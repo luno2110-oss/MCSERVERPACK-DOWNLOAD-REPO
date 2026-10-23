@@ -1338,6 +1338,285 @@
    "chars": [
     "\ue031"
    ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:ui/help_book.png",
+   "height": 16,
+   "ascent": -3,
+   "chars": [
+    "\ue200"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:ui/help_scroll.png",
+   "height": 16,
+   "ascent": -3,
+   "chars": [
+    "\ue201"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:ui/help_map.png",
+   "height": 16,
+   "ascent": -3,
+   "chars": [
+    "\ue202"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:ui/help_pickaxe.png",
+   "height": 16,
+   "ascent": -3,
+   "chars": [
+    "\ue203"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:ui/help_stall.png",
+   "height": 16,
+   "ascent": -3,
+   "chars": [
+    "\ue204"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:ui/help_leaf.png",
+   "height": 16,
+   "ascent": -3,
+   "chars": [
+    "\ue205"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:ui/help_paw.png",
+   "height": 16,
+   "ascent": -3,
+   "chars": [
+    "\ue206"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:ui/help_bed.png",
+   "height": 16,
+   "ascent": -3,
+   "chars": [
+    "\ue207"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:ui/help_check.png",
+   "height": 16,
+   "ascent": -3,
+   "chars": [
+    "\ue208"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:ui/help_gear.png",
+   "height": 16,
+   "ascent": -3,
+   "chars": [
+    "\ue209"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:ui/help_rings.png",
+   "height": 16,
+   "ascent": -3,
+   "chars": [
+    "\ue20a"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:ui/help_chair.png",
+   "height": 16,
+   "ascent": -3,
+   "chars": [
+    "\ue20b"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:ui/help_lifebuoy.png",
+   "height": 16,
+   "ascent": -3,
+   "chars": [
+    "\ue20c"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:ui/help_discord.png",
+   "height": 16,
+   "ascent": -3,
+   "chars": [
+    "\ue20d"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:ui/help_hat.png",
+   "height": 16,
+   "ascent": -3,
+   "chars": [
+    "\ue20e"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:ui/help_chest.png",
+   "height": 16,
+   "ascent": -3,
+   "chars": [
+    "\ue20f"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:ui/help_chart.png",
+   "height": 16,
+   "ascent": -3,
+   "chars": [
+    "\ue210"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:ui/help_bar.png",
+   "height": 16,
+   "ascent": -3,
+   "chars": [
+    "\ue211"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_spawn.png",
+   "height": 16,
+   "ascent": -3,
+   "chars": [
+    "\ue212"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_claim.png",
+   "height": 16,
+   "ascent": -3,
+   "chars": [
+    "\ue213"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_job.png",
+   "height": 16,
+   "ascent": -3,
+   "chars": [
+    "\ue214"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_coin.png",
+   "height": 16,
+   "ascent": -3,
+   "chars": [
+    "\ue215"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_token.png",
+   "height": 16,
+   "ascent": -3,
+   "chars": [
+    "\ue216"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_level.png",
+   "height": 16,
+   "ascent": -3,
+   "chars": [
+    "\ue217"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_team.png",
+   "height": 16,
+   "ascent": -3,
+   "chars": [
+    "\ue218"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_gem.png",
+   "height": 16,
+   "ascent": -3,
+   "chars": [
+    "\ue219"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_skull.png",
+   "height": 16,
+   "ascent": -3,
+   "chars": [
+    "\ue21a"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_people.png",
+   "height": 16,
+   "ascent": -3,
+   "chars": [
+    "\ue21b"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_clock.png",
+   "height": 16,
+   "ascent": -3,
+   "chars": [
+    "\ue21c"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_compass.png",
+   "height": 16,
+   "ascent": -3,
+   "chars": [
+    "\ue21d"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_rank.png",
+   "height": 16,
+   "ascent": -3,
+   "chars": [
+    "\ue21e"
+   ]
   }
  ]
 }

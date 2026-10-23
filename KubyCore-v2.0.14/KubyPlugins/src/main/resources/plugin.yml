@@ -10,7 +10,9 @@ commands:
   befehle:
     description: "Befehlsübersicht im Chat, mehrere Seiten"
     usage: "/befehle [seite]"
-    aliases: [hilfe]
+  hilfe:
+    description: "Survival-Hilfe: eine Seite je Feature, blättern mit den Buttons"
+    usage: "/hilfe [seite]"
   menu:
     description: "Hauptmenü als GUI öffnen"
   balance:

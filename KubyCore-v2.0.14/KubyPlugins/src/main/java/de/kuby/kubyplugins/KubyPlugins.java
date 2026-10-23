@@ -255,6 +255,23 @@ public final class KubyPlugins extends JavaPlugin {
         setAll(new CoinflipCommand(this), "coinflip");
         setAll(new CasinoCommand(this), "casino");
         setAll(new PokerCommand(this), "poker");
+        PluginCommand hilfe = getCommand("hilfe");
+        if (hilfe != null) {
+            hilfe.setExecutor((sender, c, label, args) -> {
+                if (!(sender instanceof org.bukkit.entity.Player pl)) return true;
+                if (!de.kuby.kubyplugins.service.SurvivalHelp.open(this, pl, args.length > 0 ? String.join(" ", args) : null)) {
+                    de.kuby.kubyplugins.util.Msg.send(pl, "<red>Diese Seite gibt es nicht. <gray>Seiten: "
+                            + String.join(", ", de.kuby.kubyplugins.service.SurvivalHelp.pageIds()));
+                }
+                return true;
+            });
+            hilfe.setTabCompleter((sender, c, label, args) -> {
+                if (args.length != 1) return List.of();
+                List<String> out = new java.util.ArrayList<>();
+                for (String id : de.kuby.kubyplugins.service.SurvivalHelp.pageIds()) if (id.startsWith(args[0].toLowerCase())) out.add(id);
+                return out;
+            });
+        }
         setAll((sender, command, label, args) -> {
             if (sender instanceof org.bukkit.entity.Player p) votes.showLinks(p);
             return true;

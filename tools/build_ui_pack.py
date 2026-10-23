@@ -400,6 +400,133 @@ bitmap("titlebar.png", 15, 11, "")
 bitmap("button_dark.png", 20, 13, "")
 bitmap("button_red.png", 20, 13, "")
 
+# ---------- Icons für die Seitenköpfe der Survival-Hilfe (8 x 8, doppelt groß angezeigt) ----------
+# Neue Muster hier, dazu Icons aus dem Scoreboard (kubyplugins:sb). Muss zu de.kuby.kubyplugins.ui.Ui.Icon passen.
+HELP_ICONS = {
+    "book": ([".RRRRRR.", "RRRRRRWw", "RYYYYRWw", "RRRRRRWw", "RRRRRRWw", "RRYYRRWw", "RRRRRRWw", ".rrrrrr."],
+             {"R": hexc("B83030"), "r": hexc("7A1C1C"), "Y": hexc("F2C230"), "W": hexc("F4F0E4"), "w": hexc("C8C0B0")}),
+    "scroll": (["..pppp..", ".pWWWWp.", ".pWkkWp.", ".pWWWWp.", ".pWkkWp.", ".pWWRRp.", "..ppRR..", "........"],
+               {"p": hexc("C8A870"), "W": hexc("F4E8C8"), "k": hexc("8A7050"), "R": hexc("D83030")}),
+    "map": (["pppppppp", "pGGGBBBp", "pGGRGBBp", "pBGGGGBp", "pBBGGRGp", "pBBBGGGp", "pppppppp", "........"],
+            {"p": hexc("C8A870"), "G": hexc("6CB43C"), "B": hexc("4C8CD8"), "R": hexc("D83030")}),
+    "pickaxe": (["..cCCCc.", ".c..N..c", "c...N...", "....N...", "....N...", "....N...", "....n...", "....n..."],
+                {"C": hexc("8CE8F4"), "c": hexc("2FA8C0"), "N": hexc("9C6834"), "n": hexc("6E4420")}),
+    "stall": (["RWRWRWRW", "RWRWRWRW", ".b....b.", ".bYYYYb.", ".bOOOOb.", ".bbbbbb.", ".b....b.", "........"],
+              {"R": hexc("D83040"), "W": hexc("F4F4F4"), "b": hexc("8A5A2C"), "Y": hexc("F2C230"), "O": hexc("E08A28")}),
+    "leaf": (["..oYYo..", ".oGGgYo.", "oGLGGgYo", "oGGLGgYo", "oYGgLGYo", "oYgGGGYo", ".oYYYYo.", "..oooo.."],
+             {"o": hexc("A8680E"), "Y": hexc("F4C232"), "G": hexc("4CC040"), "g": hexc("2E8028"), "L": hexc("A8F070")}),
+    "paw": ([".w.ww.w.", ".w.ww.w.", "........", "..wwww..", ".wwwwww.", ".wwwwww.", "..w..w..", "........"],
+            {"w": hexc("E8C8A8")}),
+    "bed": (["........", "........", "WW.....b", "WWRRRRRb", "RRRRRRRb", "rrrrrrrb", "b......b", "........"],
+            {"W": hexc("F4F4F4"), "R": hexc("D83040"), "r": hexc("962030"), "b": hexc("8A5A2C")}),
+    "check": (["WWWWWW..", "WWWWWWG.", "WWWWWGG.", "WGWWGGW.", "WGGGGWW.", "WWGGWWW.", "WWWWWWW.", "........"],
+              {"W": hexc("F4F4F4"), "G": hexc("3CB43C")}),
+    "gear": (["...gg...", ".gGGGGg.", ".GGddGG.", "gGd..dGg", "gGd..dGg", ".GGddGG.", ".gGGGGg.", "...gg..."],
+             {"g": hexc("7A7A84"), "G": hexc("B4B4BE"), "d": hexc("50505A")}),
+    "rings": (["..P.....", ".YYY.YYY", "Y..YY..Y", "Y..YY..Y", "Y..YY..Y", ".YYY.YYY", "........", "........"],
+              {"P": hexc("F060A0"), "Y": hexc("F2C230")}),
+    "chair": ([".b......", ".b......", ".b......", ".bRRRR..", ".bbbbbb.", ".b....b.", ".b....b.", "........"],
+              {"b": hexc("8A5A2C"), "R": hexc("D83040")}),
+    "lifebuoy": (["..RWWR..", ".RWWWWR.", "RW....WR", "WW....WW", "WW....WW", "RW....WR", ".RWWWWR.", "..RWWR.."],
+                 {"R": hexc("D83040"), "W": hexc("F4F4F4")}),
+    "discord": ([".BBBBBB.", "BBBBBBWB", "BBBBBWWB", "BWBBWWBB", "BWWWWBBB", "BBWWBBBB", ".BBBBBB.", "..B....."],
+                {"B": hexc("4C78F0"), "W": hexc("F4F4F4")}),
+    "hat": (["..PPPP..", "..PPPP..", "..PPPP..", "..YYYY..", "..PPPP..", "pPPPPPPp", ".pppppp.", "........"],
+            {"P": hexc("8A3CC8"), "p": hexc("5A2090"), "Y": hexc("F2C230")}),
+    "chest": ([".bbbbbb.", "bBBBBBBb", "bBBBBBBb", "dddYYddd", "bBBYYBBb", "bBBBBBBb", "bBBBBBBb", ".dddddd."],
+              {"b": hexc("6A4220"), "B": hexc("B8803E"), "d": hexc("3A2410"), "Y": hexc("F2C230")}),
+    "chart": (["WWWWWWWW", "W.....GW", "W.....GW", "W..Y..GW", "W..Y..GW", "WR.Y..GW", "WR.Y..GW", "WWWWWWWW"],
+              {"W": hexc("F4F4F4"), "G": hexc("3CB43C"), "Y": hexc("F2C230"), "R": hexc("D83040")}),
+    "bar": (["........", "bbbbbbbb", "bWWWWWWb", "bWYWGWRb", "bWWWWWWb", "bbbbbbbb", "........", "........"],
+            {"b": hexc("8A5A2C"), "W": hexc("F4F0E4"), "Y": hexc("F2C230"), "G": hexc("3CB43C"), "R": hexc("D83040")}),
+}
+# Reihenfolge = Zeichen ab U+E200
+HELP_ICON_ORDER = ["book", "scroll", "map", "pickaxe", "stall", "leaf", "paw", "bed", "check", "gear", "rings", "chair",
+                   "lifebuoy", "discord", "hat", "chest", "chart", "bar",
+                   "sb:spawn", "sb:claim", "sb:job", "sb:coin", "sb:token", "sb:level", "sb:team", "sb:gem", "sb:skull",
+                   "sb:people", "sb:clock", "sb:compass", "sb:rank"]
+for i, name in enumerate(HELP_ICON_ORDER):
+    if name.startswith("sb:"):
+        file = "kubyplugins:sb/sb_" + name[3:] + ".png"
+    else:
+        rows, pal = HELP_ICONS[name]
+        img = Image.new("RGBA", (8, 8), T)
+        img.alpha_composite(pattern(rows, pal), (0, 0))
+        if not any(img.getpixel((7, y))[3] for y in range(8)):
+            img.putpixel((7, 7), (0, 0, 0, 1))          # Vorschub immer 17
+        save(img, "help_" + name + ".png")
+        file = "kuby:ui/help_" + name + ".png"
+    providers.append({"type": "bitmap", "file": file, "height": 16, "ascent": -3, "chars": [chr(0xE200 + i)]})
+
+
+# ---------- Farbthemen der Survival-Hilfe: Rahmen, Aufzählungspunkt und Aktions-Button je Farbe ----------
+# Eigene Schrift je Thema (kuby:<name>) mit denselben Zeichen wie kuby:ui. Muss zu Ui.Theme passen.
+THEMES = {
+    "green": ("3CC85A", "0C2414", "123A1E", "5FE07A"),
+    "gold": ("E2B030", "241C08", "382C0E", "F2C84A"),
+    "gray": ("74747E", "18181E", "26262E", "D2D2DA"),
+    "orange": ("C87830", "26160A", "3A2410", "F0A050"),
+    "blue": ("3C9CE8", "0A1E30", "102C46", "64C0FF"),
+    "red": ("D83C50", "260A10", "3A1018", "FF6478"),
+    "pink": ("E05AA0", "260C1E", "3A142C", "FF7AC0"),
+}
+
+
+def theme_strip(kind, border, fill, shine):
+    img = Image.new("RGBA", (PANEL_W, 9), T)
+    px = img.load()
+    for y in range(9):
+        for x in range(PANEL_W):
+            px[x, y] = fill
+        px[0, y] = border
+        px[PANEL_W - 1, y] = border
+    if kind == "top":
+        for x in range(PANEL_W):
+            px[x, 0] = border if 2 <= x <= PANEL_W - 3 else T
+            if 2 <= x <= PANEL_W - 3:
+                px[x, 1] = shine
+        for x in (0, PANEL_W - 1):
+            px[x, 1] = T
+        px[1, 1] = border
+        px[PANEL_W - 2, 1] = border
+    if kind == "bottom":
+        for x in range(PANEL_W):
+            px[x, 8] = border if 2 <= x <= PANEL_W - 3 else T
+        for x in (0, PANEL_W - 1):
+            px[x, 7] = T
+        px[1, 7] = border
+        px[PANEL_W - 2, 7] = border
+    return img
+
+
+for theme, (b, f, sh, accent) in THEMES.items():
+    tdir = os.path.join(TEX, "theme_" + theme)
+    os.makedirs(tdir, exist_ok=True)
+    border, fill, shine, acc = hexc(b), hexc(f, 236), hexc(sh, 236), hexc(accent)
+    for kind in ("top", "mid", "bottom"):
+        theme_strip(kind, border, fill, shine).save(os.path.join(tdir, "panel_" + kind + ".png"))
+    pattern(["LAA", "AAA", "AAd", "...", "..."], {"L": tuple(min(255, c + 60) for c in acc[:3]) + (255,),
+                                                "A": acc, "d": tuple(c * 6 // 10 for c in acc[:3]) + (255,)}
+            ).save(os.path.join(tdir, "bullet.png"))
+    light = tuple(min(255, c + 70) for c in border[:3]) + (255,)
+    dark = tuple(c * 7 // 10 for c in border[:3]) + (255,)
+    rounded_box(BUTTON_W, 20, light, border, tuple(min(255, c + 35) for c in border[:3]) + (255,)
+                ).save(os.path.join(tdir, "button_action.png"))
+    tp = [{"type": "space", "advances": {**neg, **pos}}]
+
+    def tb(file, height, ascent, char):
+        tp.append({"type": "bitmap", "file": "kuby:ui/theme_" + theme + "/" + file, "height": height, "ascent": ascent,
+                   "chars": [char]})
+    tb("panel_top.png", 9, 8, "")
+    for k in range(1, MAX_ROWS + 1):
+        tb("panel_mid.png", 9, 8 - 9 * k, chr(0xE100 + k))
+        tb("panel_bottom.png", 9, 8 - 9 * k, chr(0xE140 + k))
+    tb("bullet.png", 5, 5, "")
+    tb("button_action.png", 20, 13, "")
+    with open(os.path.join(FONT, theme + ".json"), "w", encoding="utf-8") as fh:
+        json.dump({"providers": tp}, fh, ensure_ascii=True, indent=1)
+
+
 with open(os.path.join(FONT, "ui.json"), "w", encoding="utf-8") as f:
     json.dump({"providers": providers}, f, ensure_ascii=True, indent=1)
 

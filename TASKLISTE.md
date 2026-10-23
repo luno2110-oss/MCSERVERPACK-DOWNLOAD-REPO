@@ -47,7 +47,7 @@ Prinzip: Keine GUI. Spiel läuft über physische Dinge am Tisch (Karten, Chips, 
 
 ## Ordnergruppe 4 – Features Survival (Refs: Release „Referenzen“, Hilfe-Seiten je Feature) – nur Survival, Schwerpunkt
 Reihenfolge wie das Hilfe-Karussell der Referenz. Jede Seite: Titel, Untertitel, „So geht's“, Befehle, Buttons (zurück, Aktion, weiter), eigene Farbe.
-- [ ] 4.0 Survival-Hilfe `/hilfe` als Dialog-Karussell im Stil der Casino-Hilfe, eine Seite je Feature (Farbe je Seite)
+- [~] 4.0 Survival-Hilfe `/hilfe [seite]` (Build offen, Test im Spiel offen): Dialog-Karussell mit 31 Seiten nach der Referenz, 7 Farbthemen (grün, gold, grau, orange, blau, rot, pink), Icons je Seite, Aktions-Button ruft den passenden Befehl (fehlende Features: „kommt bald“). `/befehle` bleibt die Chat-Übersicht
 - [ ] 4.1 Regeln: `/regeln`, `/regeln <Nummer>` (12 Paragraphen), `/report <Spieler>`
 - [ ] 4.2 Einstieg: `/tutorial` (Tour in Stationen), `/bauwelt`, `/spawn`, Brunnen am Spawn
 - [ ] 4.3 Grundstücke: Claim-Axt (Links/Rechtsklick Ecken, `/claim ok`), Kosten = Fläche (10×10 = 100), Erweitern mit der Axt, `/claim axt|zeigen|hilfe`, Rechte für Fremde im Menü

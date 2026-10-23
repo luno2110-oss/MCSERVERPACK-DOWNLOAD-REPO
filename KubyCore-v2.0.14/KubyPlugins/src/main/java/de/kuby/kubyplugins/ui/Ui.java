@@ -39,7 +39,15 @@ public final class Ui {
         BACK('', 14), DICE('', 16), CARDS('', 16), ROULETTE('', 17), SLOTS('', 16),
         CRASH('', 16), POKER('', 13), TROPHY('', 16), MUSIC('', 15),
         BULLET('', 4), CLUB('', 8), DIAMOND('', 8), HEART('', 8), STAR('', 8),
-        SEVEN('', 8), COIN('', 10);
+        SEVEN('', 8), COIN('', 10),
+        // Seitenköpfe der Survival-Hilfe (8 x 8, doppelt groß)
+        BOOK('\uE200', 17), SCROLL('\uE201', 17), MAP('\uE202', 17), PICKAXE('\uE203', 17),
+        STALL('\uE204', 17), LEAF('\uE205', 17), PAW('\uE206', 17), BED('\uE207', 17), CHECK('\uE208', 17),
+        GEAR('\uE209', 17), RINGS('\uE20A', 17), CHAIR('\uE20B', 17), LIFEBUOY('\uE20C', 17),
+        DISCORD('\uE20D', 17), HAT('\uE20E', 17), CHEST('\uE20F', 17), CHART('\uE210', 17),
+        BAR('\uE211', 17), SPAWN('\uE212', 17), HOUSE('\uE213', 17), ROD('\uE214', 17), COINS('\uE215', 17),
+        TOKEN('\uE216', 17), STAR('\uE217', 17), FLAG('\uE218', 17), GEM('\uE219', 17), SKULL('\uE21A', 17),
+        PEOPLE('\uE21B', 17), HOURGLASS('\uE21C', 17), COMPASS('\uE21D', 17), CROWN('\uE21E', 17);
 
         final char c;
         final int advance;
@@ -50,6 +58,30 @@ public final class Ui {
         }
     }
 
+    /** Farbthemen der Hilfe-Seiten: eigene Schrift mit Rahmen, Aufzählungspunkt und Aktions-Button (KubyUI). */
+    public enum Theme {
+        CASINO("ui", 0xFF5D73, 0xFF4D67),
+        GREEN("green", 0x5FE07A, 0x5FE07A),
+        GOLD("gold", 0xF2C84A, 0xF2C84A),
+        GRAY("gray", 0xD2D2DA, 0xD2D2DA),
+        ORANGE("orange", 0xF0A050, 0xF0A050),
+        BLUE("blue", 0x64C0FF, 0x64C0FF),
+        RED("red", 0xFF6478, 0xFF6478),
+        PINK("pink", 0xFF7AC0, 0xFF7AC0);
+
+        public final Key font;
+        /** Farbe für Überschriften wie "SO GEHT'S". */
+        public final TextColor accent;
+        /** Farbe für den Seitentitel. */
+        public final TextColor title;
+
+        Theme(String font, int accent, int title) {
+            this.font = Key.key("kuby", font);
+            this.accent = TextColor.color(accent);
+            this.title = TextColor.color(title);
+        }
+    }
+
     private Ui() {
     }
 
@@ -57,7 +89,11 @@ public final class Ui {
 
     /** Text in der UI-Schrift, weiß (damit die Grafik nicht eingefärbt wird) und ohne Schatten. */
     static Component glyph(String s) {
-        return Component.text(s).font(FONT).color(NamedTextColor.WHITE).shadowColor(ShadowColor.none());
+        return glyph(s, FONT);
+    }
+
+    static Component glyph(String s, Key font) {
+        return Component.text(s).font(font).color(NamedTextColor.WHITE).shadowColor(ShadowColor.none());
     }
 
     /** Verschiebt den Cursor um px Pixel (auch negativ). */
@@ -134,6 +170,17 @@ public final class Ui {
                 .append(Component.text(text, NamedTextColor.WHITE));
     }
 
+    /** Aktions-Button in der Farbe des Themas, Schrift dunkel und fett (wie in der Hilfe-Referenz). */
+    public static Component button(String text, Theme theme) {
+        if (theme == Theme.CASINO) return button(text, true);
+        int t = width(text, true);
+        int toLeft = -((BUTTON_W - t) / 2);
+        return Component.empty().append(space(toLeft))
+                .append(glyph(String.valueOf(BUTTON_RED), theme.font))
+                .append(space(-(BUTTON_W + 1) - toLeft))
+                .append(Component.text(text, TextColor.color(0x1A1410)).decorate(TextDecoration.BOLD));
+    }
+
     // ---------- Kästen ----------
 
     /** Ein Stück einer Zeile: Text, Icon oder Abstand, mit bekannter oder geschätzter Breite. */
@@ -141,9 +188,18 @@ public final class Ui {
 
     /** Kasten mit roter Umrandung, Icons im Kopf und Textzeilen. Zeilen werden links ausgerichtet. */
     public static final class Panel {
+        private final Theme theme;
         private final List<List<Part>> lines = new ArrayList<>();
         private final List<int[]> headIcons = new ArrayList<>();
         private final List<Icon> headIconTypes = new ArrayList<>();
+
+        public Panel() {
+            this(Theme.CASINO);
+        }
+
+        public Panel(Theme theme) {
+            this.theme = theme;
+        }
 
         /** Icon im Kopf des Kastens bei x Pixel vom linken Rand (geht über die ersten zwei Textzeilen). */
         public Panel headIcon(Icon icon, int x) {
@@ -170,7 +226,7 @@ public final class Ui {
                 List<Part> line = new ArrayList<>();
                 if (i == 0) {
                     line.add(gap(7));
-                    line.add(new Part(icon(Icon.BULLET), Icon.BULLET.advance));
+                    line.add(new Part(glyph(String.valueOf(Icon.BULLET.c), theme.font), Icon.BULLET.advance));
                     line.add(gap(indent - 7 - Icon.BULLET.advance));
                 } else {
                     line.add(gap(indent));
@@ -216,7 +272,7 @@ public final class Ui {
             strips.append(PANEL_TOP).append(back);
             for (int k = 1; k <= n; k++) strips.append((char) (MID_BASE + k)).append(back);
             strips.append((char) (BOTTOM_BASE + n + 1)).append(back);
-            TextComponent.Builder head = Component.text().append(glyph(strips.toString()));
+            TextComponent.Builder head = Component.text().append(glyph(strips.toString(), theme.font));
             int cursor = 0;
             for (int i = 0; i < headIcons.size(); i++) {
                 Icon icon = headIconTypes.get(i);
