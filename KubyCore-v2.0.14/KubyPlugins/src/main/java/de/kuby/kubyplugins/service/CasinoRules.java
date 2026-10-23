@@ -41,8 +41,10 @@ public final class CasinoRules {
 
     private record Btn(String label, String tooltip, boolean red, Consumer<Player> onClick) {}
 
-    private record Page(String title, String subtitle, Ui.Icon icon, List<String> how, List<String[]> commands,
-                        List<Btn> buttons) {}
+    private record Page(String title, String subtitle, Ui.Icon icon, List<String> how, List<String[]> commands) {}
+
+    /** Reihenfolge der Seiten zum Blättern (wie in der Hilfe-Referenz: "< vorherige | Hinreisen | nächste >"). */
+    private static final List<String> ORDER = List.of("casino", "blackjack", "roulette", "slots", "crash", "rangliste");
 
     private CasinoRules() {
     }
@@ -50,12 +52,16 @@ public final class CasinoRules {
     /** Öffnet die Übersicht (game = null) oder die Seite eines Spiels. False, wenn es das Spiel nicht gibt. */
     public static boolean open(KubyPlugins plugin, Player p, String game) {
         if (game != null && !GAMES.contains(game)) return false;
-        show(plugin, p, game == null ? overview(plugin) : gamePage(plugin, game));
+        show(plugin, p, game == null ? 0 : ORDER.indexOf(game));
         return true;
     }
 
     /** Rangliste "Am meisten Plus": Top 10 und der eigene Platz. */
     public static void openStats(KubyPlugins plugin, Player p) {
+        show(plugin, p, ORDER.indexOf("rangliste"));
+    }
+
+    private static Page stats(KubyPlugins plugin, Player p) {
         List<String> lines = new ArrayList<>();
         List<Map.Entry<java.util.UUID, Long>> top = plugin.casinoLog().top(10);
         if (top.isEmpty()) lines.add("Noch hat niemand gespielt.");
@@ -68,11 +74,7 @@ public final class CasinoRules {
         long mine = plugin.casinoLog().netOf(p.getUniqueId());
         lines.add(rank == 0 ? "Du hast noch nicht gespielt."
                 : "Dein Platz: " + rank + "  (" + (mine >= 0 ? "+" : "") + mine + " Chips)");
-        List<Btn> buttons = List.of(
-                new Btn("< Casino", "Zurück zur Übersicht", false, pl -> show(plugin, pl, overview(plugin))),
-                new Btn("Hinreisen", "Zum Casino teleportieren", true, pl -> plugin.casino().travel(pl)));
-        show(plugin, p, new Page("RANGLISTE", "Am meisten Plus: Gewinne minus Einsätze", Ui.Icon.TROPHY,
-                lines, List.of(), buttons));
+        return new Page("RANGLISTE", "Am meisten Plus: Gewinne minus Einsätze", Ui.Icon.TROPHY, lines, List.of());
     }
 
     private static Page overview(KubyPlugins plugin) {
@@ -103,13 +105,7 @@ public final class CasinoRules {
                 new String[]{"/poker", "Poker in der VIP-Lounge"},
                 new String[]{"/casino status", "Deine Chips und der Jackpot"},
                 new String[]{"/casino regeln", "Diese Hilfe"});
-        List<Btn> buttons = new ArrayList<>();
-        for (String g : GAMES) {
-            buttons.add(new Btn(title(g), "Regeln: " + title(g), false, pl -> show(plugin, pl, gamePage(plugin, g))));
-        }
-        buttons.add(new Btn("Rangliste", "Am meisten Plus", false, pl -> openStats(plugin, pl)));
-        buttons.add(new Btn("Hinreisen", "Zum Casino teleportieren", true, pl -> plugin.casino().travel(pl)));
-        return new Page("CASINO", "Slots, Roulette, Blackjack, Poker und Crash", Ui.Icon.DICE, how, commands, buttons);
+        return new Page("CASINO", "Slots, Roulette, Blackjack, Poker und Crash", Ui.Icon.DICE, how, commands);
     }
 
     private static Page gamePage(KubyPlugins plugin, String game) {
@@ -158,20 +154,40 @@ public final class CasinoRules {
                         "Höchstens " + Math.round(c.getDouble("casino.crash.max-multiplier", 50)) + "x.");
             }
         }
-        List<Btn> buttons = List.of(
-                new Btn("< Casino", "Zurück zur Übersicht", false, pl -> show(plugin, pl, overview(plugin))),
-                new Btn("Hinreisen", "Zum Casino teleportieren", true, pl -> plugin.casino().travel(pl)));
-        return new Page(title(game).toUpperCase(), subtitle, icon, how, commands, buttons);
+        return new Page(title(game).toUpperCase(), subtitle, icon, how, commands);
     }
 
     // ---------- Darstellung ----------
 
-    private static void show(KubyPlugins plugin, Player p, Page page) {
-        p.showDialog(plugin.uiPack().active(p) ? textured(page) : plain(page));
+    /** Zeigt Seite index mit den drei Buttons darunter: vorherige Seite, Hinreisen, nächste Seite. */
+    private static void show(KubyPlugins plugin, Player p, int index) {
+        int size = ORDER.size();
+        int i = Math.floorMod(index, size);
+        Page page = switch (ORDER.get(i)) {
+            case "casino" -> overview(plugin);
+            case "rangliste" -> stats(plugin, p);
+            default -> gamePage(plugin, ORDER.get(i));
+        };
+        int prev = Math.floorMod(i - 1, size);
+        int next = Math.floorMod(i + 1, size);
+        List<Btn> buttons = List.of(
+                new Btn("< " + navName(prev), "Zurück: " + navName(prev), false, pl -> show(plugin, pl, prev)),
+                new Btn("Hinreisen", "Zum Casino teleportieren", true, pl -> plugin.casino().travel(pl)),
+                new Btn(navName(next) + " >", "Weiter: " + navName(next), false, pl -> show(plugin, pl, next)));
+        p.showDialog(plugin.uiPack().active(p) ? textured(page, buttons) : plain(page, buttons));
+    }
+
+    private static String navName(int index) {
+        String key = ORDER.get(index);
+        return switch (key) {
+            case "casino" -> "Casino";
+            case "rangliste" -> "Rangliste";
+            default -> title(key);
+        };
     }
 
     /** Mit Grafik-Pack: Titelleiste, Kästen mit Rahmen und Icons, eigene Buttons. */
-    private static Dialog textured(Page page) {
+    private static Dialog textured(Page page, List<Btn> navButtons) {
         Ui.Panel head = new Ui.Panel()
                 .headIcon(Ui.Icon.BACK, 8)
                 .headIcon(page.icon(), 26)
@@ -186,16 +202,16 @@ public final class CasinoRules {
             panels.add(cmds);
         }
         List<ActionButton> buttons = new ArrayList<>();
-        for (Btn b : page.buttons()) buttons.add(button(Ui.button(b.label(), b.red()), b.tooltip(), b.onClick()));
+        for (Btn b : navButtons) buttons.add(button(Ui.button(b.label(), b.red()), b.tooltip(), b.onClick()));
         DialogBase base = DialogBase.builder(Ui.titleBar("Hilfe"))
                 .canCloseWithEscape(true)
                 .body(List.of(DialogBody.plainMessage(Ui.stack(panels), WIDTH)))
                 .build();
-        return Dialog.create(b -> b.empty().base(base).type(DialogType.multiAction(buttons).columns(2).build()));
+        return Dialog.create(b -> b.empty().base(base).type(DialogType.multiAction(buttons).columns(3).build()));
     }
 
     /** Ohne Grafik-Pack: normale Texte. */
-    private static Dialog plain(Page page) {
+    private static Dialog plain(Page page, List<Btn> navButtons) {
         List<DialogBody> body = new ArrayList<>();
         body.add(DialogBody.plainMessage(Msg.parse("<gray>" + page.subtitle()), WIDTH));
         StringBuilder sb = new StringBuilder("<red><b>SO GEHT'S</b></red>");
@@ -213,7 +229,7 @@ public final class CasinoRules {
             body.add(DialogBody.plainMessage(Msg.parse(cmds.toString()), WIDTH));
         }
         List<ActionButton> buttons = new ArrayList<>();
-        for (Btn b : page.buttons()) {
+        for (Btn b : navButtons) {
             String label = b.red() ? "<red><b>" + Msg.escape(b.label()) + "</b>" : "<white>" + Msg.escape(b.label());
             buttons.add(button(Msg.parse(label), b.tooltip(), b.onClick()));
         }
@@ -221,11 +237,11 @@ public final class CasinoRules {
                 .canCloseWithEscape(true)
                 .body(body)
                 .build();
-        return Dialog.create(b -> b.empty().base(base).type(DialogType.multiAction(buttons).columns(2).build()));
+        return Dialog.create(b -> b.empty().base(base).type(DialogType.multiAction(buttons).columns(3).build()));
     }
 
     private static ActionButton button(Component label, String tooltip, Consumer<Player> onClick) {
-        return ActionButton.create(label, Msg.parse("<gray>" + tooltip), 100,
+        return ActionButton.create(label, Msg.parse("<gray>" + tooltip), Ui.BUTTON_W,
                 DialogAction.customClick((response, audience) -> {
                     if (audience instanceof Player pl) onClick.accept(pl);
                 }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).build()));

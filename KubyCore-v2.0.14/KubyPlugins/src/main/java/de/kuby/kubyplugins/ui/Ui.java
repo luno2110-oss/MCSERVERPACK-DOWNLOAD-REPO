@@ -31,7 +31,8 @@ public final class Ui {
     private static final int TITLEBAR_W = 160;
     private static final char BUTTON_DARK = '';
     private static final char BUTTON_RED = '';
-    private static final int BUTTON_W = 100;
+    /** Breite der Dialog-Buttons mit eigener Grafik: drei nebeneinander passen unter einen Kasten. */
+    public static final int BUTTON_W = 98;
 
     /** Icons mit ihrer Vorschubbreite in Pixeln. */
     public enum Icon {
@@ -118,18 +119,19 @@ public final class Ui {
     }
 
     /**
-     * Button-Beschriftung mit eigenem Hintergrund (Button-Breite muss 100 sein). Die Beschriftung ist 92 px breit und
-     * beginnt 4 px rechts vom Button-Rand, der Hintergrund wird von dort 4 px zurück gezeichnet.
+     * Button-Beschriftung mit eigenem Hintergrund (Button-Breite muss BUTTON_W sein). Der Hintergrund hat in Summe
+     * keinen Vorschub, die Beschriftung ist also genau so breit wie der Text. Minecraft zentriert sie mit der echten
+     * Textbreite, der Text sitzt damit immer exakt mittig. Der Hintergrund wird vom Textanfang aus zum Button-Rand
+     * zurückgesetzt (nach der geschätzten Breite).
      */
     public static Component button(String text, boolean red) {
         int t = width(text, false);
-        int a = (BUTTON_W - t) / 2;
+        int toLeft = -((BUTTON_W - t) / 2);
         return Component.empty()
-                .append(space(-4))
+                .append(space(toLeft))
                 .append(glyph(String.valueOf(red ? BUTTON_RED : BUTTON_DARK)))
-                .append(space(a - (BUTTON_W + 1)))
-                .append(Component.text(text, NamedTextColor.WHITE))
-                .append(space(BUTTON_W - 4 - a - t));
+                .append(space(-(BUTTON_W + 1) - toLeft))
+                .append(Component.text(text, NamedTextColor.WHITE));
     }
 
     // ---------- Kästen ----------

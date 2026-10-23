@@ -65,16 +65,20 @@ def strip(kind):
         px[PANEL_W - 1, y] = P_BORDER
     if kind == "top":
         for x in range(PANEL_W):
-            px[x, 0] = P_BORDER
-            if 1 <= x <= PANEL_W - 2:
+            px[x, 0] = P_BORDER if 2 <= x <= PANEL_W - 3 else T
+            if 2 <= x <= PANEL_W - 3:
                 px[x, 1] = P_SHINE
-        px[0, 0] = T
-        px[PANEL_W - 1, 0] = T
+        for x in (0, PANEL_W - 1):
+            px[x, 1] = T
+        px[1, 1] = P_BORDER
+        px[PANEL_W - 2, 1] = P_BORDER
     if kind == "bottom":
         for x in range(PANEL_W):
-            px[x, 8] = P_BORDER
-        px[0, 8] = T
-        px[PANEL_W - 1, 8] = T
+            px[x, 8] = P_BORDER if 2 <= x <= PANEL_W - 3 else T
+        for x in (0, PANEL_W - 1):
+            px[x, 7] = T
+        px[1, 7] = P_BORDER
+        px[PANEL_W - 2, 7] = P_BORDER
     return img
 
 
@@ -84,19 +88,30 @@ save(strip("bottom"), "panel_bottom.png")
 
 
 # ---------- Buttons 100x20: aeusserer Ring durchsichtig, damit der Hover-Rand von Minecraft sichtbar bleibt ----------
-def button(border, fill, shine):
-    w, h = 100, 20
+BUTTON_W = 98
+
+
+def rounded_box(w, h, border, fill, shine=None):
+    """Kasten mit 1 px Rand und runden Ecken (Radius 2)."""
     img = Image.new("RGBA", (w, h), T)
     px = img.load()
-    for y in range(1, h - 1):
-        for x in range(1, w - 1):
-            edge = x in (1, w - 2) or y in (1, h - 2)
+    for y in range(h):
+        for x in range(w):
+            corner = (x in (0, w - 1) and y in (0, 1, h - 2, h - 1)) or (y in (0, h - 1) and x in (0, 1, w - 2, w - 1))
+            if corner:
+                continue
+            edge = x in (0, w - 1) or y in (0, h - 1)
             px[x, y] = border if edge else fill
-    for x in range(2, w - 2):
-        px[x, 2] = shine
-    # Rechte Spalte deckend lassen, damit die Breite stimmt (Ring-Ecke halbtransparent).
-    px[w - 1, h // 2] = (0, 0, 0, 1)
+    for x, y in ((1, 1), (w - 2, 1), (1, h - 2), (w - 2, h - 2)):
+        px[x, y] = border
+    if shine is not None:
+        for x in range(2, w - 2):
+            px[x, 1] = shine
     return img
+
+
+def button(border, fill, shine):
+    return rounded_box(BUTTON_W, 20, border, fill, shine)
 
 
 save(button(B_BORDER, B_FILL, B_SHINE), "button_dark.png")
@@ -106,17 +121,9 @@ save(button(R_BORDER, R_FILL, R_SHINE), "button_red.png")
 # ---------- Titelleiste 160x15 ----------
 def titlebar():
     w, h = 160, 15
-    img = Image.new("RGBA", (w, h), T)
+    img = rounded_box(w, h, GOLD, hexc("141418", 225))
     px = img.load()
-    fill = hexc("141418", 225)
-    for y in range(h):
-        for x in range(w):
-            edge_x = x in (0, w - 1)
-            edge_y = y in (0, h - 1)
-            if edge_x and edge_y:
-                continue
-            px[x, y] = GOLD if (edge_x or edge_y) else fill
-    for x in range(1, w - 1):
+    for x in range(2, w - 2):
         px[x, 1] = GOLD_DD
         px[x, h - 2] = GOLD_DD
     # Smaragd-Akzente links und rechts
