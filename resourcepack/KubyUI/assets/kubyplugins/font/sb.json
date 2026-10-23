@@ -334,8 +334,8 @@
   {
    "type": "bitmap",
    "file": "kubyplugins:sb/deco_smp.png",
-   "height": 17,
-   "ascent": 16,
+   "height": 22,
+   "ascent": 21,
    "chars": [
     "\ue060"
    ]
@@ -343,8 +343,8 @@
   {
    "type": "bitmap",
    "file": "kubyplugins:sb/deco_survival.png",
-   "height": 17,
-   "ascent": 16,
+   "height": 22,
+   "ascent": 21,
    "chars": [
     "\ue061"
    ]
@@ -352,8 +352,8 @@
   {
    "type": "bitmap",
    "file": "kubyplugins:sb/deco_hub.png",
-   "height": 17,
-   "ascent": 16,
+   "height": 22,
+   "ascent": 21,
    "chars": [
     "\ue062"
    ]

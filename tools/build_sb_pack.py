@@ -1,26 +1,31 @@
-"""Scoreboard-Grafik im Pack KubyUI (Schrift kubyplugins:sb), doppelte Aufloesung: 2 Texel je GUI-Pixel.
+"""Scoreboard-Grafik im Pack KubyUI (Schrift kubyplugins:sb), Aufloesung wie die Referenz: 1 Texel je GUI-Pixel.
 
-Masse nach der Referenz (Chaos SMP): Sidebar 116 px breit, Rahmen 125 px (6 px links vom Text bis zum
-Bildschirmrand), 6 px Rand mit Goldverlauf von oben nach unten. Logo: grosse Goldbuchstaben 14 x 12 px,
-darunter kleine Silberbuchstaben 9 x 8 px auf der oberen Rahmenkante, Figuren links und rechts.
-Wird von build_ui_pack.py aufgerufen. Muss zu de.kuby.kubyscoreboard.SbUi passen.
+Masse und Stil nach der Referenz (Chaos SMP), im Bild Pixel fuer Pixel nachgemessen:
+- Sidebar 116 px breit, Rahmen 125 px, Rand 6 px (schwarz, 2 Gold, 2 Braun, schwarz), Gold von Orange (oben)
+  ueber Hellgelb zu dunklerem Gold (unten), Unterkante gespiegelt, innen ein weicher Schatten.
+- Logo: Buchstaben 13 x 12 px, oben dunkleres Gold, unten helles Gelb, helle Kanten oben und links,
+  2 px braune 3D-Kante, schwarzer Rand, Schlagschatten auf den Rahmen. Darunter Silberbuchstaben 10 x 8 px.
+- Figuren ohne schwarzen Rand, nur weich schattiert. Icons mit farbigen statt schwarzen Umrissen.
+Eigene Zeichnungen im Stil der Referenz. Wird von build_ui_pack.py aufgerufen, muss zu
+de.kuby.kubyscoreboard.SbUi passen.
 """
 import json
-import math
 import os
 import shutil
 
 from PIL import Image
 
-S = 2                  # Texel je GUI-Pixel
 SB_W = 116             # Breite der Sidebar (= Titelbreite)
-FRAME_W = SB_W + 9     # Rahmen von 6 px links vom Text bis 1 px hinter den Standard-Hintergrund
-BORDER = 12            # Randbreite in Texeln (6 px)
+FRAME_W = SB_W + 9     # Rahmen von 6 px links vom Text bis zum Bildschirmrand
+BORDER = 6             # Randbreite
 NOMINAL_H = 156        # Rahmenhoehe bei 15 Zeilen, fuer den Goldverlauf
 MAX_K = 15             # Vanilla zeigt hoechstens 15 Zeilen
 INNER_W = FRAME_W - 12  # Innenbreite (113 px), hier liegt die Deko unten
 A_TITLE = 21           # zusaetzliche Abdunklung innen (Titelzeile hat schon 40 % Hintergrund)
 A_LINE = 55            # Zeilen haben nur 30 %, so wirkt die Flaeche gleichmaessig
+LOGO_H = 43            # Logo: 28 px ueber der Rahmenoberkante bis 15 px darunter
+LOGO_TOP = 28
+DECO_H = 22            # Deko unten, steht auf dem unteren Rand
 
 T = (0, 0, 0, 0)
 
@@ -43,639 +48,516 @@ def new(w, h):
     return Image.new("RGBA", (w, h), T)
 
 
-def stamp(rows, palette, cell=S):
-    """Pixel-Art aus Zeichen; jedes Zeichen ist cell x cell Texel gross."""
+def stamp(rows, palette):
+    """Pixel-Art aus Zeichen, ein Zeichen = ein Pixel."""
     w = max(len(r) for r in rows)
-    img = new(w * cell, len(rows) * cell)
+    img = new(w, len(rows))
     px = img.load()
     for y, row in enumerate(rows):
         for x, c in enumerate(row):
             if c in palette:
-                for sy in range(cell):
-                    for sx in range(cell):
-                        px[x * cell + sx, y * cell + sy] = palette[c]
+                px[x, y] = palette[c] if isinstance(palette[c], tuple) else rgb(palette[c])
     return img
 
 
-def outlined(img, color=(18, 12, 6, 255), pad=1):
-    """Fuegt eine 1-Texel-Kontur um alle deckenden Pixel hinzu (8 Nachbarn)."""
-    out = new(img.width + 2 * pad, img.height + 2 * pad)
-    out.alpha_composite(img, (pad, pad))
-    src = out.copy().load()
-    px = out.load()
-    w, h = out.size
-    for y in range(h):
-        for x in range(w):
-            if src[x, y][3] >= 128:
-                continue
-            for dx in (-1, 0, 1):
-                for dy in (-1, 0, 1):
-                    xx, yy = x + dx, y + dy
-                    if 0 <= xx < w and 0 <= yy < h and src[xx, yy][3] >= 128:
-                        px[x, y] = color
-                        break
-                else:
-                    continue
-                break
-    return out
-
-
-def edge_shade(img, dark=0.78, light=1.12):
-    """Rechte und untere Kanten dunkler, obere Kante heller (Licht von oben links)."""
-    src = img.copy().load()
-    px = img.load()
-    w, h = img.size
-    for y in range(h):
-        for x in range(w):
-            if src[x, y][3] < 128:
-                continue
-            below = y + 1 >= h or src[x, y + 1][3] < 128
-            right = x + 1 >= w or src[x + 1, y][3] < 128
-            above = y == 0 or src[x, y - 1][3] < 128
-            if below or right:
-                px[x, y] = shade(src[x, y], dark)
-            elif above:
-                px[x, y] = shade(src[x, y], light)
-    return img
-
-
-def segment(img, x0, y0, x1, y1, width, color_fn):
-    """Zeichnet eine Strecke mit Breite; color_fn(s, r, length) gibt die Farbe (s entlang, r quer) oder None."""
-    px = img.load()
-    L = math.hypot(x1 - x0, y1 - y0)
-    ux, uy = (x1 - x0) / L, (y1 - y0) / L
-    pad = width + 2
-    for y in range(int(min(y0, y1) - pad), int(max(y0, y1) + pad) + 1):
-        for x in range(int(min(x0, x1) - pad), int(max(x0, x1) + pad) + 1):
-            if not (0 <= x < img.width and 0 <= y < img.height):
-                continue
-            cx, cy = x + 0.5 - x0, y + 0.5 - y0
-            s = cx * ux + cy * uy
-            r = -cx * uy + cy * ux
-            if 0 <= s <= L and abs(r) <= width / 2:
-                c = color_fn(s, r, L)
-                if c:
-                    px[x, y] = c
+def ramp(keys, f):
+    """Farbverlauf ueber Stuetzstellen [(pos, farbe), ...]."""
+    f = max(0.0, min(1.0, f))
+    for (p0, c0), (p1, c1) in zip(keys, keys[1:]):
+        if f <= p1:
+            return mix(c0, c1, (f - p0) / (p1 - p0) if p1 > p0 else 0)
+    return keys[-1][1]
 
 
 # =====================================================================================
 # Rahmen
 # =====================================================================================
-GOLD_TOP, GOLD_BOT = rgb("C47A0E"), rgb("F6D640")
-HL_TOP, HL_BOT = rgb("E2A030"), rgb("FFEE80")
-OR_TOP, OR_BOT = rgb("824200"), rgb("BA8812")
-BROWN = [rgb("683404"), rgb("5C2E08"), rgb("4E280A"), rgb("3E2008")]
-DARK = rgb("28160A")
-BLACK = rgb("120800")
+GOLD = [(0.0, rgb("C17304")), (0.12, rgb("B87A14")), (0.45, rgb("C89E1E")), (0.65, rgb("DEB622")),
+        (0.9, rgb("B89E1E")), (0.96, rgb("7A6A18")), (1.0, rgb("645812"))]
+BROWN = [(0.0, rgb("391700")), (0.12, rgb("6A3804")), (0.45, rgb("623800")), (0.65, rgb("5C2904")),
+         (0.9, rgb("461D02")), (1.0, rgb("301400"))]
+OUT_BLACK = rgb("190E03")
+IN_BLACK = rgb("090100")
 
 
 def band(b, g):
-    gold = mix(GOLD_TOP, GOLD_BOT, g)
-    return [BLACK, mix(HL_TOP, HL_BOT, g), mix(gold, mix(HL_TOP, HL_BOT, g), 0.4), gold, gold,
-            mix(OR_TOP, OR_BOT, g), BROWN[0], BROWN[1], BROWN[2], BROWN[3], DARK, BLACK][b]
+    gold = ramp(GOLD, g)
+    brown = ramp(BROWN, g)
+    return [OUT_BLACK, shade(gold, 1.08), gold, brown, shade(brown, 0.82), IN_BLACK][b]
 
 
-def frame_piece(rel_top, h_gui, top, bottom, inner_alpha):
-    """Ein Stueck Rahmen ab rel_top (GUI-Pixel unter der Rahmenoberkante). Unterkante: Profil gespiegelt."""
-    w, h = FRAME_W * S, h_gui * S
+def frame_piece(rel_top, h, top, bottom, inner_alpha):
+    """Ein Stueck Rahmen ab rel_top (Pixel unter der Rahmenoberkante). Unterkante: Gold innen (Licht von oben)."""
+    w = FRAME_W
     img = new(w, h)
     px = img.load()
-    R = 5
     for y in range(h):
-        g = (rel_top + (y + 0.5) / S) / NOMINAL_H
+        g = (rel_top + y + 0.5) / NOMINAL_H
         for x in range(w):
             dx = min(x, w - 1 - x)
             dt = y if top else 10 ** 6
             db = (h - 1 - y) if bottom else 10 ** 6
             dy = min(dt, db)
-            if dx < R and dy < R:
-                d = R - math.hypot(R - (dx + 0.5), R - (dy + 0.5))
-                if d < 0:
-                    continue
-            else:
-                d = min(dx, dy)
-            b = int(d)
-            if b >= BORDER:
-                px[x, y] = (0, 0, 0, inner_alpha)
+            if dx == 0 and dy == 0:
+                continue                       # abgerundete Ecke
+            d = min(dx, dy)
+            if d >= BORDER:
+                a = inner_alpha
+                # weicher Innenschatten unter der Oberkante und rechts der linken Kante
+                if top and dt - BORDER < 3:
+                    a += (70, 40, 18)[dt - BORDER]
+                if x - BORDER < 3:
+                    a += (50, 26, 10)[x - BORDER]
+                px[x, y] = (0, 0, 0, min(a, 200))
                 continue
-            if db <= dx and db < dt:
-                b = BORDER - 1 - b
+            b = d
+            if db <= dx and db < dt and b not in (0, BORDER - 1):
+                b = BORDER - 1 - b             # Unterkante gespiegelt
             px[x, y] = band(b, g)
     return img
 
 
 # =====================================================================================
-# Logo-Schrift: grosse Goldbuchstaben (14 x 12 px) und kleine Silberbuchstaben (9 x 8 px)
+# Logo-Schrift (Stil wie "CHAOS SMP")
 # =====================================================================================
 BIG = {
-    "K": ["XXXXX....XXXXX", "XXXXX...XXXXX.", "XXXXX..XXXXX..", "XXXXX.XXXXX...", "XXXXXXXXXX....",
-          "XXXXXXXXX.....", "XXXXXXXXX.....", "XXXXXXXXXX....", "XXXXX.XXXXX...", "XXXXX..XXXXX..",
-          "XXXXX...XXXXX.", "XXXXX....XXXXX"],
-    "U": ["XXXXX....XXXXX"] * 9 + ["XXXXXXXXXXXXXX", "XXXXXXXXXXXXXX", ".XXXXXXXXXXXX."],
-    "B": ["XXXXXXXXXXXX..", "XXXXXXXXXXXXX.", "XXXXX....XXXXX", "XXXXX....XXXXX", "XXXXXXXXXXXXX.",
-          "XXXXXXXXXXXX..", "XXXXXXXXXXXXX.", "XXXXX....XXXXX", "XXXXX....XXXXX", "XXXXXXXXXXXXXX",
-          "XXXXXXXXXXXXX.", "XXXXXXXXXXXX.."],
-    "Y": ["XXXXX....XXXXX", "XXXXX....XXXXX", "XXXXX....XXXXX", "XXXXXX..XXXXXX", ".XXXXXXXXXXXX.",
-          "..XXXXXXXXXX..", "....XXXXXX....", "....XXXXXX....", "....XXXXXX....", "....XXXXXX....",
-          "....XXXXXX....", "....XXXXXX...."],
+    "K": ["XXXXX...XXXXX", "XXXXX..XXXXX.", "XXXXX.XXXXX..", "XXXXXXXXXX...", "XXXXXXXXX....", "XXXXXXXX.....",
+          "XXXXXXXX.....", "XXXXXXXXX....", "XXXXXXXXXX...", "XXXXX.XXXXX..", "XXXXX..XXXXX.", "XXXXX...XXXXX"],
+    "U": ["XXXXX...XXXXX"] * 9 + ["XXXXXXXXXXXXX"] * 3,
+    "B": ["XXXXXXXXXXXX.", "XXXXXXXXXXXXX", "XXXXX...XXXXX", "XXXXX...XXXXX", "XXXXXXXXXXXX.", "XXXXXXXXXXXX.",
+          "XXXXXXXXXXXXX", "XXXXX...XXXXX", "XXXXX...XXXXX", "XXXXX...XXXXX", "XXXXXXXXXXXXX", "XXXXXXXXXXXX."],
+    "Y": ["XXXXX...XXXXX", "XXXXX...XXXXX", "XXXXX...XXXXX", "XXXXXX.XXXXXX", "XXXXXXXXXXXXX", ".XXXXXXXXXXX.",
+          "...XXXXXXX...", "....XXXXX....", "....XXXXX....", "....XXXXX....", "....XXXXX....", "....XXXXX...."],
 }
 SMALL = {
-    "S": [".XXXXXXXX", "XXXXXXXXX", "XXX......", "XXXXXXXX.", ".XXXXXXXX", "......XXX", "XXXXXXXXX", "XXXXXXXX."],
-    "M": ["XXX.....XXX", "XXXX...XXXX", "XXXXX.XXXXX", "XXXXXXXXXXX", "XXX.XXX.XXX", "XXX..X..XXX",
-          "XXX.....XXX", "XXX.....XXX"],
-    "P": ["XXXXXXXX.", "XXXXXXXXX", "XXX...XXX", "XXXXXXXXX", "XXXXXXXX.", "XXX......", "XXX......", "XXX......"],
-    "U": ["XXX...XXX"] * 6 + ["XXXXXXXXX", ".XXXXXXX."],
-    "R": ["XXXXXXXX.", "XXXXXXXXX", "XXX...XXX", "XXXXXXXXX", "XXXXXXXX.", "XXX.XXXX.", "XXX..XXXX", "XXX...XXX"],
-    "V": ["XXX...XXX", "XXX...XXX", "XXX...XXX", "XXXX.XXXX", ".XXX.XXX.", ".XXXXXXX.", "..XXXXX..", "...XXX..."],
+    "S": [".XXXXXXXXX", "XXXXXXXXXX", "XXXX......", "XXXXXXXXX.", ".XXXXXXXXX", "......XXXX", "XXXXXXXXXX",
+          "XXXXXXXXX."],
+    "M": ["XXX.....XXX", "XXXX...XXXX", "XXXXX.XXXXX", "XXXXXXXXXXX", "XXX.XXX.XXX", "XXX..X..XXX", "XXX.....XXX",
+          "XXX.....XXX"],
+    "P": ["XXXXXXXXX.", "XXXXXXXXXX", "XXX....XXX", "XXXXXXXXXX", "XXXXXXXXX.", "XXX.......", "XXX.......",
+          "XXX......."],
+    "U": ["XXX....XXX"] * 6 + ["XXXXXXXXXX", ".XXXXXXXX."],
+    "R": ["XXXXXXXXX.", "XXXXXXXXXX", "XXX....XXX", "XXXXXXXXXX", "XXXXXXXXX.", "XXX..XXXX.", "XXX...XXXX",
+          "XXX....XXX"],
+    "V": ["XXX....XXX", "XXX....XXX", "XXX....XXX", "XXXX..XXXX", ".XXX..XXX.", ".XXXXXXXX.", "..XXXXXX..",
+          "...XXXX..."],
     "I": ["XXX"] * 8,
-    "A": [".XXXXXXX.", "XXXXXXXXX", "XXX...XXX", "XXX...XXX", "XXXXXXXXX", "XXXXXXXXX", "XXX...XXX", "XXX...XXX"],
-    "L": ["XXX....."] * 6 + ["XXXXXXXX", "XXXXXXXX"],
-    "H": ["XXX...XXX"] * 3 + ["XXXXXXXXX"] * 2 + ["XXX...XXX"] * 3,
-    "B": ["XXXXXXXX.", "XXXXXXXXX", "XXX...XXX", "XXXXXXXX.", "XXXXXXXXX", "XXX...XXX", "XXXXXXXXX", "XXXXXXXX."],
+    "A": [".XXXXXXXX.", "XXXXXXXXXX", "XXX....XXX", "XXX....XXX", "XXXXXXXXXX", "XXXXXXXXXX", "XXX....XXX",
+          "XXX....XXX"],
+    "L": ["XXX......"] * 6 + ["XXXXXXXXX"] * 2,
+    "H": ["XXX....XXX"] * 3 + ["XXXXXXXXXX"] * 2 + ["XXX....XXX"] * 3,
+    "B": ["XXXXXXXXX.", "XXXXXXXXXX", "XXX....XXX", "XXXXXXXXX.", "XXXXXXXXXX", "XXX....XXX", "XXXXXXXXXX",
+          "XXXXXXXXX."],
 }
+GOLD_PAL = {"up": rgb("E4B104"), "lo": rgb("F7DD2D"), "top_up": rgb("FAD830"), "top_lo": rgb("FFF4BE"),
+            "left_up": rgb("F5CC24"), "left_lo": rgb("FFF0AA"), "cream": rgb("FFF6D4"),
+            "ext": [rgb("7B2E02"), rgb("682802")], "out": rgb("100600")}
+SILVER_PAL = {"up": rgb("9C9B9B"), "lo": rgb("C9C7C8"), "top_up": rgb("C9C7C8"), "top_lo": rgb("F9F7F5"),
+              "left_up": rgb("BEBEC0"), "left_lo": rgb("F9F7F5"), "cream": rgb("FFFFFF"),
+              "ext": [rgb("5E5E5E"), rgb("4E4E4E")], "out": rgb("0C0C0E")}
 
-BIG_BODY = ([rgb("FFF8B4")] + [rgb("FFE85A")] * 3 + [rgb("FDD832")] * 6 + [rgb("FFEC78")] * 2
-            + [rgb("F7C422")] * 6 + [rgb("ECA816")] * 4 + [rgb("D68C0E")] * 2)
-BIG_EXTR = [rgb("BA680A"), rgb("964C04"), rgb("743602")]
-SMALL_BODY = ([rgb("FFFFFF")] + [rgb("F0F0F4")] * 4 + [rgb("D6D8DE")] * 2 + [rgb("A8AAB4")] * 4
-              + [rgb("BEC0C8")] * 2 + [rgb("E8EAEE")] * 3)
-SMALL_EXTR = [rgb("6E7078"), rgb("4E5058")]
 
-
-def word_mask(word, font, height):
-    wc = sum(len(font[c][0]) for c in word) + (len(word) - 1)
-    mask = set()
-    x0 = 0
+def block_word(word, font, pal):
+    """Buchstaben mit zweifarbigem Koerper, hellen Kanten, 2 px 3D-Kante und Rand. Zaehler werden dunkel gefuellt."""
+    height = len(font[word[0]])
+    letters, x0 = [], 0
     for c in word:
-        for y, row in enumerate(font[c]):
-            for x, v in enumerate(row):
-                if v == "X":
-                    for sy in range(S):
-                        for sx in range(S):
-                            mask.add(((x0 + x) * S + sx, y * S + sy))
+        cells = {(x0 + x, y) for y, row in enumerate(font[c]) for x, v in enumerate(row) if v == "X"}
+        letters.append(cells)
         x0 += len(font[c][0]) + 1
-    # Aeussere Ecken um 1 Texel abrunden
-    corners = set()
-    for (x, y) in mask:
-        up, down = (x, y - 1) in mask, (x, y + 1) in mask
-        left, right = (x - 1, y) in mask, (x + 1, y) in mask
-        if (not up and not left) or (not up and not right) or (not down and not left) or (not down and not right):
-            corners.add((x, y))
-    return mask - corners, wc * S, height * S
-
-
-def block_word(word, font, height, body, extr, outline):
-    """Buchstaben mit Verlauf, 3D-Kante nach unten und Kontur."""
-    mask, w, h = word_mask(word, font, height)
-    depth = len(extr)
-    img = new(w + 2, h + depth + 2)
-    px = img.load()
-    solid = set(mask)
+    w, h = x0 - 1 + 2, height + 2 + 2
+    body = {}
+    for cells in letters:
+        # aeussere Ecken abrunden (nur echte Ecken, Diagonalen bleiben voll)
+        corners = set()
+        for (x, y) in cells:
+            for dx, dy in ((-1, -1), (1, -1), (-1, 1), (1, 1)):
+                if (x + dx, y) not in cells and (x, y + dy) not in cells and (x + dx, y + dy) not in cells:
+                    corners.add((x, y))
+        for p in cells - corners:
+            body[(p[0] + 1, p[1] + 1)] = True
     ext = {}
-    for (x, y) in mask:
-        for d in range(1, depth + 1):
-            if (x, y + d) not in mask and (x, y + d) not in ext:
+    for (x, y) in body:
+        for d in (1, 2):
+            if (x, y + d) not in body and (x, y + d) not in ext:
                 ext[(x, y + d)] = d
-    solid |= set(ext)
-    for (x, y) in solid:
-        for dx in (-1, 0, 1):
-            for dy in (-1, 0, 1):
-                p = (x + dx, y + dy)
-                if p not in solid:
-                    px[p[0] + 1, p[1] + 1] = outline
+    solid = set(body) | set(ext)
+    # Eingeschlossene Zaehler fuellen
+    outside, stack = set(), [(0, 0)]
+    while stack:
+        p = stack.pop()
+        if p in outside or p in solid or not (-1 <= p[0] <= w and -1 <= p[1] <= h):
+            continue
+        outside.add(p)
+        stack.extend(((p[0] + 1, p[1]), (p[0] - 1, p[1]), (p[0], p[1] + 1), (p[0], p[1] - 1)))
+    img = new(w, h)
+    px = img.load()
+    for y in range(h):
+        for x in range(w):
+            if (x, y) in solid:
+                continue
+            near = any((x + dx, y + dy) in solid for dx in (-1, 0, 1) for dy in (-1, 0, 1))
+            if near or (x, y) not in outside:
+                px[x, y] = pal["out"]
     for (x, y), d in ext.items():
-        px[x + 1, y + 1] = extr[d - 1]
-    for (x, y) in mask:
-        c = body[min(y, len(body) - 1)]
-        if (x, y - 1) not in mask and y > 0:
-            c = mix(c, (255, 255, 230), 0.45)
-        px[x + 1, y + 1] = c
+        px[x, y] = pal["ext"][d - 1]
+    for (x, y) in body:
+        r = y - 1
+        upper = r < height // 2
+        c = pal["up"] if upper else pal["lo"]
+        if (x, y - 1) not in body:
+            run = sum(1 for k in range(1, 4) if (x - k, y) in body and (x - k, y - 1) not in body)
+            c = pal["cream"] if (r == 0 and run < 3) else (pal["top_up"] if upper else pal["top_lo"])
+        elif (x - 1, y) not in body:
+            c = pal["left_up"] if upper else pal["left_lo"]
+        px[x, y] = c
     return img
 
 
+def drop_shadow(img, strength=(105, 55)):
+    """Weicher Schatten nach unten rechts unter allen deckenden Pixeln."""
+    src = img.load()
+    w, h = img.size
+    solid = {(x, y) for y in range(h) for x in range(w) if src[x, y][3] > 200}
+    sh = new(w, h)
+    px = sh.load()
+    for (x, y) in solid:
+        for (dx, dy, a) in ((1, 1, strength[0]), (0, 2, strength[0]), (1, 2, strength[0]), (2, 2, strength[1]),
+                            (1, 3, strength[1]), (2, 3, strength[1])):
+            p = (x + dx, y + dy)
+            if p in solid or not (0 <= p[0] < w and 0 <= p[1] < h):
+                continue
+            if px[p][3] < a:
+                px[p] = (10, 4, 0, a)
+    sh.alpha_composite(img)
+    return sh
+
+
 # =====================================================================================
-# Figuren (Pixel-Art 1 px je Zeichen, mit feiner Kontur) und Werkzeuge
+# Figuren: weich schattiert, ohne schwarzen Rand
 # =====================================================================================
+def figure(rows, colors):
+    """Teile: Buchstabe = Teil. Kanten je Teil: links/oben heller, rechts/unten dunkler."""
+    h, w = len(rows), max(len(r) for r in rows)
+    part = {(x, y): c for y, r in enumerate(rows) for x, c in enumerate(r) if c in colors}
+    img = new(w, h)
+    px = img.load()
+    for (x, y), c in part.items():
+        base = rgb(colors[c])
+        if c in "EKMX":
+            px[x, y] = base
+            continue
+        same = lambda dx, dy: part.get((x + dx, y + dy)) == c
+        f = 1.0
+        if not same(1, 0):
+            f = 0.78
+        elif not same(0, 1):
+            f = 0.86
+        elif not same(-1, 0):
+            f = 1.12
+        elif not same(0, -1):
+            f = 1.1
+        px[x, y] = shade(base, f)
+    return img
+
+
 FIGHTER = [
-    "....HHHHHHHH....",
-    "....HHHHHHHH..SS",
-    "....HSSSSSSH..SS",
-    "....SSSSSSSS..TT",
-    "....SEKSSKES..TT",
-    "....SSSssSSS..TT",
-    "....SSMMMMSS..TT",
-    "....SSSSSSSS.TTT",
-    "...TTTTTTTTTTTT.",
-    "..TTTTTTTTTTTT..",
-    ".TTTTTTTTTTTT...",
-    ".TT.TTTTTTTT....",
-    ".TT.TTTTTTTT....",
-    ".TT.TTTTTTTT....",
-    ".SS.TTTTTTTT....",
-    ".SS.tttttttt....",
-    "....PPPPPPPP....",
-    "....PPPPPPPP....",
-    "....PPP..PPP....",
-    "....PPP..PPP....",
-    "....PPP..PPP....",
-    "....PPP..PPP....",
-    "....BBB..BBB....",
-    "...BBBB..BBBB...",
+    "..HHHHHHHHHH......",
+    ".HHHHHHHHHHHH.....",
+    ".HHHHHHHHHHHH.....",
+    ".HHSSSSSSSSHH.....",
+    ".HSSSSSSSSSSH..SS.",
+    ".SSEESSSSEESS..SS.",
+    ".SSEKSSSSEKSS..TT.",
+    ".SSSSSSSSSSSS..TT.",
+    ".SSSSSMMSSSSS..TT.",
+    "..SSSSSSSSSS..TTT.",
+    "...TTTTTTTTTTTTT..",
+    "..TTTTTTTTTTTTT...",
+    ".TTTTTTTTTTTT.....",
+    ".TT.TTTTTTTT......",
+    ".TT.TTTTTTTT......",
+    ".SS.TTTTTTTT......",
+    ".SS.TTTTTTTT......",
+    "....PPPPPPPP......",
+    "....PPPPPPPP......",
+    "....PPPPPPPP......",
+    "....PPP..PPP......",
+    "....PPP..PPP......",
+    "....PPP..PPP......",
+    "....BBB..BBB......",
+    "...BBBB..BBBB.....",
 ]
 ARCHER = [
-    "....HHHHHHHH....",
     "...HHHHHHHHHH...",
-    "...HHSSSSSSHH...",
-    "...HSSSSSSSSH...",
-    "...HSEKSSKESH...",
-    "...HSSSssSSSH...",
-    "...HSSSMMSSSH...",
-    "...HSSSSSSSSH...",
-    "...HTTTTTTTTH...",
+    "..HHHHHHHHHHHH..",
+    "..HHHHHHHHHHHHH.",
+    "..HHSSSSSSSSHHH.",
+    "..HSSSSSSSSSSHHH",
+    "..SSEESSSSEESHH.",
+    "..SSKESSSSKESHH.",
+    "..SSSSSSSSSSSHH.",
+    "..SSSSSMMSSSS.H.",
+    "...SSSSSSSSSS...",
+    ".....TTTTTTTT...",
     "SSTTTTTTTTTTTT..",
     "SSTTTTTTTTTTTTT.",
-    "....TTTTTTTT.TT.",
-    "....TTTTTTTT.TT.",
-    "....TTTTTTTT.SS.",
-    "....TTTTTTTT.SS.",
-    "....tttttttt....",
-    "....PPPPPPPP....",
-    "....PPPPPPPP....",
-    "....PPP..PPP....",
-    "....PPP..PPP....",
-    "....PPP..PPP....",
-    "....PPP..PPP....",
-    "....BBB..BBB....",
-    "...BBBB..BBBB...",
+    ".....TTTTTTTT.TT",
+    ".....TTTTTTTT.TT",
+    ".....TTTTTTTT.SS",
+    ".....TTTTTTTT.SS",
+    ".....PPPPPPPP...",
+    ".....PPPPPPPP...",
+    ".....PPPPPPPP...",
+    ".....PPP..PPP...",
+    ".....PPP..PPP...",
+    ".....PPP..PPP...",
+    ".....BBB..BBB...",
+    "....BBBB..BBBB..",
 ]
-SKIN = rgb("D49A74")
+SKIN = "E0A387"
+FACE = {"S": SKIN, "E": "F8F8F8", "K": "1A1A24", "M": "9A5446"}
+
+SWORD = stamp(["........gW", ".......gWg", "......gWg.", ".....gWg..", "....gWg...", "...gWg....",
+               "d.gWg.....", ".dGg......", ".NGd......", "N..d......"],
+              {"W": "F0F0F4", "g": "9AA0AC", "G": "6A6A78", "d": "3E3E48", "N": "6E4424"})
+BOW = stamp(["...bw", "..b.w", ".b..w", ".b..w", "b...w", "b...w", "b...w", "b...w", "b...w", ".b..w",
+             ".b..w", "..b.w", "...bw"], {"b": "8C5A2A", "w": "D8D8D8"})
+HOE = stamp(["......GGGG", "......Gg..", ".......N..", "......N...", ".....N....", "....N.....", "...N......",
+             "..N.......", ".N........", "N........."], {"G": "C8CCD6", "g": "8A90A0", "N": "8A5C2C"})
+PICK = stamp(["..cCCCc...", ".c.....c..", "c...N...c.", "....N.....", "....N.....", "....N.....", "....N.....",
+              "....N.....", "....N.....", "....N....."], {"C": "6FE0F0", "c": "2FA8C0", "N": "8A5C2C"})
 
 
-def figure(rows, hair, shirt, pants, boots=rgb("4A4A50"), hat=None):
-    pal = {"H": hair, "S": SKIN, "s": shade(SKIN, 0.85), "E": rgb("FFFFFF"), "K": rgb("3C3C8C"),
-           "M": rgb("8A4A34"), "T": shirt, "t": shade(shirt, 0.75), "P": pants, "B": boots}
+def person(rows, hair, shirt, pants, boots="454552", hat=None):
+    cols = dict(FACE, H=hair, T=shirt, P=pants, B=boots)
     if hat:
-        # Strohhut: Krone ueber dem Kopf, Krempe eine Zeile breiter als der Kopf
-        rows = ["....AAAAAAAA" + rows[0][12:], "..aaaaaaaaaaaa" + rows[1][14:]] + rows[2:]
-        pal.update({"A": hat, "a": shade(hat, 0.8)})
-    img = stamp(rows, pal)
-    return outlined(edge_shade(img))
-
-
-def sword(layer, hx, hy, ang, length=22):
-    ux, uy = math.cos(ang), math.sin(ang)
-    segment(layer, hx - ux * 3, hy - uy * 3, hx + ux * 4, hy + uy * 4, 2.2, lambda s, r, L: rgb("6E4420") if r < 0 else rgb("8C5A2C"))
-    gx, gy = hx + ux * 4, hy + uy * 4
-    segment(layer, gx + uy * 4, gy - ux * 4, gx - uy * 4, gy + ux * 4, 2.2, lambda s, r, L: rgb("5A5A66"))
-
-    def blade(s, r, L):
-        half = 1.6 if s < L - 4 else 1.6 * (L - s) / 4
-        if abs(r) > half:
-            return None
-        return rgb("F4F6FA") if r < -0.2 else (rgb("C8CCD6") if r < 0.8 else rgb("9AA0AE"))
-    segment(layer, gx + ux * 1, gy + uy * 1, gx + ux * length, gy + uy * length, 3.4, blade)
-
-
-def bow(layer, hx, hy, radius=17):
-    cx = hx + 7
-    top, bot = None, None
-    px = layer.load()
-    for i in range(0, 241):
-        a = math.radians(125 + i * 110 / 240)
-        x, y = cx + radius * math.cos(a), hy + radius * math.sin(a)
-        for dx in (0, 1):
-            for dy in (0, 1):
-                xx, yy = int(x) + dx, int(y) + dy
-                if 0 <= xx < layer.width and 0 <= yy < layer.height:
-                    px[xx, yy] = rgb("9C6430") if dx == 0 else rgb("6E4420")
-        if i == 0:
-            top = (x + 1, y)
-        bot = (x + 1, y)
-    segment(layer, top[0], top[1], bot[0], bot[1], 1.0, lambda s, r, L: rgb("E8E8E8"))
-
-
-def hoe(layer, hx, hy, ang, length=24):
-    ux, uy = math.cos(ang), math.sin(ang)
-    segment(layer, hx - ux * 3, hy - uy * 3, hx + ux * length, hy + uy * length, 2.2,
-            lambda s, r, L: rgb("7A4E24") if r < 0 else rgb("9C6834"))
-    ex, ey = hx + ux * length, hy + uy * length
-    # Klinge quer zum Stiel, haengt nach unten
-    segment(layer, ex - ux * 1, ey - uy * 1, ex - uy * 8 - ux * 1, ey + ux * 8 - uy * 1, 3.6,
-            lambda s, r, L: rgb("E4E8F0") if r > 0.4 else rgb("9AA0AE"))
-
-
-def pickaxe(layer, hx, hy, ang, length=22):
-    ux, uy = math.cos(ang), math.sin(ang)
-    segment(layer, hx - ux * 3, hy - uy * 3, hx + ux * length, hy + uy * length, 2.2,
-            lambda s, r, L: rgb("7A4E24") if r < 0 else rgb("9C6834"))
-    ex, ey = hx + ux * length, hy + uy * length
-    px = layer.load()
-    for i in range(-10, 11):
-        t = i / 10
-        x = ex + (-uy) * t * 9 - ux * (1 - t * t) * 3
-        y = ey + ux * t * 9 - uy * (1 - t * t) * 3
-        for dx in (0, 1):
-            for dy in (0, 1):
-                xx, yy = int(x) + dx, int(y) + dy
-                if 0 <= xx < layer.width and 0 <= yy < layer.height:
-                    px[xx, yy] = rgb("6FE0F0") if dy == 0 else rgb("2FA8C0")
-
-
-def arrow(layer, tx, ty, hx, hy):
-    """Pfeil von der Feder (tx, ty) zur Spitze (hx, hy)."""
-    def col(s, r, L):
-        if s < 9:
-            lim = 0.7 + (9 - s) * 0.45
-            if abs(r) <= lim:
-                return rgb("F07070") if abs(r) > 1.2 else (rgb("D83838") if r < 0 else rgb("F4D8D8"))
-            return None
-        if s > L - 6:
-            if abs(r) <= (L - s) * 0.55 + 0.4:
-                return rgb("D8DCE4") if r < 0 else rgb("8E94A2")
-            return None
-        if abs(r) <= 1.0:
-            return rgb("8C5E30") if r < 0 else rgb("5E3C1C")
-        return None
-    segment(layer, tx, ty, hx, hy, 6, col)
+        rows = ["." + "A" * 12 + rows[0][13:], "A" * 15 + rows[1][15:]] + rows[2:]
+        cols["A"] = hat
+    return figure(rows, cols)
 
 
 # =====================================================================================
-# Deko unten (Spawner, Goldbarren, Truhe, Heuballen, Smaragde, liegender Spieler)
+# Deko unten
 # =====================================================================================
 def ingot():
-    rows = ["..LLLLLLLLLLLLLLLL..", ".LLWWWWWWWWWWWWWWLL.", "LLLLLLLLLLLLLLLLLLLL",
-            "GGGGGGGGGGGGGGGGGGGG", "GGGWWGGGGGGGGGGGGGGG", "GGGGGGGGGGGGGGGGGGGG",
-            "GGGGGGGGGGGGGGGGGGGG", "DDDDDDDDDDDDDDDDDDDD"]
-    return outlined(stamp(rows, {"L": rgb("FFE88C"), "W": rgb("FFF8D0"), "G": rgb("F6C428"), "D": rgb("B47808")}, 1),
-                    rgb("5A3600"))
+    return stamp(["#############", "#YYYYYYYYWWY#", "#GGGGGGGGLLG#", "#ddddddddddd#", "#############"],
+                 {"#": "0E0A02", "Y": "F2D040", "W": "FFF4C0", "G": "D8AE22", "L": "F0D890", "d": "9E7410"})
 
 
-def spawner(size=26):
-    img = new(size, size)
+def spawner():
+    img = new(16, 16)
     px = img.load()
-    for y in range(size):
-        for x in range(size):
-            bar_x, bar_y = x % 8 < 2, y % 8 < 2
-            edge = x < 2 or y < 2 or x >= size - 2 or y >= size - 2
-            if edge or bar_x or bar_y:
-                light = (x % 8 == 0 and not edge) or (y % 8 == 0 and not edge) or x == 0 or y == 0
-                px[x, y] = rgb("5C6C84") if light else rgb("34404E")
+    for y in range(16):
+        for x in range(16):
+            if x in (0, 15) or y in (0, 15):
+                px[x, y] = rgb("0A0C12")
+            elif (x - 1) % 5 == 0 or (y - 1) % 5 == 0:
+                px[x, y] = rgb("5E7894") if (y - 1) % 5 == 0 and y < 15 else rgb("3C4E66")
             else:
-                px[x, y] = rgb("10141C")
-    for (x, y, c) in [(12, 10, "FFB040"), (13, 10, "FFB040"), (11, 11, "FF8A20"), (12, 11, "FFE070"),
-                      (13, 11, "FFE070"), (14, 11, "FF8A20"), (11, 12, "FF8A20"), (12, 12, "FFD040"),
-                      (13, 12, "FFD040"), (14, 12, "FF8A20"), (12, 13, "E0601C"), (13, 13, "E0601C"),
-                      (5, 4, "7A5AC8"), (20, 19, "7A5AC8"), (4, 20, "5A86C8"), (21, 4, "5A86C8")]:
-        px[x, y] = rgb(c)
-    return outlined(img, rgb("080A10"))
+                px[x, y] = rgb("12161F")
+    # Mob im Kaefig mit roten Augen
+    mob = [".mmmm.", "mmmmmm", "mRmmRm", "mmmmmm", ".mmmm.", ".m..m."]
+    for y, row in enumerate(mob):
+        for x, c in enumerate(row):
+            if c != ".":
+                px[5 + x, 5 + y] = rgb("E8284C") if c == "R" else rgb("34465E")
+    return img
 
 
 def chest():
-    rows = ["WWWWWWWWWWWWWWWWWWWWWWWWWW", "WLLLLLLLLLLLLLLLLLLLLLLLLW", "WLPPPPPPPPPPPPPPPPPPPPPPLW",
-            "WLPPPPPPPPPPPPPPPPPPPPPPLW", "WLPPPPPPPPPPPPPPPPPPPPPPLW", "WLPPPPPPPPPPPPPPPPPPPPPPLW",
-            "WLPPPPPPPPPPPPPPPPPPPPPPLW", "DDDDDDDDDDDGGGGDDDDDDDDDDD", "DDDDDDDDDDDGYYGDDDDDDDDDDD",
-            "WLPPPPPPPPPGYYGPPPPPPPPPLW", "WLPPPPPPPPPGGGGPPPPPPPPPLW", "WLPPPPPPPPPPPPPPPPPPPPPPLW",
-            "WLppppppppppppppppppppppLW", "WLPPPPPPPPPPPPPPPPPPPPPPLW", "WLPPPPPPPPPPPPPPPPPPPPPPLW",
-            "WLppppppppppppppppppppppLW", "WLPPPPPPPPPPPPPPPPPPPPPPLW", "WLPPPPPPPPPPPPPPPPPPPPPPLW",
-            "WLLLLLLLLLLLLLLLLLLLLLLLLW", "WWWWWWWWWWWWWWWWWWWWWWWWWW"]
-    pal = {"W": rgb("6A4220"), "L": rgb("B8803E"), "P": rgb("A06A30"), "p": rgb("825424"), "D": rgb("3A2410"),
-           "G": rgb("C89A2A"), "Y": rgb("FFE070")}
-    return outlined(stamp(rows, pal, 1), rgb("20140A"))
+    return stamp(["##############", "#LLLLLLLLLLLL#", "#LPPPPPPPPPPL#", "#LPPPPPPPPPPL#", "#LPPPPPPPPPPL#",
+                  "#DDDDDGGDDDDD#", "#LPPPPYYPPPPL#", "#LPPPPPPPPPPL#", "#LppppppppppL#", "#LPPPPPPPPPPL#",
+                  "#LLLLLLLLLLLL#", "##############"],
+                 {"#": "1E1208", "L": "B8803E", "P": "9C6630", "p": "7E5024", "D": "3A2410", "G": "C89A2A",
+                  "Y": "FFE070"})
 
 
 def hay():
-    img = new(26, 22)
-    px = img.load()
-    for y in range(22):
-        for x in range(26):
-            band_ = 4 <= y <= 6 or 15 <= y <= 17
-            if band_:
-                px[x, y] = rgb("8A5A20") if y in (4, 15) else rgb("6E4418")
-            else:
-                px[x, y] = rgb("E6C048") if (x * 7 + y * 3) % 5 else rgb("C49A30")
-                if y == 0:
-                    px[x, y] = rgb("F6DC78")
-    return outlined(img, rgb("3A280C"))
+    rows = ["##############"]
+    for y in range(10):
+        if y in (2, 7):
+            rows.append("#" + "B" * 12 + "#")
+        else:
+            rows.append("#" + "".join("y" if (x + y) % 3 == 0 else "Y" for x in range(12)) + "#")
+    rows.append("##############")
+    return stamp(rows, {"#": "2A1E08", "Y": "E2BC46", "y": "C49A30", "B": "7A5018"})
 
 
 def emerald():
-    rows = ["......OOOO......", ".....OLLGGO.....", "....OLLGGGGO....", "...OLLGGGGGGO...", "...OLGGGMGGGO...",
-            "..OLGGGMMGGGDO..", "..OLGGGMMGGGDO..", "..OGGGGMMGGGDO..", "..OGGGGMMGGDDO..", "...OGGGMGGGDO...",
-            "...OGGGGGGDDO...", "....OGGGGDDO....", ".....OGDDDO.....", "......OOOO......"]
-    return stamp(rows, {"O": rgb("0E4A1E"), "L": rgb("B4FFC0"), "G": rgb("2CC05A"), "M": rgb("7CEA98"),
-                        "D": rgb("168038")}, 1)
+    return stamp(["...gg...", "..gLLg..", ".gLLMGg.", ".gLMMGd.", ".gLMMGd.", ".gMMGGd.", "..gGGd..", "...dd..."],
+                 {"g": "3C8A1E", "L": "C8F078", "M": "96D246", "G": "5AAA28", "d": "245A12"})
 
 
 def dead_player():
-    """Liegender Spieler mit X-Augen, Kopf rechts (Gesicht nach oben)."""
     rows = [
-        "................SSSSSSSHH",
-        ".........RRRRRRRSSSSSSSSH",
-        "BBPPPPPPPRRRRRRRSSSSSSSSH",
-        "BBPPPPPPPRRRRRRRSMSSSSSSH",
-        "BBPPPPPPPRRRRRRRSMSSSSSSH",
-        "BBPPPPPPPRRRRRRRSMSSSSSSH",
-        "BBpppppppRRRRRRRSSSSSSSSH",
-        ".........rrrrrrrSSSSSSSSH",
-        "................SSSSSSSHH",
+        "..................SSSSSSHH",
+        "...........rrrrrrSSSSSSSSH",
+        "BBDDDDDDDDRRRRRRRSSXSXSSSH",
+        "BBDDDDDDDDRRRRRRRSSSXSSSSH",
+        "BBDDDDDDDDRRRRRRRSSXSXSSSH",
+        "BBDDDDDDDDRRRRRRRSSSSSSSSH",
+        "BBDDDDDDDDRRRRRRRSSXSXSSSH",
+        "BBddddddddRRRRRRRSSSXSSSSH",
+        "...........rrrrrrSSXSXSSSH",
+        "..................SSSSSSHH",
     ]
-    pal = {"H": rgb("5A3A22"), "S": SKIN, "M": rgb("8A4A34"), "R": rgb("D82838"), "r": rgb("A41C2A"),
-           "P": rgb("3C3E96"), "p": rgb("2C2E76"), "B": rgb("4A4A50")}
-    img = stamp(rows, pal)
-    px = img.load()
-    for (ex, ey) in ((43, 5), (43, 13)):   # X-Augen, 3 x 3 Texel
-        for d in (-1, 0, 1):
-            px[ex + d, ey + d] = rgb("1A1010")
-            px[ex + d, ey - d] = rgb("1A1010")
-    return outlined(edge_shade(img))
-
-
-def place_bottom(canvas, img, x, bottom):
-    canvas.alpha_composite(img, (x, bottom - img.height))
+    return figure(rows, {"S": "C8946E", "H": "4A3020", "X": "2A1A12", "R": "C82838", "r": "8E1A26",
+                         "D": "38383E", "d": "2A2A30", "B": "5E5E68"})
 
 
 def deco(mode):
-    w, h = INNER_W * S, 17 * S
+    w, h = INNER_W, DECO_H
     img = new(w, h)
+    put = lambda sprite, x, bottom: img.alpha_composite(sprite, (x, bottom - sprite.height))
     if mode == "smp":
-        sp = spawner()
-        place_bottom(img, sp, 0, h)
-        place_bottom(img, ingot(), 2, h - sp.height + 2)
-        place_bottom(img, ingot(), sp.width - 1, h)
-        place_bottom(img, ingot(), sp.width + 19, h)
-        place_bottom(img, ingot(), sp.width + 9, h - 8)
-        dp = dead_player()
-        place_bottom(img, dp, w - dp.width, h)
+        put(spawner(), 0, h)
+        put(ingot(), 1, h - 15)
+        put(ingot(), 15, h)
+        put(ingot(), 27, h)
+        put(ingot(), 21, h - 4)
+        put(dead_player(), w - 27, h)
     elif mode == "survival":
-        ch = chest()
-        place_bottom(img, ch, 0, h)
-        place_bottom(img, ingot(), ch.width - 1, h)
-        place_bottom(img, ingot(), ch.width + 8, h - 8)
-        hb = hay()
-        place_bottom(img, hb, w - hb.width, h)
-        place_bottom(img, outlined(emerald(), rgb("0E3A18")), w - hb.width - 18, h)
+        put(chest(), 0, h)
+        put(ingot(), 13, h)
+        put(ingot(), 19, h - 4)
+        put(hay(), w - 14, h)
+        put(emerald(), w - 24, h)
     else:
-        place_bottom(img, ingot(), 0, h)
-        place_bottom(img, ingot(), 21, h)
-        place_bottom(img, ingot(), 10, h - 8)
-        e = outlined(emerald(), rgb("0E3A18"))
-        place_bottom(img, e, w - e.width, h)
-        place_bottom(img, e, w - 2 * e.width + 3, h)
+        put(ingot(), 0, h)
+        put(ingot(), 12, h)
+        put(ingot(), 6, h - 4)
+        put(emerald(), w - 8, h)
+        put(emerald(), w - 17, h)
     img.load()[w - 1, h - 1] = (0, 0, 0, 1)   # Vorschub = volle Breite
     return img
 
 
 # =====================================================================================
-# Logo je Modus (volle Rahmenbreite, 43 px hoch, Zeile 0 = 28 px ueber der Rahmenoberkante).
-# Nicht hoeher: bei 1080p und GUI-Groesse 4 wuerde der Bildschirmrand sonst die Spitze abschneiden.
+# Logo je Modus (volle Rahmenbreite; Zeile LOGO_TOP = Rahmenoberkante)
 # =====================================================================================
-LOGO_H = 43
-LOGO_TOP = 28
+def line_points(x0, y0, x1, y1):
+    pts, dx, dy = [], abs(x1 - x0), -abs(y1 - y0)
+    sx, sy = (1 if x0 < x1 else -1), (1 if y0 < y1 else -1)
+    err = dx + dy
+    while True:
+        pts.append((x0, y0))
+        if (x0, y0) == (x1, y1):
+            return pts
+        e2 = 2 * err
+        if e2 >= dy:
+            err += dy
+            x0 += sx
+        if e2 <= dx:
+            err += dx
+            y0 += sy
+
+
+def arrow(tail, head):
+    """Pfeil von der Feder zur Spitze, mit dunklem Rand."""
+    layer = new(FRAME_W, LOGO_H)
+    px = layer.load()
+    pts = line_points(*tail, *head)
+    for i, (x, y) in enumerate(pts):
+        px[x, y] = rgb("9A6440")
+    sx = 1 if head[0] > tail[0] else -1
+    for (x, y) in pts[:4]:                              # Federn
+        px[x - sx, y] = rgb("E8606A")
+        px[x, y + 1] = rgb("B8343E")
+    px[pts[0][0] - sx, pts[0][1] + 1] = rgb("FFB0B4")
+    hx, hy = head                                       # Spitze
+    for (x, y, c) in ((hx, hy, "F4F4F8"), (hx - sx, hy, "C8CCD4"), (hx, hy + 1, "C8CCD4"), (hx + sx, hy - 1, "FFFFFF")):
+        px[x, y] = rgb(c)
+    out = new(FRAME_W, LOGO_H)
+    op = out.load()
+    for y in range(LOGO_H):
+        for x in range(FRAME_W):
+            if px[x, y][3]:
+                continue
+            if any(0 <= x + dx < FRAME_W and 0 <= y + dy < LOGO_H and px[x + dx, y + dy][3]
+                   for dx in (-1, 0, 1) for dy in (-1, 0, 1)):
+                op[x, y] = rgb("1A0C04")
+    out.alpha_composite(layer)
+    return out
 
 
 def ry(rel):
-    """GUI-Pixel relativ zur Rahmenoberkante -> Texelzeile im Logo."""
-    return round((rel + LOGO_TOP) * S)
+    return rel + LOGO_TOP
 
 
-def logo(word, figures, arrows=False):
-    w, h = FRAME_W * S, LOGO_H * S
+def logo(word, left, right, arrows=False):
+    w, h = FRAME_W, LOGO_H
     img = new(w, h)
-    # Figuren links und rechts, stehen auf der Rahmenoberkante
-    lf, rf, tools = figures
-    lpos = (2, ry(0) - lf.height + 1)
-    rpos = (w - rf.width - 2, ry(0) - rf.height + 1)
-    tl = new(w, h)
-    tools(tl, lpos, rpos)
-    img.alpha_composite(_tool_outline(tl))   # Werkzeuge hinter den Haenden
+    lf, l_tool, l_tool_at = left
+    rf, r_tool, r_tool_at = right
+    lpos = (1, ry(0) - lf.height)
+    rpos = (w - rf.width - 1, ry(0) - rf.height)
+    if l_tool:
+        img.alpha_composite(l_tool, (lpos[0] + l_tool_at[0], lpos[1] + l_tool_at[1]))
+    if r_tool:
+        img.alpha_composite(r_tool, (rpos[0] + r_tool_at[0], rpos[1] + r_tool_at[1]))
     img.alpha_composite(lf, lpos)
     img.alpha_composite(rf, rpos)
     if arrows:
-        # Gekreuzte Pfeile hinter dem kleinen Schriftzug (wie in der Referenz)
-        ar = new(w, h)
-        arrow(ar, 60, ry(12), 114, ry(-1))
-        arrow(ar, w - 60, ry(12), w - 114, ry(-1))
-        img.alpha_composite(_tool_outline(ar))
-    big = block_word("KUBY", BIG, 12, BIG_BODY, BIG_EXTR, rgb("180C00"))
-    img.alpha_composite(big, ((w - big.width) // 2, ry(0) - big.height))
-    small = block_word(word, SMALL, 8, SMALL_BODY, SMALL_EXTR, rgb("101014"))
-    img.alpha_composite(small, ((w - small.width) // 2, ry(-2)))
+        img.alpha_composite(arrow((30, ry(11)), (46, ry(0))))
+        img.alpha_composite(arrow((w - 31, ry(11)), (w - 47, ry(0))))
+    text = new(w, h)
+    big = block_word("KUBY", BIG, GOLD_PAL)
+    text.alpha_composite(big, ((w - big.width) // 2, ry(0) - big.height + 1))
+    small = block_word(word, SMALL, SILVER_PAL)
+    text.alpha_composite(small, ((w - small.width) // 2, ry(-2)))
+    img.alpha_composite(drop_shadow(text))
     img.load()[w - 1, h - 1] = (0, 0, 0, 1)
     return img
 
 
-def _tool_outline(layer):
-    out = outlined(layer, rgb("140C06"))
-    return out.crop((1, 1, layer.width + 1, layer.height + 1))
-
-
-def tools_smp(layer, lpos, rpos):
-    sword(layer, lpos[0] + 29, lpos[1] + 4, math.radians(-16), length=20)
-    bow(layer, rpos[0] + 1, rpos[1] + 20)
-
-
-def tools_survival(layer, lpos, rpos):
-    hoe(layer, lpos[0] + 29, lpos[1] + 4, math.radians(-18), length=20)
-    pickaxe(layer, rpos[0] + 2, rpos[1] + 19, math.radians(-150), length=18)
-
-
-def tools_none(layer, lpos, rpos):
-    pass
-
-
 # =====================================================================================
-# Zeilen-Icons 16 x 16 Texel (8 px), Vorschub immer 9
+# Zeilen-Icons 8 x 8 (Vorschub 9), weich mit farbigen Umrissen
 # =====================================================================================
-ICON_ROWS = {
-    "coin": (["................", "................", "......OOOOO.....", "....OOLLLLLOO...", "...OLLYYYYYLLO..",
-              "...OYYYYYYYYYO..", "...ODYYYYYYYDO..", "...OODDDDDDDOO..", "...OLLLLLLLLLO..", "...ODYYYYYYYDO..",
-              "...OODDDDDDDOO..", "...OLLLLLLLLLO..", "...ODYYYYYYYDO..", "...OODDDDDDDOO..", "....OOOOOOOOO...",
-              "................"],
-             {"O": "5A3600", "L": "FFF0A0", "Y": "F6C428", "D": "B47808"}),
-    "gem": (["................", "......OOOO......", ".....OLLGGO.....", "....OLLGGGGO....", "...OLLGGGGGGO...",
-             "...OLGGGMGGGO...", "..OLGGGMMGGGDO..", "..OLGGGMMGGGDO..", "..OGGGGMMGGGDO..", "..OGGGGMMGGDDO..",
-             "...OGGGMGGGDO...", "...OGGGGGGDDO...", "....OGGGGDDO....", ".....OGDDDO.....", "......OOOO......",
-             "................"],
-            {"O": "0E4A1E", "L": "B4FFC0", "G": "2CC05A", "M": "7CEA98", "D": "168038"}),
-    "xp": (["................", ".....OOOOO......", "....OLLYYYO.....", "....OLYYYYO.....", "....OYYYYDO.....",
-            "....OYYYDDO.....", ".....OOOOO......", "..OOOOO..OOOOO..", ".OLLGGGOOLLAAAO.", ".OLGGGGOOLAAAAO.",
-            ".OGGGGDOOAAAADO.", ".OGGGDDOOAAADDO.", "..OOOOO..OOOOO..", "................", "................",
-            "................"],
-           {"O": "1E4A0A", "L": "F4FFB0", "Y": "E6F23A", "D": "6E9A10", "G": "4CD830", "A": "A6EA2A"}),
-    "trophy": (["................", "...OOOOOOOOOO...", "OOOLLYYYYYYDDOOO", "OYOLYYYYYYYYDOYO", "OYOLYYYYYYYYDOYO",
-                ".OYOLYYYYYYDOYO.", "..OOOYYYYYYOOO..", "....OYYYYYDO....", ".....OYYYDO.....", "......OYDO......",
-                "......OYDO......", ".....OYYYDO.....", "....OOOOOOOO....", "....OLYYYYDO....", "....OOOOOOOO....",
-                "................"],
-               {"O": "5A3600", "L": "FFF0A0", "Y": "F6C428", "D": "B47808"}),
-    "sword": (["............OOO.", "...........OWWO.", "..........OWWGO.", ".........OWWGO..", "........OWWGO...",
-               ".......OWWGO....", "......OWWGO.....", "..OO.OWWGO......", "..OHOWWGO.......", "...OHHGO........",
-               "...OOHHO........", "..OBOOHHO.......", ".OBO..OOO.......", "OBO.............", "OO..............",
-               "................"],
-              {"O": "1E1E26", "W": "F4F6FA", "G": "A0A6B4", "H": "5A5A66", "B": "8C5A2C"}),
-    "skull": (["................", "....OOOOOOOO....", "...OWWWWWWWWO...", "..OWWWWWWWWWSO..", "..OWWWWWWWWWSO..",
-               "..OWKKKWWKKKSO..", "..OWKKKWWKKKSO..", "..OWKKKWWKKKSO..", "..OWWWWKKWWWSO..", "...OWWWKKWWSO...",
-               "...OOWWWWWSOO...", "....OWKWKWKO....", "....OWWWWWSO....", ".....OOOOOO.....", "................",
-               "................"],
-              {"O": "2A2620", "W": "EEE8D8", "S": "B8B09C", "K": "201A18"}),
-    "clock": (["................", "..OOOOOOOOOOOO..", "..OBBBBBBBBBBO..", "..OOOOOOOOOOOO..", "...OGCCCCCCGO...",
-               "....OGCCCCGO....", ".....OGCCGO.....", "......OGCO......", "......OCGO......", ".....OGGCGO.....",
-               "....OGGCCCGO....", "...OGCCCCCCGO...", "..OOOOOOOOOOOO..", "..OBBBBBBBBBBO..", "..OOOOOOOOOOOO..",
-               "................"],
-              {"O": "3A2410", "B": "A06A30", "G": "D8F4FF", "C": "3CC8E6"}),
-    "people": (["................", "..OOOO....OOOO..", ".OHHHHO..OHHHHO.", ".OSSSSO..OSSSSO.", ".OSKSKO..OSKSKO.",
-                ".OSSSSO..OSSSSO.", "..OOOO....OOOO..", ".OTTTTO..OUUUUO.", "OTTTTTTOOUUUUUUO", "OTTTTTTOOUUUUUUO",
-                "OSTTTTSOOSUUUUSO", ".OTTTTO..OUUUUO.", ".OPPPPO..OPPPPO.", ".OPOOPO..OPOOPO.", ".OOOOOO..OOOOOO.",
-                "................"],
-               {"O": "1E1A16", "H": "5A3A22", "S": "D49A74", "K": "2A2A50", "T": "2CA8A8", "U": "4CB04C", "P": "3C3E96"}),
-    "rank": (["................", "................", ".O.....OO.....O.", "OLO...OLLO...OLO", "OYO...OYYO...OYO",
-              "OYYO.OYYYYO.OYYO", "OYYYOYYYYYYOYYYO", "OYYYYYYYYYYYYYYO", "OYYYYYYYYYYYYYYO", "OYRRYYYBBYYYGGYO",
-              "OYRRYYYBBYYYGGYO", "OYYYYYYYYYYYYYYO", "ODDDDDDDDDDDDDDO", "OOOOOOOOOOOOOOOO", "................",
-              "................"],
-             {"O": "5A3000", "L": "FFF0A0", "Y": "F6B828", "D": "B46E08", "R": "E0283C", "B": "3C8CE0", "G": "2CC05A"}),
-    "team": (["..OO............", ".OKKO...........", ".OKKOOOOOOOOOO..", "..OWORRRRRRRRRO.", "..OWORLLRRRRRRRO",
-              "..OWORRRRRRRRRRO", "..OWORRRRRRRRRO.", "..OWORRRRRRRRDO.", "..OWORRRRRRDDO..", "..OWOODDDDDDO...",
-              "..OWO.OOOOOO....", "..OWO...........", "..OWO...........", "..OWO...........", "..OWO...........",
-              "..OOO..........."],
-             {"O": "1E1A16", "K": "F6C428", "W": "A8A8B4", "R": "D82838", "L": "F06070", "D": "8A1420"}),
-    "claim": (["..OO............", ".OKKO...........", ".OKKOOOOOOOO....", "..OWOGGGGGGGO...", "..OWOGLLGGGGGO..",
-               "..OWOGGGGGGGGO..", "..OWOGGGGGGDO...", "..OWOODDDDDO....", "..OWO.OOOOO.....", "..OWO...........",
-               "..OWO...........", "OOOOOOOOOOOOOOOO", "OLLLLLLLLLLLLLLO", "ODDDDDDDDDDDDDDO", "OOOOOOOOOOOOOOOO",
-               "................"],
-              {"O": "1E1A16", "K": "F6C428", "W": "A8A8B4", "G": "4CD860", "L": "B4FFC0", "D": "1E8A34"}),
-    "token": (["................", ".....OOOOOO.....", "...OOLLPPPPOO...", "..OLLPPPPPPPPO..", "..OLPPPWWPPPPO..",
-               ".OLPPPWWWWPPPDO.", ".OPPWWWWWWWWPDO.", ".OPPPWWWWWWPPDO.", ".OPPPPWWWWPPPDO.", ".OPPPWWPPWWPPDO.",
-               "..OPPWPPPPWPDO..", "..OPPPPPPPPDDO..", "...OODDDDDDOO...", ".....OOOOOO.....", "................",
-               "................"],
-              {"O": "2A0E46", "L": "D8B0FF", "P": "9C4CE0", "W": "FFF0A0", "D": "5A2490"}),
-    "level": (["................", ".......OO.......", "......OLLO......", ".....OLGGGO.....", "....OLGGGGGO....",
-               "...OLGGGGGGGO...", "..OLGGGGGGGGGO..", ".OOOOOGGGGOOOOO.", ".....OGGGGO.....", ".....OGGGDO.....",
-               ".....OGGGDO.....", ".....OGGGDO.....", ".....OGGDDO.....", ".....OOOOOO.....", "................",
-               "................"],
-              {"O": "1E4A0A", "L": "D8FFB0", "G": "6CDC3A", "D": "3E9A1E"}),
-    "job": (["................", "....OOOOOOO.....", "..OOCCCCCCCOO...", ".OCCLLOOOOCCCO..", "OCLOO.OBO..OOCO.",
-             "OCO...OBO....OO.", "OO....OBO.......", "......OBO.......", "......OBO.......", "......OBO.......",
-             "......OBO.......", "......OBO.......", "......OBO.......", "......ODO.......", "......OOO.......",
-             "................"],
-            {"O": "1A1E22", "C": "6FE0F0", "L": "D4FCFF", "B": "9C6834", "D": "6E4420"}),
-    "arrow": (["................", "................", "................", "........OO......", "........OWO.....",
-               "OOOOOOOOOWWO....", "OWWWWWWWWWWWO...", "OWWWWWWWWWWWWO..", "OWWWWWWWWWWWO...", "OOOOOOOOOWWO....",
-               "........OWO.....", "........OO......", "................", "................", "................",
-               "................"],
-              {"O": "2A2A2A", "W": "F4F4F4"}),
+ICONS = {
+    "coin": (["........", "yYYy....", "oOOd....", "yYYy.yYy", "oOOd.oOd", "yYYy.yYy", "oOOd.oOd", "dddd.ddd"],
+             {"y": "F6C850", "Y": "FFE89A", "o": "E08A28", "O": "F0A838", "d": "9A4A14"}),
+    "gem": (["...gg...", "..gLLg..", ".gLLMGg.", ".gLMMGd.", ".gLMMGd.", ".gMMGGd.", "..gGGd..", "...dd..."],
+            {"g": "3C8A1E", "L": "C8F078", "M": "96D246", "G": "5AAA28", "d": "245A12"}),
+    "xp": (["...yy...", "..yYYy..", "..yYYy..", "ll.yy.LL", "lL.gg.LL", "..gGGg..", "..gGGg..", "...gg..."],
+           {"y": "C8AA14", "Y": "FAE63C", "l": "88B828", "L": "BEE646", "g": "1E8C28", "G": "3CC83C"}),
+    "trophy": (["oWYYYYYo", "oWYYYYOo", ".oWYYOo.", "..oYOo..", "...YO...", "...YO...", "..WYYO..", ".oOOOOo."],
+               {"W": "FFF4BE", "Y": "F4D068", "O": "D49A30", "o": "8E5A14"}),
+    "sword": (["......sW", ".....sWs", "....sWs.", "...sWs..", "g.sWs...", ".gGs....", ".bGg....", "b..g...."],
+              {"W": "EEEEF2", "s": "9AA0AC", "G": "6A6A78", "g": "4A4A56", "b": "7A4A28"}),
+    "skull": ([".wWWWWw.", "wWWWWWWs", "WWWWWWWs", "WkkWWkks", "WWWkWWWs", ".sWWWWs.", ".WsWsWs.", "..ssss.."],
+              {"W": "F0E8DA", "w": "DCD2C2", "s": "AAA090", "k": "463A34"}),
+    "clock": ([".bBBBBb.", "..gCCg..", "..gCCg..", "...cg...", "...gc...", "..gccg..", "..cccc..", ".bBBBBb."],
+              {"B": "9A6230", "b": "643C1E", "g": "C8EAF4", "C": "8CE4F4", "c": "28A8C8"}),
+    "people": (["..hh..hh", ".hhhhhhh", ".SSh.SSh", ".SS..SS.", "TTTTUUUU", "TTTTUUUU", "TTTTUUUU", ".tt..uu."],
+               {"h": "5A3A22", "S": "E0A387", "T": "2CA8D8", "t": "1C78A8", "U": "4CC04C", "u": "2C8A2C"}),
+    "rank": (["........", "Y..YR..Y", "YG.GG.GO", "YGGGGGGO", "GGGRGGGO", "OOOOOOOD", "DDDDDDDD", "........"],
+             {"Y": "FFE478", "G": "F6B42A", "O": "E08418", "D": "9A4A0E", "R": "E8283C"}),
+    "team": (["L.......", "PRRRRRRr", "PRLLRRr.", "PRRRRr..", "PRRRRRr.", "Prrrrrrr", "P.......", "p......."],
+             {"L": "D8DCE4", "P": "5A7088", "p": "34404E", "R": "D83440", "r": "961C28"}),
+    "claim": (["L.......", "PGGGGGg.", "PGLGGg..", "PGGGGGg.", "Pggggg..", "P.......", "MMMMMMMM", "dddddddd"],
+              {"L": "D8DCE4", "P": "5A7088", "G": "5AD04A", "g": "2E8A28", "M": "6CB43C", "d": "6E4A24"}),
+    "token": (["..pPPp..", ".pLPPPd.", "pPPWPPPd", "pPWWWPPd", "pPPWPPPd", "pPPPPPPd", ".pPPPPd.", "..dddd.."],
+              {"p": "7A38B8", "P": "A85AE6", "L": "D8B0FF", "W": "FFF0A0", "d": "4A1E80"}),
+    "level": (["...gg...", "..gLGg..", ".gLGGGg.", "gLGGGGGd", "...GG...", "...GGd..", "...GGd..", "...ddd.."],
+              {"g": "3E9A1E", "L": "C8FF8C", "G": "6CDC3A", "d": "2A6A12"}),
+    "job": (["..cCCCc.", ".c..N..c", "c...N...", "....N...", "....N...", "....N...", "....n...", "....n..."],
+            {"C": "8CE8F4", "c": "2FA8C0", "N": "9C6834", "n": "6E4420"}),
+    "arrow": (["........", "....W...", "....WW..", "WWWWWWW.", "wwwwwwww", "....ww..", "....w...", "........"],
+              {"W": "F4F4F4", "w": "B8B8C0"}),
 }
 ICON_ORDER = ["coin", "gem", "xp", "trophy", "sword", "skull", "clock", "people", "rank", "team", "claim", "token",
               "level", "job", "arrow"]
 
 
 def icon(name):
-    rows, pal = ICON_ROWS[name]
-    img = stamp(rows, {k: rgb(v) for k, v in pal.items()}, 1)
-    full = new(16, 16)
-    full.alpha_composite(img, (0, 0))
-    px = full.load()
-    if not any(px[15, y][3] for y in range(16)):
-        px[15, 15] = (0, 0, 0, 1)
-    return full
+    rows, pal = ICONS[name]
+    img = new(8, 8)
+    img.alpha_composite(stamp(rows, pal), (0, 0))
+    px = img.load()
+    if not any(px[7, y][3] for y in range(8)):
+        px[7, 7] = (0, 0, 0, 1)
+    return img
 
 
 # =====================================================================================
@@ -700,18 +582,20 @@ def build(out, spaces):
         save(frame_piece(6 + 9 * k, 9, False, False, A_LINE), "frame_mid_%d" % k, 9, 8 - 9 * k, chr(0xE100 + k))
         save(frame_piece(6 + 9 * k, 24, False, True, A_LINE), "frame_bottom_%d" % k, 24, 8 - 9 * k, chr(0xE140 + k))
 
-    fighter = lambda hair, shirt, pants, hat=None: figure(FIGHTER, rgb(hair), rgb(shirt), rgb(pants), hat=hat)
-    archer = lambda hair, shirt, pants: figure(ARCHER, rgb(hair), rgb(shirt), rgb(pants))
+    fighter = lambda hair, shirt, pants, hat=None: person(FIGHTER, hair, shirt, pants, hat=hat)
+    archer = lambda hair, shirt, pants: person(ARCHER, hair, shirt, pants)
     logos = {
-        "smp": logo("SMP", (fighter("3B2616", "00A8A8", "3C3896"), archer("D2702A", "3CAA46", "6E4B2D"), tools_smp), arrows=True),
-        "survival": logo("SURVIVAL", (fighter("3B2616", "C03232", "3C5096", hat=rgb("DCBE5A")),
-                                      archer("6E4420", "7A7A86", "5A3A22"), tools_survival)),
-        "hub": logo("HUB", (fighter("3B2616", "2E5BD8", "3C3896"), archer("D2702A", "8A3CC8", "6E4B2D"), tools_none)),
+        "smp": logo("SMP", (fighter("2C3060", "2CA8E0", "4A5078"), SWORD, (14, -3)),
+                    (archer("E08A34", "4CC050", "4A4A56"), BOW, (-4, 5)), arrows=True),
+        "survival": logo("SURVIVAL", (fighter("4A3020", "C83C3C", "3C5096", hat="E2C25C"), HOE, (15, -3)),
+                         (archer("6E4420", "8A8A96", "5A3A22"), PICK, (-3, 2))),
+        "hub": logo("HUB", (fighter("2C3060", "3C64DC", "4A5078"), None, (0, 0)),
+                    (archer("E08A34", "9C48D0", "4A4A56"), None, (0, 0))),
     }
     for i, mode in enumerate(["smp", "survival", "hub"]):
         save(logos[mode], "logo_" + mode, LOGO_H, LOGO_H - 1, chr(0xE050 + i))
     for i, mode in enumerate(["smp", "survival", "hub"]):
-        save(deco(mode), "deco_" + mode, 17, 16, chr(0xE060 + i))
+        save(deco(mode), "deco_" + mode, DECO_H, DECO_H - 1, chr(0xE060 + i))
     for i, name in enumerate(ICON_ORDER):
         save(icon(name), "sb_" + name, 8, 7, chr(0xE010 + i))
 

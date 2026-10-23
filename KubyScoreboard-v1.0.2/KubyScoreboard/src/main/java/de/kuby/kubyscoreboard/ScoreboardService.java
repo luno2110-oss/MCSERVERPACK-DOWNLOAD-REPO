@@ -210,7 +210,7 @@ public final class ScoreboardService {
         UUID id = p.getUniqueId();
         String rank = ScoreboardText.smallText(rank(p));
         TeamService.Team team = plugin.teams().of(id);
-        String teamName = team == null ? "—" : team.name();
+        String teamName = team == null ? "—" : SmallCaps.of(team.name());
         String money = moneyColor(p) + ScoreboardText.money(shown);
         long jewels = plugin.jewels().balance(id);
         long xp = plugin.stats().get(id).xp;
