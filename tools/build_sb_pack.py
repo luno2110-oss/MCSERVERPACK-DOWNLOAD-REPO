@@ -467,21 +467,23 @@ def emerald():
 
 
 def dead_player():
+    """Liegender Spieler mit X-Augen, Kopf rechts (Gesicht nach oben)."""
     rows = [
-        "..............HHSSSSHH",
-        "BBPPPPPPRRRRRRHSSSSSSH",
-        "BBPPPPPPRRRRRRSSSSSSSH",
-        "BBPPPPPPRRRRRRSSMSSSSH",
-        "BBPPPPPPRRRRRRSSMSSSSH",
-        "BBPPPPPPRRRRRRSSSSSSSH",
-        "BBppppppRRRRRRHSSSSSSH",
-        "..............HHSSSSHH",
+        "................SSSSSSSHH",
+        ".........RRRRRRRSSSSSSSSH",
+        "BBPPPPPPPRRRRRRRSSSSSSSSH",
+        "BBPPPPPPPRRRRRRRSMSSSSSSH",
+        "BBPPPPPPPRRRRRRRSMSSSSSSH",
+        "BBPPPPPPPRRRRRRRSMSSSSSSH",
+        "BBpppppppRRRRRRRSSSSSSSSH",
+        ".........rrrrrrrSSSSSSSSH",
+        "................SSSSSSSHH",
     ]
-    pal = {"H": rgb("5A3A22"), "S": SKIN, "M": rgb("8A4A34"), "R": rgb("D82838"), "P": rgb("3C3E96"),
-           "p": rgb("2C2E76"), "B": rgb("4A4A50")}
+    pal = {"H": rgb("5A3A22"), "S": SKIN, "M": rgb("8A4A34"), "R": rgb("D82838"), "r": rgb("A41C2A"),
+           "P": rgb("3C3E96"), "p": rgb("2C2E76"), "B": rgb("4A4A50")}
     img = stamp(rows, pal)
     px = img.load()
-    for (ex, ey) in ((36, 4), (36, 10)):   # X-Augen, 3 x 3 Texel
+    for (ex, ey) in ((43, 5), (43, 13)):   # X-Augen, 3 x 3 Texel
         for d in (-1, 0, 1):
             px[ex + d, ey + d] = rgb("1A1010")
             px[ex + d, ey - d] = rgb("1A1010")

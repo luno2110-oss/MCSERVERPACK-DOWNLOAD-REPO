@@ -79,6 +79,7 @@ Bereits vorhanden (mit Referenz verknüpfen): Kits, Enderchest, Kristalltausch, 
 - [x] 5.14 Hotbar-Anzeige nutzt die neuen Münz- und XP-Icons (die alten Zeichen gibt es nicht mehr)
 - [x] 5.15 Scoreboard-Grafik überarbeitet: doppelte Auflösung, Maße wie in der Referenz (Sidebar 116 px, Rahmen 125 px, 6 px Rand mit Goldverlauf, durchscheinender Innenbereich), Logo-Schrift wie „CHAOS SMP“ (große Goldbuchstaben 14 × 12 px, kleine Silberbuchstaben 9 × 8 px auf der Rahmenkante), Figuren links und rechts, gekreuzte Pfeile (SMP), Deko unten je Modus (SMP: Spawner, Goldbarren, liegender Spieler)
 - [x] 5.16 Zu lange Zeilen werden gekürzt, ohne Farben und Icons zu verlieren
+- [x] 5.18 Farben wie in der Referenz: Beschriftungen weiß, Werte farbig (Rang grau, Kills rot, Tode gold, Keyall gelb, Online-Zahl grün)
 - [ ] 5.17 Im Spiel prüfen: Sitz des Rahmens bei GUI-Größe 2, 3 und 4
 
 ## Ordnergruppe 6 – Modi und Welten (Stand)
