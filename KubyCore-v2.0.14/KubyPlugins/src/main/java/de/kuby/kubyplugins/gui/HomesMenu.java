@@ -60,6 +60,17 @@ public final class HomesMenu extends GuiMenu {
         set(40, Items.make(Material.LIME_DYE, "<green>Neues Home", List.of(
                 "<gray>Speichert deine Position",
                 "<gray>Belegt: <white>" + used + " <dark_gray>/ <white>" + limit)), e -> newHome(p));
+        boolean survival = de.kuby.kubyplugins.service.ModeService.SURVIVAL.equals(plugin.modes().modeOf(p.getUniqueId()));
+        if (survival) {
+            List<String> ranks = plugin.getConfig().getStringList("homes.survival.ranks");
+            set(44, Items.make(Material.BOOK, "<gold>Homes in Survival", List.of(
+                    "<gray>Jeder hat <white>" + plugin.getConfig().getInt("homes.survival.base", 1) + "<gray> Home.",
+                    "<gray>Ab " + (ranks.isEmpty() ? "Platin" : cap(ranks.get(0))) + ": <white>+1 je Rang",
+                    "<gray>Discord verlinken (/verify): <white>+" + plugin.getConfig().getInt("homes.survival.discord-bonus", 1),
+                    "<gray>Farmpass: <white>+" + plugin.getConfig().getInt("farmpass.extra-homes", 2),
+                    "", "<dark_gray>Nicht am Spawn, im Casino", "<dark_gray>und in der Farmwelt.")), null);
+            return;
+        }
         int bought = plugin.homes().extraBought(p.getUniqueId());
         set(42, Items.make(Material.EXPERIENCE_BOTTLE, "<aqua>Platz kaufen", List.of(
                 "<gray>Erweiterungen: <white>" + bought + " <dark_gray>/ <white>" + de.kuby.kubyplugins.service.HomeService.MAX_BOUGHT,
@@ -73,10 +84,14 @@ public final class HomesMenu extends GuiMenu {
             open(p);
         });
         set(44, Items.make(Material.BOOK, "<gold>Homes", List.of(
-                "<gray>Grundplätze: <white>" + plugin.getConfig().getInt("homes.default-limit", 2),
+                "<gray>Grundplätze: <white>" + plugin.getConfig().getInt("homes.default-limit", 1),
                 "<gray>Voten: <white>+1 Platz",
                 "<gray>/verify mit Discord: <white>+3 Plätze",
                 "<gray>Ränge: <white>bis 30 Plätze")), null);
+    }
+
+    private static String cap(String s) {
+        return s.isEmpty() ? s : Character.toUpperCase(s.charAt(0)) + s.substring(1);
     }
 
     private void newHome(Player p) {

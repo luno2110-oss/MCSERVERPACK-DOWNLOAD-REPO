@@ -10,6 +10,7 @@ import org.bukkit.entity.Player;
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -81,6 +82,7 @@ public final class HomeService implements ModeData {
     /** Maximale Anzahl Homes: Grundwert plus Bonus, mindestens der Rang-Wert. */
     public int limit(Player player) {
         UUID id = player.getUniqueId();
+        if (ModeService.SURVIVAL.equals(plugin.modes().modeOf(id))) return survivalLimit(player);
         int base = plugin.getConfig().getInt("homes.default-limit", 2);
         int bonus = extraBought(id) + (voted(id) ? 1 : 0) + (verified(id) ? 3 : 0)
                 + (plugin.hasPerk("farmpass", id) ? plugin.getConfig().getInt("farmpass.extra-homes", 2) : 0);
@@ -94,6 +96,22 @@ public final class HomeService implements ModeData {
         return Math.max(base + bonus, rank + (plugin.hasPerk("farmpass", id) ? plugin.getConfig().getInt("farmpass.extra-homes", 2) : 0));
     }
 
+    /** Survival: Grundwert, +1 je Rang ab Platin, +1 für Discord, dazu Farmpass. */
+    public int survivalLimit(Player player) {
+        UUID id = player.getUniqueId();
+        int limit = plugin.getConfig().getInt("homes.survival.base", 1);
+        List<String> ranks = plugin.getConfig().getStringList("homes.survival.ranks");
+        for (int i = ranks.size() - 1; i >= 0; i--) {
+            if (player.hasPermission("kuby.rank." + ranks.get(i))) {
+                limit += i + 1;
+                break;
+            }
+        }
+        if (verified(id)) limit += plugin.getConfig().getInt("homes.survival.discord-bonus", 1);
+        if (plugin.hasPerk("farmpass", id)) limit += plugin.getConfig().getInt("farmpass.extra-homes", 2);
+        return limit;
+    }
+
     public synchronized int extraBought(UUID id) {
         return perks.getInt(id + ".xp", 0);
     }
@@ -105,6 +123,9 @@ public final class HomeService implements ModeData {
     /** Kauft einen zusätzlichen Homeplatz mit XP. Gibt null bei Erfolg zurück. */
     public synchronized String buyExtra(Player p) {
         UUID id = p.getUniqueId();
+        if (ModeService.SURVIVAL.equals(plugin.modes().modeOf(id))) {
+            return "In Survival gibt es mehr Homes über Ränge ab Platin, Discord (/verify) und den Farmpass.";
+        }
         if (extraBought(id) >= MAX_BOUGHT) return "Du hast bereits alle " + MAX_BOUGHT + " Erweiterungen gekauft.";
         long cost = nextCost(id);
         var st = plugin.stats().get(id);

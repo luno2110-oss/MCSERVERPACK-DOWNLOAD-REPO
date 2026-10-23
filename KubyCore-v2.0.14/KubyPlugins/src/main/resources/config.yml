@@ -4,6 +4,18 @@ homes:
   default-limit: 1
   max-limit: 5
   teleport-delay-seconds: 3
+  xp-cost: 500                  # SMP/Skyblock: zusätzlicher Platz für XP (bis 3)
+  ranks:                        # SMP/Skyblock: Rang -> Homes
+    vip: 10
+    ultimate: 15
+    warrior: 20
+    legend: 30
+  survival:                     # Survival: 1 Home, ab Platin +1 je Rang, +1 für Discord (/verify), Farmpass +2
+    base: 1
+    discord-bonus: 1
+    ranks: [platin, diamant, smaragd, netherit]   # Reihenfolge der Ränge ab Platin (Permission kuby.rank.<name>)
+    spawn-radius: 80            # kein Home so nah am Survival-Spawn
+    blocked-regions: [casino]   # Regionen ohne Homes (/kp region)
 
 rtp:
   world: world
@@ -426,14 +438,6 @@ modes:
     world: world
   survival:
     world: survival
-
-homes:
-  xp-cost: 500
-  ranks:
-    vip: 10
-    ultimate: 15
-    warrior: 20
-    legend: 30
 
 playtime:
   rewards:

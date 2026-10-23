@@ -118,6 +118,18 @@ public final class KubySurvival extends JavaPlugin {
         getServer().getPluginManager().registerEvents(chestShops, this);
         getServer().getPluginManager().registerEvents(farm, this);
         core.homes().registerBlock(l -> farm.isFarm(l.getWorld()) ? "In der Farmwelt kannst du kein Home setzen. Sie wird jede Woche neu erstellt." : null);
+        core.homes().registerBlock(l -> {
+            Location spawn = core.modes().spawnOf(de.kuby.kubyplugins.service.ModeService.SURVIVAL);
+            int r = core.getConfig().getInt("homes.survival.spawn-radius", 80);
+            if (spawn != null && spawn.getWorld() == l.getWorld() && spawn.distanceSquared(l) <= (double) r * r) {
+                return "Am Spawn kannst du kein Home setzen.";
+            }
+            for (String id : core.getConfig().getStringList("homes.survival.blocked-regions")) {
+                var reg = core.regions().find(id);
+                if (reg != null && reg.contains(l)) return id.equalsIgnoreCase("casino") ? "Im Casino kannst du kein Home setzen." : "Hier kannst du kein Home setzen.";
+            }
+            return null;
+        });
         getServer().getPluginManager().registerEvents(sideQuests, this);
         getServer().getPluginManager().registerEvents(new QuestListener(this), this);
         intro = new IntroService(this, core);
