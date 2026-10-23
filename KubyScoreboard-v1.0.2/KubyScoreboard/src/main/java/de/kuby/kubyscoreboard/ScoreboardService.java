@@ -197,7 +197,7 @@ public final class ScoreboardService {
 
     private String moneyColor(Player p) {
         Counter c = counters.get(p.getUniqueId());
-        if (c == null || c.shown == c.target) return "<green>";
+        if (c == null || c.shown == c.target) return "<gold>";   // in Ruhe gold, beim Zählen grün/rot
         return c.target > c.shown ? "<green>" : "<red>";
     }
 
@@ -256,8 +256,11 @@ public final class ScoreboardService {
                 out.add(ind.apply(row(ScoreboardText.I_CLAIM, "CLAIMBLÖCKE", "<green>" + ScoreboardText.number(plugin.statValue("claimblocks", id)))));
                 out.add(ind.apply(row(ScoreboardText.I_CLOCK, "KEYALL IN", keyall)));
                 out.add("");
-                out.add(mid.apply(ScoreboardText.smallText(addon.getConfig().getString("scoreboard.survival-hint-1", "<gold>SPAWN VERLASSEN?"))));
-                out.add(mid.apply(ScoreboardText.smallText(addon.getConfig().getString("scoreboard.survival-hint-2", "<yellow>→ /bauwelt"))));
+                String hint1 = ScoreboardText.smallText(addon.getConfig().getString("scoreboard.survival-hint-1", "<white>SPAWN VERLASSEN?"));
+                String hint2 = addon.getConfig().getString("scoreboard.survival-hint-2", "<#D4C850>/bauwelt");
+                out.add(ind.apply(ScoreboardText.icon(ScoreboardText.I_SPAWN) + hint1));
+                // Zweite Zeile eingerückt mit orangem Pfeil, Befehl in normaler Schrift
+                out.add(textured ? SbUi.indent(ScoreboardText.icon(ScoreboardText.I_ARROW) + hint2, 16) : "<gold>→ " + hint2);
             }
             default -> {
                 out.add(ind.apply(row(ScoreboardText.I_RANK, "RANG", "<gray>" + rank)));
@@ -272,7 +275,7 @@ public final class ScoreboardService {
                 out.add(mid.apply(online));
             }
         }
-        if (textured) out.add(SbUi.deco(mode));
+        if (textured) out.add("");   // Luft über dem unteren Rand
         return out;
     }
 

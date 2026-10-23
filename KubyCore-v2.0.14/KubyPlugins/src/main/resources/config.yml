@@ -256,6 +256,12 @@ daily-shop:
 display:
   hotbar: true
 
+# Survival: Leiste oben (Platz der Bossbar) mit Geld, Juwelen, Angel-Level und Ort. Ersetzt dort die Anzeige
+# über der Hotbar. Braucht das Pack KubyUI (macht weiße Bossbars unsichtbar, die Leiste nutzt nur den Titel).
+survival-hud:
+  enabled: true
+  spawn-radius: 80
+
 economy:
   tax-percent: 9
   invest-step: 1000

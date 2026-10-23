@@ -3,8 +3,9 @@
 scoreboard-logo-title: true
 scoreboard:
   max-width: 140
-  survival-hint-1: "<gold>SPAWN VERLASSEN?"
-  survival-hint-2: "<yellow>→ /bauwelt"
+  # Survival: Hinweis unten (Zeile 1 in Small Caps mit Spawn-Icon, Zeile 2 mit Pfeil in normaler Schrift)
+  survival-hint-1: "<white>SPAWN VERLASSEN?"
+  survival-hint-2: "<#D4C850>/bauwelt"
   title:
     smp: "<gold><bold>KUBY SMP"
     survival: "<gold><bold>KUBY SURVIVAL"

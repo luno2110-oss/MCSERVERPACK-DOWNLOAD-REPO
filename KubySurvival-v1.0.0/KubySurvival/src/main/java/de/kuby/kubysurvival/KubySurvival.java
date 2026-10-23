@@ -9,6 +9,7 @@ import de.kuby.kubysurvival.claim.ClaimTool;
 import de.kuby.kubysurvival.fishing.AngelMenu;
 import de.kuby.kubysurvival.fishing.FishDealer;
 import de.kuby.kubysurvival.fishing.FishingListener;
+import de.kuby.kubysurvival.hud.SurvivalHud;
 import de.kuby.kubysurvival.fishing.FishingService;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -29,6 +30,7 @@ public final class KubySurvival extends JavaPlugin {
     private FishDealer dealer;
     private ClaimService claims;
     private ClaimTool claimTool;
+    private SurvivalHud hud;
     private final Map<UUID, Location[]> zoneCorners = new HashMap<>();
 
     public KubyPlugins core() { return core; }
@@ -52,6 +54,8 @@ public final class KubySurvival extends JavaPlugin {
 
         getServer().getPluginManager().registerEvents(new FishingListener(this, core), this);
         getServer().getPluginManager().registerEvents(new ClaimListener(this, core), this);
+        hud = new SurvivalHud(this, core);
+        getServer().getPluginManager().registerEvents(hud, this);
         command("angeln", (sender, cmd, label, args) -> {
             if (sender instanceof Player p) new AngelMenu(this, core).open(p);
             return true;
@@ -91,6 +95,7 @@ public final class KubySurvival extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (hud != null) hud.shutdown();
         if (fishing != null) fishing.save();
         if (claims != null) claims.save();
     }

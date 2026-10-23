@@ -19,6 +19,7 @@ public final class HotbarDisplay {
         for (Player p : plugin.getServer().getOnlinePlayers()) {
             if (plugin.trades().inTrade(p.getUniqueId())) continue;
             if (plugin.modes().isHub(p.getWorld())) continue;
+            if (plugin.hotbarHidden(p)) continue;
             long xp = plugin.stats().get(p.getUniqueId()).xp;
             // Münz- und XP-Icon aus dem Pack KubyUI, ohne Pack nur Text.
             boolean icons = plugin.uiPack().active(p);

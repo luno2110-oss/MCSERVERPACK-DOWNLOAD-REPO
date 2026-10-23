@@ -4,11 +4,11 @@ import de.kuby.kubyplugins.ui.Ui;
 
 /**
  * Sidebar mit Grafik aus dem Pack KubyUI (Schrift kubyplugins:sb), Maße nach der Referenz:
- * Sidebar 116 px breit, goldener Rahmen 125 px (6 px links vom Text bis zum Bildschirmrand), 6 px Rand.
+ * Sidebar 116 px breit, goldener Rahmen 125 px (6 px links vom Text bis zum Bildschirmrand), 6 px Rand,
+ * Holzranken an den Seiten. Die Texturen haben links 5 px extra für Ranken und Blätter.
  * Der ganze Rahmen wird aus dem Titel gezeichnet (ein Stück je Zeile, nach unten versetzt), das Logo ragt über
  * den Rahmen hinaus. Der Titel ist genau W Pixel breit, alle Zeilen sind schmaler, darum sitzt der Rahmen
- * pixelgenau. Die Deko unten steht in der letzten (leeren) Zeile.
- * Muss zu tools/build_sb_pack.py passen.
+ * pixelgenau. Muss zu tools/build_sb_pack.py passen.
  */
 final class SbUi {
 
@@ -17,8 +17,9 @@ final class SbUi {
     /** Innenbreite des Rahmens; der Text beginnt am linken Innenrand. */
     static final int INNER = 113;
     static final String FONT = "kubyplugins:sb";
-    private static final int FRAME_LEFT = 6;
-    private static final int FRAME_ADV = 125 + 1;
+    /** Texturbeginn links vom Text: 6 px Rahmen + 5 px Platz für Ranken. */
+    private static final int FRAME_LEFT = 6 + 5;
+    private static final int FRAME_ADV = 125 + 5 + 1;
     /** Vanilla zeigt höchstens 15 Zeilen. */
     static final int MAX_LINES = 15;
 
@@ -39,14 +40,14 @@ final class SbUi {
         return "<font:" + FONT + ">" + g + "</font>";
     }
 
-    /** Letzte Zeile: Deko des Modus am unteren Innenrand (Spawner und Gold, liegender Spieler usw.). */
-    static String deco(String mode) {
-        return "<font:" + FONT + ">" + glyph(mode, '') + "</font>";
-    }
-
     /** Normale Zeile: 1 px Abstand zum Rahmen. */
     static String indent(String mini) {
-        return mini.isEmpty() ? mini : "<font:" + FONT + ">" + Ui.spaceChars(1) + "</font>" + mini;
+        return indent(mini, 1);
+    }
+
+    /** Zeile mit px Pixel Abstand zum Rahmen. */
+    static String indent(String mini, int px) {
+        return mini.isEmpty() ? mini : "<font:" + FONT + ">" + Ui.spaceChars(px) + "</font>" + mini;
     }
 
     /** Zentriert eine Zeile pixelgenau im Rahmen. */

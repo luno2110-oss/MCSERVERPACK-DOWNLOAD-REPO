@@ -28,8 +28,8 @@
   {
    "type": "bitmap",
    "file": "kubyplugins:sb/frame_top.png",
-   "height": 15,
-   "ascent": 14,
+   "height": 19,
+   "ascent": 18,
    "chars": [
     "\ue100"
    ]
@@ -46,7 +46,7 @@
   {
    "type": "bitmap",
    "file": "kubyplugins:sb/frame_bottom_1.png",
-   "height": 24,
+   "height": 27,
    "ascent": -1,
    "chars": [
     "\ue141"
@@ -64,7 +64,7 @@
   {
    "type": "bitmap",
    "file": "kubyplugins:sb/frame_bottom_2.png",
-   "height": 24,
+   "height": 27,
    "ascent": -10,
    "chars": [
     "\ue142"
@@ -82,7 +82,7 @@
   {
    "type": "bitmap",
    "file": "kubyplugins:sb/frame_bottom_3.png",
-   "height": 24,
+   "height": 27,
    "ascent": -19,
    "chars": [
     "\ue143"
@@ -100,7 +100,7 @@
   {
    "type": "bitmap",
    "file": "kubyplugins:sb/frame_bottom_4.png",
-   "height": 24,
+   "height": 27,
    "ascent": -28,
    "chars": [
     "\ue144"
@@ -118,7 +118,7 @@
   {
    "type": "bitmap",
    "file": "kubyplugins:sb/frame_bottom_5.png",
-   "height": 24,
+   "height": 27,
    "ascent": -37,
    "chars": [
     "\ue145"
@@ -136,7 +136,7 @@
   {
    "type": "bitmap",
    "file": "kubyplugins:sb/frame_bottom_6.png",
-   "height": 24,
+   "height": 27,
    "ascent": -46,
    "chars": [
     "\ue146"
@@ -154,7 +154,7 @@
   {
    "type": "bitmap",
    "file": "kubyplugins:sb/frame_bottom_7.png",
-   "height": 24,
+   "height": 27,
    "ascent": -55,
    "chars": [
     "\ue147"
@@ -172,7 +172,7 @@
   {
    "type": "bitmap",
    "file": "kubyplugins:sb/frame_bottom_8.png",
-   "height": 24,
+   "height": 27,
    "ascent": -64,
    "chars": [
     "\ue148"
@@ -190,7 +190,7 @@
   {
    "type": "bitmap",
    "file": "kubyplugins:sb/frame_bottom_9.png",
-   "height": 24,
+   "height": 27,
    "ascent": -73,
    "chars": [
     "\ue149"
@@ -208,7 +208,7 @@
   {
    "type": "bitmap",
    "file": "kubyplugins:sb/frame_bottom_10.png",
-   "height": 24,
+   "height": 27,
    "ascent": -82,
    "chars": [
     "\ue14a"
@@ -226,7 +226,7 @@
   {
    "type": "bitmap",
    "file": "kubyplugins:sb/frame_bottom_11.png",
-   "height": 24,
+   "height": 27,
    "ascent": -91,
    "chars": [
     "\ue14b"
@@ -244,7 +244,7 @@
   {
    "type": "bitmap",
    "file": "kubyplugins:sb/frame_bottom_12.png",
-   "height": 24,
+   "height": 27,
    "ascent": -100,
    "chars": [
     "\ue14c"
@@ -262,7 +262,7 @@
   {
    "type": "bitmap",
    "file": "kubyplugins:sb/frame_bottom_13.png",
-   "height": 24,
+   "height": 27,
    "ascent": -109,
    "chars": [
     "\ue14d"
@@ -280,7 +280,7 @@
   {
    "type": "bitmap",
    "file": "kubyplugins:sb/frame_bottom_14.png",
-   "height": 24,
+   "height": 27,
    "ascent": -118,
    "chars": [
     "\ue14e"
@@ -298,7 +298,7 @@
   {
    "type": "bitmap",
    "file": "kubyplugins:sb/frame_bottom_15.png",
-   "height": 24,
+   "height": 27,
    "ascent": -127,
    "chars": [
     "\ue14f"
@@ -307,8 +307,8 @@
   {
    "type": "bitmap",
    "file": "kubyplugins:sb/logo_smp.png",
-   "height": 43,
-   "ascent": 42,
+   "height": 32,
+   "ascent": 31,
    "chars": [
     "\ue050"
    ]
@@ -316,8 +316,8 @@
   {
    "type": "bitmap",
    "file": "kubyplugins:sb/logo_survival.png",
-   "height": 43,
-   "ascent": 42,
+   "height": 32,
+   "ascent": 31,
    "chars": [
     "\ue051"
    ]
@@ -325,37 +325,10 @@
   {
    "type": "bitmap",
    "file": "kubyplugins:sb/logo_hub.png",
-   "height": 43,
-   "ascent": 42,
+   "height": 32,
+   "ascent": 31,
    "chars": [
     "\ue052"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/deco_smp.png",
-   "height": 22,
-   "ascent": 21,
-   "chars": [
-    "\ue060"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/deco_survival.png",
-   "height": 22,
-   "ascent": 21,
-   "chars": [
-    "\ue061"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/deco_hub.png",
-   "height": 22,
-   "ascent": 21,
-   "chars": [
-    "\ue062"
    ]
   },
   {
@@ -491,6 +464,24 @@
    "ascent": 7,
    "chars": [
     "\ue01e"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_spawn.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    "\ue01f"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_compass.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    "\ue020"
    ]
   }
  ]

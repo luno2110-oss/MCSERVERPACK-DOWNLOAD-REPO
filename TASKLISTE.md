@@ -81,6 +81,11 @@ Bereits vorhanden (mit Referenz verknüpfen): Kits, Enderchest, Kristalltausch, 
 - [x] 5.16 Zu lange Zeilen werden gekürzt, ohne Farben und Icons zu verlieren
 - [x] 5.18 Farben wie in der Referenz: Beschriftungen weiß, Werte farbig (Rang grau, Kills rot, Tode gold, Keyall gelb, Online-Zahl grün)
 - [x] 5.19 Teamnamen ebenfalls in Small Caps (alle Texte der Sidebar sind Small Caps wie in der Referenz)
+- [x] 5.20 Figuren und Eck-Grafiken entfernt. Dafür Holzranken, die sich links und rechts um den Rahmen nach oben winden (vorne über dem Rand, hinten verdeckt), ab und zu 2-3 Blätter, alles mit Schatten
+- [x] 5.21 Logo-Schrift wieder in der vorherigen Form, mit 3 px 3D-Kante und kräftigerem Schatten (sticht mehr heraus)
+- [x] 5.22 Survival-Scoreboard nach Referenz: Icons Stern (Level), Angel (Job), Token-Münze, Haus (Claimblöcke), Spawn-Plattform, oranger Pfeil vor „/bauwelt“ (normale Schrift). Coins in Ruhe gold, beim Zählen grün/rot
+- [x] 5.23 Survival-Leiste oben (Platz der Bossbar): Holzleisten mit Blättern und Blume, Coins und Juwelen, Angler-Level mit Fortschritt, Ort (Spawn, Grundstück, Angelzone, Wildnis). Ersetzt in Survival die Anzeige über der Hotbar. Das Pack macht weiße Bossbars unsichtbar (die Leiste nutzt nur den Titel). config: survival-hud.*
+- [ ] 5.24 Systeme für Level, Jobs und Tokens fehlen noch (Scoreboard zeigt „—“, die Leiste nutzt das Angel-Level)
 - [ ] 5.17 Im Spiel prüfen: Sitz des Rahmens bei GUI-Größe 2, 3 und 4
 
 ## Ordnergruppe 6 – Modi und Welten (Stand)

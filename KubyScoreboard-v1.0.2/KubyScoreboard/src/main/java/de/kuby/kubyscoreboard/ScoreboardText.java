@@ -31,6 +31,7 @@ public final class ScoreboardText {
     public static final String I_LEVEL = "\uE01C";
     public static final String I_JOB = "\uE01D";
     public static final String I_ARROW = "\uE01E";
+    public static final String I_SPAWN = "\uE01F";
 
     private static final Pattern TEXT = Pattern.compile(">([^<]+)");
     private static final Pattern TAGS = Pattern.compile("<[^>]+>");
