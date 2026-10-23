@@ -65,6 +65,7 @@ public final class MarketMenu extends GuiMenu {
             Msg.send(p, "<red>Nicht genug$.");
             return;
         }
+        String modeOfSold = plugin.market().modeOf(id);
         if (plugin.market().remove(id) == null) {
             plugin.economy().deposit(p.getUniqueId(), l.price());
             Msg.send(p, "<red>Zu spät, das Angebot wurde gerade verkauft.");
@@ -75,7 +76,7 @@ public final class MarketMenu extends GuiMenu {
         if (!leftover.isEmpty()) {
             // Inventar voll: Käufer bekommt alles zurück, Angebot wird neu eingestellt
             plugin.economy().deposit(p.getUniqueId(), l.price());
-            plugin.market().addIn(l.seller(), l.sellerName(), l.item(), l.price(), plugin.market().modeOf(l.id()));
+            plugin.market().addIn(l.seller(), l.sellerName(), l.item(), l.price(), modeOfSold);
             Msg.send(p, "<red>Dein Inventar ist voll.");
             open(p);
             return;
@@ -83,7 +84,7 @@ public final class MarketMenu extends GuiMenu {
 
         int taxPercent = plugin.getConfig().getInt("market.tax-percent", 5);
         long payout = l.price() - (l.price() * taxPercent / 100);
-        plugin.economy().deposit(l.seller(), payout);
+        plugin.modes().depositIn(l.seller(), modeOfSold, payout);
 
         Sfx.play(plugin, p, Sfx.Kind.COIN);
         Msg.send(p, "<green>Gekauft für <gold>" + Msg.coins(l.price()) + "$<green>.");

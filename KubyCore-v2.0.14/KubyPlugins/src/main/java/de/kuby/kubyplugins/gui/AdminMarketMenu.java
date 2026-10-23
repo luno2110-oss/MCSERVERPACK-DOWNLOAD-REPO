@@ -29,9 +29,10 @@ public final class AdminMarketMenu extends AdminBase {
                     Msg.item("<red>Klick: Angebot entfernen")));
             display.setItemMeta(meta);
             set(slot++, display, e -> {
+                String mode = plugin.market().modeOf(l.id());
                 MarketService.Listing removed = plugin.market().remove(l.id());
                 if (removed != null) {
-                    plugin.abholbox().add(removed.seller(), removed.item());
+                    plugin.modes().abholboxIn(removed.seller(), mode, removed.item());
                     done(p, "<gray>Angebot entfernt, Item in der Abholbox des Verkäufers.");
                 } else {
                     done(p, "<red>Angebot existiert nicht mehr.");

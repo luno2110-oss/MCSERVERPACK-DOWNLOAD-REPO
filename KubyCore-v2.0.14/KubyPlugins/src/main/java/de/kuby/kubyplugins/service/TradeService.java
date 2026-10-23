@@ -88,6 +88,9 @@ public final class TradeService {
     /** Gibt null bei Erfolg zurück, sonst eine Fehlermeldung. */
     public synchronized String request(Player from, Player to) {
         if (from.equals(to)) return "Du kannst nicht mit dir selbst handeln.";
+        String mode = plugin.modes().modeOf(from.getUniqueId());
+        if (ModeService.HUB.equals(mode)) return "In der Lobby wird nicht gehandelt.";
+        if (!mode.equals(plugin.modes().modeOf(to.getUniqueId()))) return to.getName() + " spielt gerade in einem anderen Modus.";
         if (busy(from.getUniqueId()) || busy(to.getUniqueId())) return "Einer der beiden ist gerade beschäftigt.";
         requests.put(to.getUniqueId(), new Request(from.getUniqueId(), System.currentTimeMillis()));
         Msg.send(to, "<gold>" + from.getName() + " <gray>möchte mit dir handeln. Annehmen mit <white>/trade accept");
@@ -102,6 +105,9 @@ public final class TradeService {
         Player from = Bukkit.getPlayer(r.from());
         if (from == null) return "Der Anfragende ist offline.";
         if (busy(from.getUniqueId()) || busy(to.getUniqueId())) return "Einer der beiden ist gerade beschäftigt.";
+        if (!plugin.modes().modeOf(from.getUniqueId()).equals(plugin.modes().modeOf(to.getUniqueId()))) {
+            return "Ihr seid gerade in verschiedenen Modi.";
+        }
         start(from, to);
         return null;
     }

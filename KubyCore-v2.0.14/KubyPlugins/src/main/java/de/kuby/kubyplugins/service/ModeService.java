@@ -151,6 +151,45 @@ public final class ModeService {
         };
     }
 
+    // ---------- Geld und Items für einen bestimmten Modus ----------
+
+    private Snap emptySnap() {
+        return new Snap(0, 0, 100, 0, 0, new ItemStack[INV_SIZE], null, new ArrayList<>(), new HashMap<>());
+    }
+
+    /**
+     * Zahlt Geld in einem bestimmten Modus aus. Ist der Spieler online in diesem Modus, geht es direkt aufs Konto.
+     * Sonst landet es im gespeicherten Stand des Modus (wird beim nächsten Betreten geladen). So landet z. B. ein
+     * Markt-Verkauf in Survival nicht im SMP-Konto und geht beim Einloggen nicht verloren.
+     */
+    public synchronized void depositIn(UUID id, String mode, long amount) {
+        if (amount == 0) return;
+        Player online = Bukkit.getPlayer(id);
+        boolean live = mode.equals(modeOf(id));
+        if (live) plugin.economy().deposit(id, amount);
+        if (live && online != null) return;
+        Map<String, Snap> byMode = snaps.computeIfAbsent(id, k -> new HashMap<>());
+        Snap sn = byMode.getOrDefault(mode, emptySnap());
+        byMode.put(mode, new Snap(sn.money() + amount, sn.xp(), sn.trophies(), sn.kills(), sn.deaths(), sn.inv(), sn.ec(),
+                sn.ab(), sn.extras()));
+        save();
+    }
+
+    /** Legt ein Item in die Abholbox eines bestimmten Modus (gleiche Regeln wie depositIn). */
+    public synchronized void abholboxIn(UUID id, String mode, ItemStack item) {
+        if (item == null || item.getType().isAir()) return;
+        Player online = Bukkit.getPlayer(id);
+        boolean live = mode.equals(modeOf(id));
+        if (live) plugin.abholbox().add(id, item.clone());
+        if (live && online != null) return;
+        Map<String, Snap> byMode = snaps.computeIfAbsent(id, k -> new HashMap<>());
+        Snap sn = byMode.getOrDefault(mode, emptySnap());
+        List<ItemStack> ab = new ArrayList<>(sn.ab());
+        ab.add(item.clone());
+        byMode.put(mode, new Snap(sn.money(), sn.xp(), sn.trophies(), sn.kills(), sn.deaths(), sn.inv(), sn.ec(), ab, sn.extras()));
+        save();
+    }
+
     // ---------- Join und Quit ----------
 
     public synchronized void onJoin(Player p) {
@@ -251,7 +290,9 @@ public final class ModeService {
             UUID id = UUID.fromString(key);
             String cur = yml.getString(key + ".current");
             if (cur != null) current.put(id, cur);
-            for (String mode : List.of(HUB, SMP, SURVIVAL)) {
+            ConfigurationSection sec = yml.getConfigurationSection(key);
+            if (sec == null) continue;
+            for (String mode : sec.getKeys(false)) {
                 String base = key + "." + mode;
                 if (yml.contains(base + ".money")) {
                     snaps.computeIfAbsent(id, k -> new HashMap<>()).put(mode, readSnap(yml, base));

@@ -605,7 +605,7 @@ public final class QuestService {
     }
 
     private void pay(UUID id, long coins, long tokens, long xp) {
-        if (coins > 0) core.economy().deposit(id, coins);
+        if (coins > 0) core.modes().depositIn(id, ModeService.SURVIVAL, coins);
         if (tokens > 0) addon.jobs().addTokens(id, tokens);
         if (xp > 0) addon.jobs().addPlayerXp(id, xp);
     }

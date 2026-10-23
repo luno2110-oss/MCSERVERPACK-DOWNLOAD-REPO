@@ -63,13 +63,14 @@ public final class OrdersMenu extends GuiMenu {
             return;
         }
         int n = Math.min(have, o.amount());
+        String orderMode = plugin.orders().modeOf(id);
         p.getInventory().removeItem(new ItemStack(o.material(), n));
         plugin.orders().fill(id, n);
 
         // Liefern in Stacks, damit die Abholbox saubere Stacks enthält
         int max = o.material().getMaxStackSize();
         for (int left = n; left > 0; left -= max) {
-            plugin.abholbox().add(o.buyer(), new ItemStack(o.material(), Math.min(max, left)));
+            plugin.modes().abholboxIn(o.buyer(), orderMode, new ItemStack(o.material(), Math.min(max, left)));
         }
 
         long gross = (long) n * o.unitPrice();

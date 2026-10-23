@@ -38,8 +38,7 @@ public final class KubyCommand implements CommandExecutor, TabCompleter {
 
         switch (command.getName().toLowerCase(Locale.ROOT)) {
             case "befehle" -> new MainMenu(plugin).open(player);
-            case "balance" -> Msg.send(player, "<gray>Kontostand: <gold>"
-                    + Msg.coins(plugin.economy().balance(id)) + "$");
+            case "balance" -> balance(player);
             case "pay" -> pay(player, args);
             case "baltop" -> new LeaderboardMenu(plugin).open(player);
             case "shop" -> new ShopMenu(plugin).open(player);
@@ -53,6 +52,17 @@ public final class KubyCommand implements CommandExecutor, TabCompleter {
             default -> { return false; }
         }
         return true;
+    }
+
+    private void balance(Player p) {
+        UUID id = p.getUniqueId();
+        String mode = plugin.modes().modeOf(id);
+        Msg.send(p, "<gray>Kontostand <dark_gray>(" + de.kuby.kubyplugins.service.ModeService.label(mode) + ")<gray>: <gold>"
+                + Msg.coins(plugin.economy().balance(id)) + " Coins <dark_gray>· <aqua>" + Msg.coins(plugin.jewels().balance(id)) + " Juwelen");
+        if (de.kuby.kubyplugins.service.ModeService.SURVIVAL.equals(mode)) {
+            Msg.send(p, "<gray>Coins verdienen: <click:run_command:'/job'><white>/job</click><gray>, <click:run_command:'/quest'><white>/quest</click>"
+                    + "<gray>, <click:run_command:'/markt'><white>/markt</click><gray>, Voten. Abgeholtes wartet in <click:run_command:'/abholbox'><white>/abholbox</click><gray>.");
+        }
     }
 
     private void pay(Player p, String[] args) {
@@ -76,9 +86,13 @@ public final class KubyCommand implements CommandExecutor, TabCompleter {
             Msg.send(p, "<red>Nicht genug$ oder ungültiger Betrag.");
             return;
         }
-        plugin.economy().deposit(target.getUniqueId(), amount);
+        // Geld bleibt im Modus des Senders: Wer gerade woanders spielt, bekommt es in diesem Modus gutgeschrieben.
+        String mode = plugin.modes().modeOf(p.getUniqueId());
+        boolean sameMode = mode.equals(plugin.modes().modeOf(target.getUniqueId()));
+        plugin.modes().depositIn(target.getUniqueId(), mode, amount);
         Msg.send(p, "<gray>Du hast <gold>" + Msg.coins(amount) + "$ <gray>an <white>" + target.getName() + " <gray>gesendet.");
-        Msg.send(target, "<gray>Du hast <gold>" + Msg.coins(amount) + "$ <gray>von <white>" + p.getName() + " <gray>erhalten.");
+        Msg.send(target, "<gray>Du hast <gold>" + Msg.coins(amount) + "$ <gray>von <white>" + p.getName() + " <gray>erhalten"
+                + (sameMode ? "." : " <dark_gray>(auf dein " + de.kuby.kubyplugins.service.ModeService.label(mode) + "-Konto)."));
     }
 
     private void setHome(Player p, String name) {
