@@ -17,7 +17,7 @@ Prinzip: Keine GUI. Spiel läuft über physische Dinge am Tisch (Karten, Chips, 
   - [~] Roulette (Build grün, Test im Spiel offen): Tisch per `/casino roulette-tisch`, Einsatz per `/casino setzen <Einsatz> <rot|schwarz|0-36>`, Rad dreht sich nach 20 Sekunden, Anzeige "Warte auf Einsätze". Offen: echtes Rad aus Blöcken mit Drehanimation
   - [~] Slots (Test im Spiel offen): Automat per `/casino automat` (am besten ein Hebel), Rechtsklick dreht, drei Walzen als Anzeigen halten nacheinander an, drei Siebener gewinnen den Jackpot (Rückfluss ohne Jackpot etwa 92 %)
   - [~] Crash (Test im Spiel offen): Automat per `/casino crash`, Anzeige "BEREIT", Rechtsklick steigt ein (10 Chips), nach 10 Sekunden steigt der Multiplikator, Rechtsklick steigt aus. Crash-Punkt steht beim Start fest (1 % Hausvorteil, max. 50x)
-- [~] 1.3 Anleitung (Test im Spiel offen): Regelbuch per `/casino regeln [spiel]`, Rechtsklick auf Kassentisch oder Roulette-Tisch öffnet es, Schleichen + Rechtsklick auf einen Spieltisch zeigt dessen Regeln. Werte kommen aus der config.yml. Offen: Layout an die Casino-Referenz anpassen (Referenz fehlt)
+- [~] 1.3 Anleitung (Test im Spiel offen): Casino-Hilfe als Dialog-Fenster nach der Referenz (Titel, "So geht's", Befehle, Buttons je Spiel, "Hinreisen"). Öffnen per `/casino regeln [spiel]` oder `/casino hilfe`, Rechtsklick auf Kasse oder Roulette-Tisch, Schleichen + Rechtsklick auf einen Spieltisch. Werte aus der config.yml. Offen: roter Rahmen der Referenz braucht Grafiken im Resource Pack
 - [ ] 1.4 Sound und Anzeige: Gewinn, Verlust, Jackpot (Sound + schwebender Text)
 - [ ] 1.5 Admin: Tische einrichten, Einsatzlimits, Auszahlung, Protokoll
 

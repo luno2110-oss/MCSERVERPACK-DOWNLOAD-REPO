@@ -28,11 +28,16 @@ public final class CasinoCommand implements CommandExecutor {
             sender.sendMessage("Nur Spieler können diesen Befehl nutzen.");
             return true;
         }
-        String sub = args.length == 0 ? "status" : args[0].toLowerCase();
+        if (args.length == 0) {
+            plugin.casino().travel(p);
+            return true;
+        }
+        String sub = args[0].toLowerCase();
         switch (sub) {
             case "status" -> status(p);
-            case "kaufen" -> trade(p, args, true);
-            case "verkaufen" -> trade(p, args, false);
+            case "kaufen", "buy" -> trade(p, args, true);
+            case "verkaufen", "sell" -> trade(p, args, false);
+            case "hilfe" -> CasinoRules.open(plugin, p, null);
             case "jackpot" -> jackpot(p, args);
             case "kasse" -> kasse(p);
             case "tisch" -> tisch(p);
@@ -48,7 +53,7 @@ public final class CasinoCommand implements CommandExecutor {
                     Msg.send(p, "<red>Nutzung: /casino regeln [" + String.join("|", CasinoRules.GAMES) + "]");
                 }
             }
-            default -> Msg.send(p, "<red>Nutzung: /casino [status|kaufen <Anzahl>|verkaufen <Anzahl>|jackpot|hit|stand|setzen <Einsatz> <rot|schwarz|0-36>|regeln]");
+            default -> Msg.send(p, "<red>Nutzung: /casino [status|buy <Anzahl>|sell <Anzahl>|jackpot|hit|stand|setzen <Einsatz> <rot|schwarz|0-36>|regeln]");
         }
         return true;
     }

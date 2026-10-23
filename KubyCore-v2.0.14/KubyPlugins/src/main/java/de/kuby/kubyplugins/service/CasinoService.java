@@ -149,6 +149,22 @@ public final class CasinoService {
         updateDisplay();
     }
 
+    /** Teleportiert den Spieler mit Wartezeit zum Kassentisch. Nur in Survival. */
+    public void travel(Player p) {
+        if (!SURVIVAL.equals(plugin.modes().modeOf(p.getUniqueId()))) {
+            Msg.send(p, "<red>Das Casino gibt es nur in Survival. Wechsle erst den Modus.");
+            return;
+        }
+        Location k = kasseLocation();
+        if (k == null) {
+            Msg.send(p, "<red>Das Casino ist noch nicht eingerichtet.");
+            return;
+        }
+        Location target = k.clone().add(0, 1, 0);
+        target.setDirection(p.getLocation().getDirection());
+        de.kuby.kubyplugins.util.Teleports.delayed(plugin, p, target, "Casino");
+    }
+
     /** True, wenn der Ort genau der Block des Kassentischs ist. */
     public boolean isKasse(Location l) {
         Location k = kasseLocation();
