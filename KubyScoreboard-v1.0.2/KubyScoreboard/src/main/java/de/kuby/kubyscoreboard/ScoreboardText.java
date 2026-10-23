@@ -92,13 +92,29 @@ public final class ScoreboardText {
         return w;
     }
 
-    /** Kürzt eine Zeile, wenn sie breiter als maxPx ist. Gekürzte Zeilen verlieren ihre Farben. */
+    /** Kürzt eine Zeile, wenn sie breiter als maxPx ist. Farben und Icons bleiben erhalten. */
     public static String fit(String mini, int maxPx) {
         if (width(plain(mini)) <= maxPx) return mini;
-        String p = plain(mini);
         int ell = width("…");
-        while (!p.isEmpty() && width(p) + ell > maxPx) p = p.substring(0, p.length() - 1);
-        return p + "…";
+        StringBuilder sb = new StringBuilder(mini);
+        while (width(plain(sb.toString())) + ell > maxPx) {
+            int i = lastTextIndex(sb);
+            if (i < 0) break;
+            sb.deleteCharAt(i);
+        }
+        return sb + "…";
+    }
+
+    /** Position des letzten sichtbaren Zeichens (außerhalb von Tags), sonst -1. */
+    private static int lastTextIndex(CharSequence s) {
+        boolean inTag = false;
+        for (int i = s.length() - 1; i >= 0; i--) {
+            char c = s.charAt(i);
+            if (c == '>') inTag = true;
+            else if (c == '<' && inTag) inTag = false;
+            else if (!inTag) return i;
+        }
+        return -1;
     }
 
     /** Geld mit Punkt als Tausendertrenner, ab einer Million verkürzt, damit die Breite gleich bleibt. */

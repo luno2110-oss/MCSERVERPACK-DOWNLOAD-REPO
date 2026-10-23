@@ -3,47 +3,64 @@ package de.kuby.kubyscoreboard;
 import de.kuby.kubyplugins.ui.Ui;
 
 /**
- * Sidebar mit Grafik aus dem Pack KubyUI (Schrift kubyplugins:sb): goldener Rahmen, Logo je Modus, Deko unten.
- * Der ganze Rahmen wird aus dem Titel gezeichnet (Streifen je Zeile, nach unten versetzt). Der Titel ist genau
- * W Pixel breit, alle Zeilen sind schmaler. Damit ist die Sidebar immer genau W breit und der Rahmen sitzt
- * pixelgenau. Er ragt links und rechts 2 px über und deckt so den Standard-Hintergrund ab.
- * Muss zu tools/build_ui_pack.py passen.
+ * Sidebar mit Grafik aus dem Pack KubyUI (Schrift kubyplugins:sb), Maße nach der Referenz:
+ * Sidebar 116 px breit, goldener Rahmen 125 px (6 px links vom Text bis zum Bildschirmrand), 6 px Rand.
+ * Der ganze Rahmen wird aus dem Titel gezeichnet (ein Stück je Zeile, nach unten versetzt), das Logo ragt über
+ * den Rahmen hinaus. Der Titel ist genau W Pixel breit, alle Zeilen sind schmaler, darum sitzt der Rahmen
+ * pixelgenau. Die Deko unten steht in der letzten (leeren) Zeile.
+ * Muss zu tools/build_sb_pack.py passen.
  */
 final class SbUi {
 
-    /** Breite der Sidebar in Pixeln. */
-    static final int W = 140;
+    /** Breite der Sidebar in Pixeln (= Titelbreite). */
+    static final int W = 116;
+    /** Innenbreite des Rahmens; der Text beginnt am linken Innenrand. */
+    static final int INNER = 113;
     static final String FONT = "kubyplugins:sb";
-    private static final int FRAME_ADV = W + 4 + 1;
-    private static final int LOGO_ADV = 90;
-    private static final int MAX_LINES = 39;
+    private static final int FRAME_LEFT = 6;
+    private static final int FRAME_ADV = 125 + 1;
+    /** Vanilla zeigt höchstens 15 Zeilen. */
+    static final int MAX_LINES = 15;
 
     private SbUi() {
     }
 
     /** Titel mit Rahmen für lineCount Zeilen und dem Logo des Modus. */
     static String title(String mode, int lineCount) {
-        int n = Math.min(lineCount, MAX_LINES);
+        int n = Math.max(2, Math.min(lineCount, MAX_LINES));
         String back = Ui.spaceChars(-FRAME_ADV);
-        StringBuilder g = new StringBuilder(Ui.spaceChars(-2));
+        StringBuilder g = new StringBuilder(Ui.spaceChars(-FRAME_LEFT));
         g.append('').append(back);
-        for (int k = 1; k <= n; k++) g.append((char) (0xE100 + k)).append(back);
-        g.append((char) (0xE140 + n + 1)).append(back);
-        g.append(Ui.spaceChars(2));
-        char logo = switch (mode) {
-            case "smp" -> '';
-            case "survival" -> '';
-            default -> '';
-        };
-        int cx = (W - LOGO_ADV) / 2;
-        g.append(Ui.spaceChars(cx)).append(logo).append(Ui.spaceChars(W - cx - LOGO_ADV));
+        for (int k = 1; k <= n - 2; k++) g.append((char) (0xE100 + k)).append(back);
+        // Unterteil: die letzten zwei Zeilen und der untere Rand
+        g.append((char) (0xE140 + n - 1)).append(back);
+        g.append(glyph(mode, ''));
+        g.append(Ui.spaceChars(W - (FRAME_ADV - FRAME_LEFT)));
         return "<font:" + FONT + ">" + g + "</font>";
     }
 
-    /** Zentriert eine Zeile pixelgenau in der Sidebar (die Zeile beginnt später mit einem Leerzeichen). */
+    /** Letzte Zeile: Deko des Modus am unteren Innenrand (Spawner und Gold, liegender Spieler usw.). */
+    static String deco(String mode) {
+        return "<font:" + FONT + ">" + glyph(mode, '') + "</font>";
+    }
+
+    /** Normale Zeile: 1 px Abstand zum Rahmen. */
+    static String indent(String mini) {
+        return mini.isEmpty() ? mini : "<font:" + FONT + ">" + Ui.spaceChars(1) + "</font>" + mini;
+    }
+
+    /** Zentriert eine Zeile pixelgenau im Rahmen. */
     static String center(String mini) {
-        int free = W - ScoreboardText.width(ScoreboardText.plain(mini));
-        int shift = Math.max(0, free / 2 - 4);
+        int free = INNER - ScoreboardText.width(ScoreboardText.plain(mini));
+        int shift = Math.max(0, free / 2);
         return shift == 0 ? mini : "<font:" + FONT + ">" + Ui.spaceChars(shift) + "</font>" + mini;
+    }
+
+    private static char glyph(String mode, char base) {
+        return switch (mode) {
+            case "smp" -> base;
+            case "survival" -> (char) (base + 1);
+            default -> (char) (base + 2);
+        };
     }
 }

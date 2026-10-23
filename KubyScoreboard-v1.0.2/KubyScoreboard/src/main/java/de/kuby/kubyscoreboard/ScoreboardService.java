@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.UnaryOperator;
 
 /**
  * Sidebar für Hub, SMP und Survival. Der Kontostand zählt bei Änderungen Ziffer für Ziffer.
@@ -123,7 +124,7 @@ public final class ScoreboardService {
             String text = "";
             if (i < lines.size()) {
                 text = textured
-                        ? " " + ScoreboardText.fit(lines.get(i), maxPx - 8)
+                        ? ScoreboardText.fit(lines.get(i), maxPx)
                         : ScoreboardText.fit(ScoreboardText.stripIcons(lines.get(i)), maxPx);
             }
             if (!text.equals(prev[i])) {
@@ -219,21 +220,24 @@ public final class ScoreboardService {
                 : "<aqua>" + ScoreboardText.clock(KeyAllTimer.secondsUntilNext());
         String people = ScoreboardText.icon(ScoreboardText.I_PEOPLE) + "<green>" + SmallCaps.of("SPIELER ONLINE");
 
+        // Mit Grafik: Zeilen 1 px vom Rahmen, mittige Zeilen über SbUi, oben eine Leerzeile unter dem Logo.
+        UnaryOperator<String> ind = textured ? SbUi::indent : s -> s;
+        UnaryOperator<String> mid = textured ? SbUi::center : s -> s;
         List<String> out = new ArrayList<>();
+        if (textured) out.add("");
         switch (mode) {
             case ModeService.SMP -> {
                 var st = plugin.stats().get(id);
-                out.add(row(ScoreboardText.I_RANK, "RANG", "<white>" + rank));
-                out.add(row(ScoreboardText.I_TEAM, "TEAM", "<white>" + teamName));
+                out.add(ind.apply(row(ScoreboardText.I_RANK, "RANG", "<white>" + rank)));
+                out.add(ind.apply(row(ScoreboardText.I_TEAM, "TEAM", "<white>" + teamName)));
                 out.add("");
-                out.add(row(ScoreboardText.I_COIN, "COINS", money));
-                out.add(row(ScoreboardText.I_GEM, "JUWELEN", "<light_purple>" + ScoreboardText.number(jewels)));
-                out.add(row(ScoreboardText.I_XP, "XP", "<green>" + ScoreboardText.number(xp)));
-                out.add(row(ScoreboardText.I_TROPHY, "TROPHÄEN", "<light_purple>" + ScoreboardText.number(st.trophies)));
-                out.add(row(ScoreboardText.I_SWORD, "KILLS", "<white>" + ScoreboardText.number(st.kills)));
-                out.add(row(ScoreboardText.I_SKULL, "TODE", "<red>" + ScoreboardText.number(st.deaths)));
-                out.add("");
-                out.add(row(ScoreboardText.I_CLOCK, "KEYALL IN", keyall));
+                out.add(ind.apply(row(ScoreboardText.I_COIN, "COINS", money)));
+                out.add(ind.apply(row(ScoreboardText.I_GEM, "JUWELEN", "<light_purple>" + ScoreboardText.number(jewels))));
+                out.add(ind.apply(row(ScoreboardText.I_XP, "XP", "<green>" + ScoreboardText.number(xp))));
+                out.add(ind.apply(row(ScoreboardText.I_TROPHY, "TROPHÄEN", "<light_purple>" + ScoreboardText.number(st.trophies))));
+                out.add(ind.apply(row(ScoreboardText.I_SWORD, "KILLS", "<white>" + ScoreboardText.number(st.kills))));
+                out.add(ind.apply(row(ScoreboardText.I_SKULL, "TODE", "<red>" + ScoreboardText.number(st.deaths))));
+                out.add(ind.apply(row(ScoreboardText.I_CLOCK, "KEYALL IN", keyall)));
                 out.add("");
                 int w = addon.getConfig().getInt("scoreboard.max-width", 140);
                 String head = "<green>" + SmallCaps.of("SPIELER ONLINE");
@@ -242,33 +246,33 @@ public final class ScoreboardService {
                 out.add(textured ? SbUi.center(count) : ScoreboardText.center(count, w));
             }
             case ModeService.SURVIVAL -> {
-                out.add(row(ScoreboardText.I_RANK, "RANG", "<white>" + rank));
-                out.add(row(ScoreboardText.I_LEVEL, "LEVEL", "<white>—"));
-                out.add(row(ScoreboardText.I_JOB, "JOB", "<white>—"));
+                out.add(ind.apply(row(ScoreboardText.I_RANK, "RANG", "<white>" + rank)));
+                out.add(ind.apply(row(ScoreboardText.I_LEVEL, "LEVEL", "<white>—")));
+                out.add(ind.apply(row(ScoreboardText.I_JOB, "JOB", "<white>—")));
                 out.add("");
-                out.add(row(ScoreboardText.I_COIN, "COINS", money));
-                out.add(row(ScoreboardText.I_GEM, "JUWELEN", "<light_purple>" + ScoreboardText.number(jewels)));
-                out.add(row(ScoreboardText.I_TOKEN, "TOKENS", "<white>—"));
-                out.add(row(ScoreboardText.I_CLAIM, "CLAIMBLÖCKE", "<green>" + ScoreboardText.number(plugin.statValue("claimblocks", id))));
+                out.add(ind.apply(row(ScoreboardText.I_COIN, "COINS", money)));
+                out.add(ind.apply(row(ScoreboardText.I_GEM, "JUWELEN", "<light_purple>" + ScoreboardText.number(jewels))));
+                out.add(ind.apply(row(ScoreboardText.I_TOKEN, "TOKENS", "<white>—")));
+                out.add(ind.apply(row(ScoreboardText.I_CLAIM, "CLAIMBLÖCKE", "<green>" + ScoreboardText.number(plugin.statValue("claimblocks", id)))));
+                out.add(ind.apply(row(ScoreboardText.I_CLOCK, "KEYALL IN", keyall)));
                 out.add("");
-                out.add(row(ScoreboardText.I_CLOCK, "KEYALL IN", keyall));
-                out.add("");
-                out.add(ScoreboardText.smallText(addon.getConfig().getString("scoreboard.survival-hint-1", "<gold>SPAWN VERLASSEN?")));
-                out.add(ScoreboardText.smallText(addon.getConfig().getString("scoreboard.survival-hint-2", "<yellow>→ /bauwelt")));
+                out.add(mid.apply(ScoreboardText.smallText(addon.getConfig().getString("scoreboard.survival-hint-1", "<gold>SPAWN VERLASSEN?"))));
+                out.add(mid.apply(ScoreboardText.smallText(addon.getConfig().getString("scoreboard.survival-hint-2", "<yellow>→ /bauwelt"))));
             }
             default -> {
-                out.add(row(ScoreboardText.I_RANK, "RANG", "<white>" + rank));
+                out.add(ind.apply(row(ScoreboardText.I_RANK, "RANG", "<white>" + rank)));
                 out.add("");
-                out.add(row(ScoreboardText.I_GEM, "JUWELEN", "<light_purple>" + ScoreboardText.number(jewels)));
+                out.add(ind.apply(row(ScoreboardText.I_GEM, "JUWELEN", "<light_purple>" + ScoreboardText.number(jewels))));
                 out.add("");
-                out.add("<green>" + SmallCaps.of("MODUS WÄHLEN:"));
-                out.add("<gray>" + SmallCaps.of("LINKS:") + " <white>" + SmallCaps.of("SMP"));
-                out.add("<gray>" + SmallCaps.of("RECHTS:") + " <white>" + SmallCaps.of("SURVIVAL"));
+                out.add(ind.apply("<green>" + SmallCaps.of("MODUS WÄHLEN:")));
+                out.add(ind.apply("<gray>" + SmallCaps.of("LINKS:") + " <white>" + SmallCaps.of("SMP")));
+                out.add(ind.apply("<gray>" + SmallCaps.of("RECHTS:") + " <white>" + SmallCaps.of("SURVIVAL")));
                 out.add("");
-                out.add(people);
-                out.add("<white>" + online);
+                out.add(mid.apply(people));
+                out.add(mid.apply("<white>" + online));
             }
         }
+        if (textured) out.add(SbUi.deco(mode));
         return out;
     }
 

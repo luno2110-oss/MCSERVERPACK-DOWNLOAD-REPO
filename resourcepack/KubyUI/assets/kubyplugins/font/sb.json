@@ -28,15 +28,15 @@
   {
    "type": "bitmap",
    "file": "kubyplugins:sb/frame_top.png",
-   "height": 9,
-   "ascent": 8,
+   "height": 15,
+   "ascent": 14,
    "chars": [
     "\ue100"
    ]
   },
   {
    "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
+   "file": "kubyplugins:sb/frame_mid_1.png",
    "height": 9,
    "ascent": -1,
    "chars": [
@@ -45,8 +45,8 @@
   },
   {
    "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
+   "file": "kubyplugins:sb/frame_bottom_1.png",
+   "height": 24,
    "ascent": -1,
    "chars": [
     "\ue141"
@@ -54,7 +54,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
+   "file": "kubyplugins:sb/frame_mid_2.png",
    "height": 9,
    "ascent": -10,
    "chars": [
@@ -63,8 +63,8 @@
   },
   {
    "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
+   "file": "kubyplugins:sb/frame_bottom_2.png",
+   "height": 24,
    "ascent": -10,
    "chars": [
     "\ue142"
@@ -72,7 +72,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
+   "file": "kubyplugins:sb/frame_mid_3.png",
    "height": 9,
    "ascent": -19,
    "chars": [
@@ -81,8 +81,8 @@
   },
   {
    "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
+   "file": "kubyplugins:sb/frame_bottom_3.png",
+   "height": 24,
    "ascent": -19,
    "chars": [
     "\ue143"
@@ -90,7 +90,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
+   "file": "kubyplugins:sb/frame_mid_4.png",
    "height": 9,
    "ascent": -28,
    "chars": [
@@ -99,8 +99,8 @@
   },
   {
    "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
+   "file": "kubyplugins:sb/frame_bottom_4.png",
+   "height": 24,
    "ascent": -28,
    "chars": [
     "\ue144"
@@ -108,7 +108,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
+   "file": "kubyplugins:sb/frame_mid_5.png",
    "height": 9,
    "ascent": -37,
    "chars": [
@@ -117,8 +117,8 @@
   },
   {
    "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
+   "file": "kubyplugins:sb/frame_bottom_5.png",
+   "height": 24,
    "ascent": -37,
    "chars": [
     "\ue145"
@@ -126,7 +126,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
+   "file": "kubyplugins:sb/frame_mid_6.png",
    "height": 9,
    "ascent": -46,
    "chars": [
@@ -135,8 +135,8 @@
   },
   {
    "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
+   "file": "kubyplugins:sb/frame_bottom_6.png",
+   "height": 24,
    "ascent": -46,
    "chars": [
     "\ue146"
@@ -144,7 +144,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
+   "file": "kubyplugins:sb/frame_mid_7.png",
    "height": 9,
    "ascent": -55,
    "chars": [
@@ -153,8 +153,8 @@
   },
   {
    "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
+   "file": "kubyplugins:sb/frame_bottom_7.png",
+   "height": 24,
    "ascent": -55,
    "chars": [
     "\ue147"
@@ -162,7 +162,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
+   "file": "kubyplugins:sb/frame_mid_8.png",
    "height": 9,
    "ascent": -64,
    "chars": [
@@ -171,8 +171,8 @@
   },
   {
    "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
+   "file": "kubyplugins:sb/frame_bottom_8.png",
+   "height": 24,
    "ascent": -64,
    "chars": [
     "\ue148"
@@ -180,7 +180,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
+   "file": "kubyplugins:sb/frame_mid_9.png",
    "height": 9,
    "ascent": -73,
    "chars": [
@@ -189,8 +189,8 @@
   },
   {
    "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
+   "file": "kubyplugins:sb/frame_bottom_9.png",
+   "height": 24,
    "ascent": -73,
    "chars": [
     "\ue149"
@@ -198,7 +198,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
+   "file": "kubyplugins:sb/frame_mid_10.png",
    "height": 9,
    "ascent": -82,
    "chars": [
@@ -207,8 +207,8 @@
   },
   {
    "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
+   "file": "kubyplugins:sb/frame_bottom_10.png",
+   "height": 24,
    "ascent": -82,
    "chars": [
     "\ue14a"
@@ -216,7 +216,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
+   "file": "kubyplugins:sb/frame_mid_11.png",
    "height": 9,
    "ascent": -91,
    "chars": [
@@ -225,8 +225,8 @@
   },
   {
    "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
+   "file": "kubyplugins:sb/frame_bottom_11.png",
+   "height": 24,
    "ascent": -91,
    "chars": [
     "\ue14b"
@@ -234,7 +234,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
+   "file": "kubyplugins:sb/frame_mid_12.png",
    "height": 9,
    "ascent": -100,
    "chars": [
@@ -243,8 +243,8 @@
   },
   {
    "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
+   "file": "kubyplugins:sb/frame_bottom_12.png",
+   "height": 24,
    "ascent": -100,
    "chars": [
     "\ue14c"
@@ -252,7 +252,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
+   "file": "kubyplugins:sb/frame_mid_13.png",
    "height": 9,
    "ascent": -109,
    "chars": [
@@ -261,8 +261,8 @@
   },
   {
    "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
+   "file": "kubyplugins:sb/frame_bottom_13.png",
+   "height": 24,
    "ascent": -109,
    "chars": [
     "\ue14d"
@@ -270,7 +270,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
+   "file": "kubyplugins:sb/frame_mid_14.png",
    "height": 9,
    "ascent": -118,
    "chars": [
@@ -279,8 +279,8 @@
   },
   {
    "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
+   "file": "kubyplugins:sb/frame_bottom_14.png",
+   "height": 24,
    "ascent": -118,
    "chars": [
     "\ue14e"
@@ -288,7 +288,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
+   "file": "kubyplugins:sb/frame_mid_15.png",
    "height": 9,
    "ascent": -127,
    "chars": [
@@ -297,8 +297,8 @@
   },
   {
    "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
+   "file": "kubyplugins:sb/frame_bottom_15.png",
+   "height": 24,
    "ascent": -127,
    "chars": [
     "\ue14f"
@@ -306,459 +306,9 @@
   },
   {
    "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
-   "height": 9,
-   "ascent": -136,
-   "chars": [
-    "\ue110"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
-   "ascent": -136,
-   "chars": [
-    "\ue150"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
-   "height": 9,
-   "ascent": -145,
-   "chars": [
-    "\ue111"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
-   "ascent": -145,
-   "chars": [
-    "\ue151"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
-   "height": 9,
-   "ascent": -154,
-   "chars": [
-    "\ue112"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
-   "ascent": -154,
-   "chars": [
-    "\ue152"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
-   "height": 9,
-   "ascent": -163,
-   "chars": [
-    "\ue113"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
-   "ascent": -163,
-   "chars": [
-    "\ue153"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
-   "height": 9,
-   "ascent": -172,
-   "chars": [
-    "\ue114"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
-   "ascent": -172,
-   "chars": [
-    "\ue154"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
-   "height": 9,
-   "ascent": -181,
-   "chars": [
-    "\ue115"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
-   "ascent": -181,
-   "chars": [
-    "\ue155"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
-   "height": 9,
-   "ascent": -190,
-   "chars": [
-    "\ue116"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
-   "ascent": -190,
-   "chars": [
-    "\ue156"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
-   "height": 9,
-   "ascent": -199,
-   "chars": [
-    "\ue117"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
-   "ascent": -199,
-   "chars": [
-    "\ue157"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
-   "height": 9,
-   "ascent": -208,
-   "chars": [
-    "\ue118"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
-   "ascent": -208,
-   "chars": [
-    "\ue158"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
-   "height": 9,
-   "ascent": -217,
-   "chars": [
-    "\ue119"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
-   "ascent": -217,
-   "chars": [
-    "\ue159"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
-   "height": 9,
-   "ascent": -226,
-   "chars": [
-    "\ue11a"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
-   "ascent": -226,
-   "chars": [
-    "\ue15a"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
-   "height": 9,
-   "ascent": -235,
-   "chars": [
-    "\ue11b"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
-   "ascent": -235,
-   "chars": [
-    "\ue15b"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
-   "height": 9,
-   "ascent": -244,
-   "chars": [
-    "\ue11c"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
-   "ascent": -244,
-   "chars": [
-    "\ue15c"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
-   "height": 9,
-   "ascent": -253,
-   "chars": [
-    "\ue11d"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
-   "ascent": -253,
-   "chars": [
-    "\ue15d"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
-   "height": 9,
-   "ascent": -262,
-   "chars": [
-    "\ue11e"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
-   "ascent": -262,
-   "chars": [
-    "\ue15e"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
-   "height": 9,
-   "ascent": -271,
-   "chars": [
-    "\ue11f"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
-   "ascent": -271,
-   "chars": [
-    "\ue15f"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
-   "height": 9,
-   "ascent": -280,
-   "chars": [
-    "\ue120"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
-   "ascent": -280,
-   "chars": [
-    "\ue160"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
-   "height": 9,
-   "ascent": -289,
-   "chars": [
-    "\ue121"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
-   "ascent": -289,
-   "chars": [
-    "\ue161"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
-   "height": 9,
-   "ascent": -298,
-   "chars": [
-    "\ue122"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
-   "ascent": -298,
-   "chars": [
-    "\ue162"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
-   "height": 9,
-   "ascent": -307,
-   "chars": [
-    "\ue123"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
-   "ascent": -307,
-   "chars": [
-    "\ue163"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
-   "height": 9,
-   "ascent": -316,
-   "chars": [
-    "\ue124"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
-   "ascent": -316,
-   "chars": [
-    "\ue164"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
-   "height": 9,
-   "ascent": -325,
-   "chars": [
-    "\ue125"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
-   "ascent": -325,
-   "chars": [
-    "\ue165"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
-   "height": 9,
-   "ascent": -334,
-   "chars": [
-    "\ue126"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
-   "ascent": -334,
-   "chars": [
-    "\ue166"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
-   "height": 9,
-   "ascent": -343,
-   "chars": [
-    "\ue127"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
-   "ascent": -343,
-   "chars": [
-    "\ue167"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_mid.png",
-   "height": 9,
-   "ascent": -352,
-   "chars": [
-    "\ue128"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "kubyplugins:sb/frame_bottom.png",
-   "height": 16,
-   "ascent": -352,
-   "chars": [
-    "\ue168"
-   ]
-  },
-  {
-   "type": "bitmap",
    "file": "kubyplugins:sb/logo_smp.png",
-   "height": 27,
-   "ascent": 25,
+   "height": 43,
+   "ascent": 42,
    "chars": [
     "\ue050"
    ]
@@ -766,8 +316,8 @@
   {
    "type": "bitmap",
    "file": "kubyplugins:sb/logo_survival.png",
-   "height": 27,
-   "ascent": 25,
+   "height": 43,
+   "ascent": 42,
    "chars": [
     "\ue051"
    ]
@@ -775,10 +325,37 @@
   {
    "type": "bitmap",
    "file": "kubyplugins:sb/logo_hub.png",
-   "height": 27,
-   "ascent": 25,
+   "height": 43,
+   "ascent": 42,
    "chars": [
     "\ue052"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/deco_smp.png",
+   "height": 17,
+   "ascent": 16,
+   "chars": [
+    "\ue060"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/deco_survival.png",
+   "height": 17,
+   "ascent": 16,
+   "chars": [
+    "\ue061"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/deco_hub.png",
+   "height": 17,
+   "ascent": 16,
+   "chars": [
+    "\ue062"
    ]
   },
   {
