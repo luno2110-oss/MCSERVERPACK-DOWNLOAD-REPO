@@ -40,6 +40,19 @@ public final class CasinoCommand implements CommandExecutor {
             case "hilfe" -> CasinoRules.open(plugin, p, null);
             case "admin" -> de.kuby.kubyplugins.service.CasinoAdmin.open(plugin, p);
             case "stats" -> CasinoRules.openStats(plugin, p);
+            case "poker-tisch" -> {
+                if (!p.hasPermission("kuby.admin")) {
+                    Msg.send(p, "<red>Nur Admins können den Poker-Tisch setzen.");
+                } else {
+                    Block target = p.getTargetBlockExact(6);
+                    if (target == null) {
+                        Msg.send(p, "<red>Schau auf den Block, der der Poker-Tisch wird.");
+                    } else {
+                        plugin.poker().setTable(target.getLocation());
+                        Msg.send(p, "<green>Poker-Tisch gesetzt. Hinsetzen mit /poker sitzen <Chips>.");
+                    }
+                }
+            }
             case "barkeeper" -> {
                 if (!p.hasPermission("kuby.admin")) {
                     Msg.send(p, "<red>Nur Admins können Barkeeper setzen.");

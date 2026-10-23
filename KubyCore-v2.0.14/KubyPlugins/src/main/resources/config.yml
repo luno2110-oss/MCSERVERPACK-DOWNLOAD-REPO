@@ -112,6 +112,12 @@ casino:
       - kuby.rank.legend
   music:
     volume: 0.6
+  poker:
+    small-blind: 10
+    big-blind: 20
+    min-buyin-bb: 40
+    max-buyin-bb: 200
+    turn-seconds: 30
   blackjack:
     bet: 1
   roulette:

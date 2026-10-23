@@ -38,7 +38,7 @@ public final class CasinoRules {
 
     private static Dialog overview(KubyPlugins plugin) {
         List<String> how = List.of(
-                "Im Casino spielst du mit Chips an Slots, Roulette, Blackjack und Crash.",
+                "Im Casino spielst du mit Chips an Slots, Roulette, Blackjack und Crash. In der VIP-Lounge gibt es Poker.",
                 "Chips tauschst du an der Kasse gegen Coins und wieder zurück. 1 Chip = "
                         + Msg.coins(plugin.casino().price()) + " Coins.",
                 "Jeden " + drawDay(plugin) + " um " + plugin.getConfig().getString("casino.jackpot.draw-time", "19:00")
@@ -49,6 +49,10 @@ public final class CasinoRules {
                         + plugin.getConfig().getLong("casino.vip.daily-chips", 500) + " Chips. Rein darfst du mit dem Legend-Rang"
                         + " oder als einer der besten " + plugin.getConfig().getInt("casino.vip.top", 10)
                         + " in der Casino-Rangliste „Am meisten Plus“.",
+                "In der VIP-Lounge steht ein Pokertisch: Texas Hold'em gegen andere Spieler, Blinds ab "
+                        + plugin.getConfig().getLong("casino.poker.small-blind", 10) + "/" + plugin.getConfig().getLong("casino.poker.big-blind", 20)
+                        + " Chips. Du setzt dich mit " + plugin.getConfig().getLong("casino.poker.min-buyin-bb", 40) + " bis "
+                        + plugin.getConfig().getLong("casino.poker.max-buyin-bb", 200) + " Big Blinds hin und nimmst deinen Stack beim Aufstehen wieder mit.",
                 "Das Casino gibt es nur in Survival.",
                 "Schleichen + Rechtsklick auf einen Tisch zeigt die Regeln dieses Spiels.");
         List<String[]> commands = List.of(
@@ -57,6 +61,7 @@ public final class CasinoRules {
                 new String[]{"/casino sell <Anzahl>", "Chips eintauschen"},
                 new String[]{"/casino stats", "Rangliste"},
                 new String[]{"/music", "Casino-Musik"},
+                new String[]{"/poker", "Poker in der VIP-Lounge"},
                 new String[]{"/casino status", "Deine Chips und der Jackpot"},
                 new String[]{"/casino regeln", "Diese Hilfe"});
         List<ActionButton> buttons = new ArrayList<>();
@@ -67,7 +72,7 @@ public final class CasinoRules {
         buttons.add(button("<white>Rangliste", "Am meisten Plus", 100, pl -> openStats(plugin, pl)));
         buttons.add(button("<red><b>Hinreisen</b>", "Zum Casino teleportieren", 100,
                 pl -> plugin.casino().travel(pl)));
-        return build("CASINO", "Slots, Roulette, Blackjack und Crash", how, commands, buttons);
+        return build("CASINO", "Slots, Roulette, Blackjack, Poker und Crash", how, commands, buttons);
     }
 
     /** Rangliste "Am meisten Plus": Top 10 und der eigene Platz. */

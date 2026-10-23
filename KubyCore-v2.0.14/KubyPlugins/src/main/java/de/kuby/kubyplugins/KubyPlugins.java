@@ -18,6 +18,8 @@ import de.kuby.kubyplugins.service.JackpotDraw;
 import de.kuby.kubyplugins.service.CasinoVip;
 import de.kuby.kubyplugins.service.CasinoMusic;
 import de.kuby.kubyplugins.listener.CasinoVipListener;
+import de.kuby.kubyplugins.service.PokerService;
+import de.kuby.kubyplugins.command.PokerCommand;
 import de.kuby.kubyplugins.command.CasinoCommand;
 import de.kuby.kubyplugins.service.ModuleService;
 import de.kuby.kubyplugins.listener.WorldBorderListener;
@@ -136,6 +138,7 @@ public final class KubyPlugins extends JavaPlugin {
     private JackpotDraw jackpotDraw;
     private CasinoVip casinoVip;
     private CasinoMusic casinoMusic;
+    private PokerService poker;
     private EditModeService edit;
     private RegionService regions;
     private HubSettingsService hubSettings;
@@ -189,6 +192,8 @@ public final class KubyPlugins extends JavaPlugin {
         jackpotDraw.start();
         casinoVip = new CasinoVip(this);
         casinoMusic = new CasinoMusic(this);
+        poker = new PokerService(this);
+        poker.start();
         blackjack = new BlackjackService(this);
         roulette = new RouletteService(this);
         slots = new SlotsService(this);
@@ -206,6 +211,7 @@ public final class KubyPlugins extends JavaPlugin {
         modes.registerBusyCheck(p -> pvp().inCombat(p.getUniqueId()));
         modes.registerBusyCheck(p -> rtpQueue().inQueue(p.getUniqueId()));
         modes.registerBusyCheck(p -> blackjack.inGame(p.getUniqueId()));
+        modes.registerBusyCheck(p -> poker.isSeated(p.getUniqueId()));
         modes.registerExtras(java.util.List.of(homes, battlepass, cosmetics, kits, tags, daily, investments, shopStorage));
         playtime = new PlaytimeService(this);
         tpa = new TpaService(this);
@@ -230,6 +236,7 @@ public final class KubyPlugins extends JavaPlugin {
         setAll(new JewelCommand(this), "juwelen", "juwelenshop");
         setAll(new CoinflipCommand(this), "coinflip");
         setAll(new CasinoCommand(this), "casino");
+        setAll(new PokerCommand(this), "poker");
         setAll((sender, command, label, args) -> {
             if (sender instanceof org.bukkit.entity.Player p) casinoMusic.openMenu(p);
             return true;
@@ -260,6 +267,7 @@ public final class KubyPlugins extends JavaPlugin {
             roulette.respawn();
             slots.respawn();
             crash.respawn();
+            poker.respawn();
             hubSettings.applyAll();
         }, 40L);
 
@@ -280,6 +288,7 @@ public final class KubyPlugins extends JavaPlugin {
         roulette.shutdown();
         slots.shutdown();
         crash.shutdown();
+        poker.shutdown();
         saveAll();
     }
 
@@ -408,6 +417,7 @@ public final class KubyPlugins extends JavaPlugin {
     public JackpotDraw jackpotDraw() { return jackpotDraw; }
     public CasinoVip casinoVip() { return casinoVip; }
     public CasinoMusic casinoMusic() { return casinoMusic; }
+    public PokerService poker() { return poker; }
     public EditModeService edit() { return edit; }
     public RegionService regions() { return regions; }
     public HubSettingsService hubSettings() { return hubSettings; }

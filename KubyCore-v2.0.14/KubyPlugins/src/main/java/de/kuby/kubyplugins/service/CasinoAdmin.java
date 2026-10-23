@@ -63,7 +63,8 @@ public final class CasinoAdmin {
                 + " " + mark("Blackjack", plugin.casino().tableLocation() != null)
                 + " " + mark("Roulette", plugin.roulette().hasTable())
                 + " " + mark("Slots", plugin.slots().hasMachine())
-                + " " + mark("Crash", plugin.crash().hasMachine())));
+                + " " + mark("Crash", plugin.crash().hasMachine())
+                + " " + mark("Poker", plugin.poker().hasTable())));
 
         StringBuilder payout = new StringBuilder("<red><b>AUSZAHLUNG</b></red>");
         Map<String, CasinoLog.Totals> totals = plugin.casinoLog().totals();
@@ -128,6 +129,7 @@ public final class CasinoAdmin {
         buttons.add(command("Roulette-Tisch", "casino roulette-tisch"));
         buttons.add(command("Slots-Automat", "casino automat"));
         buttons.add(command("Crash-Automat", "casino crash"));
+        buttons.add(command("Poker-Tisch", "casino poker-tisch"));
         buttons.add(button("<white>Barkeeper setzen", "Stellt einen Barkeeper an deine Position", (pl, response) -> pl.performCommand("casino barkeeper")));
         buttons.add(button("<white>Protokoll", "Die letzten Einträge", (pl, response) -> pl.showDialog(logDialog(plugin))));
         buttons.add(button("<gold>Jackpot jetzt ziehen", "Zieht sofort unter den aktuellen Teilnehmern", (pl, response) -> {
