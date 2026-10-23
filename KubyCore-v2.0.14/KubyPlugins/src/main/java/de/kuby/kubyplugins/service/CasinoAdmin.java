@@ -128,6 +128,7 @@ public final class CasinoAdmin {
         buttons.add(command("Roulette-Tisch", "casino roulette-tisch"));
         buttons.add(command("Slots-Automat", "casino automat"));
         buttons.add(command("Crash-Automat", "casino crash"));
+        buttons.add(button("<white>Barkeeper setzen", "Stellt einen Barkeeper an deine Position", (pl, response) -> pl.performCommand("casino barkeeper")));
         buttons.add(button("<white>Protokoll", "Die letzten Einträge", (pl, response) -> pl.showDialog(logDialog(plugin))));
         buttons.add(button("<gold>Jackpot jetzt ziehen", "Zieht sofort unter den aktuellen Teilnehmern", (pl, response) -> {
             plugin.jackpotDraw().drawNow();

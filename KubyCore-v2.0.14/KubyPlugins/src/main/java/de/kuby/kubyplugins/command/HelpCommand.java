@@ -44,6 +44,7 @@ public final class HelpCommand implements CommandExecutor {
                     new Entry("/shop", "Items mit$ kaufen", null),
                     new Entry("/coinflip <Betrag>", "50/50 um$", null),
                     new Entry("/casino", "Chips, Jackpot, Blackjack, Roulette, Slots, Crash", null),
+                    new Entry("/music", "Casino-Musik aussuchen", null),
                     new Entry("/dailypot", "Tagespot: Lose kaufen", null))),
             new Page("Markt & Handel", List.of(
                     new Entry("/markt", "Auktionshaus öffnen", null),

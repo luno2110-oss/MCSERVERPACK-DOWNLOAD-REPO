@@ -42,6 +42,7 @@ public final class CasinoLog {
     private final Object writeLock = new Object();
     private final Deque<String> recent = new ArrayDeque<>();
     private final Map<String, Totals> totals = new LinkedHashMap<>();
+    private final Map<UUID, Long> playerNet = new java.util.HashMap<>();
     private long jackpotsPaid;
     private long jackpotMoney;
 
@@ -60,6 +61,15 @@ public final class CasinoLog {
                 totals.put(game, t);
             }
         }
+        ConfigurationSection players = yml.getConfigurationSection("players");
+        if (players != null) {
+            for (String key : players.getKeys(false)) {
+                try {
+                    playerNet.put(UUID.fromString(key), players.getLong(key));
+                } catch (IllegalArgumentException ignored) {
+                }
+            }
+        }
         jackpotsPaid = yml.getLong("jackpot.count");
         jackpotMoney = yml.getLong("jackpot.money");
     }
@@ -71,6 +81,7 @@ public final class CasinoLog {
         t.staked += staked;
         t.paid += paid;
         long net = paid - staked;
+        playerNet.merge(player, net, Long::sum);
         write(String.format("%s | %s | %s | Einsatz %d | Auszahlung %d | %s%d",
                 LocalDateTime.now().format(TIME), nameOf(player), game, staked, paid, net >= 0 ? "+" : "", net));
     }
@@ -98,6 +109,28 @@ public final class CasinoLog {
         return copy;
     }
 
+    /** Rangliste "Am meisten Plus": Spieler nach Gewinn minus Einsatz (Chips), höchster zuerst. */
+    public synchronized List<Map.Entry<UUID, Long>> top(int n) {
+        List<Map.Entry<UUID, Long>> list = new ArrayList<>(playerNet.entrySet());
+        list.sort((a, b) -> Long.compare(b.getValue(), a.getValue()));
+        List<Map.Entry<UUID, Long>> out = new ArrayList<>();
+        for (int i = 0; i < Math.min(n, list.size()); i++) out.add(Map.entry(list.get(i).getKey(), list.get(i).getValue()));
+        return out;
+    }
+
+    /** Platz in der Rangliste (ab 1), 0 wenn der Spieler noch nicht gespielt hat. */
+    public synchronized int rankOf(UUID id) {
+        Long mine = playerNet.get(id);
+        if (mine == null) return 0;
+        int rank = 1;
+        for (long v : playerNet.values()) if (v > mine) rank++;
+        return rank;
+    }
+
+    public synchronized long netOf(UUID id) {
+        return playerNet.getOrDefault(id, 0L);
+    }
+
     public synchronized long jackpotsPaid() {
         return jackpotsPaid;
     }
@@ -113,6 +146,7 @@ public final class CasinoLog {
             out.set("games." + e.getKey() + ".staked", e.getValue().staked);
             out.set("games." + e.getKey() + ".paid", e.getValue().paid);
         }
+        for (Map.Entry<UUID, Long> e : playerNet.entrySet()) out.set("players." + e.getKey(), e.getValue());
         out.set("jackpot.count", jackpotsPaid);
         out.set("jackpot.money", jackpotMoney);
         try {

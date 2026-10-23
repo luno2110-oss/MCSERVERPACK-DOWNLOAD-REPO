@@ -39,6 +39,18 @@ public final class CasinoCommand implements CommandExecutor {
             case "verkaufen", "sell" -> trade(p, args, false);
             case "hilfe" -> CasinoRules.open(plugin, p, null);
             case "admin" -> de.kuby.kubyplugins.service.CasinoAdmin.open(plugin, p);
+            case "stats" -> CasinoRules.openStats(plugin, p);
+            case "barkeeper" -> {
+                if (!p.hasPermission("kuby.admin")) {
+                    Msg.send(p, "<red>Nur Admins können Barkeeper setzen.");
+                } else if (args.length > 1 && args[1].equalsIgnoreCase("entfernen")) {
+                    Msg.send(p, plugin.casinoVip().removeBarkeeper(p)
+                            ? "<green>Barkeeper entfernt." : "<red>Kein Barkeeper im Umkreis von 5 Blöcken.");
+                } else {
+                    plugin.casinoVip().spawnBarkeeper(p);
+                    Msg.send(p, "<green>Barkeeper gesetzt. Entfernen mit /casino barkeeper entfernen.");
+                }
+            }
             case "jackpot" -> jackpot(p, args);
             case "kasse" -> kasse(p);
             case "tisch" -> tisch(p);
@@ -54,7 +66,7 @@ public final class CasinoCommand implements CommandExecutor {
                     Msg.send(p, "<red>Nutzung: /casino regeln [" + String.join("|", CasinoRules.GAMES) + "]");
                 }
             }
-            default -> Msg.send(p, "<red>Nutzung: /casino [status|buy <Anzahl>|sell <Anzahl>|jackpot|hit|stand|setzen <Einsatz> <rot|schwarz|0-36>|regeln]");
+            default -> Msg.send(p, "<red>Nutzung: /casino [status|buy <Anzahl>|sell <Anzahl>|jackpot|hit|stand|setzen <Einsatz> <rot|schwarz|0-36>|stats|regeln]");
         }
         return true;
     }

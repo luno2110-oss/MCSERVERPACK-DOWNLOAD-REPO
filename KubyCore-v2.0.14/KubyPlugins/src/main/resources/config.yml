@@ -103,6 +103,15 @@ casino:
     draw-day: SATURDAY
     draw-time: "19:00"
     seven-wins: false
+  vip:
+    region: casino-vip
+    daily-chips: 500
+    top: 10
+    rank-permissions:
+      - group.legend
+      - kuby.rank.legend
+  music:
+    volume: 0.6
   blackjack:
     bet: 1
   roulette:

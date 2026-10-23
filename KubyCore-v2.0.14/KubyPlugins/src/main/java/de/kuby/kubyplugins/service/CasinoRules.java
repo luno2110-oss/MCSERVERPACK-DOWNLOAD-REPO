@@ -44,12 +44,19 @@ public final class CasinoRules {
                 "Jeden " + drawDay(plugin) + " um " + plugin.getConfig().getString("casino.jackpot.draw-time", "19:00")
                         + " Uhr wird der Jackpot ausgelost. Er wächst mit jedem Einsatz im Casino. Wer seit der letzten Ziehung"
                         + " einmal gespielt hat, ist dabei, und einer gewinnt den ganzen Topf.",
+                "Im Casino läuft Musik. Mit /music suchst du dir Songs aus, das geht nur im Casino.",
+                "In der VIP-Lounge geben dir die Barkeeper einmal am Tag "
+                        + plugin.getConfig().getLong("casino.vip.daily-chips", 500) + " Chips. Rein darfst du mit dem Legend-Rang"
+                        + " oder als einer der besten " + plugin.getConfig().getInt("casino.vip.top", 10)
+                        + " in der Casino-Rangliste „Am meisten Plus“.",
                 "Das Casino gibt es nur in Survival.",
                 "Schleichen + Rechtsklick auf einen Tisch zeigt die Regeln dieses Spiels.");
         List<String[]> commands = List.of(
                 new String[]{"/casino", "Ins Casino"},
                 new String[]{"/casino buy <Anzahl>", "Chips kaufen"},
                 new String[]{"/casino sell <Anzahl>", "Chips eintauschen"},
+                new String[]{"/casino stats", "Rangliste"},
+                new String[]{"/music", "Casino-Musik"},
                 new String[]{"/casino status", "Deine Chips und der Jackpot"},
                 new String[]{"/casino regeln", "Diese Hilfe"});
         List<ActionButton> buttons = new ArrayList<>();
@@ -57,9 +64,30 @@ public final class CasinoRules {
             buttons.add(button("<white>" + title(g), "Regeln: " + title(g), 100,
                     pl -> pl.showDialog(gamePage(plugin, g))));
         }
+        buttons.add(button("<white>Rangliste", "Am meisten Plus", 100, pl -> openStats(plugin, pl)));
         buttons.add(button("<red><b>Hinreisen</b>", "Zum Casino teleportieren", 100,
                 pl -> plugin.casino().travel(pl)));
         return build("CASINO", "Slots, Roulette, Blackjack und Crash", how, commands, buttons);
+    }
+
+    /** Rangliste "Am meisten Plus": Top 10 und der eigene Platz. */
+    public static void openStats(KubyPlugins plugin, Player p) {
+        List<String> lines = new ArrayList<>();
+        List<java.util.Map.Entry<java.util.UUID, Long>> top = plugin.casinoLog().top(10);
+        if (top.isEmpty()) lines.add("Noch hat niemand gespielt.");
+        for (int i = 0; i < top.size(); i++) {
+            String name = org.bukkit.Bukkit.getOfflinePlayer(top.get(i).getKey()).getName();
+            long net = top.get(i).getValue();
+            lines.add((i + 1) + ". " + (name == null ? "?" : name) + "  " + (net >= 0 ? "+" : "") + net + " Chips");
+        }
+        int rank = plugin.casinoLog().rankOf(p.getUniqueId());
+        long mine = plugin.casinoLog().netOf(p.getUniqueId());
+        lines.add(rank == 0 ? "Du hast noch nicht gespielt."
+                : "Dein Platz: " + rank + "  (" + (mine >= 0 ? "+" : "") + mine + " Chips)");
+        List<ActionButton> buttons = new ArrayList<>();
+        buttons.add(button("<white>< Casino", "Zurück zur Übersicht", 100, pl -> pl.showDialog(overview(plugin))));
+        buttons.add(button("<red><b>Hinreisen</b>", "Zum Casino teleportieren", 100, pl -> plugin.casino().travel(pl)));
+        p.showDialog(build("RANGLISTE", "Am meisten Plus: Gewinne minus Einsätze", lines, List.of(), buttons));
     }
 
     private static Dialog gamePage(KubyPlugins plugin, String game) {

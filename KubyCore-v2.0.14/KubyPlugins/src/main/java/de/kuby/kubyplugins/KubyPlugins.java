@@ -15,6 +15,9 @@ import de.kuby.kubyplugins.service.SlotsService;
 import de.kuby.kubyplugins.service.CrashService;
 import de.kuby.kubyplugins.service.CasinoLog;
 import de.kuby.kubyplugins.service.JackpotDraw;
+import de.kuby.kubyplugins.service.CasinoVip;
+import de.kuby.kubyplugins.service.CasinoMusic;
+import de.kuby.kubyplugins.listener.CasinoVipListener;
 import de.kuby.kubyplugins.command.CasinoCommand;
 import de.kuby.kubyplugins.service.ModuleService;
 import de.kuby.kubyplugins.listener.WorldBorderListener;
@@ -131,6 +134,8 @@ public final class KubyPlugins extends JavaPlugin {
     private CrashService crash;
     private CasinoLog casinoLog;
     private JackpotDraw jackpotDraw;
+    private CasinoVip casinoVip;
+    private CasinoMusic casinoMusic;
     private EditModeService edit;
     private RegionService regions;
     private HubSettingsService hubSettings;
@@ -182,6 +187,8 @@ public final class KubyPlugins extends JavaPlugin {
         casinoLog = new CasinoLog(this);
         jackpotDraw = new JackpotDraw(this);
         jackpotDraw.start();
+        casinoVip = new CasinoVip(this);
+        casinoMusic = new CasinoMusic(this);
         blackjack = new BlackjackService(this);
         roulette = new RouletteService(this);
         slots = new SlotsService(this);
@@ -223,6 +230,10 @@ public final class KubyPlugins extends JavaPlugin {
         setAll(new JewelCommand(this), "juwelen", "juwelenshop");
         setAll(new CoinflipCommand(this), "coinflip");
         setAll(new CasinoCommand(this), "casino");
+        setAll((sender, command, label, args) -> {
+            if (sender instanceof org.bukkit.entity.Player p) casinoMusic.openMenu(p);
+            return true;
+        }, "music");
         setAll(new AdminCommand(this), "kadmin");
         setAll(new HelpCommand(this), "befehle", "menu");
         setAll(new ExtraCommand(this), "dailypot", "trade", "tags", "rtpqueue", "meta", "booster", "xpshop", "battlepass", "cosmetics", "turnier", "verify", "versichern", "enderchest", "kristaltrade", "investments", "quizvote", "totenkiste", "kits", "hub", "tpa", "tpaccept", "tpadeny", "spielzeit");
@@ -241,6 +252,7 @@ public final class KubyPlugins extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new EditListener(this), this);
         getServer().getPluginManager().registerEvents(new RegionListener(this), this);
         getServer().getPluginManager().registerEvents(new BlackjackListener(this), this);
+        getServer().getPluginManager().registerEvents(new CasinoVipListener(this), this);
         getServer().getScheduler().runTaskLater(this, () -> {
             markers.respawnAll();
             casino.respawn();
@@ -292,6 +304,7 @@ public final class KubyPlugins extends JavaPlugin {
         casino.save();
         casinoLog.save();
         jackpotDraw.save();
+        casinoVip.save();
         homes.save();
         shop.save();
         shopStorage.save();
@@ -393,6 +406,8 @@ public final class KubyPlugins extends JavaPlugin {
     public CrashService crash() { return crash; }
     public CasinoLog casinoLog() { return casinoLog; }
     public JackpotDraw jackpotDraw() { return jackpotDraw; }
+    public CasinoVip casinoVip() { return casinoVip; }
+    public CasinoMusic casinoMusic() { return casinoMusic; }
     public EditModeService edit() { return edit; }
     public RegionService regions() { return regions; }
     public HubSettingsService hubSettings() { return hubSettings; }
