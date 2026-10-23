@@ -164,7 +164,7 @@ public final class SlotsService {
         Location m = machine();
         Location fxAt = m == null ? null : m.clone().add(0, 2.8, 0);
         String result;
-        if (three && r[0] == Symbol.SEVEN) {
+        if (three && r[0] == Symbol.SEVEN && plugin.getConfig().getBoolean("casino.jackpot.seven-wins", false)) {
             long money = plugin.casino().claimJackpot();
             CasinoFx.jackpot(plugin, s.player, fxAt, money);
             plugin.casinoLog().recordJackpot(s.player, money);

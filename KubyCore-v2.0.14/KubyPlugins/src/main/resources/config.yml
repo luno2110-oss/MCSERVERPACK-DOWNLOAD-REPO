@@ -99,6 +99,10 @@ casino:
   jackpot-start: 10000
   kasse-radius: 5
   jackpot-share: 0.01
+  jackpot:
+    draw-day: SATURDAY
+    draw-time: "19:00"
+    seven-wins: false
   blackjack:
     bet: 1
   roulette:

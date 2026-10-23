@@ -57,7 +57,8 @@ public final class CasinoAdmin {
         List<DialogBody> body = new ArrayList<>();
         body.add(text("<red><b>STATUS</b></red>\n"
                 + "<white>Casino: " + (open ? "<green>offen" : "<red>geschlossen") + "\n"
-                + "<white>Jackpot: <gold>" + Msg.coins(plugin.casino().jackpot()) + " Coins\n"
+                + "<white>Jackpot: <gold>" + Msg.coins(plugin.casino().jackpot()) + " Coins"
+                + " <gray>· Ziehung " + plugin.jackpotDraw().nextDrawLabel() + " · " + plugin.jackpotDraw().participantCount() + " Teilnehmer\n"
                 + "<white>Aufbau: " + mark("Kasse", plugin.casino().hasKasse())
                 + " " + mark("Blackjack", plugin.casino().tableLocation() != null)
                 + " " + mark("Roulette", plugin.roulette().hasTable())
@@ -128,6 +129,10 @@ public final class CasinoAdmin {
         buttons.add(command("Slots-Automat", "casino automat"));
         buttons.add(command("Crash-Automat", "casino crash"));
         buttons.add(button("<white>Protokoll", "Die letzten Einträge", (pl, response) -> pl.showDialog(logDialog(plugin))));
+        buttons.add(button("<gold>Jackpot jetzt ziehen", "Zieht sofort unter den aktuellen Teilnehmern", (pl, response) -> {
+            plugin.jackpotDraw().drawNow();
+            pl.showDialog(main(plugin));
+        }));
 
         DialogBase base = DialogBase.builder(Msg.parse("<red><b>CASINO-ADMIN</b>"))
                 .canCloseWithEscape(true)

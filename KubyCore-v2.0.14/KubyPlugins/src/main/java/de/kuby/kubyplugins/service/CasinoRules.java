@@ -41,7 +41,9 @@ public final class CasinoRules {
                 "Im Casino spielst du mit Chips an Slots, Roulette, Blackjack und Crash.",
                 "Chips tauschst du an der Kasse gegen Coins und wieder zurück. 1 Chip = "
                         + Msg.coins(plugin.casino().price()) + " Coins.",
-                "Von jedem Einsatz geht 1 % in den Jackpot. Er schwebt über der Kasse. Drei Siebener bei Slots knacken ihn.",
+                "Jeden " + drawDay(plugin) + " um " + plugin.getConfig().getString("casino.jackpot.draw-time", "19:00")
+                        + " Uhr wird der Jackpot ausgelost. Er wächst mit jedem Einsatz im Casino. Wer seit der letzten Ziehung"
+                        + " einmal gespielt hat, ist dabei, und einer gewinnt den ganzen Topf.",
                 "Das Casino gibt es nur in Survival.",
                 "Schleichen + Rechtsklick auf einen Tisch zeigt die Regeln dieses Spiels.");
         List<String[]> commands = List.of(
@@ -89,7 +91,8 @@ public final class CasinoRules {
                 how = List.of(
                         "Rechtsklick auf den Hebel dreht. Einsatz: " + c.getLong("casino.slots.bet", 1) + " Chip(s).",
                         "♣ 8-fach · ♦ 12-fach · ♥ 25-fach · ★ 60-fach",
-                        "7 7 7: 100-fach und der Jackpot.");
+                        plugin.getConfig().getBoolean("casino.jackpot.seven-wins", false)
+                                ? "7 7 7: 100-fach und der Jackpot." : "7 7 7: 100-fach.");
             }
             default -> {
                 subtitle = "Rechtzeitig aussteigen";
@@ -134,6 +137,18 @@ public final class CasinoRules {
                 DialogAction.customClick((response, audience) -> {
                     if (audience instanceof Player pl) onClick.accept(pl);
                 }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).build()));
+    }
+
+    private static String drawDay(KubyPlugins plugin) {
+        return switch (plugin.getConfig().getString("casino.jackpot.draw-day", "SATURDAY").toUpperCase(java.util.Locale.ROOT)) {
+            case "MONDAY" -> "Montag";
+            case "TUESDAY" -> "Dienstag";
+            case "WEDNESDAY" -> "Mittwoch";
+            case "THURSDAY" -> "Donnerstag";
+            case "FRIDAY" -> "Freitag";
+            case "SUNDAY" -> "Sonntag";
+            default -> "Samstag";
+        };
     }
 
     private static String title(String game) {

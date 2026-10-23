@@ -132,6 +132,7 @@ public final class CasinoService {
         if (count <= 0 || have < count) return false;
         chips.put(id, have - count);
         save();
+        if (plugin.jackpotDraw() != null) plugin.jackpotDraw().join(id);
         return true;
     }
 
@@ -195,6 +196,11 @@ public final class CasinoService {
         updateDisplay();
     }
 
+    /** Position des Kassentischs, null wenn nicht gesetzt. */
+    public Location kasse() {
+        return kasseLocation();
+    }
+
     private Location kasseLocation() {
         return parse(kasse);
     }
@@ -234,7 +240,9 @@ public final class CasinoService {
                 d.setPersistent(true);
             });
         }
-        display.text(Msg.parse("<gold>JACKPOT <yellow>" + Msg.coins(jackpot) + "$"));
+        String draw = plugin.jackpotDraw() == null ? ""
+                : "\n<gray>Ziehung " + plugin.jackpotDraw().nextDrawLabel() + " · " + plugin.jackpotDraw().participantCount() + " dabei";
+        display.text(Msg.parse("<gold>JACKPOT <yellow>" + Msg.coins(jackpot) + "$" + draw));
     }
 
     public synchronized void save() {
