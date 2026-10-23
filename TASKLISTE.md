@@ -189,3 +189,10 @@ Bereits vorhanden (mit Referenz verknüpfen): Kits, Enderchest, Kristalltausch, 
 - [ ] Etappe 4: Skyblock-Module (Insel-Vorlagen, Loot-Tabellen)
 - [ ] Juwelen für sehr seltene Items
 - [ ] Skyblock-Welt anlegen: /kp create skyblock, danach Spawn setzen
+
+## Entscheidungen (Stand: Sitzung mit Claude)
+- Ziel: Paper 1.21.11. SMP = PvP und Action (töten, greifen erlaubt, außer Cheaten, Duplizieren und Bugs ausnutzen). Survival = ruhig, bauen und farmen, Plots geschützt bzw. claimbar.
+- Bugs, Glitches und Exploits werden zum Schluss geprüft, nicht zwischendurch.
+- 7.7 Vote-Anbindung: NuVotifier/Votifier (Vote-Event).
+- Kits: nach Rang. Rang-Liste (kuby.rank.*) fehlt noch, sie blockiert 9.6 und die Kit-Inhalte 2 bis 5.
+- Casino (Gruppe 1): zuerst nur die Grundlagen (Region, Chips, Umtausch, Jackpot-Anzeige). Spiele danach.
