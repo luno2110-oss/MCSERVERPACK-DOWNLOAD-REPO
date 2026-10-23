@@ -35,6 +35,10 @@ commands:
     description: "Kistenläden: deine Läden und Anleitung"
     usage: "/chestshop [help]"
     aliases: [laden, shops]
+  pet:
+    description: "Haustiere: Menü, rufen, wegschicken, reiten (Kisten/Ränge: /pet give <Spieler> <id>)"
+    usage: "/pet [summon <Name>|dismiss|ride]"
+    aliases: [pets, haustier]
   farmpass:
     description: "Farmpass: Vorteile, Haustier, Fliegen (Store: /farmpass give <Spieler> [Tage])"
     usage: "/farmpass [pet|fly|kiste]"

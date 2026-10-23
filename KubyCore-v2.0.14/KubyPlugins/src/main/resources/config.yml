@@ -280,7 +280,7 @@ farmpass:
       - "EXPERIENCE_BOTTLE;16"
       - "DIAMOND;3"
   pets: [fuchs, axolotl, panda, papagei]              # 4 Haustiere nur für den Pass
-  monthly-pets: [katze, hund, hase, schildkroete, biene, frosch, ziege, otter]   # pro bezahltem Monat eins zum Behalten
+  monthly-pets: [katze, hund, hase, schildkroete, biene, frosch, ziege, guerteltier]   # pro bezahltem Monat eins zum Behalten
 
 level:
   xp-per-minute: 5                # Spieler-XP pro aktiver Minute in Survival (dazu alle Job-XP und Quest-XP)

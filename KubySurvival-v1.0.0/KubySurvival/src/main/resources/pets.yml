@@ -1,0 +1,28 @@
+# Haustiere. Jedes Haustier: Name, Tier (Minecraft-Entity), baby (klein bleiben), reitbar (nur Pferde-Arten und Kamel),
+# preis (Coins im Haustier-Menü, 0 = nicht kaufbar), quelle (Text im Menü, woher man es sonst bekommt).
+# Farmpass-Haustiere und Monats-Haustiere stehen in der Kern-Config (farmpass.pets / farmpass.monthly-pets).
+# Kisten und Ränge vergeben Haustiere per "/pet give <Spieler> <id>" oder mit der Permission kuby.pet.<id>.
+pets:
+  huhn:       {name: "Huhn",        tier: CHICKEN,         baby: true,  reitbar: false, preis: 5000,   quelle: "Haustier-Menü"}
+  schaf:      {name: "Schaf",       tier: SHEEP,           baby: true,  reitbar: false, preis: 8000,   quelle: "Haustier-Menü"}
+  schwein:    {name: "Schweinchen", tier: PIG,             baby: true,  reitbar: false, preis: 8000,   quelle: "Haustier-Menü"}
+  kuh:        {name: "Kälbchen",    tier: COW,             baby: true,  reitbar: false, preis: 10000,  quelle: "Haustier-Menü"}
+  esel:       {name: "Esel",        tier: DONKEY,          baby: false, reitbar: true,  preis: 40000,  quelle: "Haustier-Menü"}
+  pferd:      {name: "Pferd",       tier: HORSE,           baby: false, reitbar: true,  preis: 75000,  quelle: "Haustier-Menü"}
+  kamel:      {name: "Kamel",       tier: CAMEL,           baby: false, reitbar: true,  preis: 120000, quelle: "Haustier-Menü"}
+  fuchs:      {name: "Fuchs",       tier: FOX,             baby: true,  reitbar: false, preis: 0,      quelle: "Farmpass"}
+  axolotl:    {name: "Axolotl",     tier: AXOLOTL,         baby: true,  reitbar: false, preis: 0,      quelle: "Farmpass"}
+  panda:      {name: "Panda",       tier: PANDA,           baby: true,  reitbar: false, preis: 0,      quelle: "Farmpass"}
+  papagei:    {name: "Papagei",     tier: PARROT,          baby: false, reitbar: false, preis: 0,      quelle: "Farmpass"}
+  katze:      {name: "Katze",       tier: CAT,             baby: true,  reitbar: false, preis: 0,      quelle: "Farmpass-Monat"}
+  hund:       {name: "Hund",        tier: WOLF,            baby: true,  reitbar: false, preis: 0,      quelle: "Farmpass-Monat"}
+  hase:       {name: "Hase",        tier: RABBIT,          baby: true,  reitbar: false, preis: 0,      quelle: "Farmpass-Monat"}
+  schildkroete: {name: "Schildkröte", tier: TURTLE,        baby: true,  reitbar: false, preis: 0,      quelle: "Farmpass-Monat"}
+  biene:      {name: "Biene",       tier: BEE,             baby: true,  reitbar: false, preis: 0,      quelle: "Farmpass-Monat"}
+  frosch:     {name: "Frosch",      tier: FROG,            baby: false, reitbar: false, preis: 0,      quelle: "Farmpass-Monat"}
+  ziege:      {name: "Zicklein",    tier: GOAT,            baby: true,  reitbar: false, preis: 0,      quelle: "Farmpass-Monat"}
+  guerteltier: {name: "Gürteltier", tier: ARMADILLO,       baby: true,  reitbar: false, preis: 0,      quelle: "Farmpass-Monat"}
+  skelettpferd: {name: "Skelettpferd", tier: SKELETON_HORSE, baby: false, reitbar: true, preis: 0,     quelle: "Kisten"}
+  sniffer:    {name: "Schnüffler",  tier: SNIFFER,         baby: true,  reitbar: false, preis: 0,      quelle: "Kisten"}
+  eisbaer:    {name: "Eisbär",      tier: POLAR_BEAR,      baby: true,  reitbar: false, preis: 0,      quelle: "Rang"}
+  ozelot:     {name: "Ozelot",      tier: OCELOT,          baby: true,  reitbar: false, preis: 0,      quelle: "Rang"}

@@ -20,8 +20,10 @@ public final class FarmpassPetMenu extends GuiMenu {
         this.addon = addon;
     }
 
-    static String nice(String id) {
-        String s = id.replace("schildkroete", "schildkröte").replace('_', ' ');
+    private String nice(String id) {
+        var k = addon.pets() == null ? null : addon.pets().kind(id);
+        if (k != null) return k.name();
+        String s = id.replace('_', ' ');
         return Character.toUpperCase(s.charAt(0)) + s.substring(1);
     }
 
@@ -31,7 +33,7 @@ public final class FarmpassPetMenu extends GuiMenu {
         UUID id = p.getUniqueId();
         boolean active = fp.active(id);
         set(4, Items.make(Material.LEAD, "<gold>Haustiere", List.of(
-                "<gray>Rufen und reiten kommt mit dem", "<gray>Haustier-Menü (<white>/pet<gray>).",
+                "<gray>Rufen und reiten im", "<gray>Haustier-Menü (<white>/pet<gray>).",
                 "<gray>Auswahl offen: <white>" + fp.petPicksLeft(id))), null);
         int slot = 10;
         for (String pet : fp.passPets()) {
