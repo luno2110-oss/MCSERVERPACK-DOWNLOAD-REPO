@@ -97,6 +97,9 @@ casino:
   chip-price: 100
   jackpot-start: 10000
   kasse-radius: 5
+  jackpot-share: 0.01
+  blackjack:
+    bet: 1
 
 coinflip:
   max-bet: 5000

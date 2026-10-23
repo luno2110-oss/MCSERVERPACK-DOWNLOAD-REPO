@@ -8,6 +8,8 @@ import de.kuby.kubyplugins.listener.EditListener;
 import de.kuby.kubyplugins.service.EditModeService;
 import de.kuby.kubyplugins.service.MarkerService;
 import de.kuby.kubyplugins.service.CasinoService;
+import de.kuby.kubyplugins.service.BlackjackService;
+import de.kuby.kubyplugins.listener.BlackjackListener;
 import de.kuby.kubyplugins.command.CasinoCommand;
 import de.kuby.kubyplugins.service.ModuleService;
 import de.kuby.kubyplugins.listener.WorldBorderListener;
@@ -118,6 +120,7 @@ public final class KubyPlugins extends JavaPlugin {
     private ModuleService modules;
     private MarkerService markers;
     private CasinoService casino;
+    private BlackjackService blackjack;
     private EditModeService edit;
     private RegionService regions;
     private HubSettingsService hubSettings;
@@ -166,6 +169,7 @@ public final class KubyPlugins extends JavaPlugin {
         modules = new ModuleService(this);
         markers = new MarkerService(this);
         casino = new CasinoService(this);
+        blackjack = new BlackjackService(this);
         edit = new EditModeService(this);
         regions = new RegionService(this);
         hubSettings = new HubSettingsService(this);
@@ -178,6 +182,7 @@ public final class KubyPlugins extends JavaPlugin {
         modes.registerBusyCheck(p -> pvp().isDueling(p.getUniqueId()));
         modes.registerBusyCheck(p -> pvp().inCombat(p.getUniqueId()));
         modes.registerBusyCheck(p -> rtpQueue().inQueue(p.getUniqueId()));
+        modes.registerBusyCheck(p -> blackjack.inGame(p.getUniqueId()));
         modes.registerExtras(java.util.List.of(homes, battlepass, cosmetics, kits, tags, daily, investments, shopStorage));
         playtime = new PlaytimeService(this);
         tpa = new TpaService(this);
@@ -219,9 +224,11 @@ public final class KubyPlugins extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new WorldBorderListener(this), this);
         getServer().getPluginManager().registerEvents(new EditListener(this), this);
         getServer().getPluginManager().registerEvents(new RegionListener(this), this);
+        getServer().getPluginManager().registerEvents(new BlackjackListener(this), this);
         getServer().getScheduler().runTaskLater(this, () -> {
             markers.respawnAll();
             casino.respawn();
+            blackjack.respawn();
             hubSettings.applyAll();
         }, 40L);
 
@@ -238,6 +245,7 @@ public final class KubyPlugins extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        blackjack.shutdown();
         saveAll();
     }
 
@@ -355,6 +363,7 @@ public final class KubyPlugins extends JavaPlugin {
     public ModuleService modules() { return modules; }
     public MarkerService markers() { return markers; }
     public CasinoService casino() { return casino; }
+    public BlackjackService blackjack() { return blackjack; }
     public EditModeService edit() { return edit; }
     public RegionService regions() { return regions; }
     public HubSettingsService hubSettings() { return hubSettings; }

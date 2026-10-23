@@ -33,6 +33,7 @@ public final class CasinoService {
     private final Map<UUID, Long> chips = new HashMap<>();
     private long jackpot;
     private String kasse;
+    private String tisch;
 
     public CasinoService(KubyPlugins plugin) {
         this.plugin = plugin;
@@ -50,6 +51,7 @@ public final class CasinoService {
         }
         jackpot = yml.getLong("jackpot", plugin.getConfig().getLong("casino.jackpot-start", 10000));
         kasse = yml.getString("kasse");
+        tisch = yml.getString("tisch");
     }
 
     public synchronized long chips(UUID id) {
@@ -104,9 +106,36 @@ public final class CasinoService {
         return plugin.getConfig().getLong("casino.chip-price", 100);
     }
 
+    /** Nimmt Chips weg, etwa für den Einsatz. False, wenn nicht genug da ist. */
+    public synchronized boolean takeChips(UUID id, long count) {
+        long have = chips(id);
+        if (count <= 0 || have < count) return false;
+        chips.put(id, have - count);
+        save();
+        return true;
+    }
+
+    /** Gibt Chips zurück, etwa eine Auszahlung. */
+    public synchronized void giveChips(UUID id, long count) {
+        if (count <= 0) return;
+        chips.merge(id, count, Long::sum);
+        save();
+    }
+
+    /** Setzt den Blackjack-Tisch auf den angegebenen Block. */
+    public synchronized void setTable(Location block) {
+        tisch = format(block);
+        save();
+    }
+
+    /** Position des Blackjack-Tischs (Block-Mitte am Boden), null wenn nicht gesetzt oder die Welt fehlt. */
+    public Location tableLocation() {
+        return parse(tisch);
+    }
+
     /** Setzt den Kassentisch auf den angegebenen Block und zeigt dort den Jackpot an. */
     public synchronized void setKasse(Location block) {
-        kasse = block.getWorld().getName() + ";" + block.getBlockX() + ";" + block.getBlockY() + ";" + block.getBlockZ();
+        kasse = format(block);
         save();
         updateDisplay();
     }
@@ -124,13 +153,21 @@ public final class CasinoService {
     }
 
     private Location kasseLocation() {
-        if (kasse == null) return null;
-        String[] p = kasse.split(";");
+        return parse(kasse);
+    }
+
+    private static String format(Location block) {
+        return block.getWorld().getName() + ";" + block.getBlockX() + ";" + block.getBlockY() + ";" + block.getBlockZ();
+    }
+
+    private static Location parse(String raw) {
+        if (raw == null) return null;
+        String[] p = raw.split(";");
         if (p.length < 4) return null;
         World w = Bukkit.getWorld(p[0]);
         if (w == null) return null;
         try {
-            return new Location(w, Integer.parseInt(p[1]) + 0.5, Integer.parseInt(p[2]) + 0.5, Integer.parseInt(p[3]) + 0.5);
+            return new Location(w, Integer.parseInt(p[1]) + 0.5, Integer.parseInt(p[2]), Integer.parseInt(p[3]) + 0.5);
         } catch (NumberFormatException e) {
             return null;
         }
@@ -164,6 +201,7 @@ public final class CasinoService {
         }
         out.set("jackpot", jackpot);
         if (kasse != null) out.set("kasse", kasse);
+        if (tisch != null) out.set("tisch", tisch);
         try {
             plugin.getDataFolder().mkdirs();
             out.save(file);

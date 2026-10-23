@@ -34,7 +34,10 @@ public final class CasinoCommand implements CommandExecutor {
             case "verkaufen" -> trade(p, args, false);
             case "jackpot" -> jackpot(p, args);
             case "kasse" -> kasse(p);
-            default -> Msg.send(p, "<red>Nutzung: /casino [status|kaufen <Anzahl>|verkaufen <Anzahl>|jackpot]");
+            case "tisch" -> tisch(p);
+            case "hit" -> answer(p, plugin.blackjack().hit(p.getUniqueId()));
+            case "stand" -> answer(p, plugin.blackjack().stand(p.getUniqueId()));
+            default -> Msg.send(p, "<red>Nutzung: /casino [status|kaufen <Anzahl>|verkaufen <Anzahl>|jackpot|hit|stand]");
         }
         return true;
     }
@@ -107,5 +110,23 @@ public final class CasinoCommand implements CommandExecutor {
         Location at = target.getLocation();
         plugin.casino().setKasse(at);
         Msg.send(p, "<green>Kassentisch gesetzt. Der Jackpot wird darüber angezeigt.");
+    }
+
+    private void tisch(Player p) {
+        if (!p.hasPermission("kuby.admin")) {
+            Msg.send(p, "<red>Nur Admins können den Blackjack-Tisch setzen.");
+            return;
+        }
+        Block target = p.getTargetBlockExact(6);
+        if (target == null) {
+            Msg.send(p, "<red>Schau auf den Block, der der Blackjack-Tisch wird.");
+            return;
+        }
+        plugin.casino().setTable(target.getLocation());
+        Msg.send(p, "<green>Blackjack-Tisch gesetzt. Rechtsklick auf den Block startet eine Runde.");
+    }
+
+    private void answer(Player p, String err) {
+        if (err != null) Msg.send(p, "<red>" + err);
     }
 }
