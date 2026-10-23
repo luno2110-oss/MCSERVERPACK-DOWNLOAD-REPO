@@ -22,6 +22,13 @@ commands:
     usage: "/report <Spieler> [Grund]"
   menu:
     description: "Hauptmenü als GUI öffnen"
+  settings:
+    description: "Deine Einstellungen: Nachrichten, Anfragen, Sounds, Scoreboard, Info-Leiste"
+    aliases: [einstellungen]
+  bossbar:
+    description: "Inhalt der Info-Leiste oben einstellen"
+    usage: "/bossbar [on|off|reset]"
+    aliases: [infoleiste]
   balance:
     description: "Kontostand anzeigen"
     aliases: [bal, kontostand, money, geld]

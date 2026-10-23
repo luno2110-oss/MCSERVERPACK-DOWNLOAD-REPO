@@ -64,7 +64,7 @@ Reihenfolge wie das Hilfe-Karussell der Referenz. Jede Seite: Titel, Untertitel,
 - [x] 4.14 Teams: Team-Level 1–10 aus Team-XP (1 pro aktiver Minute in Survival, doppelt wenn Teamkollegen online), je Level +1 Platz, Team-Homes (1 + eins je 2 Level, max. 5; `/team home|sethome|delhome [Name]`, `/team homes`, gesperrte Orte wie bei Homes), Team-Lager (`/team lager`, 1–6 Reihen je nach Level, ein gemeinsames Inventar), Kasse mit Abheben für den Chef (`/team bank abheben <Betrag>`), `/team kick`, `/team info`; beim Auflösen gehen Kasse und Lager an den Chef (Abholbox), nicht mehr verloren; Menü zeigt Level, XP, Lager, Homes; Chat `/tc`, Bündnisse wie bisher
 - [x] 4.15 Homes in Survival: 1 Home, +1 je Rang ab Platin (`homes.survival.ranks`, Permission `kuby.rank.<name>`), +1 für Discord (/verify), +2 Farmpass; kein Kauf von Plätzen in Survival; gesperrt am Survival-Spawn (80 Blöcke), im Casino (`homes.survival.blocked-regions`) und in der Farmwelt (gilt auch für Team-Homes und Warps); Menü zeigt die Survival-Regeln; SMP/Skyblock unverändert. Dabei behoben: `homes:` stand doppelt in der Config, dadurch galten Start-Homes und Teleport-Wartezeit nicht
 - [x] 4.16 Voten: Serie (Tage in Folge mit mindestens einem Vote), Extra-Coins beim ersten Vote des Tages ab 10 Tagen 250, ab 25 Tagen 500, ab 50 Tagen 1.000 (`vote.streak-bonus`); Monatswertung, am Monatsende Juwelen für Platz 1–3 (50/30/20, `vote.monthly-prizes`) mit Ansage; `/vote` zeigt Links, Votes gesamt/Monat, Serie, Stufen und die Top 5 des Monats; dazu weiterhin Juwelen, Coins, 1 Token (Survival) pro Vote
-- [ ] 4.17 Einstellungen: `/settings` (Nachrichten, Freundesanfragen, Sounds, Scoreboard, Info-Leiste)
+- [x] 4.17 Einstellungen: `/settings` (Private Nachrichten – Freunde/Admins immer, Freundesanfragen, Teleport-Anfragen – Freunde immer, Sounds, Scoreboard, Info-Leiste) und `/bossbar` (Geld, Job, Ort, verfolgte Quest einzeln an/aus); gilt in allen Modi, gespeichert in settings.yml
 - [ ] 4.18 Heiraten: `/marry propose|accept|church|tp|divorce`, Priester in der Kirche, Herz im Chat, `/bank` Ehe-Konto (große Beträge nur an der Bank am Spawn, auch Konten mit Freunden), Scheidung halbiert das Konto, Sperre danach
 - [ ] 4.19 Juwelen & Shop: verschenken `/juwelenshop gift`, Kopf-Datenbank `/heads [Suchbegriff]` (1.000 Coins je Kopf) (Shop vorhanden)
 - [ ] 4.20 Tod & Gräber: Grabstein mit Items und XP, 30 Min. nur Besitzer (Farmpass 60), Rechtsklick legt alles ins Inventar, danach zerfällt er, `/grab`
@@ -76,7 +76,7 @@ Reihenfolge wie das Hilfe-Karussell der Referenz. Jede Seite: Titel, Untertitel,
 - [ ] 4.26 Kosmetik: Hüte, Trails, Haustiere, `/cosmetics` (Trails vorhanden)
 - [ ] 4.27 Kisten: am Spawn, virtuelle Schlüssel `/keys`, Linksklick Vorschau, Schleichen überspringt Animation
 - [ ] 4.28 Statistik: `/stats [Spieler]`, `/baltop`, `/level top`, `/quest top`, `/casino stats`
-- [~] 4.29 Info-Leiste (gebaut als Survival-Leiste): `/bossbar` auswählen, was oben steht (Coins, Juwelen, Job, Ort, Quest, Uhrzeit), `/bossbar on|off|reset`
+- [x] 4.29 Info-Leiste (Survival-Leiste oben): `/bossbar` wählt aus, was oben steht (Geld, Job, Ort, Uhrzeit, verfolgte Quest), `/bossbar on|off|reset`
 
 ## Ordnergruppe 5 – Scoreboard und Anzeigen (Refs: Video Scoreboard_Money, GELD_XP-Anzeige)
 - [x] 5.1 Sidebar SMP (v1.32)

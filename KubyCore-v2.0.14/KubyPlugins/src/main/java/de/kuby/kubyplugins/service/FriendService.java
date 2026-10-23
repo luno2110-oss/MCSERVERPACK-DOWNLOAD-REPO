@@ -60,6 +60,7 @@ public final class FriendService {
         if (from.equals(to)) return "Du kannst dir selbst keine Anfrage schicken.";
         if (!mode(from).equals(mode(to))) return "Der Spieler ist gerade in einem anderen Modus.";
         if (areFriends(from, to)) return "Ihr seid schon befreundet.";
+        if (!plugin.playerSettings().get(to, "friends")) return "Dieser Spieler nimmt gerade keine Freundesanfragen an.";
         requests.computeIfAbsent(fk(mode(to), to), k -> new HashSet<>()).add(from);
         return null;
     }

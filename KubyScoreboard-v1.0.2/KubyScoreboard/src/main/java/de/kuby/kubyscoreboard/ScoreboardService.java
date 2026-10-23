@@ -102,6 +102,16 @@ public final class ScoreboardService {
         UUID id = p.getUniqueId();
         Scoreboard sb = boards.get(id);
         if (sb == null) return;
+        // Spieler-Einstellung "scoreboard": Sidebar aus- und wieder einblenden.
+        Objective side = sb.getObjective(OBJ);
+        boolean wanted = plugin.playerSettings() == null || plugin.playerSettings().get(id, "scoreboard");
+        if (side != null) {
+            if (!wanted) {
+                if (side.getDisplaySlot() != null) side.setDisplaySlot(null);
+                return;
+            }
+            if (side.getDisplaySlot() != DisplaySlot.SIDEBAR) side.setDisplaySlot(DisplaySlot.SIDEBAR);
+        }
         String mode = plugin.modes().modeOf(id);
         long balance = plugin.economy().balance(id);
         long shown = counterTick(p, balance, mode);

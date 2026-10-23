@@ -168,6 +168,7 @@ public final class KubyPlugins extends JavaPlugin {
         messages = new MessageService(this);
         stats = new StatsService(this);
         prompts = new PromptService(this);
+        playerSettings = new de.kuby.kubyplugins.service.PlayerSettings(this);
         dailyPot = new DailyPotService(this);
         tags = new TagService(this);
         trades = new TradeService(this);
@@ -282,6 +283,25 @@ public final class KubyPlugins extends JavaPlugin {
             if (sender instanceof org.bukkit.entity.Player p) votes.showLinks(p);
             return true;
         }, "vote");
+        setAll((sender, command, label, args) -> {
+            if (!(sender instanceof org.bukkit.entity.Player p)) return true;
+            boolean bar = command.getName().equalsIgnoreCase("bossbar");
+            String sub = args.length > 0 ? args[0].toLowerCase() : "";
+            if (bar && (sub.equals("on") || sub.equals("an"))) {
+                playerSettings.set(p.getUniqueId(), "infobar", true);
+                de.kuby.kubyplugins.util.Msg.send(p, "<green>Info-Leiste an.");
+            } else if (bar && (sub.equals("off") || sub.equals("aus"))) {
+                playerSettings.set(p.getUniqueId(), "infobar", false);
+                de.kuby.kubyplugins.util.Msg.send(p, "<gray>Info-Leiste aus. Wieder an: <white>/bossbar on");
+            } else if (bar && sub.equals("reset")) {
+                playerSettings.reset(p.getUniqueId(), "bar.");
+                playerSettings.set(p.getUniqueId(), "infobar", true);
+                de.kuby.kubyplugins.util.Msg.send(p, "<green>Info-Leiste zurückgesetzt.");
+            } else {
+                new de.kuby.kubyplugins.gui.PlayerSettingsMenu(this, bar).open(p);
+            }
+            return true;
+        }, "settings", "bossbar");
         setAll((sender, command, label, args) -> {
             if (sender instanceof org.bukkit.entity.Player p) new de.kuby.kubyplugins.gui.AchievementMenu(this, 0).open(p);
             return true;
@@ -403,6 +423,8 @@ public final class KubyPlugins extends JavaPlugin {
     public void setPvp(de.kuby.kubyplugins.pvp.PvpApi api) { pvp = api; }
     public JewelService jewels() { return jewels; }
     public PromptService prompts() { return prompts; }
+    private de.kuby.kubyplugins.service.PlayerSettings playerSettings;
+    public de.kuby.kubyplugins.service.PlayerSettings playerSettings() { return playerSettings; }
     public DailyPotService dailyPot() { return dailyPot; }
     public TagService tags() { return tags; }
     public TradeService trades() { return trades; }

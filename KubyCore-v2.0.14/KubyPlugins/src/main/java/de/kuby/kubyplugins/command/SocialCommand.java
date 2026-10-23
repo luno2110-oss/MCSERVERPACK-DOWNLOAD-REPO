@@ -75,6 +75,14 @@ public final class SocialCommand implements CommandExecutor {
         }
     }
 
+    /** Private Nachrichten aus (Einstellung "msg"): nur Freunde und Admins kommen durch. */
+    private boolean blocked(Player p, java.util.UUID target) {
+        if (target == null || p.hasPermission("kuby.admin") || plugin.friends().areFriends(p.getUniqueId(), target)) return false;
+        if (plugin.playerSettings().get(target, "msg")) return false;
+        Msg.send(p, "<red>Dieser Spieler nimmt gerade keine privaten Nachrichten an.");
+        return true;
+    }
+
     private void msg(Player p, String[] args) {
         if (args.length < 2) {
             Msg.send(p, "<red>Nutzung: /msg <Spieler> <Text>");
@@ -83,6 +91,7 @@ public final class SocialCommand implements CommandExecutor {
         UUID target = resolve(args[0]);
         if (target == null) { Msg.send(p, "<red>Spieler nicht gefunden."); return; }
         if (target.equals(p.getUniqueId())) { Msg.send(p, "<red>Du kannst dir nicht selbst schreiben."); return; }
+        if (blocked(p, target)) return;
         plugin.messages().send(p, target, args[0], String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length)));
     }
 
@@ -91,6 +100,7 @@ public final class SocialCommand implements CommandExecutor {
         if (target == null) { Msg.send(p, "<red>Niemand zum Antworten da."); return; }
         if (args.length == 0) { Msg.send(p, "<red>Nutzung: /r <Text>"); return; }
         OfflinePlayer op = Bukkit.getOfflinePlayer(target);
+        if (blocked(p, target)) return;
         plugin.messages().send(p, target, op.getName() == null ? "Unbekannt" : op.getName(), String.join(" ", args));
     }
 

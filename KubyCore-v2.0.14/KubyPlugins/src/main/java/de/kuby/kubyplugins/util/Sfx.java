@@ -37,6 +37,7 @@ public final class Sfx {
     /** pitchMul verschiebt die Tonhöhe, z. B. für einen aufsteigenden Countdown. */
     public static void play(KubyPlugins plugin, Player p, Kind kind, float pitchMul) {
         if (p == null || !plugin.getConfig().getBoolean("sfx.enabled", true)) return;
+        if (plugin.playerSettings() != null && !plugin.playerSettings().get(p.getUniqueId(), "sounds")) return;
         for (Step s : steps(kind)) {
             float pitch = s.pitch() * pitchMul;
             if (s.delay() <= 0) {

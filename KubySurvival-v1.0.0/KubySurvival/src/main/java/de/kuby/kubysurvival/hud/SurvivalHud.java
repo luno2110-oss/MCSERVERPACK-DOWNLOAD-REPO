@@ -49,6 +49,7 @@ public final class SurvivalHud implements Listener {
     private static final char I_GEM = '';
     private static final char I_ROD = '';
     private static final char I_COMPASS = '';
+    private static final char I_CLOCK = '';
     private static final int ICON_ADV = 9;
     private static final int GAP = 2;                          // Abstand zwischen den Leisten
 
@@ -75,6 +76,9 @@ public final class SurvivalHud implements Listener {
     /** Leiste nur in Survival und nur mit geladenem Pack (sonst bleibt die Anzeige über der Hotbar). */
     private boolean wants(Player p) {
         return core.getConfig().getBoolean("survival-hud.enabled", true)
+                && core.playerSettings().get(p.getUniqueId(), "infobar")
+                && (core.playerSettings().get(p.getUniqueId(), "bar.money") || core.playerSettings().get(p.getUniqueId(), "bar.job")
+                    || core.playerSettings().get(p.getUniqueId(), "bar.place") || core.playerSettings().get(p.getUniqueId(), "bar.time"))
                 && ModeService.SURVIVAL.equals(core.modes().modeOf(p.getUniqueId()))
                 && core.uiPack().active(p);
     }
@@ -108,6 +112,7 @@ public final class SurvivalHud implements Listener {
     private void questBar(Player p, boolean hudAdded) {
         UUID id = p.getUniqueId();
         QuestService.Track t = ModeService.SURVIVAL.equals(core.modes().modeOf(id)) && addon.quests() != null
+                && core.playerSettings().get(id, "infobar") && core.playerSettings().get(id, "bar.quest")
                 ? addon.quests().track(id) : null;
         BossBar quest = questBars.get(id);
         BossBar spacer = spacers.get(id);
@@ -171,7 +176,7 @@ public final class SurvivalHud implements Listener {
         money.add(Part.gap(6));
         money.add(Part.icon(I_GEM));
         money.add(Part.text(number(core.jewels().balance(id)), DARK));
-        s.panel(money);
+        if (core.playerSettings().get(id, "bar.money")) s.panel(money);
 
         // Aktiver Job: Level, Fortschritt, Job-Coins diese Stunde / Stundenlimit
         JobService jobs = addon.jobs();
@@ -190,12 +195,19 @@ public final class SurvivalHud implements Listener {
             job.add(Part.dot());
             job.add(Part.text(number(w.earnedHour) + "/" + number(jobs.hourlyCap(w)), GREEN));
         }
-        s.panel(job);
+        if (core.playerSettings().get(id, "bar.job")) s.panel(job);
 
         List<Part> place = new ArrayList<>();
         place.add(Part.icon(I_COMPASS));
         place.add(Part.text(place(p), DARK));
-        s.panel(place);
+        if (core.playerSettings().get(id, "bar.place")) s.panel(place);
+        if (core.playerSettings().get(id, "bar.time")) {
+            List<Part> time = new ArrayList<>();
+            time.add(Part.icon(I_CLOCK));
+            time.add(Part.text(java.time.LocalTime.now(java.time.ZoneId.of("Europe/Berlin"))
+                    .format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")), DARK));
+            s.panel(time);
+        }
         return s.build();
     }
 

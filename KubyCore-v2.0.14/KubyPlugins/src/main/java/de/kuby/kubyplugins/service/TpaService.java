@@ -29,6 +29,10 @@ public final class TpaService {
     public synchronized String request(Player from, Player to) {
         if (from.equals(to)) return "Du kannst dich nicht zu dir selbst teleportieren.";
         if (busy(from) || busy(to)) return "Einer der beiden ist gerade beschäftigt.";
+        if (!plugin.playerSettings().get(to.getUniqueId(), "tpa") && !plugin.friends().areFriends(from.getUniqueId(), to.getUniqueId())
+                && !from.hasPermission("kuby.admin")) {
+            return to.getName() + " nimmt gerade keine Teleport-Anfragen an.";
+        }
         requests.put(to.getUniqueId(), new Req(from.getUniqueId(), System.currentTimeMillis()));
         Msg.send(to, "<gold>" + from.getName() + " <gray>möchte zu dir teleportieren. <white>/tpaccept <gray>oder <white>/tpadeny");
         Sfx.play(plugin, to, Sfx.Kind.PING);
