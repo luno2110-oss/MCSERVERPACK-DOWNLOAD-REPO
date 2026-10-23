@@ -146,7 +146,7 @@ minecraft|Welches Item droppt der Ghast?|Ghast-Träne/Ghasttraene|200
 minecraft|Wie heißt das Dorf-Handelsmob?|Dorfbewohner|100
 minecraft|Wie viele Items passen in einen Stapel Steine?|64|150
 minecraft|Welches Material hat der Piglin als Währung?|Goldbarren/Gold|150
-minecraft|Welcher Block leuchtet am hellsten?|Glowstone/Leuchtstein|250
+minecraft|Welcher Block entsteht aus vier Glowstone-Staub?|Glowstone/Leuchtstein|250
 zufall|Welches Tier ist das größte Säugetier?|Blauwal|150
 zufall|Wie viele Herzen hat ein Oktopus?|3|300
 zufall|Was ist das schnellste Landtier?|Gepard|150
@@ -167,3 +167,77 @@ zufall|Welches Gemüse ist botanisch eine Frucht?|Tomate|250
 zufall|Wie viele Saiten hat eine Gitarre standardmäßig?|6|150
 zufall|Welche Sprache spricht man in Brasilien?|Portugiesisch|150
 zufall|Welcher taube Komponist schrieb die Neunte Sinfonie?|Beethoven|200
+physik|Welcher Physiker entdeckte die Röntgenstrahlen?|Röntgen/Roentgen/Wilhelm Conrad Röntgen|250
+physik|Bei wie viel Grad Celsius siedet Wasser auf Meereshöhe?|100|100
+physik|Bei wie viel Grad Celsius gefriert Wasser?|0|100
+physik|Wie nennt man die tiefste mögliche Temperatur?|absoluter Nullpunkt/Nullpunkt|250
+physik|Wie viel Grad Celsius sind 0 Kelvin ungefähr?|-273/-273,15|300
+physik|Welche Einheit hat der Druck?|Pascal|150
+physik|Wie nennt man Bewegungsenergie mit dem Fachwort?|kinetische Energie/kinetisch|200
+physik|Was bündelt eine Sammellinse: Licht oder Schall?|Licht|100
+physik|Welcher Planet ist der Sonne am nächsten?|Merkur|150
+physik|Wie viele Minuten braucht das Sonnenlicht ungefähr bis zur Erde?|8/acht|250
+mathe|Was ist 13 mal 3?|39|100
+mathe|Was ist 25 Prozent von 80?|20|150
+mathe|Wie viele Seiten hat ein Achteck?|8|100
+mathe|Was ist 1000 geteilt durch 8?|125|150
+mathe|Was ist die Quadratwurzel aus 144?|12|150
+mathe|Wie viele Zentimeter hat ein Meter?|100|100
+mathe|Wie viele Gramm hat ein Kilogramm?|1000|100
+mathe|Was ist 5 Fakultät?|120|250
+mathe|Wie nennt man das Ergebnis einer Multiplikation?|Produkt|150
+mathe|Wie viele Grad hat ein rechter Winkel?|90|100
+mathe|Was ist 17 plus 28?|45|100
+deutsch|Wie lautet der Plural von Maus?|Mäuse/Maeuse|100
+deutsch|Wie lautet der Plural von Buch?|Bücher/Buecher|100
+deutsch|Welcher Artikel gehört zu Mond?|der|100
+deutsch|Welcher Artikel gehört zu Mädchen?|das|100
+deutsch|Was ist das Gegenteil von schnell?|langsam|100
+deutsch|Wie nennt man die Zeitform von ich ging?|Präteritum/Praeteritum/Imperfekt|200
+deutsch|Wer schrieb Die Leiden des jungen Werthers?|Goethe|200
+deutsch|Wie nennt man ein Eigenschaftswort?|Adjektiv|150
+deutsch|Wie viele Buchstaben hat das Alphabet ohne Umlaute und ß?|26|150
+deutsch|Wer schrieb Die Physiker?|Dürrenmatt/Duerrenmatt|250
+deutsch|Wie nennt man einen Satz, der mit einem Fragezeichen endet?|Fragesatz|100
+geografie|Was ist die Hauptstadt von Frankreich?|Paris|100
+geografie|Was ist die Hauptstadt von Polen?|Warschau|150
+geografie|Was ist die Hauptstadt von Ägypten?|Kairo|150
+geografie|Was ist die Hauptstadt von Argentinien?|Buenos Aires|200
+geografie|Welcher Fluss fließt durch Hamburg?|Elbe|150
+geografie|Welcher Fluss fließt durch Köln?|Rhein|100
+geografie|Wie heißt der höchste Berg Deutschlands?|Zugspitze|150
+geografie|Auf welchem Kontinent liegt Kenia?|Afrika|100
+geografie|Wie heißt die Hauptstadt von Bayern?|München/Muenchen|100
+geografie|Welches Land hat die Form eines Stiefels?|Italien|100
+geografie|Wie heißt der längste Fluss der Welt?|Nil/Amazonas|200
+chemie|Welches Element hat das Symbol Ca?|Calcium/Kalzium|150
+chemie|Welches Element hat das Symbol S?|Schwefel|150
+chemie|Welches Element hat das Symbol Al?|Aluminium|150
+chemie|Welches Element hat das Symbol Si?|Silicium/Silizium|200
+chemie|Welches Element hat das Symbol U?|Uran|200
+chemie|Welches Edelgas leuchtet in Werbeschildern oft rot?|Neon|200
+chemie|Wie nennt man den Übergang von flüssig zu gasförmig?|Verdampfen/Verdampfung/Sieden|150
+chemie|Ist Zitronensaft sauer oder basisch?|sauer|100
+chemie|Welches Element hat die Ordnungszahl 6?|Kohlenstoff|150
+chemie|Was ist die chemische Formel von Sauerstoffgas?|O2|150
+minecraft|Welcher Boss lebt im End?|Enderdrache/Ender-Drache/Drache|150
+minecraft|Woraus craftet man eine Werkbank?|Holzbretter/Bretter/Planken|100
+minecraft|Welchen Block braucht man, um Tränke zu brauen?|Braustand|150
+minecraft|Welcher Mob lässt Enderperlen fallen?|Enderman|100
+minecraft|Welches Erz im Nether liefert Quarz?|Netherquarzerz/Netherquarz/Quarzerz|200
+minecraft|Wie viele Obsidian braucht man mindestens für ein Nether-Portal ohne Ecken?|10|200
+minecraft|Welcher Mob schießt mit Pfeil und Bogen?|Skelett|100
+minecraft|Welches Tier kann man mit Knochen zähmen?|Wolf|100
+minecraft|Welches Item zeigt zum Weltspawn?|Kompass|150
+minecraft|Womit zündet man einen Creeper an, damit er explodiert?|Feuerzeug/Feuerstein und Stahl|200
+minecraft|Wie viele Level braucht man für die beste Verzauberung am Zaubertisch?|30|200
+zufall|Wie viele Kontinente gibt es?|7/sieben|100
+zufall|Welcher Planet ist der größte im Sonnensystem?|Jupiter|150
+zufall|Wie viele Zähne hat ein erwachsener Mensch normalerweise?|32|200
+zufall|Welches Tier ist das Wappentier Deutschlands?|Adler/Bundesadler|150
+zufall|Wer erfand in Europa den Buchdruck mit beweglichen Lettern?|Gutenberg/Johannes Gutenberg|200
+zufall|Wie viele Knochen hat ein erwachsener Mensch ungefähr?|206|250
+zufall|In welchem Jahr landeten Menschen zum ersten Mal auf dem Mond?|1969|200
+zufall|Welche Farbe entsteht aus Blau und Gelb?|Grün/Gruen|100
+zufall|Wie viele Minuten dauert ein Fußballspiel ohne Nachspielzeit?|90|100
+zufall|Welches ist das größte Organ des Menschen?|Haut|200

@@ -32,6 +32,9 @@ public final class KitMenu extends GuiMenu {
             long left = plugin.kits().remaining(p.getUniqueId(), kit);
             List<String> lore = new ArrayList<>();
             lore.add("<gray>" + KitService.describe(kit) + " <dark_gray>· <gray>Cooldown " + kit.cooldownMinutes() + " min");
+            if (!kit.rank().isEmpty()) {
+                lore.add((plugin.kits().allowed(p, kit) ? "<green>" : "<red>") + "Ab Rang " + KitService.rankName(kit.rank()));
+            }
             if (kit.items().isEmpty()) {
                 lore.add("<dark_gray>Status: leer");
             } else if (left > 0) {

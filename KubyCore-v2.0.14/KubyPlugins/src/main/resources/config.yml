@@ -286,6 +286,11 @@ totenkiste:
   protect-min-value: 50
   owner-access-level3: true
 
+# Ränge von niedrig nach hoch. Erkannt über LuckPerms (group.<rang>) oder kuby.rank.<rang>.
+ranks:
+  order: [vip, ultimate, warrior, legend]
+
+# rank: ab welchem Rang ein Kit erlaubt ist (leer = alle). Höhere Ränge dürfen auch niedrigere Kits.
 kits:
   "1":
     name: "Mitglied"
@@ -299,21 +304,25 @@ kits:
       - "IRON_SWORD:1:SHARPNESS=2"
       - "IRON_PICKAXE:1:EFFICIENCY=2"
   "2":
-    name: "Kit 2"
+    rank: vip
+    name: "VIP"
     icon: LEATHER_CHESTPLATE
     cooldown-minutes: 60
     items: []
   "3":
+    rank: ultimate
     name: "Ultimate"
     icon: DIAMOND_CHESTPLATE
     cooldown-minutes: 120
     items: []
   "4":
+    rank: warrior
     name: "Warrior"
     icon: NETHERITE_CHESTPLATE
     cooldown-minutes: 180
     items: []
   "5":
+    rank: legend
     name: "Legend"
     icon: GOLDEN_CHESTPLATE
     cooldown-minutes: 240
@@ -347,6 +356,8 @@ playtime:
     - "2400;TAG;sweater"
 
 xp-sources:
+  # Keine XP für selbst gesetzte Erze (auch nach Neustart und Kolben) und für Mobs aus Spawnern/Spawn-Eiern.
+  anti-farm: true
   blocks:
     DIAMOND_ORE: 15
     DEEPSLATE_DIAMOND_ORE: 15

@@ -109,16 +109,16 @@ Bereits vorhanden (mit Referenz verknüpfen): Kits, Enderchest, Kristalltausch, 
 - [ ] Vault-Brücke (optional, nur für externe Shops)
 
 ## Ordnergruppe 9 – Technik und Qualität
-- [~] 9.1 Syntax-Check mit JDK 21 (v1.38): keine Syntaxfehler in 151 Dateien. Bukkit/Paper-API fehlt in der Sandbox, echter Bau mit Maven nötig
+- [x] 9.1 Echter Maven-Build gegen Paper 1.21.11 bei jedem Push (GitHub Actions), Compiler-Fehler als Annotationen, fertige ZIP als Release
 - [x] 9.2 Testplan als TESTPLAN.md angelegt (14 Abschnitte)
-- [ ] 9.3 Config-Editor: Kommentare in der config.yml bleiben erhalten
-- [ ] 9.4 Quiz auf 200 bis 300 Fragen erweitern (aktuell 168)
-- [ ] 9.5 Anti-Missbrauch für XP aus Erzen (Spielerblöcke ausschließen)
-- [ ] 9.6 Kits: Rang-Filter
+- [~] 9.3 Config-Kommentare: Paper speichert sie seit 1.18 mit (Config-Editor nutzt den normalen Speicherweg). Im Spiel prüfen: Wert im Config-Editor ändern, Kommentare in config.yml müssen bleiben
+- [x] 9.4 Quiz auf 241 Fragen erweitert (alle 7 Kategorien, keine Doppelten), falsche Glowstone-Frage ersetzt
+- [~] 9.5 Anti-Farm-XP (Test offen): gesetzte XP-Blöcke im Chunk markiert (übersteht Neustart, keine Obergrenze, wandert mit Kolben), keine XP für Mobs aus Spawnern/Spawn-Eiern/Trial-Spawnern. Schalter: xp-sources.anti-farm
+- [~] 9.6 Kit-Rang-Filter (Test offen): Kit 2 VIP, 3 Ultimate, 4 Warrior, 5 Legend, höhere Ränge dürfen niedrigere Kits. Erkennung über LuckPerms (group.x) oder kuby.rank.x, Reihenfolge in ranks.order
 
 ## Ordnergruppe 10 – Entscheidungen (offen)
-- [ ] Rang-Berechtigungen (kuby.rank.*) festlegen oder über LuckPerms vergeben
-- [ ] Kit-Namen 2 bis 5 und Inhalte
+- [x] Rang-Berechtigungen: beides geht (LuckPerms group.<rang> oder kuby.rank.<rang>)
+- [~] Kit-Namen 2 bis 5: VIP, Ultimate, Warrior, Legend. Inhalte der Kits 2 bis 5 noch offen (Admin-Panel → Kits)
 - [ ] Totenkiste Stufe 3: darf nur der Besitzer öffnen?
 - [ ] Store-Index-Link für Module
 - [ ] Hub-Scoreboard: Layout bestätigen (Clip fehlt)

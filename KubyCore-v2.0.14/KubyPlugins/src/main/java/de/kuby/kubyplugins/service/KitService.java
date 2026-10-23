@@ -24,7 +24,8 @@ import java.util.UUID;
 /** Kits aus der config: Items, Icon und Cooldown pro Kit. Leere Kits werden angezeigt, lassen sich aber nicht abholen. */
 public final class KitService implements ModeData {
 
-    public record Kit(String id, String name, Material icon, long cooldownMinutes, List<ItemStack> items) {}
+    /** rank: ab welchem Rang das Kit erlaubt ist, leer = für alle. */
+    public record Kit(String id, String name, Material icon, long cooldownMinutes, List<ItemStack> items, String rank) {}
 
     private final KubyPlugins plugin;
     private final File file;
@@ -57,7 +58,7 @@ public final class KitService implements ModeData {
                 if (it != null) items.add(it);
             }
             sorted.put(id, new Kit(id, s.getString("name", "Kit " + id), icon == null ? Material.CHEST : icon,
-                    s.getLong("cooldown-minutes", 30), items));
+                    s.getLong("cooldown-minutes", 30), items, s.getString("rank", "").trim().toLowerCase(Locale.ROOT)));
         }
         return new ArrayList<>(sorted.values());
     }
@@ -89,6 +90,34 @@ public final class KitService implements ModeData {
         return it;
     }
 
+    /** Rang-Reihenfolge, niedrigster zuerst (ranks.order in der config.yml). */
+    public List<String> rankOrder() {
+        List<String> order = plugin.getConfig().getStringList("ranks.order");
+        return order.isEmpty() ? List.of("vip", "ultimate", "warrior", "legend") : order;
+    }
+
+    /** Höchster Rang des Spielers als Index in rankOrder(), -1 ohne Rang. Erkennt LuckPerms (group.x) und kuby.rank.x. */
+    public int rankLevel(Player p) {
+        List<String> order = rankOrder();
+        for (int i = order.size() - 1; i >= 0; i--) {
+            String r = order.get(i).toLowerCase(Locale.ROOT);
+            if (p.hasPermission("group." + r) || p.hasPermission("kuby.rank." + r)) return i;
+        }
+        return -1;
+    }
+
+    /** Darf der Spieler das Kit nehmen? Höhere Ränge dürfen auch die Kits der niedrigeren. */
+    public boolean allowed(Player p, Kit kit) {
+        if (kit.rank().isEmpty() || p.hasPermission("kuby.admin")) return true;
+        int needed = rankOrder().indexOf(kit.rank());
+        return needed < 0 || rankLevel(p) >= needed;
+    }
+
+    /** Rangname für die Anzeige, z. B. "VIP". */
+    public static String rankName(String rank) {
+        return rank.equals("vip") ? "VIP" : rank.isEmpty() ? "" : Character.toUpperCase(rank.charAt(0)) + rank.substring(1);
+    }
+
     /** Verbleibende Cooldown-Zeit in Millisekunden. 0 = verfügbar. */
     public synchronized long remaining(UUID id, Kit kit) {
         long last = lastClaim.getOrDefault(id, Map.of()).getOrDefault(kit.id(), 0L);
@@ -98,6 +127,7 @@ public final class KitService implements ModeData {
 
     /** Gibt null bei Erfolg zurück, sonst eine Fehlermeldung. */
     public synchronized String claim(Player p, Kit kit) {
+        if (!allowed(p, kit)) return "Dieses Kit gibt es ab Rang " + rankName(kit.rank()) + ".";
         if (kit.items().isEmpty()) return "Dieses Kit ist noch leer.";
         long left = remaining(p.getUniqueId(), kit);
         if (left > 0) return "Cooldown: " + format(left) + ".";
