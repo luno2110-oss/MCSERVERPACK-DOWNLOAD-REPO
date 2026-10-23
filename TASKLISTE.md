@@ -16,7 +16,7 @@ Prinzip: Keine GUI. Spiel läuft über physische Dinge am Tisch (Karten, Chips, 
   - [~] Blackjack (Build grün, Test im Spiel offen): Rechtsklick auf den Tisch startet, Karten als schwebende Texte, Ziehen und Halten per `/casino hit` und `/casino stand`, Weggehen oder Ausloggen beendet die Runde. Offen: Dealer-NPC, Chips als Anzeige auf dem Tisch
   - [~] Roulette (Build grün, Test im Spiel offen): Tisch per `/casino roulette-tisch`, Einsatz per `/casino setzen <Einsatz> <rot|schwarz|0-36>`, Rad dreht sich nach 20 Sekunden, Anzeige "Warte auf Einsätze". Offen: echtes Rad aus Blöcken mit Drehanimation
   - [~] Slots (Test im Spiel offen): Automat per `/casino automat` (am besten ein Hebel), Rechtsklick dreht, drei Walzen als Anzeigen halten nacheinander an, drei Siebener gewinnen den Jackpot (Rückfluss ohne Jackpot etwa 92 %)
-  - [ ] Crash: Anzeige "BEREIT", Multiplikator steigt, Aussteigen per Klick
+  - [~] Crash (Test im Spiel offen): Automat per `/casino crash`, Anzeige "BEREIT", Rechtsklick steigt ein (10 Chips), nach 10 Sekunden steigt der Multiplikator, Rechtsklick steigt aus. Crash-Punkt steht beim Start fest (1 % Hausvorteil, max. 50x)
 - [ ] 1.3 Anleitung: Regeln als Buch oder Schild am Tisch
 - [ ] 1.4 Sound und Anzeige: Gewinn, Verlust, Jackpot (Sound + schwebender Text)
 - [ ] 1.5 Admin: Tische einrichten, Einsatzlimits, Auszahlung, Protokoll

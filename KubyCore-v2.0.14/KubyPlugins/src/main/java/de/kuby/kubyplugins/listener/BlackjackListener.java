@@ -13,7 +13,8 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.EquipmentSlot;
 
 /**
- * Rechtsklick auf den Blackjack-Tisch startet eine Runde, Rechtsklick auf den Slots-Automaten eine Drehung.
+ * Rechtsklick auf den Blackjack-Tisch startet eine Runde, Rechtsklick auf den Slots-Automaten eine Drehung,
+ * Rechtsklick auf den Crash-Automaten steigt ein oder aus.
  * Weggehen, Ausloggen und Sterben beenden eine Blackjack-Runde.
  */
 public final class BlackjackListener implements Listener {
@@ -33,6 +34,8 @@ public final class BlackjackListener implements Listener {
             err = plugin.blackjack().start(e.getPlayer());
         } else if (plugin.slots().isMachine(e.getClickedBlock().getLocation())) {
             err = plugin.slots().pull(e.getPlayer());
+        } else if (plugin.crash().isMachine(e.getClickedBlock().getLocation())) {
+            err = plugin.crash().click(e.getPlayer());
         } else {
             return;
         }

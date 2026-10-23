@@ -103,6 +103,11 @@ casino:
   roulette:
     wait-seconds: 20
     max-bet: 50
+  crash:
+    bet: 10
+    wait-seconds: 10
+    rate: 0.07
+    max-multiplier: 50
   slots:
     bet: 1
 

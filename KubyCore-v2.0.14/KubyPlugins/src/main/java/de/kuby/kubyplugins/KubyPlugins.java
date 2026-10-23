@@ -12,6 +12,7 @@ import de.kuby.kubyplugins.service.BlackjackService;
 import de.kuby.kubyplugins.listener.BlackjackListener;
 import de.kuby.kubyplugins.service.RouletteService;
 import de.kuby.kubyplugins.service.SlotsService;
+import de.kuby.kubyplugins.service.CrashService;
 import de.kuby.kubyplugins.command.CasinoCommand;
 import de.kuby.kubyplugins.service.ModuleService;
 import de.kuby.kubyplugins.listener.WorldBorderListener;
@@ -125,6 +126,7 @@ public final class KubyPlugins extends JavaPlugin {
     private BlackjackService blackjack;
     private RouletteService roulette;
     private SlotsService slots;
+    private CrashService crash;
     private EditModeService edit;
     private RegionService regions;
     private HubSettingsService hubSettings;
@@ -176,6 +178,7 @@ public final class KubyPlugins extends JavaPlugin {
         blackjack = new BlackjackService(this);
         roulette = new RouletteService(this);
         slots = new SlotsService(this);
+        crash = new CrashService(this);
         edit = new EditModeService(this);
         regions = new RegionService(this);
         hubSettings = new HubSettingsService(this);
@@ -237,6 +240,7 @@ public final class KubyPlugins extends JavaPlugin {
             blackjack.respawn();
             roulette.respawn();
             slots.respawn();
+            crash.respawn();
             hubSettings.applyAll();
         }, 40L);
 
@@ -256,6 +260,7 @@ public final class KubyPlugins extends JavaPlugin {
         blackjack.shutdown();
         roulette.shutdown();
         slots.shutdown();
+        crash.shutdown();
         saveAll();
     }
 
@@ -376,6 +381,7 @@ public final class KubyPlugins extends JavaPlugin {
     public BlackjackService blackjack() { return blackjack; }
     public RouletteService roulette() { return roulette; }
     public SlotsService slots() { return slots; }
+    public CrashService crash() { return crash; }
     public EditModeService edit() { return edit; }
     public RegionService regions() { return regions; }
     public HubSettingsService hubSettings() { return hubSettings; }
