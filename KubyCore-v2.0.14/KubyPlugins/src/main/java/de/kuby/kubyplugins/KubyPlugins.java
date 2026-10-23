@@ -328,6 +328,7 @@ public final class KubyPlugins extends JavaPlugin {
         new KeyAllTimer(this).start();
 
         getServer().getPluginManager().registerEvents(new GuiListener(), this);
+        getServer().getPluginManager().registerEvents(new de.kuby.kubyplugins.ui.UiClicks(this), this);
         getServer().getPluginManager().registerEvents(new GuiHoldersListener(this), this);
         getServer().getPluginManager().registerEvents(new TotenkisteListener(this), this);
         getServer().getPluginManager().registerEvents(new ModeListener(this), this);

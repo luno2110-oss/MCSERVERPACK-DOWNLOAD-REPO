@@ -547,6 +547,23 @@ import build_sb_pack  # noqa: E402
 
 build_sb_pack.build(OUT, {**neg, **pos})
 
+# Dialog-Kit (Schriften kuby:k/...), siehe build_kit.py. Braucht die Vanilla-Schriften (Release "vanilla-assets")
+# im Ordner KUBY_VANILLA; ohne den bleibt das vorhandene Kit unverändert.
+import build_kit  # noqa: E402
+
+VANILLA = os.environ.get("KUBY_VANILLA")
+if VANILLA and os.path.isdir(VANILLA):
+    build_kit.build(OUT, {**neg, **pos}, VANILLA)
+else:
+    print("Hinweis: KUBY_VANILLA nicht gesetzt, Dialog-Kit nicht neu gebaut")
+
+# Das Warn-Zeichen ("!") oben in Server-Dialogen ausblenden, die Menüs zeichnen ihren eigenen Kopf.
+# Der Knopf bleibt anklickbar, Esc schließt jedes Menü.
+WARN = os.path.join(OUT, "assets/minecraft/textures/gui/sprites/dialog")
+os.makedirs(WARN, exist_ok=True)
+for name in ("warning_button", "warning_button_disabled", "warning_button_highlighted"):
+    Image.new("RGBA", (20, 20), T).save(os.path.join(WARN, name + ".png"))
+
 
 # ---------- Prüfung: Fehler in einer Schrift-Datei lassen Minecraft die ganze Schrift verwerfen ----------
 import check_fonts  # noqa: E402

@@ -21,7 +21,8 @@ def check_fonts(root):
         fdir = os.path.join(root, "assets", ns, "font")
         if not os.path.isdir(fdir):
             continue
-        for fn in sorted(os.listdir(fdir)):
+        files = sorted(os.path.relpath(os.path.join(d, n), fdir) for d, _, ns in os.walk(fdir) for n in ns)
+        for fn in files:
             with open(os.path.join(fdir, fn), encoding="utf-8") as f:
                 data = json.load(f)
             for p in data["providers"]:
