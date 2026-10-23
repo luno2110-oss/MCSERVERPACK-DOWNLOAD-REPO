@@ -1,0 +1,40 @@
+# Legt die Paper-API mit allen Abhängigkeiten (Adventure usw.) als Release "api-jars" ab, damit man die genauen
+# Methoden nachschlagen kann (die Maven-Repos sind aus der Entwicklungsumgebung nicht erreichbar). Nur zum Nachschlagen.
+name: API-Jars holen
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/api-jars.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Abhängigkeiten kopieren
+        working-directory: KubyCore-v2.0.14/KubyPlugins
+        run: |
+          mvn -B -ntp dependency:copy-dependencies -DincludeScope=provided -DoutputDirectory=../../api-jars
+          mvn -B -ntp dependency:copy-dependencies -DincludeScope=provided -Dclassifier=sources -DoutputDirectory=../../api-jars/sources || true
+          ls ../../api-jars
+
+      - name: Als Release "api-jars" ablegen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          (cd api-jars && zip -q -r ../api-jars.zip .)
+          gh release delete api-jars --yes --cleanup-tag || true
+          gh release create api-jars api-jars.zip --title "API-Jars (nur zum Nachschlagen)" \
+            --notes "Paper-API und Abhängigkeiten, nur zum Nachschlagen beim Entwickeln." --prerelease
