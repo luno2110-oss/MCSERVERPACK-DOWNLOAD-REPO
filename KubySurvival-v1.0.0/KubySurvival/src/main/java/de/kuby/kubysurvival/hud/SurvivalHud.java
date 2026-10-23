@@ -120,7 +120,7 @@ public final class SurvivalHud implements Listener {
         money.add(Part.text(number(core.jewels().balance(id)), DARK));
         s.panel(money);
 
-        // Aktiver Job: Level, Fortschritt, Job-Coins heute / Tageslimit
+        // Aktiver Job: Level, Fortschritt, Job-Coins diese Stunde / Stundenlimit
         JobService jobs = addon.jobs();
         JobService.Worker w = jobs.worker(id);
         List<Part> job = new ArrayList<>();
@@ -135,7 +135,7 @@ public final class SurvivalHud implements Listener {
             job.add(Part.dot());
             job.add(Part.text(jobs.progress(w, w.job) + "%", OLIVE));
             job.add(Part.dot());
-            job.add(Part.text(number(w.earnedToday) + "/" + number(jobs.dailyCap()), GREEN));
+            job.add(Part.text(number(w.earnedHour) + "/" + number(jobs.hourlyCap(w)), GREEN));
         }
         s.panel(job);
 

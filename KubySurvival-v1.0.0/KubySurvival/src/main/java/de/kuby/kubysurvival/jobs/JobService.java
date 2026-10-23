@@ -12,7 +12,10 @@ import org.bukkit.entity.Player;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.IsoFields;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,9 +23,10 @@ import java.util.UUID;
 
 /**
  * Jobs, Spielerlevel und Tokens.
- * Job-Level: Level L braucht insgesamt 50 * L * (L - 1) Job-XP. Spielerlevel: alle Job-XP zusammen,
+ * Job-Level 1 bis 100: Level L braucht insgesamt 50 * L * (L - 1) Job-XP. Spielerlevel: alle Job-XP zusammen,
  * Level L braucht 150 * L * (L - 1). Aufstiege bringen Coins (Job) und Tokens (Job und Spieler).
- * Coins aus Jobs sind pro Tag gedeckelt (jobs.daily-coin-cap), XP gibt es weiter.
+ * Coins aus Jobs sind pro Stunde gedeckelt; Limit und Lohn wachsen mit dem Job-Level. XP gibt es weiter.
+ * Jede Woche gibt es einen Auftrag: eine Menge Job-XP im Job, den man zu Wochenbeginn hatte.
  */
 public final class JobService {
 
@@ -34,9 +38,16 @@ public final class JobService {
         public final Map<Job, Long> xp = new EnumMap<>(Job.class);
         public long totalXp;
         public long tokens;
-        public long earnedToday;
-        public String day = "";
+        /** Coins aus Jobs in der laufenden Stunde. */
+        public long earnedHour;
+        public String hour = "";
         public long switchedAt;
+        /** Wochenauftrag: Woche (z. B. 2026-W43), Job, Ziel und Stand in Job-XP, abgeschlossen. */
+        public String orderWeek = "";
+        public Job orderJob;
+        public long orderGoal;
+        public long orderDone;
+        public boolean orderFinished;
 
         public long xp(Job j) {
             return xp.getOrDefault(j, 0L);
@@ -66,7 +77,7 @@ public final class JobService {
     }
 
     public int maxLevel() {
-        return Math.max(2, core.getConfig().getInt("jobs.max-level", 50));
+        return Math.max(2, core.getConfig().getInt("jobs.max-level", 100));
     }
 
     public int jobLevel(Worker w, Job j) {
@@ -90,27 +101,76 @@ public final class JobService {
         return (int) Math.min(99, (w.xp(j) - from) * 100 / Math.max(1, to - from));
     }
 
-    public long dailyCap() {
-        return core.getConfig().getLong("jobs.daily-coin-cap", 3000);
+    /** Coins pro Stunde für den aktiven Job; wächst mit dessen Level. */
+    public long hourlyCap(Worker w) {
+        int level = w.job == null ? 1 : jobLevel(w, w.job);
+        return core.getConfig().getLong("jobs.hourly-coin-cap-base", 300)
+                + core.getConfig().getLong("jobs.hourly-coin-cap-per-level", 15) * level;
+    }
+
+    /** Lohn-Faktor durch das Job-Level: Level 1 zahlt normal, Level 100 etwa doppelt. */
+    public double payFactor(int level) {
+        return 1.0 + (level - 1) * core.getConfig().getDouble("jobs.pay-bonus-per-level", 0.01);
+    }
+
+    public long orderCoins() {
+        return core.getConfig().getLong("jobs.weekly-order.reward-coins", 3000);
+    }
+
+    public long orderTokens() {
+        return core.getConfig().getLong("jobs.weekly-order.reward-tokens", 3);
+    }
+
+    /** Minuten bis das Stundenlimit zurückgesetzt wird. */
+    public static long minutesToNextHour() {
+        return 60 - LocalDateTime.now(ZONE).getMinute();
+    }
+
+    private static String hourKey() {
+        return LocalDateTime.now(ZONE).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH"));
+    }
+
+    private static String weekKey() {
+        LocalDate d = LocalDate.now(ZONE);
+        return d.get(IsoFields.WEEK_BASED_YEAR) + "-W" + d.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
     }
 
     // ---------- Daten ----------
 
     public synchronized Worker worker(UUID id) {
         Worker w = workers.computeIfAbsent(id, k -> new Worker());
-        String today = LocalDate.now(ZONE).toString();
-        if (!today.equals(w.day)) {
-            w.day = today;
-            w.earnedToday = 0;
+        String hour = hourKey();
+        if (!hour.equals(w.hour)) {
+            w.hour = hour;
+            w.earnedHour = 0;
+        }
+        String week = weekKey();
+        if (!week.equals(w.orderWeek)) {
+            w.orderWeek = week;
+            newOrder(w);
         }
         return w;
+    }
+
+    /** Neuer Wochenauftrag für den aktuellen Job (ohne Job gibt es ihn bei der ersten Wahl). */
+    private void newOrder(Worker w) {
+        w.orderJob = w.job;
+        w.orderDone = 0;
+        w.orderFinished = false;
+        if (w.job == null) {
+            w.orderGoal = 0;
+            return;
+        }
+        int level = jobLevel(w, w.job);
+        w.orderGoal = core.getConfig().getLong("jobs.weekly-order.xp-base", 1500)
+                + core.getConfig().getLong("jobs.weekly-order.xp-per-level", 40) * level;
     }
 
     /** Minuten bis zum nächsten erlaubten Wechsel, 0 wenn sofort möglich. */
     public synchronized long cooldownMinutes(UUID id) {
         Worker w = worker(id);
         if (w.job == null) return 0;
-        long wait = core.getConfig().getLong("jobs.switch-cooldown-minutes", 60) * 60_000L;
+        long wait = core.getConfig().getLong("jobs.switch-cooldown-minutes", 30) * 60_000L;
         long left = w.switchedAt + wait - System.currentTimeMillis();
         return left <= 0 ? 0 : (left + 59_999) / 60_000;
     }
@@ -121,8 +181,10 @@ public final class JobService {
         if (w.job == job) return "Das ist schon dein Job.";
         long wait = cooldownMinutes(p.getUniqueId());
         if (wait > 0) return "Du kannst deinen Job erst in " + wait + " Minuten wechseln (oder im Token-Shop sofort).";
+        boolean first = w.job == null;
         w.job = job;
-        w.switchedAt = System.currentTimeMillis();
+        w.switchedAt = first ? 0 : System.currentTimeMillis();
+        if (w.orderJob == null && !w.orderFinished) newOrder(w);
         return null;
     }
 
@@ -155,21 +217,35 @@ public final class JobService {
         if (!ModeService.SURVIVAL.equals(core.modes().modeOf(p.getUniqueId()))) return;
         Worker w = worker(p.getUniqueId());
         if (w.job != job) return;
-        long xp = Math.round(baseXp * core.getConfig().getDouble("jobs.xp-multiplier", 1.0) * core.booster().multiplier());
-        long coins = Math.round(baseCoins * core.getConfig().getDouble("jobs.coin-multiplier", 1.0));
-
         int jobBefore = jobLevel(w, job);
+        long xp = Math.round(baseXp * core.getConfig().getDouble("jobs.xp-multiplier", 1.0) * core.booster().multiplier());
+        long coins = Math.round(baseCoins * core.getConfig().getDouble("jobs.coin-multiplier", 1.0) * payFactor(jobBefore));
+
         int playerBefore = playerLevel(w);
         if (jobBefore < maxLevel()) w.xp.merge(job, xp, Long::sum);
         w.totalXp += xp;
 
-        long cap = dailyCap();
-        long paid = Math.max(0, Math.min(coins, cap - w.earnedToday));
+        long cap = hourlyCap(w);
+        long paid = Math.max(0, Math.min(coins, cap - w.earnedHour));
         if (paid > 0) {
             core.economy().deposit(p.getUniqueId(), paid);
-            w.earnedToday += paid;
-            if (w.earnedToday >= cap) {
-                Msg.send(p, "<yellow>Tageslimit für Job-Coins erreicht (" + Msg.coins(cap) + "). XP bekommst du weiter.");
+            w.earnedHour += paid;
+            if (w.earnedHour >= cap) {
+                Msg.send(p, "<yellow>Stundenlimit für Job-Coins erreicht (" + Msg.coins(cap) + "). XP bekommst du weiter, "
+                        + "Coins wieder in " + minutesToNextHour() + " Min.");
+            }
+        }
+
+        if (w.orderJob == job && !w.orderFinished && w.orderGoal > 0) {
+            w.orderDone = Math.min(w.orderGoal, w.orderDone + xp);
+            if (w.orderDone >= w.orderGoal) {
+                w.orderFinished = true;
+                long oc = orderCoins();
+                long ot = orderTokens();
+                core.economy().deposit(p.getUniqueId(), oc);
+                w.tokens += ot;
+                Msg.send(p, "<gold><b>Wochenauftrag erfüllt!</b> <gold>+" + Msg.coins(oc) + " Coins <light_purple>+" + ot + " Tokens");
+                p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.7f, 1.1f);
             }
         }
 
@@ -212,9 +288,14 @@ public final class JobService {
             w.job = Job.of(s.getString("job"));
             w.totalXp = s.getLong("total-xp");
             w.tokens = s.getLong("tokens");
-            w.earnedToday = s.getLong("earned-today");
-            w.day = s.getString("day", "");
+            w.earnedHour = s.getLong("earned-hour");
+            w.hour = s.getString("hour", "");
             w.switchedAt = s.getLong("switched-at");
+            w.orderWeek = s.getString("order.week", "");
+            w.orderJob = Job.of(s.getString("order.job"));
+            w.orderGoal = s.getLong("order.goal");
+            w.orderDone = s.getLong("order.done");
+            w.orderFinished = s.getBoolean("order.finished");
             ConfigurationSection x = s.getConfigurationSection("xp");
             if (x != null) {
                 for (String j : x.getKeys(false)) {
@@ -234,9 +315,14 @@ public final class JobService {
             out.set(base + ".job", w.job == null ? null : w.job.name());
             out.set(base + ".total-xp", w.totalXp);
             out.set(base + ".tokens", w.tokens);
-            out.set(base + ".earned-today", w.earnedToday);
-            out.set(base + ".day", w.day);
+            out.set(base + ".earned-hour", w.earnedHour);
+            out.set(base + ".hour", w.hour);
             out.set(base + ".switched-at", w.switchedAt);
+            out.set(base + ".order.week", w.orderWeek);
+            out.set(base + ".order.job", w.orderJob == null ? null : w.orderJob.name());
+            out.set(base + ".order.goal", w.orderGoal);
+            out.set(base + ".order.done", w.orderDone);
+            out.set(base + ".order.finished", w.orderFinished);
             for (Map.Entry<Job, Long> x : w.xp.entrySet()) out.set(base + ".xp." + x.getKey().name(), x.getValue());
         }
         try {

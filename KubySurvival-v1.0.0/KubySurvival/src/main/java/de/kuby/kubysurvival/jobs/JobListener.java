@@ -8,10 +8,13 @@ import org.bukkit.Tag;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.Ageable;
+import org.bukkit.event.enchantment.EnchantItemEvent;
 import org.bukkit.entity.Animals;
+import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Sheep;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -21,8 +24,11 @@ import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
+import org.bukkit.event.entity.EntityBreedEvent;
+import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerFishEvent;
+import org.bukkit.event.player.PlayerShearEntityEvent;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
@@ -55,6 +61,15 @@ public final class JobListener implements Listener {
     private static final Set<Material> STONES = Set.of(Material.STONE, Material.DEEPSLATE, Material.ANDESITE,
             Material.DIORITE, Material.GRANITE, Material.TUFF, Material.NETHERRACK, Material.BLACKSTONE,
             Material.BASALT, Material.END_STONE, Material.CALCITE);
+    /** Gräber: XP und Coins je Block. */
+    private static final Map<Material, Pay> DIG = Map.ofEntries(
+            Map.entry(Material.DIRT, new Pay(1, 1)), Map.entry(Material.GRASS_BLOCK, new Pay(1, 1)),
+            Map.entry(Material.COARSE_DIRT, new Pay(1, 1)), Map.entry(Material.ROOTED_DIRT, new Pay(1, 1)),
+            Map.entry(Material.PODZOL, new Pay(2, 1)), Map.entry(Material.MYCELIUM, new Pay(2, 2)),
+            Map.entry(Material.SAND, new Pay(2, 1)), Map.entry(Material.RED_SAND, new Pay(2, 2)),
+            Map.entry(Material.GRAVEL, new Pay(2, 1)), Map.entry(Material.CLAY, new Pay(3, 2)),
+            Map.entry(Material.MUD, new Pay(2, 1)), Map.entry(Material.SOUL_SAND, new Pay(2, 2)),
+            Map.entry(Material.SOUL_SOIL, new Pay(2, 2)), Map.entry(Material.SNOW_BLOCK, new Pay(1, 1)));
     private static final Set<Material> CROPS = Set.of(Material.WHEAT, Material.CARROTS, Material.POTATOES,
             Material.BEETROOTS, Material.NETHER_WART, Material.COCOA);
     private static final Set<Material> GROWN = Set.of(Material.MELON, Material.PUMPKIN, Material.SUGAR_CANE,
@@ -73,7 +88,7 @@ public final class JobListener implements Listener {
     }
 
     private static boolean tracked(Material m) {
-        return Tag.LOGS.isTagged(m) || ORES.containsKey(m) || STONES.contains(m) || GROWN.contains(m);
+        return Tag.LOGS.isTagged(m) || ORES.containsKey(m) || STONES.contains(m) || GROWN.contains(m) || DIG.containsKey(m);
     }
 
     // ---------- Blöcke ----------
@@ -110,10 +125,25 @@ public final class JobListener implements Listener {
             jobs.reward(p, Job.MINER, pay.xp(), pay.coins());
         } else if (STONES.contains(m)) {
             jobs.reward(p, Job.MINER, 1, 0);
+        } else if (DIG.containsKey(m)) {
+            Pay pay = DIG.get(m);
+            jobs.reward(p, Job.GRAEBER, pay.xp(), pay.coins());
         } else if (m == Material.MELON || m == Material.PUMPKIN) {
             jobs.reward(p, Job.FARMER, 3, 2);
         } else {
             jobs.reward(p, Job.FARMER, 1, 1);
+        }
+    }
+
+    /** Fallender Sand und Kies: die Markierung wandert mit (sonst ließe sich gesetzter Sand "frisch" fallen lassen). */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onFall(EntityChangeBlockEvent e) {
+        if (!(e.getEntity() instanceof FallingBlock)) return;
+        Block b = e.getBlock();
+        if (e.getTo() == Material.AIR) {
+            if (isPlaced(b)) mark(b, false);
+        } else if (tracked(e.getTo())) {
+            mark(b, true);
         }
     }
 
@@ -152,6 +182,22 @@ public final class JobListener implements Listener {
         } else if (mob instanceof Animals) {
             jobs.reward(p, Job.JAEGER, 2, 1);
         }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onBreed(EntityBreedEvent e) {
+        if (e.getBreeder() instanceof Player p) jobs.reward(p, Job.ZUECHTER, 6, 5);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onShear(PlayerShearEntityEvent e) {
+        if (e.getEntity() instanceof Sheep) jobs.reward(e.getPlayer(), Job.ZUECHTER, 2, 2);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onEnchant(EnchantItemEvent e) {
+        int levels = e.getExpLevelCost();
+        jobs.reward(e.getEnchanter(), Job.VERZAUBERER, levels * 4, levels * 4);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

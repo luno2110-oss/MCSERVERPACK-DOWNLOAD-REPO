@@ -12,15 +12,15 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.List;
 
-/** /job: Job wählen, Level und Fortschritt aller Jobs, Spielerlevel, Tokens und Token-Shop. */
+/** /job: acht Berufe (wählen, Level, Aufgaben), Spielerlevel, Stundenlimit, Wochenauftrag und Token-Shop. */
 public final class JobMenu extends GuiMenu {
 
-    private static final int[] SLOTS = {20, 21, 22, 23, 24};
+    private static final int[] SLOTS = {10, 12, 14, 16, 19, 21, 23, 25};
 
     private final KubySurvival addon;
 
     public JobMenu(KubySurvival addon, KubyPlugins core) {
-        super(core, Msg.parse("<dark_green>Jobs"), 5);
+        super(core, Msg.parse("<dark_green>Jobs"), 6);
         this.addon = addon;
     }
 
@@ -42,16 +42,15 @@ public final class JobMenu extends GuiMenu {
                 bar(pct),
                 "<gray>XP: <white>" + Msg.coins(w.totalXp) + " <dark_gray>/ " + Msg.coins(to),
                 "<gray>Tokens: <light_purple>" + w.tokens,
-                "<gray>Job-Coins heute: <gold>" + Msg.coins(w.earnedToday) + " <dark_gray>/ " + Msg.coins(jobs.dailyCap()),
                 "", "<dark_gray>Jeder Aufstieg bringt Tokens.")), null);
 
         long wait = jobs.cooldownMinutes(p.getUniqueId());
         Job[] all = Job.values();
-        for (int i = 0; i < all.length; i++) {
+        for (int i = 0; i < all.length && i < SLOTS.length; i++) {
             Job j = all[i];
             int jl = jobs.jobLevel(w, j);
             List<String> lore = new ArrayList<>();
-            lore.add("<gray>" + j.desc);
+            for (String t : j.tasks) lore.add("<gray>▪ " + t);
             lore.add("");
             lore.add("<gray>Level <white>" + jl + " <dark_gray>/ " + jobs.maxLevel());
             lore.add(bar(jobs.progress(w, j)));
@@ -62,6 +61,8 @@ public final class JobMenu extends GuiMenu {
                 lore.add("<red>Wechsel in " + wait + " Min. möglich");
             } else {
                 lore.add("<yellow>Klick: diesen Job wählen");
+                if (w.job != null) lore.add("<dark_gray>Danach " + addon.core().getConfig().getLong("jobs.switch-cooldown-minutes", 30)
+                        + " Min. Wartezeit, dein Level bleibt.");
             }
             String name = j.color + j.display + (w.job == j ? " <green>✔" : "");
             set(SLOTS[i], Items.make(j.icon, name, lore), e -> {
@@ -76,9 +77,34 @@ public final class JobMenu extends GuiMenu {
             });
         }
 
+        long cap = jobs.hourlyCap(w);
+        set(38, Items.make(Material.CLOCK, "<yellow>Stundenlimit", List.of(
+                "<gray>Diese Stunde: <gold>" + Msg.coins(w.earnedHour) + " <dark_gray>/ " + Msg.coins(cap) + " Coins",
+                "<gray>Neu in <white>" + JobService.minutesToNextHour() + " Min.",
+                "", "<dark_gray>Mit jedem Job-Level steigt das", "<dark_gray>Limit und die Aufgaben zahlen mehr.")), null);
         set(40, Items.make(Material.AMETHYST_SHARD, "<light_purple>Token-Shop", List.of(
                 "<gray>Du hast <light_purple>" + w.tokens + " Tokens<gray>.", "", "<yellow>Klick zum Öffnen")),
                 e -> new TokenShopMenu(addon, plugin).open(p));
+        set(42, Items.make(Material.WRITABLE_BOOK, "<gold>Wochenauftrag", orderLore(jobs, w)), null);
         addBack(p);
+    }
+
+    static List<String> orderLore(JobService jobs, JobService.Worker w) {
+        List<String> lore = new ArrayList<>();
+        if (w.orderJob == null || w.orderGoal <= 0) {
+            lore.add("<gray>Wähle einen Job, dann bekommst");
+            lore.add("<gray>du deinen Auftrag für diese Woche.");
+            return lore;
+        }
+        lore.add("<gray>Sammle <white>" + Msg.coins(w.orderGoal) + " Job-XP <gray>als " + w.orderJob.color + w.orderJob.display);
+        lore.add(bar((int) Math.min(100, w.orderDone * 100 / Math.max(1, w.orderGoal))));
+        lore.add("");
+        if (w.orderFinished) {
+            lore.add("<green>Erledigt! Nächste Woche gibt es einen neuen.");
+        } else {
+            lore.add("<gray>Belohnung: <gold>" + Msg.coins(jobs.orderCoins()) + " Coins <light_purple>+" + jobs.orderTokens() + " Tokens");
+            if (w.job != w.orderJob) lore.add("<red>Zählt nur, solange du " + w.orderJob.display + " bist.");
+        }
+        return lore;
     }
 }

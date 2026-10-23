@@ -12,9 +12,12 @@ commands:
     description: "Landclaims: Grundstücke sichern und Freunden vertrauen"
     usage: "/claim [axt|ok|zeigen|info|liste|trust <Spieler>|untrust <Spieler>|löschen|hilfe]"
   job:
-    description: "Jobs: Job wählen, Level, Tokens und Token-Shop"
-    usage: "/job"
+    description: "Jobs: acht Berufe, Level, Stundenlimit, Wochenauftrag"
+    usage: "/job [info <Beruf>|waehlen <Beruf>|limit|auftrag|hilfe]"
     aliases: [jobs]
+  tokenshop:
+    description: "Token-Shop"
+    usage: "/tokenshop"
   bauwelt:
     description: "In die Bauwelt"
     usage: "/bauwelt"

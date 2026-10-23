@@ -12,9 +12,11 @@ import de.kuby.kubysurvival.fishing.FishingListener;
 import de.kuby.kubysurvival.hud.SurvivalHud;
 import de.kuby.kubysurvival.intro.IntroService;
 import de.kuby.kubysurvival.jobs.Job;
+import de.kuby.kubysurvival.jobs.JobCommand;
 import de.kuby.kubysurvival.jobs.JobListener;
 import de.kuby.kubysurvival.jobs.JobMenu;
 import de.kuby.kubysurvival.jobs.JobService;
+import de.kuby.kubysurvival.jobs.TokenShopMenu;
 import de.kuby.kubysurvival.fishing.FishingService;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -97,8 +99,12 @@ public final class KubySurvival extends JavaPlugin {
             else if (args.length > 1 && args[1].equalsIgnoreCase("setzen")) intro.setBuildWorld(p);
             else Msg.send(p, "<white>/kp bauwelt setzen <gray>Bauwelt-Punkt an deiner Position. Brunnen: Region <white>bauwelt-brunnen");
         });
-        command("job", (sender, cmd, label, args) -> {
-            if (sender instanceof Player p) new JobMenu(this, core).open(p);
+        JobCommand jobCommand = new JobCommand(this);
+        command("job", jobCommand);
+        PluginCommand jobCmd = getCommand("job");
+        if (jobCmd != null) jobCmd.setTabCompleter(jobCommand);
+        command("tokenshop", (sender, cmd, label, args) -> {
+            if (sender instanceof Player p) new TokenShopMenu(this, core).open(p);
             return true;
         });
 
