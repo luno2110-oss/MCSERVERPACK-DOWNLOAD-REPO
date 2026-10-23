@@ -16,6 +16,7 @@ import de.kuby.kubysurvival.jobs.JobCommand;
 import de.kuby.kubysurvival.jobs.JobListener;
 import de.kuby.kubysurvival.jobs.JobMenu;
 import de.kuby.kubysurvival.jobs.JobService;
+import de.kuby.kubysurvival.jobs.LevelCommand;
 import de.kuby.kubysurvival.jobs.TokenShopMenu;
 import de.kuby.kubysurvival.fishing.FishingService;
 import de.kuby.kubysurvival.farm.FarmWorldService;
@@ -171,6 +172,10 @@ public final class KubySurvival extends JavaPlugin {
         });
         core.registerStat("quests_done", id -> quests.total(id));
         core.registerStat("quest_streak", id -> (long) quests.streak(id));
+        LevelCommand levelCommand = new LevelCommand(this);
+        command("level", levelCommand);
+        PluginCommand levelCmd = getCommand("level");
+        if (levelCmd != null) levelCmd.setTabCompleter(levelCommand);
         command("tokens", (sender, cmd, label, args) -> {
             if (!(sender instanceof Player p)) return true;
             UUID id = p.getUniqueId();

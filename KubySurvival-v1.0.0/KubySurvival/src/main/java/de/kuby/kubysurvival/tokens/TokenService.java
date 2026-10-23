@@ -119,6 +119,8 @@ public final class TokenService implements Listener {
             idle.put(id, idleMin);
             daily(p);
             if (idleMin >= 5) continue;
+            // Level-XP fürs Online-Sein (nur aktiv).
+            addon.jobs().addPlayerXp(id, core.getConfig().getLong("level.xp-per-minute", 5));
             synchronized (this) {
                 Data d = data(id);
                 d.minutes++;

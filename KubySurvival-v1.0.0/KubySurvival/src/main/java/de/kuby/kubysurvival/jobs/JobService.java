@@ -285,6 +285,16 @@ public final class JobService {
         if (addon.quests() != null) addon.quests().progress(p, "jobxp", job, xp);
     }
 
+    /** Die Spieler mit den meisten Spieler-XP. */
+    public synchronized java.util.List<Map.Entry<UUID, Long>> topXp(int n) {
+        java.util.List<Map.Entry<UUID, Long>> list = new java.util.ArrayList<>();
+        for (Map.Entry<UUID, Worker> e : workers.entrySet()) {
+            if (e.getValue().totalXp > 0) list.add(Map.entry(e.getKey(), e.getValue().totalXp));
+        }
+        list.sort((a, b) -> Long.compare(b.getValue(), a.getValue()));
+        return list.subList(0, Math.min(n, list.size()));
+    }
+
     /** Spieler-XP ohne Job (Quests, Online-Zeit). Aufstiege bringen Tokens wie sonst auch. */
     public synchronized void addPlayerXp(UUID id, long xp) {
         if (xp <= 0) return;

@@ -264,6 +264,9 @@ survival-hud:
 
 # Survival-Jobs (KubySurvival): Holzfäller, Miner, Farmer, Jäger, Angler. Ein Job ist aktiv, nur er bringt XP und Coins.
 # Kein Lohn für selbst gesetzte Blöcke, Generator-Steine, Spawner-Mobs, gezüchtete Tiere und unreife Pflanzen.
+level:
+  xp-per-minute: 5                # Spieler-XP pro aktiver Minute in Survival (dazu alle Job-XP und Quest-XP)
+
 tokens:
   per-hour: 1                     # pro Stunde aktiv in Survival (5 Min. ohne Bewegung zählt nicht)
   daily-bonus: 1                  # beim ersten Spielen am Tag
