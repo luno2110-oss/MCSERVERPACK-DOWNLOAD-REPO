@@ -13,7 +13,7 @@ Prinzip: Keine GUI. Spiel läuft über physische Dinge am Tisch (Karten, Chips, 
   - [x] Chips als eigene Währung, Umtausch $ ↔ Chips am Kassentisch (`/casino kaufen|verkaufen`, Kassentisch per `/casino kasse`)
   - [~] Jackpot-Anzeige: schwebender Text über dem Kassentisch fertig, Ticker (Animation) offen. Der Jackpot wird noch nicht durch Spiele gefüllt (kommt mit 1.2)
 - [~] 1.2 Spiele
-  - [~] Blackjack (Code fertig, Build und Test offen): Rechtsklick auf den Tisch startet, Karten als schwebende Texte, Ziehen und Halten per `/casino hit` und `/casino stand`, Weggehen oder Ausloggen beendet die Runde. Offen: Dealer-NPC, Chips als Anzeige auf dem Tisch
+  - [~] Blackjack (Build grün, Test im Spiel offen): Rechtsklick auf den Tisch startet, Karten als schwebende Texte, Ziehen und Halten per `/casino hit` und `/casino stand`, Weggehen oder Ausloggen beendet die Runde. Offen: Dealer-NPC, Chips als Anzeige auf dem Tisch
   - [ ] Roulette: Rad aus Blöcken, Anzeige "Warte auf Einsätze"
   - [ ] Slots: Walzen als Anzeigeobjekte, Hebel
   - [ ] Crash: Anzeige "BEREIT", Multiplikator steigt, Aussteigen per Klick
