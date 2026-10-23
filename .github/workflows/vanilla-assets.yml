@@ -1,5 +1,5 @@
 # Holt Schrift- und Item-Grafiken aus dem Minecraft-Client (nur zum Bauen des Grafik-Packs, nicht Teil der Plugins).
-# Start per Hand (workflow_dispatch) oder wenn sich tools/vanilla_assets.txt ändert. Ergebnis als Artefakt "vanilla-assets".
+# Start per Hand (workflow_dispatch) oder wenn sich tools/vanilla_assets.txt ändert. Ergebnis als Release "vanilla-assets".
 name: Vanilla-Grafiken holen
 
 on:
@@ -7,6 +7,9 @@ on:
   push:
     paths:
       - tools/vanilla_assets.txt
+
+permissions:
+  contents: write
 
 jobs:
   fetch:
@@ -29,7 +32,12 @@ jobs:
           done
           find out -type f | wc -l
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: vanilla-assets
-          path: out
+      # Als Release-Datei (Artefakte sind aus der Entwicklungsumgebung nicht erreichbar).
+      - name: Als Release "vanilla-assets" ablegen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          (cd out && zip -q -r ../vanilla-assets.zip .)
+          gh release delete vanilla-assets --yes --cleanup-tag || true
+          gh release create vanilla-assets vanilla-assets.zip --title "Vanilla-Grafiken (nur für den Pack-Bau)" \
+            --notes "Aus dem Minecraft-Client, nur zum Bauen des Grafik-Packs." --prerelease
