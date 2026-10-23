@@ -264,6 +264,10 @@ survival-hud:
 
 # Survival-Jobs (KubySurvival): Holzfäller, Miner, Farmer, Jäger, Angler. Ein Job ist aktiv, nur er bringt XP und Coins.
 # Kein Lohn für selbst gesetzte Blöcke, Generator-Steine, Spawner-Mobs, gezüchtete Tiere und unreife Pflanzen.
+shops:
+  warp-prices: [50000, 150000, 500000]   # Spieler-Warps: Preis für den 1., 2. und 3. Warp (Anzahl = Länge der Liste)
+  max-chestshops: 20                     # Kistenläden pro Spieler
+
 farmwelt:
   enabled: true
   world: farmwelt

@@ -19,6 +19,11 @@ import de.kuby.kubysurvival.jobs.JobService;
 import de.kuby.kubysurvival.jobs.TokenShopMenu;
 import de.kuby.kubysurvival.fishing.FishingService;
 import de.kuby.kubysurvival.farm.FarmWorldService;
+import de.kuby.kubysurvival.shops.ChestShopCommand;
+import de.kuby.kubysurvival.shops.ChestShopService;
+import de.kuby.kubysurvival.shops.SwCommand;
+import de.kuby.kubysurvival.shops.WarpMenu;
+import de.kuby.kubysurvival.shops.WarpService;
 import de.kuby.kubysurvival.quests.QuestCommand;
 import de.kuby.kubysurvival.quests.QuestListener;
 import de.kuby.kubysurvival.quests.QuestMenu;
@@ -50,6 +55,8 @@ public final class KubySurvival extends JavaPlugin {
     private QuestService quests;
     private SideQuestService sideQuests;
     private FarmWorldService farm;
+    private WarpService warps;
+    private ChestShopService chestShops;
     private final Map<UUID, Location[]> zoneCorners = new HashMap<>();
 
     public KubyPlugins core() { return core; }
@@ -62,6 +69,8 @@ public final class KubySurvival extends JavaPlugin {
     public QuestService quests() { return quests; }
     public SideQuestService sideQuests() { return sideQuests; }
     public FarmWorldService farm() { return farm; }
+    public WarpService warps() { return warps; }
+    public ChestShopService chestShops() { return chestShops; }
 
     @Override
     public void onEnable() {
@@ -79,6 +88,9 @@ public final class KubySurvival extends JavaPlugin {
         quests = new QuestService(this, core);
         sideQuests = new SideQuestService(this, core);
         farm = new FarmWorldService(this, core);
+        warps = new WarpService(this, core);
+        chestShops = new ChestShopService(this, core);
+        getServer().getPluginManager().registerEvents(chestShops, this);
         getServer().getPluginManager().registerEvents(farm, this);
         core.homes().registerBlock(l -> farm.isFarm(l.getWorld()) ? "In der Farmwelt kannst du kein Home setzen. Sie wird jede Woche neu erstellt." : null);
         getServer().getPluginManager().registerEvents(sideQuests, this);
@@ -134,6 +146,11 @@ public final class KubySurvival extends JavaPlugin {
             else farm.travel(p);
             return true;
         });
+        SwCommand swCommand = new SwCommand(this);
+        command("sw", swCommand);
+        PluginCommand swCmd = getCommand("sw");
+        if (swCmd != null) swCmd.setTabCompleter(swCommand);
+        command("chestshop", new ChestShopCommand(this));
         SideQuestCommand sideCommand = new SideQuestCommand(this);
         command("sidequests", sideCommand);
         PluginCommand sideCmd = getCommand("sidequests");
@@ -180,6 +197,8 @@ public final class KubySurvival extends JavaPlugin {
                 p -> new JobMenu(this, core).open(p)));
         core.registerMainEntry(new KubyPlugins.MainEntry(Material.WRITABLE_BOOK, "Quests", "Tages-, Wochen- und Team-Quests, Geschichte",
                 p -> new QuestMenu(this).open(p)));
+        core.registerMainEntry(new KubyPlugins.MainEntry(Material.ENDER_PEARL, "Spieler-Warps", "Läden und Bauwerke anderer besuchen",
+                p -> new WarpMenu(this, false, 0).open(p)));
         core.registerMainEntry(new KubyPlugins.MainEntry(Material.GOLDEN_AXE, "Grundstücke", "Landclaims sichern",
                 p -> p.performCommand("claim")));
 
@@ -194,6 +213,8 @@ public final class KubySurvival extends JavaPlugin {
             quests.save();
             sideQuests.save();
             farm.save();
+            warps.save();
+            chestShops.save();
         }, 6000L, 6000L);
         getServer().getScheduler().runTaskLater(this, fishing::respawnSigns, 40L);
         getLogger().info("KubySurvival aktiv.");
@@ -208,6 +229,8 @@ public final class KubySurvival extends JavaPlugin {
         if (quests != null) quests.save();
         if (sideQuests != null) sideQuests.save();
         if (farm != null) farm.save();
+        if (warps != null) warps.save();
+        if (chestShops != null) chestShops.save();
         if (intro != null) intro.save();
     }
 

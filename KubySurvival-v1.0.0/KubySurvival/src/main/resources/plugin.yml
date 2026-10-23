@@ -27,6 +27,14 @@ commands:
     description: "Farmwelt: Rohstoffe abbauen, wird jede Woche neu erstellt"
     usage: "/farmwelt [info]"
     aliases: [farmworld]
+  sw:
+    description: "Spieler-Warps: alle ansehen, eigenen kaufen und verwalten"
+    usage: "/sw [<Name>|create <Name>|manage|help]"
+    aliases: [pwarp, playerwarp]
+  chestshop:
+    description: "Kistenläden: deine Läden und Anleitung"
+    usage: "/chestshop [help]"
+    aliases: [laden, shops]
   tokenshop:
     description: "Token-Shop"
     usage: "/tokenshop"

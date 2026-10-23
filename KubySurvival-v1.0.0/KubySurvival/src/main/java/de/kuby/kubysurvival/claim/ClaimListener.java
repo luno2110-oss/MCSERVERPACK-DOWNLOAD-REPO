@@ -129,6 +129,8 @@ public final class ClaimListener implements Listener {
         }
         if (e.getAction() != Action.RIGHT_CLICK_BLOCK) return;
         if (claims().canBuild(p, b.getLocation())) return;
+        // Ladenschilder darf jeder anklicken (der Laden regelt selbst, wer was darf).
+        if (addon.chestShops() != null && addon.chestShops().atSign(b) != null) return;
         if (usable(b)) {
             if (allowed(b) && !risky(e.getItem())) return;
             deny(p, b.getLocation());
