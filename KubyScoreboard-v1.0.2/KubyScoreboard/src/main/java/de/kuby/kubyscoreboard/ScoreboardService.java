@@ -72,14 +72,15 @@ public final class ScoreboardService {
         counters.remove(p.getUniqueId());
         lastLines.remove(p.getUniqueId());
         lastTitle.remove(p.getUniqueId());
-        if (!addon.getConfig().getBoolean("hud.enabled", true)) p.setScoreboard(sb);
+        // Die Sidebar ist der Normalfall. hud.enabled: true blendet sie aus (HUD-Zeilen über hudLines).
+        if (!addon.getConfig().getBoolean("hud.enabled", false)) p.setScoreboard(sb);
     }
 
     /** Zeilen für das HUD, mit dem aktuell angezeigten Kontostand. */
     public List<String> hudLines(Player p) {
         Counter c = counters.get(p.getUniqueId());
         long shown = (c != null && c.ready) ? c.shown : plugin.economy().balance(p.getUniqueId());
-        return lines(p, plugin.modes().modeOf(p.getUniqueId()), shown);
+        return lines(p, plugin.modes().modeOf(p.getUniqueId()), shown, false);
     }
 
     public void quit(UUID id) {
@@ -104,20 +105,27 @@ public final class ScoreboardService {
         long balance = plugin.economy().balance(id);
         long shown = counterTick(p, balance, mode);
 
-        String title = addon.getConfig().getBoolean("scoreboard-logo-title", true)
-                ? "<font:" + ScoreboardText.FONT + ">\uE050\uE001\uE031</font>"
-                : ScoreboardText.smallText(addon.getConfig().getString("scoreboard.title." + mode, "<gold><bold>CHAOS"));
-        int maxPx = addon.getConfig().getInt("scoreboard.max-width", 140);
+        // Mit geladenem Grafik-Pack: Rahmen, Logo und Icons. Ohne: reine Text-Version.
+        boolean textured = addon.getConfig().getBoolean("scoreboard-logo-title", true) && plugin.uiPack().active(p);
+        List<String> lines = lines(p, mode, shown, textured);
+        String title = textured
+                ? SbUi.title(mode, lines.size())
+                : ScoreboardText.smallText(addon.getConfig().getString("scoreboard.title." + mode, "<gold><bold>KUBY"));
+        int maxPx = textured ? SbUi.W : addon.getConfig().getInt("scoreboard.max-width", 140);
         if (!title.equals(lastTitle.get(id))) {
             sb.getObjective(OBJ).displayName(Msg.parse(title));
             lastTitle.put(id, title);
         }
 
-        List<String> lines = lines(p, mode, shown);
         String[] prev = lastLines.computeIfAbsent(id, k -> new String[MAX_LINES]);
         Objective obj = sb.getObjective(OBJ);
         for (int i = 0; i < MAX_LINES; i++) {
-            String text = i < lines.size() ? ScoreboardText.line(ScoreboardText.fit(lines.get(i), maxPx - 4)) : "";
+            String text = "";
+            if (i < lines.size()) {
+                text = textured
+                        ? " " + ScoreboardText.fit(lines.get(i), maxPx - 8)
+                        : ScoreboardText.fit(ScoreboardText.stripIcons(lines.get(i)), maxPx);
+            }
             if (!text.equals(prev[i])) {
                 Team t = sb.getTeam("kp_l" + i);
                 if (t != null) t.prefix(Msg.parse(text));
@@ -197,7 +205,7 @@ public final class ScoreboardService {
         return ScoreboardText.icon(icon) + "<gold>" + SmallCaps.of(label) + ": " + value;
     }
 
-    private List<String> lines(Player p, String mode, long shown) {
+    private List<String> lines(Player p, String mode, long shown, boolean textured) {
         UUID id = p.getUniqueId();
         String rank = ScoreboardText.smallText(rank(p));
         TeamService.Team team = plugin.teams().of(id);
@@ -228,8 +236,10 @@ public final class ScoreboardService {
                 out.add(row(ScoreboardText.I_CLOCK, "KEYALL IN", keyall));
                 out.add("");
                 int w = addon.getConfig().getInt("scoreboard.max-width", 140);
-                out.add(ScoreboardText.center("<green>" + SmallCaps.of("SPIELER ONLINE"), w));
-                out.add(ScoreboardText.center("<white>" + online, w));
+                String head = "<green>" + SmallCaps.of("SPIELER ONLINE");
+                String count = "<white>" + online;
+                out.add(textured ? SbUi.center(head) : ScoreboardText.center(head, w));
+                out.add(textured ? SbUi.center(count) : ScoreboardText.center(count, w));
             }
             case ModeService.SURVIVAL -> {
                 out.add(row(ScoreboardText.I_RANK, "RANG", "<white>" + rank));

@@ -73,6 +73,10 @@ Bereits vorhanden (mit Referenz verknüpfen): Kits, Enderchest, Kristalltausch, 
 - [x] 5.8 Zahlen rechts ausblenden (v1.34, Paper NumberFormat)
 - [x] 5.9 Geld-Zählanimation auch in der Hotbar/ActionBar (v1.35)
 - [x] 5.10 Keyall-Anzeige an echten Keyall-Timer gekoppelt, gleiche Zeitzone (v1.35)
+- [x] 5.11 Sidebar mit eigener Grafik nach Referenz (Sitzung mit Claude): goldener Rahmen mit runden Ecken, Logo je Modus oben („KUBY SMP“ rot mit Schwertern, „KUBY SURVIVAL“ grün mit Spitzhacken, „KUBY HUB“ blau), Münzen und Smaragde unten, 15 neue Icons (Coins, Juwelen, XP, Trophäen, Kills, Tode, Uhr, Spieler, Rang, Team, Claim, Tokens, Level, Job, Pfeil). Kommt über das Pack KubyUI, das KubyCore automatisch verschickt
+- [x] 5.12 Ohne Pack (abgelehnt oder ui.custom-textures: off): saubere Text-Version ohne Kästchen, Titel aus der Config
+- [x] 5.13 Fehler behoben: Die Sidebar wurde nie angezeigt (hud.enabled stand intern auf true)
+- [x] 5.14 Hotbar-Anzeige nutzt die neuen Münz- und XP-Icons (die alten Zeichen gibt es nicht mehr)
 
 ## Ordnergruppe 6 – Modi und Welten (Stand)
 - Hinweis: SMP = viel Geld, PvP. Survival = wenig Geld, ruhig, Farmen. Beide Seiten sind getrennt.
@@ -147,7 +151,7 @@ Bereits vorhanden (mit Referenz verknüpfen): Kits, Enderchest, Kristalltausch, 
 - [x] Abschlusston: tief bei Verlust, hell bei Gewinn, wenn die Zählung fertig ist
 - [x] Scoreboard komplett in Small Caps (Zeilen und Titel)
 - [x] Icons für jede Zeile (Pack v2, Platzhalter-Grafik)
-- [ ] Pack-Link: direkten Download-Link eintragen (config.yml: resource-pack.url), dann verschickt das Plugin das Pack beim Join (v1.45)
+- [x] Pack-Link: nicht mehr nötig. KubyCore verschickt das Pack KubyUI (mit Scoreboard-Grafik). resource-pack.url im Scoreboard leer lassen
 
 
 ## Aufteilung in Kategorien (Entscheidungen)

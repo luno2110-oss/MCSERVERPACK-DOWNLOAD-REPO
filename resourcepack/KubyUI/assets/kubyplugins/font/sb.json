@@ -1,0 +1,920 @@
+{
+ "providers": [
+  {
+   "type": "space",
+   "advances": {
+    "\uf801": -1,
+    "\uf802": -2,
+    "\uf803": -4,
+    "\uf804": -8,
+    "\uf805": -16,
+    "\uf806": -32,
+    "\uf807": -64,
+    "\uf808": -128,
+    "\uf809": -256,
+    "\uf80a": -512,
+    "\uf811": 1,
+    "\uf812": 2,
+    "\uf813": 4,
+    "\uf814": 8,
+    "\uf815": 16,
+    "\uf816": 32,
+    "\uf817": 64,
+    "\uf818": 128,
+    "\uf819": 256,
+    "\uf81a": 512
+   }
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_top.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue100"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -1,
+   "chars": [
+    "\ue101"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -1,
+   "chars": [
+    "\ue141"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -10,
+   "chars": [
+    "\ue102"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -10,
+   "chars": [
+    "\ue142"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -19,
+   "chars": [
+    "\ue103"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -19,
+   "chars": [
+    "\ue143"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -28,
+   "chars": [
+    "\ue104"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -28,
+   "chars": [
+    "\ue144"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -37,
+   "chars": [
+    "\ue105"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -37,
+   "chars": [
+    "\ue145"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -46,
+   "chars": [
+    "\ue106"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -46,
+   "chars": [
+    "\ue146"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -55,
+   "chars": [
+    "\ue107"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -55,
+   "chars": [
+    "\ue147"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -64,
+   "chars": [
+    "\ue108"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -64,
+   "chars": [
+    "\ue148"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -73,
+   "chars": [
+    "\ue109"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -73,
+   "chars": [
+    "\ue149"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -82,
+   "chars": [
+    "\ue10a"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -82,
+   "chars": [
+    "\ue14a"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -91,
+   "chars": [
+    "\ue10b"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -91,
+   "chars": [
+    "\ue14b"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -100,
+   "chars": [
+    "\ue10c"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -100,
+   "chars": [
+    "\ue14c"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -109,
+   "chars": [
+    "\ue10d"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -109,
+   "chars": [
+    "\ue14d"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -118,
+   "chars": [
+    "\ue10e"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -118,
+   "chars": [
+    "\ue14e"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -127,
+   "chars": [
+    "\ue10f"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -127,
+   "chars": [
+    "\ue14f"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -136,
+   "chars": [
+    "\ue110"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -136,
+   "chars": [
+    "\ue150"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -145,
+   "chars": [
+    "\ue111"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -145,
+   "chars": [
+    "\ue151"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -154,
+   "chars": [
+    "\ue112"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -154,
+   "chars": [
+    "\ue152"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -163,
+   "chars": [
+    "\ue113"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -163,
+   "chars": [
+    "\ue153"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -172,
+   "chars": [
+    "\ue114"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -172,
+   "chars": [
+    "\ue154"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -181,
+   "chars": [
+    "\ue115"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -181,
+   "chars": [
+    "\ue155"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -190,
+   "chars": [
+    "\ue116"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -190,
+   "chars": [
+    "\ue156"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -199,
+   "chars": [
+    "\ue117"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -199,
+   "chars": [
+    "\ue157"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -208,
+   "chars": [
+    "\ue118"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -208,
+   "chars": [
+    "\ue158"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -217,
+   "chars": [
+    "\ue119"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -217,
+   "chars": [
+    "\ue159"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -226,
+   "chars": [
+    "\ue11a"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -226,
+   "chars": [
+    "\ue15a"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -235,
+   "chars": [
+    "\ue11b"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -235,
+   "chars": [
+    "\ue15b"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -244,
+   "chars": [
+    "\ue11c"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -244,
+   "chars": [
+    "\ue15c"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -253,
+   "chars": [
+    "\ue11d"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -253,
+   "chars": [
+    "\ue15d"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -262,
+   "chars": [
+    "\ue11e"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -262,
+   "chars": [
+    "\ue15e"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -271,
+   "chars": [
+    "\ue11f"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -271,
+   "chars": [
+    "\ue15f"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -280,
+   "chars": [
+    "\ue120"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -280,
+   "chars": [
+    "\ue160"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -289,
+   "chars": [
+    "\ue121"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -289,
+   "chars": [
+    "\ue161"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -298,
+   "chars": [
+    "\ue122"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -298,
+   "chars": [
+    "\ue162"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -307,
+   "chars": [
+    "\ue123"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -307,
+   "chars": [
+    "\ue163"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -316,
+   "chars": [
+    "\ue124"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -316,
+   "chars": [
+    "\ue164"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -325,
+   "chars": [
+    "\ue125"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -325,
+   "chars": [
+    "\ue165"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -334,
+   "chars": [
+    "\ue126"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -334,
+   "chars": [
+    "\ue166"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -343,
+   "chars": [
+    "\ue127"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -343,
+   "chars": [
+    "\ue167"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_mid.png",
+   "height": 9,
+   "ascent": -352,
+   "chars": [
+    "\ue128"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/frame_bottom.png",
+   "height": 16,
+   "ascent": -352,
+   "chars": [
+    "\ue168"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/logo_smp.png",
+   "height": 27,
+   "ascent": 25,
+   "chars": [
+    "\ue050"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/logo_survival.png",
+   "height": 27,
+   "ascent": 25,
+   "chars": [
+    "\ue051"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/logo_hub.png",
+   "height": 27,
+   "ascent": 25,
+   "chars": [
+    "\ue052"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_coin.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    "\ue010"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_gem.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    "\ue011"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_xp.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    "\ue012"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_trophy.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    "\ue013"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_sword.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    "\ue014"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_skull.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    "\ue015"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_clock.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    "\ue016"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_people.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    "\ue017"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_rank.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    "\ue018"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_team.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    "\ue019"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_claim.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    "\ue01a"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_token.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    "\ue01b"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_level.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    "\ue01c"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_job.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    "\ue01d"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_arrow.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    "\ue01e"
+   ]
+  }
+ ]
+}

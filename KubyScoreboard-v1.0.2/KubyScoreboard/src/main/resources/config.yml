@@ -1,4 +1,5 @@
 # KubyScoreboard – Einstellungen
+# Rahmen, Logo und Icons aus dem Grafik-Pack KubyUI (nur für Spieler, die das Pack geladen haben)
 scoreboard-logo-title: true
 scoreboard:
   max-width: 140

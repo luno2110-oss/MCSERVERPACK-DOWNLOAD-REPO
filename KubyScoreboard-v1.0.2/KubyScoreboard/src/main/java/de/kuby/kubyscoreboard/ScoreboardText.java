@@ -9,17 +9,12 @@ import java.util.regex.Pattern;
 
 /**
  * Hilfsfunktionen fürs Scoreboard: Pixelbreite messen, zu breite Zeilen kürzen, Geld formatieren,
- * Icons und Rahmen aus dem Resource Pack (KubyPlugins-ResourcePack.zip).
+ * Icons aus dem Resource Pack KubyUI (Schrift kubyplugins:sb). Rahmen und Logo baut SbUi.
  */
 public final class ScoreboardText {
 
     /** Schrift mit Rahmen und Icons aus dem Resource Pack. */
     public static final String FONT = "kubyplugins:sb";
-
-    /** Rahmen-Glyphe, 152 Pixel breit. */
-    private static final String PANEL = "\uE000";
-    /** Zieht den Cursor um die Rahmenbreite zurück, damit der Text über dem Rahmen steht. */
-    private static final String BACK = "\uE001";
 
     public static final String I_COIN = "\uE010";
     public static final String I_GEM = "\uE011";
@@ -48,9 +43,11 @@ public final class ScoreboardText {
 
     private ScoreboardText() {}
 
-    /** Zeile mit festem Rahmen: Rahmen wird gezeichnet, Cursor zurück, Text darüber. */
-    public static String line(String mini) {
-        return "<font:" + FONT + ">" + PANEL + BACK + "</font> " + mini;
+    private static final Pattern ICONS = Pattern.compile("<font:" + Pattern.quote(FONT) + ">[^<]*</font> ?");
+
+    /** Entfernt Icons und Abstände aus dem Resource Pack (für Spieler ohne Pack). */
+    public static String stripIcons(String mini) {
+        return ICONS.matcher(mini).replaceAll("");
     }
 
     /** Zentriert eine Zeile innerhalb der Breite (Leerzeichen davor). */
@@ -88,6 +85,8 @@ public final class ScoreboardText {
         int w = 0;
         for (char c : text.toCharArray()) {
             if (c >= '\uE010' && c <= '\uE01F') w += 9;   // Icons sind 9 Pixel breit
+            else if (c >= '\uF801' && c <= '\uF80A') w -= 1 << (c - '\uF801');   // Abst\u00E4nde aus dem Pack
+            else if (c >= '\uF811' && c <= '\uF81A') w += 1 << (c - '\uF811');
             else w += WIDTH.getOrDefault(c, 6);
         }
         return w;
