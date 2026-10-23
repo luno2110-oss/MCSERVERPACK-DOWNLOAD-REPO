@@ -45,22 +45,38 @@ Prinzip: Keine GUI. Spiel läuft über physische Dinge am Tisch (Karten, Chips, 
 - [x] 3.3 Battlepass und Vorteilspakete als Barriere, im Editor aktivierbar (v1.37)
 - [x] 3.4 Editor: /kp shop editor survival|smp (v1.37)
 
-## Ordnergruppe 4 – Features Survival (Refs: REFERENZEN ANDERER FEATURE) – nur Survival, Schwerpunkt
-Titel per OCR ausgelesen, bitte bestätigen. Viele Karten sind unleserlich.
-- [ ] 4.1 Einstieg und Regeln (?)
-- [ ] 4.2 Grundstoffe (?)
-- [ ] 4.3 Quests und Level (?)
-- [ ] 4.4 Haustiere (?)
-- [ ] 4.5 Heiraten (?)
-- [ ] 4.6 Freunde und Support (?)
-- [ ] 4.7 Spielzeit (?)
-- [ ] 4.8 Kosmetik (?)
-- [ ] 4.9 Einstellungen und Info-Leiste (?)
-- [ ] 4.10 Voten (?)
-- [ ] 4.11 Juwelen (?)
-- [ ] 4.12 Tod und Ort (?)
-- [ ] 4.13 Fraktionen / Gangs (?)
-Bereits vorhanden (mit Referenz verknüpfen): Kits, Enderchest, Kristalltausch, Homes, Markt, Totenkiste
+## Ordnergruppe 4 – Features Survival (Refs: Release „Referenzen“, Hilfe-Seiten je Feature) – nur Survival, Schwerpunkt
+Reihenfolge wie das Hilfe-Karussell der Referenz. Jede Seite: Titel, Untertitel, „So geht's“, Befehle, Buttons (zurück, Aktion, weiter), eigene Farbe.
+- [ ] 4.0 Survival-Hilfe `/hilfe` als Dialog-Karussell im Stil der Casino-Hilfe, eine Seite je Feature (Farbe je Seite)
+- [ ] 4.1 Regeln: `/regeln`, `/regeln <Nummer>` (12 Paragraphen), `/report <Spieler>`
+- [ ] 4.2 Einstieg: `/tutorial` (Tour in Stationen), `/bauwelt`, `/spawn`, Brunnen am Spawn
+- [ ] 4.3 Grundstücke: Claim-Axt (Links/Rechtsklick Ecken, `/claim ok`), Kosten = Fläche (10×10 = 100), Erweitern mit der Axt, `/claim axt|zeigen|hilfe`, Rechte für Fremde im Menü
+- [~] 4.4 Jobs (Grundlage gebaut, anpassen): 8 Berufe, Level 1–100, Stundenlimit wächst mit dem Level, Wechsel jederzeit mit 30 Min. Sperre danach, `/job info|waehlen|limit|auftrag|hilfe`, Wochenauftrag
+- [ ] 4.5 Quests: täglich, wöchentlich, lange Geschichte, Meilensteine, Team-Quests, geheime; Serie (Streak) mit Extra; verfolgte Quest oben in der Leiste; `/quest daily|weekly|abholen|streak|top`
+- [ ] 4.6 Nebenquests bei Figuren (mehrere Aufgaben nacheinander), Wegweisung, `/sidequests [nav|cancel]`
+- [ ] 4.7 Farmwelt: Abbauwelt ohne Grundstücke und Homes, wöchentlicher Reset, `/farmwelt [info]`
+- [ ] 4.8 Geld & Markt: `/money`, `/markt`, `/markt sell <Preis>`, `/abholbox`, `/trade` (vieles vorhanden, verknüpfen)
+- [ ] 4.9 Läden & Warps: Spieler-Warps `/sw` (bis 3: 50.000 / 150.000 / 500.000 Coins), `/sw create|manage`; Kistenläden per Schild [Shop], `/chestshop [help]`
+- [ ] 4.10 Tokens: 1 pro Stunde online, Tagesbonus, Extra für Serien, beim Voten; nicht kaufbar/tauschbar; Token-Shop (Claim-Blöcke, Rucksack, besondere Verzauberungen, Booster, Bauhelfer); `/tokens`, `/tokenshop`, `/backpack [item]`
+- [ ] 4.11 Level: XP fürs Online-Sein, Jobs und Quests, `/level [Spieler]`, `/level top`
+- [ ] 4.12 Farmpass (Store-Abo, Rechte): Fliegen (Spawn, Casino, eigene und Freundes-Grundstücke), Nebenjob, keine Gebühren (AH, Grundstücksmarkt), Casino steuerfrei, +2 Homes, mehr AH-Plätze, Grab 60 Min., `/werkbank` und `/ec` überall, Wochenkiste, 4 exklusive Pets, Monats-Pet, +250 Claim-Blöcke pro Monat, grünes Blatt in Tab und Chat; Menü wie Referenz; `/farmpass [pet|fly]`
+- [ ] 4.13 Haustiere: folgen, manche reitbar, aus Farmpass/Kisten/Rang/Haustier-Menü; rufen, umbenennen, Lieblinge; `/pet [summon|dismiss|ride]`
+- [ ] 4.14 Teams: Chat, Team-Homes, Lager, Kasse, Team-Level mit mehr Plätzen; `/team create|invite|accept|help`, `/tc` (Teile vorhanden)
+- [ ] 4.15 Homes: 1 Home, ab Platin +1 je Rang, +1 für Discord; nicht am Spawn, im Casino, in der Farmwelt (vorhanden, anpassen)
+- [ ] 4.16 Voten: Serie ab 10/25/50 Tagen +250/500/1.000 Coins je Vote-Tag, Monats-Top-Voter (vorhanden, erweitern)
+- [ ] 4.17 Einstellungen: `/settings` (Nachrichten, Freundesanfragen, Sounds, Scoreboard, Info-Leiste)
+- [ ] 4.18 Heiraten: `/marry propose|accept|church|tp|divorce`, Priester in der Kirche, Herz im Chat, `/bank` Ehe-Konto (große Beträge nur an der Bank am Spawn, auch Konten mit Freunden), Scheidung halbiert das Konto, Sperre danach
+- [ ] 4.19 Juwelen & Shop: verschenken `/juwelenshop gift`, Kopf-Datenbank `/heads [Suchbegriff]` (1.000 Coins je Kopf) (Shop vorhanden)
+- [ ] 4.20 Tod & Gräber: Grabstein mit Items und XP, 30 Min. nur Besitzer (Farmpass 60), Rechtsklick legt alles ins Inventar, danach zerfällt er, `/grab`
+- [ ] 4.21 Möbel & Sitzen: Möbel aus dem Juwelenshop, auf Grundstücken aufstellen, drehen, aufheben, max. 50; Sitzen auf Stühlen, `/sit`, `/lay` (Liegen zählt beim Schlafen)
+- [ ] 4.22 Support: Tickets `/support [new|top|helper]`, Helfer antworten, Sterne-Bewertung, Weitergabe ans Team
+- [ ] 4.23 Discord: `/discord`, `/verify`, Haken hinter dem Namen, +1 Home, Pflicht für Spielzeit-Belohnungen und Helfer
+- [ ] 4.24 Freunde: `/friends` (online, Server), `/friend add|accept|jump|remove`, mehr Plätze mit Rang, Anfragen abschaltbar (vorhanden, anpassen)
+- [ ] 4.25 Spielzeit: Stufen mit Coins, Tokens, Schlüsseln, Juwelen, `/playtime [claim]`, nur mit Discord (vorhanden, anpassen)
+- [ ] 4.26 Kosmetik: Hüte, Trails, Haustiere, `/cosmetics` (Trails vorhanden)
+- [ ] 4.27 Kisten: am Spawn, virtuelle Schlüssel `/keys`, Linksklick Vorschau, Schleichen überspringt Animation
+- [ ] 4.28 Statistik: `/stats [Spieler]`, `/baltop`, `/level top`, `/quest top`, `/casino stats`
+- [~] 4.29 Info-Leiste (gebaut als Survival-Leiste): `/bossbar` auswählen, was oben steht (Coins, Juwelen, Job, Ort, Quest, Uhrzeit), `/bossbar on|off|reset`
 
 ## Ordnergruppe 5 – Scoreboard und Anzeigen (Refs: Video Scoreboard_Money, GELD_XP-Anzeige)
 - [x] 5.1 Sidebar SMP (v1.32)
