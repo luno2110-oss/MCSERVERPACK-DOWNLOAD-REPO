@@ -10,6 +10,7 @@ import de.kuby.kubyplugins.service.MarkerService;
 import de.kuby.kubyplugins.service.CasinoService;
 import de.kuby.kubyplugins.service.BlackjackService;
 import de.kuby.kubyplugins.listener.BlackjackListener;
+import de.kuby.kubyplugins.service.RouletteService;
 import de.kuby.kubyplugins.command.CasinoCommand;
 import de.kuby.kubyplugins.service.ModuleService;
 import de.kuby.kubyplugins.listener.WorldBorderListener;
@@ -121,6 +122,7 @@ public final class KubyPlugins extends JavaPlugin {
     private MarkerService markers;
     private CasinoService casino;
     private BlackjackService blackjack;
+    private RouletteService roulette;
     private EditModeService edit;
     private RegionService regions;
     private HubSettingsService hubSettings;
@@ -170,6 +172,7 @@ public final class KubyPlugins extends JavaPlugin {
         markers = new MarkerService(this);
         casino = new CasinoService(this);
         blackjack = new BlackjackService(this);
+        roulette = new RouletteService(this);
         edit = new EditModeService(this);
         regions = new RegionService(this);
         hubSettings = new HubSettingsService(this);
@@ -229,6 +232,7 @@ public final class KubyPlugins extends JavaPlugin {
             markers.respawnAll();
             casino.respawn();
             blackjack.respawn();
+            roulette.respawn();
             hubSettings.applyAll();
         }, 40L);
 
@@ -246,6 +250,7 @@ public final class KubyPlugins extends JavaPlugin {
     @Override
     public void onDisable() {
         blackjack.shutdown();
+        roulette.shutdown();
         saveAll();
     }
 
@@ -364,6 +369,7 @@ public final class KubyPlugins extends JavaPlugin {
     public MarkerService markers() { return markers; }
     public CasinoService casino() { return casino; }
     public BlackjackService blackjack() { return blackjack; }
+    public RouletteService roulette() { return roulette; }
     public EditModeService edit() { return edit; }
     public RegionService regions() { return regions; }
     public HubSettingsService hubSettings() { return hubSettings; }

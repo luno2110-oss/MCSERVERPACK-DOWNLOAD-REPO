@@ -37,7 +37,9 @@ public final class CasinoCommand implements CommandExecutor {
             case "tisch" -> tisch(p);
             case "hit" -> answer(p, plugin.blackjack().hit(p.getUniqueId()));
             case "stand" -> answer(p, plugin.blackjack().stand(p.getUniqueId()));
-            default -> Msg.send(p, "<red>Nutzung: /casino [status|kaufen <Anzahl>|verkaufen <Anzahl>|jackpot|hit|stand]");
+            case "setzen" -> rouletteBet(p, args);
+            case "roulette-tisch" -> rouletteTable(p);
+            default -> Msg.send(p, "<red>Nutzung: /casino [status|kaufen <Anzahl>|verkaufen <Anzahl>|jackpot|hit|stand|setzen <Einsatz> <rot|schwarz|0-36>]");
         }
         return true;
     }
@@ -128,5 +130,44 @@ public final class CasinoCommand implements CommandExecutor {
 
     private void answer(Player p, String err) {
         if (err != null) Msg.send(p, "<red>" + err);
+    }
+
+    private void rouletteBet(Player p, String[] args) {
+        if (args.length < 3) {
+            Msg.send(p, "<red>Nutzung: /casino setzen <Einsatz> <rot|schwarz|0-36>");
+            return;
+        }
+        long amount;
+        try {
+            amount = Long.parseLong(args[1]);
+        } catch (NumberFormatException e) {
+            Msg.send(p, "<red>Ungültiger Einsatz.");
+            return;
+        }
+        String blocked = plugin.roulette().checkTable(p);
+        if (blocked != null) {
+            Msg.send(p, "<red>" + blocked);
+            return;
+        }
+        String err = plugin.roulette().bet(p, args[2], amount);
+        if (err != null) {
+            Msg.send(p, "<red>" + err);
+            return;
+        }
+        Msg.send(p, "<green>Einsatz gesetzt: " + amount + " Chip(s) auf " + args[2] + ".");
+    }
+
+    private void rouletteTable(Player p) {
+        if (!p.hasPermission("kuby.admin")) {
+            Msg.send(p, "<red>Nur Admins können den Roulette-Tisch setzen.");
+            return;
+        }
+        Block target = p.getTargetBlockExact(6);
+        if (target == null) {
+            Msg.send(p, "<red>Schau auf den Block, der der Roulette-Tisch wird.");
+            return;
+        }
+        plugin.roulette().setTable(target.getLocation());
+        Msg.send(p, "<green>Roulette-Tisch gesetzt.");
     }
 }
