@@ -149,6 +149,13 @@ public final class CasinoService {
         updateDisplay();
     }
 
+    /** True, wenn der Ort genau der Block des Kassentischs ist. */
+    public boolean isKasse(Location l) {
+        Location k = kasseLocation();
+        return k != null && l.getWorld() != null && l.getWorld().equals(k.getWorld())
+                && l.getBlockX() == k.getBlockX() && l.getBlockY() == k.getBlockY() && l.getBlockZ() == k.getBlockZ();
+    }
+
     public boolean nearKasse(Location l) {
         Location k = kasseLocation();
         if (k == null || l.getWorld() == null || !l.getWorld().equals(k.getWorld())) return false;

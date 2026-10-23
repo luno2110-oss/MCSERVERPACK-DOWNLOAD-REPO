@@ -87,7 +87,7 @@ commands:
     description: "Juwelen-Pakete ansehen"
   casino:
     description: "Casino: Chips, Jackpot, Blackjack, Roulette, Slots und Crash"
-    usage: "/casino [status|kaufen <Anzahl>|verkaufen <Anzahl>|jackpot|hit|stand|setzen <Einsatz> <rot|schwarz|0-36>]"
+    usage: "/casino [status|kaufen <Anzahl>|verkaufen <Anzahl>|jackpot|hit|stand|setzen <Einsatz> <rot|schwarz|0-36>|regeln]"
   coinflip:
     description: "Münzwurf um Coins"
     usage: "/coinflip <Betrag>"

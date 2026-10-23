@@ -74,6 +74,12 @@ public final class RouletteService {
         showIdle();
     }
 
+    public boolean isTable(Location l) {
+        Location t = table();
+        return t != null && l.getWorld() != null && l.getWorld().equals(t.getWorld())
+                && l.getBlockX() == t.getBlockX() && l.getBlockY() == t.getBlockY() && l.getBlockZ() == t.getBlockZ();
+    }
+
     /** Prüft Modus und Nähe zum Tisch. Gibt null bei Erfolg zurück, sonst eine Meldung. */
     public String checkTable(Player p) {
         Location t = table();

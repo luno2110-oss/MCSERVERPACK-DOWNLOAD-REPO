@@ -1,6 +1,7 @@
 package de.kuby.kubyplugins.command;
 
 import de.kuby.kubyplugins.KubyPlugins;
+import de.kuby.kubyplugins.service.CasinoRules;
 import de.kuby.kubyplugins.util.Msg;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -41,7 +42,13 @@ public final class CasinoCommand implements CommandExecutor {
             case "roulette-tisch" -> rouletteTable(p);
             case "automat" -> slotsMachine(p);
             case "crash" -> crashMachine(p);
-            default -> Msg.send(p, "<red>Nutzung: /casino [status|kaufen <Anzahl>|verkaufen <Anzahl>|jackpot|hit|stand|setzen <Einsatz> <rot|schwarz|0-36>]");
+            case "regeln" -> {
+                String game = args.length > 1 ? args[1].toLowerCase() : null;
+                if (!CasinoRules.open(plugin, p, game)) {
+                    Msg.send(p, "<red>Nutzung: /casino regeln [" + String.join("|", CasinoRules.GAMES) + "]");
+                }
+            }
+            default -> Msg.send(p, "<red>Nutzung: /casino [status|kaufen <Anzahl>|verkaufen <Anzahl>|jackpot|hit|stand|setzen <Einsatz> <rot|schwarz|0-36>|regeln]");
         }
         return true;
     }
