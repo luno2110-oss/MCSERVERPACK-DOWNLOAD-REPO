@@ -37,8 +37,11 @@ jobs:
 
       - name: Namen zurückübersetzen
         run: |
-          java -jar ss.jar --in-jar client.jar --out-jar mapped.jar --srg-in client.txt --reverse --quiet || echo "SpecialSource fehlgeschlagen"
-          ls -la mapped.jar || true
+          mkdir -p out
+          python3 tools/proguard2srg.py client.txt client.srg
+          java -jar ss.jar --in-jar client.jar --out-jar mapped.jar --srg-in client.srg > out/specialsource.log 2>&1 || echo "SpecialSource fehlgeschlagen" >> out/specialsource.log
+          ls -la mapped.jar >> out/specialsource.log 2>&1 || true
+          tail -5 out/specialsource.log
 
       - name: Ausgewählte Klassen dekompilieren
         run: |
@@ -48,8 +51,9 @@ jobs:
             [ -z "$pattern" ] && continue
             unzip -q -o "$JAR" "$pattern" -d sel || true
           done
-          (cd sel && zip -q -r ../sel.jar .)
-          java -jar vf.jar -dgs=1 -e="$JAR" sel.jar out/ || true
+          find sel -type f | wc -l > out/selected.txt
+          (cd sel && zip -q -r ../sel.jar .) || true
+          java -jar vf.jar -dgs=1 -e="$JAR" sel.jar out/ > out/vineflower.log 2>&1 || true
           ls -R out | head -50
           cp client.txt out/client_mappings.txt
 
