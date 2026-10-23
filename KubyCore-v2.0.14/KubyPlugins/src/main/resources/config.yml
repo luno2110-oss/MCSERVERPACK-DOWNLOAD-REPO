@@ -1,0 +1,402 @@
+prefix: "<gradient:#ff7a00:#ffd000>ᴋᴜʙʏᴘʟᴜɢɪɴꜱ</gradient> <dark_gray>»</dark_gray> "
+
+homes:
+  default-limit: 1
+  max-limit: 5
+  teleport-delay-seconds: 3
+
+rtp:
+  world: world
+  radius: 5000
+
+daily:
+  base-reward: 500
+  reward-per-day: 50
+  cycle-bonus: 5000
+
+shop:
+  items:
+    COBBLESTONE: 2
+    IRON_INGOT: 25
+    GOLD_INGOT: 40
+    DIAMOND: 250
+    EMERALD: 150
+    ENDER_PEARL: 60
+    TNT: 30
+    ENCHANTED_GOLDEN_APPLE: 5000
+
+team:
+  create-cost: 1000
+  max-members: 5
+
+market:
+  tax-percent: 5
+  max-listings: 10
+
+worth:
+  COBBLESTONE: 1
+  COAL: 3
+  OAK_LOG: 4
+  STRING: 2
+  BONE: 3
+  ROTTEN_FLESH: 2
+  GUNPOWDER: 6
+  IRON_INGOT: 20
+  GOLD_INGOT: 30
+  EMERALD: 120
+  DIAMOND: 200
+  ENDER_PEARL: 40
+
+sellmulti:
+  step: 0.05
+  base-cost: 500
+  max-level: 10
+
+pvp:
+  newbie-minutes: 30
+  spawn-radius: 30
+
+trophies:
+  base: 20
+  league-step: 5
+  min: 5
+  max: 60
+
+xp:
+  per-kill: 20
+  shop:
+    - "COINS;1000;500"
+    - "JEWELS;10;300"
+    - "TAG;veteran;800"
+
+duel:
+  arena-a: "world;0.5;100.0;0.5;0;0"
+  arena-b: "world;30.5;100.0;0.5;90;0"
+  tax-percent: 5
+  trophies-win: 15
+  trophies-loss: 10
+  kit:
+    - "IRON_SWORD:1"
+    - "BOW:1"
+    - "ARROW:32"
+    - "COOKED_BEEF:16"
+    - "IRON_HELMET:1"
+    - "IRON_CHESTPLATE:1"
+    - "IRON_LEGGINGS:1"
+    - "IRON_BOOTS:1"
+
+jewels:
+  store-url: ""
+  packages:
+    - "Starter;4,99 €;500"
+    - "Standard;9,99 €;1200"
+    - "Premium;19,99 €;2600"
+
+
+coinflip:
+  max-bet: 5000
+
+quiz:
+  interval-minutes: 20
+  questions:
+    - "Welcher Block wird aus Lehm und Sand gebrannt?;Ziegel;300"
+    - "Wie viele Seiten hat ein Würfel?;6;200"
+    - "Welches Erz braucht man für Diamantrüstung?;diamant;300"
+
+# Kisten und Schlüssel laufen über Phoenix Crates.
+# Stündlicher Universal-Schlüssel (Schlüssel-Name: keyall_key).
+# Trage hier den Phoenix-Befehl ein, {player} wird durch den Spielernamen ersetzt.
+# Beispiel (bitte an deine Phoenix-Syntax anpassen): "crates givekey {player} keyall_key 1"
+keyall:
+  command: "crate givekey keyall_key %player%"
+
+dailypot:
+  ticket-price: 200
+  max-tickets: 50
+  draw-hour: 19
+  tax-percent: 5
+
+rtpqueue:
+  open-menu: false
+
+# Titel: id;Anzeige (MiniMessage). Liga-Titel kommen automatisch.
+tags:
+  - "vip;<gold>VIP"
+  - "helfer;<green>Helfer"
+  - "veteran;<light_purple>Veteran"
+  - "bp_champion;<#ffd700>Champion"
+  - "neuling;<gray>Neuling"
+  - "arbeitslos;<dark_gray>Arbeitslos"
+  - "hobbylos;<yellow>Hobbylos"
+  - "sweater;<aqua>Sweater"
+
+# Soundeffekte an/aus
+sfx:
+  enabled: true
+
+booster:
+  start-hour: 18
+  end-hour: 24
+  multiplier: 1.5
+
+weekly:
+  jewel-reward: 1000
+
+meta:
+  candidates:
+    - "DIAMOND"
+    - "IRON_INGOT"
+    - "GOLD_INGOT"
+    - "EMERALD"
+    - "ENDER_PEARL"
+    - "COAL"
+    - "NETHERITE_SCRAP"
+    - "OAK_LOG"
+
+battlepass:
+  premium-price: 950
+  key-command: "crate givekey keyall_key %player%"
+  xp-per-level: 100
+  quests:
+    - "kill;Spieler besiegen;10;30"
+    - "duel;Duelle gewinnen;3;50"
+    - "trade;Handel abschließen;2;40"
+    - "daily;Täglich abholen;1;20"
+
+cosmetics:
+  - "flame;TRAIL;FLAME;Flammenspur;COMMON;MONEY;2500;0"
+  - "happy;TRAIL;HAPPY_VILLAGER;Smaragdfunken;COMMON;XP;1500;0"
+  - "snow;TRAIL;SNOWFLAKE;Schneefall;RARE;XP;4000;0"
+  - "heart;TRAIL;HEART;Herzregen;RARE;NONE;0;5"
+  - "note;TRAIL;NOTE;Musiknoten;EPIC;NONE;0;10"
+  - "end;TRAIL;END_ROD;Sternenstaub;EPIC;JEWELS;20;0"
+  - "soul;TRAIL;SOUL_FIRE_FLAME;Seelenfeuer;LEGENDARY;NONE;0;25"
+  - "ench;KILL;ENCHANT;Verzauberung;COMMON;XP;1500;0"
+  - "explode;KILL;EXPLOSION;Explosion;RARE;MONEY;3000;0"
+  - "hearts;KILL;HEART;Herzexplosion;EPIC;NONE;0;15"
+  - "totem;KILL;TOTEM_OF_UNDYING;Totem-Schimmer;LEGENDARY;JEWELS;40;0"
+  - "tp_flash;TELEPORT;FLASH;Blitz;COMMON;MONEY;2000;0"
+  - "tp_portal;TELEPORT;PORTAL;Portal;RARE;XP;4000;0"
+  - "tp_dragon;TELEPORT;DRAGON_BREATH;Drachenatem;EPIC;JEWELS;30;0"
+  - "tp_soul;TELEPORT;SOUL;Seelen-Wirbel;LEGENDARY;NONE;0;30"
+
+tournament:
+  max-players: 16
+  reward: 5000
+  trophies-per-win: 50
+  trophies-champion: 200
+
+discord:
+  require-for-daily: false
+  require-for-duels: false
+  require-for-meta: false
+
+insurance:
+  premium-percent: 10
+  payout-percent: 50
+  days: 1
+  max-chests: 3
+  min-premium: 50
+
+enderchest:
+  slot-xp: 1000
+  stage2-xp: 20000
+  stage3-xp: 50000
+
+shop-storage:
+  xp-2: 2000
+  xp-3: 5000
+
+weekend:
+  count: 4
+  reroll-jewels: 50
+  max-rerolls: 3
+
+daily-shop:
+  count: 6
+
+display:
+  hotbar: true
+
+economy:
+  tax-percent: 9
+  invest-step: 1000
+  reactivate-multiplier: 10
+  target:
+    frequent: 2000
+    common: 500
+    rare: 150
+    very_rare: 40
+    unique: 10
+  min-price:
+    frequent: 10
+    common: 7
+    rare: 5
+    very_rare: 3
+    unique: 1
+  rarities:
+    frequent: [COBBLESTONE, OAK_PLANKS, GLASS, STONE_BRICKS, DIRT, SAND, GRAVEL]
+    common: [IRON_INGOT, BREAD, COOKED_BEEF, APPLE, GOLDEN_CARROT, HOPPER, CANDLE, FLOWER_POT]
+    rare: [GOLD_INGOT, REDSTONE, REPEATER, PISTON, OBSERVER, LANTERN, PAINTING]
+    very_rare: [DIAMOND, NETHERITE_SCRAP, DIAMOND_BLOCK, EMERALD_BLOCK]
+    unique: [NETHERITE_INGOT, ENCHANTED_GOLDEN_APPLE, BEACON]
+
+totenkiste:
+  slot-xp: 500
+  level2-jewels: 100
+  level3-jewels: 300
+  protect-min-value: 50
+  owner-access-level3: true
+
+kits:
+  "1":
+    name: "Mitglied"
+    icon: IRON_CHESTPLATE
+    cooldown-minutes: 30
+    items:
+      - "IRON_HELMET:1:PROTECTION=2"
+      - "IRON_CHESTPLATE:1:PROTECTION=2"
+      - "IRON_LEGGINGS:1:PROTECTION=2"
+      - "IRON_BOOTS:1:PROTECTION=2"
+      - "IRON_SWORD:1:SHARPNESS=2"
+      - "IRON_PICKAXE:1:EFFICIENCY=2"
+  "2":
+    name: "Kit 2"
+    icon: LEATHER_CHESTPLATE
+    cooldown-minutes: 60
+    items: []
+  "3":
+    name: "Ultimate"
+    icon: DIAMOND_CHESTPLATE
+    cooldown-minutes: 120
+    items: []
+  "4":
+    name: "Warrior"
+    icon: NETHERITE_CHESTPLATE
+    cooldown-minutes: 180
+    items: []
+  "5":
+    name: "Legend"
+    icon: GOLDEN_CHESTPLATE
+    cooldown-minutes: 240
+    items: []
+
+modes:
+  hub:
+    world: hub
+  smp:
+    world: world
+  survival:
+    world: survival
+
+homes:
+  xp-cost: 500
+  ranks:
+    vip: 10
+    ultimate: 15
+    warrior: 20
+    legend: 30
+
+playtime:
+  rewards:
+    - "60;XP;500"
+    - "120;COINS;3000"
+    - "180;TAG;neuling"
+    - "300;JEWELS;5"
+    - "600;TAG;arbeitslos"
+    - "900;COMMAND;crate givekey keyall_key %player%"
+    - "1200;TAG;hobbylos"
+    - "2400;TAG;sweater"
+
+xp-sources:
+  blocks:
+    DIAMOND_ORE: 15
+    DEEPSLATE_DIAMOND_ORE: 15
+    ANCIENT_DEBRIS: 25
+    EMERALD_ORE: 12
+    DEEPSLATE_EMERALD_ORE: 12
+    GOLD_ORE: 5
+    IRON_ORE: 2
+    COAL_ORE: 1
+    REDSTONE_ORE: 2
+    LAPIS_ORE: 3
+    NETHER_QUARTZ_ORE: 2
+  mobs:
+    ZOMBIE: 1
+    SKELETON: 1
+    CREEPER: 2
+    ENDERMAN: 5
+    WITHER_SKELETON: 4
+    BLAZE: 3
+    WITHER: 500
+    ENDER_DRAGON: 1000
+  fish: 3
+
+teleport:
+  default-particle: PORTAL
+
+worldbuilder:
+  start-size: 16
+  trigger: 8
+  step: 16
+  max-size: 1000
+  auto-border: []
+
+module-store:
+  index-url: "https://raw.githubusercontent.com/KubyNet/kubyplugins-modules/main/index.yml"
+
+landclaim:
+  start-blocks: 500
+  blocks-per-hour: 100
+  max-claims: 10
+  max-side: 128
+
+angel:
+  rod-base: 2000
+  max-rod: 5
+  level-reward: 500
+  popup-ticks: 50
+  fish:
+    - "sardine;Sardine;COD;50;30;2;white"
+    - "hering;Hering;COD;30;60;4;aqua"
+    - "lachs;Lachs;SALMON;25;120;6;red"
+    - "barsch;Barsch;COD;15;200;8;green"
+    - "hecht;Hecht;SALMON;8;400;12;yellow"
+    - "clownfisch;Clownfisch;TROPICAL_FISH;5;800;18;gold"
+    - "stoer;Stör;SALMON;2;2000;35;light_purple"
+    - "koi;Koi;TROPICAL_FISH;1;5000;60;dark_purple"
+
+jewelshop:
+  survival:
+    categories:
+      - "ranks;Ränge;NAME_TAG;ITEMS;true"
+      - "keys;Keys;TRIPWIRE_HOOK;ITEMS;true"
+      - "jewels;Juwelen;EMERALD;PACKAGES;true"
+      - "battlepass;Battlepass;BOOK;PLACEHOLDER;false"
+      - "packs;Vorteilspakete;CHEST;PLACEHOLDER;false"
+    items:
+      ranks:
+        - "vip;VIP;NAME_TAG;300;lp user %player% parent add vip;Mehr Homes und Vorteile"
+        - "ultimate;Ultimate;NAME_TAG;800;lp user %player% parent add ultimate;Mehr Homes und Vorteile"
+        - "warrior;Warrior;NAME_TAG;1500;lp user %player% parent add warrior;Mehr Homes und Vorteile"
+        - "legend;Legend;NAME_TAG;3000;lp user %player% parent add legend;Die höchste Stufe"
+      keys:
+        - "keyall;Universal-Schlüssel;TRIPWIRE_HOOK;50;crate givekey %player% keyall_key 1;Öffnet Phoenix-Kisten"
+  smp:
+    categories:
+      - "ranks;Ränge;NAME_TAG;ITEMS;true"
+      - "keys;Keys;TRIPWIRE_HOOK;ITEMS;true"
+      - "jewels;Juwelen;EMERALD;PACKAGES;true"
+      - "battlepass;Battlepass;BOOK;PLACEHOLDER;false"
+      - "packs;Vorteilspakete;CHEST;PLACEHOLDER;false"
+    items:
+      ranks:
+        - "vip;VIP;NAME_TAG;300;lp user %player% parent add vip;Mehr Homes und Vorteile"
+        - "ultimate;Ultimate;NAME_TAG;800;lp user %player% parent add ultimate;Mehr Homes und Vorteile"
+        - "warrior;Warrior;NAME_TAG;1500;lp user %player% parent add warrior;Mehr Homes und Vorteile"
+        - "legend;Legend;NAME_TAG;3000;lp user %player% parent add legend;Die höchste Stufe"
+      keys:
+        - "keyall;Universal-Schlüssel;TRIPWIRE_HOOK;50;crate givekey %player% keyall_key 1;Öffnet Phoenix-Kisten"
+
+# Custom Items (ohne externes Plugin). Format: id;Name;MATERIAL;namespace:modell;Lore1|Lore2
+custom-items: []

@@ -1,0 +1,7 @@
+name: KubyJR Addon
+version: 1.0.2
+main: de.kp.jumprun.KPJumpRun
+api-version: '1.21'
+author: Kuby
+description: KubyJ&R Addon 1.0.0 – Jump and Run für KubyPlugins
+depend: [KubyCore]

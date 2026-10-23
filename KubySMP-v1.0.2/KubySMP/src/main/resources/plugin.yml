@@ -1,0 +1,25 @@
+name: KubySMP
+version: 1.0.0
+main: de.kuby.kubysmp.KubySMP
+api-version: '1.21'
+depend: [KubyCore]
+description: PvP-Teil für KubyCore (Kampf, Duelle, Kopfgelder, Trophäen, Turniere, Versicherung)
+
+commands:
+  bounty:
+    description: "Kopfgeld auf einen Spieler setzen"
+    usage: "/bounty <Spieler> <Betrag>"
+  bounties:
+    description: "Steckbriefe anzeigen"
+  trophaeen:
+    description: "Deine Trophäen und Liga anzeigen"
+  duell:
+    description: "Duelle starten oder annehmen"
+    usage: "/duell [accept | <Spieler> [Einsatz]]"
+    aliases: [duel]
+  turnier:
+    description: "K.O.-Turnier: anmelden, starten, Teilnehmer ansehen"
+    usage: "/turnier [join|leave|open|start|cancel]"
+  versichern:
+    description: "Versichert die Kiste, auf die du schaust"
+    usage: "/versichern [liste]"

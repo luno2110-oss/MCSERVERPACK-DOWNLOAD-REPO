@@ -1,0 +1,19 @@
+# KubyScoreboard – Einstellungen
+scoreboard-logo-title: true
+scoreboard:
+  max-width: 140
+  survival-hint-1: "<gold>SPAWN VERLASSEN?"
+  survival-hint-2: "<yellow>→ /bauwelt"
+  title:
+    smp: "<gold><bold>KUBY SMP"
+    survival: "<gold><bold>KUBY SURVIVAL"
+    hub: "<gold><bold>KUBY HUB"
+  ranks:
+    - "kuby.rank.legend;<gold>Legend"
+    - "kuby.rank.warrior;<red>Warrior"
+    - "kuby.rank.ultimate;<light_purple>Ultimate"
+    - "kuby.rank.vip;<aqua>VIP"
+# Resource Pack: direkter Download-Link und SHA-1 (leer = kein Versand)
+resource-pack:
+  url: ""
+  sha1: ""

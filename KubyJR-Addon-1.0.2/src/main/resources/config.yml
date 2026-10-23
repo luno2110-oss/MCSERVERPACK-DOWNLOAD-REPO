@@ -1,0 +1,17 @@
+# KubyJ&R Addon 1.0.0 – Einstellungen
+# Dieses Plugin ist ein Addon für KubyPlugins. Coins, Juwelen und XP laufen über dessen Konten.
+
+# Prefix vor jeder Nachricht (MiniMessage-Format)
+messages-prefix: "<dark_gray>[</dark_gray><aqua>KP</aqua><dark_gray>]</dark_gray> "
+
+# Fall-Reset: Wie viele Blöcke tiefer als der letzte Block der Spieler fallen darf
+fall:
+  reset-blocks: 2
+
+# Feder: Stärke des Boosts in Blöcken
+feather:
+  boost-blocks: 3.0
+
+# Bestenliste
+leaderboard:
+  visible-rows: 10

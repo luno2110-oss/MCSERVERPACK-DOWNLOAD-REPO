@@ -1,0 +1,10 @@
+name: KubySkyblock
+version: 1.2.0
+main: de.kuby.kubyskyblock.KubySkyblock
+api-version: '1.21'
+depend: [KubyCore]
+description: Skyblock-Modus für KubyCore (Inseln, Weltgrenze, Multiplikator-Serie)
+commands:
+  skyblock:
+    description: "Skyblock-Checkliste und Erfolge"
+    usage: "/skyblock"

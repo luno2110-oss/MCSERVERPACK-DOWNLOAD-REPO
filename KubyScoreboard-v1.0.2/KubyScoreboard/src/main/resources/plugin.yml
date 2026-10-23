@@ -1,0 +1,6 @@
+name: KubyScoreboard
+version: 1.0.2
+main: de.kuby.kubyscoreboard.KubyScoreboard
+api-version: '1.21'
+depend: [KubyCore]
+description: Sidebar-Scoreboard für KubyPlugins

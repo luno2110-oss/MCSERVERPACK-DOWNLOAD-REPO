@@ -1,0 +1,272 @@
+package de.kuby.kubyscoreboard;
+
+import de.kuby.kubyplugins.KubyPlugins;
+import de.kuby.kubyplugins.service.KeyAllTimer;
+import de.kuby.kubyplugins.service.ModeService;
+import de.kuby.kubyplugins.service.TeamService;
+import org.bukkit.plugin.java.JavaPlugin;
+import de.kuby.kubyplugins.util.Msg;
+import de.kuby.kubyplugins.util.SmallCaps;
+import io.papermc.paper.scoreboard.numbers.NumberFormat;
+import org.bukkit.Bukkit;
+import org.bukkit.Sound;
+import org.bukkit.entity.Player;
+import org.bukkit.scoreboard.Criteria;
+import org.bukkit.scoreboard.DisplaySlot;
+import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.Score;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.Team;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+/**
+ * Sidebar für Hub, SMP und Survival. Der Kontostand zählt bei Änderungen Ziffer für Ziffer.
+ * Ein Moduswechsel setzt den Stand direkt, ohne Zählen und ohne Ton.
+ * Am Ende der Zählung gibt es einen Abschlusston: tief bei Verlust, hell bei Gewinn.
+ */
+public final class ScoreboardService {
+
+    private static final String OBJ = "kp_side";
+    private static final String[] ENTRIES = {
+            "§0", "§1", "§2", "§3", "§4", "§5", "§6", "§7", "§8", "§9", "§a", "§b", "§c", "§d", "§e", "§f",
+            "§k", "§l", "§m", "§n", "§o", "§r"};
+    private static final int MAX_LINES = ENTRIES.length;
+
+    /** Anzeigewert für das Geld eines Spielers. */
+    private static final class Counter {
+        long shown;
+        long target;
+        boolean ready;
+        String mode = "";
+        boolean animating;
+        int dir;
+    }
+
+    private final JavaPlugin addon;
+    private final KubyPlugins plugin;
+    private final Map<UUID, Scoreboard> boards = new HashMap<>();
+    private final Map<UUID, Counter> counters = new HashMap<>();
+    private final Map<UUID, String[]> lastLines = new HashMap<>();
+    private final Map<UUID, String> lastTitle = new HashMap<>();
+
+    public ScoreboardService(JavaPlugin addon, KubyPlugins plugin) {
+        this.addon = addon;
+        this.plugin = plugin;
+        addon.getServer().getScheduler().runTaskTimer(addon, this::tick, 40L, 2L);
+    }
+
+    public void join(Player p) {
+        Scoreboard sb = Bukkit.getScoreboardManager().getNewScoreboard();
+        Objective obj = sb.registerNewObjective(OBJ, Criteria.DUMMY, Msg.parse(" "));
+        obj.setDisplaySlot(DisplaySlot.SIDEBAR);
+        for (int i = 0; i < MAX_LINES; i++) {
+            Team t = sb.registerNewTeam("kp_l" + i);
+            t.addEntry(ENTRIES[i]);
+        }
+        boards.put(p.getUniqueId(), sb);
+        counters.remove(p.getUniqueId());
+        lastLines.remove(p.getUniqueId());
+        lastTitle.remove(p.getUniqueId());
+        if (!addon.getConfig().getBoolean("hud.enabled", true)) p.setScoreboard(sb);
+    }
+
+    /** Zeilen für das HUD, mit dem aktuell angezeigten Kontostand. */
+    public List<String> hudLines(Player p) {
+        Counter c = counters.get(p.getUniqueId());
+        long shown = (c != null && c.ready) ? c.shown : plugin.economy().balance(p.getUniqueId());
+        return lines(p, plugin.modes().modeOf(p.getUniqueId()), shown);
+    }
+
+    public void quit(UUID id) {
+        boards.remove(id);
+        counters.remove(id);
+        lastLines.remove(id);
+        lastTitle.remove(id);
+    }
+
+    private void tick() {
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            if (!boards.containsKey(p.getUniqueId())) join(p);
+            update(p);
+        }
+    }
+
+    private void update(Player p) {
+        UUID id = p.getUniqueId();
+        Scoreboard sb = boards.get(id);
+        if (sb == null) return;
+        String mode = plugin.modes().modeOf(id);
+        long balance = plugin.economy().balance(id);
+        long shown = counterTick(p, balance, mode);
+
+        String title = addon.getConfig().getBoolean("scoreboard-logo-title", true)
+                ? "<font:" + ScoreboardText.FONT + ">\uE050\uE001\uE031</font>"
+                : ScoreboardText.smallText(addon.getConfig().getString("scoreboard.title." + mode, "<gold><bold>CHAOS"));
+        int maxPx = addon.getConfig().getInt("scoreboard.max-width", 140);
+        if (!title.equals(lastTitle.get(id))) {
+            sb.getObjective(OBJ).displayName(Msg.parse(title));
+            lastTitle.put(id, title);
+        }
+
+        List<String> lines = lines(p, mode, shown);
+        String[] prev = lastLines.computeIfAbsent(id, k -> new String[MAX_LINES]);
+        Objective obj = sb.getObjective(OBJ);
+        for (int i = 0; i < MAX_LINES; i++) {
+            String text = i < lines.size() ? ScoreboardText.line(ScoreboardText.fit(lines.get(i), maxPx - 4)) : "";
+            if (!text.equals(prev[i])) {
+                Team t = sb.getTeam("kp_l" + i);
+                if (t != null) t.prefix(Msg.parse(text));
+                prev[i] = text;
+            }
+            if (i < lines.size()) {
+                Score sc = obj.getScore(ENTRIES[i]);
+                sc.setScore(lines.size() - i);
+                sc.numberFormat(NumberFormat.blank());
+            } else {
+                sb.resetScores(ENTRIES[i]);
+            }
+        }
+    }
+
+    /**
+     * Zählt den angezeigten Kontostand Schritt für Schritt zum echten Stand.
+     * Moduswechsel: sofort, ohne Ton. Zählung fertig: Abschlusston.
+     */
+    private long counterTick(Player p, long balance, String mode) {
+        Counter c = counters.computeIfAbsent(p.getUniqueId(), k -> new Counter());
+        if (!c.ready || !mode.equals(c.mode)) {
+            c.shown = balance;
+            c.target = balance;
+            c.ready = true;
+            c.mode = mode;
+            c.animating = false;
+            return c.shown;
+        }
+        c.target = balance;
+        if (c.shown == c.target) {
+            if (c.animating) {
+                c.animating = false;
+                endSound(p, c.dir);
+            }
+            return c.shown;
+        }
+        long diff = c.target - c.shown;
+        c.dir = diff > 0 ? 1 : -1;
+        c.animating = true;
+        long step = Math.max(1, Math.abs(diff) / 6);
+        if (Math.abs(diff) <= step) c.shown = c.target;
+        else c.shown += c.dir * step;
+        if (c.shown == c.target) {
+            c.animating = false;
+            endSound(p, c.dir);
+        } else {
+            p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 0.25f, c.dir > 0 ? 1.5f : 0.7f);
+        }
+        return c.shown;
+    }
+
+    private void endSound(Player p, int dir) {
+        if (dir > 0) {
+            p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1.5f);
+        } else {
+            p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.9f, 0.8f);
+        }
+    }
+
+    /** Angezeigter Kontostand mit Farbe, für Hotbar und ActionBar. */
+    public String moneyText(Player p) {
+        Counter c = counters.get(p.getUniqueId());
+        long balance = plugin.economy().balance(p.getUniqueId());
+        if (c == null || !c.ready) return "<gold>" + ScoreboardText.number(balance) + "$";
+        return moneyColor(p) + ScoreboardText.number(c.shown) + "$";
+    }
+
+    private String moneyColor(Player p) {
+        Counter c = counters.get(p.getUniqueId());
+        if (c == null || c.shown == c.target) return "<green>";
+        return c.target > c.shown ? "<green>" : "<red>";
+    }
+
+    /** Beschriftete Zeile: Icon, Name in Small Caps, dann der Wert. */
+    private static String row(String icon, String label, String value) {
+        return ScoreboardText.icon(icon) + "<gold>" + SmallCaps.of(label) + ": " + value;
+    }
+
+    private List<String> lines(Player p, String mode, long shown) {
+        UUID id = p.getUniqueId();
+        String rank = ScoreboardText.smallText(rank(p));
+        TeamService.Team team = plugin.teams().of(id);
+        String teamName = team == null ? "—" : team.name();
+        String money = moneyColor(p) + ScoreboardText.money(shown);
+        long jewels = plugin.jewels().balance(id);
+        long xp = plugin.stats().get(id).xp;
+        String online = Bukkit.getOnlinePlayers().size() + "/" + Bukkit.getMaxPlayers();
+        String keyall = plugin.getConfig().getString("keyall.command", "").isBlank()
+                ? "<red>" + SmallCaps.of("AUS")
+                : "<aqua>" + ScoreboardText.clock(KeyAllTimer.secondsUntilNext());
+        String people = ScoreboardText.icon(ScoreboardText.I_PEOPLE) + "<green>" + SmallCaps.of("SPIELER ONLINE");
+
+        List<String> out = new ArrayList<>();
+        switch (mode) {
+            case ModeService.SMP -> {
+                var st = plugin.stats().get(id);
+                out.add(row(ScoreboardText.I_RANK, "RANG", "<white>" + rank));
+                out.add(row(ScoreboardText.I_TEAM, "TEAM", "<white>" + teamName));
+                out.add("");
+                out.add(row(ScoreboardText.I_COIN, "COINS", money));
+                out.add(row(ScoreboardText.I_GEM, "JUWELEN", "<light_purple>" + ScoreboardText.number(jewels)));
+                out.add(row(ScoreboardText.I_XP, "XP", "<green>" + ScoreboardText.number(xp)));
+                out.add(row(ScoreboardText.I_TROPHY, "TROPHÄEN", "<light_purple>" + ScoreboardText.number(st.trophies)));
+                out.add(row(ScoreboardText.I_SWORD, "KILLS", "<white>" + ScoreboardText.number(st.kills)));
+                out.add(row(ScoreboardText.I_SKULL, "TODE", "<red>" + ScoreboardText.number(st.deaths)));
+                out.add("");
+                out.add(row(ScoreboardText.I_CLOCK, "KEYALL IN", keyall));
+                out.add("");
+                int w = addon.getConfig().getInt("scoreboard.max-width", 140);
+                out.add(ScoreboardText.center("<green>" + SmallCaps.of("SPIELER ONLINE"), w));
+                out.add(ScoreboardText.center("<white>" + online, w));
+            }
+            case ModeService.SURVIVAL -> {
+                out.add(row(ScoreboardText.I_RANK, "RANG", "<white>" + rank));
+                out.add(row(ScoreboardText.I_LEVEL, "LEVEL", "<white>—"));
+                out.add(row(ScoreboardText.I_JOB, "JOB", "<white>—"));
+                out.add("");
+                out.add(row(ScoreboardText.I_COIN, "COINS", money));
+                out.add(row(ScoreboardText.I_GEM, "JUWELEN", "<light_purple>" + ScoreboardText.number(jewels)));
+                out.add(row(ScoreboardText.I_TOKEN, "TOKENS", "<white>—"));
+                out.add(row(ScoreboardText.I_CLAIM, "CLAIMBLÖCKE", "<green>" + ScoreboardText.number(plugin.statValue("claimblocks", id))));
+                out.add("");
+                out.add(row(ScoreboardText.I_CLOCK, "KEYALL IN", keyall));
+                out.add("");
+                out.add(ScoreboardText.smallText(addon.getConfig().getString("scoreboard.survival-hint-1", "<gold>SPAWN VERLASSEN?")));
+                out.add(ScoreboardText.smallText(addon.getConfig().getString("scoreboard.survival-hint-2", "<yellow>→ /bauwelt")));
+            }
+            default -> {
+                out.add(row(ScoreboardText.I_RANK, "RANG", "<white>" + rank));
+                out.add("");
+                out.add(row(ScoreboardText.I_GEM, "JUWELEN", "<light_purple>" + ScoreboardText.number(jewels)));
+                out.add("");
+                out.add("<green>" + SmallCaps.of("MODUS WÄHLEN:"));
+                out.add("<gray>" + SmallCaps.of("LINKS:") + " <white>" + SmallCaps.of("SMP"));
+                out.add("<gray>" + SmallCaps.of("RECHTS:") + " <white>" + SmallCaps.of("SURVIVAL"));
+                out.add("");
+                out.add(people);
+                out.add("<white>" + online);
+            }
+        }
+        return out;
+    }
+
+    private String rank(Player p) {
+        for (String raw : addon.getConfig().getStringList("scoreboard.ranks")) {
+            String[] parts = raw.split(";", 2);
+            if (parts.length == 2 && p.hasPermission(parts[0].trim())) return parts[1].trim();
+        }
+        return "<white>Mitglied";
+    }
+}

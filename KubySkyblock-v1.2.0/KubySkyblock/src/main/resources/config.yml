@@ -1,0 +1,122 @@
+reward:
+  money: 2
+  xp: 1
+oneblock:
+  positions:
+    - "-3000;100;0"
+    - "-3000;100;40"
+    - "-3000;100;80"
+  money: 5
+  xp: 3
+  blocks:
+    STONE: 10
+    COAL_ORE: 6
+    IRON_ORE: 4
+    GOLD_ORE: 3
+    DIAMOND_ORE: 1
+    OAK_LOG: 6
+    SAND: 5
+loot:
+  cooldown-minutes: 360
+  tiers:
+    nutzlos:
+      weight: 40
+      radius: 2
+      items: 1
+      money: 10
+      xp: 2
+      random-all: true
+      max-amount: 2
+    normal:
+      weight: 30
+      radius: 3
+      items: 2
+      money: 50
+      xp: 10
+      random-all: true
+      max-amount: 4
+    gut:
+      weight: 15
+      radius: 4
+      items: 3
+      money: 200
+      xp: 40
+      jewel-chance: 0.05
+      jewels: 1
+      random-all: true
+      max-amount: 8
+    stark:
+      weight: 10
+      radius: 5
+      items: 4
+      money: 800
+      xp: 120
+      jewel-chance: 0.2
+      jewels: 2
+      random-all: true
+      max-amount: 16
+    overpowered:
+      weight: 4
+      radius: 6
+      items: 6
+      money: 3000
+      xp: 400
+      jewel-chance: 0.6
+      jewels: 5
+      random-all: true
+      max-amount: 32
+    gott:
+      weight: 1
+      radius: 6
+      items: 8
+      money: 10000
+      xp: 1000
+      jewel-chance: 1.0
+      jewels: 15
+      random-all: true
+      max-amount: 64
+achievements:
+  erste_schritte:
+    name: Erste Schritte
+    desc: 10 Blöcke abbauen
+    type: blocks
+    target: 10
+    money: 100
+    xp: 20
+  holzfaeller:
+    name: Holzfäller
+    desc: 200 Blöcke abbauen
+    type: blocks
+    target: 200
+    money: 1000
+    xp: 100
+  sammler:
+    name: Sammler
+    desc: 25 verschiedene Items sammeln
+    type: items
+    target: 25
+    money: 500
+    xp: 50
+  checkliste_gross:
+    name: Großsammler
+    desc: 500 verschiedene Items sammeln
+    type: items
+    target: 500
+    money: 10000
+    xp: 500
+    jewels: 5
+  oneblock_10:
+    name: One-Block-Fan
+    desc: 10 mal den One-Block abbauen
+    type: oneblock
+    target: 10
+    money: 500
+    xp: 50
+  loot_5:
+    name: Kistenöffner
+    desc: 5 Loot-Kisten öffnen
+    type: loot
+    target: 5
+    money: 800
+    xp: 80
+

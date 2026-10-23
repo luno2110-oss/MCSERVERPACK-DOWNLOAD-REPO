@@ -1,0 +1,169 @@
+# Format: kategorie|frage|antwort|coins   (mehrere Antworten mit / trennen)
+# Kategorien: physik, mathe, deutsch, geografie, chemie, minecraft, zufall
+physik|Welche Einheit hat die Kraft?|Newton|150
+physik|Wie schnell ist Licht im Vakuum ungefähr in km/s?|300000|300
+physik|Welche Einheit hat die elektrische Spannung?|Volt|150
+physik|Welche Einheit hat der elektrische Widerstand?|Ohm|200
+physik|Welche Einheit hat die Energie?|Joule|150
+physik|Welche Einheit hat die Leistung?|Watt|150
+physik|Welche Einheit hat die Stromstärke?|Ampere|150
+physik|Welche Einheit hat die Frequenz?|Hertz|200
+physik|Welche Einheit hat die Masse im SI-System?|Kilogramm|150
+physik|Welche Einheit hat die Zeit im SI-System?|Sekunde|100
+physik|Welche Teilchen tragen eine negative Ladung?|Elektronen|200
+physik|Wie nennt man die Anzahl der Schwingungen pro Sekunde?|Frequenz|200
+physik|Wie nennt man den Abstand zweier Wellenberge?|Wellenlänge|200
+physik|Welche Strahlung bräunt die Haut?|UV-Strahlung/UV/Ultraviolett|200
+physik|Wie nennt man den Vorgang, bei dem Licht abgelenkt wird, wenn es in ein anderes Medium tritt?|Brechung|200
+physik|Welche Farbe hat sichtbares Licht mit der kürzesten Wellenlänge?|Violett|200
+physik|Welches Gas ist in der Luft am häufigsten?|Stickstoff|200
+physik|Wer formulierte die Relativitätstheorie?|Einstein|150
+physik|Was misst ein Thermometer?|Temperatur|100
+physik|Welche Kraft zieht Körper zur Erde?|Schwerkraft/Gravitation|150
+physik|Welche Einheit hat die magnetische Flussdichte?|Tesla|300
+mathe|Was ist 12 mal 12?|144|100
+mathe|Was ist die Quadratwurzel aus 81?|9|100
+mathe|Wie viele Seiten hat ein Sechseck?|6|100
+mathe|Was ist 15 Prozent von 200?|30|150
+mathe|Wie viele Grad hat die Summe der Innenwinkel im Dreieck?|180|150
+mathe|Welche Primzahl folgt auf 7?|11|150
+mathe|Was ist 2 hoch 10?|1024|200
+mathe|Wie viele Ecken hat ein Würfel?|8|150
+mathe|Wie viele Kanten hat ein Würfel?|12|150
+mathe|Was ist die Ableitung von x hoch 2?|2x/2 x|250
+mathe|Wie viele Sekunden hat eine Stunde?|3600|150
+mathe|Was ist Pi auf zwei Nachkommastellen gerundet?|3,14|150
+mathe|Was ist 7 mal 8?|56|100
+mathe|Was ist ein Viertel als Dezimalzahl?|0,25|150
+mathe|Wie viele Tage hat ein Schaltjahr?|366|150
+mathe|Was ist die Summe der Zahlen von 1 bis 10?|55|200
+mathe|Was ist 100 geteilt durch 4?|25|100
+mathe|Wie viele Grad hat ein Vollkreis?|360|100
+mathe|Was ist 0,5 mal 0,5?|0,25|200
+mathe|Wie viele Nullen hat eine Million?|6|150
+mathe|Was ist 3 hoch 3?|27|150
+mathe|Wie heißt eine Zahl, die nur durch 1 und sich selbst teilbar ist?|Primzahl|150
+mathe|Wie viele Ecken hat ein Dreieck?|3|100
+mathe|Was ist der Umfang eines Quadrats mit 5 Zentimeter Seitenlänge?|20|150
+mathe|Wie viele Minuten hat ein Tag?|1440|200
+mathe|Wie nennt man das Ergebnis einer Addition?|Summe|100
+mathe|Was ist die Quadratzahl von 9?|81|100
+deutsch|Wie viele Fälle gibt es im Deutschen?|4|150
+deutsch|Wie lautet der Plural von Haus?|Häuser|150
+deutsch|Wie lautet der Plural von Kind?|Kinder|200
+deutsch|Wie lautet der Plural von Auto?|Autos|150
+deutsch|Wie lautet der Plural von Schiff?|Schiffe|150
+deutsch|Welcher Artikel gehört zu Sonne?|die|100
+deutsch|Was ist das Gegenteil von hell?|dunkel|100
+deutsch|Wie nennt man ein Wort mit gleicher Bedeutung?|Synonym|200
+deutsch|Wie nennt man ein Wort mit gegensätzlicher Bedeutung?|Antonym|200
+deutsch|Wie nennt man ein Tuwort, zum Beispiel laufen?|Verb|150
+deutsch|Wie nennt man ein Hauptwort?|Substantiv/Nomen|150
+deutsch|Welches Wort ist ein Adjektiv: schnell, laufen oder Haus?|schnell|150
+deutsch|Welches Wort ist eine Konjunktion: und, rot oder laufen?|und|150
+deutsch|Welches Satzzeichen beendet einen Aussagesatz?|Punkt|100
+deutsch|Wie nennt man die Vorsilbe in unhöflich?|Präfix|250
+deutsch|Wer schrieb den Faust?|Goethe|150
+deutsch|Wer schrieb Die Verwandlung?|Kafka|200
+deutsch|Wer schrieb Die Räuber?|Schiller|200
+deutsch|Wie nennt man die Gegenwartsform eines Verbs?|Präsens|200
+deutsch|Wie nennt man ein Gedicht mit 14 Zeilen?|Sonett|250
+deutsch|Welches Fürwort steht in Er geht?|Er/Personalpronomen|200
+deutsch|Welches Wort ist kein Nomen: Tisch, Stuhl oder laufen?|laufen|150
+deutsch|Wie lautet der Plural von Mutter?|Mütter|200
+deutsch|Wie lautet der Dativ Singular von Mann?|dem Mann|200
+geografie|Welcher Fluss fließt durch Berlin?|Spree|200
+geografie|Welcher Fluss fließt durch Wien?|Donau|150
+geografie|Was ist die Hauptstadt von Australien?|Canberra|200
+geografie|Was ist die Hauptstadt von Kanada?|Ottawa|200
+geografie|Was ist die Hauptstadt von Japan?|Tokio|100
+geografie|Was ist die Hauptstadt von Spanien?|Madrid|100
+geografie|Was ist die Hauptstadt von Italien?|Rom|100
+geografie|Was ist die Hauptstadt von Norwegen?|Oslo|100
+geografie|Welches Land hat die Hauptstadt Ankara?|Türkei/Turkei|200
+geografie|Wie viele Bundesländer hat Deutschland?|16|150
+geografie|Welcher ist der größte Ozean?|Pazifik/Pazifischer Ozean|150
+geografie|Welcher Kontinent ist der größte?|Asien|150
+geografie|Wie heißt der höchste Berg der Erde?|Mount Everest/Everest|150
+geografie|Welches Land hat die meisten Einwohner?|Indien|250
+geografie|Welche Wüste ist die größte heiße Wüste?|Sahara|200
+geografie|Welches ist das kleinste Land der Welt?|Vatikanstadt|200
+geografie|Welche Meerenge trennt Europa von Afrika?|Straße von Gibraltar/Gibraltar|250
+geografie|Welches Land liegt südlich der USA?|Mexiko|100
+geografie|Welcher Staat hat die Hauptstadt Brasília?|Brasilien|150
+geografie|Wie heißt der größte See Afrikas?|Victoriasee/Victoria|300
+geografie|In welchem Land liegt Timbuktu?|Mali|250
+geografie|Welches Meer liegt zwischen Italien und Griechenland?|Ionisches Meer/Ionisch|250
+geografie|Welcher Fluss ist der längste Europas?|Wolga|250
+geografie|Welche Stadt ist die Hauptstadt der Schweiz?|Bern|200
+chemie|Welches chemische Zeichen hat Gold?|Au|150
+chemie|Welches Element hat das Symbol O?|Sauerstoff|100
+chemie|Welches Element hat das Symbol C?|Kohlenstoff|100
+chemie|Welches Element hat das Symbol N?|Stickstoff|150
+chemie|Welches Element hat das Symbol He?|Helium|150
+chemie|Welches Element hat das Symbol Fe?|Eisen|150
+chemie|Welches Element hat das Symbol Na?|Natrium|200
+chemie|Welches Element hat das Symbol K?|Kalium|200
+chemie|Welches Element hat das Symbol Ag?|Silber|200
+chemie|Welches Element hat das Symbol Cu?|Kupfer|200
+chemie|Welches Element hat das Symbol Zn?|Zink|250
+chemie|Welches Element hat das Symbol Pb?|Blei|250
+chemie|Welches Element hat die Ordnungszahl 1?|Wasserstoff|200
+chemie|Welches Element hat die Ordnungszahl 8?|Sauerstoff|200
+chemie|Was ist die chemische Formel von Wasser?|H2O|100
+chemie|Was ist die chemische Formel von Kochsalz?|NaCl|150
+chemie|Was ist die chemische Formel von Kohlendioxid?|CO2|150
+chemie|Was ist die chemische Formel von Methan?|CH4|200
+chemie|Was ist die chemische Formel von Ammoniak?|NH3|200
+chemie|Welches Gas entsteht bei der Fotosynthese?|Sauerstoff|150
+chemie|Welches Gas macht Getränke sprudelig?|Kohlendioxid/CO2|100
+chemie|Wie hoch ist der pH-Wert von reinem Wasser?|7|200
+chemie|Welches Element ist bei Raumtemperatur flüssig?|Quecksilber|250
+chemie|Welches Element ist das häufigste im Universum?|Wasserstoff|250
+chemie|Welches Metall reagiert heftig mit Wasser: Natrium oder Gold?|Natrium|200
+chemie|Wie nennt man den Übergang von fest zu gasförmig?|Sublimation|250
+chemie|Wie nennt man Stoffe, die Säuren neutralisieren?|Basen/Laugen/Base|250
+chemie|Wie viele Protonen hat ein Kohlenstoffatom?|6|250
+chemie|Wie viele Elektronen hat neutrales Helium?|2|200
+minecraft|Welches Erz braucht man für Netherit?|Ancient Debris|150
+minecraft|Wie viele Herzen hat ein Spieler standardmäßig?|10|150
+minecraft|Welcher Mob explodiert, wenn er einen Spieler nahe kommt?|Creeper|100
+minecraft|Welcher Boss hat drei Köpfe?|Wither|200
+minecraft|Welche Dimension ist die Hölle?|Nether|100
+minecraft|Welches Tier liefert Leder?|Kuh|100
+minecraft|Welches Tier liefert Wolle?|Schaf|100
+minecraft|Welche Farbe hat ein Enderman?|Schwarz|100
+minecraft|Welches Item braucht man, um in das End zu gelangen?|Ender-Auge/Enderauge|200
+minecraft|Welcher Block ist unzerstörbar?|Bedrock|150
+minecraft|Welches Material braucht man für ein Nether-Portal?|Obsidian|150
+minecraft|Welche Spitzhacke braucht man für Diamanterz?|Eisenspitzhacke/Eisen|200
+minecraft|Welches Item rettet dich vor dem Tod?|Totem der Unsterblichkeit/Totem|200
+minecraft|Wie viele Slots hat die Hotbar?|9|100
+minecraft|Welches Item braucht man zum Reiten auf einem Schwein?|Sattel|150
+minecraft|Wie viele Dimensionen gibt es standardmäßig?|3|150
+minecraft|Welche Pflanze liefert Zucker?|Zuckerrohr|150
+minecraft|Welches Item droppt der Ghast?|Ghast-Träne/Ghasttraene|200
+minecraft|Wie heißt das Dorf-Handelsmob?|Dorfbewohner|100
+minecraft|Wie viele Items passen in einen Stapel Steine?|64|150
+minecraft|Welches Material hat der Piglin als Währung?|Goldbarren/Gold|150
+minecraft|Welcher Block leuchtet am hellsten?|Glowstone/Leuchtstein|250
+zufall|Welches Tier ist das größte Säugetier?|Blauwal|150
+zufall|Wie viele Herzen hat ein Oktopus?|3|300
+zufall|Was ist das schnellste Landtier?|Gepard|150
+zufall|Wie viele Beine hat eine Spinne?|8|100
+zufall|Welche Farbe hat Chlorophyll?|Grün|100
+zufall|Wie nennt man die Lehre von den Pflanzen?|Botanik|200
+zufall|In welchem Jahr fiel die Berliner Mauer?|1989|200
+zufall|Wie viele Sterne hat die Fahne der EU?|12|200
+zufall|Wie viele Ringe hat das Olympia-Symbol?|5|150
+zufall|Welcher Vogel kann nicht fliegen und lebt in Australien?|Emu|150
+zufall|Welches Instrument hat 88 Tasten?|Klavier|150
+zufall|Welches Land gewann die erste Fußball-WM 1930?|Uruguay|250
+zufall|Was misst ein Barometer?|Luftdruck|200
+zufall|Wie viele Spieler stehen pro Fußballmannschaft auf dem Feld?|11|100
+zufall|Welcher Planet ist der rote?|Mars|100
+zufall|Wie viele Monate haben 31 Tage?|7|150
+zufall|Welches Gemüse ist botanisch eine Frucht?|Tomate|250
+zufall|Wie viele Saiten hat eine Gitarre standardmäßig?|6|150
+zufall|Welche Sprache spricht man in Brasilien?|Portugiesisch|150
+zufall|Welcher taube Komponist schrieb die Neunte Sinfonie?|Beethoven|200

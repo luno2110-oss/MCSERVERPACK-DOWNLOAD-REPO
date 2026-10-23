@@ -1,0 +1,150 @@
+name: KubyCore
+version: 2.0.14
+main: de.kuby.kubyplugins.KubyPlugins
+api-version: '1.21'
+author: Kuby
+description: All-in-One Plugin für ChaosSMP
+
+commands:
+  befehle:
+    description: "Befehlsübersicht im Chat, mehrere Seiten"
+    usage: "/befehle [seite]"
+    aliases: [hilfe]
+  menu:
+    description: "Hauptmenü als GUI öffnen"
+  balance:
+    description: "Kontostand anzeigen"
+    aliases: [bal, kontostand]
+  pay:
+    description: "Coins an einen Spieler senden"
+    usage: "/pay <Spieler> <Betrag>"
+  baltop:
+    description: "Reichsten-Liste öffnen"
+    aliases: [top]
+  shop:
+    description: "Shop öffnen"
+  sethome:
+    description: "Home auf deiner Position setzen"
+    usage: "/sethome <Name>"
+  home:
+    description: "Zu einem Home teleportieren"
+    usage: "/home <Name>"
+  homes:
+    description: "Homes-Menü öffnen"
+  delhome:
+    description: "Home löschen"
+    usage: "/delhome <Name>"
+  daily:
+    description: "Tageskalender öffnen"
+  rtp:
+    description: "Zufalls-Teleport in die Wildnis"
+  spawn:
+    description: "Zurück zum Spawn"
+  team:
+    description: "Team-Menü und Team-Befehle"
+    usage: "/team [create|invite|accept|leave|disband|home|sethome|bank|ally|help]"
+    aliases: [clan]
+  tc:
+    description: "Team-Chat"
+    usage: "/tc <Nachricht>"
+  markt:
+    description: "Auktionshaus öffnen oder Item anbieten"
+    usage: "/markt [sell <Preis>]"
+  sell:
+    description: "Alle verkaufbaren Items im Inventar verkaufen"
+  worth:
+    description: "Preisliste öffnen"
+  sellmulti:
+    description: "Verkaufs-Multiplikator verbessern"
+  orders:
+    description: "Orders öffnen oder erstellen"
+    usage: "/orders [add <Material> <Menge> <Preis>]"
+  abholbox:
+    description: "Abholbox öffnen"
+  abholen:
+    description: "Alle Items aus der Abholbox einsammeln"
+  friend:
+    description: "Freunde hinzufügen, annehmen, entfernen"
+    usage: "/friend add|accept|remove <Spieler>"
+  friends:
+    description: "Freundesliste öffnen"
+  msg:
+    description: "Private Nachricht senden"
+    usage: "/msg <Spieler> <Text>"
+    aliases: [w, tell]
+  r:
+    description: "Auf die letzte Nachricht antworten"
+    usage: "/r <Text>"
+  inbox:
+    description: "Verpasste Nachrichten anzeigen"
+  stats:
+    description: "Deine Statistik anzeigen"
+  ranking:
+    description: "Trophäen-Rangliste öffnen"
+  juwelen:
+    description: "Juwelen-Konto anzeigen"
+  juwelenshop:
+    description: "Juwelen-Pakete ansehen"
+  coinflip:
+    description: "Münzwurf um Coins"
+    usage: "/coinflip <Betrag>"
+  kadmin:
+    description: "Admin-Panel öffnen"
+    permission: kuby.admin
+    usage: "/kadmin"
+  dailypot:
+    description: "Tagespot öffnen, Lose kaufen"
+  trade:
+    description: "Mit einem Spieler handeln"
+    usage: "/trade <Spieler> oder /trade accept"
+  tags:
+    description: "Titel auswählen"
+    usage: "/tags [grant <Spieler> <Titel-ID>]"
+  rtpqueue:
+    description: "Zu zweit an einen Zufallsort, Kampf!"
+    usage: "/rtpqueue [leave]"
+  meta:
+    description: "Wochen-Meta: für ein Item abstimmen"
+  booster:
+    description: "Status des Abend-Boosters"
+  xpshop:
+    description: "XP eintauschen"
+  battlepass:
+    description: "Battlepass mit 100 Stufen öffnen"
+  cosmetics:
+    description: "Spuren und Kill-Effekte auswählen"
+  verify:
+    description: "Zeigt, ob dein Account mit Discord verknüpft ist"
+  enderchest:
+    description: "Deine Enderchest öffnen"
+    aliases: [ec]
+  kristaltrade:
+    description: "Ancient Debris gegen End-Kristalle tauschen"
+  investments:
+    description: "Anteile an Shop-Items kaufen und verkaufen"
+  quizvote:
+    description: "Abstimmung über die Quiz-Kategorie der Woche"
+  totenkiste:
+    description: "Setzt deine Totenkiste auf den Block, auf den du schaust"
+  kits:
+    description: "Kits abholen und Vorschau ansehen"
+  hub:
+    description: "Zur Lobby wechseln"
+  kp:
+    description: "Operative Befehle für Admins"
+    permission: kuby.admin
+    usage: "/kp setspawn|setworld|mode"
+  tpa:
+    description: "Teleport-Anfrage an einen Spieler"
+    usage: "/tpa <Spieler>"
+  tpaccept:
+    description: "Teleport-Anfrage annehmen"
+  tpadeny:
+    description: "Teleport-Anfrage ablehnen"
+  spielzeit:
+    description: "Spielzeit-Belohnungen ansehen"
+
+permissions:
+  kuby.admin:
+    description: "Zugriff auf das Admin-Panel"
+    default: op
