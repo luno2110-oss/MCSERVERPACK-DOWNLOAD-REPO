@@ -373,38 +373,31 @@ def drop_shadow(img, strength=(135, 75)):
 # =====================================================================================
 # Logo je Modus (Rahmenbreite + Rand M; Zeile LOGO_TOP = Rahmenoberkante)
 # =====================================================================================
-def line_points(x0, y0, x1, y1):
-    pts, dx, dy = [], abs(x1 - x0), -abs(y1 - y0)
-    sx, sy = (1 if x0 < x1 else -1), (1 if y0 < y1 else -1)
-    err = dx + dy
-    while True:
-        pts.append((x0, y0))
-        if (x0, y0) == (x1, y1):
-            return pts
-        e2 = 2 * err
-        if e2 >= dy:
-            err += dy
-            x0 += sx
-        if e2 <= dx:
-            err += dx
-            y0 += sy
+ARROW = {
+    # Pfeil steckt schraeg im oberen Rand links neben dem kleinen Schriftzug (Rahmenkoordinaten, y relativ zur
+    # Rahmenoberkante): Spitze schaut heraus, Schaft 45 Grad nach unten aussen, Feder als Faecher.
+    "head": [(43, 0, "s"), (44, 0, "W"), (42, 1, "s"), (43, 1, "W"), (44, 1, "s"), (42, 2, "s"), (43, 2, "s")],
+    "shaft": [(42, 3), (41, 4), (40, 5), (39, 6), (38, 7), (37, 8)],
+    "feather": [(33, 9, "R"), (34, 9, "R"), (35, 9, "R"), (36, 9, "O"),
+                (32, 10, "P"), (33, 10, "P"), (34, 10, "R"), (35, 10, "C"), (36, 10, "R"),
+                (34, 11, "C"), (35, 11, "R"), (36, 11, "P"),
+                (35, 12, "P"), (36, 12, "P"),
+                (35, 13, "P")],
+}
+ARROW_COL = {"s": rgb("AEB2BC"), "W": rgb("F2F2F6"), "b": rgb("A0604A"), "R": rgb("AF3737"), "P": rgb("F06E6E"),
+             "C": rgb("FAD8BE"), "O": rgb("D88C64")}
 
 
-def arrow(tail, head):
-    """Pfeil von der Feder zur Spitze, mit dunklem Rand."""
+def stuck_arrows():
+    """Beide steckenden Pfeile (rechts gespiegelt) mit schwarzem Rand."""
     layer = new(TEX_W, LOGO_H)
     px = layer.load()
-    pts = line_points(*tail, *head)
-    for (x, y) in pts:
-        px[x, y] = rgb("9A6440")
-    sx = 1 if head[0] > tail[0] else -1
-    for (x, y) in pts[:4]:                              # Federn
-        px[x - sx, y] = rgb("E8606A")
-        px[x, y + 1] = rgb("B8343E")
-    px[pts[0][0] - sx, pts[0][1] + 1] = rgb("FFB0B4")
-    hx, hy = head                                       # Spitze
-    for (x, y, c) in ((hx, hy, "F4F4F8"), (hx - sx, hy, "C8CCD4"), (hx, hy + 1, "C8CCD4"), (hx + sx, hy - 1, "FFFFFF")):
-        px[x, y] = rgb(c)
+    pts = []
+    for (x, y, c) in ARROW["head"] + [(x, y, "b") for (x, y) in ARROW["shaft"]] + ARROW["feather"]:
+        pts.append((x, y, c))
+        pts.append((FRAME_W - 1 - x, y, c))
+    for (x, y, c) in pts:
+        px[M + x, ry(y)] = ARROW_COL[c]
     out = new(TEX_W, LOGO_H)
     op = out.load()
     for y in range(LOGO_H):
@@ -413,7 +406,7 @@ def arrow(tail, head):
                 continue
             if any(0 <= x + dx < TEX_W and 0 <= y + dy < LOGO_H and px[x + dx, y + dy][3]
                    for dx in (-1, 0, 1) for dy in (-1, 0, 1)):
-                op[x, y] = rgb("1A0C04")
+                op[x, y] = rgb("0F0804")
     out.alpha_composite(layer)
     return out
 
@@ -426,8 +419,7 @@ def logo(word, arrows=False):
     w, h = TEX_W, LOGO_H
     img = new(w, h)
     if arrows:
-        img.alpha_composite(arrow((M + 30, ry(11)), (M + 46, ry(0))))
-        img.alpha_composite(arrow((M + FRAME_W - 31, ry(11)), (M + FRAME_W - 47, ry(0))))
+        img.alpha_composite(stuck_arrows())
     text = new(w, h)
     big = block_word("KUBY", BIG, GOLD_PAL)
     text.alpha_composite(big, (M + (FRAME_W - big.width) // 2, ry(0) - big.height + 1))
@@ -497,7 +489,8 @@ def icon(name):
 # Muss zu de.kuby.kubysurvival.hud.SurvivalHud passen.
 # =====================================================================================
 HUD_H = 18                     # Leiste: Rand, Holz, Cremefeld (11), Holz, Rand
-HUD_TEXT_SHIFT = 4             # Text 4 px tiefer als normal, damit er mittig im Cremefeld sitzt
+HUD_DOWN = 5                   # ganze Leiste 5 px tiefer (Abstand zum oberen Bildschirmrand)
+HUD_TEXT_SHIFT = 4 + HUD_DOWN  # Text tiefer als normal, damit er mittig im Cremefeld sitzt
 HUD_COLUMN = [rgb("3A2210"), rgb("D2924E"), rgb("AA6A34"), rgb("70421E"), rgb("E6DABE")] + [rgb("F8F0DA")] * 10 + \
              [rgb("70421E"), rgb("965C2C"), rgb("3A2210")]
 FLOWER = {"W": rgb("FAFAF4"), "Y": rgb("F0C83C")}
@@ -568,12 +561,12 @@ def build_hud(out, spaces):
         providers.append({"type": "bitmap", "file": "kubyplugins:hud/" + name + ".png", "height": height,
                           "ascent": ascent, "chars": [char]})
 
-    # Leiste oben bei y = 1 (Bossbar-Titel steht bei y = 3): ascent 3 + 7 - 1 = 9
+    # Leiste oben bei y = 1 + HUD_DOWN (Bossbar-Titel steht bei y = 3): ascent 3 + 7 - 1 - HUD_DOWN
     for i, width in enumerate((1, 2, 4, 8, 16, 32, 64)):
-        save(hud_tile(width), "tile_%d" % width, HUD_H, 9, chr(0xE040 + i))
+        save(hud_tile(width), "tile_%d" % width, HUD_H, 9 - HUD_DOWN, chr(0xE040 + i))
     cap = hud_cap()
-    save(cap, "cap_left", cap.height, 10, chr(0xE001))
-    save(cap.transpose(Image.FLIP_LEFT_RIGHT), "cap_right", cap.height, 10, chr(0xE002))
+    save(cap, "cap_left", cap.height, 10 - HUD_DOWN, chr(0xE001))
+    save(cap.transpose(Image.FLIP_LEFT_RIGHT), "cap_right", cap.height, 10 - HUD_DOWN, chr(0xE002))
     dot = new(2, 2)
     dot.paste(rgb("8C7860"), (0, 0, 2, 2))
     save(dot, "dot", 2, 7 - HUD_TEXT_SHIFT - 3, chr(0xE003))

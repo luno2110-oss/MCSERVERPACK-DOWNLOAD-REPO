@@ -30,7 +30,7 @@
    "type": "bitmap",
    "file": "minecraft:font/ascii.png",
    "height": 8,
-   "ascent": 3,
+   "ascent": -2,
    "chars": [
     "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
     "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
@@ -54,7 +54,7 @@
    "type": "bitmap",
    "file": "kubyplugins:hud/tile_1.png",
    "height": 18,
-   "ascent": 9,
+   "ascent": 4,
    "chars": [
     "\ue040"
    ]
@@ -63,7 +63,7 @@
    "type": "bitmap",
    "file": "kubyplugins:hud/tile_2.png",
    "height": 18,
-   "ascent": 9,
+   "ascent": 4,
    "chars": [
     "\ue041"
    ]
@@ -72,7 +72,7 @@
    "type": "bitmap",
    "file": "kubyplugins:hud/tile_4.png",
    "height": 18,
-   "ascent": 9,
+   "ascent": 4,
    "chars": [
     "\ue042"
    ]
@@ -81,7 +81,7 @@
    "type": "bitmap",
    "file": "kubyplugins:hud/tile_8.png",
    "height": 18,
-   "ascent": 9,
+   "ascent": 4,
    "chars": [
     "\ue043"
    ]
@@ -90,7 +90,7 @@
    "type": "bitmap",
    "file": "kubyplugins:hud/tile_16.png",
    "height": 18,
-   "ascent": 9,
+   "ascent": 4,
    "chars": [
     "\ue044"
    ]
@@ -99,7 +99,7 @@
    "type": "bitmap",
    "file": "kubyplugins:hud/tile_32.png",
    "height": 18,
-   "ascent": 9,
+   "ascent": 4,
    "chars": [
     "\ue045"
    ]
@@ -108,7 +108,7 @@
    "type": "bitmap",
    "file": "kubyplugins:hud/tile_64.png",
    "height": 18,
-   "ascent": 9,
+   "ascent": 4,
    "chars": [
     "\ue046"
    ]
@@ -117,7 +117,7 @@
    "type": "bitmap",
    "file": "kubyplugins:hud/cap_left.png",
    "height": 20,
-   "ascent": 10,
+   "ascent": 5,
    "chars": [
     "\ue001"
    ]
@@ -126,7 +126,7 @@
    "type": "bitmap",
    "file": "kubyplugins:hud/cap_right.png",
    "height": 20,
-   "ascent": 10,
+   "ascent": 5,
    "chars": [
     "\ue002"
    ]
@@ -135,7 +135,7 @@
    "type": "bitmap",
    "file": "kubyplugins:hud/dot.png",
    "height": 2,
-   "ascent": 0,
+   "ascent": -5,
    "chars": [
     "\ue003"
    ]
@@ -144,7 +144,7 @@
    "type": "bitmap",
    "file": "kubyplugins:sb/sb_coin.png",
    "height": 8,
-   "ascent": 4,
+   "ascent": -1,
    "chars": [
     "\ue010"
    ]
@@ -153,7 +153,7 @@
    "type": "bitmap",
    "file": "kubyplugins:sb/sb_gem.png",
    "height": 8,
-   "ascent": 4,
+   "ascent": -1,
    "chars": [
     "\ue011"
    ]
@@ -162,7 +162,7 @@
    "type": "bitmap",
    "file": "kubyplugins:sb/sb_xp.png",
    "height": 8,
-   "ascent": 4,
+   "ascent": -1,
    "chars": [
     "\ue012"
    ]
@@ -171,7 +171,7 @@
    "type": "bitmap",
    "file": "kubyplugins:sb/sb_trophy.png",
    "height": 8,
-   "ascent": 4,
+   "ascent": -1,
    "chars": [
     "\ue013"
    ]
@@ -180,7 +180,7 @@
    "type": "bitmap",
    "file": "kubyplugins:sb/sb_sword.png",
    "height": 8,
-   "ascent": 4,
+   "ascent": -1,
    "chars": [
     "\ue014"
    ]
@@ -189,7 +189,7 @@
    "type": "bitmap",
    "file": "kubyplugins:sb/sb_skull.png",
    "height": 8,
-   "ascent": 4,
+   "ascent": -1,
    "chars": [
     "\ue015"
    ]
@@ -198,7 +198,7 @@
    "type": "bitmap",
    "file": "kubyplugins:sb/sb_clock.png",
    "height": 8,
-   "ascent": 4,
+   "ascent": -1,
    "chars": [
     "\ue016"
    ]
@@ -207,7 +207,7 @@
    "type": "bitmap",
    "file": "kubyplugins:sb/sb_people.png",
    "height": 8,
-   "ascent": 4,
+   "ascent": -1,
    "chars": [
     "\ue017"
    ]
@@ -216,7 +216,7 @@
    "type": "bitmap",
    "file": "kubyplugins:sb/sb_rank.png",
    "height": 8,
-   "ascent": 4,
+   "ascent": -1,
    "chars": [
     "\ue018"
    ]
@@ -225,7 +225,7 @@
    "type": "bitmap",
    "file": "kubyplugins:sb/sb_team.png",
    "height": 8,
-   "ascent": 4,
+   "ascent": -1,
    "chars": [
     "\ue019"
    ]
@@ -234,7 +234,7 @@
    "type": "bitmap",
    "file": "kubyplugins:sb/sb_claim.png",
    "height": 8,
-   "ascent": 4,
+   "ascent": -1,
    "chars": [
     "\ue01a"
    ]
@@ -243,7 +243,7 @@
    "type": "bitmap",
    "file": "kubyplugins:sb/sb_token.png",
    "height": 8,
-   "ascent": 4,
+   "ascent": -1,
    "chars": [
     "\ue01b"
    ]
@@ -252,7 +252,7 @@
    "type": "bitmap",
    "file": "kubyplugins:sb/sb_level.png",
    "height": 8,
-   "ascent": 4,
+   "ascent": -1,
    "chars": [
     "\ue01c"
    ]
@@ -261,7 +261,7 @@
    "type": "bitmap",
    "file": "kubyplugins:sb/sb_job.png",
    "height": 8,
-   "ascent": 4,
+   "ascent": -1,
    "chars": [
     "\ue01d"
    ]
@@ -270,7 +270,7 @@
    "type": "bitmap",
    "file": "kubyplugins:sb/sb_arrow.png",
    "height": 8,
-   "ascent": 4,
+   "ascent": -1,
    "chars": [
     "\ue01e"
    ]
@@ -279,7 +279,7 @@
    "type": "bitmap",
    "file": "kubyplugins:sb/sb_spawn.png",
    "height": 8,
-   "ascent": 4,
+   "ascent": -1,
    "chars": [
     "\ue01f"
    ]
@@ -288,7 +288,7 @@
    "type": "bitmap",
    "file": "kubyplugins:sb/sb_compass.png",
    "height": 8,
-   "ascent": 4,
+   "ascent": -1,
    "chars": [
     "\ue020"
    ]
