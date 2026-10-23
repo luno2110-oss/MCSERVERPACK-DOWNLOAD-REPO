@@ -259,13 +259,28 @@ public final class JobService {
                     + " Coins <light_purple>+" + tokens + " Token" + (tokens == 1 ? "" : "s"));
             p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.8f, 1.2f);
         }
-        int playerAfter = playerLevel(w);
-        if (playerAfter > playerBefore) {
-            long tokens = core.getConfig().getLong("jobs.tokens-per-player-level", 3);
-            w.tokens += tokens;
-            Msg.send(p, "<gold><bold>Level " + playerAfter + "!</bold> <light_purple>+" + tokens + " Tokens");
-            p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.6f, 1.0f);
-        }
+        playerLevelUp(p.getUniqueId(), w, playerBefore);
+        if (addon.quests() != null) addon.quests().progress(p, "jobxp", job, xp);
+    }
+
+    /** Spieler-XP ohne Job (Quests, Online-Zeit). Aufstiege bringen Tokens wie sonst auch. */
+    public synchronized void addPlayerXp(UUID id, long xp) {
+        if (xp <= 0) return;
+        Worker w = worker(id);
+        int before = playerLevel(w);
+        w.totalXp += xp;
+        playerLevelUp(id, w, before);
+    }
+
+    private void playerLevelUp(UUID id, Worker w, int before) {
+        int after = playerLevel(w);
+        if (after <= before) return;
+        long tokens = core.getConfig().getLong("jobs.tokens-per-player-level", 3) * (after - before);
+        w.tokens += tokens;
+        Player p = addon.getServer().getPlayer(id);
+        if (p == null) return;
+        Msg.send(p, "<gold><bold>Level " + after + "!</bold> <light_purple>+" + tokens + " Tokens");
+        p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.6f, 1.0f);
     }
 
     // ---------- Speichern ----------

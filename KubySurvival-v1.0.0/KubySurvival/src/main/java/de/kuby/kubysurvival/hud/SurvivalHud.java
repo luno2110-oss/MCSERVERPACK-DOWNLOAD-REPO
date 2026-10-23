@@ -7,6 +7,8 @@ import de.kuby.kubysurvival.KubySurvival;
 import de.kuby.kubysurvival.claim.ClaimService;
 import de.kuby.kubysurvival.fishing.FishingService;
 import de.kuby.kubysurvival.jobs.JobService;
+import de.kuby.kubysurvival.quests.QuestService;
+import de.kuby.kubyplugins.util.Msg;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
@@ -30,6 +32,7 @@ import java.util.UUID;
 
 /**
  * Survival-Leiste oben (Platz der Bossbar): drei Holzleisten mit Geld und Juwelen, aktivem Job und Ort.
+ * Darunter die verfolgte Quest als grüne Bossbar.
  * Die Leisten sind Zeichen der Schrift kubyplugins:hud aus dem Pack KubyUI, der Bossbar-Balken selbst ist
  * durch das Pack unsichtbar (Farbe weiß). Solange die Leiste sichtbar ist, entfällt die Anzeige über der Hotbar.
  * Muss zu tools/build_sb_pack.py (build_hud) passen.
@@ -58,6 +61,9 @@ public final class SurvivalHud implements Listener {
     private final KubySurvival addon;
     private final KubyPlugins core;
     private final Map<UUID, BossBar> bars = new HashMap<>();
+    /** Verfolgte Quest: eigene Bossbar mit grünem Balken. Unter der Leiste liegt eine leere Bossbar als Abstand. */
+    private final Map<UUID, BossBar> questBars = new HashMap<>();
+    private final Map<UUID, BossBar> spacers = new HashMap<>();
 
     public SurvivalHud(KubySurvival addon, KubyPlugins core) {
         this.addon = addon;
@@ -77,33 +83,80 @@ public final class SurvivalHud implements Listener {
         for (Player p : Bukkit.getOnlinePlayers()) {
             UUID id = p.getUniqueId();
             BossBar bar = bars.get(id);
+            boolean added = false;
             if (!wants(p)) {
                 if (bar != null) {
                     p.hideBossBar(bar);
                     bars.remove(id);
                 }
-                continue;
+            } else {
+                Component title = build(p);
+                if (bar == null) {
+                    bar = BossBar.bossBar(title, 0f, BossBar.Color.WHITE, BossBar.Overlay.PROGRESS);
+                    bars.put(id, bar);
+                    p.showBossBar(bar);
+                    added = true;
+                } else if (!title.equals(bar.name())) {
+                    bar.name(title);
+                }
             }
-            Component title = build(p);
-            if (bar == null) {
-                bar = BossBar.bossBar(title, 0f, BossBar.Color.WHITE, BossBar.Overlay.PROGRESS);
-                bars.put(id, bar);
-                p.showBossBar(bar);
-            } else if (!title.equals(bar.name())) {
-                bar.name(title);
-            }
+            questBar(p, added);
         }
+    }
+
+    /** Zeigt die verfolgte Quest unter der Leiste (in Survival, auch ohne Pack). */
+    private void questBar(Player p, boolean hudAdded) {
+        UUID id = p.getUniqueId();
+        QuestService.Track t = ModeService.SURVIVAL.equals(core.modes().modeOf(id)) && addon.quests() != null
+                ? addon.quests().track(id) : null;
+        BossBar quest = questBars.get(id);
+        BossBar spacer = spacers.get(id);
+        if (t == null) {
+            if (quest != null) p.hideBossBar(questBars.remove(id));
+            if (spacer != null) p.hideBossBar(spacers.remove(id));
+            return;
+        }
+        boolean hud = bars.containsKey(id);
+        // Reihenfolge: Leiste, Abstand, Quest. Kommt etwas Neues dazu, wird neu aufgebaut.
+        boolean rebuild = hudAdded || quest == null || (hud != (spacer != null));
+        if (rebuild) {
+            if (quest != null) p.hideBossBar(quest);
+            if (spacer != null) p.hideBossBar(spacer);
+            spacers.remove(id);
+            if (hud) {
+                spacer = BossBar.bossBar(Component.empty(), 0f, BossBar.Color.WHITE, BossBar.Overlay.PROGRESS);
+                spacers.put(id, spacer);
+                p.showBossBar(spacer);
+            }
+            if (quest == null) {
+                quest = BossBar.bossBar(Component.empty(), 0f, BossBar.Color.GREEN, BossBar.Overlay.NOTCHED_10);
+                questBars.put(id, quest);
+            }
+            p.showBossBar(quest);
+        }
+        long goal = Math.max(1, t.def().amount());
+        float progress = Math.max(0f, Math.min(1f, (float) t.progress() / goal));
+        Component name = Msg.parse("<gold>" + Msg.escape(t.def().name()) + " <dark_gray>· <white>" + Msg.escape(t.def().task())
+                + " <dark_gray>· <green>" + Msg.coins(t.progress()) + "/" + Msg.coins(goal));
+        if (!name.equals(quest.name())) quest.name(name);
+        if (quest.progress() != progress) quest.progress(progress);
     }
 
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
         bars.remove(e.getPlayer().getUniqueId());
+        questBars.remove(e.getPlayer().getUniqueId());
+        spacers.remove(e.getPlayer().getUniqueId());
     }
 
     public void shutdown() {
         for (Player p : Bukkit.getOnlinePlayers()) {
             BossBar bar = bars.remove(p.getUniqueId());
             if (bar != null) p.hideBossBar(bar);
+            BossBar quest = questBars.remove(p.getUniqueId());
+            if (quest != null) p.hideBossBar(quest);
+            BossBar spacer = spacers.remove(p.getUniqueId());
+            if (spacer != null) p.hideBossBar(spacer);
         }
     }
 

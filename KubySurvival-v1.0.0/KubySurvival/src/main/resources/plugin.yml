@@ -15,6 +15,10 @@ commands:
     description: "Jobs: acht Berufe, Level, Stundenlimit, Wochenauftrag"
     usage: "/job [info <Beruf>|waehlen <Beruf>|limit|auftrag|hilfe]"
     aliases: [jobs]
+  quest:
+    description: "Quests: täglich, wöchentlich, Geschichte, Team, Meilensteine"
+    usage: "/quest [daily|weekly|abholen|streak|top|aus|hilfe]"
+    aliases: [quests]
   tokenshop:
     description: "Token-Shop"
     usage: "/tokenshop"

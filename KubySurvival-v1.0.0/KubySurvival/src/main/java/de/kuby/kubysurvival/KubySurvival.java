@@ -18,6 +18,10 @@ import de.kuby.kubysurvival.jobs.JobMenu;
 import de.kuby.kubysurvival.jobs.JobService;
 import de.kuby.kubysurvival.jobs.TokenShopMenu;
 import de.kuby.kubysurvival.fishing.FishingService;
+import de.kuby.kubysurvival.quests.QuestCommand;
+import de.kuby.kubysurvival.quests.QuestListener;
+import de.kuby.kubysurvival.quests.QuestMenu;
+import de.kuby.kubysurvival.quests.QuestService;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.command.PluginCommand;
@@ -40,6 +44,7 @@ public final class KubySurvival extends JavaPlugin {
     private SurvivalHud hud;
     private JobService jobs;
     private IntroService intro;
+    private QuestService quests;
     private final Map<UUID, Location[]> zoneCorners = new HashMap<>();
 
     public KubyPlugins core() { return core; }
@@ -49,6 +54,7 @@ public final class KubySurvival extends JavaPlugin {
     public ClaimTool claimTool() { return claimTool; }
     public JobService jobs() { return jobs; }
     public IntroService intro() { return intro; }
+    public QuestService quests() { return quests; }
 
     @Override
     public void onEnable() {
@@ -63,6 +69,8 @@ public final class KubySurvival extends JavaPlugin {
         claims = new ClaimService(this, core);
         claimTool = new ClaimTool(this);
         jobs = new JobService(this, core);
+        quests = new QuestService(this, core);
+        getServer().getPluginManager().registerEvents(new QuestListener(this), this);
         intro = new IntroService(this, core);
         getServer().getPluginManager().registerEvents(intro, this);
 
@@ -103,6 +111,12 @@ public final class KubySurvival extends JavaPlugin {
         command("job", jobCommand);
         PluginCommand jobCmd = getCommand("job");
         if (jobCmd != null) jobCmd.setTabCompleter(jobCommand);
+        QuestCommand questCommand = new QuestCommand(this);
+        command("quest", questCommand);
+        PluginCommand questCmd = getCommand("quest");
+        if (questCmd != null) questCmd.setTabCompleter(questCommand);
+        core.registerStat("quests_done", id -> quests.total(id));
+        core.registerStat("quest_streak", id -> (long) quests.streak(id));
         command("tokenshop", (sender, cmd, label, args) -> {
             if (sender instanceof Player p) new TokenShopMenu(this, core).open(p);
             return true;
@@ -137,6 +151,8 @@ public final class KubySurvival extends JavaPlugin {
                 p -> new AngelMenu(this, core).open(p)));
         core.registerMainEntry(new KubyPlugins.MainEntry(Material.IRON_PICKAXE, "Jobs", "Job wählen, Level, Tokens und Token-Shop",
                 p -> new JobMenu(this, core).open(p)));
+        core.registerMainEntry(new KubyPlugins.MainEntry(Material.WRITABLE_BOOK, "Quests", "Tages-, Wochen- und Team-Quests, Geschichte",
+                p -> new QuestMenu(this).open(p)));
         core.registerMainEntry(new KubyPlugins.MainEntry(Material.GOLDEN_AXE, "Grundstücke", "Landclaims sichern",
                 p -> p.performCommand("claim")));
 
@@ -148,6 +164,7 @@ public final class KubySurvival extends JavaPlugin {
             fishing.save();
             claims.save();
             jobs.save();
+            quests.save();
         }, 6000L, 6000L);
         getServer().getScheduler().runTaskLater(this, fishing::respawnSigns, 40L);
         getLogger().info("KubySurvival aktiv.");
@@ -159,6 +176,7 @@ public final class KubySurvival extends JavaPlugin {
         if (fishing != null) fishing.save();
         if (claims != null) claims.save();
         if (jobs != null) jobs.save();
+        if (quests != null) quests.save();
         if (intro != null) intro.save();
     }
 

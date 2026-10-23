@@ -1,0 +1,101 @@
+# Survival-Quests. Format jeder Zeile: "id;Name;Aufgabe;Typ;Menge;Coins;Tokens;XP"
+# Typen:
+#   break:<MATERIAL|logs|ores|stones|crops|dig>   natürliche Blöcke abbauen (selbst gesetzte zählen nicht)
+#   kill:<MOB|monster|animal>                     Mobs besiegen (nicht aus Spawnern)
+#   fish, breed, shear, enchant, trade             Fische fangen, Tiere züchten, Schafe scheren, verzaubern, mit Dorfbewohnern handeln
+#   craft:<MATERIAL|*>, smelt:<MATERIAL|*>, eat:<MATERIAL|*>
+#   jobxp[:<Beruf>]                                Job-XP sammeln
+#   playtime                                       Minuten in Survival online
+#   stat:<Schlüssel>                               Wert erreichen (claims, player_level, job_level, fish_caught, playtime, ...)
+# XP sind Spieler-XP (Level).
+
+daily-count: 3
+weekly-count: 3
+
+# Serie: wer an aufeinanderfolgenden Tagen mindestens eine Tages-Quest abholt, baut eine Serie auf.
+streak:
+  bonus-coins-per-day: 25        # Extra-Coins bei der ersten Tages-Quest des Tages: Serie x Wert (höchstens 30 Tage)
+  rewards:                        # Serie;Tokens
+    - "3;1"
+    - "7;3"
+    - "14;5"
+    - "30;10"
+    - "60;15"
+    - "100;25"
+
+daily:
+  - "holz;Holz für den Tag;Fälle 48 Baumstämme;break:logs;48;300;0;120"
+  - "stein;Ab in den Stein;Baue 128 Stein ab;break:stones;128;250;0;100"
+  - "erz;Erzsucher;Baue 16 Erze ab;break:ores;16;400;0;150"
+  - "ernte;Erntezeit;Ernte 64 reife Pflanzen;break:crops;64;300;0;120"
+  - "graben;Schaufelarbeit;Grabe 96 Blöcke Erde, Sand oder Kies;break:dig;96;250;0;100"
+  - "monster;Nachtwache;Besiege 20 Monster;kill:monster;20;400;0;150"
+  - "zombie;Zombie-Plage;Besiege 10 Zombies;kill:ZOMBIE;10;300;0;120"
+  - "skelett;Knochenjagd;Besiege 8 Skelette;kill:SKELETON;8;300;0;120"
+  - "fisch;Anglerglück;Fange 12 Fische;fish;12;350;0;130"
+  - "zucht;Nachwuchs;Züchte 8 Tiere;breed;8;300;0;120"
+  - "wolle;Schafschur;Schere 10 Schafe;shear;10;250;0;100"
+  - "brot;Bäckerei;Stelle 16 Brote her;craft:BREAD;16;250;0;100"
+  - "ofen;Schmelzofen;Schmelze 32 Gegenstände;smelt:*;32;300;0;120"
+  - "essen;Gut gegessen;Iss 8 Mahlzeiten;eat:*;8;200;0;80"
+  - "handel;Händler;Handle 5-mal mit Dorfbewohnern;trade;5;350;0;130"
+  - "fleiss;Fleißig;Sammle 600 Job-XP;jobxp;600;400;0;150"
+  - "online;Dabei sein;Spiele 45 Minuten in Survival;playtime;45;300;0;150"
+
+weekly:
+  - "w_holz;Sägewerk;Fälle 600 Baumstämme;break:logs;600;3000;2;1200"
+  - "w_erz;Bergwerk;Baue 200 Erze ab;break:ores;200;4000;2;1500"
+  - "w_diamant;Diamantfieber;Baue 20 Diamanterze ab;break:ores_diamond;20;5000;3;2000"
+  - "w_monster;Monsterjäger;Besiege 250 Monster;kill:monster;250;4000;2;1500"
+  - "w_fisch;Hochsee;Fange 150 Fische;fish;150;3500;2;1400"
+  - "w_ernte;Großbauer;Ernte 800 reife Pflanzen;break:crops;800;3000;2;1200"
+  - "w_zauber;Zaubermeister;Verzaubere 15 Gegenstände;enchant;15;3500;2;1400"
+  - "w_jobxp;Arbeitswoche;Sammle 8.000 Job-XP;jobxp;8000;4500;3;1800"
+  - "w_online;Stammspieler;Spiele 6 Stunden in Survival;playtime;360;3500;3;2000"
+  - "w_handel;Marktwoche;Handle 40-mal mit Dorfbewohnern;trade;40;3500;2;1400"
+
+# Die lange Geschichte: Kapitel nacheinander. Das nächste kommt, wenn du das vorige abgeholt hast.
+story:
+  - "s1;Ein Stück Land;Sichere dein erstes Grundstück (/claim axt);stat:claims;1;500;1;200"
+  - "s2;Ein ehrlicher Beruf;Wähle einen Job (/job);stat:job_level;1;300;0;150"
+  - "s3;Holz fürs Haus;Fälle 64 Baumstämme;break:logs;64;500;0;250"
+  - "s4;Erste Mahlzeit;Iss 10 Mahlzeiten;eat:*;10;300;0;150"
+  - "s5;In die Tiefe;Baue 40 Erze ab;break:ores;40;800;1;400"
+  - "s6;Am See;Fange 15 Fische;fish;15;600;0;300"
+  - "s7;Die erste Nacht;Besiege 30 Monster;kill:monster;30;800;1;400"
+  - "s8;Eigene Farm;Ernte 150 reife Pflanzen;break:crops;150;800;1;400"
+  - "s9;Handwerk;Schmelze 64 Gegenstände;smelt:*;64;700;0;350"
+  - "s10;Feierabend;Sammle 3.000 Job-XP;jobxp;3000;1200;2;600"
+  - "s11;Handel und Wandel;Handle 15-mal mit Dorfbewohnern;trade;15;1000;1;500"
+  - "s12;Magie;Verzaubere 5 Gegenstände;enchant;5;1200;2;600"
+  - "s13;Diamanten;Baue 10 Diamanterze ab;break:ores_diamond;10;2000;2;800"
+  - "s14;Aufstieg;Erreiche Level 10;stat:player_level;10;2500;3;0"
+  - "s15;Ein echter Kuby;Spiele 20 Stunden auf Kuby;stat:playtime;1200;5000;5;0"
+
+# Meilensteine: "id;Name;Stat;Stufen;Coins je Stufe;Tokens je Stufe" (Belohnung x Nummer der Stufe)
+milestones:
+  - "m_level;Aufsteiger;player_level;5,10,25,50,75,100;400;2"
+  - "m_job;Profi;job_level;10,25,50,75,100;400;2"
+  - "m_fisch;Fischer;fish_caught;25,100,500,2000;300;1"
+  - "m_zeit;Stammgast;playtime;600,3000,12000,30000;400;2"
+  - "m_quests;Questmeister;quests_done;10,50,200,500,1000;400;2"
+  - "m_serie;Treue;quest_streak_best;7,30,100;600;3"
+  - "m_land;Grundbesitzer;claims;1,3,5;300;1"
+
+# Team-Quests: eine pro Woche und Team. Alle im Team helfen mit, jeder holt die Belohnung einmal ab.
+team:
+  - "t_monster;Gemeinsam stark;Besiegt zusammen 500 Monster;kill:monster;500;2500;2;1000"
+  - "t_erz;Tiefbau;Baut zusammen 400 Erze ab;break:ores;400;2500;2;1000"
+  - "t_holz;Holzfällertrupp;Fällt zusammen 1.500 Baumstämme;break:logs;1500;2500;2;1000"
+  - "t_fisch;Fischkutter;Fangt zusammen 300 Fische;fish;300;2500;2;1000"
+  - "t_jobxp;Firma;Sammelt zusammen 25.000 Job-XP;jobxp;25000;3000;3;1200"
+
+# Geheime Quests: werden erst angezeigt, wenn du sie geschafft hast.
+secret:
+  - "x_drache;Drachentöter;Besiege den Enderdrachen;kill:ENDER_DRAGON;1;10000;10;3000"
+  - "x_wither;Schattenbezwinger;Besiege den Wither;kill:WITHER;1;8000;8;2500"
+  - "x_warden;Leise Sohlen;Besiege einen Warden;kill:WARDEN;1;8000;8;2500"
+  - "x_kugelfisch;Mutprobe;Iss einen Kugelfisch;eat:PUFFERFISH;1;500;1;200"
+  - "x_leuchtfeuer;Leuchtturm;Baue ein Leuchtfeuer;craft:BEACON;1;3000;3;1000"
+  - "x_goldapfel;Feinschmecker;Iss einen verzauberten Goldapfel;eat:ENCHANTED_GOLDEN_APPLE;1;2000;2;800"
+  - "x_seebaer;Seebär;Fange 1.000 Fische;stat:fish_caught;1000;5000;5;2000"
