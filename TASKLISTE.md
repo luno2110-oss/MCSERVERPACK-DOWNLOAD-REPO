@@ -28,15 +28,16 @@ Prinzip: Keine GUI. Spiel läuft über physische Dinge am Tisch (Karten, Chips, 
   - [~] Poker (Test im Spiel offen): Texas Hold'em, bis 6 Spieler, Blinds 10/20, Buy-in 40 bis 200 BB per `/poker sitzen <Chips>`, `/poker aufstehen` nimmt den Stack mit. Aktionen als Klick-Buttons im Chat, 30 s Zeit pro Zug, eigene Karten in der Aktionsleiste, Tisch-Anzeige mit Board, Pot und Stacks. Side-Pots, Hand-Auswertung getestet (17 Fälle). Stacks laufend gesichert, nach Absturz zurück. Tisch per `/casino poker-tisch` oder Admin-Fenster
 
 ## Ordnergruppe 2 – Angeln (Refs: ANGEL REF) – nur Survival
-- [x] 2.1 Angelzonen mit schwebendem Text (v1.36)
-- [x] 2.2 Fangsystem: 8 Fischarten, Seltenheit, Gewichte, Rute beeinflusst Chance (v1.36). Tageszeit noch nicht
-- [x] 2.3 Angel-Level und XP mit Fortschritt (v1.36)
-- [x] 2.4 Belohnungen: XP beim Fang, Geld bei Levelaufstieg, Fische als Items (v1.36)
-- [x] 2.5 Fischbuch mit Fortschritt pro Fischart (v1.36)
-- [x] 2.6 Angelrute-Upgrades, 5 Stufen (v1.36)
-- [x] 2.7 Bestenliste (v1.36). Turnier noch offen
-- [x] 2.8 SFX und schwebende Texte bei jedem Fang (v1.36)
-- [x] 2.9 Fischverkauf im Angel-Menü (v1.36). Händler-NPC noch offen
+> Hinweis: Der Angel- und Claim-Code fehlte im hochgeladenen Stand (nur Config-Reste). Neu gebaut als Addon KubySurvival 1.0.0.
+- [~] 2.1 Angelzonen mit schwebendem Text (KubySurvival, Test offen): `/kp angel pos1|pos2`, `/kp angel zone erstellen <id> [Name]`. Ohne Zonen gilt das System überall in Survival
+- [~] 2.2 Fangsystem (Test offen): 8 Fischarten, Seltenheit, Gewicht in kg je Art, Rute beeinflusst Chance. Tageszeit: nachts seltene Fische öfter, tagsüber häufige
+- [~] 2.3 Angel-Level und XP mit Fortschritt (Test offen)
+- [~] 2.4 Belohnungen (Test offen): XP beim Fang, Geld bei Levelaufstieg, Fische als Items mit Gewicht und Wert
+- [~] 2.5 Fischbuch mit Fortschritt, Anzahl und Rekord pro Fischart (Test offen)
+- [~] 2.6 Angelrute-Upgrades, 5 Stufen (Test offen): Stufe hängt am Spieler (nicht duplizierbar), seltene Fische öfter, schnelleres Beißen
+- [~] 2.7 Bestenliste (Top 10 nach XP, Server-Rekord je Art) und Angel-Turnier (Test offen): `/kp angel turnier start <Minuten>`, Gesamtgewicht zählt, Preise 5.000/2.500/1.000
+- [~] 2.8 SFX und schwebende Texte bei jedem Fang (Test offen), seltene Fänge werden angesagt
+- [~] 2.9 Fischverkauf im Angel-Menü und beim Fischhändler-NPC (`/kp angel haendler`) (Test offen)
 
 ## Ordnergruppe 3 – Juwelenshop (Refs: JUWELENSHOP SURVIVAL, JUWELENSHOP SMP)
 - [x] 3.1 Survival: Ränge, Keys, Juwelen mit Inhalt (v1.37)
@@ -84,7 +85,7 @@ Bereits vorhanden (mit Referenz verknüpfen): Kits, Enderchest, Kristalltausch, 
 - [x] 6.7 Regionen mit Schutz
 - [x] 6.8 Hologramm-Marker (nur Admins sichtbar)
 - [x] 6.9 Hub-Editor (Border, Zeit, Wetter, Musik, Begrüßung)
-- [x] 6.10 Landclaim in Survival (v1.34, Claimblöcke in claims.yml)
+- [~] 6.10 Landclaim in Survival (neu gebaut in KubySurvival, Test offen): Claim-Schaufel, `/claim erstellen|löschen|liste|trust|untrust|anzeigen`, 500 Startblöcke +100/Stunde, max. 10 Claims, 5 bis 128 Blöcke Seitenlänge, Schutz gegen Abbauen, Bauen, Benutzen, Explosionen, Feuer, Kolben und Flüssigkeiten
 - [x] 6.11 Daten pro Modus: Battlepass, Kosmetik, Homes, Kits (v1.33)
 - [x] 6.12 /rtp in der Welt des aktuellen Modus (v1.33; Duo-RTP folgt)
 - [x] 6.13 Sounds für Bearbeitungsmodus und Hub-Editor (v1.31)
@@ -170,7 +171,7 @@ Bereits vorhanden (mit Referenz verknüpfen): Kits, Enderchest, Kristalltausch, 
     - Reihenfolge: erst 2d (Menüs und Befehle über eine Registrierung), dann verschieben
   - [x] 2d. Hauptmenü und Admin-Menü lesen Einträge aus einer Registrierung (registerMainEntry, registerAdminButton). Duelle, Turnier, Trophäen und Versicherung sind aus dem Kern raus (v2.0.4). Befehle folgen mit 2c
   - [x] 2e. KubySMP-Hauptklasse: Dienste erstellen, PvpApi setzen, Befehle registrieren (im Code geprüft, Build offen: Paper-API nicht erreichbar)
-- [ ] 3. KubySurvival aus Angel- und Claim-Teilen bauen, dann Casino und Features
+- [~] 3. KubySurvival 1.0.0 gebaut (Angeln, Claims). Casino liegt im Kern. Features aus Gruppe 4 folgen
 
 ## Addons
 - [x] KubyScoreboard 1.0 (eigenes Addon)

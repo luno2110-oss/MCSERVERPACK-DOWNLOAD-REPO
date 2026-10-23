@@ -387,6 +387,7 @@ landclaim:
   start-blocks: 500
   blocks-per-hour: 100
   max-claims: 10
+  min-side: 5
   max-side: 128
 
 angel:
@@ -394,6 +395,11 @@ angel:
   max-rod: 5
   level-reward: 500
   popup-ticks: 50
+  # Gibt es Angelzonen (/kp angel zone), gilt das Fangsystem nur dort. Ohne Zonen überall in Survival.
+  only-in-zones: true
+  tournament:
+    rewards: [5000, 2500, 1000]
+  # Format: id;Name;MATERIAL;Chance;Grundwert;XP;Farbe[;min-kg;max-kg]
   fish:
     - "sardine;Sardine;COD;50;30;2;white"
     - "hering;Hering;COD;30;60;4;aqua"

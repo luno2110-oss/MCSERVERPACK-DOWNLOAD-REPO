@@ -28,7 +28,7 @@ jobs:
       - name: Addons bauen (mit frisch gebautem KubyCore)
         run: |
           CORE=$(ls KubyCore-v2.0.14/KubyPlugins/target/KubyPlugins-*.jar | grep -v sources | head -1)
-          for dir in KubySMP-v1.0.2/KubySMP KubyScoreboard-v1.0.2/KubyScoreboard KubySkyblock-v1.2.0/KubySkyblock KubyJR-Addon-1.0.2; do
+          for dir in KubySMP-v1.0.2/KubySMP KubyScoreboard-v1.0.2/KubyScoreboard KubySkyblock-v1.2.0/KubySkyblock KubySurvival-v1.0.0/KubySurvival KubyJR-Addon-1.0.2; do
             mkdir -p "$dir/libs"
             cp "$CORE" "$dir/libs/KubyCore.jar"
             (cd "$dir" && mvn -B -ntp package)
@@ -42,6 +42,7 @@ jobs:
           mv dist/KubySMP-*.jar dist/KubySMP.jar
           mv dist/KubyScoreboard-*.jar dist/KubyScoreboard.jar
           mv dist/KubySkyblock-*.jar dist/KubySkyblock.jar
+          mv dist/KubySurvival-*.jar dist/KubySurvival.jar
           mv dist/KubyJR-Addon-*.jar dist/KubyJR.jar
           cat > dist/INSTALLATION.txt <<'TXT'
           KubyPlugins - Installation
@@ -50,7 +51,7 @@ jobs:
           1. Server stoppen.
           2. Im Ordner plugins alle alten Kuby-Jars loeschen (die Ordner wie KubyCore bleiben, da liegen die Daten).
           3. Alle Jars aus dieser ZIP in den Ordner plugins legen.
-          4. Server starten. Im Log muss "Bukkit plugins (5)" stehen.
+          4. Server starten. Im Log muss "Bukkit plugins (6)" stehen.
 
           KubyCore.jar ist das Hauptplugin, die anderen sind Addons und brauchen KubyCore.
           TXT

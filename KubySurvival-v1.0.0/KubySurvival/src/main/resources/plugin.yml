@@ -1,0 +1,13 @@
+name: KubySurvival
+version: 1.0.0
+main: de.kuby.kubysurvival.KubySurvival
+api-version: '1.21'
+depend: [KubyCore]
+description: Survival-Teil für KubyCore (Angeln, Landclaims)
+commands:
+  angeln:
+    description: "Angel-Menü: Fischbuch, Rute, Verkauf, Bestenliste"
+    usage: "/angeln"
+  claim:
+    description: "Landclaims: Grundstücke sichern und Freunden vertrauen"
+    usage: "/claim [schaufel|erstellen|löschen|liste|trust <Spieler>|untrust <Spieler>|anzeigen]"
