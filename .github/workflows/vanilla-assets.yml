@@ -1,0 +1,35 @@
+# Holt Schrift- und Item-Grafiken aus dem Minecraft-Client (nur zum Bauen des Grafik-Packs, nicht Teil der Plugins).
+# Start per Hand (workflow_dispatch) oder wenn sich tools/vanilla_assets.txt ändert. Ergebnis als Artefakt "vanilla-assets".
+name: Vanilla-Grafiken holen
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - tools/vanilla_assets.txt
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Client-Jar laden und Grafiken auspacken
+        run: |
+          VERSION=$(head -n 1 tools/vanilla_assets.txt | tr -d '[:space:]')
+          curl -sSL https://piston-meta.mojang.com/mc/game/version_manifest_v2.json -o manifest.json
+          URL=$(python3 -c "import json,sys; m=json.load(open('manifest.json')); print(next(v['url'] for v in m['versions'] if v['id']=='$VERSION'))")
+          curl -sSL "$URL" -o version.json
+          JAR=$(python3 -c "import json; print(json.load(open('version.json'))['downloads']['client']['url'])")
+          curl -sSL "$JAR" -o client.jar
+          mkdir -p out
+          tail -n +2 tools/vanilla_assets.txt | while read -r pattern; do
+            [ -z "$pattern" ] && continue
+            unzip -q -o client.jar "$pattern" -d out || true
+          done
+          find out -type f | wc -l
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vanilla-assets
+          path: out

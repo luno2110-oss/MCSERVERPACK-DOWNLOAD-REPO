@@ -1,0 +1,9 @@
+1.21.11
+assets/minecraft/font/*
+assets/minecraft/textures/font/*
+assets/minecraft/textures/item/*
+assets/minecraft/textures/gui/sprites/widget/*
+assets/minecraft/textures/gui/sprites/tooltip/*
+assets/minecraft/textures/gui/sprites/boss_bar/*
+assets/minecraft/textures/entity/fish/*
+assets/minecraft/textures/block/*
