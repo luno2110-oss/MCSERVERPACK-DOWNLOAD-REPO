@@ -26,6 +26,8 @@ import java.util.UUID;
  * Votes über NuVotifier/Votifier. Die Anbindung läuft zur Laufzeit über das VotifierEvent, KubyCore braucht
  * Votifier also nicht zum Starten. Jeder Vote: Juwelen (modusübergreifend), Coins im aktuellen Modus und beim
  * ersten Vote der Home-Bonus. Wer offline votet, bekommt die Coins beim nächsten Einloggen.
+ * Serie: Wer an aufeinanderfolgenden Tagen votet, bekommt ab 10/25/50 Tagen beim ersten Vote des Tages Extra-Coins
+ * (vote.streak-bonus). Monatswertung: Die besten Voter des Vormonats bekommen Juwelen (vote.monthly-prizes).
  */
 public final class VoteService implements Listener {
 
@@ -35,7 +37,13 @@ public final class VoteService implements Listener {
     private final File file;
     private final Map<UUID, Integer> votes = new HashMap<>();
     private final Map<UUID, Long> pendingCoins = new HashMap<>();
+    private final Map<UUID, String> lastDay = new HashMap<>();
+    private final Map<UUID, Integer> streaks = new HashMap<>();
+    private final Map<UUID, Integer> monthly = new HashMap<>();
+    private String month = "";
     private boolean hooked;
+
+    private static final java.time.ZoneId ZONE = java.time.ZoneId.of("Europe/Berlin");
 
     public VoteService(KubyPlugins plugin) {
         this.plugin = plugin;
@@ -45,6 +53,84 @@ public final class VoteService implements Listener {
         if (v != null) for (String key : v.getKeys(false)) parse(key, id -> votes.put(id, v.getInt(key)));
         ConfigurationSection p = yml.getConfigurationSection("pending");
         if (p != null) for (String key : p.getKeys(false)) parse(key, id -> pendingCoins.put(id, p.getLong(key)));
+        ConfigurationSection s = yml.getConfigurationSection("streak");
+        if (s != null) {
+            for (String key : s.getKeys(false)) {
+                parse(key, id -> {
+                    lastDay.put(id, s.getString(key + ".day", ""));
+                    streaks.put(id, s.getInt(key + ".count"));
+                });
+            }
+        }
+        month = yml.getString("month", currentMonth());
+        ConfigurationSection m = yml.getConfigurationSection("monthly");
+        if (m != null) for (String key : m.getKeys(false)) parse(key, id -> monthly.put(id, m.getInt(key)));
+        Bukkit.getScheduler().runTaskTimer(plugin, this::checkMonth, 1200L, 72_000L);
+    }
+
+    private static String currentMonth() {
+        return java.time.YearMonth.now(ZONE).toString();
+    }
+
+    /** Aktuelle Serie (0, wenn gestern und heute nicht gevotet wurde). */
+    public synchronized int streak(UUID id) {
+        String d = lastDay.get(id);
+        java.time.LocalDate today = java.time.LocalDate.now(ZONE);
+        if (d == null || !(d.equals(today.toString()) || d.equals(today.minusDays(1).toString()))) return 0;
+        return streaks.getOrDefault(id, 0);
+    }
+
+    /** Extra-Coins für eine Serie (höchste erreichte Stufe). */
+    public long streakBonus(int streak) {
+        long bonus = 0;
+        int best = 0;
+        for (String raw : plugin.getConfig().getStringList("vote.streak-bonus")) {
+            String[] parts = raw.split(";");
+            try {
+                int days = Integer.parseInt(parts[0].trim());
+                if (streak >= days && days >= best) {
+                    best = days;
+                    bonus = Long.parseLong(parts[1].trim());
+                }
+            } catch (RuntimeException ignored) {
+            }
+        }
+        return bonus;
+    }
+
+    public synchronized int monthlyVotes(UUID id) {
+        return monthly.getOrDefault(id, 0);
+    }
+
+    public synchronized java.util.List<Map.Entry<UUID, Integer>> monthlyTop(int n) {
+        java.util.List<Map.Entry<UUID, Integer>> list = new java.util.ArrayList<>(monthly.entrySet());
+        list.sort((a, b) -> Integer.compare(b.getValue(), a.getValue()));
+        return list.subList(0, Math.min(n, list.size()));
+    }
+
+    /** Monatswechsel: Preise an die besten Voter des Vormonats, dann neu zählen. */
+    private synchronized void checkMonth() {
+        String now = currentMonth();
+        if (now.equals(month)) return;
+        java.util.List<Map.Entry<UUID, Integer>> top = monthlyTop(10);
+        for (String raw : plugin.getConfig().getStringList("vote.monthly-prizes")) {
+            String[] parts = raw.split(";");
+            try {
+                int place = Integer.parseInt(parts[0].trim());
+                long jewels = Long.parseLong(parts[1].trim());
+                if (place < 1 || place > top.size() || jewels <= 0) continue;
+                UUID id = top.get(place - 1).getKey();
+                plugin.jewels().add(id, jewels);
+                OfflinePlayer op = Bukkit.getOfflinePlayer(id);
+                Bukkit.broadcast(Msg.parse("<green>Voter des Monats " + month + ", Platz " + place + ": <white>"
+                        + (op.getName() == null ? "?" : op.getName()) + " <gray>(" + top.get(place - 1).getValue()
+                        + " Votes) <light_purple>+" + jewels + " Juwelen"));
+            } catch (RuntimeException ignored) {
+            }
+        }
+        monthly.clear();
+        month = now;
+        save();
     }
 
     /** Meldet sich beim VotifierEvent an, falls NuVotifier oder Votifier installiert ist. */
@@ -96,7 +182,21 @@ public final class VoteService implements Listener {
             return;
         }
         UUID id = op.getUniqueId();
+        checkMonth();
         int count = votes.merge(id, 1, Integer::sum);
+        monthly.merge(id, 1, Integer::sum);
+        // Serie: erster Vote des Tages zählt.
+        String today = java.time.LocalDate.now(ZONE).toString();
+        long streakCoins = 0;
+        int streak = streaks.getOrDefault(id, 0);
+        if (!today.equals(lastDay.get(id))) {
+            String yesterday = java.time.LocalDate.now(ZONE).minusDays(1).toString();
+            streak = yesterday.equals(lastDay.get(id)) ? streak + 1 : 1;
+            streaks.put(id, streak);
+            lastDay.put(id, today);
+            streakCoins = streakBonus(streak);
+            if (streakCoins > 0) pendingCoins.merge(id, streakCoins, Long::sum);
+        }
         long jewels = plugin.getConfig().getLong("vote.jewels", 2);
         long coins = plugin.getConfig().getLong("vote.coins", 250);
         if (jewels > 0) plugin.jewels().add(id, jewels);
@@ -116,7 +216,8 @@ public final class VoteService implements Listener {
                 + " <gray>gevotet und bekommt eine Belohnung. <green>/vote"));
         Player p = op.getPlayer();
         if (p != null) {
-            Msg.send(p, "<green>Danke fürs Voten! <gray>(" + count + ". Vote) <light_purple>+" + jewels + " Juwelen"
+            Msg.send(p, "<green>Danke fürs Voten! <gray>(" + count + ". Vote, Serie " + streak + " Tage) <light_purple>+" + jewels + " Juwelen"
+                    + (streakCoins > 0 ? " <gold>+" + Msg.coins(streakCoins) + " Coins Serien-Extra" : "")
                     + (firstBonus ? " <gold>· +1 Home-Platz freigeschaltet" : ""));
             Sfx.play(plugin, p, Sfx.Kind.SUCCESS);
             payPending(p);
@@ -158,13 +259,41 @@ public final class VoteService implements Listener {
                     + "</u></aqua></click>");
         }
         if (!any) Msg.send(p, "<gray>Noch keine Vote-Seiten eingetragen (config.yml: vote.links).");
-        Msg.send(p, "<gray>Deine Votes: <white>" + votesOf(p.getUniqueId()));
+        UUID id = p.getUniqueId();
+        int streak = streak(id);
+        Msg.send(p, "<gray>Deine Votes: <white>" + votesOf(id) + " <dark_gray>· <gray>diesen Monat: <white>" + monthlyVotes(id)
+                + " <dark_gray>· <gray>Serie: <white>" + streak + (streak == 1 ? " Tag" : " Tage"));
+        StringBuilder tiers = new StringBuilder();
+        for (String raw : plugin.getConfig().getStringList("vote.streak-bonus")) {
+            String[] parts = raw.split(";");
+            if (parts.length < 2) continue;
+            if (tiers.length() > 0) tiers.append("<dark_gray>, ");
+            tiers.append("<white>ab ").append(parts[0].trim()).append(" Tagen <gold>+").append(parts[1].trim());
+        }
+        if (tiers.length() > 0) Msg.send(p, "<gray>Serien-Extra pro Vote-Tag: " + tiers);
+        java.util.List<Map.Entry<UUID, Integer>> top = monthlyTop(5);
+        if (!top.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            int i = 1;
+            for (Map.Entry<UUID, Integer> e : top) {
+                String n = Bukkit.getOfflinePlayer(e.getKey()).getName();
+                if (sb.length() > 0) sb.append("<dark_gray>, ");
+                sb.append("<white>").append(i++).append(". ").append(n == null ? "?" : n).append(" <gray>(").append(e.getValue()).append(")");
+            }
+            Msg.send(p, "<gray>Voter des Monats: " + sb + " <dark_gray>· Preise am Monatsende");
+        }
     }
 
     public synchronized void save() {
         YamlConfiguration out = new YamlConfiguration();
         for (Map.Entry<UUID, Integer> e : votes.entrySet()) out.set("votes." + e.getKey(), e.getValue());
         for (Map.Entry<UUID, Long> e : pendingCoins.entrySet()) out.set("pending." + e.getKey(), e.getValue());
+        for (Map.Entry<UUID, String> e : lastDay.entrySet()) {
+            out.set("streak." + e.getKey() + ".day", e.getValue());
+            out.set("streak." + e.getKey() + ".count", streaks.getOrDefault(e.getKey(), 0));
+        }
+        out.set("month", month);
+        for (Map.Entry<UUID, Integer> e : monthly.entrySet()) out.set("monthly." + e.getKey(), e.getValue());
         try {
             plugin.getDataFolder().mkdirs();
             out.save(file);
