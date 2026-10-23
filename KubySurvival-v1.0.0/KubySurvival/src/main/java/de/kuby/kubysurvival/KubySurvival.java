@@ -19,6 +19,8 @@ import de.kuby.kubysurvival.jobs.JobService;
 import de.kuby.kubysurvival.jobs.TokenShopMenu;
 import de.kuby.kubysurvival.fishing.FishingService;
 import de.kuby.kubysurvival.farm.FarmWorldService;
+import de.kuby.kubysurvival.tokens.BackpackService;
+import de.kuby.kubysurvival.tokens.TokenService;
 import de.kuby.kubysurvival.shops.ChestShopCommand;
 import de.kuby.kubysurvival.shops.ChestShopService;
 import de.kuby.kubysurvival.shops.SwCommand;
@@ -56,6 +58,8 @@ public final class KubySurvival extends JavaPlugin {
     private SideQuestService sideQuests;
     private FarmWorldService farm;
     private WarpService warps;
+    private TokenService tokens;
+    private BackpackService backpacks;
     private ChestShopService chestShops;
     private final Map<UUID, Location[]> zoneCorners = new HashMap<>();
 
@@ -70,6 +74,8 @@ public final class KubySurvival extends JavaPlugin {
     public SideQuestService sideQuests() { return sideQuests; }
     public FarmWorldService farm() { return farm; }
     public WarpService warps() { return warps; }
+    public TokenService tokens() { return tokens; }
+    public BackpackService backpacks() { return backpacks; }
     public ChestShopService chestShops() { return chestShops; }
 
     @Override
@@ -89,6 +95,10 @@ public final class KubySurvival extends JavaPlugin {
         sideQuests = new SideQuestService(this, core);
         farm = new FarmWorldService(this, core);
         warps = new WarpService(this, core);
+        tokens = new TokenService(this, core);
+        getServer().getPluginManager().registerEvents(tokens, this);
+        backpacks = new BackpackService(this, core);
+        getServer().getPluginManager().registerEvents(backpacks, this);
         chestShops = new ChestShopService(this, core);
         getServer().getPluginManager().registerEvents(chestShops, this);
         getServer().getPluginManager().registerEvents(farm, this);
@@ -161,6 +171,31 @@ public final class KubySurvival extends JavaPlugin {
         });
         core.registerStat("quests_done", id -> quests.total(id));
         core.registerStat("quest_streak", id -> (long) quests.streak(id));
+        command("tokens", (sender, cmd, label, args) -> {
+            if (!(sender instanceof Player p)) return true;
+            UUID id = p.getUniqueId();
+            Msg.send(p, "<light_purple><b>Tokens: " + jobs.worker(id).tokens + "</b>");
+            Msg.send(p, "<gray>Nächster Token in <white>" + tokens.minutesToNext(id) + " Min. <gray>Spielzeit in Survival · Serie: <white>"
+                    + tokens.streak(id) + " Tage");
+            Msg.send(p, "<gray>Tokens gibt es: <white>1 pro Stunde<gray>, <white>Tagesbonus<gray>, Extra für Tage in Folge, beim <white>Voten<gray>, "
+                    + "für Quests sowie Job- und Level-Aufstiege. Kaufen oder tauschen kann man sie nicht.");
+            Msg.send(p, "<click:run_command:'/tokenshop'><light_purple>[Token-Shop öffnen]</click>");
+            return true;
+        });
+        command("backpack", (sender, cmd, label, args) -> {
+            if (!(sender instanceof Player p)) return true;
+            if (args.length > 0 && args[0].equalsIgnoreCase("item")) {
+                if (backpacks.rows(p.getUniqueId()) <= 0) {
+                    Msg.send(p, "<gray>Du hast noch keinen Rucksack. Freischalten im <white>/tokenshop<gray>.");
+                } else {
+                    p.getInventory().addItem(backpacks.item()).values().forEach(r -> p.getWorld().dropItemNaturally(p.getLocation(), r));
+                    Msg.send(p, "<green>Rucksack-Item erhalten. <gray>Rechtsklick öffnet ihn.");
+                }
+            } else {
+                backpacks.open(p);
+            }
+            return true;
+        });
         command("tokenshop", (sender, cmd, label, args) -> {
             if (sender instanceof Player p) new TokenShopMenu(this, core).open(p);
             return true;
@@ -215,6 +250,8 @@ public final class KubySurvival extends JavaPlugin {
             farm.save();
             warps.save();
             chestShops.save();
+            tokens.save();
+            backpacks.save();
         }, 6000L, 6000L);
         getServer().getScheduler().runTaskLater(this, fishing::respawnSigns, 40L);
         getLogger().info("KubySurvival aktiv.");
@@ -231,6 +268,8 @@ public final class KubySurvival extends JavaPlugin {
         if (farm != null) farm.save();
         if (warps != null) warps.save();
         if (chestShops != null) chestShops.save();
+        if (tokens != null) tokens.save();
+        if (backpacks != null) backpacks.shutdown();
         if (intro != null) intro.save();
     }
 

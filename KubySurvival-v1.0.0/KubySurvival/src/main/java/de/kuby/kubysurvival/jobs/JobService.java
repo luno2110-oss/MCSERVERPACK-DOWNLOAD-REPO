@@ -48,6 +48,8 @@ public final class JobService {
         public long orderGoal;
         public long orderDone;
         public boolean orderFinished;
+        /** Persönlicher Job-Booster aus dem Token-Shop läuft bis zu diesem Zeitpunkt. */
+        public long boosterUntil;
 
         public long xp(Job j) {
             return xp.getOrDefault(j, 0L);
@@ -101,11 +103,30 @@ public final class JobService {
         return (int) Math.min(99, (w.xp(j) - from) * 100 / Math.max(1, to - from));
     }
 
-    /** Coins pro Stunde für den aktiven Job; wächst mit dessen Level. */
+    /** Coins pro Stunde für den aktiven Job; wächst mit dessen Level (und mit Booster). */
     public long hourlyCap(Worker w) {
         int level = w.job == null ? 1 : jobLevel(w, w.job);
-        return core.getConfig().getLong("jobs.hourly-coin-cap-base", 300)
+        long cap = core.getConfig().getLong("jobs.hourly-coin-cap-base", 300)
                 + core.getConfig().getLong("jobs.hourly-coin-cap-per-level", 15) * level;
+        return Math.round(cap * boost(w));
+    }
+
+    /** Faktor des persönlichen Boosters (1.0 ohne). */
+    public double boost(Worker w) {
+        return w.boosterUntil > System.currentTimeMillis() ? core.getConfig().getDouble("tokens.booster-multiplier", 1.5) : 1.0;
+    }
+
+    /** Minuten Booster übrig (0 ohne). */
+    public synchronized long boosterMinutes(UUID id) {
+        long left = worker(id).boosterUntil - System.currentTimeMillis();
+        return left <= 0 ? 0 : (left + 59_999) / 60_000;
+    }
+
+    /** Verlängert den persönlichen Booster. */
+    public synchronized void addBooster(UUID id, int minutes) {
+        Worker w = worker(id);
+        long start = Math.max(System.currentTimeMillis(), w.boosterUntil);
+        w.boosterUntil = start + minutes * 60_000L;
     }
 
     /** Lohn-Faktor durch das Job-Level: Level 1 zahlt normal, Level 100 etwa doppelt. */
@@ -218,8 +239,9 @@ public final class JobService {
         Worker w = worker(p.getUniqueId());
         if (w.job != job) return;
         int jobBefore = jobLevel(w, job);
-        long xp = Math.round(baseXp * core.getConfig().getDouble("jobs.xp-multiplier", 1.0) * core.booster().multiplier());
-        long coins = Math.round(baseCoins * core.getConfig().getDouble("jobs.coin-multiplier", 1.0) * payFactor(jobBefore));
+        double personal = boost(w);
+        long xp = Math.round(baseXp * core.getConfig().getDouble("jobs.xp-multiplier", 1.0) * core.booster().multiplier() * personal);
+        long coins = Math.round(baseCoins * core.getConfig().getDouble("jobs.coin-multiplier", 1.0) * payFactor(jobBefore) * personal);
 
         int playerBefore = playerLevel(w);
         if (jobBefore < maxLevel()) w.xp.merge(job, xp, Long::sum);
@@ -311,6 +333,7 @@ public final class JobService {
             w.orderGoal = s.getLong("order.goal");
             w.orderDone = s.getLong("order.done");
             w.orderFinished = s.getBoolean("order.finished");
+            w.boosterUntil = s.getLong("booster-until");
             ConfigurationSection x = s.getConfigurationSection("xp");
             if (x != null) {
                 for (String j : x.getKeys(false)) {
@@ -338,6 +361,7 @@ public final class JobService {
             out.set(base + ".order.goal", w.orderGoal);
             out.set(base + ".order.done", w.orderDone);
             out.set(base + ".order.finished", w.orderFinished);
+            out.set(base + ".booster-until", w.boosterUntil);
             for (Map.Entry<Job, Long> x : w.xp.entrySet()) out.set(base + ".xp." + x.getKey().name(), x.getValue());
         }
         try {

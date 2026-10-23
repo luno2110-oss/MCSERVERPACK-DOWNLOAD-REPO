@@ -81,6 +81,13 @@ public final class VoteService implements Listener {
     }
 
     /** Verarbeitet einen Vote nach Spielernamen (Votifier oder /kp vote). */
+    /** Addons hängen sich hier an Votes an (z. B. Tokens in Survival). */
+    private final java.util.List<java.util.function.Consumer<UUID>> hooks = new java.util.ArrayList<>();
+
+    public void registerHook(java.util.function.Consumer<UUID> hook) {
+        hooks.add(hook);
+    }
+
     public synchronized void handle(String name, String site) {
         OfflinePlayer op = Bukkit.getPlayerExact(name);
         if (op == null) op = Bukkit.getOfflinePlayerIfCached(name);
@@ -97,6 +104,13 @@ public final class VoteService implements Listener {
         if (firstBonus) plugin.homes().grantVote(id);
         if (coins > 0) pendingCoins.merge(id, coins, Long::sum);
         save();
+        for (java.util.function.Consumer<UUID> h : hooks) {
+            try {
+                h.accept(id);
+            } catch (RuntimeException ex) {
+                plugin.getLogger().warning("Vote-Hook: " + ex.getMessage());
+            }
+        }
         String shown = op.getName() == null ? name : op.getName();
         Bukkit.broadcast(Msg.parse("<green>" + shown + " <gray>hat bei <white>" + Msg.escape(site)
                 + " <gray>gevotet und bekommt eine Belohnung. <green>/vote"));

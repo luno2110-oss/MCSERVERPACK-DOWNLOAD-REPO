@@ -264,6 +264,29 @@ survival-hud:
 
 # Survival-Jobs (KubySurvival): Holzfäller, Miner, Farmer, Jäger, Angler. Ein Job ist aktiv, nur er bringt XP und Coins.
 # Kein Lohn für selbst gesetzte Blöcke, Generator-Steine, Spawner-Mobs, gezüchtete Tiere und unreife Pflanzen.
+tokens:
+  per-hour: 1                     # pro Stunde aktiv in Survival (5 Min. ohne Bewegung zählt nicht)
+  daily-bonus: 1                  # beim ersten Spielen am Tag
+  per-vote: 1
+  streak-rewards:                 # Tage in Folge;Extra-Tokens
+    - "3;1"
+    - "7;2"
+    - "14;3"
+    - "30;5"
+  booster-multiplier: 1.5         # Job-Booster aus dem Token-Shop
+  backpack-prices: [5, 8, 12, 16, 20, 25]   # Rucksack: Preis für Reihe 1 bis 6
+  prices:
+    claim-100: 2
+    claim-500: 8
+    claim-2000: 25
+    booster-30: 5
+    booster-60: 9
+  build-helpers:                  # MATERIAL;Anzahl;Preis
+    - "LIGHT;16;3"
+    - "SCAFFOLDING;64;1"
+    - "SEA_LANTERN;16;2"
+    - "GLASS;64;1"
+
 shops:
   warp-prices: [50000, 150000, 500000]   # Spieler-Warps: Preis für den 1., 2. und 3. Warp (Anzahl = Länge der Liste)
   max-chestshops: 20                     # Kistenläden pro Spieler

@@ -35,6 +35,13 @@ commands:
     description: "Kistenläden: deine Läden und Anleitung"
     usage: "/chestshop [help]"
     aliases: [laden, shops]
+  tokens:
+    description: "Deine Tokens und wie du mehr bekommst"
+    usage: "/tokens"
+  backpack:
+    description: "Rucksack öffnen (/backpack item: Rucksack-Item)"
+    usage: "/backpack [item]"
+    aliases: [rucksack, bp]
   tokenshop:
     description: "Token-Shop"
     usage: "/tokenshop"
