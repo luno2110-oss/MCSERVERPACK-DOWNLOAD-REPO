@@ -57,7 +57,9 @@ jobs:
           TXT
           sed -i 's/^          //' dist/INSTALLATION.txt
           sed -i "s/\${GITHUB_SHA}/${GITHUB_SHA::7}/" dist/INSTALLATION.txt
-          # Grafik-Pack KubyUI: feste Zeitstempel und Reihenfolge, damit die SHA-1 nur bei echten Änderungen wechselt.
+          # Grafik-Pack KubyUI: Schriften prüfen (ein Fehler macht in Minecraft alle Zeichen der Schrift zu Kästchen),
+          # dann mit festen Zeitstempeln und Reihenfolge packen, damit die SHA-1 nur bei echten Änderungen wechselt.
+          python3 tools/check_fonts.py resourcepack/KubyUI
           find resourcepack/KubyUI -exec touch -d '2026-01-01 00:00:00' {} +
           (cd resourcepack/KubyUI && find . -type f | sort | zip -X -q -@ ../../dist/KubyUI-Pack.zip)
           (cd dist && zip -q KubyPlugins.zip *.jar INSTALLATION.txt KubyUI-Pack.zip)

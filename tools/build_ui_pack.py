@@ -200,10 +200,13 @@ save(pattern([
     "..DDDDD..",
 ], {"D": GOLD_D, "G": GOLD, "L": GOLD_L, "C": GOLD_DD}), "coin.png")
 
+# Aufzählungspunkt 3 x 3, unten 2 leere Zeilen: Minecraft verlangt ascent <= height (sonst fällt die ganze Schrift weg)
 save(pattern([
     "LRR",
     "RRR",
     "RRD",
+    "...",
+    "...",
 ], {"L": hexc("FF6B80"), "R": hexc("E0364F"), "D": hexc("A0182C")}), "bullet.png")
 
 SUITS = {
@@ -389,7 +392,7 @@ bitmap("back.png", 13, -4, "")
 bitmap("dice.png", 16, -3, "")
 for i, name in enumerate(["icon_cards", "icon_roulette", "icon_slots", "icon_crash", "icon_poker", "icon_trophy", "icon_music"]):
     bitmap(name + ".png", 16, -3, chr(0xE003 + i))
-bitmap("bullet.png", 3, 5, "")
+bitmap("bullet.png", 5, 5, "")
 for i, name in enumerate(["suit_club", "suit_diamond", "suit_heart", "suit_star", "suit_seven"]):
     bitmap(name + ".png", 7, 7, chr(0xE011 + i))
 bitmap("coin.png", 9, 8, "")
@@ -416,3 +419,14 @@ print("ok", OUT)
 import build_sb_pack  # noqa: E402
 
 build_sb_pack.build(OUT, {**neg, **pos})
+
+
+# ---------- Prüfung: Fehler in einer Schrift-Datei lassen Minecraft die ganze Schrift verwerfen ----------
+import check_fonts  # noqa: E402
+
+errors = check_fonts.check_fonts(OUT)
+for e in errors:
+    print("FEHLER " + e)
+if errors:
+    sys.exit(1)
+print("Schriften geprüft: ok")

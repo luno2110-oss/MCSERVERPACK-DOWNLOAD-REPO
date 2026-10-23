@@ -1252,7 +1252,7 @@
   {
    "type": "bitmap",
    "file": "kuby:ui/bullet.png",
-   "height": 3,
+   "height": 5,
    "ascent": 5,
    "chars": [
     "\ue010"
