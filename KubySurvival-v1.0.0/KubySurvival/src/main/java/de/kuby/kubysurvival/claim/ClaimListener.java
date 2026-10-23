@@ -45,7 +45,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-/** Schutz der Claims, Claim-Schaufel und Hinweis beim Betreten eines Grundstücks. */
+/** Schutz der Claims (mit Freigaben für Fremde), Claim-Axt und Hinweis beim Betreten eines Grundstücks. */
 public final class ClaimListener implements Listener {
 
     /** Blöcke, die man benutzen kann und die deshalb geschützt sind (zusätzlich zu allem mit Inventar). */
@@ -112,22 +112,25 @@ public final class ClaimListener implements Listener {
     public void onInteract(PlayerInteractEvent e) {
         Player p = e.getPlayer();
         Block b = e.getClickedBlock();
-        // Claim-Schaufel: Ecken setzen.
-        if (e.getAction() == Action.RIGHT_CLICK_BLOCK && e.getHand() == EquipmentSlot.HAND && b != null
-                && addon.claimTool().isTool(e.getItem())) {
+        // Claim-Axt: Linksklick Ecke 1 bzw. Ecke greifen, Rechtsklick Ecke 2 bzw. neue Position.
+        if ((e.getAction() == Action.LEFT_CLICK_BLOCK || e.getAction() == Action.RIGHT_CLICK_BLOCK)
+                && e.getHand() == EquipmentSlot.HAND && b != null && addon.claimTool().isTool(e.getItem())) {
             e.setCancelled(true);
-            addon.claimTool().mark(p, b.getLocation());
+            if (e.getAction() == Action.LEFT_CLICK_BLOCK) addon.claimTool().left(p, b.getLocation());
+            else addon.claimTool().right(p, b.getLocation());
             return;
         }
         if (b == null) return;
         if (e.getAction() == Action.PHYSICAL) {
-            // Ackerboden zertrampeln, Druckplatten, Stolperdraht.
+            // Ackerboden zertrampeln, Druckplatten, Stolperdraht. Druckplatten kann der Besitzer freigeben.
+            if (Tag.PRESSURE_PLATES.isTagged(b.getType()) && allowed(b)) return;
             if (deny(p, b.getLocation())) e.setCancelled(true);
             return;
         }
         if (e.getAction() != Action.RIGHT_CLICK_BLOCK) return;
         if (claims().canBuild(p, b.getLocation())) return;
         if (usable(b)) {
+            if (allowed(b) && !risky(e.getItem())) return;
             deny(p, b.getLocation());
             e.setUseInteractedBlock(org.bukkit.event.Event.Result.DENY);
             e.setUseItemInHand(org.bukkit.event.Event.Result.DENY);
@@ -139,6 +142,24 @@ public final class ClaimListener implements Listener {
             e.setUseItemInHand(org.bukkit.event.Event.Result.DENY);
             e.setCancelled(true);
         }
+    }
+
+    /** Hat der Besitzer diesen Block für Fremde freigegeben (Türen, Knöpfe/Hebel, Kisten)? */
+    private boolean allowed(Block b) {
+        ClaimService.Claim c = claims().at(b.getLocation());
+        if (c == null) return true;
+        Material m = b.getType();
+        String flag = null;
+        if (Tag.DOORS.isTagged(m) || Tag.TRAPDOORS.isTagged(m) || Tag.FENCE_GATES.isTagged(m)) flag = "tueren";
+        else if (Tag.BUTTONS.isTagged(m) || Tag.PRESSURE_PLATES.isTagged(m) || m == Material.LEVER) flag = "knoepfe";
+        else if (b.getState(false) instanceof Container || Tag.SHULKER_BOXES.isTagged(m)) flag = "kisten";
+        return flag != null && claims().allows(c.owner(), flag);
+    }
+
+    private boolean animalsAllowed(Entity t) {
+        if (!(t instanceof Animals)) return false;
+        ClaimService.Claim c = claims().at(t.getLocation());
+        return c != null && claims().allows(c.owner(), "tiere");
     }
 
     private boolean usable(Block b) {
@@ -162,6 +183,7 @@ public final class ClaimListener implements Listener {
     public void onInteractEntity(PlayerInteractEntityEvent e) {
         Entity t = e.getRightClicked();
         if (!(t instanceof Hanging || t instanceof ArmorStand || t instanceof Animals)) return;
+        if (animalsAllowed(t)) return;
         if (deny(e.getPlayer(), t.getLocation())) e.setCancelled(true);
     }
 

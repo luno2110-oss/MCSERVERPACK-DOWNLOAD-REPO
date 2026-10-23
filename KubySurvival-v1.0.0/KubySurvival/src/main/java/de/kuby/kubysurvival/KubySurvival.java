@@ -131,7 +131,7 @@ public final class KubySurvival extends JavaPlugin {
                 p -> new AngelMenu(this, core).open(p)));
         core.registerMainEntry(new KubyPlugins.MainEntry(Material.IRON_PICKAXE, "Jobs", "Job wählen, Level, Tokens und Token-Shop",
                 p -> new JobMenu(this, core).open(p)));
-        core.registerMainEntry(new KubyPlugins.MainEntry(Material.GOLDEN_SHOVEL, "Grundstücke", "Landclaims sichern",
+        core.registerMainEntry(new KubyPlugins.MainEntry(Material.GOLDEN_AXE, "Grundstücke", "Landclaims sichern",
                 p -> p.performCommand("claim")));
 
         getServer().getScheduler().runTaskTimer(this, () -> {

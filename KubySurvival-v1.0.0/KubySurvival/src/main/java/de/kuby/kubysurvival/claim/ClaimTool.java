@@ -17,12 +17,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/** Claim-Schaufel: zwei Rechtsklicks markieren die Ecken. Danach /claim erstellen. Rahmen werden mit Partikeln gezeigt. */
+/**
+ * Claim-Axt: Linksklick setzt Ecke 1, Rechtsklick Ecke 2, danach /claim ok.
+ * Linksklick auf eine Ecke eines eigenen Grundstücks und danach Rechtsklick auf die neue Position ändert dessen Größe.
+ * Rahmen werden mit Partikeln gezeigt.
+ */
 public final class ClaimTool {
 
     private final KubySurvival addon;
     private final NamespacedKey tag;
     private final Map<UUID, Location[]> corners = new HashMap<>();
+    /** Spieler, die gerade eine Ecke eines Claims verschieben: Claim und die gegenüberliegende Ecke (x, z). */
+    private final Map<UUID, Resize> resizing = new HashMap<>();
+
+    private record Resize(ClaimService.Claim claim, int fixedX, int fixedZ) {}
 
     public ClaimTool(KubySurvival addon) {
         this.addon = addon;
@@ -30,8 +38,9 @@ public final class ClaimTool {
     }
 
     public ItemStack create() {
-        ItemStack it = Items.make(Material.GOLDEN_SHOVEL, "<gold>Claim-Schaufel", List.of(
-                "<gray>Rechtsklick auf einen Block: Ecke setzen", "<gray>Zwei Ecken, dann <white>/claim erstellen"));
+        ItemStack it = Items.make(Material.GOLDEN_AXE, "<gold>Claim-Axt", List.of(
+                "<gray>Linksklick: <white>Ecke 1", "<gray>Rechtsklick: <white>Ecke 2", "<gray>Danach <white>/claim ok", "",
+                "<gray>Größe ändern: Linksklick auf eine Ecke", "<gray>deines Grundstücks, dann Rechtsklick", "<gray>auf die neue Position."));
         ItemMeta meta = it.getItemMeta();
         meta.getPersistentDataContainer().set(tag, PersistentDataType.BYTE, (byte) 1);
         it.setItemMeta(meta);
@@ -42,26 +51,60 @@ public final class ClaimTool {
         return it != null && it.hasItemMeta() && it.getItemMeta().getPersistentDataContainer().has(tag, PersistentDataType.BYTE);
     }
 
-    /** Setzt abwechselnd Ecke 1 und Ecke 2 und zeigt Größe und Kosten. */
-    public void mark(Player p, Location block) {
-        Location[] c = corners.computeIfAbsent(p.getUniqueId(), k -> new Location[2]);
-        if (c[0] == null || c[1] != null) {
-            c[0] = block;
-            c[1] = null;
-            Msg.send(p, "<gold>Ecke 1 gesetzt. <gray>Jetzt die gegenüberliegende Ecke anklicken.");
+    /** Linksklick: Ecke eines eigenen Claims greifen oder Ecke 1 setzen. */
+    public void left(Player p, Location block) {
+        ClaimService.Claim c = addon.claims().at(block);
+        if (c != null && c.owner().equals(p.getUniqueId())) {
+            int x = block.getBlockX(), z = block.getBlockZ();
+            boolean cornerX = x == c.x1() || x == c.x2(), cornerZ = z == c.z1() || z == c.z2();
+            if (cornerX && cornerZ) {
+                resizing.put(p.getUniqueId(), new Resize(c, x == c.x1() ? c.x2() : c.x1(), z == c.z1() ? c.z2() : c.z1()));
+                corners.remove(p.getUniqueId());
+                Msg.send(p, "<gold>Ecke gegriffen. <gray>Rechtsklick auf die neue Position, um das Grundstück zu verändern.");
+                show(p, c.x1(), c.z1(), c.x2(), c.z2());
+                return;
+            }
+        }
+        resizing.remove(p.getUniqueId());
+        Location[] cs = corners.computeIfAbsent(p.getUniqueId(), k -> new Location[2]);
+        cs[0] = block;
+        cs[1] = null;
+        Msg.send(p, "<gold>Ecke 1 gesetzt. <gray>Jetzt Rechtsklick auf die gegenüberliegende Ecke.");
+    }
+
+    /** Rechtsklick: Größe ändern (wenn eine Ecke gegriffen ist) oder Ecke 2 setzen. */
+    public void right(Player p, Location block) {
+        Resize r = resizing.remove(p.getUniqueId());
+        if (r != null) {
+            if (!block.getWorld().getName().equals(r.claim().world())) {
+                Msg.send(p, "<red>Die neue Ecke muss in derselben Welt liegen.");
+                return;
+            }
+            String err = addon.claims().resize(p, r.claim(), r.fixedX(), r.fixedZ(), block.getBlockX(), block.getBlockZ());
+            if (err != null) {
+                Msg.send(p, "<red>" + err);
+                return;
+            }
+            ClaimService.Claim now = addon.claims().at(block);
+            Msg.send(p, "<green>Grundstück angepasst. <gray>Freie Claimblöcke: <white>" + addon.claims().available(p.getUniqueId()));
+            if (now != null) show(p, now.x1(), now.z1(), now.x2(), now.z2());
+            return;
+        }
+        Location[] c = corners.get(p.getUniqueId());
+        if (c == null || c[0] == null) {
+            Msg.send(p, "<gray>Setze zuerst mit <white>Linksklick</white> die erste Ecke.");
+            return;
+        }
+        if (!c[0].getWorld().equals(block.getWorld())) {
+            Msg.send(p, "<red>Beide Ecken müssen in derselben Welt liegen.");
             return;
         }
         c[1] = block;
-        if (!c[0].getWorld().equals(c[1].getWorld())) {
-            Msg.send(p, "<red>Beide Ecken müssen in derselben Welt liegen.");
-            c[1] = null;
-            return;
-        }
         int w = Math.abs(c[0].getBlockX() - c[1].getBlockX()) + 1;
         int l = Math.abs(c[0].getBlockZ() - c[1].getBlockZ()) + 1;
         long free = addon.claims().available(p.getUniqueId());
         Msg.send(p, "<gold>Ecke 2 gesetzt. <white>" + w + " x " + l + " = " + (long) w * l + " Blöcke <gray>(frei: " + free + ")");
-        Msg.send(p, "<click:run_command:'/claim erstellen'><green>[Jetzt claimen]</green></click> <gray>oder /claim erstellen");
+        Msg.send(p, "<click:run_command:'/claim ok'><green>[Jetzt sichern]</green></click> <gray>oder /claim ok");
         show(p, Math.min(c[0].getBlockX(), c[1].getBlockX()), Math.min(c[0].getBlockZ(), c[1].getBlockZ()),
                 Math.max(c[0].getBlockX(), c[1].getBlockX()), Math.max(c[0].getBlockZ(), c[1].getBlockZ()));
     }
@@ -73,6 +116,7 @@ public final class ClaimTool {
 
     public void forget(UUID id) {
         corners.remove(id);
+        resizing.remove(id);
     }
 
     /** Zeigt den Rand eines Rechtecks 10 Sekunden lang mit Partikeln (nur für diesen Spieler). */

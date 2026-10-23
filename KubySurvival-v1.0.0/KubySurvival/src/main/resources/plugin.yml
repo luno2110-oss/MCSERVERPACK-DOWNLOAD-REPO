@@ -10,7 +10,7 @@ commands:
     usage: "/angeln"
   claim:
     description: "Landclaims: Grundstücke sichern und Freunden vertrauen"
-    usage: "/claim [schaufel|erstellen|löschen|liste|trust <Spieler>|untrust <Spieler>|anzeigen]"
+    usage: "/claim [axt|ok|zeigen|info|liste|trust <Spieler>|untrust <Spieler>|löschen|hilfe]"
   job:
     description: "Jobs: Job wählen, Level, Tokens und Token-Shop"
     usage: "/job"

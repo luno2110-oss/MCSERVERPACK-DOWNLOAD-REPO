@@ -59,6 +59,10 @@ public final class ClaimService {
     private final Map<String, Map<Long, List<Claim>>> index = new HashMap<>();
     private final Map<UUID, Double> earned = new HashMap<>();
     private final Map<UUID, Set<UUID>> trust = new HashMap<>();
+    /** Was Fremde auf allen Grundstücken eines Besitzers dürfen: tueren, knoepfe, kisten, tiere. */
+    private final Map<UUID, Set<String>> flags = new HashMap<>();
+
+    public static final List<String> FLAGS = List.of("tueren", "knoepfe", "kisten", "tiere");
 
     public ClaimService(KubySurvival addon, KubyPlugins core) {
         this.addon = addon;
@@ -98,6 +102,24 @@ public final class ClaimService {
         return out;
     }
 
+    public synchronized boolean allows(UUID owner, String flag) {
+        return flags.getOrDefault(owner, Set.of()).contains(flag);
+    }
+
+    public synchronized boolean toggle(UUID owner, String flag) {
+        Set<String> set = flags.computeIfAbsent(owner, k -> new HashSet<>());
+        boolean on = !set.remove(flag);
+        if (on) set.add(flag);
+        save();
+        return on;
+    }
+
+    /** Zusätzliche Claimblöcke (Token-Shop, Farmpass). */
+    public synchronized void addBlocks(UUID owner, long blocks) {
+        earned.merge(owner, (double) blocks, Double::sum);
+        save();
+    }
+
     public synchronized Set<UUID> trusted(UUID owner) {
         return new HashSet<>(trust.getOrDefault(owner, Set.of()));
     }
@@ -122,7 +144,7 @@ public final class ClaimService {
     /** Legt einen Claim zwischen zwei Ecken an. Gibt null bei Erfolg zurück, sonst eine Meldung. */
     public synchronized String create(Player p, Location a, Location b) {
         UUID id = p.getUniqueId();
-        if (a == null || b == null) return "Markiere erst zwei Ecken mit der Claim-Schaufel (/claim schaufel).";
+        if (a == null || b == null) return "Markiere erst zwei Ecken mit der Claim-Axt (/claim axt).";
         if (a.getWorld() == null || !a.getWorld().equals(b.getWorld())) return "Beide Ecken müssen in derselben Welt liegen.";
         String world = a.getWorld().getName();
         if (!world.equals(core.modes().worldOf(SURVIVAL))) return "Claims gibt es nur in der Survival-Welt.";
@@ -153,6 +175,33 @@ public final class ClaimService {
             }
         }
         claims.add(new Claim(UUID.randomUUID().toString().substring(0, 8), id, world, x1, z1, x2, z2));
+        reindex();
+        save();
+        return null;
+    }
+
+    /** Ändert die Größe eines eigenen Claims (Ecke verschieben). Null bei Erfolg, sonst eine Meldung. */
+    public synchronized String resize(Player p, Claim old, int nx1, int nz1, int nx2, int nz2) {
+        int index = claims.indexOf(old);
+        if (index < 0) return "Dieses Grundstück gibt es nicht mehr.";
+        int x1 = Math.min(nx1, nx2), x2 = Math.max(nx1, nx2), z1 = Math.min(nz1, nz2), z2 = Math.max(nz1, nz2);
+        int minSide = core.getConfig().getInt("landclaim.min-side", 5);
+        int maxSide = core.getConfig().getInt("landclaim.max-side", 128);
+        int w = x2 - x1 + 1, l = z2 - z1 + 1;
+        if (w < minSide || l < minSide) return "Ein Claim muss mindestens " + minSide + "x" + minSide + " Blöcke groß sein.";
+        if (w > maxSide || l > maxSide) return "Ein Claim darf höchstens " + maxSide + " Blöcke lang sein.";
+        long extra = (long) w * l - old.area();
+        long free = available(old.owner());
+        if (extra > free) return "Dafür brauchst du " + extra + " Claimblöcke mehr, du hast " + free + ".";
+        for (Claim c : claims) {
+            if (c != old && c.overlaps(old.world(), x1, z1, x2, z2)) return "Das überschneidet sich mit einem anderen Claim.";
+        }
+        for (RegionService.Region r : core.regions().all()) {
+            if (r.world().equals(old.world()) && x1 <= r.x2() && x2 >= r.x1() && z1 <= r.z2() && z2 >= r.z1()) {
+                return "Das überschneidet sich mit einem geschützten Bereich (" + r.id() + ").";
+            }
+        }
+        claims.set(index, new Claim(old.id(), old.owner(), old.world(), x1, z1, x2, z2));
         reindex();
         save();
         return null;
@@ -223,6 +272,15 @@ public final class ClaimService {
                 }
             }
         }
+        ConfigurationSection fl = yml.getConfigurationSection("flags");
+        if (fl != null) {
+            for (String owner : fl.getKeys(false)) {
+                try {
+                    flags.put(UUID.fromString(owner), new HashSet<>(fl.getStringList(owner)));
+                } catch (IllegalArgumentException ignored) {
+                }
+            }
+        }
         ConfigurationSection t = yml.getConfigurationSection("trust");
         if (t != null) {
             for (String owner : t.getKeys(false)) {
@@ -244,6 +302,7 @@ public final class ClaimService {
         }
         out.set("claims", list);
         for (Map.Entry<UUID, Double> e : earned.entrySet()) out.set("earned." + e.getKey(), e.getValue());
+        for (Map.Entry<UUID, Set<String>> e : flags.entrySet()) out.set("flags." + e.getKey(), new ArrayList<>(e.getValue()));
         for (Map.Entry<UUID, Set<UUID>> e : trust.entrySet()) {
             List<String> ids = new ArrayList<>();
             for (UUID who : e.getValue()) ids.add(who.toString());

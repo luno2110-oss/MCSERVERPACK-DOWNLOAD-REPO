@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-/** /claim: Übersicht, Schaufel, erstellen, löschen, Liste, Vertrauen und Rahmen anzeigen. */
+/** /claim: Menü, Claim-Axt, ok (anlegen), löschen, Liste, Vertrauen, Grenzen zeigen und Hilfe. */
 public final class ClaimCommand implements CommandExecutor {
 
     private final KubySurvival addon;
@@ -31,14 +31,22 @@ public final class ClaimCommand implements CommandExecutor {
             return true;
         }
         ClaimService claims = addon.claims();
-        String sub = args.length == 0 ? "info" : args[0].toLowerCase();
+        String sub = args.length == 0 ? "menu" : args[0].toLowerCase();
         switch (sub) {
+            case "menu", "menü" -> new ClaimMenu(addon).open(p);
             case "info" -> info(p, claims);
-            case "schaufel", "tool" -> {
-                p.getInventory().addItem(addon.claimTool().create());
-                Msg.send(p, "<green>Claim-Schaufel erhalten. <gray>Rechtsklick auf zwei gegenüberliegende Ecken.");
+            case "axt", "schaufel", "tool" -> {
+                for (org.bukkit.inventory.ItemStack it : p.getInventory().getContents()) {
+                    if (addon.claimTool().isTool(it)) {
+                        Msg.send(p, "<gray>Du hast schon eine Claim-Axt im Inventar.");
+                        return true;
+                    }
+                }
+                p.getInventory().addItem(addon.claimTool().create()).values()
+                        .forEach(rest -> p.getWorld().dropItemNaturally(p.getLocation(), rest));
+                Msg.send(p, "<green>Claim-Axt erhalten. <gray>Linksklick: Ecke 1, Rechtsklick: Ecke 2, dann <white>/claim ok");
             }
-            case "erstellen", "create" -> {
+            case "ok", "erstellen", "create" -> {
                 Location[] c = addon.claimTool().corners(p.getUniqueId());
                 String err = claims.create(p, c == null ? null : c[0], c == null ? null : c[1]);
                 if (err != null) {
@@ -64,13 +72,13 @@ public final class ClaimCommand implements CommandExecutor {
             }
             case "liste", "list" -> {
                 List<ClaimService.Claim> list = claims.claimsOf(p.getUniqueId());
-                if (list.isEmpty()) Msg.send(p, "<gray>Du hast noch keine Claims. <white>/claim schaufel");
+                if (list.isEmpty()) Msg.send(p, "<gray>Du hast noch keine Claims. <white>/claim axt");
                 for (ClaimService.Claim c : list) {
                     Msg.send(p, "<gold>▪ <white>" + c.width() + "x" + c.length() + " <gray>bei <white>"
                             + (c.x1() + c.x2()) / 2 + ", " + (c.z1() + c.z2()) / 2 + " <gray>(" + c.area() + " Blöcke)");
                 }
             }
-            case "anzeigen", "show" -> {
+            case "zeigen", "anzeigen", "show" -> {
                 ClaimService.Claim c = claims.at(p.getLocation());
                 if (c == null) {
                     Msg.send(p, "<gray>Hier ist Wildnis.");
@@ -101,7 +109,11 @@ public final class ClaimCommand implements CommandExecutor {
                         : "<green>" + target.getName() + " darf auf deinen Claims nicht mehr bauen.")
                         : "<gray>Keine Änderung.");
             }
-            default -> Msg.send(p, "<red>Nutzung: /claim [schaufel|erstellen|löschen|liste|trust <Spieler>|untrust <Spieler>|anzeigen]");
+            case "hilfe", "help" -> help(p);
+            default -> {
+                Msg.send(p, "<red>Unbekannter Befehl.");
+                help(p);
+            }
         }
         return true;
     }
@@ -128,6 +140,24 @@ public final class ClaimCommand implements CommandExecutor {
             }
             Msg.send(p, "<gray>Vertraut: <white>" + sb);
         }
-        Msg.send(p, "<gray>Befehle: <white>/claim schaufel, erstellen, löschen, liste, trust, untrust, anzeigen");
+        Msg.send(p, "<gray>Alle Befehle: <white>/claim hilfe");
+    }
+
+    private void help(Player p) {
+        Msg.send(p, "<gold><b>Grundstücke</b>");
+        String[][] lines = {
+                {"/claim", "Menü: Grundstücke, Freunde, Rechte"},
+                {"/claim axt", "Claim-Axt holen"},
+                {"/claim ok", "Markierte Fläche sichern"},
+                {"/claim zeigen", "Grenzen hier anzeigen"},
+                {"/claim info", "Freie Blöcke und wer hier wohnt"},
+                {"/claim liste", "Deine Grundstücke"},
+                {"/claim trust <Spieler>", "Freund eintragen"},
+                {"/claim untrust <Spieler>", "Freund austragen"},
+                {"/claim löschen", "Grundstück, in dem du stehst, löschen"}};
+        for (String[] l : lines) {
+            Msg.send(p, "<click:suggest_command:'" + l[0].replaceAll(" <.*", " ") + "'><white>" + Msg.escape(l[0]) + "</click> <gray>" + l[1]);
+        }
+        Msg.send(p, "<gray>Erweitern: Linksklick mit der Axt auf eine Ecke deines Grundstücks, dann Rechtsklick auf die neue Position.");
     }
 }
