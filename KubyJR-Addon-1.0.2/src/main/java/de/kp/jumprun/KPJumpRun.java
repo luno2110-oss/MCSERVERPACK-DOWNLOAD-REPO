@@ -86,7 +86,7 @@ public final class KPJumpRun extends JavaPlugin {
         KpCommand kpParkour = new KpCommand(this);
         kuby.registerKpSub("parkour", (p, args) -> kpParkour.onCommand(p, null, "kp", args));
 
-        getLogger().info("KubyJ&R Addon 1.0.0 als Addon von KubyPlugins aktiviert.");
+        getLogger().info("KubyJR-Addon " + getPluginMeta().getVersion() + " als Addon von KubyCore aktiv.");
     }
 
     @Override

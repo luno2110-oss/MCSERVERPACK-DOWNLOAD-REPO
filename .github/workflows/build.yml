@@ -39,6 +39,24 @@ jobs:
           mkdir -p dist
           find . -path '*/target/*.jar' -not -name 'original-*' -not -path '*/libs/*' -exec cp {} dist/ \;
           mv dist/KubyPlugins-*.jar dist/KubyCore.jar
+          mv dist/KubySMP-*.jar dist/KubySMP.jar
+          mv dist/KubyScoreboard-*.jar dist/KubyScoreboard.jar
+          mv dist/KubySkyblock-*.jar dist/KubySkyblock.jar
+          mv dist/KubyJR-Addon-*.jar dist/KubyJR.jar
+          cat > dist/INSTALLATION.txt <<'TXT'
+          KubyPlugins - Installation
+          Stand: Commit ${GITHUB_SHA}
+
+          1. Server stoppen.
+          2. Im Ordner plugins alle alten Kuby-Jars loeschen (die Ordner wie KubyCore bleiben, da liegen die Daten).
+          3. Alle Jars aus dieser ZIP in den Ordner plugins legen.
+          4. Server starten. Im Log muss "Bukkit plugins (5)" stehen.
+
+          KubyCore.jar ist das Hauptplugin, die anderen sind Addons und brauchen KubyCore.
+          TXT
+          sed -i 's/^          //' dist/INSTALLATION.txt
+          sed -i "s/\${GITHUB_SHA}/${GITHUB_SHA::7}/" dist/INSTALLATION.txt
+          (cd dist && zip -q KubyPlugins.zip *.jar INSTALLATION.txt)
           ls -la dist
 
       - uses: actions/upload-artifact@v4
@@ -53,5 +71,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete latest --yes --cleanup-tag || true
-          gh release create latest dist/*.jar --title "Aktueller Stand" \
-            --notes "Automatisch gebaut aus Commit ${GITHUB_SHA::7}. KubyCore.jar ist das Hauptplugin, dazu die Addons." --latest
+          gh release create latest dist/KubyPlugins.zip dist/*.jar --title "Aktueller Stand" \
+            --notes "Automatisch gebaut aus Commit ${GITHUB_SHA::7}. KubyPlugins.zip enthält alle Jars und eine Anleitung." --latest
