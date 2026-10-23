@@ -516,3 +516,31 @@ ui:
   pack-force: false
   # auto = eigene Grafiken nur, wenn das Pack beim Spieler geladen ist; on = immer; off = nie
   custom-textures: auto
+
+# Regeln (/regeln) und Meldungen (/report). Format: "Titel;Text". Meldungen sehen Spieler mit kuby.report.see.
+rules:
+  report-cooldown-seconds: 60
+  list:
+    - "Respekt;Behandle alle freundlich. Beleidigungen, Hetze, Drohungen und Belästigung sind verboten, auch per Privatnachricht."
+    - "Griefing;Zerstören, Verändern oder Ausräumen fremder Bauten ist verboten, auch wenn sie nicht geclaimt sind."
+    - "Grundstücke;Claims nur so groß wie nötig. Kein Claimen direkt an fremden Grundstücken, um sie einzuschränken."
+    - "PvP;Töten ist erlaubt, aber kein Spawn-Camping, kein Fallen-Stellen an Spawn und Portalen und kein Ausnutzen von Grundstücken."
+    - "Chat;Kein Spam, keine Werbung für andere Server, keine Caps-Flut und keine verbotenen Inhalte."
+    - "Cheats;Hacks, X-Ray, Autoclicker und unfaire Mods sind verboten. Erlaubt sind Optik-Mods wie Shader, Minimaps ohne Höhlen- und Erzanzeige."
+    - "Bugs;Dupen und das Ausnutzen von Bugs sind verboten. Gefundene Fehler meldest du dem Team und bekommst dafür eine Belohnung."
+    - "Farmen;Farmen dürfen den Server nicht belasten. Große Mob- und Redstone-Farmen nur mit Abschaltung, keine Lag-Maschinen."
+    - "Handel;Betrug beim Handeln ist verboten. Nutze /trade oder den Markt, dann seid ihr beide sicher."
+    - "Namen;Namen von Spielern, Teams, Warps und Haustieren dürfen nicht beleidigend oder anstößig sein."
+    - "Accounts;Pro Person ein Account zum Farmen von Belohnungen. Accounts teilen und verkaufen ist verboten."
+    - "Team;Den Anweisungen des Teams ist Folge zu leisten. Fragen und Beschwerden klärst du über /support oder den Discord."
+
+# Survival-Einstieg (KubySurvival). /bauwelt: fester Punkt (leer = Zufallsteleport). Brunnen am Spawn: Region mit dieser ID
+# (/kp region ...), wer hineinläuft, kommt in die Bauwelt. Punkt setzen: /kp bauwelt setzen
+bauwelt:
+  location: ""
+  fountain-region: "bauwelt-brunnen"
+# /tutorial: Stationen "Ort;Titel;Text", anlegen mit /kp tutorial add <Titel>|<Text>. Belohnung beim ersten Abschluss.
+tutorial:
+  reward-coins: 500
+  reward-tokens: 3
+  stations: []

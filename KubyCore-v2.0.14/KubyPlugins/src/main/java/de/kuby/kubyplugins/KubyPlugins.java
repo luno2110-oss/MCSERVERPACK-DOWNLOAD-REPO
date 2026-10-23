@@ -255,6 +255,12 @@ public final class KubyPlugins extends JavaPlugin {
         setAll(new CoinflipCommand(this), "coinflip");
         setAll(new CasinoCommand(this), "casino");
         setAll(new PokerCommand(this), "poker");
+        de.kuby.kubyplugins.command.RulesCommand rules = new de.kuby.kubyplugins.command.RulesCommand(this);
+        setAll(rules, "regeln", "report");
+        for (String n : List.of("regeln", "report")) {
+            PluginCommand rc = getCommand(n);
+            if (rc != null) rc.setTabCompleter(rules);
+        }
         PluginCommand hilfe = getCommand("hilfe");
         if (hilfe != null) {
             hilfe.setExecutor((sender, c, label, args) -> {

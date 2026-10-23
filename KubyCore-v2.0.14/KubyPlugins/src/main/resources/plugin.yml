@@ -13,6 +13,13 @@ commands:
   hilfe:
     description: "Survival-Hilfe: eine Seite je Feature, blättern mit den Buttons"
     usage: "/hilfe [seite]"
+  regeln:
+    description: "Serverregeln, /regeln <Nummer> für einen Paragraphen"
+    usage: "/regeln [Nummer]"
+    aliases: [rules]
+  report:
+    description: "Spieler beim Team melden"
+    usage: "/report <Spieler> [Grund]"
   menu:
     description: "Hauptmenü als GUI öffnen"
   balance:
@@ -164,6 +171,9 @@ commands:
     description: "Spielzeit-Belohnungen ansehen"
 
 permissions:
+  kuby.report.see:
+    description: Sieht Meldungen von /report
+    default: op
   kuby.admin:
     description: "Zugriff auf das Admin-Panel"
     default: op

@@ -48,8 +48,8 @@ Prinzip: Keine GUI. Spiel läuft über physische Dinge am Tisch (Karten, Chips, 
 ## Ordnergruppe 4 – Features Survival (Refs: Release „Referenzen“, Hilfe-Seiten je Feature) – nur Survival, Schwerpunkt
 Reihenfolge wie das Hilfe-Karussell der Referenz. Jede Seite: Titel, Untertitel, „So geht's“, Befehle, Buttons (zurück, Aktion, weiter), eigene Farbe.
 - [~] 4.0 Survival-Hilfe `/hilfe [seite]` (Build offen, Test im Spiel offen): Dialog-Karussell mit 31 Seiten nach der Referenz, 7 Farbthemen (grün, gold, grau, orange, blau, rot, pink), Icons je Seite, Aktions-Button ruft den passenden Befehl (fehlende Features: „kommt bald“). `/befehle` bleibt die Chat-Übersicht
-- [ ] 4.1 Regeln: `/regeln`, `/regeln <Nummer>` (12 Paragraphen), `/report <Spieler>`
-- [ ] 4.2 Einstieg: `/tutorial` (Tour in Stationen), `/bauwelt`, `/spawn`, Brunnen am Spawn
+- [~] 4.1 Regeln (Build offen): `/regeln` (12 Paragraphen zum Anklicken, Texte in config rules.list), `/regeln <Nummer>`, `/report <Spieler> [Grund]` (an Team mit kuby.report.see, reports.log, 60 s Sperre)
+- [~] 4.2 Einstieg (Build offen): `/bauwelt` (Punkt per `/kp bauwelt setzen`, sonst Zufallsteleport), Brunnen = Region `bauwelt-brunnen`, `/tutorial` mit Stationen (`/kp tutorial add <Titel>|<Text>`), Belohnung beim ersten Abschluss (500 Coins, 3 Tokens)
 - [ ] 4.3 Grundstücke: Claim-Axt (Links/Rechtsklick Ecken, `/claim ok`), Kosten = Fläche (10×10 = 100), Erweitern mit der Axt, `/claim axt|zeigen|hilfe`, Rechte für Fremde im Menü
 - [~] 4.4 Jobs (Grundlage gebaut, anpassen): 8 Berufe, Level 1–100, Stundenlimit wächst mit dem Level, Wechsel jederzeit mit 30 Min. Sperre danach, `/job info|waehlen|limit|auftrag|hilfe`, Wochenauftrag
 - [ ] 4.5 Quests: täglich, wöchentlich, lange Geschichte, Meilensteine, Team-Quests, geheime; Serie (Streak) mit Extra; verfolgte Quest oben in der Leiste; `/quest daily|weekly|abholen|streak|top`

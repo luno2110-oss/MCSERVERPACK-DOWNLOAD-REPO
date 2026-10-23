@@ -10,6 +10,7 @@ import de.kuby.kubysurvival.fishing.AngelMenu;
 import de.kuby.kubysurvival.fishing.FishDealer;
 import de.kuby.kubysurvival.fishing.FishingListener;
 import de.kuby.kubysurvival.hud.SurvivalHud;
+import de.kuby.kubysurvival.intro.IntroService;
 import de.kuby.kubysurvival.jobs.Job;
 import de.kuby.kubysurvival.jobs.JobListener;
 import de.kuby.kubysurvival.jobs.JobMenu;
@@ -36,6 +37,7 @@ public final class KubySurvival extends JavaPlugin {
     private ClaimTool claimTool;
     private SurvivalHud hud;
     private JobService jobs;
+    private IntroService intro;
     private final Map<UUID, Location[]> zoneCorners = new HashMap<>();
 
     public KubyPlugins core() { return core; }
@@ -44,6 +46,7 @@ public final class KubySurvival extends JavaPlugin {
     public ClaimService claims() { return claims; }
     public ClaimTool claimTool() { return claimTool; }
     public JobService jobs() { return jobs; }
+    public IntroService intro() { return intro; }
 
     @Override
     public void onEnable() {
@@ -58,6 +61,8 @@ public final class KubySurvival extends JavaPlugin {
         claims = new ClaimService(this, core);
         claimTool = new ClaimTool(this);
         jobs = new JobService(this, core);
+        intro = new IntroService(this, core);
+        getServer().getPluginManager().registerEvents(intro, this);
 
         getServer().getPluginManager().registerEvents(new FishingListener(this, core), this);
         getServer().getPluginManager().registerEvents(new ClaimListener(this, core), this);
@@ -69,6 +74,29 @@ public final class KubySurvival extends JavaPlugin {
             return true;
         });
         command("claim", new ClaimCommand(this));
+        command("bauwelt", (sender, cmd, label, args) -> {
+            if (sender instanceof Player p) intro.toBuildWorld(p);
+            return true;
+        });
+        command("tutorial", (sender, cmd, label, args) -> {
+            if (!(sender instanceof Player p)) return true;
+            String sub = args.length > 0 ? args[0].toLowerCase() : "";
+            switch (sub) {
+                case "weiter" -> intro.next(p);
+                case "stop" -> intro.stop(p);
+                default -> intro.start(p);
+            }
+            return true;
+        });
+        core.registerKpSub("tutorial", (p, args) -> {
+            if (p.hasPermission("kuby.admin")) intro.admin(p, args);
+            else Msg.send(p, "<red>Nur Admins.");
+        });
+        core.registerKpSub("bauwelt", (p, args) -> {
+            if (!p.hasPermission("kuby.admin")) Msg.send(p, "<red>Nur Admins.");
+            else if (args.length > 1 && args[1].equalsIgnoreCase("setzen")) intro.setBuildWorld(p);
+            else Msg.send(p, "<white>/kp bauwelt setzen <gray>Bauwelt-Punkt an deiner Position. Brunnen: Region <white>bauwelt-brunnen");
+        });
         command("job", (sender, cmd, label, args) -> {
             if (sender instanceof Player p) new JobMenu(this, core).open(p);
             return true;
@@ -125,6 +153,7 @@ public final class KubySurvival extends JavaPlugin {
         if (fishing != null) fishing.save();
         if (claims != null) claims.save();
         if (jobs != null) jobs.save();
+        if (intro != null) intro.save();
     }
 
     private void command(String name, org.bukkit.command.CommandExecutor exec) {
