@@ -12,7 +12,10 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.EquipmentSlot;
 
-/** Rechtsklick auf den Blackjack-Tisch startet eine Runde. Weggehen, Ausloggen und Sterben beenden sie. */
+/**
+ * Rechtsklick auf den Blackjack-Tisch startet eine Runde, Rechtsklick auf den Slots-Automaten eine Drehung.
+ * Weggehen, Ausloggen und Sterben beenden eine Blackjack-Runde.
+ */
 public final class BlackjackListener implements Listener {
 
     private final KubyPlugins plugin;
@@ -24,9 +27,16 @@ public final class BlackjackListener implements Listener {
     @EventHandler
     public void onInteract(PlayerInteractEvent e) {
         if (e.getAction() != Action.RIGHT_CLICK_BLOCK || e.getHand() != EquipmentSlot.HAND) return;
-        if (e.getClickedBlock() == null || !plugin.blackjack().isTable(e.getClickedBlock().getLocation())) return;
+        if (e.getClickedBlock() == null) return;
+        String err;
+        if (plugin.blackjack().isTable(e.getClickedBlock().getLocation())) {
+            err = plugin.blackjack().start(e.getPlayer());
+        } else if (plugin.slots().isMachine(e.getClickedBlock().getLocation())) {
+            err = plugin.slots().pull(e.getPlayer());
+        } else {
+            return;
+        }
         e.setCancelled(true);
-        String err = plugin.blackjack().start(e.getPlayer());
         if (err != null) Msg.send(e.getPlayer(), "<red>" + err);
     }
 

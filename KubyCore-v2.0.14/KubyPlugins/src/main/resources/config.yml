@@ -103,6 +103,8 @@ casino:
   roulette:
     wait-seconds: 20
     max-bet: 50
+  slots:
+    bet: 1
 
 coinflip:
   max-bet: 5000

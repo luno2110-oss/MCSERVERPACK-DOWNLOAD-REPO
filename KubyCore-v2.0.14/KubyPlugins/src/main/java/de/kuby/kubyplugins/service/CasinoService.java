@@ -68,6 +68,15 @@ public final class CasinoService {
         updateDisplay();
     }
 
+    /** Zahlt den Jackpot aus: gibt den Betrag zurück und setzt ihn auf den Startwert. */
+    public synchronized long claimJackpot() {
+        long won = jackpot;
+        jackpot = plugin.getConfig().getLong("casino.jackpot-start", 10000);
+        save();
+        updateDisplay();
+        return won;
+    }
+
     /** Prüft Modus und Kassentisch. Gibt null bei Erfolg zurück, sonst eine Meldung. */
     public String checkUse(Player p) {
         if (!SURVIVAL.equals(plugin.modes().modeOf(p.getUniqueId()))) {
