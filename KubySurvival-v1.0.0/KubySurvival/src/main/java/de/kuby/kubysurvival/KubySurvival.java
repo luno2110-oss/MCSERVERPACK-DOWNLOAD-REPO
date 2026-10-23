@@ -60,6 +60,10 @@ public final class KubySurvival extends JavaPlugin {
 
         core.registerKpSub("angel", this::kpAngel);
         core.registerStat("claimblocks", claims::available);
+        // Werte für die Erfolge im Kern.
+        core.registerStat("fish_caught", id -> (long) fishing.angler(id).total());
+        core.registerStat("angel_level", id -> (long) FishingService.levelOf(fishing.angler(id).xp));
+        core.registerStat("claims", id -> (long) claims.claimsOf(id).size());
         // Regionen im Kern fragen hierüber, wem ein Besitzer vertraut.
         core.setTrustCheck((owner, who) -> {
             try {

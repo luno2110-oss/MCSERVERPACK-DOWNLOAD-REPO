@@ -20,6 +20,8 @@ import de.kuby.kubyplugins.service.CasinoMusic;
 import de.kuby.kubyplugins.listener.CasinoVipListener;
 import de.kuby.kubyplugins.service.PokerService;
 import de.kuby.kubyplugins.command.PokerCommand;
+import de.kuby.kubyplugins.service.VoteService;
+import de.kuby.kubyplugins.service.AchievementService;
 import de.kuby.kubyplugins.command.CasinoCommand;
 import de.kuby.kubyplugins.service.ModuleService;
 import de.kuby.kubyplugins.listener.WorldBorderListener;
@@ -139,6 +141,8 @@ public final class KubyPlugins extends JavaPlugin {
     private CasinoVip casinoVip;
     private CasinoMusic casinoMusic;
     private PokerService poker;
+    private VoteService votes;
+    private AchievementService achievements;
     private EditModeService edit;
     private RegionService regions;
     private HubSettingsService hubSettings;
@@ -194,6 +198,16 @@ public final class KubyPlugins extends JavaPlugin {
         casinoMusic = new CasinoMusic(this);
         poker = new PokerService(this);
         poker.start();
+        votes = new VoteService(this);
+        achievements = new AchievementService(this);
+        achievements.start();
+        // Stat-Quellen für Erfolge (Addons melden weitere an, z. B. Angeln und Claims).
+        registerStat("playtime", id -> playtime().minutesOf(id));
+        registerStat("votes", id -> votes.votesOf(id));
+        registerStat("kills", id -> (long) stats().get(id).kills);
+        registerStat("casino_plus", id -> Math.max(0L, casinoLog.netOf(id)));
+        registerMainEntry(new MainEntry(org.bukkit.Material.NETHER_STAR, "Erfolge", "Fortschritt und Belohnungen",
+                p -> new de.kuby.kubyplugins.gui.AchievementMenu(this, 0).open(p)));
         blackjack = new BlackjackService(this);
         roulette = new RouletteService(this);
         slots = new SlotsService(this);
@@ -238,6 +252,22 @@ public final class KubyPlugins extends JavaPlugin {
         setAll(new CasinoCommand(this), "casino");
         setAll(new PokerCommand(this), "poker");
         setAll((sender, command, label, args) -> {
+            if (sender instanceof org.bukkit.entity.Player p) votes.showLinks(p);
+            return true;
+        }, "vote");
+        setAll((sender, command, label, args) -> {
+            if (sender instanceof org.bukkit.entity.Player p) new de.kuby.kubyplugins.gui.AchievementMenu(this, 0).open(p);
+            return true;
+        }, "erfolge");
+        registerKpSub("vote", (p, args) -> {
+            if (!p.hasPermission("kuby.admin")) return;
+            if (args.length < 2) {
+                Msg.send(p, "<red>Nutzung: /kp vote <Spieler> (simuliert einen Vote)");
+                return;
+            }
+            votes.handle(args[1], "Test (" + p.getName() + ")");
+        });
+        setAll((sender, command, label, args) -> {
             if (sender instanceof org.bukkit.entity.Player p) casinoMusic.openMenu(p);
             return true;
         }, "music");
@@ -260,6 +290,7 @@ public final class KubyPlugins extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new RegionListener(this), this);
         getServer().getPluginManager().registerEvents(new BlackjackListener(this), this);
         getServer().getPluginManager().registerEvents(new CasinoVipListener(this), this);
+        getServer().getPluginManager().registerEvents(votes, this);
         getServer().getScheduler().runTaskLater(this, () -> {
             markers.respawnAll();
             casino.respawn();
@@ -268,6 +299,7 @@ public final class KubyPlugins extends JavaPlugin {
             slots.respawn();
             crash.respawn();
             poker.respawn();
+            votes.hook();
             hubSettings.applyAll();
         }, 40L);
 
@@ -314,6 +346,8 @@ public final class KubyPlugins extends JavaPlugin {
         casinoLog.save();
         jackpotDraw.save();
         casinoVip.save();
+        votes.save();
+        achievements.save();
         homes.save();
         shop.save();
         shopStorage.save();
@@ -418,6 +452,8 @@ public final class KubyPlugins extends JavaPlugin {
     public CasinoVip casinoVip() { return casinoVip; }
     public CasinoMusic casinoMusic() { return casinoMusic; }
     public PokerService poker() { return poker; }
+    public VoteService votes() { return votes; }
+    public AchievementService achievements() { return achievements; }
     public EditModeService edit() { return edit; }
     public RegionService regions() { return regions; }
     public HubSettingsService hubSettings() { return hubSettings; }

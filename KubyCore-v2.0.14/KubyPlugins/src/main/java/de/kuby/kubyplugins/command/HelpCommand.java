@@ -107,6 +107,8 @@ public final class HelpCommand implements CommandExecutor {
                     new Entry("/tpaccept", "Teleport-Anfrage annehmen", null),
                     new Entry("/tpadeny", "Teleport-Anfrage ablehnen", null),
                     new Entry("/spielzeit", "Spielzeit-Belohnungen", null),
+                    new Entry("/erfolge", "Erfolge mit Fortschritt", null),
+                    new Entry("/vote", "Voten für Juwelen und Coins", null),
                     new Entry("/claim", "Landclaims (Survival)", null),
                     new Entry("/angeln", "Angel-Menü (Survival)", null),
                     new Entry("/skyblock", "Skyblock-Checkliste und Erfolge", null),

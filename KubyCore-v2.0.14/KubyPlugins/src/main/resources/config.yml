@@ -444,3 +444,29 @@ jewelshop:
 
 # Custom Items (ohne externes Plugin). Format: id;Name;MATERIAL;namespace:modell;Lore1|Lore2
 custom-items: []
+
+# Votes über NuVotifier/Votifier (optional). Ohne Votifier geht es zum Testen mit /kp vote <Spieler>.
+vote:
+  jewels: 2
+  coins: 250
+  # Format: Name;URL
+  links: []
+
+# Erfolge. Format: id;Name;Wert;Ziel;Juwelen;MATERIAL;Beschreibung
+# Werte: playtime (Minuten), votes, kills, casino_plus (Chips), fish_caught, angel_level, claims
+achievements:
+  list:
+    - "zeit1;Angekommen;playtime;60;2;CLOCK;Spiel 1 Stunde auf dem Server"
+    - "zeit2;Stammgast;playtime;600;5;CLOCK;Spiel 10 Stunden auf dem Server"
+    - "zeit3;Inventar;playtime;3000;15;CLOCK;Spiel 50 Stunden auf dem Server"
+    - "vote1;Erste Stimme;votes;1;2;PAPER;Vote einmal für den Server"
+    - "vote2;Treue Stimme;votes;10;5;PAPER;Vote 10 Mal für den Server"
+    - "vote3;Botschafter;votes;50;15;PAPER;Vote 50 Mal für den Server"
+    - "fisch1;Anfänger-Angler;fish_caught;10;2;COD;Fang 10 Fische"
+    - "fisch2;Petri Heil;fish_caught;100;5;SALMON;Fang 100 Fische"
+    - "fisch3;Meister-Angler;fish_caught;500;15;TROPICAL_FISH;Fang 500 Fische"
+    - "angel10;Profi an der Rute;angel_level;10;10;FISHING_ROD;Erreiche Angel-Level 10"
+    - "claim1;Sesshaft;claims;1;2;GOLDEN_SHOVEL;Sichere dein erstes Grundstück"
+    - "kill1;Erstes Blut;kills;10;2;IRON_SWORD;Besiege 10 Spieler (SMP)"
+    - "kill2;Krieger;kills;100;10;DIAMOND_SWORD;Besiege 100 Spieler (SMP)"
+    - "casino1;Glückspilz;casino_plus;1000;5;GOLD_INGOT;Mach im Casino 1.000 Chips Plus"

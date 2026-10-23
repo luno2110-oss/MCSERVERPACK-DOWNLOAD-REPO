@@ -4,6 +4,7 @@ main: de.kuby.kubyplugins.KubyPlugins
 api-version: '1.21'
 author: Kuby
 description: All-in-One Plugin für ChaosSMP
+softdepend: [Votifier, NuVotifier]
 
 commands:
   befehle:
@@ -91,6 +92,13 @@ commands:
   poker:
     description: "Texas Hold'em in der VIP-Lounge"
     usage: "/poker [sitzen <Chips>|aufstehen|fold|check|call|raise <Betrag>|allin]"
+  vote:
+    description: "Vote-Seiten und deine Votes"
+    usage: "/vote"
+  erfolge:
+    description: "Erfolge mit Fortschritt"
+    usage: "/erfolge"
+    aliases: [achievements]
   music:
     description: "Casino-Musik aussuchen (nur im Casino)"
     usage: "/music"

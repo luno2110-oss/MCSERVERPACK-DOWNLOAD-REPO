@@ -96,8 +96,8 @@ Bereits vorhanden (mit Referenz verknüpfen): Kits, Enderchest, Kristalltausch, 
 - [x] 7.3 TPA mit Teleport-Effekten
 - [x] 7.4 XP-Quellen: Erze, Mobs, Angeln
 - [x] 7.5 Admin-XP: geben, nehmen, setzen
-- [ ] 7.6 Erfolge mit Fortschritt
-- [ ] 7.7 Vote-Anbindung für Homes und Belohnungen
+- [~] 7.6 Erfolge mit Fortschritt (Test offen): `/erfolge` und Hauptmenü, 14 Standard-Erfolge (Spielzeit, Votes, Angeln, Claims, Kills, Casino), frei definierbar in config.yml (achievements.list), Belohnung in Juwelen, Fortschrittsbalken
+- [~] 7.7 Vote-Anbindung (Test offen): NuVotifier/Votifier optional per softdepend. Pro Vote 2 Juwelen + 250 Coins (offline: beim Login), erster Vote schaltet +1 Home frei. `/vote` zeigt die Vote-Seiten (config: vote.links eintragen!), `/kp vote <Spieler>` zum Testen
 
 ## Ordnergruppe 8 – Bestehende Systeme (Stand)
 - [x] Shop, Sell, Markt, Auktionshaus, Orders, Handel
