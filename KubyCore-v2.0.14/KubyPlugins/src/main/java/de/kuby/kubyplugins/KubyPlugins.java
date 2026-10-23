@@ -402,6 +402,21 @@ public final class KubyPlugins extends JavaPlugin {
     /** Werte für das Scoreboard, die ein Addon bereitstellt (z. B. Claimblöcke). */
     private final java.util.Map<String, java.util.function.Function<java.util.UUID, Long>> statProviders = new java.util.HashMap<>();
     public void registerStat(String key, java.util.function.Function<java.util.UUID, Long> fn) { statProviders.put(key, fn); }
+
+    /** Texte von Addons für Anzeigen (z. B. der aktuelle Job). Leer, wenn kein Addon den Wert liefert. */
+    private final java.util.Map<String, java.util.function.Function<java.util.UUID, String>> textProviders = new java.util.HashMap<>();
+    public void registerText(String key, java.util.function.Function<java.util.UUID, String> fn) { textProviders.put(key, fn); }
+    public String textValue(String key, java.util.UUID id) {
+        java.util.function.Function<java.util.UUID, String> fn = textProviders.get(key);
+        if (fn == null) return "";
+        try {
+            String v = fn.apply(id);
+            return v == null ? "" : v;
+        } catch (RuntimeException e) {
+            return "";
+        }
+    }
+    public boolean hasStat(String key) { return statProviders.containsKey(key); }
     public long statValue(String key, java.util.UUID id) {
         java.util.function.Function<java.util.UUID, Long> f = statProviders.get(key);
         return f == null ? 0L : f.apply(id);

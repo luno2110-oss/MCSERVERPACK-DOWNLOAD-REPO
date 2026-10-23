@@ -262,6 +262,27 @@ survival-hud:
   enabled: true
   spawn-radius: 80
 
+# Survival-Jobs (KubySurvival): Holzfäller, Miner, Farmer, Jäger, Angler. Ein Job ist aktiv, nur er bringt XP und Coins.
+# Kein Lohn für selbst gesetzte Blöcke, Generator-Steine, Spawner-Mobs, gezüchtete Tiere und unreife Pflanzen.
+jobs:
+  switch-cooldown-minutes: 60     # Wartezeit beim Jobwechsel
+  daily-coin-cap: 3000            # höchstens so viele Coins pro Tag aus Jobs (XP gibt es weiter)
+  xp-multiplier: 1.0
+  coin-multiplier: 1.0
+  max-level: 50
+  levelup-coins: 100              # Bonus beim Job-Aufstieg: Wert x neues Level
+  tokens-per-job-level: 1
+  tokens-per-player-level: 3
+  skip-cooldown-tokens: 2         # Jobwechsel sofort (im Token-Shop)
+  # Token-Shop: MATERIAL;Anzahl;Preis in Tokens
+  token-shop:
+    - "EXPERIENCE_BOTTLE;16;3"
+    - "GOLDEN_APPLE;2;4"
+    - "NAME_TAG;1;3"
+    - "DIAMOND;2;5"
+    - "SHULKER_SHELL;2;12"
+    - "ENCHANTED_GOLDEN_APPLE;1;25"
+
 economy:
   tax-percent: 9
   invest-step: 1000

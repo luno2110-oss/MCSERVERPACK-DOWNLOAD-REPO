@@ -6,6 +6,7 @@ import de.kuby.kubyplugins.ui.Ui;
 import de.kuby.kubysurvival.KubySurvival;
 import de.kuby.kubysurvival.claim.ClaimService;
 import de.kuby.kubysurvival.fishing.FishingService;
+import de.kuby.kubysurvival.jobs.JobService;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
@@ -28,7 +29,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Survival-Leiste oben (Platz der Bossbar): drei Holzleisten mit Geld und Juwelen, Angel-Level und Ort.
+ * Survival-Leiste oben (Platz der Bossbar): drei Holzleisten mit Geld und Juwelen, aktivem Job und Ort.
  * Die Leisten sind Zeichen der Schrift kubyplugins:hud aus dem Pack KubyUI, der Bossbar-Balken selbst ist
  * durch das Pack unsichtbar (Farbe weiß). Solange die Leiste sichtbar ist, entfällt die Anzeige über der Hotbar.
  * Muss zu tools/build_sb_pack.py (build_hud) passen.
@@ -119,20 +120,23 @@ public final class SurvivalHud implements Listener {
         money.add(Part.text(number(core.jewels().balance(id)), DARK));
         s.panel(money);
 
-        FishingService.Angler a = addon.fishing().angler(id);
-        int level = FishingService.levelOf(a.xp);
-        long from = FishingService.xpFor(level);
-        long to = FishingService.xpFor(level + 1);
-        long have = Math.max(0, a.xp - from);
-        long need = Math.max(1, to - from);
+        // Aktiver Job: Level, Fortschritt, Job-Coins heute / Tageslimit
+        JobService jobs = addon.jobs();
+        JobService.Worker w = jobs.worker(id);
         List<Part> job = new ArrayList<>();
         job.add(Part.icon(I_ROD));
-        job.add(Part.text("Angler", TEAL));
-        job.add(Part.text(" Lv " + level, GRAY));
-        job.add(Part.dot());
-        job.add(Part.text(Math.min(99, have * 100 / need) + "%", OLIVE));
-        job.add(Part.dot());
-        job.add(Part.text(number(have) + "/" + number(need), GREEN));
+        if (w.job == null) {
+            job.add(Part.text("Kein Job", GRAY));
+            job.add(Part.dot());
+            job.add(Part.text("/job", TEAL));
+        } else {
+            job.add(Part.text(w.job.ascii, TEAL));
+            job.add(Part.text(" Lv " + jobs.jobLevel(w, w.job), GRAY));
+            job.add(Part.dot());
+            job.add(Part.text(jobs.progress(w, w.job) + "%", OLIVE));
+            job.add(Part.dot());
+            job.add(Part.text(number(w.earnedToday) + "/" + number(jobs.dailyCap()), GREEN));
+        }
         s.panel(job);
 
         List<Part> place = new ArrayList<>();

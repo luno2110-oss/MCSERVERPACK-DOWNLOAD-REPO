@@ -247,12 +247,15 @@ public final class ScoreboardService {
             }
             case ModeService.SURVIVAL -> {
                 out.add(ind.apply(row(ScoreboardText.I_RANK, "RANG", "<gray>" + rank)));
-                out.add(ind.apply(row(ScoreboardText.I_LEVEL, "LEVEL", "<white>—")));
-                out.add(ind.apply(row(ScoreboardText.I_JOB, "JOB", "<white>—")));
+                out.add(ind.apply(row(ScoreboardText.I_LEVEL, "LEVEL", plugin.hasStat("player_level")
+                        ? "<gray>" + plugin.statValue("player_level", id) : "<white>—")));
+                String job = plugin.textValue("job", id);
+                out.add(ind.apply(row(ScoreboardText.I_JOB, "JOB", job.isEmpty() ? "<gray>" + SmallCaps.of("KEINER") : "<aqua>" + SmallCaps.of(job))));
                 out.add("");
                 out.add(ind.apply(row(ScoreboardText.I_COIN, "COINS", money)));
                 out.add(ind.apply(row(ScoreboardText.I_GEM, "JUWELEN", "<light_purple>" + ScoreboardText.number(jewels))));
-                out.add(ind.apply(row(ScoreboardText.I_TOKEN, "TOKENS", "<white>—")));
+                out.add(ind.apply(row(ScoreboardText.I_TOKEN, "TOKENS", plugin.hasStat("tokens")
+                        ? "<yellow>" + ScoreboardText.number(plugin.statValue("tokens", id)) : "<white>—")));
                 out.add(ind.apply(row(ScoreboardText.I_CLAIM, "CLAIMBLÖCKE", "<green>" + ScoreboardText.number(plugin.statValue("claimblocks", id)))));
                 out.add(ind.apply(row(ScoreboardText.I_CLOCK, "KEYALL IN", keyall)));
                 out.add("");

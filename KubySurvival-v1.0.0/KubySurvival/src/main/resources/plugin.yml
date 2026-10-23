@@ -3,7 +3,7 @@ version: 1.0.0
 main: de.kuby.kubysurvival.KubySurvival
 api-version: '1.21'
 depend: [KubyCore]
-description: Survival-Teil für KubyCore (Angeln, Landclaims)
+description: Survival-Teil für KubyCore (Angeln, Landclaims, Jobs)
 commands:
   angeln:
     description: "Angel-Menü: Fischbuch, Rute, Verkauf, Bestenliste"
@@ -11,3 +11,7 @@ commands:
   claim:
     description: "Landclaims: Grundstücke sichern und Freunden vertrauen"
     usage: "/claim [schaufel|erstellen|löschen|liste|trust <Spieler>|untrust <Spieler>|anzeigen]"
+  job:
+    description: "Jobs: Job wählen, Level, Tokens und Token-Shop"
+    usage: "/job"
+    aliases: [jobs]

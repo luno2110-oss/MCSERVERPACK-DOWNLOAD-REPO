@@ -10,6 +10,10 @@ import de.kuby.kubysurvival.fishing.AngelMenu;
 import de.kuby.kubysurvival.fishing.FishDealer;
 import de.kuby.kubysurvival.fishing.FishingListener;
 import de.kuby.kubysurvival.hud.SurvivalHud;
+import de.kuby.kubysurvival.jobs.Job;
+import de.kuby.kubysurvival.jobs.JobListener;
+import de.kuby.kubysurvival.jobs.JobMenu;
+import de.kuby.kubysurvival.jobs.JobService;
 import de.kuby.kubysurvival.fishing.FishingService;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -31,6 +35,7 @@ public final class KubySurvival extends JavaPlugin {
     private ClaimService claims;
     private ClaimTool claimTool;
     private SurvivalHud hud;
+    private JobService jobs;
     private final Map<UUID, Location[]> zoneCorners = new HashMap<>();
 
     public KubyPlugins core() { return core; }
@@ -38,6 +43,7 @@ public final class KubySurvival extends JavaPlugin {
     public FishDealer dealer() { return dealer; }
     public ClaimService claims() { return claims; }
     public ClaimTool claimTool() { return claimTool; }
+    public JobService jobs() { return jobs; }
 
     @Override
     public void onEnable() {
@@ -51,9 +57,11 @@ public final class KubySurvival extends JavaPlugin {
         dealer = new FishDealer(this);
         claims = new ClaimService(this, core);
         claimTool = new ClaimTool(this);
+        jobs = new JobService(this, core);
 
         getServer().getPluginManager().registerEvents(new FishingListener(this, core), this);
         getServer().getPluginManager().registerEvents(new ClaimListener(this, core), this);
+        getServer().getPluginManager().registerEvents(new JobListener(this, jobs), this);
         hud = new SurvivalHud(this, core);
         getServer().getPluginManager().registerEvents(hud, this);
         command("angeln", (sender, cmd, label, args) -> {
@@ -61,6 +69,10 @@ public final class KubySurvival extends JavaPlugin {
             return true;
         });
         command("claim", new ClaimCommand(this));
+        command("job", (sender, cmd, label, args) -> {
+            if (sender instanceof Player p) new JobMenu(this, core).open(p);
+            return true;
+        });
 
         core.registerKpSub("angel", this::kpAngel);
         core.registerStat("claimblocks", claims::available);
@@ -68,6 +80,17 @@ public final class KubySurvival extends JavaPlugin {
         core.registerStat("fish_caught", id -> (long) fishing.angler(id).total());
         core.registerStat("angel_level", id -> (long) FishingService.levelOf(fishing.angler(id).xp));
         core.registerStat("claims", id -> (long) claims.claimsOf(id).size());
+        // Level, Job und Tokens für Scoreboard und Erfolge.
+        core.registerStat("player_level", id -> (long) JobService.playerLevel(jobs.worker(id)));
+        core.registerStat("tokens", id -> jobs.worker(id).tokens);
+        core.registerStat("job_level", id -> {
+            JobService.Worker w = jobs.worker(id);
+            return w.job == null ? 0L : (long) jobs.jobLevel(w, w.job);
+        });
+        core.registerText("job", id -> {
+            Job j = jobs.worker(id).job;
+            return j == null ? "" : j.display;
+        });
         // Regionen im Kern fragen hierüber, wem ein Besitzer vertraut.
         core.setTrustCheck((owner, who) -> {
             try {
@@ -78,6 +101,8 @@ public final class KubySurvival extends JavaPlugin {
         });
         core.registerMainEntry(new KubyPlugins.MainEntry(Material.FISHING_ROD, "Angeln", "Fischbuch, Rute, Verkauf, Bestenliste",
                 p -> new AngelMenu(this, core).open(p)));
+        core.registerMainEntry(new KubyPlugins.MainEntry(Material.IRON_PICKAXE, "Jobs", "Job wählen, Level, Tokens und Token-Shop",
+                p -> new JobMenu(this, core).open(p)));
         core.registerMainEntry(new KubyPlugins.MainEntry(Material.GOLDEN_SHOVEL, "Grundstücke", "Landclaims sichern",
                 p -> p.performCommand("claim")));
 
@@ -88,6 +113,7 @@ public final class KubySurvival extends JavaPlugin {
         getServer().getScheduler().runTaskTimer(this, () -> {
             fishing.save();
             claims.save();
+            jobs.save();
         }, 6000L, 6000L);
         getServer().getScheduler().runTaskLater(this, fishing::respawnSigns, 40L);
         getLogger().info("KubySurvival aktiv.");
@@ -98,6 +124,7 @@ public final class KubySurvival extends JavaPlugin {
         if (hud != null) hud.shutdown();
         if (fishing != null) fishing.save();
         if (claims != null) claims.save();
+        if (jobs != null) jobs.save();
     }
 
     private void command(String name, org.bukkit.command.CommandExecutor exec) {
