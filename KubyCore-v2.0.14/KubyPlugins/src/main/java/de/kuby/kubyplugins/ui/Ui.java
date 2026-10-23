@@ -46,7 +46,7 @@ public final class Ui {
         GEAR('\uE209', 17), RINGS('\uE20A', 17), CHAIR('\uE20B', 17), LIFEBUOY('\uE20C', 17),
         DISCORD('\uE20D', 17), HAT('\uE20E', 17), CHEST('\uE20F', 17), CHART('\uE210', 17),
         BAR('\uE211', 17), SPAWN('\uE212', 17), HOUSE('\uE213', 17), ROD('\uE214', 17), COINS('\uE215', 17),
-        TOKEN('\uE216', 17), STAR('\uE217', 17), FLAG('\uE218', 17), GEM('\uE219', 17), SKULL('\uE21A', 17),
+        TOKEN('\uE216', 17), LEVEL_STAR('\uE217', 17), FLAG('\uE218', 17), GEM('\uE219', 17), SKULL('\uE21A', 17),
         PEOPLE('\uE21B', 17), HOURGLASS('\uE21C', 17), COMPASS('\uE21D', 17), CROWN('\uE21E', 17);
 
         final char c;
