@@ -264,6 +264,13 @@ survival-hud:
 
 # Survival-Jobs (KubySurvival): Holzfäller, Miner, Farmer, Jäger, Angler. Ein Job ist aktiv, nur er bringt XP und Coins.
 # Kein Lohn für selbst gesetzte Blöcke, Generator-Steine, Spawner-Mobs, gezüchtete Tiere und unreife Pflanzen.
+farmwelt:
+  enabled: true
+  world: farmwelt
+  border: 6000                    # Seitenlänge der Welt (Weltgrenze um 0/0)
+  reset-day: MONDAY               # Neustart jede Woche an diesem Tag ...
+  reset-hour: 4                   # ... um diese Uhrzeit (Europe/Berlin). Admins: /farmwelt reset
+
 jobs:
   switch-cooldown-minutes: 30     # Wartezeit nach einem Jobwechsel (die erste Wahl ist frei)
   hourly-coin-cap-base: 300       # Coins pro Stunde aus Jobs: Grundwert ...

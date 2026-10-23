@@ -84,6 +84,12 @@ public final class HomesMenu extends GuiMenu {
         int n = list.size() + 1;
         while (list.containsKey("home" + n)) n++;
         String name = "home" + n;
+        String blocked = plugin.homes().blockedReason(p.getLocation());
+        if (blocked != null) {
+            Sfx.play(plugin, p, Sfx.Kind.ERROR);
+            Msg.send(p, "<red>" + blocked);
+            return;
+        }
         if (plugin.homes().set(p, name, p.getLocation())) {
             Sfx.play(plugin, p, Sfx.Kind.SUCCESS);
             Msg.send(p, "<green>Home <white>" + name + " <green>gesetzt.");

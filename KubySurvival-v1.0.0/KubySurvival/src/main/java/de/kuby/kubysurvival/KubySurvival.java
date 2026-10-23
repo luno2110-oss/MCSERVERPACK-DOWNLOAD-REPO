@@ -18,6 +18,7 @@ import de.kuby.kubysurvival.jobs.JobMenu;
 import de.kuby.kubysurvival.jobs.JobService;
 import de.kuby.kubysurvival.jobs.TokenShopMenu;
 import de.kuby.kubysurvival.fishing.FishingService;
+import de.kuby.kubysurvival.farm.FarmWorldService;
 import de.kuby.kubysurvival.quests.QuestCommand;
 import de.kuby.kubysurvival.quests.QuestListener;
 import de.kuby.kubysurvival.quests.QuestMenu;
@@ -48,6 +49,7 @@ public final class KubySurvival extends JavaPlugin {
     private IntroService intro;
     private QuestService quests;
     private SideQuestService sideQuests;
+    private FarmWorldService farm;
     private final Map<UUID, Location[]> zoneCorners = new HashMap<>();
 
     public KubyPlugins core() { return core; }
@@ -59,6 +61,7 @@ public final class KubySurvival extends JavaPlugin {
     public IntroService intro() { return intro; }
     public QuestService quests() { return quests; }
     public SideQuestService sideQuests() { return sideQuests; }
+    public FarmWorldService farm() { return farm; }
 
     @Override
     public void onEnable() {
@@ -75,6 +78,9 @@ public final class KubySurvival extends JavaPlugin {
         jobs = new JobService(this, core);
         quests = new QuestService(this, core);
         sideQuests = new SideQuestService(this, core);
+        farm = new FarmWorldService(this, core);
+        getServer().getPluginManager().registerEvents(farm, this);
+        core.homes().registerBlock(l -> farm.isFarm(l.getWorld()) ? "In der Farmwelt kannst du kein Home setzen. Sie wird jede Woche neu erstellt." : null);
         getServer().getPluginManager().registerEvents(sideQuests, this);
         getServer().getPluginManager().registerEvents(new QuestListener(this), this);
         intro = new IntroService(this, core);
@@ -121,6 +127,13 @@ public final class KubySurvival extends JavaPlugin {
         command("quest", questCommand);
         PluginCommand questCmd = getCommand("quest");
         if (questCmd != null) questCmd.setTabCompleter(questCommand);
+        command("farmwelt", (sender, cmd, label, args) -> {
+            if (!(sender instanceof Player p)) return true;
+            if (args.length > 0 && args[0].equalsIgnoreCase("info")) farm.info(p);
+            else if (args.length > 0 && args[0].equalsIgnoreCase("reset") && p.hasPermission("kuby.admin")) farm.reset();
+            else farm.travel(p);
+            return true;
+        });
         SideQuestCommand sideCommand = new SideQuestCommand(this);
         command("sidequests", sideCommand);
         PluginCommand sideCmd = getCommand("sidequests");
@@ -180,6 +193,7 @@ public final class KubySurvival extends JavaPlugin {
             jobs.save();
             quests.save();
             sideQuests.save();
+            farm.save();
         }, 6000L, 6000L);
         getServer().getScheduler().runTaskLater(this, fishing::respawnSigns, 40L);
         getLogger().info("KubySurvival aktiv.");
@@ -193,6 +207,7 @@ public final class KubySurvival extends JavaPlugin {
         if (jobs != null) jobs.save();
         if (quests != null) quests.save();
         if (sideQuests != null) sideQuests.save();
+        if (farm != null) farm.save();
         if (intro != null) intro.save();
     }
 

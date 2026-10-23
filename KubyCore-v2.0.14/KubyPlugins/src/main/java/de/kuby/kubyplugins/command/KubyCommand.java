@@ -82,6 +82,11 @@ public final class KubyCommand implements CommandExecutor, TabCompleter {
     }
 
     private void setHome(Player p, String name) {
+        String blocked = plugin.homes().blockedReason(p.getLocation());
+        if (blocked != null) {
+            Msg.send(p, "<red>" + blocked);
+            return;
+        }
         if (plugin.homes().set(p, name, p.getLocation())) {
             Msg.send(p, "<green>Home <white>" + name + " <green>gesetzt.");
         } else {

@@ -23,6 +23,10 @@ commands:
     description: "Nebenquests bei Figuren"
     usage: "/sidequests [nav|cancel]"
     aliases: [nebenquests, sidequest]
+  farmwelt:
+    description: "Farmwelt: Rohstoffe abbauen, wird jede Woche neu erstellt"
+    usage: "/farmwelt [info]"
+    aliases: [farmworld]
   tokenshop:
     description: "Token-Shop"
     usage: "/tokenshop"

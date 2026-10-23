@@ -50,6 +50,22 @@ public final class HomeService implements ModeData {
         return homes(id).get(sanitize(name));
     }
 
+    /** Orte, an denen keine Homes erlaubt sind (Addons tragen sich ein). Liefert einen Grund oder null. */
+    private final java.util.List<java.util.function.Function<Location, String>> blocks = new java.util.ArrayList<>();
+
+    public void registerBlock(java.util.function.Function<Location, String> check) {
+        blocks.add(check);
+    }
+
+    /** Grund, warum hier kein Home gesetzt werden darf, oder null. */
+    public String blockedReason(Location loc) {
+        for (java.util.function.Function<Location, String> b : blocks) {
+            String reason = b.apply(loc);
+            if (reason != null) return reason;
+        }
+        return null;
+    }
+
     public boolean set(Player player, String rawName, Location loc) {
         String name = sanitize(rawName);
         Map<String, Location> current = homes(player.getUniqueId());

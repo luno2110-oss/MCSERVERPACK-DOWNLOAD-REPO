@@ -207,6 +207,7 @@ public final class SurvivalHud implements Listener {
         if (spawn != null && spawn.getWorld() == l.getWorld() && spawn.distanceSquared(l) <= (double) r * r) {
             return "Spawn";
         }
+        if (addon.farm() != null && addon.farm().isFarm(l.getWorld())) return "Farmwelt";
         ClaimService.Claim c = addon.claims().at(l);
         if (c != null) {
             if (c.owner().equals(p.getUniqueId())) return "Dein Grundstueck";
