@@ -1,0 +1,7 @@
+-proc:none
+-d
+/tmp/claude-0/jc
+de/kuby/kubyplugins/service/BlackjackService.java
+de/kuby/kubyplugins/service/CasinoService.java
+de/kuby/kubyplugins/command/CasinoCommand.java
+de/kuby/kubyplugins/listener/BlackjackListener.java

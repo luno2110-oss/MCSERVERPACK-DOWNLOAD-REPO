@@ -19,7 +19,9 @@ jobs:
 
       - name: KubyCore bauen
         working-directory: KubyCore-v2.0.14/KubyPlugins
-        run: mvn -B -ntp package
+        run: |
+          echo "::add-matcher::.github/javac-matcher.json"
+          mvn -B -ntp package
 
       - name: Addons bauen (mit frisch gebautem KubyCore)
         run: |
