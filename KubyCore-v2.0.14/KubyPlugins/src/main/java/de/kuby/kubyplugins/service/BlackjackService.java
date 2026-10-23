@@ -201,6 +201,11 @@ public final class BlackjackService {
             result = "<red>Verloren. -" + bet + " Chip(s)";
         }
         plugin.casino().giveChips(g.player, payout);
+        CasinoFx.Result fx = payout > bet
+                ? (playerNatural && !dealerNatural ? CasinoFx.Result.BIG_WIN : CasinoFx.Result.WIN)
+                : payout == bet ? CasinoFx.Result.PUSH : CasinoFx.Result.LOSE;
+        Location table = plugin.casino().tableLocation();
+        CasinoFx.show(plugin, g.player, table == null ? null : table.clone().add(0, 2.6, 0), fx, payout - bet);
         g.revealed = true;
         render(g, result);
         game = null;

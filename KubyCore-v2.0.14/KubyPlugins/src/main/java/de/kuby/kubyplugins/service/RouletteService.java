@@ -19,7 +19,10 @@ import org.bukkit.scheduler.BukkitTask;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -138,9 +141,14 @@ public final class RouletteService {
         spinTask = null;
         int result = ThreadLocalRandom.current().nextInt(37);
         String color = result == 0 ? "grün" : RED.contains(result) ? "rot" : "schwarz";
+        // Pro Spieler zusammenfassen, damit bei mehreren Einsätzen nur ein Effekt kommt.
+        Map<UUID, Long> netOf = new LinkedHashMap<>();
+        Set<UUID> numberHit = new HashSet<>();
         for (Bet b : bets) {
             long payout = payout(b, result, color);
             if (payout > 0) plugin.casino().giveChips(b.player(), payout);
+            netOf.merge(b.player(), payout - b.amount(), Long::sum);
+            if (payout > 0 && b.kind().equals("zahl")) numberHit.add(b.player());
             Player online = Bukkit.getPlayer(b.player());
             if (online != null) {
                 long net = payout - b.amount();
@@ -151,6 +159,15 @@ public final class RouletteService {
             }
         }
         bets.clear();
+        Location t = table();
+        Location fxAt = t == null ? null : t.clone().add(0, 2.8, 0);
+        for (Map.Entry<UUID, Long> e : netOf.entrySet()) {
+            long net = e.getValue();
+            CasinoFx.Result fx = net > 0
+                    ? (numberHit.contains(e.getKey()) ? CasinoFx.Result.BIG_WIN : CasinoFx.Result.WIN)
+                    : net == 0 ? CasinoFx.Result.PUSH : CasinoFx.Result.LOSE;
+            CasinoFx.show(plugin, e.getKey(), fxAt, fx, net);
+        }
         showResult(result, color);
         plugin.getServer().getScheduler().runTaskLater(plugin, this::resetIdle, RESULT_SHOWN_TICKS);
     }

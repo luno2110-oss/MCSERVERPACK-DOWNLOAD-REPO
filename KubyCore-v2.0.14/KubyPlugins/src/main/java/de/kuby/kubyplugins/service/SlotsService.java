@@ -155,17 +155,23 @@ public final class SlotsService {
         Symbol[] r = s.result;
         boolean three = r[0] == r[1] && r[1] == r[2];
         long payout = three ? s.bet * r[0].multiplier : 0;
+        Location m = machine();
+        Location fxAt = m == null ? null : m.clone().add(0, 2.8, 0);
         String result;
         if (three && r[0] == Symbol.SEVEN) {
             long money = plugin.casino().claimJackpot();
+            CasinoFx.jackpot(plugin, s.player, fxAt, money);
             plugin.economy().deposit(s.player, money);
             result = "<gold><b>JACKPOT!</b> <yellow>+" + Msg.coins(money) + "$ <green>+" + (payout - s.bet) + " Chips";
             Bukkit.broadcast(Msg.parse("<gold>Casino: <white>" + nameOf(s.player) + " <gold>hat den Jackpot geknackt: <yellow>"
                     + Msg.coins(money) + "$"));
         } else if (three) {
             result = "<green>Drei gleiche! +" + (payout - s.bet) + " Chips";
+            CasinoFx.show(plugin, s.player, fxAt,
+                    r[0].multiplier >= 25 ? CasinoFx.Result.BIG_WIN : CasinoFx.Result.WIN, payout - s.bet);
         } else {
             result = "<red>Leider nichts. -" + s.bet + " Chip(s)";
+            CasinoFx.show(plugin, s.player, fxAt, CasinoFx.Result.LOSE, -s.bet);
         }
         plugin.casino().giveChips(s.player, payout);
         render(r, result);

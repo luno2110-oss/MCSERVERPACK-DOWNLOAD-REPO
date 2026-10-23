@@ -18,7 +18,7 @@ Prinzip: Keine GUI. Spiel läuft über physische Dinge am Tisch (Karten, Chips, 
   - [~] Slots (Test im Spiel offen): Automat per `/casino automat` (am besten ein Hebel), Rechtsklick dreht, drei Walzen als Anzeigen halten nacheinander an, drei Siebener gewinnen den Jackpot (Rückfluss ohne Jackpot etwa 92 %)
   - [~] Crash (Test im Spiel offen): Automat per `/casino crash`, Anzeige "BEREIT", Rechtsklick steigt ein (10 Chips), nach 10 Sekunden steigt der Multiplikator, Rechtsklick steigt aus. Crash-Punkt steht beim Start fest (1 % Hausvorteil, max. 50x)
 - [~] 1.3 Anleitung (Test im Spiel offen): Casino-Hilfe als Dialog-Fenster nach der Referenz (Titel, "So geht's", Befehle, Buttons je Spiel, "Hinreisen"). Öffnen per `/casino regeln [spiel]` oder `/casino hilfe`, Rechtsklick auf Kasse oder Roulette-Tisch, Schleichen + Rechtsklick auf einen Spieltisch. Werte aus der config.yml. Offen: roter Rahmen der Referenz braucht Grafiken im Resource Pack
-- [ ] 1.4 Sound und Anzeige: Gewinn, Verlust, Jackpot (Sound + schwebender Text)
+- [~] 1.4 Sound und Anzeige (Test im Spiel offen): bei jedem Ergebnis Sound für den Spieler und aufsteigender Text über dem Tisch ("Name +12 Chips"), eigener Klang für Gewinn, großen Gewinn, Unentschieden und Verlust. Jackpot: Text, Totem-Partikel und Sound für alle im Umkreis von 30 Blöcken. Offen: Jackpot-Ticker
 - [ ] 1.5 Admin: Tische einrichten, Einsatzlimits, Auszahlung, Protokoll
 - [ ] 1.6 Aus der Casino-Referenz (Entscheidung nötig, weicht vom aktuellen Stand ab)
   - [ ] Jackpot: jeden Samstag 18 Uhr Verlosung unter allen, die seit der letzten Ziehung gespielt haben (aktuell: drei Siebener bei Slots)

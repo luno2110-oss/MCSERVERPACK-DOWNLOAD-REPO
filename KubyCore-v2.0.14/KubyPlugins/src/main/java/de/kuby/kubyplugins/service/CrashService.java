@@ -137,6 +137,9 @@ public final class CrashService {
         plugin.casino().giveChips(id, payout);
         Msg.send(p, "<green>Ausgestiegen bei " + format(current) + ": +" + (payout - bet) + " Chips"
                 + "  <gray>Chips: " + plugin.casino().chips(id));
+        CasinoFx.Result fx = payout == bet ? CasinoFx.Result.PUSH
+                : current >= 5 ? CasinoFx.Result.BIG_WIN : CasinoFx.Result.WIN;
+        CasinoFx.show(plugin, id, fxAt(), fx, payout - bet);
         return null;
     }
 
@@ -200,10 +203,16 @@ public final class CrashService {
             if (online != null) {
                 Msg.send(online, "<red>Crash bei " + format(crashAt) + ". -" + e.getValue() + " Chips");
             }
+            CasinoFx.show(plugin, e.getKey(), fxAt(), CasinoFx.Result.LOSE, -e.getValue());
         }
         bets.clear();
         cashed.clear();
         update();
+    }
+
+    private Location fxAt() {
+        Location m = machine();
+        return m == null ? null : m.clone().add(0, 3.4, 0);
     }
 
     private String format(double m) {
