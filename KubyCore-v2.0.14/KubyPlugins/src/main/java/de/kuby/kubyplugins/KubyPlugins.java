@@ -13,6 +13,7 @@ import de.kuby.kubyplugins.listener.BlackjackListener;
 import de.kuby.kubyplugins.service.RouletteService;
 import de.kuby.kubyplugins.service.SlotsService;
 import de.kuby.kubyplugins.service.CrashService;
+import de.kuby.kubyplugins.service.CasinoLog;
 import de.kuby.kubyplugins.command.CasinoCommand;
 import de.kuby.kubyplugins.service.ModuleService;
 import de.kuby.kubyplugins.listener.WorldBorderListener;
@@ -127,6 +128,7 @@ public final class KubyPlugins extends JavaPlugin {
     private RouletteService roulette;
     private SlotsService slots;
     private CrashService crash;
+    private CasinoLog casinoLog;
     private EditModeService edit;
     private RegionService regions;
     private HubSettingsService hubSettings;
@@ -175,6 +177,7 @@ public final class KubyPlugins extends JavaPlugin {
         modules = new ModuleService(this);
         markers = new MarkerService(this);
         casino = new CasinoService(this);
+        casinoLog = new CasinoLog(this);
         blackjack = new BlackjackService(this);
         roulette = new RouletteService(this);
         slots = new SlotsService(this);
@@ -283,6 +286,7 @@ public final class KubyPlugins extends JavaPlugin {
         playtime.save();
         regions.save();
         casino.save();
+        casinoLog.save();
         homes.save();
         shop.save();
         shopStorage.save();
@@ -382,6 +386,7 @@ public final class KubyPlugins extends JavaPlugin {
     public RouletteService roulette() { return roulette; }
     public SlotsService slots() { return slots; }
     public CrashService crash() { return crash; }
+    public CasinoLog casinoLog() { return casinoLog; }
     public EditModeService edit() { return edit; }
     public RegionService regions() { return regions; }
     public HubSettingsService hubSettings() { return hubSettings; }

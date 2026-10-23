@@ -46,6 +46,8 @@ public final class AdminMenu extends GuiMenu {
         button(p, 28, Material.EMERALD, "Shop", "Sektionen, Wochenende, Daily Shop", () -> new ShopEditorMenu(plugin).open(p));
         button(p, 30, Material.ENCHANTED_BOOK, "Battlepass", "Belohnungen für Free und Premium", () -> new BattlepassEditorMenu(plugin, 0).open(p));
         button(p, 32, Material.WRITABLE_BOOK, "Quiz", "Quiz-Start und Fragen", () -> new AdminServerMenu(plugin).open(p));
+        button(p, 34, Material.GOLD_BLOCK, "Casino", "Tische, Limits, Auszahlung, Protokoll",
+                () -> de.kuby.kubyplugins.service.CasinoAdmin.open(plugin, p));
 
         button(p, 37, Material.COMPARATOR, "Einstellungen", "Die wichtigsten Werte, übersichtlich", () -> new SettingsMenu(plugin, -1).open(p));
         button(p, 39, Material.COMMAND_BLOCK, "Config-Editor", "Jeder Wert der config.yml", () -> new ConfigEditorMenu(plugin, "", 0).open(p));

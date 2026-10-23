@@ -97,6 +97,8 @@ public final class BlackjackService {
     public synchronized String start(Player p) {
         UUID id = p.getUniqueId();
         if (game != null) return game.player.equals(id) ? null : "Der Tisch ist gerade belegt.";
+        String closed = plugin.casino().closedMessage();
+        if (closed != null) return closed;
         if (!SURVIVAL.equals(plugin.modes().modeOf(id))) return "Blackjack gibt es nur in Survival.";
         if (plugin.casino().tableLocation() == null) return "Der Tisch ist noch nicht eingerichtet.";
         long bet = plugin.getConfig().getLong("casino.blackjack.bet", 1);
@@ -206,6 +208,7 @@ public final class BlackjackService {
                 : payout == bet ? CasinoFx.Result.PUSH : CasinoFx.Result.LOSE;
         Location table = plugin.casino().tableLocation();
         CasinoFx.show(plugin, g.player, table == null ? null : table.clone().add(0, 2.6, 0), fx, payout - bet);
+        plugin.casinoLog().record("Blackjack", g.player, bet, payout);
         g.revealed = true;
         render(g, result);
         game = null;

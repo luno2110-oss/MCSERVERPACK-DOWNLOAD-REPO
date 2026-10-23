@@ -76,6 +76,10 @@ public final class CrashService {
         update();
     }
 
+    public boolean hasMachine() {
+        return machine() != null;
+    }
+
     public boolean isMachine(Location l) {
         Location m = machine();
         return m != null && l.getWorld() != null && l.getWorld().equals(m.getWorld())
@@ -107,6 +111,8 @@ public final class CrashService {
 
     private String join(Player p) {
         UUID id = p.getUniqueId();
+        String closed = plugin.casino().closedMessage();
+        if (closed != null) return closed;
         if (!SURVIVAL.equals(plugin.modes().modeOf(id))) return "Crash gibt es nur in Survival.";
         if (bets.containsKey(id)) return "Du bist schon dabei. Warte auf den Start.";
         long bet = plugin.getConfig().getLong("casino.crash.bet", 10);
@@ -140,6 +146,7 @@ public final class CrashService {
         CasinoFx.Result fx = payout == bet ? CasinoFx.Result.PUSH
                 : current >= 5 ? CasinoFx.Result.BIG_WIN : CasinoFx.Result.WIN;
         CasinoFx.show(plugin, id, fxAt(), fx, payout - bet);
+        plugin.casinoLog().record("Crash", id, bet, payout);
         return null;
     }
 
@@ -204,6 +211,7 @@ public final class CrashService {
                 Msg.send(online, "<red>Crash bei " + format(crashAt) + ". -" + e.getValue() + " Chips");
             }
             CasinoFx.show(plugin, e.getKey(), fxAt(), CasinoFx.Result.LOSE, -e.getValue());
+            plugin.casinoLog().record("Crash", e.getKey(), e.getValue(), 0);
         }
         bets.clear();
         cashed.clear();

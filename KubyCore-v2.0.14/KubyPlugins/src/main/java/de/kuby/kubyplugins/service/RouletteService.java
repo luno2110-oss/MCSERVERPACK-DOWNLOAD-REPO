@@ -77,6 +77,10 @@ public final class RouletteService {
         showIdle();
     }
 
+    public boolean hasTable() {
+        return table() != null;
+    }
+
     public boolean isTable(Location l) {
         Location t = table();
         return t != null && l.getWorld() != null && l.getWorld().equals(t.getWorld())
@@ -97,6 +101,8 @@ public final class RouletteService {
 
     /** Setzt einen Einsatz. Gibt null bei Erfolg zurück, sonst eine Meldung. */
     public synchronized String bet(Player p, String choice, long amount) {
+        String closed = plugin.casino().closedMessage();
+        if (closed != null) return closed;
         long max = plugin.getConfig().getLong("casino.roulette.max-bet", 50);
         if (amount <= 0 || amount > max) return "Einsatz zwischen 1 und " + max + " Chips.";
         String c = choice.toLowerCase();
@@ -143,11 +149,13 @@ public final class RouletteService {
         String color = result == 0 ? "grün" : RED.contains(result) ? "rot" : "schwarz";
         // Pro Spieler zusammenfassen, damit bei mehreren Einsätzen nur ein Effekt kommt.
         Map<UUID, Long> netOf = new LinkedHashMap<>();
+        Map<UUID, Long> stakeOf = new LinkedHashMap<>();
         Set<UUID> numberHit = new HashSet<>();
         for (Bet b : bets) {
             long payout = payout(b, result, color);
             if (payout > 0) plugin.casino().giveChips(b.player(), payout);
             netOf.merge(b.player(), payout - b.amount(), Long::sum);
+            stakeOf.merge(b.player(), b.amount(), Long::sum);
             if (payout > 0 && b.kind().equals("zahl")) numberHit.add(b.player());
             Player online = Bukkit.getPlayer(b.player());
             if (online != null) {
@@ -167,6 +175,8 @@ public final class RouletteService {
                     ? (numberHit.contains(e.getKey()) ? CasinoFx.Result.BIG_WIN : CasinoFx.Result.WIN)
                     : net == 0 ? CasinoFx.Result.PUSH : CasinoFx.Result.LOSE;
             CasinoFx.show(plugin, e.getKey(), fxAt, fx, net);
+            long stake = stakeOf.getOrDefault(e.getKey(), 0L);
+            plugin.casinoLog().record("Roulette", e.getKey(), stake, stake + net);
         }
         showResult(result, color);
         plugin.getServer().getScheduler().runTaskLater(plugin, this::resetIdle, RESULT_SHOWN_TICKS);

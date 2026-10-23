@@ -38,6 +38,7 @@ public final class CasinoCommand implements CommandExecutor {
             case "kaufen", "buy" -> trade(p, args, true);
             case "verkaufen", "sell" -> trade(p, args, false);
             case "hilfe" -> CasinoRules.open(plugin, p, null);
+            case "admin" -> de.kuby.kubyplugins.service.CasinoAdmin.open(plugin, p);
             case "jackpot" -> jackpot(p, args);
             case "kasse" -> kasse(p);
             case "tisch" -> tisch(p);

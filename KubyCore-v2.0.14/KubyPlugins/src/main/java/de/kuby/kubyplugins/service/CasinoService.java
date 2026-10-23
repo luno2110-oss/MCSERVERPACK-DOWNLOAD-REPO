@@ -88,8 +88,19 @@ public final class CasinoService {
         return null;
     }
 
+    /** Null, wenn das Casino offen ist, sonst die Meldung für den Spieler. Verkaufen geht auch bei geschlossenem Casino. */
+    public String closedMessage() {
+        return plugin.getConfig().getBoolean("casino.open", true) ? null : "Das Casino ist gerade geschlossen.";
+    }
+
+    public boolean hasKasse() {
+        return kasseLocation() != null;
+    }
+
     /** Kauft Chips. Gibt null bei Erfolg zurück, sonst eine Meldung. */
     public synchronized String buy(Player p, long count) {
+        String closed = closedMessage();
+        if (closed != null) return closed;
         if (count <= 0) return "Die Anzahl muss größer als 0 sein.";
         long cost = count * price();
         if (!plugin.economy().withdraw(p.getUniqueId(), cost)) {

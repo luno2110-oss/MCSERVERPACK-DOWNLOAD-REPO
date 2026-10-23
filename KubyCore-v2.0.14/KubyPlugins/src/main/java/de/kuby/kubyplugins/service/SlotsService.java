@@ -103,6 +103,10 @@ public final class SlotsService {
         showIdle();
     }
 
+    public boolean hasMachine() {
+        return machine() != null;
+    }
+
     public boolean isMachine(Location l) {
         Location m = machine();
         return m != null && l.getWorld() != null && l.getWorld().equals(m.getWorld())
@@ -113,6 +117,8 @@ public final class SlotsService {
     public synchronized String pull(Player p) {
         UUID id = p.getUniqueId();
         if (spin != null) return spin.player.equals(id) ? null : "Der Automat dreht gerade.";
+        String closed = plugin.casino().closedMessage();
+        if (closed != null) return closed;
         if (!SURVIVAL.equals(plugin.modes().modeOf(id))) return "Slots gibt es nur in Survival.";
         long bet = plugin.getConfig().getLong("casino.slots.bet", 1);
         if (!plugin.casino().takeChips(id, bet)) {
@@ -161,6 +167,7 @@ public final class SlotsService {
         if (three && r[0] == Symbol.SEVEN) {
             long money = plugin.casino().claimJackpot();
             CasinoFx.jackpot(plugin, s.player, fxAt, money);
+            plugin.casinoLog().recordJackpot(s.player, money);
             plugin.economy().deposit(s.player, money);
             result = "<gold><b>JACKPOT!</b> <yellow>+" + Msg.coins(money) + "$ <green>+" + (payout - s.bet) + " Chips";
             Bukkit.broadcast(Msg.parse("<gold>Casino: <white>" + nameOf(s.player) + " <gold>hat den Jackpot geknackt: <yellow>"
@@ -174,6 +181,7 @@ public final class SlotsService {
             CasinoFx.show(plugin, s.player, fxAt, CasinoFx.Result.LOSE, -s.bet);
         }
         plugin.casino().giveChips(s.player, payout);
+        plugin.casinoLog().record("Slots", s.player, s.bet, payout);
         render(r, result);
         plugin.getServer().getScheduler().runTaskLater(plugin, this::resetIdle, RESULT_SHOWN_TICKS);
         Player online = Bukkit.getPlayer(s.player);

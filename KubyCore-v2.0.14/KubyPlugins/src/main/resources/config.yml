@@ -94,6 +94,7 @@ jewels:
 
 
 casino:
+  open: true
   chip-price: 100
   jackpot-start: 10000
   kasse-radius: 5
