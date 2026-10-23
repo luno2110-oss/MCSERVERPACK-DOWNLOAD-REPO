@@ -8,3 +8,4 @@ assets/minecraft/textures/gui/sprites/boss_bar/*
 assets/minecraft/textures/entity/fish/*
 assets/minecraft/textures/block/*
 assets/minecraft/textures/gui/sprites/container/*
+assets/minecraft/textures/gui/sprites/hud/*

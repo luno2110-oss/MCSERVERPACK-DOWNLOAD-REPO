@@ -26,6 +26,8 @@ jobs:
           JAR=$(python3 -c "import json; print(json.load(open('version.json'))['downloads']['client']['url'])")
           curl -sSL "$JAR" -o client.jar
           mkdir -p out
+          MAP=$(python3 -c "import json; print(json.load(open('version.json'))['downloads']['client_mappings']['url'])")
+          curl -sSL "$MAP" -o out/client_mappings.txt || true
           tail -n +2 tools/vanilla_assets.txt | while read -r pattern; do
             [ -z "$pattern" ] && continue
             unzip -q -o client.jar "$pattern" -d out || true
