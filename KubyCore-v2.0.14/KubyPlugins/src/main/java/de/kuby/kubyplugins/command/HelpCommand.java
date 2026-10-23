@@ -43,6 +43,7 @@ public final class HelpCommand implements CommandExecutor {
                     new Entry("/sellmulti", "Verkaufs-Multiplikator verbessern", null),
                     new Entry("/shop", "Items mit$ kaufen", null),
                     new Entry("/coinflip <Betrag>", "50/50 um$", null),
+                    new Entry("/casino", "Chips kaufen und verkaufen, Jackpot ansehen", null),
                     new Entry("/dailypot", "Tagespot: Lose kaufen", null))),
             new Page("Markt & Handel", List.of(
                     new Entry("/markt", "Auktionshaus öffnen", null),

@@ -93,6 +93,11 @@ jewels:
     - "Premium;19,99 €;2600"
 
 
+casino:
+  chip-price: 100
+  jackpot-start: 10000
+  kasse-radius: 5
+
 coinflip:
   max-bet: 5000
 

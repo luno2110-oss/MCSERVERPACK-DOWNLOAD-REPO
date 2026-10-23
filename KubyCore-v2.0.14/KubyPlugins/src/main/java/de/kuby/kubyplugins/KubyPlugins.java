@@ -7,6 +7,8 @@ import de.kuby.kubyplugins.service.RegionService;
 import de.kuby.kubyplugins.listener.EditListener;
 import de.kuby.kubyplugins.service.EditModeService;
 import de.kuby.kubyplugins.service.MarkerService;
+import de.kuby.kubyplugins.service.CasinoService;
+import de.kuby.kubyplugins.command.CasinoCommand;
 import de.kuby.kubyplugins.service.ModuleService;
 import de.kuby.kubyplugins.listener.WorldBorderListener;
 import de.kuby.kubyplugins.service.WorldService;
@@ -115,6 +117,7 @@ public final class KubyPlugins extends JavaPlugin {
     private WorldService worlds;
     private ModuleService modules;
     private MarkerService markers;
+    private CasinoService casino;
     private EditModeService edit;
     private RegionService regions;
     private HubSettingsService hubSettings;
@@ -162,6 +165,7 @@ public final class KubyPlugins extends JavaPlugin {
         worlds = new WorldService(this);
         modules = new ModuleService(this);
         markers = new MarkerService(this);
+        casino = new CasinoService(this);
         edit = new EditModeService(this);
         regions = new RegionService(this);
         hubSettings = new HubSettingsService(this);
@@ -197,6 +201,7 @@ public final class KubyPlugins extends JavaPlugin {
                 "stats", "trophaeen", "ranking");
         setAll(new JewelCommand(this), "juwelen", "juwelenshop");
         setAll(new CoinflipCommand(this), "coinflip");
+        setAll(new CasinoCommand(this), "casino");
         setAll(new AdminCommand(this), "kadmin");
         setAll(new HelpCommand(this), "befehle", "menu");
         setAll(new ExtraCommand(this), "dailypot", "trade", "tags", "rtpqueue", "meta", "booster", "xpshop", "battlepass", "cosmetics", "turnier", "verify", "versichern", "enderchest", "kristaltrade", "investments", "quizvote", "totenkiste", "kits", "hub", "tpa", "tpaccept", "tpadeny", "spielzeit");
@@ -216,6 +221,7 @@ public final class KubyPlugins extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new RegionListener(this), this);
         getServer().getScheduler().runTaskLater(this, () -> {
             markers.respawnAll();
+            casino.respawn();
             hubSettings.applyAll();
         }, 40L);
 
@@ -253,6 +259,7 @@ public final class KubyPlugins extends JavaPlugin {
         modes.save();
         playtime.save();
         regions.save();
+        casino.save();
         homes.save();
         shop.save();
         shopStorage.save();
@@ -347,6 +354,7 @@ public final class KubyPlugins extends JavaPlugin {
     public WorldService worlds() { return worlds; }
     public ModuleService modules() { return modules; }
     public MarkerService markers() { return markers; }
+    public CasinoService casino() { return casino; }
     public EditModeService edit() { return edit; }
     public RegionService regions() { return regions; }
     public HubSettingsService hubSettings() { return hubSettings; }

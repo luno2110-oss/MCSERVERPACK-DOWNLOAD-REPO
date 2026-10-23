@@ -8,10 +8,10 @@ Stand: **v1.32** (ungetestet, nicht kompiliert)
 ## Ordnergruppe 1 – Casino (Refs: CASINO REF) – nur Survival
 Prinzip: Keine GUI. Spiel läuft über physische Dinge am Tisch (Karten, Chips, Rad, Dealer).
 
-- [ ] 1.1 Grundlagen
-  - [ ] Casino-Bereich als Region (Schutz über Regionssystem)
-  - [ ] Chips als eigene Währung, Umtausch $ ↔ Chips am Kassentisch
-  - [ ] Jackpot-Anzeige (schwebender Text, Ticker)
+- [~] 1.1 Grundlagen (Code fertig, Build und Test offen)
+  - [x] Casino-Bereich als Region: Region mit ID `casino` anlegen, Schutz über das Regionssystem
+  - [x] Chips als eigene Währung, Umtausch $ ↔ Chips am Kassentisch (`/casino kaufen|verkaufen`, Kassentisch per `/casino kasse`)
+  - [~] Jackpot-Anzeige: schwebender Text über dem Kassentisch fertig, Ticker (Animation) offen. Der Jackpot wird noch nicht durch Spiele gefüllt (kommt mit 1.2)
 - [ ] 1.2 Spiele
   - [ ] Blackjack: Dealer-NPC, Karten als Anzeigeobjekte, Chips auf dem Tisch, Rechtsklick startet
   - [ ] Roulette: Rad aus Blöcken, Anzeige "Warte auf Einsätze"
