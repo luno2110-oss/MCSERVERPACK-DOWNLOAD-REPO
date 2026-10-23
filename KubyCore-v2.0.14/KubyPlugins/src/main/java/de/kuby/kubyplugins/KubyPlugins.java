@@ -22,6 +22,7 @@ import de.kuby.kubyplugins.service.PokerService;
 import de.kuby.kubyplugins.command.PokerCommand;
 import de.kuby.kubyplugins.service.VoteService;
 import de.kuby.kubyplugins.service.AchievementService;
+import de.kuby.kubyplugins.service.UiPackService;
 import de.kuby.kubyplugins.command.CasinoCommand;
 import de.kuby.kubyplugins.service.ModuleService;
 import de.kuby.kubyplugins.listener.WorldBorderListener;
@@ -143,6 +144,7 @@ public final class KubyPlugins extends JavaPlugin {
     private PokerService poker;
     private VoteService votes;
     private AchievementService achievements;
+    private UiPackService uiPack;
     private EditModeService edit;
     private RegionService regions;
     private HubSettingsService hubSettings;
@@ -201,6 +203,8 @@ public final class KubyPlugins extends JavaPlugin {
         votes = new VoteService(this);
         achievements = new AchievementService(this);
         achievements.start();
+        uiPack = new UiPackService(this);
+        uiPack.start();
         // Stat-Quellen für Erfolge (Addons melden weitere an, z. B. Angeln und Claims).
         registerStat("playtime", id -> playtime().minutesOf(id));
         registerStat("votes", id -> votes.votesOf(id));
@@ -291,6 +295,7 @@ public final class KubyPlugins extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new BlackjackListener(this), this);
         getServer().getPluginManager().registerEvents(new CasinoVipListener(this), this);
         getServer().getPluginManager().registerEvents(votes, this);
+        getServer().getPluginManager().registerEvents(uiPack, this);
         getServer().getScheduler().runTaskLater(this, () -> {
             markers.respawnAll();
             casino.respawn();
@@ -454,6 +459,7 @@ public final class KubyPlugins extends JavaPlugin {
     public PokerService poker() { return poker; }
     public VoteService votes() { return votes; }
     public AchievementService achievements() { return achievements; }
+    public UiPackService uiPack() { return uiPack; }
     public EditModeService edit() { return edit; }
     public RegionService regions() { return regions; }
     public HubSettingsService hubSettings() { return hubSettings; }

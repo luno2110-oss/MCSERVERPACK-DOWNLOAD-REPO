@@ -57,7 +57,10 @@ jobs:
           TXT
           sed -i 's/^          //' dist/INSTALLATION.txt
           sed -i "s/\${GITHUB_SHA}/${GITHUB_SHA::7}/" dist/INSTALLATION.txt
-          (cd dist && zip -q KubyPlugins.zip *.jar INSTALLATION.txt)
+          # Grafik-Pack KubyUI: feste Zeitstempel und Reihenfolge, damit die SHA-1 nur bei echten Änderungen wechselt.
+          find resourcepack/KubyUI -exec touch -d '2026-01-01 00:00:00' {} +
+          (cd resourcepack/KubyUI && find . -type f | sort | zip -X -q -@ ../../dist/KubyUI-Pack.zip)
+          (cd dist && zip -q KubyPlugins.zip *.jar INSTALLATION.txt KubyUI-Pack.zip)
           ls -la dist
 
       - uses: actions/upload-artifact@v4
@@ -72,5 +75,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete latest --yes --cleanup-tag || true
-          gh release create latest dist/KubyPlugins.zip dist/*.jar --title "Aktueller Stand" \
+          gh release create latest dist/KubyPlugins.zip dist/KubyUI-Pack.zip dist/*.jar --title "Aktueller Stand" \
             --notes "Automatisch gebaut aus Commit ${GITHUB_SHA::7}. KubyPlugins.zip enthält alle Jars und eine Anleitung." --latest

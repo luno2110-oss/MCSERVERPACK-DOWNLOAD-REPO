@@ -481,3 +481,11 @@ achievements:
     - "kill1;Erstes Blut;kills;10;2;IRON_SWORD;Besiege 10 Spieler (SMP)"
     - "kill2;Krieger;kills;100;10;DIAMOND_SWORD;Besiege 100 Spieler (SMP)"
     - "casino1;Glückspilz;casino_plus;1000;5;GOLD_INGOT;Mach im Casino 1.000 Chips Plus"
+
+# Grafik-Pack "KubyUI" für Menüs (Casino-Hilfe): wird beim Join zusätzlich zu anderen Packs geschickt.
+ui:
+  pack-url: "https://github.com/luno2110-oss/MCSERVERPACK-DOWNLOAD-REPO/releases/download/latest/KubyUI-Pack.zip"
+  pack-prompt: "Grafiken für Menüs und Casino"
+  pack-force: false
+  # auto = eigene Grafiken nur, wenn das Pack beim Spieler geladen ist; on = immer; off = nie
+  custom-textures: auto

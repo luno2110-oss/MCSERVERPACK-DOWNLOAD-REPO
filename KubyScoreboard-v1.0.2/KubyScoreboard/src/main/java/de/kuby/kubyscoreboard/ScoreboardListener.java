@@ -29,12 +29,23 @@ public final class ScoreboardListener implements Listener {
         service.quit(e.getPlayer().getUniqueId());
     }
 
+    private static final java.util.UUID PACK_ID = java.util.UUID.nameUUIDFromBytes(
+            "kuby-scoreboard-pack".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
     /** Schickt das Scoreboard-Pack, wenn in der config eine URL steht. */
     private void sendPack(Player p) {
         String url = addon.getConfig().getString("resource-pack.url", "");
         if (url == null || url.isBlank()) return;
         String sha1 = addon.getConfig().getString("resource-pack.sha1", "");
-        if (sha1 == null || sha1.isBlank()) p.setResourcePack(url);
-        else p.setResourcePack(url, sha1);
+        byte[] hash = null;
+        if (sha1 != null && sha1.length() == 40) {
+            try {
+                hash = java.util.HexFormat.of().parseHex(sha1);
+            } catch (IllegalArgumentException ignored) {
+                hash = null;
+            }
+        }
+        // Zusätzlich statt ersetzend, damit andere Packs (z. B. KubyUI) erhalten bleiben.
+        p.addResourcePack(PACK_ID, url, hash, null, false);
     }
 }

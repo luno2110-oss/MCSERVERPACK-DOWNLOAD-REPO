@@ -1,6 +1,7 @@
 package de.kuby.kubyplugins.service;
 
 import de.kuby.kubyplugins.KubyPlugins;
+import de.kuby.kubyplugins.ui.Ui;
 import de.kuby.kubyplugins.util.Msg;
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.registry.data.dialog.ActionButton;
@@ -8,23 +9,40 @@ import io.papermc.paper.registry.data.dialog.DialogBase;
 import io.papermc.paper.registry.data.dialog.action.DialogAction;
 import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
+import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 /**
- * Casino-Hilfe als Dialog-Fenster im Stil der Hilfe-Referenz: Titel, Abschnitt "So geht's", Befehle und Buttons.
- * Die Übersicht verlinkt auf eine Seite je Spiel. Die Zahlen (Einsätze, Wartezeiten, Preis) kommen aus der config.yml.
+ * Casino-Hilfe als Dialog-Fenster im Stil der Hilfe-Referenz: Kopf mit Icon, Abschnitt "So geht's", Befehle und Buttons.
+ * Mit geladenem Grafik-Pack (KubyUI) kommen Rahmen, Icons und Buttons aus dem Pack, sonst die normale Ansicht.
+ * Die Zahlen (Einsätze, Wartezeiten, Preis) kommen aus der config.yml.
  */
 public final class CasinoRules {
 
     public static final List<String> GAMES = List.of("blackjack", "roulette", "slots", "crash");
 
     private static final int WIDTH = 320;
+    private static final TextColor PINK = TextColor.color(0xFF5D73);
+    private static final TextColor TITLE_RED = TextColor.color(0xFF4D67);
+    private static final TextColor BODY = TextColor.color(0xE8E8E8);
+    private static final TextColor SUB = TextColor.color(0xBDBDBD);
+    private static final TextColor CMD = TextColor.color(0x5FE3C4);
+    /** Platzhalter für Icons im Text. Ohne Grafik-Pack werden daraus normale Zeichen. */
+    private static final Map<String, String> PLAIN_TOKENS = Map.of(
+            "{club}", "♣", "{diamond}", "♦", "{heart}", "♥", "{star}", "★", "{seven}", "7");
+
+    private record Btn(String label, String tooltip, boolean red, Consumer<Player> onClick) {}
+
+    private record Page(String title, String subtitle, Ui.Icon icon, List<String> how, List<String[]> commands,
+                        List<Btn> buttons) {}
 
     private CasinoRules() {
     }
@@ -32,11 +50,32 @@ public final class CasinoRules {
     /** Öffnet die Übersicht (game = null) oder die Seite eines Spiels. False, wenn es das Spiel nicht gibt. */
     public static boolean open(KubyPlugins plugin, Player p, String game) {
         if (game != null && !GAMES.contains(game)) return false;
-        p.showDialog(game == null ? overview(plugin) : gamePage(plugin, game));
+        show(plugin, p, game == null ? overview(plugin) : gamePage(plugin, game));
         return true;
     }
 
-    private static Dialog overview(KubyPlugins plugin) {
+    /** Rangliste "Am meisten Plus": Top 10 und der eigene Platz. */
+    public static void openStats(KubyPlugins plugin, Player p) {
+        List<String> lines = new ArrayList<>();
+        List<Map.Entry<java.util.UUID, Long>> top = plugin.casinoLog().top(10);
+        if (top.isEmpty()) lines.add("Noch hat niemand gespielt.");
+        for (int i = 0; i < top.size(); i++) {
+            String name = org.bukkit.Bukkit.getOfflinePlayer(top.get(i).getKey()).getName();
+            long net = top.get(i).getValue();
+            lines.add((i + 1) + ". " + (name == null ? "?" : name) + "  " + (net >= 0 ? "+" : "") + net + " Chips");
+        }
+        int rank = plugin.casinoLog().rankOf(p.getUniqueId());
+        long mine = plugin.casinoLog().netOf(p.getUniqueId());
+        lines.add(rank == 0 ? "Du hast noch nicht gespielt."
+                : "Dein Platz: " + rank + "  (" + (mine >= 0 ? "+" : "") + mine + " Chips)");
+        List<Btn> buttons = List.of(
+                new Btn("< Casino", "Zurück zur Übersicht", false, pl -> show(plugin, pl, overview(plugin))),
+                new Btn("Hinreisen", "Zum Casino teleportieren", true, pl -> plugin.casino().travel(pl)));
+        show(plugin, p, new Page("RANGLISTE", "Am meisten Plus: Gewinne minus Einsätze", Ui.Icon.TROPHY,
+                lines, List.of(), buttons));
+    }
+
+    private static Page overview(KubyPlugins plugin) {
         List<String> how = List.of(
                 "Im Casino spielst du mit Chips an Slots, Roulette, Blackjack und Crash. In der VIP-Lounge gibt es Poker.",
                 "Chips tauschst du an der Kasse gegen Coins und wieder zurück. 1 Chip = "
@@ -48,7 +87,7 @@ public final class CasinoRules {
                 "In der VIP-Lounge geben dir die Barkeeper einmal am Tag "
                         + plugin.getConfig().getLong("casino.vip.daily-chips", 500) + " Chips. Rein darfst du mit dem Legend-Rang"
                         + " oder als einer der besten " + plugin.getConfig().getInt("casino.vip.top", 10)
-                        + " in der Casino-Rangliste „Am meisten Plus“.",
+                        + " in der Casino-Rangliste \"Am meisten Plus\".",
                 "In der VIP-Lounge steht ein Pokertisch: Texas Hold'em gegen andere Spieler, Blinds ab "
                         + plugin.getConfig().getLong("casino.poker.small-blind", 10) + "/" + plugin.getConfig().getLong("casino.poker.big-blind", 20)
                         + " Chips. Du setzt dich mit " + plugin.getConfig().getLong("casino.poker.min-buyin-bb", 40) + " bis "
@@ -64,45 +103,25 @@ public final class CasinoRules {
                 new String[]{"/poker", "Poker in der VIP-Lounge"},
                 new String[]{"/casino status", "Deine Chips und der Jackpot"},
                 new String[]{"/casino regeln", "Diese Hilfe"});
-        List<ActionButton> buttons = new ArrayList<>();
+        List<Btn> buttons = new ArrayList<>();
         for (String g : GAMES) {
-            buttons.add(button("<white>" + title(g), "Regeln: " + title(g), 100,
-                    pl -> pl.showDialog(gamePage(plugin, g))));
+            buttons.add(new Btn(title(g), "Regeln: " + title(g), false, pl -> show(plugin, pl, gamePage(plugin, g))));
         }
-        buttons.add(button("<white>Rangliste", "Am meisten Plus", 100, pl -> openStats(plugin, pl)));
-        buttons.add(button("<red><b>Hinreisen</b>", "Zum Casino teleportieren", 100,
-                pl -> plugin.casino().travel(pl)));
-        return build("CASINO", "Slots, Roulette, Blackjack, Poker und Crash", how, commands, buttons);
+        buttons.add(new Btn("Rangliste", "Am meisten Plus", false, pl -> openStats(plugin, pl)));
+        buttons.add(new Btn("Hinreisen", "Zum Casino teleportieren", true, pl -> plugin.casino().travel(pl)));
+        return new Page("CASINO", "Slots, Roulette, Blackjack, Poker und Crash", Ui.Icon.DICE, how, commands, buttons);
     }
 
-    /** Rangliste "Am meisten Plus": Top 10 und der eigene Platz. */
-    public static void openStats(KubyPlugins plugin, Player p) {
-        List<String> lines = new ArrayList<>();
-        List<java.util.Map.Entry<java.util.UUID, Long>> top = plugin.casinoLog().top(10);
-        if (top.isEmpty()) lines.add("Noch hat niemand gespielt.");
-        for (int i = 0; i < top.size(); i++) {
-            String name = org.bukkit.Bukkit.getOfflinePlayer(top.get(i).getKey()).getName();
-            long net = top.get(i).getValue();
-            lines.add((i + 1) + ". " + (name == null ? "?" : name) + "  " + (net >= 0 ? "+" : "") + net + " Chips");
-        }
-        int rank = plugin.casinoLog().rankOf(p.getUniqueId());
-        long mine = plugin.casinoLog().netOf(p.getUniqueId());
-        lines.add(rank == 0 ? "Du hast noch nicht gespielt."
-                : "Dein Platz: " + rank + "  (" + (mine >= 0 ? "+" : "") + mine + " Chips)");
-        List<ActionButton> buttons = new ArrayList<>();
-        buttons.add(button("<white>< Casino", "Zurück zur Übersicht", 100, pl -> pl.showDialog(overview(plugin))));
-        buttons.add(button("<red><b>Hinreisen</b>", "Zum Casino teleportieren", 100, pl -> plugin.casino().travel(pl)));
-        p.showDialog(build("RANGLISTE", "Am meisten Plus: Gewinne minus Einsätze", lines, List.of(), buttons));
-    }
-
-    private static Dialog gamePage(KubyPlugins plugin, String game) {
+    private static Page gamePage(KubyPlugins plugin, String game) {
         FileConfiguration c = plugin.getConfig();
         List<String> how;
         List<String[]> commands = new ArrayList<>();
         String subtitle;
+        Ui.Icon icon;
         switch (game) {
             case "blackjack" -> {
                 subtitle = "Näher an 21 als der Dealer";
+                icon = Ui.Icon.CARDS;
                 how = List.of(
                         "Rechtsklick auf den Tisch startet eine Runde. Einsatz: " + c.getLong("casino.blackjack.bet", 1) + " Chip(s).",
                         "Bildkarten zählen 10, Asse 1 oder 11. Der Dealer zieht bis 17.",
@@ -113,6 +132,7 @@ public final class CasinoRules {
             }
             case "roulette" -> {
                 subtitle = "Europäisches Roulette, 0 bis 36";
+                icon = Ui.Icon.ROULETTE;
                 how = List.of(
                         "Setze am Tisch bis zu " + c.getLong("casino.roulette.max-bet", 50) + " Chips auf eine Zahl oder eine Farbe.",
                         "Nach " + c.getLong("casino.roulette.wait-seconds", 20) + " Sekunden dreht das Rad.",
@@ -121,14 +141,16 @@ public final class CasinoRules {
             }
             case "slots" -> {
                 subtitle = "Drei gleiche gewinnen";
+                icon = Ui.Icon.SLOTS;
                 how = List.of(
                         "Rechtsklick auf den Hebel dreht. Einsatz: " + c.getLong("casino.slots.bet", 1) + " Chip(s).",
-                        "♣ 8-fach · ♦ 12-fach · ♥ 25-fach · ★ 60-fach",
-                        plugin.getConfig().getBoolean("casino.jackpot.seven-wins", false)
-                                ? "7 7 7: 100-fach und der Jackpot." : "7 7 7: 100-fach.");
+                        "{club} 8-fach   {diamond} 12-fach   {heart} 25-fach   {star} 60-fach",
+                        c.getBoolean("casino.jackpot.seven-wins", false)
+                                ? "{seven} {seven} {seven} 100-fach und der Jackpot." : "{seven} {seven} {seven} 100-fach.");
             }
             default -> {
                 subtitle = "Rechtzeitig aussteigen";
+                icon = Ui.Icon.CRASH;
                 how = List.of(
                         "Rechtsklick auf den Automaten steigt ein. Einsatz: " + c.getLong("casino.crash.bet", 10) + " Chips.",
                         "Nach " + c.getLong("casino.crash.wait-seconds", 10) + " Sekunden steigt der Multiplikator.",
@@ -136,37 +158,74 @@ public final class CasinoRules {
                         "Höchstens " + Math.round(c.getDouble("casino.crash.max-multiplier", 50)) + "x.");
             }
         }
-        List<ActionButton> buttons = new ArrayList<>();
-        buttons.add(button("<white>< Casino", "Zurück zur Übersicht", 100, pl -> pl.showDialog(overview(plugin))));
-        buttons.add(button("<red><b>Hinreisen</b>", "Zum Casino teleportieren", 100, pl -> plugin.casino().travel(pl)));
-        return build(title(game).toUpperCase(), subtitle, how, commands, buttons);
+        List<Btn> buttons = List.of(
+                new Btn("< Casino", "Zurück zur Übersicht", false, pl -> show(plugin, pl, overview(plugin))),
+                new Btn("Hinreisen", "Zum Casino teleportieren", true, pl -> plugin.casino().travel(pl)));
+        return new Page(title(game).toUpperCase(), subtitle, icon, how, commands, buttons);
     }
 
-    private static Dialog build(String title, String subtitle, List<String> how, List<String[]> commands,
-                                List<ActionButton> buttons) {
+    // ---------- Darstellung ----------
+
+    private static void show(KubyPlugins plugin, Player p, Page page) {
+        p.showDialog(plugin.uiPack().active(p) ? textured(page) : plain(page));
+    }
+
+    /** Mit Grafik-Pack: Titelleiste, Kästen mit Rahmen und Icons, eigene Buttons. */
+    private static Dialog textured(Page page) {
+        Ui.Panel head = new Ui.Panel()
+                .headIcon(Ui.Icon.BACK, 8)
+                .headIcon(page.icon(), 26)
+                .text(48, page.title(), TITLE_RED, true)
+                .text(48, page.subtitle(), SUB, false);
+        Ui.Panel how = new Ui.Panel().text(7, "SO GEHT'S", PINK, true);
+        for (String line : page.how()) how.bullet(line, BODY);
+        List<Ui.Panel> panels = new ArrayList<>(List.of(head, how));
+        if (!page.commands().isEmpty()) {
+            Ui.Panel cmds = new Ui.Panel().text(7, "BEFEHLE", PINK, true);
+            for (String[] cmd : page.commands()) cmds.columns(cmd[0], CMD, cmd[1], BODY, 120);
+            panels.add(cmds);
+        }
+        List<ActionButton> buttons = new ArrayList<>();
+        for (Btn b : page.buttons()) buttons.add(button(Ui.button(b.label(), b.red()), b.tooltip(), b.onClick()));
+        DialogBase base = DialogBase.builder(Ui.titleBar("Hilfe"))
+                .canCloseWithEscape(true)
+                .body(List.of(DialogBody.plainMessage(Ui.stack(panels), WIDTH)))
+                .build();
+        return Dialog.create(b -> b.empty().base(base).type(DialogType.multiAction(buttons).columns(2).build()));
+    }
+
+    /** Ohne Grafik-Pack: normale Texte. */
+    private static Dialog plain(Page page) {
         List<DialogBody> body = new ArrayList<>();
-        body.add(DialogBody.plainMessage(Msg.parse("<gray>" + subtitle), WIDTH));
+        body.add(DialogBody.plainMessage(Msg.parse("<gray>" + page.subtitle()), WIDTH));
         StringBuilder sb = new StringBuilder("<red><b>SO GEHT'S</b></red>");
-        for (String line : how) sb.append("\n<red>▪</red> <white>").append(Msg.escape(line)).append("</white>");
+        for (String line : page.how()) {
+            String text = line;
+            for (Map.Entry<String, String> t : PLAIN_TOKENS.entrySet()) text = text.replace(t.getKey(), t.getValue());
+            sb.append("\n<red>▪</red> <white>").append(Msg.escape(text)).append("</white>");
+        }
         body.add(DialogBody.plainMessage(Msg.parse(sb.toString()), WIDTH));
-        if (!commands.isEmpty()) {
+        if (!page.commands().isEmpty()) {
             StringBuilder cmds = new StringBuilder("<red><b>BEFEHLE</b></red>");
-            for (String[] cmd : commands) {
+            for (String[] cmd : page.commands()) {
                 cmds.append("\n<aqua>").append(Msg.escape(cmd[0])).append("</aqua> <gray>").append(Msg.escape(cmd[1])).append("</gray>");
             }
             body.add(DialogBody.plainMessage(Msg.parse(cmds.toString()), WIDTH));
         }
-        DialogBase base = DialogBase.builder(Msg.parse("<red><b>" + title + "</b>"))
+        List<ActionButton> buttons = new ArrayList<>();
+        for (Btn b : page.buttons()) {
+            String label = b.red() ? "<red><b>" + Msg.escape(b.label()) + "</b>" : "<white>" + Msg.escape(b.label());
+            buttons.add(button(Msg.parse(label), b.tooltip(), b.onClick()));
+        }
+        DialogBase base = DialogBase.builder(Msg.parse("<red><b>" + page.title() + "</b>"))
                 .canCloseWithEscape(true)
                 .body(body)
                 .build();
-        return Dialog.create(b -> b.empty()
-                .base(base)
-                .type(DialogType.multiAction(buttons).columns(2).build()));
+        return Dialog.create(b -> b.empty().base(base).type(DialogType.multiAction(buttons).columns(2).build()));
     }
 
-    private static ActionButton button(String label, String tooltip, int width, Consumer<Player> onClick) {
-        return ActionButton.create(Msg.parse(label), Msg.parse("<gray>" + tooltip), width,
+    private static ActionButton button(Component label, String tooltip, Consumer<Player> onClick) {
+        return ActionButton.create(label, Msg.parse("<gray>" + tooltip), 100,
                 DialogAction.customClick((response, audience) -> {
                     if (audience instanceof Player pl) onClick.accept(pl);
                 }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).build()));
