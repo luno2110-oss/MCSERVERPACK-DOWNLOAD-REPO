@@ -1,4 +1,4 @@
-name: KubyJR Addon
+name: KubyJR-Addon
 version: 1.0.2
 main: de.kp.jumprun.KPJumpRun
 api-version: '1.21'

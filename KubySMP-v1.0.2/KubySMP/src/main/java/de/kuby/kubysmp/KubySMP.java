@@ -61,7 +61,6 @@ public final class KubySMP extends JavaPlugin {
         }
         instance = this;
         core = c;
-        saveDefaultConfig();
 
         bounties = new BountyService(core);
         combat = new CombatService(core);
