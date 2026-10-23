@@ -37,9 +37,13 @@ public final class TeamMenu extends GuiMenu {
 
         boolean leader = t.leader().equals(p.getUniqueId());
 
-        set(4, Items.make(Material.WHITE_BANNER, "<gold>" + SmallCaps.of(t.name()), List.of(
-                "<gray>Mitglieder: <white>" + t.members().size() + "<gray>/<white>" + plugin.teams().maxMembers(),
-                "<gray>Teamkasse: <gold>" + Msg.coins(t.bank()) + "$")), null);
+        int lv = plugin.teams().level(t);
+        long from = TeamService.xpFor(lv), to = TeamService.xpFor(lv + 1);
+        set(4, Items.make(Material.WHITE_BANNER, "<gold>" + SmallCaps.of(t.name()) + " <gray>· Level <green>" + lv, List.of(
+                "<gray>Mitglieder: <white>" + t.members().size() + "<gray>/<white>" + plugin.teams().maxMembers(t),
+                "<gray>Teamkasse: <gold>" + Msg.coins(t.bank()) + "$",
+                lv >= plugin.teams().maxLevel() ? "<green>Höchstes Level" : "<gray>Team-XP: <white>" + Msg.coins(t.xp() - from) + "/" + Msg.coins(to - from),
+                "", "<dark_gray>Gemeinsam spielen bringt Team-XP:", "<dark_gray>mehr Plätze, Homes und Lager.")), null);
 
         int slot = 19;
         for (UUID id : t.members()) {
@@ -51,12 +55,19 @@ public final class TeamMenu extends GuiMenu {
                     isLeader ? "<gray>Teamchef" : "<gray>Mitglied")), null);
         }
 
+        set(10, Items.make(Material.CHEST, "<gold>" + SmallCaps.of("Team-Lager"), List.of(
+                        "<gray>" + plugin.teams().storageRows(t) + " Reihen für alle im Team", "", "<yellow>Klick")),
+                e -> {
+                    String err = plugin.teams().openStorage(p);
+                    if (err != null) Msg.send(p, "<red>" + err);
+                });
         set(11, Items.make(Material.RED_BED, "<red>" + SmallCaps.of("Teamhome"), List.of(
+                        "<gray>Homes: <white>" + t.homes().size() + "/" + plugin.teams().homeLimit(t) + " <dark_gray>(/team homes)",
                         "<gray>Klick: <white>teleportieren",
                         "<gray>Shift + Klick: <white>hier setzen")),
                 e -> {
                     if (e.isShiftClick()) {
-                        String err = plugin.teams().setHome(p);
+                        String err = plugin.teams().setHome(p, "home");
                         Msg.send(p, err == null ? "<green>Teamhome gesetzt." : "<red>" + err);
                         open(p);
                         return;
@@ -72,8 +83,16 @@ public final class TeamMenu extends GuiMenu {
 
         set(13, Items.make(Material.GOLD_INGOT, "<gold>" + SmallCaps.of("Teamkasse"), List.of(
                         "<gray>Linksklick: <white>100$ einzahlen",
-                        "<gray>Shift + Klick: <white>1.000$ einzahlen")),
+                        "<gray>Shift + Klick: <white>1.000$ einzahlen",
+                        leader ? "<gray>Rechtsklick: <white>1.000$ abheben" : "<dark_gray>Abheben kann der Teamchef")),
                 e -> {
+                    if (e.isRightClick() && leader) {
+                        long amount = Math.min(1000, t.bank());
+                        String err = plugin.teams().withdraw(p, amount);
+                        Msg.send(p, err == null ? "<green>Abgehoben: <gold>" + Msg.coins(amount) + "$" : "<red>" + err);
+                        open(p);
+                        return;
+                    }
                     long amount = e.isShiftClick() ? 1000 : 100;
                     String err = plugin.teams().deposit(p, amount);
                     Msg.send(p, err == null ? "<green>Eingezahlt: <gold>" + Msg.coins(amount) + "$" : "<red>" + err);

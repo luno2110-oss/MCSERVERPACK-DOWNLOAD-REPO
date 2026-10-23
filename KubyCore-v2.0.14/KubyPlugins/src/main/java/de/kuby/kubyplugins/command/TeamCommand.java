@@ -61,21 +61,56 @@ public final class TeamCommand implements CommandExecutor {
             case "leave" -> reply(p, plugin.teams().leave(p.getUniqueId()), "<gray>Du hast das Team verlassen.");
             case "disband" -> reply(p, plugin.teams().disband(p), "<gray>Team aufgelöst.");
             case "home" -> {
-                Location loc = plugin.teams().homeOf(p.getUniqueId());
-                if (loc == null) { Msg.send(p, "<red>Kein Teamhome gesetzt. Nutze /team sethome."); return true; }
+                Location loc = args.length > 1 ? plugin.teams().homeOf(p.getUniqueId(), args[1]) : plugin.teams().homeOf(p.getUniqueId());
+                if (loc == null) { Msg.send(p, "<red>Dieses Team-Home gibt es nicht. <gray>Alle: <white>/team homes"); return true; }
                 Teleports.delayed(plugin, p, loc, "Teamhome");
             }
-            case "sethome" -> reply(p, plugin.teams().setHome(p), "<green>Teamhome gesetzt.");
+            case "homes" -> {
+                TeamService.Team t = plugin.teams().of(p.getUniqueId());
+                if (t == null) { Msg.send(p, "<red>Du hast kein Team."); return true; }
+                Msg.send(p, "<gold>Team-Homes <gray>(" + t.homes().size() + "/" + plugin.teams().homeLimit(t) + "):");
+                for (String h : t.homes().keySet()) {
+                    Msg.send(p, "<click:run_command:'/team home " + h + "'><white>▪ " + h + "</click>");
+                }
+            }
+            case "sethome" -> reply(p, plugin.teams().setHome(p, args.length > 1 ? args[1] : "home"), "<green>Teamhome gesetzt.");
+            case "delhome" -> {
+                if (args.length < 2) { Msg.send(p, "<red>Nutzung: /team delhome <Name>"); return true; }
+                reply(p, plugin.teams().delHome(p, args[1]), "<gray>Team-Home gelöscht.");
+            }
+            case "lager", "storage" -> {
+                String err = plugin.teams().openStorage(p);
+                if (err != null) Msg.send(p, "<red>" + err);
+            }
+            case "kick" -> {
+                if (args.length < 2) { Msg.send(p, "<red>Nutzung: /team kick <Spieler>"); return true; }
+                var op = Bukkit.getOfflinePlayerIfCached(args[1]);
+                if (op == null) { Msg.send(p, "<red>Diesen Spieler kennen wir nicht."); return true; }
+                reply(p, plugin.teams().kick(p, op.getUniqueId()), "<gray>" + args[1] + " ist nicht mehr im Team.");
+            }
+            case "info" -> {
+                TeamService.Team t = plugin.teams().of(p.getUniqueId());
+                if (t == null) { Msg.send(p, "<red>Du hast kein Team."); return true; }
+                int lv = plugin.teams().level(t);
+                long from = TeamService.xpFor(lv), to = TeamService.xpFor(lv + 1);
+                Msg.send(p, "<gold><b>" + t.name() + "</b> <gray>· Level <green>" + lv + " <gray>· Mitglieder <white>"
+                        + t.members().size() + "/" + plugin.teams().maxMembers(t) + " <gray>· Kasse <gold>" + Msg.coins(t.bank()) + "$");
+                Msg.send(p, lv >= plugin.teams().maxLevel() ? "<green>Höchstes Team-Level erreicht."
+                        : "<gray>Team-XP: <white>" + Msg.coins(t.xp() - from) + "/" + Msg.coins(to - from)
+                        + " <gray>bis Level " + (lv + 1) + " (gemeinsam spielen bringt XP)");
+            }
             case "bank" -> {
-                if (args.length < 2) { Msg.send(p, "<red>Nutzung: /team bank <Betrag>"); return true; }
+                if (args.length < 2) { Msg.send(p, "<red>Nutzung: /team bank <Betrag> · /team bank abheben <Betrag>"); return true; }
+                boolean out = args[1].equalsIgnoreCase("abheben");
                 long amount;
                 try {
-                    amount = Long.parseLong(args[1]);
-                } catch (NumberFormatException e) {
+                    amount = Long.parseLong(args[out ? 2 : 1]);
+                } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
                     Msg.send(p, "<red>Ungültiger Betrag.");
                     return true;
                 }
-                reply(p, plugin.teams().deposit(p, amount), "<green>Eingezahlt: <gold>" + Msg.coins(amount) + "$");
+                if (out) reply(p, plugin.teams().withdraw(p, amount), "<green>Abgehoben: <gold>" + Msg.coins(amount) + "$");
+                else reply(p, plugin.teams().deposit(p, amount), "<green>Eingezahlt: <gold>" + Msg.coins(amount) + "$");
             }
             case "ally" -> {
                 if (args.length < 2) { Msg.send(p, "<red>Nutzung: /team ally <Team>"); return true; }
@@ -114,9 +149,13 @@ public final class TeamCommand implements CommandExecutor {
         Msg.send(p, "<gray>/team invite <Spieler> <dark_gray>- <gray>Spieler einladen");
         Msg.send(p, "<gray>/team accept <dark_gray>- <gray>Einladung annehmen");
         Msg.send(p, "<gray>/team leave <dark_gray>- <gray>Team verlassen");
-        Msg.send(p, "<gray>/team home <dark_gray>- <gray>zum Teamhome");
-        Msg.send(p, "<gray>/team sethome <dark_gray>- <gray>Teamhome setzen");
-        Msg.send(p, "<gray>/team bank <Betrag> <dark_gray>- <gray>Teamkasse füllen");
+        Msg.send(p, "<gray>/team info <dark_gray>- <gray>Level, Plätze, Kasse");
+        Msg.send(p, "<gray>/team home [Name] <dark_gray>- <gray>zum Team-Home · <gray>/team homes");
+        Msg.send(p, "<gray>/team sethome [Name] <dark_gray>- <gray>Team-Home setzen · <gray>/team delhome <Name>");
+        Msg.send(p, "<gray>/team lager <dark_gray>- <gray>gemeinsames Lager");
+        Msg.send(p, "<gray>/team bank <Betrag> <dark_gray>- <gray>Teamkasse füllen · <gray>/team bank abheben <Betrag> (Chef)");
+        Msg.send(p, "<gray>/team kick <Spieler> <dark_gray>- <gray>Mitglied entfernen (Chef)");
+        Msg.send(p, "<gray>/team ally <Team> <dark_gray>- <gray>Bündnis (Chef)");
         Msg.send(p, "<gray>/tc <Nachricht> <dark_gray>- <gray>Team-Chat");
     }
 }

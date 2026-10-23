@@ -3,7 +3,12 @@ package de.kuby.kubyplugins.service;
 import de.kuby.kubyplugins.KubyPlugins;
 import de.kuby.kubyplugins.util.Locs;
 import de.kuby.kubyplugins.util.Msg;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
@@ -32,8 +37,11 @@ public final class TeamService {
         private final String name;
         private UUID leader;
         private final Set<UUID> members = new LinkedHashSet<>();
-        private String home;
+        private final Map<String, String> homes = new LinkedHashMap<>();
         private long bank;
+        private long xp;
+        private ItemStack[] storage = new ItemStack[54];
+        private Inventory storageInv;
 
         private Team(String mode, String name, UUID leader) {
             this.mode = mode;
@@ -47,6 +55,22 @@ public final class TeamService {
         public UUID leader() { return leader; }
         public Set<UUID> members() { return Collections.unmodifiableSet(members); }
         public long bank() { return bank; }
+        public long xp() { return xp; }
+        public Map<String, String> homes() { return Collections.unmodifiableMap(homes); }
+    }
+
+    /** Halter des Team-Lagers (ein Inventar-Objekt pro Team, damit alle denselben Inhalt sehen). */
+    public static final class StorageHolder implements InventoryHolder {
+        public final Team team;
+
+        StorageHolder(Team team) {
+            this.team = team;
+        }
+
+        @Override
+        public @NotNull Inventory getInventory() {
+            return team.storageInv;
+        }
     }
 
     private final KubyPlugins plugin;
@@ -69,8 +93,22 @@ public final class TeamService {
             Team t = new Team(mode, name, UUID.fromString(leaderRaw));
             t.members.clear();
             for (String m : yml.getStringList(key + ".members")) t.members.add(UUID.fromString(m));
-            t.home = yml.getString(key + ".home");
+            String oldHome = yml.getString(key + ".home");
+            if (oldHome != null) t.homes.put("home", oldHome);
+            var hs = yml.getConfigurationSection(key + ".homes");
+            if (hs != null) for (String h : hs.getKeys(false)) t.homes.put(h, hs.getString(h));
             t.bank = yml.getLong(key + ".bank");
+            t.xp = yml.getLong(key + ".xp");
+            var st = yml.getConfigurationSection(key + ".storage");
+            if (st != null) {
+                for (String slot : st.getKeys(false)) {
+                    try {
+                        int i = Integer.parseInt(slot);
+                        if (i >= 0 && i < 54) t.storage[i] = st.getItemStack(slot);
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+            }
             teams.put(tk, t);
             for (String a : yml.getStringList(key + ".allies")) {
                 allies.computeIfAbsent(tk, k -> new HashSet<>()).add(a.contains("|") ? a : "smp|" + a);
@@ -100,6 +138,53 @@ public final class TeamService {
         return plugin.getConfig().getInt("team.max-members", 5);
     }
 
+    // ---------- Team-Level ----------
+
+    public static long xpFor(int level) {
+        return 200L * level * (level - 1);
+    }
+
+    public int maxLevel() {
+        return Math.max(1, plugin.getConfig().getInt("team.max-level", 10));
+    }
+
+    public int level(Team t) {
+        int l = 1;
+        while (l < maxLevel() && xpFor(l + 1) <= t.xp) l++;
+        return l;
+    }
+
+    /** Plätze im Team: Grundwert plus je Level (team.members-per-level). */
+    public int maxMembers(Team t) {
+        return maxMembers() + (level(t) - 1) * plugin.getConfig().getInt("team.members-per-level", 1);
+    }
+
+    /** Team-Homes: 1, dazu eins je zwei Level (höchstens 5). */
+    public int homeLimit(Team t) {
+        return Math.min(5, 1 + (level(t) - 1) / 2);
+    }
+
+    /** Reihen im Team-Lager: 1, dazu eine je zwei Level (höchstens 6). */
+    public int storageRows(Team t) {
+        return Math.min(6, 1 + (level(t) - 1) / 2);
+    }
+
+    /** Team-XP für ein Mitglied (z. B. aktive Spielzeit). Aufstiege werden dem Team gemeldet. */
+    public synchronized void addXp(UUID member, long amount) {
+        Team t = of(member);
+        if (t == null || amount <= 0) return;
+        int before = level(t);
+        t.xp += amount;
+        int after = level(t);
+        if (after > before) {
+            for (UUID m : t.members) {
+                Player p = Bukkit.getPlayer(m);
+                if (p != null) Msg.send(p, "<gold><b>Team-Level " + after + "!</b> <gray>Jetzt " + maxMembers(t) + " Plätze, "
+                        + homeLimit(t) + " Team-Homes, Lager mit " + storageRows(t) + " Reihen.");
+            }
+        }
+    }
+
     public String create(Player p, String rawName) {
         UUID id = p.getUniqueId();
         if (of(id) != null) return "Du bist schon in einem Team.";
@@ -125,7 +210,7 @@ public final class TeamService {
         if (target.equals(inviter)) return "Du kannst dich nicht selbst einladen.";
         if (!mode(target.getUniqueId()).equals(t.mode)) return "Dieser Spieler ist gerade in einem anderen Modus.";
         if (of(target.getUniqueId()) != null) return "Dieser Spieler ist schon in einem Team.";
-        if (t.members.size() >= maxMembers()) return "Dein Team ist voll.";
+        if (t.members.size() >= maxMembers(t)) return "Dein Team ist voll.";
         invites.put(mkey(target.getUniqueId()), key(t));
         return null;
     }
@@ -136,7 +221,7 @@ public final class TeamService {
         if (tk == null) return "Keine offene Einladung.";
         Team t = teams.get(tk);
         if (t == null) return "Dieses Team existiert nicht mehr.";
-        if (t.members.size() >= maxMembers()) return "Das Team ist inzwischen voll.";
+        if (t.members.size() >= maxMembers(t)) return "Das Team ist inzwischen voll.";
         t.members.add(id);
         memberOf.put(mkey(id), tk);
         save();
@@ -149,6 +234,7 @@ public final class TeamService {
         t.members.remove(id);
         memberOf.remove(mkey(id));
         if (t.members.isEmpty()) {
+            payOut(t, id);
             teams.remove(key(t));
         } else if (t.leader.equals(id)) {
             t.leader = t.members.iterator().next();
@@ -161,24 +247,120 @@ public final class TeamService {
         Team t = of(p.getUniqueId());
         if (t == null) return "Du hast kein Team.";
         if (!t.leader.equals(p.getUniqueId())) return "Nur der Teamchef kann das Team auflösen.";
+        payOut(t, p.getUniqueId());
         for (UUID m : t.members) memberOf.remove(t.mode + "|" + m);
         teams.remove(key(t));
         save();
         return null;
     }
 
+    /** Kasse und Lager eines aufgelösten Teams gehen an den, der es auflöst (bzw. als Letzter geht). */
+    private void payOut(Team t, UUID to) {
+        if (t.bank > 0) plugin.modes().depositIn(to, t.mode, t.bank);
+        t.bank = 0;
+        if (t.storageInv != null) {
+            for (org.bukkit.entity.HumanEntity v : List.copyOf(t.storageInv.getViewers())) v.closeInventory();
+            t.storage = t.storageInv.getContents();
+        }
+        for (ItemStack it : t.storage) if (it != null && !it.getType().isAir()) plugin.modes().abholboxIn(to, t.mode, it);
+        t.storage = new ItemStack[54];
+    }
+
     public String setHome(Player p) {
+        return setHome(p, "home");
+    }
+
+    public String setHome(Player p, String rawName) {
         Team t = of(p.getUniqueId());
         if (t == null) return "Du hast kein Team.";
-        t.home = Locs.serialize(p.getLocation());
+        String name = clean(rawName).toLowerCase();
+        if (name.isEmpty()) name = "home";
+        if (!t.homes.containsKey(name) && t.homes.size() >= homeLimit(t)) {
+            return "Euer Team-Level erlaubt " + homeLimit(t) + " Team-Home(s). Lösch eins oder steigt im Level auf.";
+        }
+        String blocked = plugin.homes().blockedReason(p.getLocation());
+        if (blocked != null) return blocked;
+        t.homes.put(name, Locs.serialize(p.getLocation()));
+        save();
+        return null;
+    }
+
+    public String delHome(Player p, String rawName) {
+        Team t = of(p.getUniqueId());
+        if (t == null) return "Du hast kein Team.";
+        if (t.homes.remove(clean(rawName).toLowerCase()) == null) return "Dieses Team-Home gibt es nicht.";
         save();
         return null;
     }
 
     public Location homeOf(UUID id) {
         Team t = of(id);
-        if (t == null || t.home == null) return null;
-        return Locs.parse(t.home);
+        if (t == null || t.homes.isEmpty()) return null;
+        return homeOf(id, t.homes.containsKey("home") ? "home" : t.homes.keySet().iterator().next());
+    }
+
+    public Location homeOf(UUID id, String name) {
+        Team t = of(id);
+        if (t == null) return null;
+        String raw = t.homes.get(clean(name).toLowerCase());
+        return raw == null ? null : Locs.parse(raw);
+    }
+
+    /** Abheben aus der Kasse (nur Teamchef). */
+    public String withdraw(Player p, long amount) {
+        Team t = of(p.getUniqueId());
+        if (t == null) return "Du hast kein Team.";
+        if (!t.leader.equals(p.getUniqueId())) return "Nur der Teamchef kann abheben.";
+        if (amount <= 0 || amount > t.bank) return "In der Kasse sind " + Msg.coins(t.bank) + "$.";
+        t.bank -= amount;
+        plugin.economy().deposit(p.getUniqueId(), amount);
+        save();
+        return null;
+    }
+
+    /** Mitglied entfernen (nur Teamchef). */
+    public String kick(Player p, UUID target) {
+        Team t = of(p.getUniqueId());
+        if (t == null) return "Du hast kein Team.";
+        if (!t.leader.equals(p.getUniqueId())) return "Nur der Teamchef kann Mitglieder entfernen.";
+        if (target.equals(p.getUniqueId())) return "Du kannst dich nicht selbst entfernen.";
+        if (!t.members.remove(target)) return "Dieser Spieler ist nicht in deinem Team.";
+        memberOf.remove(t.mode + "|" + target);
+        Player kicked = Bukkit.getPlayer(target);
+        if (kicked != null) {
+            if (t.storageInv != null && t.storageInv.getViewers().contains(kicked)) kicked.closeInventory();
+            Msg.send(kicked, "<red>Du wurdest aus dem Team " + t.name + " entfernt.");
+        }
+        save();
+        return null;
+    }
+
+    /** Team-Lager öffnen (alle Mitglieder, nur im Modus des Teams). */
+    public String openStorage(Player p) {
+        Team t = of(p.getUniqueId());
+        if (t == null) return "Du hast kein Team.";
+        int size = storageRows(t) * 9;
+        if (t.storageInv == null || (t.storageInv.getSize() != size && t.storageInv.getViewers().isEmpty())) {
+            if (t.storageInv != null) t.storage = t.storageInv.getContents();
+            t.storageInv = Bukkit.createInventory(new StorageHolder(t), size, Msg.parse("<dark_gray>Team-Lager " + t.name));
+            ItemStack[] content = new ItemStack[size];
+            List<ItemStack> overflow = new ArrayList<>();
+            for (int i = 0; i < t.storage.length; i++) {
+                if (t.storage[i] == null) continue;
+                if (i < size) content[i] = t.storage[i];
+                else overflow.add(t.storage[i]);
+            }
+            t.storageInv.setContents(content);
+            for (ItemStack it : overflow) t.storageInv.addItem(it);
+        }
+        p.openInventory(t.storageInv);
+        return null;
+    }
+
+    /** Lager-Inhalt übernehmen (beim Schließen). */
+    public synchronized void storageClosed(Team t) {
+        if (t.storageInv != null) t.storage = java.util.Arrays.copyOf(t.storageInv.getContents(), 54);
+        save();
     }
 
     public String deposit(Player p, long amount) {
@@ -228,8 +410,13 @@ public final class TeamService {
             String k = key(t);
             out.set(k + ".leader", t.leader.toString());
             out.set(k + ".members", t.members.stream().map(UUID::toString).toList());
-            if (t.home != null) out.set(k + ".home", t.home);
+            for (Map.Entry<String, String> h : t.homes.entrySet()) out.set(k + ".homes." + h.getKey(), h.getValue());
             out.set(k + ".bank", t.bank);
+            out.set(k + ".xp", t.xp);
+            ItemStack[] content = t.storageInv != null ? t.storageInv.getContents() : t.storage;
+            for (int i = 0; i < content.length; i++) {
+                if (content[i] != null && !content[i].getType().isAir()) out.set(k + ".storage." + i, content[i]);
+            }
             out.set(k + ".allies", List.copyOf(allies.getOrDefault(k, Set.of())));
         }
         try {

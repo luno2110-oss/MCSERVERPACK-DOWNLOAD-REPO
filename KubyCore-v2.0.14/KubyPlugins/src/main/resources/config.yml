@@ -27,7 +27,9 @@ shop:
 
 team:
   create-cost: 1000
-  max-members: 5
+  max-members: 5              # Plätze auf Team-Level 1
+  members-per-level: 1        # mehr Plätze je Team-Level
+  max-level: 10               # Team-XP: 1 pro aktiver Minute in Survival, doppelt mit Teamkollegen online; Level L braucht 200*L*(L-1)
 
 market:
   tax-percent: 5

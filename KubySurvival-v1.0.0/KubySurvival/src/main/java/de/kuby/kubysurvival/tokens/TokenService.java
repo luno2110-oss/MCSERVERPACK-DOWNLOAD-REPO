@@ -121,6 +121,12 @@ public final class TokenService implements Listener {
             if (idleMin >= 5) continue;
             // Level-XP fürs Online-Sein (nur aktiv).
             addon.jobs().addPlayerXp(id, core.getConfig().getLong("level.xp-per-minute", 5));
+            // Team-XP: 1 pro aktiver Minute, doppelt wenn ein Teamkollege auch online ist.
+            var team = core.teams().of(id);
+            if (team != null) {
+                boolean together = team.members().stream().anyMatch(m -> !m.equals(id) && addon.getServer().getPlayer(m) != null);
+                core.teams().addXp(id, together ? 2 : 1);
+            }
             synchronized (this) {
                 Data d = data(id);
                 d.minutes++;

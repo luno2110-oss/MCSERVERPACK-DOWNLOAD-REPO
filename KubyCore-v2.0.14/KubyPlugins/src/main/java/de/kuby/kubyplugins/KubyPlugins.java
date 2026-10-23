@@ -304,6 +304,7 @@ public final class KubyPlugins extends JavaPlugin {
         setAll(new KpCommand(this), "kp");
         getServer().getPluginManager().registerEvents(new TradeListener(this), this);
         getServer().getPluginManager().registerEvents(new QuizListener(this), this);
+        getServer().getPluginManager().registerEvents(new de.kuby.kubyplugins.listener.TeamStorageListener(this), this);
         new KeyAllTimer(this).start();
 
         getServer().getPluginManager().registerEvents(new GuiListener(), this);
