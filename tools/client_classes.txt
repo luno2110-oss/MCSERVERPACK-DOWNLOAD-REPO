@@ -1,0 +1,24 @@
+# Muster (in der Jar mit Mojang-Namen) für .github/workflows/client-sources.yml
+net/minecraft/client/gui/screens/dialog/*
+net/minecraft/server/dialog/*
+net/minecraft/client/gui/render/*
+net/minecraft/client/gui/font/*
+net/minecraft/client/gui/components/AbstractStringWidget*
+net/minecraft/client/gui/components/MultiLineTextWidget*
+net/minecraft/client/gui/components/FocusableTextWidget*
+net/minecraft/client/gui/components/AbstractWidget*
+net/minecraft/client/gui/components/AbstractButton*
+net/minecraft/client/gui/components/Button*
+net/minecraft/client/gui/components/MultiLineLabel*
+net/minecraft/client/gui/components/ScrollableLayout*
+net/minecraft/client/gui/ActiveTextCollector*
+net/minecraft/client/gui/GuiGraphics*
+net/minecraft/client/gui/Font*
+net/minecraft/client/gui/TextAlignment*
+net/minecraft/client/gui/screens/Screen*
+net/minecraft/client/gui/screens/ConfirmLinkScreen*
+net/minecraft/client/renderer/entity/DisplayRenderer*
+net/minecraft/client/renderer/entity/state/TextDisplayEntityRenderState*
+net/minecraft/network/chat/ClickEvent*
+net/minecraft/network/chat/Style*
+com/mojang/blaze3d/font/*

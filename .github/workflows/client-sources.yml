@@ -1,0 +1,63 @@
+# Dekompiliert ausgewählte Client-Klassen (Dialoge, Text- und GUI-Darstellung) mit den offiziellen Mojang-Namen,
+# damit man genau nachlesen kann, wie Minecraft Dialoge und Schriften zeichnet. Nur zum Nachschlagen beim Entwickeln.
+# Ergebnis als Release "client-sources".
+name: Client-Quelltext holen
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - tools/client_classes.txt
+
+permissions:
+  contents: write
+
+jobs:
+  decompile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Client, Zuordnung und Werkzeuge laden
+        run: |
+          VERSION=$(head -n 1 tools/vanilla_assets.txt | tr -d '[:space:]')
+          curl -sSL https://piston-meta.mojang.com/mc/game/version_manifest_v2.json -o manifest.json
+          URL=$(python3 -c "import json; m=json.load(open('manifest.json')); print(next(v['url'] for v in m['versions'] if v['id']=='$VERSION'))")
+          curl -sSL "$URL" -o version.json
+          curl -sSL "$(python3 -c "import json; print(json.load(open('version.json'))['downloads']['client']['url'])")" -o client.jar
+          curl -sSL "$(python3 -c "import json; print(json.load(open('version.json'))['downloads']['client_mappings']['url'])")" -o client.txt
+          curl -sSL https://repo1.maven.org/maven2/net/md-5/SpecialSource/1.11.4/SpecialSource-1.11.4-shaded.jar -o ss.jar
+          curl -sSL https://repo1.maven.org/maven2/org/vineflower/vineflower/1.11.1/vineflower-1.11.1.jar -o vf.jar
+          ls -la
+
+      - name: Namen zurückübersetzen
+        run: |
+          java -jar ss.jar --in-jar client.jar --out-jar mapped.jar --srg-in client.txt --reverse --quiet || echo "SpecialSource fehlgeschlagen"
+          ls -la mapped.jar || true
+
+      - name: Ausgewählte Klassen dekompilieren
+        run: |
+          mkdir -p sel out
+          if [ -s mapped.jar ]; then JAR=mapped.jar; else JAR=client.jar; fi
+          grep -v '^#' tools/client_classes.txt | while read -r pattern; do
+            [ -z "$pattern" ] && continue
+            unzip -q -o "$JAR" "$pattern" -d sel || true
+          done
+          (cd sel && zip -q -r ../sel.jar .)
+          java -jar vf.jar -dgs=1 -e="$JAR" sel.jar out/ || true
+          ls -R out | head -50
+          cp client.txt out/client_mappings.txt
+
+      - name: Als Release "client-sources" ablegen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          (cd out && zip -q -r ../client-sources.zip .)
+          gh release delete client-sources --yes --cleanup-tag || true
+          gh release create client-sources client-sources.zip --title "Client-Quelltext (nur zum Nachschlagen)" \
+            --notes "Ausgewählte Minecraft-Client-Klassen, dekompiliert, nur zum Nachschlagen." --prerelease
