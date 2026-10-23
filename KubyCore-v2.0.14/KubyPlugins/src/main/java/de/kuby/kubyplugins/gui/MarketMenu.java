@@ -82,7 +82,7 @@ public final class MarketMenu extends GuiMenu {
             return;
         }
 
-        int taxPercent = plugin.getConfig().getInt("market.tax-percent", 5);
+        int taxPercent = plugin.hasPerk("farmpass", l.seller()) ? 0 : plugin.getConfig().getInt("market.tax-percent", 5);
         long payout = l.price() - (l.price() * taxPercent / 100);
         plugin.modes().depositIn(l.seller(), modeOfSold, payout);
 

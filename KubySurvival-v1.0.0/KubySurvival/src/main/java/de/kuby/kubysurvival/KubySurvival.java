@@ -20,6 +20,9 @@ import de.kuby.kubysurvival.jobs.LevelCommand;
 import de.kuby.kubysurvival.jobs.TokenShopMenu;
 import de.kuby.kubysurvival.fishing.FishingService;
 import de.kuby.kubysurvival.farm.FarmWorldService;
+import de.kuby.kubysurvival.farmpass.FarmpassCommand;
+import de.kuby.kubysurvival.farmpass.FarmpassMenu;
+import de.kuby.kubysurvival.farmpass.FarmpassService;
 import de.kuby.kubysurvival.tokens.BackpackService;
 import de.kuby.kubysurvival.tokens.TokenService;
 import de.kuby.kubysurvival.shops.ChestShopCommand;
@@ -60,6 +63,7 @@ public final class KubySurvival extends JavaPlugin {
     private FarmWorldService farm;
     private WarpService warps;
     private TokenService tokens;
+    private FarmpassService farmpass;
     private BackpackService backpacks;
     private ChestShopService chestShops;
     private final Map<UUID, Location[]> zoneCorners = new HashMap<>();
@@ -76,6 +80,7 @@ public final class KubySurvival extends JavaPlugin {
     public FarmWorldService farm() { return farm; }
     public WarpService warps() { return warps; }
     public TokenService tokens() { return tokens; }
+    public FarmpassService farmpass() { return farmpass; }
     public BackpackService backpacks() { return backpacks; }
     public ChestShopService chestShops() { return chestShops; }
 
@@ -96,6 +101,8 @@ public final class KubySurvival extends JavaPlugin {
         sideQuests = new SideQuestService(this, core);
         farm = new FarmWorldService(this, core);
         warps = new WarpService(this, core);
+        farmpass = new FarmpassService(this, core);
+        getServer().getPluginManager().registerEvents(farmpass, this);
         tokens = new TokenService(this, core);
         getServer().getPluginManager().registerEvents(tokens, this);
         backpacks = new BackpackService(this, core);
@@ -172,6 +179,11 @@ public final class KubySurvival extends JavaPlugin {
         });
         core.registerStat("quests_done", id -> quests.total(id));
         core.registerStat("quest_streak", id -> (long) quests.streak(id));
+        FarmpassCommand farmpassCommand = new FarmpassCommand(this);
+        command("farmpass", farmpassCommand);
+        command("werkbank", farmpassCommand);
+        PluginCommand fpCmd = getCommand("farmpass");
+        if (fpCmd != null) fpCmd.setTabCompleter(farmpassCommand);
         LevelCommand levelCommand = new LevelCommand(this);
         command("level", levelCommand);
         PluginCommand levelCmd = getCommand("level");
@@ -237,6 +249,8 @@ public final class KubySurvival extends JavaPlugin {
                 p -> new JobMenu(this, core).open(p)));
         core.registerMainEntry(new KubyPlugins.MainEntry(Material.WRITABLE_BOOK, "Quests", "Tages-, Wochen- und Team-Quests, Geschichte",
                 p -> new QuestMenu(this).open(p)));
+        core.registerMainEntry(new KubyPlugins.MainEntry(Material.LILY_PAD, "Farmpass", "Monats-Pass mit Vorteilen",
+                p -> new FarmpassMenu(this).open(p)));
         core.registerMainEntry(new KubyPlugins.MainEntry(Material.ENDER_PEARL, "Spieler-Warps", "Läden und Bauwerke anderer besuchen",
                 p -> new WarpMenu(this, false, 0).open(p)));
         core.registerMainEntry(new KubyPlugins.MainEntry(Material.GOLDEN_AXE, "Grundstücke", "Landclaims sichern",
@@ -257,6 +271,7 @@ public final class KubySurvival extends JavaPlugin {
             chestShops.save();
             tokens.save();
             backpacks.save();
+            farmpass.save();
         }, 6000L, 6000L);
         getServer().getScheduler().runTaskLater(this, fishing::respawnSigns, 40L);
         getLogger().info("KubySurvival aktiv.");
@@ -274,6 +289,7 @@ public final class KubySurvival extends JavaPlugin {
         if (warps != null) warps.save();
         if (chestShops != null) chestShops.save();
         if (tokens != null) tokens.save();
+        if (farmpass != null) farmpass.shutdown();
         if (backpacks != null) backpacks.shutdown();
         if (intro != null) intro.save();
     }

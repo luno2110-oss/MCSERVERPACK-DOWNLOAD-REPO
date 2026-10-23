@@ -35,6 +35,8 @@ public final class JobService {
     /** Daten eines Spielers. */
     public static final class Worker {
         public Job job;
+        /** Nebenjob (nur mit Farmpass aktiv). */
+        public Job sideJob;
         public final Map<Job, Long> xp = new EnumMap<>(Job.class);
         public long totalXp;
         public long tokens;
@@ -203,9 +205,18 @@ public final class JobService {
         long wait = cooldownMinutes(p.getUniqueId());
         if (wait > 0) return "Du kannst deinen Job erst in " + wait + " Minuten wechseln (oder im Token-Shop sofort).";
         boolean first = w.job == null;
+        if (w.sideJob == job) w.sideJob = null;
         w.job = job;
         w.switchedAt = first ? 0 : System.currentTimeMillis();
         if (w.orderJob == null && !w.orderFinished) newOrder(w);
+        return null;
+    }
+
+    /** Nebenjob setzen (Farmpass). Null = aus. Gibt eine Fehlermeldung zurück oder null. */
+    public synchronized String chooseSide(Player p, Job job) {
+        Worker w = worker(p.getUniqueId());
+        if (job != null && job == w.job) return "Das ist schon dein Hauptjob.";
+        w.sideJob = job;
         return null;
     }
 
@@ -237,7 +248,8 @@ public final class JobService {
     public synchronized void reward(Player p, Job job, int baseXp, int baseCoins) {
         if (!ModeService.SURVIVAL.equals(core.modes().modeOf(p.getUniqueId()))) return;
         Worker w = worker(p.getUniqueId());
-        if (w.job != job) return;
+        boolean side = job == w.sideJob && addon.farmpass() != null && addon.farmpass().active(p.getUniqueId());
+        if (w.job != job && !side) return;
         int jobBefore = jobLevel(w, job);
         double personal = boost(w);
         long xp = Math.round(baseXp * core.getConfig().getDouble("jobs.xp-multiplier", 1.0) * core.booster().multiplier() * personal);
@@ -333,6 +345,7 @@ public final class JobService {
             if (s == null) continue;
             Worker w = new Worker();
             w.job = Job.of(s.getString("job"));
+            w.sideJob = Job.of(s.getString("side-job"));
             w.totalXp = s.getLong("total-xp");
             w.tokens = s.getLong("tokens");
             w.earnedHour = s.getLong("earned-hour");
@@ -361,6 +374,7 @@ public final class JobService {
             Worker w = e.getValue();
             String base = "players." + e.getKey();
             out.set(base + ".job", w.job == null ? null : w.job.name());
+            out.set(base + ".side-job", w.sideJob == null ? null : w.sideJob.name());
             out.set(base + ".total-xp", w.totalXp);
             out.set(base + ".tokens", w.tokens);
             out.set(base + ".earned-hour", w.earnedHour);

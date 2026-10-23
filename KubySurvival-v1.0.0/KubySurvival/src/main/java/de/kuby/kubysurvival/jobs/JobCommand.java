@@ -15,7 +15,7 @@ import java.util.List;
 /** /job [info <Beruf>|waehlen <Beruf>|limit|auftrag|hilfe]. Ohne Argument öffnet sich das Job-Menü. */
 public final class JobCommand implements CommandExecutor, TabCompleter {
 
-    private static final List<String> SUBS = List.of("info", "waehlen", "limit", "auftrag", "hilfe");
+    private static final List<String> SUBS = List.of("info", "waehlen", "nebenjob", "limit", "auftrag", "hilfe");
 
     private final KubySurvival addon;
 
@@ -57,6 +57,25 @@ public final class JobCommand implements CommandExecutor, TabCompleter {
                     Msg.send(p, "<green>Du bist jetzt " + j.color + j.display + "<green>. <gray>Was zählt: <white>/job info");
                     p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.7f, 1.4f);
                 }
+            }
+            case "nebenjob", "side" -> {
+                if (addon.farmpass() == null || !addon.farmpass().active(p.getUniqueId())) {
+                    Msg.send(p, "<gray>Einen Nebenjob gibt es mit dem <green>Farmpass<gray>: <white>/farmpass");
+                    return true;
+                }
+                if (args.length < 2) {
+                    Msg.send(p, "<gray>Nebenjob: <white>" + (w.sideJob == null ? "keiner" : w.sideJob.display)
+                            + " <gray>· Setzen: <white>/job nebenjob <Beruf> <gray>· Aus: <white>/job nebenjob aus");
+                    return true;
+                }
+                Job j = args[1].equalsIgnoreCase("aus") ? null : Job.find(args[1]);
+                if (j == null && !args[1].equalsIgnoreCase("aus")) {
+                    Msg.send(p, "<red>Diesen Beruf gibt es nicht. <gray>(" + names() + ")");
+                    return true;
+                }
+                String err = jobs.chooseSide(p, j);
+                Msg.send(p, err != null ? "<red>" + err : j == null ? "<gray>Nebenjob aus."
+                        : "<green>Dein Nebenjob: " + j.color + j.display + "<green>. Er zahlt wie der Hauptjob (gleiches Stundenlimit).");
             }
             case "limit" -> {
                 long cap = jobs.hourlyCap(w);
@@ -100,6 +119,7 @@ public final class JobCommand implements CommandExecutor, TabCompleter {
                 {"/job waehlen <Beruf>", "Beruf wählen"},
                 {"/job limit", "Was diese Stunde noch geht"},
                 {"/job auftrag", "Dein Wochenauftrag"},
+                {"/job nebenjob <Beruf>", "Zweiter Job (Farmpass)"},
                 {"/tokenshop", "Token-Shop"}};
         for (String[] l : lines) {
             Msg.send(p, "<click:suggest_command:'" + l[0].replaceAll(" <.*", " ") + "'><white>" + Msg.escape(l[0]) + "</click> <gray>" + l[1]);
@@ -112,7 +132,8 @@ public final class JobCommand implements CommandExecutor, TabCompleter {
         List<String> out = new ArrayList<>();
         if (args.length == 1) {
             for (String s : SUBS) if (s.startsWith(args[0].toLowerCase())) out.add(s);
-        } else if (args.length == 2 && (args[0].equalsIgnoreCase("info") || args[0].equalsIgnoreCase("waehlen"))) {
+        } else if (args.length == 2 && (args[0].equalsIgnoreCase("info") || args[0].equalsIgnoreCase("waehlen")
+                || args[0].equalsIgnoreCase("nebenjob"))) {
             for (Job j : Job.values()) if (j.ascii.toLowerCase().startsWith(args[1].toLowerCase())) out.add(j.ascii.toLowerCase());
         }
         return out;

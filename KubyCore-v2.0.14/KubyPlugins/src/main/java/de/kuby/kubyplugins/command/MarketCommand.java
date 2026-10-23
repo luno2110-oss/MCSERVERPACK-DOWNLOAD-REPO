@@ -53,6 +53,7 @@ public final class MarketCommand implements CommandExecutor {
             return;
         }
         int max = plugin.getConfig().getInt("market.max-listings", 10);
+        if (plugin.hasPerk("farmpass", p.getUniqueId())) max = Math.max(max, plugin.getConfig().getInt("farmpass.market-listings", 15));
         long own = plugin.market().inMode(plugin.modes().modeOf(p.getUniqueId())).stream()
                 .filter(l -> l.seller().equals(p.getUniqueId()))
                 .count();

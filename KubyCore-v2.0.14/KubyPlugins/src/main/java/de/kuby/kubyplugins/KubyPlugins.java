@@ -426,6 +426,36 @@ public final class KubyPlugins extends JavaPlugin {
     private final java.util.Map<String, java.util.function.Function<java.util.UUID, Long>> statProviders = new java.util.HashMap<>();
     public void registerStat(String key, java.util.function.Function<java.util.UUID, Long> fn) { statProviders.put(key, fn); }
 
+    /** Vorteile, die Addons vergeben (z. B. "farmpass"). Der Kern fragt sie bei Steuern, Homes usw. ab. */
+    private final java.util.Map<String, java.util.function.Predicate<java.util.UUID>> perks = new java.util.concurrent.ConcurrentHashMap<>();
+
+    public void registerPerk(String key, java.util.function.Predicate<java.util.UUID> check) { perks.put(key, check); }
+
+    public boolean hasPerk(String key, java.util.UUID id) {
+        java.util.function.Predicate<java.util.UUID> c = perks.get(key);
+        return c != null && c.test(id);
+    }
+
+    /** Zeichen vor dem Namen in Chat und Tab (MiniMessage), z. B. das grüne Blatt des Farmpasses. */
+    private final java.util.List<java.util.function.Function<java.util.UUID, String>> namePrefixes = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+    public void registerNamePrefix(java.util.function.Function<java.util.UUID, String> fn) { namePrefixes.add(fn); }
+
+    public String namePrefix(java.util.UUID id) {
+        StringBuilder sb = new StringBuilder();
+        for (java.util.function.Function<java.util.UUID, String> f : namePrefixes) {
+            String s = f.apply(id);
+            if (s != null && !s.isEmpty()) sb.append(s);
+        }
+        return sb.toString();
+    }
+
+    /** Tab-Namen mit Präfix aktualisieren. */
+    public void refreshTabName(org.bukkit.entity.Player p) {
+        String prefix = namePrefix(p.getUniqueId());
+        p.playerListName(prefix.isEmpty() ? null : de.kuby.kubyplugins.util.Msg.parse(prefix).append(net.kyori.adventure.text.Component.text(p.getName())));
+    }
+
     /** Texte von Addons für Anzeigen (z. B. der aktuelle Job). Leer, wenn kein Addon den Wert liefert. */
     private final java.util.Map<String, java.util.function.Function<java.util.UUID, String>> textProviders = new java.util.HashMap<>();
     public void registerText(String key, java.util.function.Function<java.util.UUID, String> fn) { textProviders.put(key, fn); }

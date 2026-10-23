@@ -74,7 +74,7 @@ public final class OrdersMenu extends GuiMenu {
         }
 
         long gross = (long) n * o.unitPrice();
-        long tax = gross * plugin.getConfig().getInt("market.tax-percent", 5) / 100;
+        long tax = plugin.hasPerk("farmpass", p.getUniqueId()) ? 0 : gross * plugin.getConfig().getInt("market.tax-percent", 5) / 100;
         plugin.economy().deposit(p.getUniqueId(), gross - tax);
         Sfx.play(plugin, p, Sfx.Kind.COIN);
         Msg.send(p, "<green>Geliefert: <white>" + n + "x <green>für <gold>" + Msg.coins(gross - tax) + "$");

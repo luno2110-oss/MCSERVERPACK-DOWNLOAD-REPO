@@ -28,9 +28,11 @@ public final class QuizListener implements Listener {
             return;
         }
         String tag = plugin.tags().activeDisplay(player.getUniqueId());
-        if (tag != null) {
+        String prefix = plugin.namePrefix(player.getUniqueId());
+        if (tag != null || !prefix.isEmpty()) {
+            String head = prefix + (tag != null ? "<gray>[" + tag + "<gray>] " : "");
             e.renderer((source, displayName, message, viewer) ->
-                    Msg.parse("<gray>[" + tag + "<gray>] ").append(displayName)
+                    Msg.parse(head).append(displayName)
                             .append(Component.text(": ")).append(message));
         }
         plugin.getServer().getScheduler().runTask(plugin, () -> plugin.quiz().onChat(player, text));

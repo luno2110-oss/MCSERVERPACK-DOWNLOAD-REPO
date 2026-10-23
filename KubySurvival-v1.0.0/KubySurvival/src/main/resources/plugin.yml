@@ -35,6 +35,13 @@ commands:
     description: "Kistenläden: deine Läden und Anleitung"
     usage: "/chestshop [help]"
     aliases: [laden, shops]
+  farmpass:
+    description: "Farmpass: Vorteile, Haustier, Fliegen (Store: /farmpass give <Spieler> [Tage])"
+    usage: "/farmpass [pet|fly|kiste]"
+    aliases: [pass]
+  werkbank:
+    description: "Werkbank überall (Farmpass)"
+    aliases: [wb, craft]
   level:
     description: "Dein Level, das eines anderen oder die Rangliste"
     usage: "/level [Spieler|top]"

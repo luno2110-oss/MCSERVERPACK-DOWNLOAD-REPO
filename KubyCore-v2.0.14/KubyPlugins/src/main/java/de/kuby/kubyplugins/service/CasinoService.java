@@ -117,7 +117,10 @@ public final class CasinoService {
         long have = chips(p.getUniqueId());
         if (have < count) return "Du hast nur " + have + " Chips.";
         chips.put(p.getUniqueId(), have - count);
-        plugin.economy().deposit(p.getUniqueId(), count * price());
+        long gross = count * price();
+        // Casino-Steuer beim Auszahlen (Farmpass: steuerfrei).
+        int taxPercent = plugin.hasPerk("farmpass", p.getUniqueId()) ? 0 : plugin.getConfig().getInt("casino.cashout-tax-percent", 0);
+        plugin.economy().deposit(p.getUniqueId(), gross - gross * taxPercent / 100);
         save();
         return null;
     }

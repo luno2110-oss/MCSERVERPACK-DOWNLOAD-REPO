@@ -82,7 +82,8 @@ public final class HomeService implements ModeData {
     public int limit(Player player) {
         UUID id = player.getUniqueId();
         int base = plugin.getConfig().getInt("homes.default-limit", 2);
-        int bonus = extraBought(id) + (voted(id) ? 1 : 0) + (verified(id) ? 3 : 0);
+        int bonus = extraBought(id) + (voted(id) ? 1 : 0) + (verified(id) ? 3 : 0)
+                + (plugin.hasPerk("farmpass", id) ? plugin.getConfig().getInt("farmpass.extra-homes", 2) : 0);
         int rank = 0;
         ConfigurationSection ranks = plugin.getConfig().getConfigurationSection("homes.ranks");
         if (ranks != null) {
@@ -90,7 +91,7 @@ public final class HomeService implements ModeData {
                 if (player.hasPermission("kuby.rank." + r)) rank = Math.max(rank, ranks.getInt(r));
             }
         }
-        return Math.max(base + bonus, rank);
+        return Math.max(base + bonus, rank + (plugin.hasPerk("farmpass", id) ? plugin.getConfig().getInt("farmpass.extra-homes", 2) : 0));
     }
 
     public synchronized int extraBought(UUID id) {
