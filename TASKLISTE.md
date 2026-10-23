@@ -20,6 +20,12 @@ Prinzip: Keine GUI. Spiel läuft über physische Dinge am Tisch (Karten, Chips, 
 - [~] 1.3 Anleitung (Test im Spiel offen): Casino-Hilfe als Dialog-Fenster nach der Referenz (Titel, "So geht's", Befehle, Buttons je Spiel, "Hinreisen"). Öffnen per `/casino regeln [spiel]` oder `/casino hilfe`, Rechtsklick auf Kasse oder Roulette-Tisch, Schleichen + Rechtsklick auf einen Spieltisch. Werte aus der config.yml. Offen: roter Rahmen der Referenz braucht Grafiken im Resource Pack
 - [ ] 1.4 Sound und Anzeige: Gewinn, Verlust, Jackpot (Sound + schwebender Text)
 - [ ] 1.5 Admin: Tische einrichten, Einsatzlimits, Auszahlung, Protokoll
+- [ ] 1.6 Aus der Casino-Referenz (Entscheidung nötig, weicht vom aktuellen Stand ab)
+  - [ ] Jackpot: jeden Samstag 18 Uhr Verlosung unter allen, die seit der letzten Ziehung gespielt haben (aktuell: drei Siebener bei Slots)
+  - [ ] Casino-Musik, Songauswahl mit /music (nur im Casino)
+  - [ ] VIP-Lounge: Barkeeper geben einmal am Tag 500 Chips. Zutritt mit Legend-Rang oder Top 10 der Rangliste „Am meisten Plus“
+  - [ ] Rangliste „Am meisten Plus“ (/casino stats)
+  - [ ] Poker: Texas Hold'em gegen andere Spieler in der VIP-Lounge, Blinds ab 10/20, Buy-in 40 bis 200 Big Blinds, Stack beim Aufstehen mitnehmen (/poker)
 
 ## Ordnergruppe 2 – Angeln (Refs: ANGEL REF) – nur Survival
 - [x] 2.1 Angelzonen mit schwebendem Text (v1.36)
