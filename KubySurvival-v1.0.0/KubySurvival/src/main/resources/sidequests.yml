@@ -1,0 +1,50 @@
+# Nebenquests bei Figuren. Jede Figur hat mehrere Aufgaben, die nacheinander kommen.
+# Figuren aufstellen: /kp figur setzen <id> (an deiner Position), entfernen: /kp figur entfernen <id>, Liste: /kp figur liste
+# Aufgabe: "Name;Was die Figur sagt;Aufgabe;Typ;Menge;Coins;Tokens;XP"
+# Typen wie in quests.yml (break, kill, fish, breed, shear, enchant, craft, smelt, eat, trade, jobxp, playtime), dazu:
+#   bring:<MATERIAL>   Gegenstände zur Figur bringen (werden beim Ansprechen abgegeben)
+#   talk:<figur-id>    mit einer anderen Figur sprechen
+# Beruf: Aussehen des Dorfbewohners (farmer, fisherman, weaponsmith, armorer, cleric, librarian, cartographer, ...)
+
+figures:
+  fischer_fritz:
+    name: "Fischer Fritz"
+    beruf: fisherman
+    quests:
+      - "Zittrige Hände;Ah, ein neues Gesicht! Meine Hände zittern, ich krieg keinen Fisch mehr an den Haken. Fängst du mir ein paar?;Fange 10 Fische;fish;10;400;0;150"
+      - "Frischer Fang;Der Markt wartet auf meinen Kabeljau. Bringst du mir fünf Stück? Ich zahl gut!;Bring Fritz 5 rohe Kabeljaue;bring:COD;5;500;1;200"
+      - "Gruß an Berta;Berta vom Hof hat mir letztens Brot geschenkt. Sag ihr bitte danke von mir!;Sprich mit Bäuerin Berta;talk:baeuerin_berta;1;300;0;150"
+      - "Der Schatz im See;Man sagt, im See liegen alte Schätze. Wer genug angelt, zieht sie raus. Versuch dein Glück!;Fange 40 Fische;fish;40;1500;2;600"
+  baeuerin_berta:
+    name: "Bäuerin Berta"
+    beruf: farmer
+    quests:
+      - "Erntehelfer;Das Korn steht reif und mein Rücken macht nicht mehr mit. Hilfst du mir bei der Ernte?;Ernte 32 reife Pflanzen;break:crops;32;400;0;150"
+      - "Brot für alle;Im Dorf hungern sie. Backst du zehn Brote für mich?;Bring Berta 10 Brote;bring:BREAD;10;600;1;250"
+      - "Neues Leben;Meine Ställe sind so leer. Ein paar Jungtiere wären schön.;Züchte 6 Tiere;breed;6;600;1;250"
+      - "Kürbiskuchen;Zum Erntefest fehlen noch Kürbiskuchen. Drei würden reichen!;Bring Berta 3 Kürbiskuchen;bring:PUMPKIN_PIE;3;1200;2;500"
+  schmied_bruno:
+    name: "Schmied Bruno"
+    beruf: weaponsmith
+    quests:
+      - "Leeres Lager;Mein Erzlager ist leer. Geh in die Tiefe und bau mir Erz ab!;Baue 20 Erze ab;break:ores;20;500;0;200"
+      - "Eisen für die Esse;Ich brauche Eisen für neue Schwerter. Sechzehn Barren, bitte.;Bring Bruno 16 Eisenbarren;bring:IRON_INGOT;16;800;1;300"
+      - "Heißes Eisen;Ein guter Schmied kennt seinen Ofen. Schmilz etwas und lern das Handwerk!;Schmelze 64 Gegenstände;smelt:*;64;800;1;300"
+      - "Das Meisterstück;Für mein Meisterstück fehlen nur noch zwei Diamanten. Findest du welche?;Bring Bruno 2 Diamanten;bring:DIAMOND;2;2500;3;800"
+  waechterin_wanda:
+    name: "Wächterin Wanda"
+    beruf: armorer
+    quests:
+      - "Untote am Waldrand;Nachts kommen die Zombies bis an die Mauer. Hilf mir, sie zurückzudrängen!;Besiege 15 Zombies;kill:ZOMBIE;15;500;0;200"
+      - "Pfeile im Dunkeln;Skelette schießen auf unsere Wachen. Räum mit ihnen auf!;Besiege 15 Skelette;kill:SKELETON;15;600;1;250"
+      - "Eine Nachricht;Bruno soll uns neue Schwerter schmieden. Bring ihm meine Bestellung!;Sprich mit Schmied Bruno;talk:schmied_bruno;1;300;0;150"
+      - "Zischende Gefahr;Creeper haben die Brücke gesprengt. Das darf nicht wieder passieren!;Besiege 8 Creeper;kill:CREEPER;8;800;1;300"
+      - "Die lange Nacht;Heute Nacht greifen sie alle an. Halte durch, Held!;Besiege 100 Monster;kill:monster;100;3000;3;1000"
+  holzfaeller_hans:
+    name: "Holzfäller Hans"
+    beruf: leatherworker
+    quests:
+      - "Brennholz;Der Winter kommt und mein Holzstapel ist klein. Fällst du ein paar Bäume?;Fälle 64 Baumstämme;break:logs;64;500;0;200"
+      - "Neue Bäume;Wer fällt, muss auch pflanzen! Bring mir sechzehn Eichensetzlinge.;Bring Hans 16 Eichensetzlinge;bring:OAK_SAPLING;16;500;1;200"
+      - "Bretter für die Brücke;Wanda braucht eine neue Brücke. Dafür brauche ich viele Bretter.;Bring Hans 64 Eichenbretter;bring:OAK_PLANKS;64;700;1;300"
+      - "Der große Einschlag;Jetzt zeig mal, was du kannst. Ein ganzer Wald wartet!;Fälle 300 Baumstämme;break:logs;300;2500;3;800"

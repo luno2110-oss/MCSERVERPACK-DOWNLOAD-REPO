@@ -98,6 +98,8 @@ public final class QuestMenu extends GuiMenu {
         set(34, Items.make(Material.NETHER_STAR, "<gold>Meilensteine", List.of("<gray>Stufen für Level, Spielzeit,", "<gray>Fische, Serie und mehr", "", "<yellow>Klick")),
                 e -> new MilestoneMenu(addon).open(p));
 
+        set(36, Items.make(Material.MAP, "<gold>Nebenquests", List.of("<gray>Kleine Geschichten bei Figuren", "", "<yellow>Klick")),
+                e -> new SideQuestMenu(addon).open(p));
         boolean off = "-".equals(q.trackedKey(id));
         set(45, Items.make(off ? Material.GRAY_DYE : Material.LIME_DYE, "<white>Anzeige oben: " + (off ? "<red>aus" : "<green>an"), List.of(
                 "<gray>Die verfolgte Quest steht oben", "<gray>am Bildschirm. Ohne Auswahl", "<gray>das aktuelle Kapitel.", "", "<yellow>Klick zum Umschalten")), e -> {

@@ -382,6 +382,7 @@ public final class QuestService {
     public synchronized void progress(Player p, String type, Object subject, long amount) {
         if (amount <= 0 || !survival(p)) return;
         UUID id = p.getUniqueId();
+        if (addon.sideQuests() != null) addon.sideQuests().progress(p, type, subject, amount);
         Data d = data(id);
         for (String q : d.daily) advance(p, d, "d:", daily.get(q), type, subject, amount);
         for (String q : d.weekly) advance(p, d, "w:", weekly.get(q), type, subject, amount);
@@ -428,7 +429,7 @@ public final class QuestService {
         if (key.equals(d.tracked)) d.tracked = null;
     }
 
-    static boolean matches(Def q, String type, Object subject) {
+    public static boolean matches(Def q, String type, Object subject) {
         if (!q.type().equals(type)) return false;
         String arg = q.arg();
         if (arg == null || arg.equals("*")) return true;
@@ -609,7 +610,7 @@ public final class QuestService {
         if (xp > 0) addon.jobs().addPlayerXp(id, xp);
     }
 
-    static String rewardText(long coins, long tokens, long xp) {
+    public static String rewardText(long coins, long tokens, long xp) {
         StringBuilder sb = new StringBuilder();
         if (coins > 0) sb.append("<gold>+").append(Msg.coins(coins)).append(" Coins ");
         if (tokens > 0) sb.append("<light_purple>+").append(tokens).append(tokens == 1 ? " Token " : " Tokens ");
@@ -648,6 +649,11 @@ public final class QuestService {
                 key = null;
                 def = null;
             }
+        }
+        if (def == null && addon.sideQuests() != null) {
+            // Ohne eigene Auswahl hat eine laufende Nebenquest Vorrang vor der Geschichte.
+            Def side = addon.sideQuests().running(id);
+            if (side != null) return new Track("n:" + side.id(), side, addon.sideQuests().runningProgress(id));
         }
         if (def == null && d.story < story.size()) {
             def = story.get(d.story);

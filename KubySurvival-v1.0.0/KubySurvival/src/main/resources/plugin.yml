@@ -19,6 +19,10 @@ commands:
     description: "Quests: täglich, wöchentlich, Geschichte, Team, Meilensteine"
     usage: "/quest [daily|weekly|abholen|streak|top|aus|hilfe]"
     aliases: [quests]
+  sidequests:
+    description: "Nebenquests bei Figuren"
+    usage: "/sidequests [nav|cancel]"
+    aliases: [nebenquests, sidequest]
   tokenshop:
     description: "Token-Shop"
     usage: "/tokenshop"
