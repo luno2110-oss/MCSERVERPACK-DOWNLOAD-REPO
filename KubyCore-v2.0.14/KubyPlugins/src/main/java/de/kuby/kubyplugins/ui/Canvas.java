@@ -22,9 +22,10 @@ import java.util.function.Consumer;
  *
  * <p>Alles wird in Pixeln gesetzt: x nach rechts, y nach unten; bei Text ist y die Oberkante der Großbuchstaben.
  * Ein Dialog-Körper ist mehrzeiliger Text mit 9 px Zeilenhöhe. Jedes Zeichen kommt in eine Zeile und wird über die
- * Schrift (kuby:k/t3 = 3 px tiefer usw.) genau auf seine Höhe verschoben. Minecraft zeichnet die Zeichen einer Zeile
- * nach Textur sortiert; was übereinander liegt, muss darum in verschiedenen Zeilen stehen. {@link #build} ordnet das
- * automatisch: Ebenen weiter unten (Kasten unter Knopf unter Text) kommen in frühere Zeilen.
+ * Schrift (kuby:k/t3 = 3 px tiefer usw.) genau auf seine Höhe verschoben. Spätere Zeilen liegen über früheren; in
+ * einer Zeile zeichnet Minecraft (ab 1.21.6) die Zeichen in Textreihenfolge. {@link #build} ordnet das automatisch:
+ * Ebenen weiter unten (Kasten unter Knopf unter Text) kommen in frühere Zeilen, und wo das nicht geht (ganz oben),
+ * in derselben Zeile weiter vorn.
  *
  * <p>Klickbare Bereiche ({@link #action}) bekommen Klick und Tooltip auf alle Zeichen darin, auch auf den Hintergrund.
  */
@@ -228,9 +229,11 @@ public final class Canvas {
         w = Math.max(w, 2 * KitData.CAP + KitData.SEG);
         h = Math.max(h, 14);
         row(x, y, w, style.p[0], z);
-        // Mittelzeilen dürfen 4 px in die geraden Teile der oberen und unteren Zeile ragen
+        // Mittelzeilen dürfen in die geraden Teile der oberen und unteren Zeile ragen (ab Zeile style.straight)
+        int lo = y + style.straight;
+        int hi = y + h - LINE - style.straight;
         for (int p = y + LINE; p < y + h - LINE; p += LINE) {
-            row(x, Math.max(y + 5, Math.min(p, y + h - 14)), w, style.p[1], z);
+            row(x, Math.max(Math.min(lo, hi), Math.min(p, hi)), w, style.p[1], z);
         }
         row(x, y + h - LINE, w, style.p[2], z);
         return this;
@@ -284,6 +287,23 @@ public final class Canvas {
         return w;
     }
 
+    /** Kleiner Knopf (16 px hoch, mindestens 10 breit). */
+    public Canvas smallButton(int x, int y, int w, KitData.Small style) {
+        w = Math.max(w, 10);
+        int cap = Math.min(style.l.width(), w / 2);
+        piece(x, y, style.l, Z_BUTTON);
+        span(x + cap, x + w - cap, y, style.m, style.narrow, Z_BUTTON);
+        piece(x + w - style.r.width(), y, style.r, Z_BUTTON);
+        return this;
+    }
+
+    /** Kleiner Knopf mit Beschriftung in der Mitte. */
+    public Canvas smallButton(int x, int y, int w, KitData.Small style, String label, TextColor color, boolean bold) {
+        smallButton(x, y, w, style);
+        textCenter(x + w / 2, y + 4, label, color, bold);
+        return this;
+    }
+
     /** Zurück-Knopf 20 x 20 mit Pfeil. */
     public Canvas back(int x, int y) {
         piece(x, y, KitData.BACK, Z_BUTTON);
@@ -327,6 +347,74 @@ public final class Canvas {
         glyphs.add(new Glyph(Kind.ICON, x, y, size, size, big ? icon.adv32 : icon.adv16, Z_ICON, String.valueOf(c),
                 NamedTextColor.WHITE, false, Math.max(KitData.I_MIN, 7 - size), KitData.I_MAX, y, y + size));
         return this;
+    }
+
+    /** Icon in Originalgröße (Chips, Sterne, Noten) mit linker oberer Ecke bei (x, y). Gibt den Vorschub zurück. */
+    public int smallIcon(int x, int y, KitData.SmallIcon icon) {
+        glyphs.add(new Glyph(Kind.ICON, x, y, icon.advance - 1, icon.height, icon.advance, Z_ICON,
+                String.valueOf(icon.c), NamedTextColor.WHITE, false, Math.max(KitData.I_MIN, 7 - KitData.SMALL_CELL),
+                KitData.I_MAX, y, y + icon.height));
+        return icon.advance;
+    }
+
+    // =================================================================================================================
+    // Titelschrift
+    // =================================================================================================================
+
+    /** Breite eines Titels in der großen Titelschrift. */
+    public static int titleWidth(String text) {
+        int w = 0;
+        for (char c : titleText(text).toCharArray()) {
+            int i = KitData.TITLE_CHARS.indexOf(c);
+            w += KitData.TITLE_ADV.charAt(i) - '0';
+        }
+        return w;
+    }
+
+    private static String titleText(String text) {
+        StringBuilder sb = new StringBuilder(text.length());
+        for (char c : text.toUpperCase(java.util.Locale.ROOT).toCharArray()) {
+            sb.append(KitData.TITLE_CHARS.indexOf(c) < 0 ? '?' : c);
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Titel in der großen Titelschrift (Versalhöhe 17 px), y = Oberkante der Großbuchstaben. gold = fertig gefärbt
+     * (Gold-Verlauf), sonst hell und mit color eingefärbt. Gibt die Breite zurück.
+     */
+    public int title(int x, int y, String text, boolean gold, TextColor color) {
+        String t = titleText(text);
+        char base = gold ? KitData.TITLE_GOLD : KitData.TITLE_WHITE;
+        StringBuilder chars = new StringBuilder(t.length());
+        for (char c : t.toCharArray()) chars.append((char) (base + KitData.TITLE_CHARS.indexOf(c)));
+        int w = titleWidth(t);
+        int top = y - KitData.TITLE_TOP;
+        glyphs.add(new Glyph(Kind.ICON, x, top, w, KitData.TITLE_H, w, Z_TEXT, chars.toString(),
+                gold || color == null ? NamedTextColor.WHITE : color, false,
+                Math.max(KitData.I_MIN, 7 - KitData.TITLE_H), KitData.I_MAX, top, top + KitData.TITLE_H));
+        return w;
+    }
+
+    public int title(int x, int y, String text) {
+        return title(x, y, text, true, null);
+    }
+
+    /** Small Caps für die Kit-Schriften (ᴀʙᴄ ..., mit eigenen Umlauten ᴀ̈ ᴏ̈ ᴜ̈). */
+    public static String caps(String text) {
+        StringBuilder sb = new StringBuilder(text.length());
+        for (char c : text.toLowerCase(java.util.Locale.ROOT).toCharArray()) {
+            switch (c) {
+                case 'ä' -> sb.append('\ue0f0');
+                case 'ö' -> sb.append('\ue0f1');
+                case 'ü' -> sb.append('\ue0f2');
+                default -> {
+                    int i = "abcdefghijklmnopqrstuvwxyz".indexOf(c);
+                    sb.append(i >= 0 ? "ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘǫʀꜱᴛᴜᴠᴡxʏᴢ".charAt(i) : c);
+                }
+            }
+        }
+        return sb.toString();
     }
 
     // =================================================================================================================
@@ -394,20 +482,20 @@ public final class Canvas {
             for (Glyph o : placed) {
                 if (o.z > g.z && o.line <= line && g.overlaps(o)) line = o.line - 1;
             }
-            if (line < earliest) line = earliest;    // zu weit verschoben: Schrift fehlt, lieber falsch sortiert
+            if (line < 0) line = 0;                  // ganz oben: in derselben Zeile darunter einordnen (buildLine)
+            if (line < earliest) line = earliest;    // zu weit verschoben: Schrift fehlt
             g.line = line;
             placed.add(g);
             minLine = Math.min(minLine, line);
         }
-        int shift = minLine < 0 ? -minLine : 0;
-        topMargin = shift * LINE;
-        for (Glyph g : glyphs) g.line += shift;
+        topMargin = 0;
     }
 
     private record Style(Key font, TextColor color, boolean bold, boolean noShadow, Region region) {}
 
     private Component buildLine(List<Glyph> line, List<String> tokens) {
-        line.sort(Comparator.comparingInt((Glyph g) -> g.x));
+        // erst nach Ebene, dann von links nach rechts: Überlappendes in einer Zeile liegt so richtig übereinander
+        line.sort(Comparator.comparingInt((Glyph g) -> g.z).thenComparingInt(g -> g.x));
         List<Style> styles = new ArrayList<>();
         List<StringBuilder> texts = new ArrayList<>();
         int cursor = 0;
@@ -429,7 +517,7 @@ public final class Canvas {
                     texts.add(new StringBuilder(Ui.spaceChars(gap)));
                 }
             }
-            Style st = new Style(font, g.color, g.bold, g.kind != Kind.TEXT, g.region);
+            Style st = new Style(font, g.color, g.bold, g.kind != Kind.TEXT || dark(g.color), g.region);
             Style last = styles.isEmpty() ? null : styles.get(styles.size() - 1);
             if (last != null && last.equals(st)) {
                 texts.get(texts.size() - 1).append(g.chars);
@@ -469,6 +557,12 @@ public final class Canvas {
             b.append(c.build());
         }
         return b.build();
+    }
+
+    /** Dunkle Schrift (z. B. auf Gold- oder Grün-Knöpfen) ohne Schatten, wie in den Referenz-Menüs. */
+    private static boolean dark(TextColor c) {
+        if (c == null) return false;
+        return 0.299 * c.red() + 0.587 * c.green() + 0.114 * c.blue() < 64;
     }
 
     @Override

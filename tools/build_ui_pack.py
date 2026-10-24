@@ -553,6 +553,7 @@ import build_kit  # noqa: E402
 
 import build_fish  # noqa: E402
 import build_angel_icons  # noqa: E402
+import build_casino  # noqa: E402
 import build_sym  # noqa: E402
 
 build_sym.build(OUT)
@@ -563,7 +564,9 @@ if VANILLA and os.path.isdir(VANILLA):
     own = [("fish_" + f[0], build_fish.render(f)) for f in build_fish.FISH]
     own += [("fishx_" + f[0], build_fish.render(f, silhouette=True)) for f in build_fish.FISH]
     own += build_angel_icons.build(OUT)
-    build_kit.build(OUT, {**neg, **pos}, VANILLA, own)
+    casino16, casino_small, casino_big = build_casino.build(OUT)
+    own += casino16
+    build_kit.build(OUT, {**neg, **pos}, VANILLA, own, casino_small, casino_big)
 else:
     print("Hinweis: KUBY_VANILLA nicht gesetzt, Dialog-Kit nicht neu gebaut")
 

@@ -8,6 +8,14 @@ Stand: **v1.32** (ungetestet, nicht kompiliert)
 ## Ordnergruppe 1 – Casino (Refs: CASINO REF) – nur Survival
 Prinzip: Keine GUI. Spiel läuft über physische Dinge am Tisch (Karten, Chips, Rad, Dealer).
 
+- [~] 1.0 Neu nach den Referenz-Clips (Angeln.Casino.zip), Menüs pixelgenau wie im Clip (Dialog-Kit, siehe 5.30). Reihenfolge:
+  - [x] C1 Casino-Grafik: Kästen (roter Kopf mit Fase, Filz, dunkel mit Goldrand und Eck-Glanz), Farbfelder Rot/Grün/Schwarz, kleine 16-px-Knöpfe (Reiter, Zähler, „Wählen“, „Aktiv“), große Titelschrift (dicke Pixel-Großbuchstaben mit Kontur und Gold-Verlauf, auch als Schrift `kuby:title` für Hologramme), Poker-Chips (7 Farben), Roulette-Rad, Jukebox, Schallplatte, Noten, Stern, Münze. Tooltips überall im Clip-Stil (schwarz, lila Linie, goldene Eck-Knoten). Roulette- und Musik-Dialog liegen in der Vorschau fast deckungsgleich auf dem Clip
+  - [ ] C2 Kasse (Truhe „CASINO-KASSE“, Chip-Stapel als Items, eigener Betrag, 5 % Steuer, Kassen-NPC mit Hologramm)
+  - [ ] C3 Roulette (Dialog Einfach/Experte, Tisch mit Zahlenkranz und Lauflicht, Croupier)
+  - [ ] C4 Blackjack (Tisch mit 5 Plätzen, Hocker, Chip-Rack, Karten, Aktionsfelder, Dealer)
+  - [ ] C5 Slots (Automaten mit Walzen, Hebel, Einsatzknopf, Hocker, Hologramm)
+  - [ ] C6 Crash (Wand-Bildschirm mit Kurve, Spielertafeln, Creeper-Croupier, Info)
+  - [ ] C7 Musik (DJ Mia), Jackpot-Hologramm, Losbude, Ranking-Tafel, Eingang, Scoreboard, Casino-Hilfe
 - [~] 1.1 Grundlagen (Code fertig, Build und Test offen)
   - [x] Casino-Bereich als Region: Region mit ID `casino` anlegen, Schutz über das Regionssystem
   - [x] Chips als eigene Währung, Umtausch $ ↔ Chips am Kassentisch (`/casino kaufen|verkaufen`, Kassentisch per `/casino kasse`)
@@ -108,6 +116,7 @@ Reihenfolge wie das Hilfe-Karussell der Referenz. Jede Seite: Titel, Untertitel,
 - [x] 5.26 SMP-Logo: Pfeile wie in der Referenz, stecken schräg im oberen Rand neben „SMP“ (Spitze schaut heraus, 45°-Schaft, Feder als Fächer)
 - [x] 5.27 Fehler behoben: Casino-Hilfe zeigte nur Kästchen (ungültiger Aufzählungspunkt ließ Minecraft die ganze Schrift verwerfen). Schriften werden jetzt bei jedem Build geprüft (tools/check_fonts.py)
 - [x] 5.30 Dialog-Kit für Menüs mit eigener Grafik wie in den Referenz-Clips: Kästen, Kacheln, Reiter, Knöpfe, Balken und Icons werden pixelgenau als Dialog-Text gesetzt (Schriften kuby:k/…, Werkzeug tools/build_kit.py, Klassen Canvas, UiDialog, UiClicks). Ganze Kacheln sind klickbar mit Tooltip, kein Knopfbalken unten, das „!“ oben in Server-Dialogen ist ausgeblendet. Vorschau ohne Spiel: tools/preview_text.py. Test: `/kadmin kittest`
+- [x] 5.32 Dialog-Kit: Zeichen einer Zeile zeichnet Minecraft (ab 1.21.6) in Textreihenfolge, Klicks treffen die gezeichnete Stelle (im Client-Code nachgelesen). Überlappungen ganz oben kommen jetzt in dieselbe Zeile, dadurch keine Leerzeile mehr über dem Dialog. Fehler behoben: 40 Zeichen außerhalb der Basis-Ebene brachten die Breiten-Tabelle durcheinander (Small Caps wurden zu „?“)
 - [ ] 5.31 Alte Hilfe-Kästen (Casino-Hilfe, Survival-Hilfe) auf das Kit umstellen: Minecraft zeichnet Schriftzeichen nur bis 256 px, die alten Kästen sind 300 px breit
 - [ ] 5.17 Im Spiel prüfen: Sitz des Rahmens bei GUI-Größe 2, 3 und 4
 

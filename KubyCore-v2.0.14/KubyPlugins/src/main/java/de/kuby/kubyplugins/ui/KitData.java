@@ -15,6 +15,7 @@ public final class KitData {
     public static final int CAP = 8;
     public static final int ROW = 9;
     public static final int BTN_H = 22;
+    public static final int SMALL_H = 16;
     public static final int BAR_H = 7;
 
     /** Ein Hintergrund-Stück: Zeichen, Vorschub (Breite + 1), sichtbare Breite und Höhe. */
@@ -22,7 +23,7 @@ public final class KitData {
 
     /** Kasten-Stile (Rahmen aus Zeilen zu 9 px). */
     public enum Box {
-        NAVY(new Piece('\ue400', 9, 8, 9),
+        NAVY(5, new Piece('\ue400', 9, 8, 9),
                 new Piece('\ue500', 33, 32, 9),
                 new Piece('\ue401', 9, 8, 9),
                 new Piece('\ue402', 9, 8, 9),
@@ -31,7 +32,7 @@ public final class KitData {
                 new Piece('\ue404', 9, 8, 9),
                 new Piece('\ue502', 33, 32, 9),
                 new Piece('\ue405', 9, 8, 9)),
-        GREEN(new Piece('\ue406', 9, 8, 9),
+        GREEN(5, new Piece('\ue406', 9, 8, 9),
                 new Piece('\ue503', 33, 32, 9),
                 new Piece('\ue407', 9, 8, 9),
                 new Piece('\ue408', 9, 8, 9),
@@ -40,7 +41,7 @@ public final class KitData {
                 new Piece('\ue40a', 9, 8, 9),
                 new Piece('\ue505', 33, 32, 9),
                 new Piece('\ue40b', 9, 8, 9)),
-        GOLD(new Piece('\ue40c', 9, 8, 9),
+        GOLD(5, new Piece('\ue40c', 9, 8, 9),
                 new Piece('\ue506', 33, 32, 9),
                 new Piece('\ue40d', 9, 8, 9),
                 new Piece('\ue40e', 9, 8, 9),
@@ -49,7 +50,7 @@ public final class KitData {
                 new Piece('\ue410', 9, 8, 9),
                 new Piece('\ue508', 33, 32, 9),
                 new Piece('\ue411', 9, 8, 9)),
-        PURPLE(new Piece('\ue412', 9, 8, 9),
+        PURPLE(5, new Piece('\ue412', 9, 8, 9),
                 new Piece('\ue509', 33, 32, 9),
                 new Piece('\ue413', 9, 8, 9),
                 new Piece('\ue414', 9, 8, 9),
@@ -58,7 +59,7 @@ public final class KitData {
                 new Piece('\ue416', 9, 8, 9),
                 new Piece('\ue50b', 33, 32, 9),
                 new Piece('\ue417', 9, 8, 9)),
-        TEAL(new Piece('\ue418', 9, 8, 9),
+        TEAL(5, new Piece('\ue418', 9, 8, 9),
                 new Piece('\ue50c', 33, 32, 9),
                 new Piece('\ue419', 9, 8, 9),
                 new Piece('\ue41a', 9, 8, 9),
@@ -67,7 +68,7 @@ public final class KitData {
                 new Piece('\ue41c', 9, 8, 9),
                 new Piece('\ue50e', 33, 32, 9),
                 new Piece('\ue41d', 9, 8, 9)),
-        GRAY(new Piece('\ue41e', 9, 8, 9),
+        GRAY(5, new Piece('\ue41e', 9, 8, 9),
                 new Piece('\ue50f', 33, 32, 9),
                 new Piece('\ue41f', 9, 8, 9),
                 new Piece('\ue420', 9, 8, 9),
@@ -76,7 +77,7 @@ public final class KitData {
                 new Piece('\ue422', 9, 8, 9),
                 new Piece('\ue511', 33, 32, 9),
                 new Piece('\ue423', 9, 8, 9)),
-        RED(new Piece('\ue424', 9, 8, 9),
+        RED(5, new Piece('\ue424', 9, 8, 9),
                 new Piece('\ue512', 33, 32, 9),
                 new Piece('\ue425', 9, 8, 9),
                 new Piece('\ue426', 9, 8, 9),
@@ -85,7 +86,7 @@ public final class KitData {
                 new Piece('\ue428', 9, 8, 9),
                 new Piece('\ue514', 33, 32, 9),
                 new Piece('\ue429', 9, 8, 9)),
-        CASINO(new Piece('\ue42a', 9, 8, 9),
+        CASINO(6, new Piece('\ue42a', 9, 8, 9),
                 new Piece('\ue515', 33, 32, 9),
                 new Piece('\ue42b', 9, 8, 9),
                 new Piece('\ue42c', 9, 8, 9),
@@ -94,7 +95,7 @@ public final class KitData {
                 new Piece('\ue42e', 9, 8, 9),
                 new Piece('\ue517', 33, 32, 9),
                 new Piece('\ue42f', 9, 8, 9)),
-        CASINO_DARK(new Piece('\ue430', 9, 8, 9),
+        FELT(5, new Piece('\ue430', 9, 8, 9),
                 new Piece('\ue518', 33, 32, 9),
                 new Piece('\ue431', 9, 8, 9),
                 new Piece('\ue432', 9, 8, 9),
@@ -103,7 +104,7 @@ public final class KitData {
                 new Piece('\ue434', 9, 8, 9),
                 new Piece('\ue51a', 33, 32, 9),
                 new Piece('\ue435', 9, 8, 9)),
-        FELT(new Piece('\ue436', 9, 8, 9),
+        CASINO_DARK(5, new Piece('\ue436', 9, 8, 9),
                 new Piece('\ue51b', 33, 32, 9),
                 new Piece('\ue437', 9, 8, 9),
                 new Piece('\ue438', 9, 8, 9),
@@ -112,7 +113,7 @@ public final class KitData {
                 new Piece('\ue43a', 9, 8, 9),
                 new Piece('\ue51d', 33, 32, 9),
                 new Piece('\ue43b', 9, 8, 9)),
-        BLACK(new Piece('\ue43c', 9, 8, 9),
+        FIELD_RED(5, new Piece('\ue43c', 9, 8, 9),
                 new Piece('\ue51e', 33, 32, 9),
                 new Piece('\ue43d', 9, 8, 9),
                 new Piece('\ue43e', 9, 8, 9),
@@ -120,12 +121,33 @@ public final class KitData {
                 new Piece('\ue43f', 9, 8, 9),
                 new Piece('\ue440', 9, 8, 9),
                 new Piece('\ue520', 33, 32, 9),
-                new Piece('\ue441', 9, 8, 9));
+                new Piece('\ue441', 9, 8, 9)),
+        FIELD_GREEN(5, new Piece('\ue442', 9, 8, 9),
+                new Piece('\ue521', 33, 32, 9),
+                new Piece('\ue443', 9, 8, 9),
+                new Piece('\ue444', 9, 8, 9),
+                new Piece('\ue522', 33, 32, 9),
+                new Piece('\ue445', 9, 8, 9),
+                new Piece('\ue446', 9, 8, 9),
+                new Piece('\ue523', 33, 32, 9),
+                new Piece('\ue447', 9, 8, 9)),
+        FIELD_BLACK(5, new Piece('\ue448', 9, 8, 9),
+                new Piece('\ue524', 33, 32, 9),
+                new Piece('\ue449', 9, 8, 9),
+                new Piece('\ue44a', 9, 8, 9),
+                new Piece('\ue525', 33, 32, 9),
+                new Piece('\ue44b', 9, 8, 9),
+                new Piece('\ue44c', 9, 8, 9),
+                new Piece('\ue526', 33, 32, 9),
+                new Piece('\ue44d', 9, 8, 9));
 
         /** [Zeile oben/mitte/unten][links/mitte/rechts] */
         public final Piece[][] p;
+        /** Ab dieser Zeile ist die Ecke gerade: so weit dürfen Mittelzeilen in die obere und untere ragen. */
+        public final int straight;
 
-        Box(Piece... all) {
+        Box(int straight, Piece... all) {
+            this.straight = straight;
             p = new Piece[][]{{all[0], all[1], all[2]}, {all[3], all[4], all[5]}, {all[6], all[7], all[8]}};
         }
     }
@@ -171,13 +193,37 @@ public final class KitData {
         }
     }
 
+    /** Kleine Knöpfe (16 px hoch). */
+    public enum Small {
+        DARK(new Piece('\ue800', 9, 8, 16), new Piece('\ue880', 33, 32, 16), new Piece('\ue801', 9, 8, 16),
+                new Piece('\ue881', 17, 16, 16), new Piece('\ue802', 9, 8, 16), new Piece('\ue803', 5, 4, 16), new Piece('\ue804', 3, 2, 16), new Piece('\ue805', 2, 1, 16)),
+        GOLD(new Piece('\ue806', 9, 8, 16), new Piece('\ue882', 33, 32, 16), new Piece('\ue807', 9, 8, 16),
+                new Piece('\ue883', 17, 16, 16), new Piece('\ue808', 9, 8, 16), new Piece('\ue809', 5, 4, 16), new Piece('\ue80a', 3, 2, 16), new Piece('\ue80b', 2, 1, 16)),
+        GOLD_ON(new Piece('\ue80c', 9, 8, 16), new Piece('\ue884', 33, 32, 16), new Piece('\ue80d', 9, 8, 16),
+                new Piece('\ue885', 17, 16, 16), new Piece('\ue80e', 9, 8, 16), new Piece('\ue80f', 5, 4, 16), new Piece('\ue810', 3, 2, 16), new Piece('\ue811', 2, 1, 16)),
+        GOLD_GRAY(new Piece('\ue812', 9, 8, 16), new Piece('\ue886', 33, 32, 16), new Piece('\ue813', 9, 8, 16),
+                new Piece('\ue887', 17, 16, 16), new Piece('\ue814', 9, 8, 16), new Piece('\ue815', 5, 4, 16), new Piece('\ue816', 3, 2, 16), new Piece('\ue817', 2, 1, 16)),
+        GREEN(new Piece('\ue818', 9, 8, 16), new Piece('\ue888', 33, 32, 16), new Piece('\ue819', 9, 8, 16),
+                new Piece('\ue889', 17, 16, 16), new Piece('\ue81a', 9, 8, 16), new Piece('\ue81b', 5, 4, 16), new Piece('\ue81c', 3, 2, 16), new Piece('\ue81d', 2, 1, 16));
+
+        public final Piece l, m, r;
+        public final Piece[] narrow;
+
+        Small(Piece l, Piece m, Piece r, Piece... narrow) {
+            this.l = l;
+            this.m = m;
+            this.r = r;
+            this.narrow = narrow;
+        }
+    }
+
     /** Balken-Füllfarben; Stücke in den Breiten 1, 2, 4, 8, 16, 32. */
     public enum Fill {
-        GOLD(new Piece('\ue448', 2, 1, 5), new Piece('\ue449', 3, 2, 5), new Piece('\ue44a', 5, 4, 5), new Piece('\ue44b', 9, 8, 5), new Piece('\ue523', 17, 16, 5), new Piece('\ue524', 33, 32, 5)),
-        CYAN(new Piece('\ue44c', 2, 1, 5), new Piece('\ue44d', 3, 2, 5), new Piece('\ue44e', 5, 4, 5), new Piece('\ue44f', 9, 8, 5), new Piece('\ue525', 17, 16, 5), new Piece('\ue526', 33, 32, 5)),
-        GREEN(new Piece('\ue450', 2, 1, 5), new Piece('\ue451', 3, 2, 5), new Piece('\ue452', 5, 4, 5), new Piece('\ue453', 9, 8, 5), new Piece('\ue527', 17, 16, 5), new Piece('\ue528', 33, 32, 5)),
-        PURPLE(new Piece('\ue454', 2, 1, 5), new Piece('\ue455', 3, 2, 5), new Piece('\ue456', 5, 4, 5), new Piece('\ue457', 9, 8, 5), new Piece('\ue529', 17, 16, 5), new Piece('\ue52a', 33, 32, 5)),
-        RED(new Piece('\ue458', 2, 1, 5), new Piece('\ue459', 3, 2, 5), new Piece('\ue45a', 5, 4, 5), new Piece('\ue45b', 9, 8, 5), new Piece('\ue52b', 17, 16, 5), new Piece('\ue52c', 33, 32, 5));
+        GOLD(new Piece('\ue454', 2, 1, 5), new Piece('\ue455', 3, 2, 5), new Piece('\ue456', 5, 4, 5), new Piece('\ue457', 9, 8, 5), new Piece('\ue529', 17, 16, 5), new Piece('\ue52a', 33, 32, 5)),
+        CYAN(new Piece('\ue458', 2, 1, 5), new Piece('\ue459', 3, 2, 5), new Piece('\ue45a', 5, 4, 5), new Piece('\ue45b', 9, 8, 5), new Piece('\ue52b', 17, 16, 5), new Piece('\ue52c', 33, 32, 5)),
+        GREEN(new Piece('\ue45c', 2, 1, 5), new Piece('\ue45d', 3, 2, 5), new Piece('\ue45e', 5, 4, 5), new Piece('\ue45f', 9, 8, 5), new Piece('\ue52d', 17, 16, 5), new Piece('\ue52e', 33, 32, 5)),
+        PURPLE(new Piece('\ue460', 2, 1, 5), new Piece('\ue461', 3, 2, 5), new Piece('\ue462', 5, 4, 5), new Piece('\ue463', 9, 8, 5), new Piece('\ue52f', 17, 16, 5), new Piece('\ue530', 33, 32, 5)),
+        RED(new Piece('\ue464', 2, 1, 5), new Piece('\ue465', 3, 2, 5), new Piece('\ue466', 5, 4, 5), new Piece('\ue467', 9, 8, 5), new Piece('\ue531', 17, 16, 5), new Piece('\ue532', 33, 32, 5));
 
         public final Piece[] p;
 
@@ -186,10 +232,10 @@ public final class KitData {
         }
     }
 
-    public static final Piece BAR_L = new Piece('\ue442', 9, 8, 7);
-    public static final Piece BAR_M = new Piece('\ue521', 33, 32, 7);
-    public static final Piece BAR_R = new Piece('\ue443', 9, 8, 7);
-    public static final Piece[] BAR_NARROW = {new Piece('\ue522', 17, 16, 7), new Piece('\ue444', 9, 8, 7), new Piece('\ue445', 5, 4, 7), new Piece('\ue446', 3, 2, 7), new Piece('\ue447', 2, 1, 7)};
+    public static final Piece BAR_L = new Piece('\ue44e', 9, 8, 7);
+    public static final Piece BAR_M = new Piece('\ue527', 33, 32, 7);
+    public static final Piece BAR_R = new Piece('\ue44f', 9, 8, 7);
+    public static final Piece[] BAR_NARROW = {new Piece('\ue528', 17, 16, 7), new Piece('\ue450', 9, 8, 7), new Piece('\ue451', 5, 4, 7), new Piece('\ue452', 3, 2, 7), new Piece('\ue453', 2, 1, 7)};
     public static final Piece BACK = new Piece('\ue780', 21, 20, 20);
 
     /** Icons: Zeichen und Vorschub für 16 px und 32 px (Schriften kuby:k/i<s>). */
@@ -221,7 +267,7 @@ public final class KitData {
         INK('\ue930', 15, '\ue931', 29),
         EXPERIENCE('\ue932', 15, '\ue933', 29),
         MUSIC_DISC('\ue934', 16, '\ue935', 31),
-        JUKEBOX('\ue936', 16, '\ue937', 31),
+        DISC_13('\ue936', 16, '\ue937', 31),
         NAME_TAG('\ue938', 16, '\ue939', 31),
         TOTEM('\ue93a', 16, '\ue93b', 31),
         STAR('\ue93c', 16, '\ue93d', 31),
@@ -346,7 +392,18 @@ public final class KitData {
         CHEST('\uea6d', 15, '\uec6d', 29),
         SUN_HOUR('\uea6e', 16, '\uec6e', 31),
         BUOY('\uea6f', 15, '\uec6f', 29),
-        COIN_STACK('\uea70', 14, '\uec70', 27);
+        COIN_STACK('\uea70', 14, '\uec70', 27),
+        CHIP_WHITE('\uea71', 17, '\uec71', 33),
+        CHIP_RED('\uea72', 17, '\uec72', 33),
+        CHIP_BLUE('\uea73', 17, '\uec73', 33),
+        CHIP_GREEN('\uea74', 17, '\uec74', 33),
+        CHIP_BLACK('\uea75', 17, '\uec75', 33),
+        CHIP_PURPLE('\uea76', 17, '\uec76', 33),
+        CHIP_GOLD('\uea77', 17, '\uec77', 33),
+        CHIP_PINK('\uea78', 17, '\uec78', 33),
+        ROULETTE_WHEEL('\uedc0', 17, '\ued80', 32),
+        JUKEBOX('\uedc1', 15, '\ued81', 29),
+        VINYL('\uedc2', 17, '\ued82', 32);
 
         public final char c16, c32;
         public final int adv16, adv32;
@@ -358,6 +415,44 @@ public final class KitData {
             this.adv32 = adv32;
         }
     }
+
+    /** Icons in Originalgröße (Zellen 20 x 20, links oben): Zeichen, Vorschub, sichtbare Höhe. */
+    public enum SmallIcon {
+        S_CHIP_RED('\ued00', 12, 11),
+        S_CHIP_BLUE('\ued01', 12, 11),
+        S_CHIP_GOLD('\ued02', 12, 11),
+        S_CHIP_GREEN('\ued03', 12, 11),
+        C_WHITE('\ued04', 20, 19),
+        C_RED('\ued05', 20, 19),
+        C_BLUE('\ued06', 20, 19),
+        C_GREEN('\ued07', 20, 19),
+        C_BLACK('\ued08', 20, 19),
+        C_PURPLE('\ued09', 20, 19),
+        C_GOLD('\ued0a', 20, 19),
+        C_PINK('\ued0b', 20, 19),
+        S_STAR('\ued0c', 12, 10),
+        S_COIN('\ued0d', 11, 10),
+        S_NOTE('\ued0e', 9, 7),
+        S_NOTE_GOLD('\ued0f', 9, 7),
+        S_MUTE('\ued10', 11, 8);
+
+        public final char c;
+        public final int advance, height;
+
+        SmallIcon(char c, int advance, int height) {
+            this.c = c;
+            this.advance = advance;
+            this.height = height;
+        }
+    }
+
+    public static final int SMALL_CELL = 20;
+
+    /** Titelschrift (Schriften kuby:k/i<s> und kuby:title): Zeichen in TITLE_CHARS, Glyphe = Start + Index. */
+    public static final String TITLE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!?.,:-+/%'&#$\u2726\u2605\u00c4\u00d6\u00dc ";
+    public static final String TITLE_ADV = "@@@@@@@@8@@@B@@@@@@@@@B@@@@@@@@@@@@@8@888<@@@8@@@BB@@@8";
+    public static final char TITLE_GOLD = '\uee00', TITLE_WHITE = '\uef00';
+    public static final int TITLE_H = 23, TITLE_TOP = 5, TITLE_CAP = 17;
 
     /** Textzeichen der Schriften kuby:k/t<s> (sortiert) und ihr Vorschub ohne Fett. */
     static final String TEXT_CHARS = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\u00a1\u00a2\u00a3\u00a4\u00a5\u00a6\u00a7\u00a8\u00a9\u00aa\u00ab\u00ac\u00ad\u00ae\u00af\u00b0\u00b1\u00b2\u00b3\u00b4\u00b5\u00b6\u00b7\u00b9\u00ba"
@@ -379,8 +474,7 @@ public final class KitData {
             + "\u2159\u215a\u215b\u215c\u215d\u215e\u215f\u2189\u2190\u2191\u2192\u2193\u2194\u21bb\u21c4\u21cf\u21d2\u21d4\u21f5\u2200\u2201\u2202\u2203\u2204\u2205\u2208\u2209\u220b\u220c\u2211\u2212\u2213\u2219\u221a\u221b\u221c\u221d\u221e\u2225\u2227\u2228\u2229\u222b\u222e\u2234\u2235\u2248\u2254\u2260\u2261\u2262\u2264\u2265\u2282\u2283\u2284\u2285\u2286\u2287\u22a2\u22a4\u22a5\u22a8\u22bb\u22bc\u22bd\u22c3\u22c6\u2300\u2302\u2318\u231a\u231b\u2320\u2321\u23cf\u23e9\u23ea\u23ed\u23ee\u23ef\u23f3\u23f4\u23f5\u23f6\u23f7\u23f8\u23f9\u23fa\u23fb\u23fc\u23fd\u2460\u2461\u2462\u2463\u2464\u2465\u2466\u2467\u2468\u2469\u246a\u246b\u246c\u246d\u246e\u246f\u2470\u2471\u2472\u2473\u24b6\u24b7\u24b8\u24b9\u24ba\u24bb\u24bc\u24bd"
             + "\u24be\u24bf\u24c0\u24c1\u24c2\u24c3\u24c4\u24c5\u24c6\u24c7\u24c8\u24c9\u24ca\u24cb\u24cc\u24cd\u24ce\u24cf\u24d0\u24d1\u24d2\u24d3\u24d4\u24d5\u24d6\u24d7\u24d8\u24d9\u24da\u24db\u24dc\u24dd\u24de\u24df\u24e0\u24e1\u24e2\u24e3\u24e4\u24e5\u24e6\u24e7\u24e8\u24e9\u24ea\u2500\u2502\u250c\u2510\u2514\u2518\u251c\u2524\u252c\u2534\u253c\u2550\u2551\u2552\u2553\u2554\u2555\u2556\u2557\u2558\u2559\u255a\u255b\u255c\u255d\u255e\u255f\u2560\u2561\u2562\u2563\u2564\u2565\u2566\u2567\u2568\u2569\u256a\u256b\u256c\u2580\u2584\u2588\u258c\u2590\u2591\u2592\u2593\u25a0\u25a1\u25b2\u25b3\u25b6\u25b7\u25b8\u25bc\u25bd\u25c0\u25c1\u25c2\u25c6\u25c7\u25cb\u25ce\u25cf\u25d8\u25e6\u2600\u2601\u2602\u2603\u2604\u2605\u2606\u2608"
             + "\u2610\u2611\u2612\u2614\u2618\u261c\u261e\u2620\u262e\u262f\u2630\u2631\u2632\u2633\u2634\u2635\u2636\u2637\u2639\u263a\u263b\u263d\u2640\u2642\u2648\u2660\u2661\u2662\u2663\u2664\u2665\u2666\u2667\u2669\u266a\u266b\u266c\u266d\u266e\u266f\u2680\u2681\u2682\u2683\u2684\u2685\u2690\u2691\u2693\u2694\u2697\u26a0\u26a1\u26a5\u26c4\u26c8\u26cf\u26e8\u2702\u2709\u270e\u2713\u2714\u2717\u2718\u2726\u2731\u273f\u2744\u274c\u2763\u2764\u279c\u27d8\u2928\u295d\u29c8\u2b50\u2b58\u2bea\u2beb\u2c62\u2c65\u2c66\u2c6d\u2c6f\u2c71\u2c7e\u2c7f\u2d00\u2d01\u2d02\u2d03\u2d04\u2d05\u2d06\u2d07\u2d08\u2d09\u2d0a\u2d0b\u2d0c\u2d0d\u2d0e\u2d0f\u2d10\u2d11\u2d12\u2d13\u2d14\u2d15\u2d16\u2d17\u2d18\u2d19\u2d1a\u2d1b\u2d1c\u2d1d\u2d1e"
-            + "\u2d1f\u2d20\u2d21\u2d22\u2d23\u2d24\u2d25\u2e18\u2e2e\u2e35\u2e38\u2e41\u2e4b\u3012\u3125\ua680\ua681\ua682\ua683\ua684\ua685\ua686\ua687\ua688\ua689\ua68a\ua68b\ua68c\ua68d\ua68e\ua68f\ua690\ua691\ua692\ua693\ua694\ua695\ua696\ua697\ua726\ua727\ua728\ua729\ua730\ua731\ua732\ua733\ua734\ua735\ua736\ua737\ua738\ua739\ua73a\ua73b\ua73c\ua73d\ua73e\ua73f\ua74e\ua74f\ua75a\ua75b\ua760\ua761\ua779\ua780\ua781\ua794\ua795\ua7a8\ua7a9\ua7af\ua7b0\ua7c4\ua7c6\uab50\uab51\uab63\ufb00\ufb01\ufb02\ufb03\ufb04\ufb05\ufb06\ufb13\ufb14\ufb15\ufb16\ufb17\ufb1d\ufb1f\ufb2b\ufb2e\ufb2f\ufb31\ufb35\ufb3b\ufb44\ufb4a\ufb4b\ufb4c\ufb4e\uff0b\ufffd\u10330\u10331\u10332\u10333\u10334\u10335\u10336\u10337\u10338\u10339\u1033a\u1033b\u1033c\u1033d"
-            + "\u1033e\u1033f\u10340\u10341\u10342\u10343\u10344\u10345\u10346\u10347\u10348\u10349\u1034a\u1f30a\u1f327\u1f356\u1f3a3\u1f3f9\u1f514\u1f525\u1f531\u1f5e1\u1f6e1\u1f9ea\u1fa93\u1faa3";
+            + "\u2d1f\u2d20\u2d21\u2d22\u2d23\u2d24\u2d25\u2e18\u2e2e\u2e35\u2e38\u2e41\u2e4b\u3012\u3125\ua680\ua681\ua682\ua683\ua684\ua685\ua686\ua687\ua688\ua689\ua68a\ua68b\ua68c\ua68d\ua68e\ua68f\ua690\ua691\ua692\ua693\ua694\ua695\ua696\ua697\ua726\ua727\ua728\ua729\ua730\ua731\ua732\ua733\ua734\ua735\ua736\ua737\ua738\ua739\ua73a\ua73b\ua73c\ua73d\ua73e\ua73f\ua74e\ua74f\ua75a\ua75b\ua760\ua761\ua779\ua780\ua781\ua794\ua795\ua7a8\ua7a9\ua7af\ua7b0\ua7c4\ua7c6\uab50\uab51\uab63\ue0f0\ue0f1\ue0f2\ufb00\ufb01\ufb02\ufb03\ufb04\ufb05\ufb06\ufb13\ufb14\ufb15\ufb16\ufb17\ufb1d\ufb1f\ufb2b\ufb2e\ufb2f\ufb31\ufb35\ufb3b\ufb44\ufb4a\ufb4b\ufb4c\ufb4e\uff0b\ufffd";
     static final String TEXT_ADV = "424666624446262666666666662256567666666664666666666666666664646636666656626536666666466666642472668626485764865655367245"
             + "78886666666:6666644447666666666666666666666:6666633446666666666666666666666666666666877666666666666666666668755445543426"
             + "5666556363646475666666866666666::666666666666666465646666666666666666666666647866776777866666676769446546676688888666666"
@@ -397,9 +491,8 @@ public final class KitData {
             + "668888888888666666668765676666676699::::9966666699::::6666666699::::99436666557:98987766666699::::666666669::98888888899"
             + "::::9:666666436666886666666699::::996666666699::::998888888899::::9:6666666669966666699996544455547766666666669998888899"
             + "99604479333555663889357357548468:885742449525555554443355455555555444336667668::887776:6868866866786776:896:66699:99999:"
-            + "88999979868698899978566686666666678878466666667867766666666666666664888888567788784466466882::::::::::::::::::::::::::::"
+            + "88999979868698899978566686666666678878466666667867766666666666666664888888567798784466466882::::::::::::::::::::::::::::"
             + ":::::::::::::::::::::::::::::::::::::::::::::969696969999899968899968899968899999999999959899666677566775666854499888888"
-            + ":::88::8::66666666668946866666666468844688888888888:66799888887778888768869688888876668666776667666666677666666666666676"
-            + "6666666662626667766:9667777667666776697668766:::::::9:9:966::65666636776666766:8679:6::::::24666645663666866666666626666"
-            + "66666666666669999987998878";
+            + ":::88::8::66666666668946866666666468844688888888888:66799888887778888768868688888876668666776667666666677666666666666676"
+            + "6666666662626667766:9667777667666776697668766:::::::9:9:966::65666636776666766:6668679:6::::::246666456636668";
 }

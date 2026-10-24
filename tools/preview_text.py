@@ -2,7 +2,7 @@
 
 Aufruf: python3 tools/preview_text.py <komponente.json> <pack-ordner> <vanilla-ordner> <bild.png> [skala]
 Nur zum Entwickeln. Meldet außerdem Zeichen einer Zeile, die sich mit verschiedenen Texturen überdecken
-(Minecraft zeichnet die in zufälliger Reihenfolge).
+(nur zur Info: ab 1.21.6 zeichnet Minecraft eine Zeile in Textreihenfolge).
 """
 import json
 import os
@@ -207,6 +207,6 @@ if __name__ == "__main__":
     scale = int(sys.argv[5]) if len(sys.argv) > 5 else 3
     img = img.resize((img.width * scale, img.height * scale), Image.NEAREST)
     img.save(sys.argv[4])
-    print("Bild", img.size, "Konflikte", len(conflicts))
+    print("Bild", img.size, "Überlappungen in einer Zeile (Info)", len(conflicts))
     for c in conflicts[:20]:
         print("  Zeile %d: (%d,%d) / (%d,%d)" % c)

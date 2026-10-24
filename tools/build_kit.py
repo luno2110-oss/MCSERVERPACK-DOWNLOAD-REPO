@@ -25,6 +25,8 @@ import sys
 
 from PIL import Image
 
+import build_title
+
 T = (0, 0, 0, 0)
 HERE = os.path.dirname(os.path.abspath(__file__))
 JAVA_OUT = os.path.join(HERE, "..", "KubyCore-v2.0.14", "KubyPlugins", "src", "main", "java", "de", "kuby",
@@ -74,12 +76,57 @@ BOXES = {
     "purple": ("B05AF9", "673293", "1C0B29"),    # Bonus, "Nur die seltenen"
     "teal": ("2FCCC0", "1F7A73", "091F23"),      # aktiver Köder
     "gray": ("8A8E96", "44474E", "141519"),      # neutral
-    "red": ("FF4D5E", "9A1F2C", "2A0A10"),       # Warnung / Casino rot
-    "casino": ("F2C230", "A8761A", "3A0A0E"),    # Casino: Gold-Rand, dunkelrot
-    "casino_dark": ("C9A030", "6B4A0E", "1A0A0C"),  # Casino: Gold-Rand, fast schwarz
-    "felt": ("3FD55C", "1C6A2C", "0E3A1A"),      # Casino: grüner Filz (Farbe setzen)
-    "black": ("5A5C64", "2A2B30", "0B0B0E"),     # Casino: schwarzes Feld
+    "red": ("FF4D5E", "9A1F2C", "2A0A10"),       # Warnung
 }
+
+# Casino-Kästen (Roulette- und Musik-Dialog im Clip): eigene Ecken, Rand von außen nach innen ("edge"), Füllung N.
+# Zeichen im Eckmuster: K schwarz, L/D Rand hell/dunkel, H Glanz in der Ecke, N Füllung.
+CORNER_CASINO_HEAD = [      # roter Kopf: Goldrand hell außen, orange innen, schwarze Fase innen an der Ecke
+    "...KKKK",
+    "..KKLLL",
+    ".KLLLDD",
+    ".KLDKKN",
+    "KLLKKNN",
+    "KLDKNNN",
+    "KLDNNNN",
+]
+CORNER_GOLD_FRAME = [       # Filz und dunkle Kästen: Goldrand, innen schwarze Linie, Glanz in der Ecke
+    "...KKKK",
+    "..KHHLL",
+    ".KHHLDD",
+    "KHHLDNN",
+    "KHLDDNN",
+    "KLDNNNN",
+    "KLDNNNN",
+]
+CORNER_FIELD = [            # Farbfelder (Rot, Grün · 0, Schwarz): olivbrauner Rand
+    "...KKKK",
+    "..KKLLL",
+    ".KLLLDD",
+    "KKLNNNN",
+    "KLLNNNN",
+    "KLDNNNN",
+    "KLDNNNN",
+]
+CASINO_BOXES = {
+    # Kopf: unten (letzte 6 Zeilen) sind hell und dunkel vertauscht, das wirkt wie eine Fase
+    "casino": dict(corner=CORNER_CASINO_HEAD, straight=6, edge="KLD",
+                   colors={"L": "FFF25A", "D": "E49E0A", "N": "6E0008"},
+                   bottom={"L": "DE9508", "D": "F0CB2C"}),
+    "felt": dict(corner=CORNER_GOLD_FRAME, straight=5, edge="KLD",
+                 colors={"L": "F8C412", "D": "0A1A08", "N": "015426"},
+                 glow={"tl": "F6E592", "tr": "F2D560", "bl": "EEC23A", "br": "C88600"}),
+    "casino_dark": dict(corner=CORNER_GOLD_FRAME, straight=5, edge="KLD",
+                        colors={"L": "F6BE12", "D": "120C08", "N": "1B1511"},
+                        glow={"tl": "F6E592", "tr": "F2D560", "bl": "EEC23A", "br": "C88600"}),
+    "field_red": dict(corner=CORNER_FIELD, straight=5, edge="KLD",
+                      colors={"L": "6C5A2C", "D": "473716", "N": "901826"}, first="A91F31", last="8B1A24"),
+    "field_green": dict(corner=CORNER_FIELD, straight=5, edge="KLD",
+                        colors={"L": "6C5A2C", "D": "433813", "N": "15723B"}, first="1E8749", last="17703A"),
+    "field_black": dict(corner=CORNER_FIELD, straight=5, edge="KLD",
+                        colors={"L": "665628", "D": "47381C", "N": "222126"}, first="2A292E", last="232024"),
+}
+ALL_BOXES = list(BOXES) + list(CASINO_BOXES)
 
 # Knöpfe 22 px: (Rand, Füllung oben hell, Füllung, Schatten 1, Schatten 2) oder Umriss-Knopf (Rand, Füllung)
 BUTTONS = {
@@ -97,6 +144,52 @@ BUTTONS = {
     "red_line": ("line", "FF4D5E", "2A0A10"),
     "navy_line": ("line", "2DAEF9", "061B28"),
 }
+
+# Kleine Knöpfe 16 px (Casino: Reiter, Zähler, "Wählen", "Letzte Einsätze wiederholen"):
+# Rand L, innen D (oben/seitlich), Db (unten), Füllung N, optional top2 = zweite Glanzzeile oben, side = D seitlich
+BUTTONS16 = {
+    "s_dark": dict(L="5A5A62", D="3C3D44", Db="3C3D44", N="0F1013"),
+    "s_gold": dict(L="F4C13E", D="A37E2A", Db="9E7F2C", N="281E07"),
+    "s_gold_on": dict(L="F6C03D", D="CD9C31", top2="C29734", Db="816712", N="A47F26", side="B4861E"),
+    "s_gold_gray": dict(L="FAC23E", D="B3842D", Db="A08029", N="232327"),
+    "s_green": dict(L="24AC5F", D="158C46", top2="1A8849", Db="0A5E28", N="19733D", side="177033"),
+}
+SMALL_H = 16
+CORNER_SMALL = [
+    "...KK",
+    ".KKLL",
+    ".KLDD",
+    "KLDNN",
+    "KLDNN",
+]
+
+
+def draw_small(w, h, style):
+    spec = BUTTONS16[style]
+    img = Image.new("RGBA", (w, h), T)
+    px = img.load()
+    for y in range(h):
+        for x in range(w):
+            ch = corner_px(CORNER_SMALL, x, y, w, h)
+            if ch is None:
+                d = min(x, y, w - 1 - x, h - 1 - y)
+                ch = "KLD"[d] if d < 3 else "N"
+            if ch == ".":
+                continue
+            if ch == "K":
+                px[x, y] = K
+                continue
+            col = spec[ch]
+            if ch == "D":
+                if y >= h - 3:
+                    col = spec["Db"]
+                elif y > 2 and "side" in spec:
+                    col = spec["side"]
+            elif ch == "N" and y == 3 and "top2" in spec:
+                col = spec["top2"]
+            px[x, y] = rgb(col)
+    return img
+
 
 # Fortschrittsbalken: Füllfarben (oben hell, Mitte, unten)
 BAR_FILLS = {
@@ -146,6 +239,8 @@ def corner_px(pattern, x, y, w, h):
 
 
 def draw_box(w, h, style):
+    if style in CASINO_BOXES:
+        return draw_casino_box(w, h, CASINO_BOXES[style])
     c, m, f = (rgb(v) for v in BOXES[style])
     img = Image.new("RGBA", (w, h), T)
     px = img.load()
@@ -157,6 +252,43 @@ def draw_box(w, h, style):
                 ch = "KCM"[d] if d < 3 else "N"
             px[x, y] = {"K": K, "C": c, "M": m, "N": f, ".": T}[ch]
     return img
+
+
+def draw_casino_box(w, h, spec):
+    corner = spec["corner"]
+    edge = spec["edge"]
+    n = len(corner)
+    img = Image.new("RGBA", (w, h), T)
+    px = img.load()
+    for y in range(h):
+        for x in range(w):
+            ch = corner_px(corner, x, y, w, h)
+            if ch is None:
+                d = min(x, y, w - 1 - x, h - 1 - y)
+                ch = edge[d] if d < len(edge) else "N"
+            if ch == ".":
+                continue
+            if ch == "K":
+                px[x, y] = K
+                continue
+            col = spec["colors"].get(ch)
+            if ch == "H":
+                key = ("t" if y < h / 2 else "b") + ("l" if x < w / 2 else "r")
+                col = spec["glow"][key]
+            if "bottom" in spec and y >= h - (n - 1) and ch in spec["bottom"]:
+                col = spec["bottom"][ch]
+            if ch == "N":
+                if "first" in spec and y == len(edge):
+                    col = spec["first"]
+                elif "last" in spec and y == h - 1 - len(edge):
+                    col = spec["last"]
+            px[x, y] = rgb(col)
+    return img
+
+
+def box_straight(style):
+    """Erste Zeile, ab der die Kasten-Ecke gerade ist (so weit dürfen Mittelzeilen überlappen)."""
+    return CASINO_BOXES[style]["straight"] if style in CASINO_BOXES else 5
 
 
 def button_rows(style, h):
@@ -244,7 +376,7 @@ MINI = {
     "✗": ["X....X", "XX..XX", ".XXXX.", "..XX..", ".XXXX.", "XX..XX", "X....X"],               # ✗
     "✱": ["...X...", "X..X..X", ".X.X.X.", "..XXX..", ".X.X.X.", "X..X..X", "...X..."],      # ✱
     "➜": ["...X...", "...XX..", "XXXXXX.", "XXXXXXX", "XXXXXX.", "...XX..", "...X..."],      # ➜
-    "⤨": ["XXX..XXX", "XX....XX", "X.X..X.X", "...XX...", "X.X..X.X", "XX....XX", "XXX..XXX"],  # ⤨
+    "⤨": [".....X.", "XX..XXX", "..XX.X.", "...X...", "..XX.X.", "XX..XXX", ".....X."],      # ⤨ Mischen
     "↻": ["..XXX..", ".X...XX", "X....XX", "X......", "X.....X", ".X...X.", "..XXX.."],      # ↻
     "✿": ["..X.X..", ".XXXXX.", "XXX.XXX", ".X...X.", "XXX.XXX", ".XXXXX.", "..X.X.."],      # ✿
     "▸": ["X...", "XX..", "XXX.", "XXXX", "XXX.", "XX..", "X..."],                             # ▸
@@ -253,6 +385,11 @@ MINI = {
     "♈": ["XX...XX", "X.X.X.X", "...X...", "...X...", "...X...", "...X...", "...X..."],      # ♈
     "›": ["", "X...", ".X..", "..X.", ".X..", "X..."],                                         # ›
     "‹": ["", "...X", "..X.", ".X..", "..X.", "...X"],                                         # ‹
+    "⏭": ["X...X..X", "XX..XX.X", "XXX.XXXX", "XXXXXXXX", "XXX.XXXX", "XX..XX.X", "X...X..X"],  # ⏭
+    # Small-Caps-Umlaute (Canvas.caps): ᴀ, ᴏ, ᴜ mit Punkten
+    "\ue0f0": [".X.X.", ".....", ".XXX.", "X...X", "XXXXX", "X...X", "X...X"],
+    "\ue0f1": [".X.X.", ".....", ".XXX.", "X...X", "X...X", "X...X", ".XXX."],
+    "\ue0f2": [".X.X.", ".....", "X...X", "X...X", "X...X", "X...X", ".XXX."],
 }
 MINI_ORDER = list(MINI)
 
@@ -362,9 +499,11 @@ def build_pieces():
     caps22 = Sheet("caps22", CAP, BTN_H, 0xE600)
     segs22 = Sheet("segs22", SEG, BTN_H, 0xE700)
     misc = Sheet("misc", 24, BTN_H, 0xE780)
+    caps16 = Sheet("caps16", CAP, SMALL_H, 0xE800)
+    segs16 = Sheet("segs16", SEG, SMALL_H, 0xE880)
 
     # Kästen: Zeilen oben/mitte/unten aus einem Beispielkasten 48 x 27
-    for style in BOXES:
+    for style in ALL_BOXES:
         full = draw_box(CAP + SEG + CAP, 3 * ROW, style)
         for r, row in enumerate(("top", "mid", "bot")):
             y = r * ROW
@@ -379,6 +518,14 @@ def build_pieces():
         caps22.add(("btn", style, "r"), full.crop((CAP + SEG, 0, 2 * CAP + SEG, BTN_H)))
         for w in NARROW:
             (segs22 if w > CAP else caps22).add(("btn", style, w), full.crop((CAP, 0, CAP + w, BTN_H)))
+    # Kleine Knöpfe 16 px
+    for style in BUTTONS16:
+        full = draw_small(CAP + SEG + CAP, SMALL_H, style)
+        caps16.add(("small", style, "l"), full.crop((0, 0, CAP, SMALL_H)))
+        segs16.add(("small", style, "m"), full.crop((CAP, 0, CAP + SEG, SMALL_H)))
+        caps16.add(("small", style, "r"), full.crop((CAP + SEG, 0, 2 * CAP + SEG, SMALL_H)))
+        for w in NARROW:
+            (segs16 if w > CAP else caps16).add(("small", style, w), full.crop((CAP, 0, CAP + w, SMALL_H)))
     # Balken: Hintergrund (Ecken + Mittelstücke) und Füllung in Breiten 1, 2, 4, 8, 16, 32
     bg = draw_bar_bg(CAP + SEG + CAP)
     caps9.add(("bar", "l"), bg.crop((0, 0, CAP, BAR_H)))
@@ -398,7 +545,7 @@ def build_pieces():
             if c == "X":
                 back.putpixel((8 + x, 6 + y), rgb("E6E6EA"))
     misc.add(("back",), back)
-    return [caps9, segs9, caps22, segs22, misc]
+    return [caps9, segs9, caps22, segs22, misc, caps16, segs16]
 
 
 # =====================================================================================================================
@@ -415,7 +562,7 @@ VANILLA_ICONS = {
     "clock": "item/clock_00.png", "nautilus": "item/nautilus_shell.png", "heart_sea": "item/heart_of_the_sea.png",
     "prismarine": "item/prismarine_crystals.png", "string": "item/string.png", "spider_eye": "item/spider_eye.png",
     "glow_ink": "item/glow_ink_sac.png", "ink": "item/ink_sac.png", "experience": "item/experience_bottle.png",
-    "music_disc": "item/music_disc_cat.png", "jukebox": "item/music_disc_13.png", "name_tag": "item/name_tag.png",
+    "music_disc": "item/music_disc_cat.png", "disc_13": "item/music_disc_13.png", "name_tag": "item/name_tag.png",
     "totem": "item/totem_of_undying.png", "star": "item/nether_star.png", "writable": "item/writable_book.png",
     "barrier": "item/barrier.png", "iron_ingot": "item/iron_ingot.png", "hopper": "item/hopper.png",
     "sunflower": "block/sunflower_front.png", "lily": "block/lily_pad.png",
@@ -453,8 +600,15 @@ def write_font(fdir, name, providers):
         json.dump({"providers": providers}, f, ensure_ascii=True, separators=(",", ":"))
 
 
-def build(out, spaces, vroot, own_icons=()):
-    """own_icons: [(name, Bild 16 x 16)] aus build_fish.py und build_angel_icons.py."""
+TITLE_GOLD, TITLE_WHITE = 0xEE00, 0xEF00
+SMALL_FIRST, SMALL_CELL = 0xED00, 20
+BIG_FIRST = 0xED80          # eigene 32-px-Icons: ED80 + i (32 px), EDC0 + i (16 px)
+
+
+def build(out, spaces, vroot, own_icons=(), small_icons=(), big_icons=()):
+    """own_icons: [(name, Bild 16 x 16)] aus build_fish.py, build_angel_icons.py und build_casino.py.
+    small_icons: [(name, Bild bis 20 x 20)] in Originalgröße (Chips, Sterne, Noten).
+    big_icons: [(name, Bild 32 x 32)] in Originalgröße (Roulette-Rad, Jukebox, Schallplatte)."""
     tex = os.path.join(out, "assets/kuby/textures/k")
     fdir = os.path.join(out, "assets/kuby/font/k")
     shutil.rmtree(tex, ignore_errors=True)
@@ -521,6 +675,35 @@ def build(out, spaces, vroot, own_icons=()):
                              for c in range(cols)))
     if own_icons:
         own_sheet.save(os.path.join(tex, "icons.png"))
+    # kleine Icons (12 px Zellen) und große eigene Icons (32 px)
+    small_chars = []
+    small_data = []
+    if small_icons:
+        scols = 16
+        srows = (len(small_icons) + scols - 1) // scols
+        simg = Image.new("RGBA", (SMALL_CELL * scols, SMALL_CELL * srows), T)
+        for i, (name, img) in enumerate(small_icons):
+            assert img.width <= SMALL_CELL and img.height <= SMALL_CELL, name
+            simg.alpha_composite(img, ((i % scols) * SMALL_CELL, (i // scols) * SMALL_CELL))
+            bbox = img.getchannel("A").getbbox()
+            small_data.append((name, chr(SMALL_FIRST + i), (bbox[2] if bbox else 0) + 1,
+                               bbox[3] if bbox else 0))
+        for r in range(srows):
+            small_chars.append("".join(chr(SMALL_FIRST + r * scols + c) if r * scols + c < len(small_icons)
+                                       else "\u0000" for c in range(scols)))
+        simg.save(os.path.join(tex, "small.png"))
+    if big_icons:
+        bimg = Image.new("RGBA", (32 * len(big_icons), 32), T)
+        for i, (name, img) in enumerate(big_icons):
+            bimg.alpha_composite(img, (32 * i, 0))
+        bimg.save(os.path.join(tex, "icons32.png"))
+    # Titelschrift
+    gimg, title_adv, tcols, trows = build_title.sheet(build_title.GOLD)
+    wimg, _, _, _ = build_title.sheet(build_title.WHITE)
+    gimg.save(os.path.join(tex, "title_gold.png"))
+    wimg.save(os.path.join(tex, "title_white.png"))
+    title_gold_chars = build_title.chars(TITLE_GOLD, tcols, trows)
+    title_white_chars = build_title.chars(TITLE_WHITE, tcols, trows)
     for s in I_SHIFTS:
         providers = [space_prov]
         asc = 7 - s
@@ -537,11 +720,41 @@ def build(out, spaces, vroot, own_icons=()):
             if asc <= 32:
                 providers.append({"type": "bitmap", "file": "kuby:k/icons.png", "height": 32, "ascent": asc,
                                   "chars": own32})
+        if small_icons and asc <= SMALL_CELL:
+            providers.append({"type": "bitmap", "file": "kuby:k/small.png", "height": SMALL_CELL, "ascent": asc,
+                              "chars": small_chars})
+        if big_icons:
+            if asc <= 32:
+                providers.append({"type": "bitmap", "file": "kuby:k/icons32.png", "height": 32, "ascent": asc,
+                                  "chars": ["".join(chr(BIG_FIRST + i) for i in range(len(big_icons)))]})
+            if asc <= 16:
+                providers.append({"type": "bitmap", "file": "kuby:k/icons32.png", "height": 16, "ascent": asc,
+                                  "chars": ["".join(chr(BIG_FIRST + 0x40 + i) for i in range(len(big_icons)))]})
+        if asc <= build_title.CELL_H:
+            providers.append({"type": "bitmap", "file": "kuby:k/title_gold.png", "height": build_title.CELL_H,
+                              "ascent": asc, "chars": title_gold_chars})
+            providers.append({"type": "bitmap", "file": "kuby:k/title_white.png", "height": build_title.CELL_H,
+                              "ascent": asc, "chars": title_white_chars})
         write_font(fdir, "i%d" % s, providers)
     icons = icons + [(name, None) for name, _ in own_icons]
+    for i, (name, img) in enumerate(big_icons):
+        icon_chars[name] = (chr(BIG_FIRST + 0x40 + i), chr(BIG_FIRST + i))
+        bbox = img.getchannel("A").getbbox()
+        w = bbox[2] if bbox else 0
+        icon_adv[name] = (int(0.5 + w / 2) + 1, w + 1)
+    icons = icons + [(name, None) for name, _ in big_icons]
+
+    # Titelschrift auch als eigene Schrift kuby:title (Hologramme, Titel): Versal-Unterkante auf der Grundlinie
+    title_font = {"providers": [{"type": "space", "advances": {" ": build_title.SPACE_ADV}},
+                                {"type": "bitmap", "file": "kuby:k/title_gold.png", "height": build_title.CELL_H,
+                                 "ascent": 15, "chars": title_gold_chars},
+                                {"type": "bitmap", "file": "kuby:k/title_white.png", "height": build_title.CELL_H,
+                                 "ascent": 15, "chars": title_white_chars}]}
+    with open(os.path.join(out, "assets/kuby/font/title.json"), "w", encoding="utf-8") as f:
+        json.dump(title_font, f, ensure_ascii=True, separators=(",", ":"))
 
     widths = text_widths(vroot)
-    write_java(sheets, widths, icons, icon_chars, icon_adv)
+    write_java(sheets, widths, icons, icon_chars, icon_adv, small_data, title_adv)
     n_fonts = len(T_SHIFTS) + len(B_SHIFTS) + len(I_SHIFTS)
     print("ok kit: %d Schriften, %d Stücke, %d Icons, %d Textzeichen" % (
         n_fonts, sum(len(s.cells) for s in sheets), len(icons), len(widths)))
@@ -569,7 +782,7 @@ def jstr(s):
     return '"' + "".join(out) + '"'
 
 
-def write_java(sheets, widths, icons, icon_chars, icon_adv):
+def write_java(sheets, widths, icons, icon_chars, icon_adv, small_data=(), title_adv=()):
     by = {}
     for sh in sheets:
         for i, (key, img) in enumerate(sh.cells):
@@ -594,6 +807,7 @@ def write_java(sheets, widths, icons, icon_chars, icon_adv):
     L.append("    public static final int CAP = %d;" % CAP)
     L.append("    public static final int ROW = %d;" % ROW)
     L.append("    public static final int BTN_H = %d;" % BTN_H)
+    L.append("    public static final int SMALL_H = %d;" % SMALL_H)
     L.append("    public static final int BAR_H = %d;" % BAR_H)
     L.append("")
     L.append("    /** Ein Hintergrund-Stück: Zeichen, Vorschub (Breite + 1), sichtbare Breite und Höhe. */")
@@ -607,18 +821,21 @@ def write_java(sheets, widths, icons, icon_chars, icon_adv):
     L.append("    /** Kasten-Stile (Rahmen aus Zeilen zu 9 px). */")
     L.append("    public enum Box {")
     rows = []
-    for style in BOXES:
+    for style in ALL_BOXES:
         parts = []
         for row in ("top", "mid", "bot"):
             for side, kind in (("l", "l"), ("m", "m"), ("r", "r")):
                 parts.append(piece(("box", style, row, side)))
-        rows.append("        %s(%s)" % (style.upper(), ",\n                ".join(parts)))
+        rows.append("        %s(%d, %s)" % (style.upper(), box_straight(style), ",\n                ".join(parts)))
     L.append(",\n".join(rows) + ";")
     L.append("")
     L.append("        /** [Zeile oben/mitte/unten][links/mitte/rechts] */")
     L.append("        public final Piece[][] p;")
+    L.append("        /** Ab dieser Zeile ist die Ecke gerade: so weit dürfen Mittelzeilen in die obere und untere ragen. */")
+    L.append("        public final int straight;")
     L.append("")
-    L.append("        Box(Piece... all) {")
+    L.append("        Box(int straight, Piece... all) {")
+    L.append("            this.straight = straight;")
     L.append("            p = new Piece[][]{{all[0], all[1], all[2]}, {all[3], all[4], all[5]}, {all[6], all[7], all[8]}};")
     L.append("        }")
     L.append("    }")
@@ -637,6 +854,27 @@ def write_java(sheets, widths, icons, icon_chars, icon_adv):
     L.append("        public final Piece[] narrow;")
     L.append("")
     L.append("        Button(Piece l, Piece m, Piece r, Piece... narrow) {")
+    L.append("            this.l = l;")
+    L.append("            this.m = m;")
+    L.append("            this.r = r;")
+    L.append("            this.narrow = narrow;")
+    L.append("        }")
+    L.append("    }")
+    L.append("")
+    L.append("    /** Kleine Knöpfe (16 px hoch). */")
+    L.append("    public enum Small {")
+    rows = []
+    for style in BUTTONS16:
+        narrow = ", ".join(piece(("small", style, w)) for w in NARROW)
+        rows.append("        %s(%s, %s, %s,\n                %s)" % (
+            style[2:].upper(), piece(("small", style, "l")), piece(("small", style, "m")),
+            piece(("small", style, "r")), narrow))
+    L.append(",\n".join(rows) + ";")
+    L.append("")
+    L.append("        public final Piece l, m, r;")
+    L.append("        public final Piece[] narrow;")
+    L.append("")
+    L.append("        Small(Piece l, Piece m, Piece r, Piece... narrow) {")
     L.append("            this.l = l;")
     L.append("            this.m = m;")
     L.append("            this.r = r;")
@@ -684,7 +922,35 @@ def write_java(sheets, widths, icons, icon_chars, icon_adv):
     L.append("        }")
     L.append("    }")
     L.append("")
-    chars = sorted(widths)
+    L.append("    /** Icons in Originalgröße (Zellen 20 x 20, links oben): Zeichen, Vorschub, sichtbare Höhe. */")
+    L.append("    public enum SmallIcon {")
+    rows = []
+    for name, c, adv, hgt in small_data:
+        rows.append("        %s(%s, %d, %d)" % (name.upper(), jchar(c), adv, hgt))
+    L.append(",\n".join(rows) + ";" if rows else "        ;")
+    L.append("")
+    L.append("        public final char c;")
+    L.append("        public final int advance, height;")
+    L.append("")
+    L.append("        SmallIcon(char c, int advance, int height) {")
+    L.append("            this.c = c;")
+    L.append("            this.advance = advance;")
+    L.append("            this.height = height;")
+    L.append("        }")
+    L.append("    }")
+    L.append("")
+    L.append("    public static final int SMALL_CELL = %d;" % SMALL_CELL)
+    L.append("")
+    L.append("    /** Titelschrift (Schriften kuby:k/i<s> und kuby:title): Zeichen in TITLE_CHARS, Glyphe = Start + Index. */")
+    L.append("    public static final String TITLE_CHARS = %s;" % jstr("".join(build_title.ORDER)))
+    L.append("    public static final String TITLE_ADV = %s;" % jstr("".join(chr(0x30 + a) for a in title_adv)))
+    L.append("    public static final char TITLE_GOLD = %s, TITLE_WHITE = %s;" % (jchar(chr(TITLE_GOLD)),
+                                                                              jchar(chr(TITLE_WHITE))))
+    L.append("    public static final int TITLE_H = %d, TITLE_TOP = %d, TITLE_CAP = %d;" % (
+        build_title.CELL_H, build_title.TOP, build_title.CAP_H))
+    L.append("")
+    # nur Zeichen aus der Basis-Ebene (ein Java-char); sonst stimmt die Sortierung für die Binärsuche nicht
+    chars = sorted(c for c in widths if ord(c) <= 0xFFFF)
     L.append("    /** Textzeichen der Schriften kuby:k/t<s> (sortiert) und ihr Vorschub ohne Fett. */")
     chunk = 120
     parts = [jstr("".join(chars[i:i + chunk])) for i in range(0, len(chars), chunk)]
