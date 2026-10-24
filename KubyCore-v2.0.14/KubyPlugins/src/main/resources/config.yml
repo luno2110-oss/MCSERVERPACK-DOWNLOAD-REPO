@@ -496,25 +496,25 @@ landclaim:
   min-side: 5
   max-side: 128
 
-angel:
-  rod-base: 2000
-  max-rod: 5
-  level-reward: 500
-  popup-ticks: 50
-  # Gibt es Angelzonen (/kp angel zone), gilt das Fangsystem nur dort. Ohne Zonen überall in Survival.
-  only-in-zones: true
+# Angeln in Survival (KubySurvival): 48 Fischarten auf 6 Gewässern, Seltenheiten und Sterne, Angel-Punkte und
+# Level, Upgrades und Köder (/angeln). Angel-Zonen (/kp angel zone): +10 % Glück, -10 % Wartezeit,
+# Mythen-Fische und Schätze nur dort. Preise je Seltenheit: Gewöhnlich 2-8, Ungewöhnlich 5-19, Selten 14-53,
+# Episch 45-169, Legendär 180-675, Mythisch 900-3.375 (1 bis 5 Sterne).
+angeln:
+  dealer:
+    # So viel zahlt der Händler pro Stunde und Spieler zum vollen Preis, darüber nur noch over-budget-percent.
+    # (Balance: Jobs bringen 300+ Coins pro Stunde, Angeln mit Budget etwa 1.000 bis 1.500.)
+    hour-budget: 1000
+    over-budget-percent: 20
+  # Belohnung für eine volle Fischbuch-Seite (alle 8 Arten)
+  page-coins: 3000
+  page-tokens: 2
+  # Auto-Verkauf (Fische bis Ungewöhnlich sofort verkaufen), einmalig
+  auto-sell-tokens: 150
+  # Doppelfang im Token-Shop: 3 Stufen zu je 5 % Chance auf zwei Fische, Preis = Wert * Stufe
+  double-catch-tokens: 100
   tournament:
     rewards: [5000, 2500, 1000]
-  # Format: id;Name;MATERIAL;Chance;Grundwert;XP;Farbe[;min-kg;max-kg]
-  fish:
-    - "sardine;Sardine;COD;50;30;2;white"
-    - "hering;Hering;COD;30;60;4;aqua"
-    - "lachs;Lachs;SALMON;25;120;6;red"
-    - "barsch;Barsch;COD;15;200;8;green"
-    - "hecht;Hecht;SALMON;8;400;12;yellow"
-    - "clownfisch;Clownfisch;TROPICAL_FISH;5;800;18;gold"
-    - "stoer;Stör;SALMON;2;2000;35;light_purple"
-    - "koi;Koi;TROPICAL_FISH;1;5000;60;dark_purple"
 
 jewelshop:
   survival:

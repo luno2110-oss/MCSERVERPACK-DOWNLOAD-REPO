@@ -247,11 +247,12 @@ public final class SurvivalHelp {
                     List.<String[]>of(c("/bossbar", "Leiste einrichten"), c("/bossbar on", "Einblenden"), c("/bossbar off", "Ausblenden"), c("/bossbar reset", "Zurücksetzen")),
                     "Leiste einrichten", "bossbar"),
             new Page("angeln", "Angeln", Ui.Theme.BLUE, Ui.Icon.ROD, "ANGELN", "Fische fangen, Rekorde jagen",
-                    List.of("Angeln geht überall in Survival, in den Angelzonen beißen seltene Fische öfter.",
-                            "Jeder Fang bringt Angel-XP. Mit jedem Level verdienst du mehr, und seltene Fische werden häufiger.",
-                            "Im Fischbuch siehst du alle Arten, deine Fänge und deine Rekorde. Verkaufen kannst du im Angel-Menü oder beim Fischhändler.",
-                            "Je besser die Rute, desto schneller beißt es und desto öfter hängen seltene Fische dran."),
-                    List.<String[]>of(c("/angeln", "Angel-Menü: Fischbuch, Rute, Verkauf, Bestenliste")),
+                    List.of("48 Fischarten in sechs Gewässern: Fluss, Ozean, warm, kalt, Sumpf und Mythen. Das Biom entscheidet.",
+                            "Jeder Fang bringt Angel-Punkte fürs Level. Schwere Fische haben mehr Sterne und bringen mehr Geld.",
+                            "In der Angel-Zone: +10 % Glück, Mythen-Fische und Schätze. Köder und Upgrades verbessern die Angel.",
+                            "Verkaufen beim Fischhändler, Fische des Tages +50 %, jeden Tag eine Goldene Stunde und drei Aufträge."),
+                    List.<String[]>of(c("/angeln", "Angel-Menü"), c("/angeln buch", "Fischbuch"), c("/angeln haendler", "Fische verkaufen"),
+                            c("/angeln zone", "Zur Angel-Zone")),
                     "Menü öffnen", "angeln"));
 
     private SurvivalHelp() {

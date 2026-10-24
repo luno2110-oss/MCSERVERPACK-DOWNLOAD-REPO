@@ -99,6 +99,8 @@ public final class AngelService {
     private final Map<UUID, Double> tournament = new HashMap<>();
     private long tournamentEnds;
     private final Map<String, List<TopEntry>> topCache = new HashMap<>();
+    /** Geändert seit dem letzten Speichern (gespeichert wird jede Minute und beim Beenden). */
+    private boolean dirty;
     private long topUpdated;
 
     public AngelService(KubySurvival addon, KubyPlugins core) {
@@ -352,7 +354,7 @@ public final class AngelService {
         double q = 0;
         for (int i = 0; i <= a.upgrade(Upgrade.GROSSFANG); i++) q = Math.max(q, rnd.nextDouble());
         double kg = species.minKg() + (species.maxKg() - species.minKg()) * Math.pow(q, 1.6);
-        kg = Math.round(kg * (kg < 1 ? 100 : 10)) / (kg < 1 ? 100.0 : 10.0);
+        kg = Math.round(kg * (kg < 10 ? 100 : 10)) / (kg < 10 ? 100.0 : 10.0);
         int stars = q < 0.35 ? 1 : q < 0.6 ? 2 : q < 0.8 ? 3 : q < 0.93 ? 4 : 5;
 
         // Statistik
@@ -411,7 +413,7 @@ public final class AngelService {
                 case "rare" -> species.rarity().atLeast(Rarity.SELTEN) ? amount : 0;
                 case "night" -> night ? amount : 0;
                 case "bait" -> usedBait ? amount : 0;
-                case "kg" -> (int) Math.round(kg * amount);
+                case "kg" -> (int) Math.ceil(kg * amount);
                 default -> 0;
             };
             if (add > 0) advance(p, a, o, add);
@@ -432,7 +434,7 @@ public final class AngelService {
             pay(id, coins);
             if (levelAfter % 10 == 0 && addon.tokens() != null) addon.tokens().give(id, 1, "Angel-Level " + levelAfter);
         }
-        save();
+        dirty = true;
         return new Catch(species, kg, stars, points, amount, record, previous, levelBefore, levelAfter, inZone, water,
                 treasure, autoSold, pageDone);
     }
@@ -479,7 +481,7 @@ public final class AngelService {
     }
 
     public long hourBudget() {
-        return cfg("dealer.hour-budget", 2500);
+        return cfg("dealer.hour-budget", 1000);
     }
 
     /** Noch so viel diese Stunde zum vollen Preis. */
@@ -535,7 +537,7 @@ public final class AngelService {
         long left = Math.max(0, hourBudget() - a.dealerSold);
         long atFull = Math.min(full, left);
         long rest = full - atFull;
-        long reduced = Math.round(rest * cfg("dealer.over-budget-percent", 30) / 100.0);
+        long reduced = Math.round(rest * cfg("dealer.over-budget-percent", 20) / 100.0);
         a.dealerSold += atFull;
         return atFull + reduced;
     }
@@ -569,7 +571,7 @@ public final class AngelService {
         a.earned += money;
         pay(p.getUniqueId(), money);
         sold(p, a, money);
-        save();
+        dirty = true;
         return new SaleResult(count, money, full, full > leftBefore);
     }
 
@@ -597,7 +599,7 @@ public final class AngelService {
         long price = u.price(level);
         if (!core.economy().withdraw(p.getUniqueId(), price)) return "Dafür fehlen dir Coins (" + AngelText.money(price) + ").";
         a.upgrades.put(u, level + 1);
-        save();
+        dirty = true;
         return null;
     }
 
@@ -612,7 +614,7 @@ public final class AngelService {
         if (a.autoSell) return "Auto-Verkauf hast du schon.";
         if (!addon.jobs().takeTokens(p.getUniqueId(), autoSellPrice())) return "Dafür brauchst du " + autoSellPrice() + " Tokens.";
         a.autoSell = true;
-        save();
+        dirty = true;
         return null;
     }
 
@@ -631,7 +633,7 @@ public final class AngelService {
         long price = doublePrice(a.doubleCatch);
         if (!addon.jobs().takeTokens(p.getUniqueId(), price)) return "Dafür brauchst du " + price + " Tokens.";
         a.doubleCatch++;
-        save();
+        dirty = true;
         return null;
     }
 
@@ -640,7 +642,7 @@ public final class AngelService {
         if (err != null) return err;
         if (!core.economy().withdraw(p.getUniqueId(), b.price10)) return "Dafür fehlen dir Coins (" + AngelText.money(b.price10) + ").";
         profile(p.getUniqueId()).baits.merge(b, 10, Integer::sum);
-        save();
+        dirty = true;
         return null;
     }
 
@@ -676,7 +678,7 @@ public final class AngelService {
             p.getInventory().setStorageContents(contents);
         }
         profile(p.getUniqueId()).baits.merge(b, b.craftAmount, Integer::sum);
-        save();
+        dirty = true;
         return null;
     }
 
@@ -685,12 +687,12 @@ public final class AngelService {
         AngelProfile a = profile(p.getUniqueId());
         if (a.active == b) {
             a.active = null;
-            save();
+            dirty = true;
             return null;
         }
         if (a.bait(b) <= 0) return "Du hast keinen " + b.label + " im Beutel.";
         a.active = b;
-        save();
+        dirty = true;
         return null;
     }
 
@@ -925,6 +927,7 @@ public final class AngelService {
     private boolean goldenAnnounced;
 
     public synchronized void tick() {
+        if (dirty) save();
         if (tournamentEnds > 0 && !tournamentRunning()) finishTournament();
         payPending();
         boolean golden = goldenActive();
@@ -946,7 +949,7 @@ public final class AngelService {
             Player p = Bukkit.getPlayer(id);
             if (p != null) Msg.send(p, "<aqua>Turnier-Preis: <gold>+" + AngelText.money(money) + " <gray>auf dein Survival-Konto.");
         }
-        save();
+        dirty = true;
     }
 
     // =================================================================================================================
@@ -1075,6 +1078,7 @@ public final class AngelService {
     }
 
     public synchronized void save() {
+        dirty = false;
         YamlConfiguration out = new YamlConfiguration();
         for (Map.Entry<UUID, AngelProfile> e : profiles.entrySet()) {
             AngelProfile a = e.getValue();

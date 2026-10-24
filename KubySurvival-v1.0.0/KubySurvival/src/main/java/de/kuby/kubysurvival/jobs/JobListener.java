@@ -214,7 +214,9 @@ public final class JobListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onFish(PlayerFishEvent e) {
+        // In Survival zahlt das Angeln (AngelListener) Job-XP nach Seltenheit; hier nur außerhalb davon.
         if (e.getState() != PlayerFishEvent.State.CAUGHT_FISH) return;
+        if ("survival".equals(addon.core().modes().modeOf(e.getPlayer().getUniqueId()))) return;
         jobs.reward(e.getPlayer(), Job.ANGLER, 5, 5);
         addon.quests().progress(e.getPlayer(), "fish", null, 1);
     }

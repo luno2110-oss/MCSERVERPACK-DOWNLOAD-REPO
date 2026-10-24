@@ -118,6 +118,27 @@ public final class TokenShopMenu extends GuiMenu {
                 "<gray>Eine Stufe über dem Maximum:", "<gray>Effizienz VI, Haltbarkeit IV,", "<gray>Glück IV, Schärfe VI und mehr.",
                 "", "<yellow>Klick")), e -> new TokenEnchantMenu(addon).open(p));
 
+        // Angeln: Doppelfang (Chance auf zwei Fische)
+        var angeln = addon.angeln();
+        int dbl = angeln.profile(id).doubleCatch;
+        boolean maxed = dbl >= de.kuby.kubysurvival.angeln.AngelService.DOUBLE_MAX;
+        long dblPrice = angeln.doublePrice(dbl);
+        set(25, Items.make(Material.TROPICAL_FISH, "<aqua>Doppelfang " + (maxed ? "(max)" : "Stufe " + (dbl + 1)), List.of(
+                "<gray>Beim Angeln: Chance auf zwei Fische", "<gray>Jetzt: <white>" + (5 * dbl) + " %"
+                        + (maxed ? "" : " <dark_gray>→ <green>" + (5 * (dbl + 1)) + " %"),
+                maxed ? "<green>Höchste Stufe erreicht" : "<gray>Preis: <light_purple>" + dblPrice + " Tokens",
+                "", maxed ? "" : "<yellow>Klick zum Kaufen")), e -> {
+            if (maxed) return;
+            String err = angeln.buyDouble(p);
+            if (err != null) {
+                Msg.send(p, "<red>" + err);
+                p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.6f, 1f);
+            } else {
+                bought(p, "Doppelfang Stufe " + angeln.profile(id).doubleCatch);
+            }
+            open(p);
+        });
+
         // Bauhelfer
         set(27, Items.make(Material.SCAFFOLDING, "<aqua>Bauhelfer", List.of("<gray>Licht-Blöcke, Gerüste und mehr")), null);
         items(p, "tokens.build-helpers", List.of("LIGHT;16;3", "SCAFFOLDING;64;1", "SEA_LANTERN;16;2", "GLASS;64;1"), 28, 35);

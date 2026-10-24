@@ -2,7 +2,10 @@ package de.kuby.kubysurvival.angeln;
 
 import de.kuby.kubyplugins.ui.KitData;
 
-/** Dauerhafte Verbesserungen der Angel (gelten für jede Rute). Preis der nächsten Stufe = Grundpreis * Stufe. */
+/**
+ * Dauerhafte Verbesserungen der Angel (gelten für jede Rute). Die erste Stufe kostet den Grundpreis, jede weitere
+ * die Hälfte mehr (Glückshaken: 5.000, 7.500, 10.000, 12.500, 15.000).
+ */
 public enum Upgrade {
     GLUECKSHAKEN("Glückshaken", KitData.Icon.RABBIT_FOOT, 5, 5000, "Glück"),
     SCHNELLSPULE("Schnellspule", KitData.Icon.FEATHER, 5, 4000, "Wartezeit"),
@@ -25,7 +28,7 @@ public enum Upgrade {
 
     /** Preis für die Stufe level + 1. */
     public long price(int level) {
-        return basePrice * (level + 1);
+        return basePrice * (2 + level) / 2;
     }
 
     /** Wirkung als Text für eine Stufe, z. B. "+8 % Glück". */

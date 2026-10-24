@@ -5,7 +5,7 @@ import de.kuby.kubyplugins.service.ModeService;
 import de.kuby.kubyplugins.ui.Ui;
 import de.kuby.kubysurvival.KubySurvival;
 import de.kuby.kubysurvival.claim.ClaimService;
-import de.kuby.kubysurvival.fishing.FishingService;
+import de.kuby.kubysurvival.angeln.AngelService;
 import de.kuby.kubysurvival.jobs.JobService;
 import de.kuby.kubysurvival.quests.QuestService;
 import de.kuby.kubyplugins.util.Msg;
@@ -226,13 +226,8 @@ public final class SurvivalHud implements Listener {
             String name = Bukkit.getOfflinePlayer(c.owner()).getName();
             return name == null ? "Grundstueck" : "Grundstueck " + name;
         }
-        for (FishingService.Zone z : addon.fishing().zones()) {
-            if (z.world().equals(l.getWorld().getName())
-                    && l.getBlockX() >= Math.min(z.x1(), z.x2()) && l.getBlockX() <= Math.max(z.x1(), z.x2())
-                    && l.getBlockZ() >= Math.min(z.z1(), z.z2()) && l.getBlockZ() <= Math.max(z.z1(), z.z2())) {
-                return ascii(z.name() == null ? z.id() : z.name());
-            }
-        }
+        AngelService.Zone z = addon.angeln().zoneAt(l);
+        if (z != null) return "Angel-Zone";
         return "Wildnis";
     }
 

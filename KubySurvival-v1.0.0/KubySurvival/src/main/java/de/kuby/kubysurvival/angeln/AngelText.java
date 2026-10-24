@@ -25,9 +25,9 @@ public final class AngelText {
         return new DecimalFormat("#,##0.#", DE).format(v);
     }
 
-    /** Gewicht: unter 1 kg zwei Nachkommastellen (0,43 kg), sonst eine (15,6 kg). */
+    /** Gewicht: unter 10 kg zwei Nachkommastellen (0,43 kg, 3,41 kg), sonst eine (15,6 kg). */
     public static String kg(double kg) {
-        DecimalFormat f = new DecimalFormat(kg < 1 ? "#,##0.00" : "#,##0.0", DE);
+        DecimalFormat f = new DecimalFormat(kg < 10 ? "#,##0.00" : "#,##0.0", DE);
         return f.format(kg) + " kg";
     }
 

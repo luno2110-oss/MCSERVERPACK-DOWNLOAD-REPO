@@ -29,15 +29,17 @@ Prinzip: Keine GUI. Spiel läuft über physische Dinge am Tisch (Karten, Chips, 
 
 ## Ordnergruppe 2 – Angeln (Refs: ANGEL REF) – nur Survival
 > Hinweis: Der Angel- und Claim-Code fehlte im hochgeladenen Stand (nur Config-Reste). Neu gebaut als Addon KubySurvival 1.0.0.
-- [~] 2.1 Angelzonen mit schwebendem Text (KubySurvival, Test offen): `/kp angel pos1|pos2`, `/kp angel zone erstellen <id> [Name]`. Ohne Zonen gilt das System überall in Survival
-- [~] 2.2 Fangsystem (Test offen): 8 Fischarten, Seltenheit, Gewicht in kg je Art, Rute beeinflusst Chance. Tageszeit: nachts seltene Fische öfter, tagsüber häufige
-- [~] 2.3 Angel-Level und XP mit Fortschritt (Test offen)
-- [~] 2.4 Belohnungen (Test offen): XP beim Fang, Geld bei Levelaufstieg, Fische als Items mit Gewicht und Wert
-- [~] 2.5 Fischbuch mit Fortschritt, Anzahl und Rekord pro Fischart (Test offen)
-- [~] 2.6 Angelrute-Upgrades, 5 Stufen (Test offen): Stufe hängt am Spieler (nicht duplizierbar), seltene Fische öfter, schnelleres Beißen
-- [~] 2.7 Bestenliste (Top 10 nach XP, Server-Rekord je Art) und Angel-Turnier (Test offen): `/kp angel turnier start <Minuten>`, Gesamtgewicht zählt, Preise 5.000/2.500/1.000
-- [~] 2.8 SFX und schwebende Texte bei jedem Fang (Test offen), seltene Fänge werden angesagt
-- [~] 2.9 Fischverkauf im Angel-Menü und beim Fischhändler-NPC (`/kp angel haendler`) (Test offen)
+- [x] 2.0 Neu nach den Referenz-Clips (Angeln.Casino.zip), Menüs pixelgenau nachgebaut (Dialog-Kit, siehe 5.30). Test im Spiel offen
+- [~] 2.1 Angel-Zonen (Test offen): `/kp angel pos1|pos2`, `/kp angel zone erstellen <id> [Name]` (deine Position = Teleport-Punkt „Zur Angel-Zone“), `/kp angel tp`, `/kp angel holo` stellt das Hologramm „ANGELZONE“ (Blau-Verlauf, Zeilen mit Symbolen) auf. In der Zone +10 % Glück, -10 % Wartezeit, Mythen-Fische und Schätze nur dort. Angeln geht überall in Survival
+- [~] 2.2 Fangsystem (Test offen): 48 Arten auf 6 Gewässern (Flüsse & Seen, Ozean, Warme, Kalte, Sumpf & Höhlen, Mythen & Zone), Gewässer nach Biom am Schwimmer (Höhlenwasser = Sumpf & Höhlen), 6 Seltenheiten (Gewöhnlich bis Mythisch), 1 bis 5 Sterne nach Gewicht, manche Arten nachts doppelt so oft. Glück (Level, Glückshaken, Köder, Zone, Angler-Job) schiebt zu den seltenen. Eigene Grafik für alle 48 Fische (Items stapeln sich nach Art und Sternen, nicht essbar, nicht zu braten)
+- [~] 2.3 Angel-Punkte, Level 1 bis 100 (Level L ab 35·L·(L-1) Punkten) und Ränge (Anfänger, Hobby-Angler, Angler, Profi, Meisterangler, Legende); Aufstieg: Titel „LEVEL 8“, Coins, alle 10 Level ein Token
+- [~] 2.4 Fang wie in der Referenz: Aktionsleiste „Du angelst gerade… · Angel-Zone +10 %“ und „Es zieht! Jetzt einholen!“, großer Titel „SELTEN!“ in Seltenheitsfarbe mit Sternen und Gewicht, Fisch springt aus dem Wasser vor dich, kreiselt und landet im Inventar, Punkte in der Aktionsleiste, Rekord im Chat, Legendär und Mythisch werden angesagt, Schätze (Coins, Köder, Token, Items)
+- [~] 2.5 Fischbuch (`/angeln buch`): 6 Seiten mit je 8 Kacheln, Anzahl und Rekord, unbekannte Arten als dunkler Umriss, Detailseite (wo sie beißen, Gewicht, Preis, Server-Rekord). Volle Seite: 3.000 Coins + 2 Tokens
+- [~] 2.6 Rute & Upgrades (`/angeln rute`): Glückshaken (+4 % Glück, 5 Stufen), Schnellspule (-4 % Wartezeit, 5), Schatzsinn (+0,5 % Schatz, 3), Großfang-Rolle (Extra-Würfe aufs Gewicht, 3); Auto-Verkauf für 150 Tokens; Doppelfang (5/10/15 %) im Token-Shop. Kaufen mit zwei Klicks
+- [~] 2.7 Köder (`/angeln koeder`): Regenwurm, Glitzer-, Nacht- und Goldköder, kaufen (10 Stück) oder basteln (Zutaten aus dem Inventar), einer aktiv, wird je Fang verbraucht
+- [~] 2.8 Fischhändler (`/angeln haendler`, NPC per `/kp angel haendler`): alles, nur die kleinen, nur die seltenen oder nur die Fische des Tages verkaufen; Preise je Seltenheit und Sterne, Fische des Tages +50 %, jeden Tag eine Goldene Stunde +50 %, Angler-Job +1 % je Level. Balance: pro Stunde 1.000 Coins zum vollen Preis, darüber 20 % (`angeln.dealer.*`)
+- [~] 2.9 Tagesaufträge (3 je Tag, Geld und Punkte, Bonus für alle drei: 1 Token + 3 Köder) und Bestenliste (Woche, Ränge, Fänge, Rekorde; alle 2 Minuten neu). Turnier wie bisher: `/kp angel turnier start <Minuten>`
+- [~] 2.10 Hauptmenü `/angeln` wie in der Referenz: Profil (Level-Balken, Fänge, Woche, Fischbuch, Verdient, Serie, Schätze, Angler-Job), Heute (Fische des Tages, Goldene Stunde), sechs Kacheln, „Zur Angel-Zone“, „So funktioniert's“. Alte Daten (fishing.yml) werden übernommen
 
 ## Ordnergruppe 3 – Juwelenshop (Refs: JUWELENSHOP SURVIVAL, JUWELENSHOP SMP)
 - [x] 3.1 Survival: Ränge, Keys, Juwelen mit Inhalt (v1.37)
@@ -105,6 +107,8 @@ Reihenfolge wie das Hilfe-Karussell der Referenz. Jede Seite: Titel, Untertitel,
 - [x] 5.25 Survival-Leiste 5 px tiefer (mehr Abstand zum oberen Bildschirmrand)
 - [x] 5.26 SMP-Logo: Pfeile wie in der Referenz, stecken schräg im oberen Rand neben „SMP“ (Spitze schaut heraus, 45°-Schaft, Feder als Fächer)
 - [x] 5.27 Fehler behoben: Casino-Hilfe zeigte nur Kästchen (ungültiger Aufzählungspunkt ließ Minecraft die ganze Schrift verwerfen). Schriften werden jetzt bei jedem Build geprüft (tools/check_fonts.py)
+- [x] 5.30 Dialog-Kit für Menüs mit eigener Grafik wie in den Referenz-Clips: Kästen, Kacheln, Reiter, Knöpfe, Balken und Icons werden pixelgenau als Dialog-Text gesetzt (Schriften kuby:k/…, Werkzeug tools/build_kit.py, Klassen Canvas, UiDialog, UiClicks). Ganze Kacheln sind klickbar mit Tooltip, kein Knopfbalken unten, das „!“ oben in Server-Dialogen ist ausgeblendet. Vorschau ohne Spiel: tools/preview_text.py. Test: `/kadmin kittest`
+- [ ] 5.31 Alte Hilfe-Kästen (Casino-Hilfe, Survival-Hilfe) auf das Kit umstellen: Minecraft zeichnet Schriftzeichen nur bis 256 px, die alten Kästen sind 300 px breit
 - [ ] 5.17 Im Spiel prüfen: Sitz des Rahmens bei GUI-Größe 2, 3 und 4
 
 ## Ordnergruppe 6 – Modi und Welten (Stand)
