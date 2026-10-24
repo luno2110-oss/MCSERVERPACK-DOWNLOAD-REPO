@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * Menüs für Heiraten und Bank auf dem Dialog-Kit (Breite 390, Kopf 52 hoch wie die Angel-Menüs).
+ * Menüs für Heiraten und Bank auf dem Dialog-Kit (Breite 390, Kopf wie die Hilfe-Seiten der Referenz).
  * Nur Darstellung; Daten kommen als View-Records, Klicks über die Actions-Schnittstellen (MarryMenus).
  */
 public final class MarryScreens {
@@ -28,46 +28,52 @@ public final class MarryScreens {
     private MarryScreens() {
     }
 
-    private static void head(Canvas c, KitData.Box box, KitData.Icon icon, String title, TextColor accent, String sub,
+    /**
+     * Kopf wie die Hilfe-Seiten der Referenz: 50 hoch, Zurück-Knopf (9, 18), Icon 18 x 18 (43, 18), Titel (74, 15),
+     * Untertitel (74, 28). Ohne Zurück rücken Icon und Text nach links.
+     */
+    private static void head(Canvas c, KitData.Box box, KitData.SmallIcon icon, String title, TextColor accent, String sub,
                              Consumer<Player> back, List<Span> right) {
-        c.box(0, 0, W, 52, box);
-        int x = 10;
+        c.box(0, 0, W, 50, box);
+        int ix = 13, tx = 41;
         if (back != null) {
-            c.back(11, 9);
-            c.action(11, 9, 20, 20, back, "Zurück");
-            x = 40;
+            c.back(9, 18);
+            c.action(9, 18, 20, 20, back, "Zurück");
+            ix = 43;
+            tx = 74;
         }
-        c.icon(x, 10, icon, true);
-        int tx = x + 38;
-        c.text(tx, 12, title, accent, true);
+        c.smallIcon(ix, back != null ? 18 : 16, icon);
+        c.text(tx, 15, title, accent, true);
         int room = W - tx - 12 - (right == null ? 0 : Canvas.width(right) + 8);
-        if (sub != null) c.text(tx, 25, Canvas.fit(sub, false, room), GRAY, false);
-        if (right != null) c.textRight(380, 15, right);
+        if (sub != null) c.text(tx, 28, Canvas.fit(sub, false, room), GRAY, false);
+        if (right != null) c.textRight(378, 21, right);
     }
 
     /** Kasten mit Überschrift (Small Caps in der Akzentfarbe). */
     private static void box(Canvas c, int y, int h, KitData.Box style, String title, TextColor accent) {
         c.box(0, y, W, h, style);
-        if (title != null) c.text(10, y + 8, Canvas.caps(title), accent, true);
+        if (title != null) c.text(9, y + 9, title.toUpperCase(java.util.Locale.ROOT), accent, true);
     }
 
-    /** Aufzählung mit ▶ und Umbruch, gibt die neue y-Position zurück. */
+    /** Aufzählung mit • wie in der Hilfe (Zeilen 11, Absätze +3), gibt die y-Position unter der letzten Zeile zurück. */
     private static int bullets(Canvas c, int x, int y, List<String> lines, TextColor bullet) {
-        for (String para : lines) {
-            List<String> w = Canvas.wrap(para, W - x - 22);
+        for (int i = 0; i < lines.size(); i++) {
+            if (i > 0) y += 3;
+            List<String> w = Canvas.wrap(lines.get(i), W - x - 19);
             for (int k = 0; k < w.size(); k++) {
-                if (k == 0) c.text(x, y, "▶", bullet, false);
-                c.text(x + 10, y, w.get(k), LIGHT, false);
-                y += 10;
+                if (k == 0) c.text(x, y, "•", bullet, false);
+                c.text(x + 11, y, w.get(k), LIGHT, false);
+                y += 11;
             }
         }
         return y;
     }
 
-    private static int lines(List<String> paras, int width) {
+    /** Höhe eines "So geht's"-Kastens (Titel, Aufzählung ab y + 23, unten 12 Rand). */
+    private static int howHeight(List<String> paras) {
         int n = 0;
-        for (String p : paras) n += Canvas.wrap(p, width).size();
-        return n;
+        for (String p : paras) n += Canvas.wrap(p, W - 10 - 19).size();
+        return 23 + 11 * n + 3 * (paras.size() - 1) - 4 + 12;
     }
 
     /** Reihe gleich breiter Knöpfe über die ganze Breite. */
@@ -129,15 +135,15 @@ public final class MarryScreens {
 
     public static Canvas marry(MarryView v, MarryActions a) {
         Canvas c = new Canvas(W);
-        head(c, KitData.Box.PURPLE, KitData.Icon.HELP_RINGS, "HEIRATEN", PINK, "Antrag, Hochzeit und Ehe-Konto", null,
+        head(c, KitData.Box.PURPLE, KitData.SmallIcon.H_RINGS, "HEIRATEN", PINK, "Antrag, Hochzeit und Ehe-Konto", null,
                 v.married() ? List.of(Span.of("❤ ", PINK), Span.of("verheiratet", LIGHT)) : null);
-        int y = 55;
+        int y = 54;
         if (v.married()) {
             box(c, y, 70, KitData.Box.PURPLE, "Deine Ehe", PINK);
             c.text(12, y + 22, List.of(Span.bold("❤ ", PINK), Span.bold(v.partner(), WHITE)));
             c.text(12, y + 35, "Verheiratet seit " + v.since(), GRAY, false);
             c.text(12, y + 48, v.partnerStatus(), v.partnerOnline() ? GREEN : GRAY, false);
-            c.textRight(378, y + 8, Canvas.caps("Ehe-Konto"), PINK, true);
+            c.textRight(378, y + 9, "EHE-KONTO", PINK, true);
             if (v.marriageBalance() != null) {
                 c.textRight(378, y + 22, de.kuby.kubyplugins.util.Msg.coins(v.marriageBalance()) + " Coins", GOLD, true);
                 c.textRight(378, y + 35, "/bank", CMD, false);
@@ -158,8 +164,8 @@ public final class MarryScreens {
                     "Mit /bank zahlt ihr überall bis zu einem Limit ein und aus, große Beträge an der Bank am Spawn.",
                     "Verheiratet steht ein Herz vor eurem Namen im Chat und in der Tab-Liste.",
                     "Bei einer Scheidung wird das Ehe-Konto halbiert, jeder bekommt seinen Teil. Danach dürft ihr eine Zeit lang nicht neu heiraten.");
-            box(c, y, 24 + 10 * lines(how, W - 34), KitData.Box.PURPLE, "So geht's", PINK);
-            bullets(c, 12, y + 20, how, PINK);
+            box(c, y, howHeight(how), KitData.Box.PURPLE, "So geht's", PINK);
+            bullets(c, 10, y + 23, how, PINK);
             return c;
         }
         // Anträge
@@ -211,8 +217,9 @@ public final class MarryScreens {
                 "Mach einem Spieler mit /marry propose einen Antrag. Er gilt 10 Minuten.",
                 "Das Ja-Wort gebt ihr euch beim Priester in der Kirche, beide müssen dort stehen. Rechtsklick auf den Priester.",
                 "Die Hochzeit kostet " + de.kuby.kubyplugins.util.Msg.coins(v.cost()) + " Coins. Bezahlt wird sie von dem, der den Antrag macht.");
-        box(c, y, 24 + 10 * lines(how, W - 34), KitData.Box.PURPLE, "So geht's", PINK);
-        y = bullets(c, 12, y + 20, how, PINK) + 7;
+        box(c, y, howHeight(how), KitData.Box.PURPLE, "So geht's", PINK);
+        bullets(c, 10, y + 23, how, PINK);
+        y += howHeight(how) + 4;
         buttonRow(c, y, List.of(
                 Btn.of("Zur Kirche", KitData.Button.PURPLE, a.church(), "Zur Kirche teleportieren"),
                 Btn.of("Bank", KitData.Button.GOLD, a.bank(), "Ehe-Konto und Konten mit Freunden")));
@@ -258,8 +265,8 @@ public final class MarryScreens {
 
     public static Canvas bank(BankView v, BankActions a) {
         Canvas c = new Canvas(W);
-        head(c, KitData.Box.GOLD, KitData.Icon.COIN_STACK, "BANK", GOLD, "Ehe-Konto und Konten mit Freunden", null, wallet(v.wallet()));
-        int y = 55;
+        head(c, KitData.Box.GOLD, KitData.SmallIcon.H_COINS, "BANK", GOLD, "Ehe-Konto und Konten mit Freunden", null, wallet(v.wallet()));
+        int y = 54;
         String info = v.atBank() ? "Du bist an der Bank: Ein- und Auszahlen ohne Grenze."
                 : "Unterwegs: bis " + de.kuby.kubyplugins.util.Msg.coins(v.limit()) + " Coins je Buchung. Mehr an der Bank am Spawn.";
         c.text(4, y + 2, info, v.atBank() ? GREEN : GRAY, false);
@@ -267,7 +274,7 @@ public final class MarryScreens {
         for (AccountView acc : v.accounts()) {
             KitData.Box style = acc.marriage() ? KitData.Box.PURPLE : KitData.Box.GOLD;
             c.box(0, y, W, 36, style);
-            c.icon(9, y + 10, acc.marriage() ? KitData.Icon.HELP_RINGS : KitData.Icon.HELP_PEOPLE, false);
+            c.smallIcon(8, y + 9, acc.marriage() ? KitData.SmallIcon.H_RINGS : KitData.SmallIcon.H_PEOPLE);
             c.text(32, y + 8, Canvas.fit(acc.name(), true, 200), acc.marriage() ? PINK : GOLD, true);
             c.text(32, y + 21, Canvas.fit(String.join(", ", acc.members()), false, 220), GRAY, false);
             c.textRight(380, y + 8, de.kuby.kubyplugins.util.Msg.coins(acc.balance()) + " Coins", WHITE, true);
@@ -277,7 +284,7 @@ public final class MarryScreens {
         }
         if (v.canOpenMarriage()) {
             c.box(0, y, W, 36, KitData.Box.PURPLE);
-            c.icon(9, y + 10, KitData.Icon.HELP_RINGS, false);
+            c.smallIcon(8, y + 9, KitData.SmallIcon.H_RINGS);
             c.text(32, y + 8, "Ehe-Konto eröffnen", PINK, true);
             c.text(32, y + 21, "Gemeinsames Konto für euch beide, kostenlos", GRAY, false);
             c.textRight(380, y + 14, "Eröffnen ›", LIGHT, false);
@@ -285,7 +292,7 @@ public final class MarryScreens {
             y += 39;
         }
         c.box(0, y, W, 36, KitData.Box.GRAY);
-        c.icon(9, y + 10, KitData.Icon.HELP_PEOPLE, false);
+        c.smallIcon(8, y + 9, KitData.SmallIcon.H_PEOPLE);
         c.text(32, y + 8, "Neues Konto mit Freunden", v.canCreate() ? GOLD : GRAY, true);
         c.text(32, y + 21, Canvas.fit(v.createHint(), false, 300), GRAY, false);
         if (v.canCreate()) {
@@ -339,22 +346,23 @@ public final class MarryScreens {
         Canvas c = new Canvas(W);
         KitData.Box style = acc.marriage() ? KitData.Box.PURPLE : KitData.Box.GOLD;
         TextColor accent = acc.marriage() ? PINK : GOLD;
-        head(c, style, acc.marriage() ? KitData.Icon.HELP_RINGS : KitData.Icon.HELP_PEOPLE, acc.name().toUpperCase(), accent,
+        head(c, style, acc.marriage() ? KitData.SmallIcon.H_RINGS : KitData.SmallIcon.H_PEOPLE, acc.name().toUpperCase(), accent,
                 acc.marriage() ? "Ehe-Konto" : "Konto mit Freunden · eröffnet von " + acc.owner(), a.back(),
                 List.of(Span.bold(de.kuby.kubyplugins.util.Msg.coins(acc.balance()), WHITE), Span.of(" Coins", GRAY)));
-        int y = 55;
-        box(c, y, 74, style, "Buchen", accent);
-        c.textRight(378, y + 8, d.atBank() ? "an der Bank: ohne Grenze"
-                : "unterwegs bis " + de.kuby.kubyplugins.util.Msg.coins(d.limit()) + " je Buchung", d.atBank() ? GREEN : GRAY, false);
-        c.textRight(378, y + 58, List.of(Span.of("Dein Geld ", GRAY), Span.bold(de.kuby.kubyplugins.util.Msg.coins(d.wallet()), GOLD)));
+        int y = 54;
+        box(c, y, 78, style, "Buchen", accent);
+        c.textRight(378, y + 9, List.of(Span.of("Dein Geld ", GRAY), Span.bold(de.kuby.kubyplugins.util.Msg.coins(d.wallet()), GOLD)));
         amountRow(c, y + 20, "Einzahlen", true, d, a);
         amountRow(c, y + 38, "Abheben", false, d, a);
-        y += 77;
+        c.text(12, y + 64, d.atBank() ? "An der Bank: Beträge ohne Grenze."
+                : "Unterwegs bis " + de.kuby.kubyplugins.util.Msg.coins(d.limit()) + " Coins je Buchung, mehr an der Bank am Spawn.",
+                d.atBank() ? GREEN : GRAY, false);
+        y += 81;
         // Mitglieder
         List<String> members = acc.members();
         int mh = 22 + 12 * ((members.size() + 1) / 2) + (d.canManage() && !d.addable().isEmpty() ? 20 : 0);
         box(c, y, mh, style, "Mitglieder", accent);
-        if (!acc.marriage()) c.textRight(378, y + 8, "alle dürfen ein- und auszahlen", GRAY, false);
+        if (!acc.marriage()) c.textRight(378, y + 9, "alle dürfen ein- und auszahlen", GRAY, false);
         for (int i = 0; i < members.size(); i++) {
             String m = members.get(i);
             int mx = 12 + (i % 2) * 190, my = y + 21 + (i / 2) * 12;

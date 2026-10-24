@@ -59,8 +59,9 @@ if VANILLA and os.path.isdir(VANILLA):
     casino16, casino_small, casino_big = build_casino.build(OUT)
     build_skins.build(OUT)
     own += casino16
-    own += build_help_icons.build()
-    build_kit.build(OUT, {**neg, **pos}, VANILLA, own, casino_small, casino_big)
+    # Icons der Survival-Hilfe in Originalgröße (18 px) hinter die Casino-Icons
+    small = casino_small + build_help_icons.build(VANILLA, build_casino.chip("red"))
+    build_kit.build(OUT, {**neg, **pos}, VANILLA, own, small, casino_big)
     # Icons für Hologramm-Zeilen (kuby:holo): dieselben Zeichen wie kuby:k/i0, aber nur 9 px hoch wie Text
     with open(os.path.join(OUT, "assets/kuby/font/k/i0.json"), encoding="utf-8") as fh:
         i0 = json.load(fh)
