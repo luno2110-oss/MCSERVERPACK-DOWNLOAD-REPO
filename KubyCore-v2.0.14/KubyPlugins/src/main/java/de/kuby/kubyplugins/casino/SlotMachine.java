@@ -198,8 +198,8 @@ public final class SlotMachine {
             }
         }
         // Stege zwischen den Walzen, Leisten oben und unten
-        float depth = (float) (rad + 0.06);
-        for (int i = 0; i < 2; i++) box(off((i - 0.5) * s, 0, depth / 2), face, 0.07f, (float) (2 * rad + 0.04), depth, "black");
+        float depth = (float) (rad * 0.92);
+        for (int i = 0; i < 2; i++) box(off((i - 0.5) * s, 0, depth / 2), face, 0.06f, (float) (2 * rad + 0.04), depth, "black");
         float barW = (float) (3 * s + 0.12);
         box(off(0, rad + 0.035, (rad + 0.1) / 2), face, barW, 0.05f, (float) (rad + 0.1), "gold");
         box(off(0, -rad - 0.035, (rad + 0.1) / 2), face, barW, 0.05f, (float) (rad + 0.1), "gold");
@@ -212,7 +212,7 @@ public final class SlotMachine {
                 e.setBillboard(Display.Billboard.FIXED);
                 e.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
                 e.setShadowed(false);
-                e.setTransformation(new Transformation(new Vector3f(), new Quaternionf(face), new Vector3f(0.7f, 0.7f, 0.7f),
+                e.setTransformation(new Transformation(new Vector3f(), new Quaternionf(face), new Vector3f(0.55f, 0.55f, 0.55f),
                         new Quaternionf()));
                 mark(e, "static");
             });
@@ -227,26 +227,30 @@ public final class SlotMachine {
             e.setLineWidth(220);
             // liegt fast flach, Oberkante zur Wand
             Quaternionf q = new Quaternionf(face).rotateX((float) Math.toRadians(-78));
-            e.setTransformation(new Transformation(new Vector3f(), q, new Vector3f(0.4f, 0.4f, 0.4f), new Quaternionf()));
+            e.setTransformation(new Transformation(new Vector3f(), q, new Vector3f(0.3f, 0.3f, 0.3f), new Quaternionf()));
             mark(e, "panel");
         });
-        interaction(off(0, DESK_TOP - 0.02, front - 0.12), 0.5f, 0.08f, "panel");
+        interaction(off(0, DESK_TOP - 0.02, front - 0.1), 0.4f, 0.08f, "panel");
         double ctrl = rad + 0.26;
-        Location lb = off(-1.1 * s, DESK_TOP + 0.09, ctrl);
+        // Hebel und Knopf an den Enden des Pults: vom Hocker aus verdecken sie keine Symbole
+        Location lb = off(-(1.5 * s - 0.17), DESK_TOP + 0.09, ctrl);
         block(lb, face, Material.POLISHED_ANDESITE, 0.34f, 0.18f, 0.3f);
         lever = lb.getWorld().spawn(lb.clone().add(0, 0.09, 0), BlockDisplay.class, e -> {
             Switch data = (Switch) Bukkit.createBlockData(Material.LEVER);
             data.setAttachedFace(org.bukkit.block.data.FaceAttachable.AttachedFace.FLOOR);
             data.setFacing(org.bukkit.block.BlockFace.NORTH);
+            // in Ruhe nach hinten gekippt, gezogen zum Spieler
+            data.setPowered(true);
             e.setBlock(data);
-            Quaternionf q = new Quaternionf(face).rotateY((float) Math.PI / 2);
+            // kippt nach vorn und hinten (zum Spieler gezogen)
+            Quaternionf q = new Quaternionf(face);
             Vector3f t = new Vector3f(-0.5f, 0, -0.5f);
             q.transform(t);
             e.setTransformation(new Transformation(t, q, new Vector3f(1, 1, 1), new Quaternionf()));
             mark(e, "lever");
         });
         interaction(lb.clone().add(0, -0.09, 0), 0.36f, 0.75f, "lever");
-        Location bt = off(1.1 * s, DESK_TOP + 0.05, ctrl);
+        Location bt = off(1.5 * s - 0.17, DESK_TOP + 0.05, ctrl);
         box(bt, face, 0.3f, 0.1f, 0.24f, "black");
         box(bt.clone().add(0, 0.065, 0), face, 0.17f, 0.04f, 0.13f, "screen");
         interaction(bt.clone().add(0, -0.05, 0), 0.32f, 0.2f, "button");
@@ -342,7 +346,7 @@ public final class SlotMachine {
     public void lever(boolean pulled) {
         if (lever == null || !lever.isValid()) return;
         Switch data = (Switch) lever.getBlock();
-        data.setPowered(pulled);
+        data.setPowered(!pulled);
         lever.setBlock(data);
     }
 
