@@ -116,7 +116,7 @@ casino:
   jackpot-share: 0.01
   jackpot:
     draw-day: SATURDAY
-    draw-time: "19:00"
+    draw-time: "18:00"
     seven-wins: false
   vip:
     region: casino-vip

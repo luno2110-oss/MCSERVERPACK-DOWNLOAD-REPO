@@ -28,7 +28,7 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Wöchentliche Jackpot-Verlosung (Standard: Samstag 19 Uhr, Europe/Berlin). Dabei ist jeder, der seit der letzten
+ * Wöchentliche Jackpot-Verlosung (Standard: Samstag 18 Uhr, Europe/Berlin). Dabei ist jeder, der seit der letzten
  * Ziehung im Casino gespielt hat. Der Gewinn wird vorgemerkt und erst gutgeschrieben, wenn der Gewinner online und
  * in Survival ist, weil das Geld pro Modus getrennt ist. War der Server zur Ziehung aus, wird beim Start nachgezogen.
  */
@@ -43,6 +43,8 @@ public final class JackpotDraw {
     private final Set<UUID> participants = new LinkedHashSet<>();
     private final Map<UUID, Long> pending = new HashMap<>();
     private long lastDraw;
+    private String lastWinner;
+    private long lastAmount;
 
     public JackpotDraw(KubyPlugins plugin) {
         this.plugin = plugin;
@@ -65,6 +67,8 @@ public final class JackpotDraw {
         }
         // Beim allerersten Start nicht sofort ziehen, sondern ab jetzt zählen.
         lastDraw = yml.getLong("last", System.currentTimeMillis());
+        lastWinner = yml.getString("letzter-gewinner");
+        lastAmount = yml.getLong("letzter-betrag", 0);
     }
 
     /** Startet die Prüfung jede Minute: fällige Ziehung und vorgemerkte Gewinne. */
@@ -83,6 +87,31 @@ public final class JackpotDraw {
 
     public synchronized boolean isParticipant(UUID id) {
         return participants.contains(id);
+    }
+
+    public synchronized String lastWinner() {
+        return lastWinner;
+    }
+
+    public synchronized long lastAmount() {
+        return lastAmount;
+    }
+
+    /** Nächste Ziehung, z. B. "Samstag 18:00". */
+    public String nextDrawLong() {
+        ZonedDateTime next = nextDraw(ZonedDateTime.now(ZONE));
+        return next.getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.GERMAN)
+                + " " + String.format("%02d:%02d", next.getHour(), next.getMinute());
+    }
+
+    /** Restzeit bis zur Ziehung, z. B. "22 Std. 46 Min." oder "2 Tage 3 Std.". */
+    public String timeLeft() {
+        ZonedDateTime now = ZonedDateTime.now(ZONE);
+        long min = Math.max(0, java.time.Duration.between(now, nextDraw(now)).toMinutes());
+        long d = min / (60 * 24), h = (min / 60) % 24, m = min % 60;
+        if (d > 0) return d + (d == 1 ? " Tag " : " Tage ") + h + " Std.";
+        if (h > 0) return h + " Std. " + m + " Min.";
+        return m + " Min.";
     }
 
     /** Nächste Ziehung, z. B. "Sa 19:00". */
@@ -120,10 +149,15 @@ public final class JackpotDraw {
         UUID winner = list.get(ThreadLocalRandom.current().nextInt(list.size()));
         participants.clear();
         long money = plugin.casino().claimJackpot();
-        pending.merge(winner, money, Long::sum);
+        // Gewinn in Chips (wie im Clip), kommt sofort auf das Chip-Konto, auch offline
+        plugin.casino().giveChips(winner, money);
         String name = Bukkit.getOfflinePlayer(winner).getName();
-        Bukkit.broadcast(Msg.parse("<gold><b>JACKPOT-ZIEHUNG</b> <white>" + (name == null ? "Jemand" : name)
-                + " <gold>gewinnt <yellow>" + Msg.coins(money) + "$ <gray>(" + list.size() + " Teilnehmer)"));
+        lastWinner = name == null ? "Jemand" : name;
+        lastAmount = money;
+        Bukkit.broadcast(Msg.parse("<#F2B829><b>JACKPOT</b></#F2B829> <dark_gray>▶</dark_gray> <white>" + lastWinner
+                + " <gray>knackt den Tresor: <yellow>" + Msg.coins(money) + " Chips <gray>(" + list.size() + " Teilnehmer)"));
+        Player online = Bukkit.getPlayer(winner);
+        if (online != null) Sfx.play(plugin, online, Sfx.Kind.JACKPOT);
         plugin.casinoLog().recordJackpot(winner, money);
         Location kasse = plugin.casino().kasse();
         CasinoFx.jackpot(plugin, winner, kasse == null ? null : kasse.clone().add(0, 3.0, 0), money);
@@ -155,9 +189,9 @@ public final class JackpotDraw {
         }
         LocalTime time;
         try {
-            time = LocalTime.parse(plugin.getConfig().getString("casino.jackpot.draw-time", "19:00"));
+            time = LocalTime.parse(plugin.getConfig().getString("casino.jackpot.draw-time", "18:00"));
         } catch (RuntimeException e) {
-            time = LocalTime.of(19, 0);
+            time = LocalTime.of(18, 0);
         }
         ZonedDateTime candidate = now.with(TemporalAdjusters.nextOrSame(day)).with(time).withSecond(0).withNano(0);
         if (!candidate.isAfter(now)) candidate = candidate.plusWeeks(1);
@@ -171,6 +205,8 @@ public final class JackpotDraw {
         out.set("participants", ids);
         for (Map.Entry<UUID, Long> e : pending.entrySet()) out.set("pending." + e.getKey(), e.getValue());
         out.set("last", lastDraw);
+        out.set("letzter-gewinner", lastWinner);
+        out.set("letzter-betrag", lastAmount);
         try {
             plugin.getDataFolder().mkdirs();
             out.save(file);

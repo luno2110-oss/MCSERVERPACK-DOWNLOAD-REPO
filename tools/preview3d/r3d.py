@@ -598,6 +598,10 @@ def context(rs, name):
             for y in range(0, 3):
                 cube(rs, x, y, -1, "pink_glazed_terracotta")
                 cube(rs, x, y, 0, "pink_glazed_terracotta")
+    if name == "holos":
+        for x in range(2, 9):
+            for y in range(0, 5):
+                cube(rs, x, y, -2, "polished_blackstone")
     if name == "crash":
         # Wand mit dunklem Rahmen (Schwarzstein) und schwarzer Bildfläche, Holzsäulen, Sims mit Lampen
         for x in range(-5, 7):

@@ -183,7 +183,120 @@ def croupier():
     return s.img
 
 
-SKINS = {"croupier": croupier}
+def mia():
+    """DJ Mia wie im Clip: lange blonde Haare über den Schultern, weißes Shirt, hellgraue Strickjacke, helle Jeans
+    mit Rissen an den Knien, helle Schuhe."""
+    s = Skin({
+        "H": "F0D48A", "h": "D6B464", "d": "B8944A",       # Haare hell, Schatten, dunkel
+        "S": "F7DECB", "s": "EAC6AE",                       # Haut
+        "W": "F6F4F2", "E": "7C7888", "e": "4A4656",        # Augen
+        "B": "F2BCAC", "m": "E6B4A4",                       # Wangen, Mund
+        "T": "F1EFEC", "t": "DCD8D4",                       # Shirt
+        "C": "D2D2D8", "c": "B6B6C0", "g": "9C9CA8",        # Strickjacke
+        "J": "8EAABC", "j": "7090A6", "k": "AEC6D4",        # Jeans
+        "F": "DCDCE0", "f": "B4B4BC",                       # Schuhe
+    })
+    s.fill("head", "top", "H")
+    s.fill("head", "bottom", "s")
+    s.paint("head", "front", [
+        "HHHHHHHH",
+        "HHHhHHHH",
+        "HHhHHhHH",
+        "HhSSSShH",
+        "hWESSEWh",
+        "hWeSSeWh",
+        "hBSSSSBh",
+        "hSSmmSSh",
+    ])
+    for side in ("right", "left"):
+        s.paint("head", side, ["HHHHHHHH", "HHHHHHHH", "HHHhHHHh", "HHhHHHhh", "HHHHHhHS", "hHHHHHhS", "hHhHHhhs",
+                               "hhHHHhhs"] if side == "right" else
+                ["HHHHHHHH", "HHHHHHHH", "hHHHhHHH", "hhHHHhHH", "ShHhHHHH", "ShHHHHHh", "shhHHhHh", "shhHHHhh"])
+    s.paint("head", "back", ["HHHHHHHH", "HHhHHHHH", "HHHHHhHH", "HhHHHHHH", "HHHHhHHH", "hHHHHHHh", "HhHHHHhH",
+                             "hHHhhHHh"])
+    # Haar-Schicht: Scheitel und Strähnen seitlich
+    s.paint("hat", "front", [
+        "HHHHHHHH",
+        "HHHhHHHH",
+        "HH....hH",
+        "H......H",
+        "h......h",
+        "H......H",
+        "h......h",
+        "H......H",
+    ])
+    s.paint("hat", "right", ["........", "HHHHHHHH", "HhHHHHhH", "hHHHHhHH", "HHhHHHHh", "HhHHhHHH", "hHHHHhHh",
+                             "HHhHHHhH"])
+    s.paint("hat", "left", ["........", "HHHHHHHH", "HhHHHHhH", "HHhHHHHh", "hHHHHhHH", "HHHhHHhH", "HhHHHHHh",
+                            "hHHhHHHH"])
+    s.paint("hat", "back", ["HHHHHHHH", "HHhHHHHH", "HHHHHhHH", "hHHHHHHh", "HHHhHHHH", "HhHHHHhH", "HHHHHHHH",
+                            "hHhHHhHh"])
+    # Körper: weißes Shirt, Ränder der Strickjacke
+    s.paint("body", "front", [
+        "CTTTTTTC",
+        "CTTTTTTC",
+        "CTTTTTTC",
+        "CTtTTtTC",
+        "CTTTTTTC",
+        "CTTTTTTC",
+        "cTTTTTTc",
+        "CTTtTTTC",
+        "CTTTTTTC",
+        "CTTTTTTC",
+        "cTtTTtTc",
+        "CTTTTTTC",
+    ])
+    s.fill("body", "back", "C")
+    s.paint("body", "back", ["", "", "", "", "", "", "", "", "", "", "cCcCcCcC", "CCCCCCCC"])
+    for side in ("right", "left"):
+        s.column("body", side, "CCCCCCcCCCcC")
+    s.fill("body", "top", "C")
+    s.fill("body", "bottom", "T")
+    # lange Haare vorn über die Schultern und hinten den Rücken hinunter (Jacken-Schicht)
+    s.paint("jacket", "front", [
+        "HH....HH",
+        "hH....Hh",
+        "Hh....hH",
+        "hH....Hh",
+        ".H....h.",
+        ".h....H.",
+        ".H....h.",
+        ".d....d.",
+    ])
+    s.paint("jacket", "back", [
+        "HhHHhHHh",
+        "hHHhHHhH",
+        "HhHHHhHh",
+        "dHhHHhHd",
+        "HdhHHhdH",
+        ".dHhhHd.",
+        "..dhhd..",
+    ])
+    for side in ("right", "left"):
+        s.paint("jacket", side, ["hHHh", "Hd.H", "d..h", "...."])
+    # Arme: Strickjacke mit Bündchen, Hände
+    for arm in ("rarm", "larm"):
+        for side in ("front", "back", "right", "left"):
+            s.column(arm, side, "CCCcCCCCcgSS")
+        s.fill(arm, "top", "C")
+        s.fill(arm, "bottom", "S")
+    for sl in ("rsleeve", "lsleeve"):
+        for side in ("front", "back", "right", "left"):
+            s.column(sl, side, "c...........")
+    # Beine: helle Jeans mit Rissen an den Knien, helle Schuhe
+    for leg in ("rleg", "lleg"):
+        for side in ("front", "back", "right", "left"):
+            s.column(leg, side, "JJJJJJJJJjFF")
+        s.fill(leg, "top", "J")
+        s.fill(leg, "bottom", "f")
+    s.paint("rleg", "front", ["JjJJ", "JJJJ", "JJkJ", "JJJJ", "JjJJ", "kSSJ", "JsSk", "JJJJ", "JkJJ", "JJjJ", "FFFF", "fFFf"])
+    s.paint("lleg", "front", ["JJjJ", "JJJJ", "JkJJ", "JJJJ", "JJjJ", "JSSk", "kSsJ", "JJJJ", "JJkJ", "JjJJ", "FFFF", "fFFf"])
+    for p in ("rpants", "lpants"):
+        s.paint(p, "front", ["", "", "", "", "", "", "", "", "", "", "", "ffff"])
+    return s.img
+
+
+SKINS = {"croupier": croupier, "mia": mia}
 
 
 def build(out):

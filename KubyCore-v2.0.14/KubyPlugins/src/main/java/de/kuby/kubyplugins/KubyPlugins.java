@@ -133,6 +133,7 @@ public final class KubyPlugins extends JavaPlugin {
     private de.kuby.kubyplugins.casino.RouletteGame roulette;
     private de.kuby.kubyplugins.casino.SlotsService slots;
     private de.kuby.kubyplugins.casino.CrashGame crash;
+    private de.kuby.kubyplugins.casino.CasinoHolos casinoHolos;
     private CasinoLog casinoLog;
     private JackpotDraw jackpotDraw;
     private CasinoVip casinoVip;
@@ -215,6 +216,7 @@ public final class KubyPlugins extends JavaPlugin {
         roulette = new de.kuby.kubyplugins.casino.RouletteGame(this);
         slots = new de.kuby.kubyplugins.casino.SlotsService(this);
         crash = new de.kuby.kubyplugins.casino.CrashGame(this);
+        casinoHolos = new de.kuby.kubyplugins.casino.CasinoHolos(this);
         edit = new EditModeService(this);
         regions = new RegionService(this);
         hubSettings = new HubSettingsService(this);
@@ -346,6 +348,7 @@ public final class KubyPlugins extends JavaPlugin {
         getServer().getPluginManager().registerEvents(blackjack, this);
         getServer().getPluginManager().registerEvents(slots, this);
         getServer().getPluginManager().registerEvents(crash, this);
+        getServer().getPluginManager().registerEvents(casinoHolos, this);
         getServer().getPluginManager().registerEvents(new CasinoVipListener(this), this);
         getServer().getPluginManager().registerEvents(votes, this);
         getServer().getPluginManager().registerEvents(uiPack, this);
@@ -356,6 +359,7 @@ public final class KubyPlugins extends JavaPlugin {
             roulette.respawn();
             slots.respawn();
             crash.respawn();
+            casinoHolos.respawnAll();
             poker.respawn();
             votes.hook();
             hubSettings.applyAll();
@@ -378,6 +382,7 @@ public final class KubyPlugins extends JavaPlugin {
         roulette.shutdown();
         slots.shutdown();
         crash.shutdown();
+        casinoHolos.shutdown();
         poker.shutdown();
         saveAll();
     }
@@ -552,6 +557,7 @@ public final class KubyPlugins extends JavaPlugin {
     public de.kuby.kubyplugins.casino.RouletteGame roulette() { return roulette; }
     public de.kuby.kubyplugins.casino.SlotsService slots() { return slots; }
     public de.kuby.kubyplugins.casino.CrashGame crash() { return crash; }
+    public de.kuby.kubyplugins.casino.CasinoHolos casinoHolos() { return casinoHolos; }
     public CasinoLog casinoLog() { return casinoLog; }
     public JackpotDraw jackpotDraw() { return jackpotDraw; }
     public CasinoVip casinoVip() { return casinoVip; }

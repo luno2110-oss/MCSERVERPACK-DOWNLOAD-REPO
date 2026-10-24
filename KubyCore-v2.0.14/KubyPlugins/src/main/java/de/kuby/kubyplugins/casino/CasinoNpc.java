@@ -41,13 +41,15 @@ public final class CasinoNpc implements Listener {
     public enum Role {
         KASSE("Kasse", "kasse", null, KitData.SmallIcon.C_PINK),
         CROUPIER("Roulette", "croupier", TextColor.color(0xF0303E), KitData.SmallIcon.C_PINK),
-        CRASH("Crash", "crash", TextColor.color(0xF2402E), KitData.SmallIcon.C_WHITE);
+        CRASH("Crash", "crash", TextColor.color(0xF2402E), KitData.SmallIcon.C_WHITE),
+        MIA("Mia", "mia", null, null),
+        LOSBUDE("Losbude", "losbude", null, KitData.SmallIcon.Y_CLOVER);
 
         public final String title;
         public final String id;
         /** Farbe des Titels (helle Titelschrift eingefärbt); null = Gold-Verlauf. */
         public final TextColor titleColor;
-        /** Chip links und rechts vom Titel. */
+        /** Chip links und rechts vom Titel (null = ohne). */
         public final KitData.SmallIcon chip;
 
         Role(String title, String id, TextColor titleColor, KitData.SmallIcon chip) {
@@ -91,6 +93,8 @@ public final class CasinoNpc implements Listener {
             });
             case CROUPIER -> mannequin(loc, "Croupier", "croupier");
             // geladener Creeper (blaue Aura) wie im Clip; ohne KI zündet er nie
+            case MIA -> mannequin(loc, "Mia", "mia");
+            case LOSBUDE -> mannequin(loc, "Losbude", "croupier");
             case CRASH -> loc.getWorld().spawn(loc, org.bukkit.entity.Creeper.class, c -> {
                 c.setPowered(true);
                 c.setMaxFuseTicks(Integer.MAX_VALUE / 2);
@@ -133,23 +137,58 @@ public final class CasinoNpc implements Listener {
         base.setYaw(0);
         base.setPitch(0);
         String owner = npc.getUniqueId().toString();
-        TextComponent.Builder title = Component.text();
-        Key chipFont = Key.key("kuby", "k/i-5");
-        title.append(Component.text(String.valueOf(role.chip.c)).font(chipFont).color(NamedTextColor.WHITE));
-        title.append(Component.text(de.kuby.kubyplugins.ui.Canvas.titleChars(" " + role.title + " ", role.titleColor == null))
-                .font(Key.key("kuby", "title")).color(role.titleColor == null ? NamedTextColor.WHITE : role.titleColor));
-        title.append(Component.text(String.valueOf(role.chip.c)).font(chipFont).color(NamedTextColor.WHITE));
-        holo(base.clone().add(0, 2.62, 0), title.build(), 0.62f, owner);
-        holo(base.clone().add(0, 2.12, 0), body(role), 1.0f, owner);
+        // Titel direkt über dem Textblock (der wächst vom Anker nach oben, 0,25 je Zeile)
+        Component text = body(role);
+        int lines = 1 + (int) net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText().serialize(text)
+                .chars().filter(c -> c == '\n').count();
+        holo(base.clone().add(0, 2.2 + 0.25 * lines, 0), title(role), 0.62f, owner);
+        holo(base.clone().add(0, 2.12, 0), text, 1.0f, owner);
     }
 
-    private static Component body(Role role) {
+    /** Hologramm-Titel: großer Schriftzug zwischen zwei Chips (Losbude: Regenbogen mit Kleeblättern). */
+    public static Component title(Role role) {
+        TextComponent.Builder title = Component.text();
+        Key chipFont = Key.key("kuby", "k/i-5");
+        String pad = role.chip == null ? "" : " ";
+        if (role.chip != null) title.append(Component.text(String.valueOf(role.chip.c)).font(chipFont).color(NamedTextColor.WHITE));
+        if (role == Role.LOSBUDE) {
+            // Regenbogen-Titel wie im Clip
+            title.append(CrashScreen.logo(" LOSBUDE ", new int[]{0xF2404A, 0xF6902E, 0xF6D23A, 0x5AD860, 0x48B8F0, 0x6A7AF2,
+                    0xB060F0}));
+        } else {
+            title.append(Component.text(de.kuby.kubyplugins.ui.Canvas.titleChars(pad + role.title + pad, role.titleColor == null))
+                    .font(Key.key("kuby", "title")).color(role.titleColor == null ? NamedTextColor.WHITE : role.titleColor));
+        }
+        if (role.chip != null) title.append(Component.text(String.valueOf(role.chip.c)).font(chipFont).color(NamedTextColor.WHITE));
+        return title.build();
+    }
+
+    public static Component body(Role role) {
         TextColor light = TextColor.color(0xE8E4DC);
         return switch (role) {
             case KASSE -> Component.text()
                     .append(Component.text("Coins ", light)).append(Component.text("⇄", NamedTextColor.GRAY))
                     .append(Component.text(" Chips", light)).append(Component.newline())
                     .append(Component.text("➜ ", NamedTextColor.YELLOW)).append(Component.text("Rechtsklick", light))
+                    .build();
+            case LOSBUDE -> {
+                Key icons = Key.key("kuby", "holo");
+                Component dot = Component.text(" · ", NamedTextColor.DARK_GRAY);
+                yield Component.text()
+                        .append(Component.text(String.valueOf(KitData.SmallIcon.C_PINK.c)).font(icons).color(NamedTextColor.WHITE))
+                        .append(dot).append(Component.text("Lose kaufst du mit ", light))
+                        .append(Component.text("Chips", TextColor.color(0xF6E23A))).append(Component.newline())
+                        .append(Component.text(String.valueOf(KitData.SmallIcon.S_GIFT.c)).font(icons).color(NamedTextColor.WHITE))
+                        .append(dot).append(Component.text("Sofort aufdecken, sofort wissen", light)).append(Component.newline())
+                        .append(Component.text(String.valueOf(KitData.SmallIcon.S_STAR.c)).font(icons).color(NamedTextColor.WHITE))
+                        .append(dot).append(Component.text("Mehrere Sorten, mehrere Preisklassen", light)).append(Component.newline())
+                        .append(Component.newline())
+                        .append(Component.text("➜ ", NamedTextColor.YELLOW)).append(Component.text("Rechtsklick und dein Glück versuchen", light))
+                        .build();
+            }
+            case MIA -> Component.text()
+                    .append(Component.text("Rechtsklick", light)).append(Component.text(" · ", NamedTextColor.GRAY))
+                    .append(Component.text("Musik an/aus", light))
                     .build();
             case CROUPIER, CRASH -> Component.text()
                     .append(Component.text("Einsatz setzen", light)).append(Component.newline())
@@ -221,6 +260,12 @@ public final class CasinoNpc implements Listener {
         if (roleOf(e.getEntity()) != null) e.setCancelled(true);
     }
 
+    /** Rubbellos zugemacht, ohne alles aufzudecken: Ergebnis trotzdem nennen. */
+    @EventHandler
+    public void onClose(org.bukkit.event.inventory.InventoryCloseEvent e) {
+        if (e.getInventory().getHolder() instanceof Losbude.Scratch s && e.getPlayer() instanceof Player p) s.closed(p);
+    }
+
     /** Der Crash-Creeper explodiert nie. */
     @EventHandler(ignoreCancelled = true)
     public void onPrime(org.bukkit.event.entity.ExplosionPrimeEvent e) {
@@ -239,6 +284,8 @@ public final class CasinoNpc implements Listener {
             };
             case CROUPIER -> p -> plugin.roulette().open(p);
             case CRASH -> p -> plugin.crash().open(p);
+            case MIA -> p -> plugin.casinoMusic().openMenu(p);
+            case LOSBUDE -> p -> Losbude.open(plugin, p);
         };
     }
 

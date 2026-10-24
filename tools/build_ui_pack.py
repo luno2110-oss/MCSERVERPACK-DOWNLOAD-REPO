@@ -569,6 +569,21 @@ if VANILLA and os.path.isdir(VANILLA):
     build_skins.build(OUT)
     own += casino16
     build_kit.build(OUT, {**neg, **pos}, VANILLA, own, casino_small, casino_big)
+    # Icons für Hologramm-Zeilen (kuby:holo): dieselben Zeichen wie kuby:k/i0, aber nur 9 px hoch wie Text
+    with open(os.path.join(OUT, "assets/kuby/font/k/i0.json"), encoding="utf-8") as fh:
+        i0 = json.load(fh)
+    holo = []
+    for prov in i0["providers"]:
+        if prov.get("type") != "bitmap" or prov.get("height") not in (16, 20):
+            continue
+        if "title" in prov.get("file", ""):
+            continue
+        q = dict(prov)
+        q["height"] = 9
+        q["ascent"] = 8
+        holo.append(q)
+    with open(os.path.join(OUT, "assets/kuby/font/holo.json"), "w", encoding="utf-8") as fh:
+        json.dump({"providers": holo}, fh, ensure_ascii=False)
 else:
     print("Hinweis: KUBY_VANILLA nicht gesetzt, Dialog-Kit nicht neu gebaut")
 

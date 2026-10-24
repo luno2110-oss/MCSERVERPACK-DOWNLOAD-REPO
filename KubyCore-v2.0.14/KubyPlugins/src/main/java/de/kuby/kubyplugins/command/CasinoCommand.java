@@ -81,6 +81,7 @@ public final class CasinoCommand implements CommandExecutor {
             case "automat" -> Msg.send(p, "<gray>Slot-Automaten baust du jetzt mit <white>/casino slots automat [Breite]</white>.");
             case "slots" -> plugin.slots().command(p, args);
             case "crash" -> plugin.crash().command(p, args);
+            case "holo" -> plugin.casinoHolos().command(p, args);
             case "cashout", "auszahlen" -> {
                 String err = plugin.crash().cashout(p);
                 if (err != null) de.kuby.kubyplugins.casino.CasinoText.error(p, err);

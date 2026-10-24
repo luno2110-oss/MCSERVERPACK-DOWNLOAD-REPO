@@ -465,16 +465,17 @@ public final class KitData {
         S_NOTE('\ued0e', 9, 7),
         S_NOTE_GOLD('\ued0f', 9, 7),
         S_MUTE('\ued10', 11, 8),
-        Y_CHERRY('\ued11', 15, 15),
-        Y_LEMON('\ued12', 16, 14),
-        Y_BANANA('\ued13', 17, 12),
-        Y_BELL('\ued14', 16, 16),
-        Y_STAR('\ued15', 15, 14),
-        Y_CLOVER('\ued16', 15, 16),
-        Y_CHIP('\ued17', 16, 15),
-        Y_COIN('\ued18', 16, 15),
-        Y_DIAMOND('\ued19', 16, 14),
-        Y_SEVEN('\ued1a', 15, 15);
+        S_GIFT('\ued11', 12, 11),
+        Y_CHERRY('\ued12', 15, 15),
+        Y_LEMON('\ued13', 16, 14),
+        Y_BANANA('\ued14', 17, 12),
+        Y_BELL('\ued15', 16, 16),
+        Y_STAR('\ued16', 15, 14),
+        Y_CLOVER('\ued17', 15, 16),
+        Y_CHIP('\ued18', 16, 15),
+        Y_COIN('\ued19', 16, 15),
+        Y_DIAMOND('\ued1a', 16, 14),
+        Y_SEVEN('\ued1b', 15, 15);
 
         public final char c;
         public final int advance, height;

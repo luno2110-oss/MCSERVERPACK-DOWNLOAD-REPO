@@ -99,6 +99,72 @@ public final class Scene {
                         .append(Component.text(" · ", NamedTextColor.DARK_GRAY).decoration(net.kyori.adventure.text.format.TextDecoration.BOLD, false))
                         .append(Component.text("3,19x", green).decoration(net.kyori.adventure.text.format.TextDecoration.BOLD, false)));
             }
+            case "holos" -> {
+                // Jackpot (links), Eingang (Mitte), Ranking an der Wand (rechts) wie in CasinoHolos
+                java.util.function.BiFunction<Location, Object[], org.bukkit.entity.TextDisplay> holo = (at, o) ->
+                        w.spawn(at, org.bukkit.entity.TextDisplay.class, d -> {
+                            d.text((Component) o[0]);
+                            float sc = (Float) o[1];
+                            boolean bb = (Boolean) o[2];
+                            d.setBillboard(bb ? org.bukkit.entity.Display.Billboard.VERTICAL : org.bukkit.entity.Display.Billboard.FIXED);
+                            d.setBackgroundColor(org.bukkit.Color.fromARGB(o.length > 3 ? (Integer) o[3] : 0, 0, 0, 0));
+                            d.setShadowed(true);
+                            d.setLineWidth(400);
+                            d.setTransformation(new org.bukkit.util.Transformation(new org.joml.Vector3f(), new org.joml.Quaternionf(),
+                                    new org.joml.Vector3f(sc, sc, sc), new org.joml.Quaternionf()));
+                        });
+                de.kuby.kubyplugins.casino.CasinoHolos.class.getName();
+                Location j = new Location(w, -4.5, 0, 0.5);
+                holo.apply(j.clone().add(0, 3.05, 0), new Object[]{de.kuby.kubyplugins.casino.CasinoHolos.jackpotTitle(), 0.62f, true});
+                holo.apply(j.clone().add(0, 2.62, 0), new Object[]{de.kuby.kubyplugins.casino.CasinoHolos.jackpotAmount(192203), 1.35f, true});
+                holo.apply(j.clone().add(0, 1.3, 0), new Object[]{de.kuby.kubyplugins.casino.CasinoHolos.jackpotBody("Samstag 18:00", "22 Std. 46 Min.",
+                        221, "OfficalNixo", 25265), 0.8f, true});
+                holo.apply(j.clone().add(0, 0.98, 0), new Object[]{Component.text("✦ ", net.kyori.adventure.text.format.TextColor.color(0xF23A5A))
+                        .append(Component.text("Du bist dabei ✓", net.kyori.adventure.text.format.TextColor.color(0x5AE878))
+                                .decorate(net.kyori.adventure.text.format.TextDecoration.BOLD))
+                        .append(Component.text(" ✦", net.kyori.adventure.text.format.TextColor.color(0xF6E23A))), 0.95f, true});
+                Location e = new Location(w, 0.5, 0, 0.5);
+                holo.apply(e.clone().add(0, 3.0, 0), new Object[]{de.kuby.kubyplugins.casino.CrashScreen.logo("CASINO",
+                        de.kuby.kubyplugins.casino.CasinoHolos.CASINO_LOGO), 1.4f, true});
+                holo.apply(e.clone().add(0, 0.9, 0), new Object[]{de.kuby.kubyplugins.casino.CasinoHolos.entranceBody(), 1.0f, true});
+                Location r = new Location(w, 5.5, 1.0, -0.95);
+                holo.apply(r, new Object[]{de.kuby.kubyplugins.casino.CasinoHolos.rankingText(
+                        List.of("Kyamix", "Shortsguy", "Imperiatos", "OfficalNixo", "_TestoThorsten_"),
+                        List.of(1345800L, 679000L, 303000L, 233768L, 217203L)), 0.62f, false, 70});
+            }
+            case "npcs" -> {
+                de.kuby.kubyplugins.casino.CasinoNpc.Role[] roles = {de.kuby.kubyplugins.casino.CasinoNpc.Role.MIA,
+                        de.kuby.kubyplugins.casino.CasinoNpc.Role.LOSBUDE, de.kuby.kubyplugins.casino.CasinoNpc.Role.CRASH,
+                        de.kuby.kubyplugins.casino.CasinoNpc.Role.KASSE};
+                String[] skins = {"mia", "croupier", null, null};
+                for (int i = 0; i < roles.length; i++) {
+                    Location base = new Location(w, -4.5 + 3 * i, 0, 0.5);
+                    var role = roles[i];
+                    Component text = de.kuby.kubyplugins.casino.CasinoNpc.body(role);
+                    int lines = 1 + (int) net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText()
+                            .serialize(text).chars().filter(c -> c == '\n').count();
+                    for (Object[] o : new Object[][]{{de.kuby.kubyplugins.casino.CasinoNpc.title(role), 0.62f, 2.12 + 0.25 * lines},
+                            {text, 1.0f, 2.12}}) {
+                        w.spawn(base.clone().add(0, (Double) o[2], 0), org.bukkit.entity.TextDisplay.class, d -> {
+                            d.text((Component) o[0]);
+                            float sc = (Float) o[1];
+                            d.setBillboard(org.bukkit.entity.Display.Billboard.VERTICAL);
+                            d.setBackgroundColor(org.bukkit.Color.fromARGB(0, 0, 0, 0));
+                            d.setShadowed(true);
+                            d.setLineWidth(400);
+                            d.setTransformation(new org.bukkit.util.Transformation(new org.joml.Vector3f(), new org.joml.Quaternionf(),
+                                    new org.joml.Vector3f(sc, sc, sc), new org.joml.Quaternionf()));
+                        });
+                    }
+                    if (skins[i] != null) {
+                        String sk = skins[i];
+                        w.spawn(base, org.bukkit.entity.Mannequin.class, m -> m.setProfile(
+                                io.papermc.paper.datacomponent.item.ResolvableProfile.resolvableProfile().name("x")
+                                        .skinPatch(sp -> sp.body(net.kyori.adventure.key.Key.key("kuby", "entity/casino/" + sk))
+                                                .model(org.bukkit.profile.PlayerTextures.SkinModel.SLIM)).build()));
+                    }
+                }
+            }
             default -> throw new IllegalArgumentException(args[0]);
         }
         try (FileWriter fw = new FileWriter(args[1])) {

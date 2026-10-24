@@ -306,6 +306,64 @@ def vinyl():
     return p.image()
 
 
+def gift_small():
+    """Kleines Geschenk (Losbude: Sofort aufdecken)."""
+    p = Pix(11)
+    p.rect(1, 4, 9, 9, rgb("D82830"))
+    p.rect(0, 3, 10, 4, rgb("E84048"))
+    p.rect(4, 3, 6, 9, rgb("F6C21C"))
+    p.put(3, 1, rgb("F6C21C"))
+    p.put(2, 2, rgb("F6C21C"))
+    p.put(7, 1, rgb("F6C21C"))
+    p.put(8, 2, rgb("F6C21C"))
+    p.put(4, 2, rgb("F6C21C"))
+    p.put(6, 2, rgb("F6C21C"))
+    p.rect(1, 9, 9, 9, rgb("A01820"))
+    img = p.image()
+    return img.crop(img.getchannel("A").getbbox())
+
+
+def ticket(base, hi, lo, mark):
+    """Rubbellos (16 px): Karte mit Rand, silbernem Rubbelfeld und Zeichen."""
+    p = Pix(16)
+    b, h, l = rgb(base), rgb(hi), rgb(lo)
+    p.rect(1, 3, 14, 12, b)
+    p.rect(1, 3, 14, 3, h)
+    p.rect(1, 12, 14, 12, l)
+    p.rect(1, 3, 1, 12, h)
+    p.rect(14, 3, 14, 12, l)
+    # Rubbelfeld
+    p.rect(6, 5, 12, 10, rgb("C8CCD4"))
+    for i in range(4):
+        p.put(7 + i, 9 - i, rgb("EEF0F4"))
+    p.put(9, 6, rgb("6A6E78"))
+    p.put(10, 6, rgb("6A6E78"))
+    p.put(10, 7, rgb("6A6E78"))
+    p.put(9, 8, rgb("6A6E78"))
+    p.put(9, 10, rgb("6A6E78"))
+    # Zeichen links (Stern)
+    m = rgb(mark)
+    for x, y in ((3, 5), (2, 6), (3, 6), (4, 6), (3, 7), (3, 9), (2, 10), (4, 10)):
+        p.put(x, y, m)
+    return p.image(outline=rgb("2A1A10"))
+
+
+def scratch_field():
+    """Verdecktes Feld: Silberfolie mit Fragezeichen."""
+    p = Pix(16)
+    p.rect(1, 1, 14, 14, rgb("B8BCC6"))
+    for i in range(14):
+        p.put(1 + i, 14 - i, rgb("D8DCE4"))
+        if i < 13:
+            p.put(2 + i, 14 - i, rgb("CDD1DA"))
+    p.rect(1, 1, 14, 1, rgb("E4E8EE"))
+    p.rect(1, 14, 14, 14, rgb("8E929C"))
+    q = rgb("4A4E58")
+    for x, y in ((6, 4), (7, 3), (8, 3), (9, 4), (9, 5), (8, 6), (7, 7), (7, 8), (7, 11)):
+        p.put(x, y, q)
+    return p.image(outline=rgb("3A3E48"))
+
+
 # =====================================================================================================================
 # Bauen
 # =====================================================================================================================
@@ -313,7 +371,7 @@ ICONS16 = [("chip_" + n, (lambda n=n: chip(n))) for n in CHIPS]
 SMALL = [("s_chip_" + n, (lambda n=n: chip_small(n))) for n in ("red", "blue", "gold", "green")] + [
     ("c_" + n, (lambda n=n: chip(n, 19))) for n in CHIPS] + [
     ("s_star", star_small), ("s_coin", coin_small), ("s_note", note_small), ("s_note_gold", lambda: note_small("F6D27A")),
-    ("s_mute", mute_small)]
+    ("s_mute", mute_small), ("s_gift", gift_small)]
 # Slot-Symbole 16 px (Namen y_<symbol>) – nach SYMBOLS definiert, darum unten angehängt
 BIG = [("roulette_wheel", roulette_wheel), ("jukebox", jukebox), ("vinyl", vinyl), ("slot_big", lambda: _sym(sym_seven))]
 
@@ -514,7 +572,11 @@ def cashout_tile():
 
 ITEMS = [("stack_" + n, (lambda n=n: chip_stack(n))) for n in ITEM_CHIPS] + [
     ("chip_" + n, (lambda n=n: chip_single(n))) for n in ITEM_CHIPS] + [
-    ("crash_info", crash_info), ("repeat", repeat_tile), ("cashout", cashout_tile)]
+    ("crash_info", crash_info), ("repeat", repeat_tile), ("cashout", cashout_tile),
+    ("los_bronze", lambda: ticket("C8844A", "E8A870", "8A5428", "FFE070")),
+    ("los_silber", lambda: ticket("9AA2B0", "C8CED8", "6A7280", "FFFFFF")),
+    ("los_gold", lambda: ticket("E8B828", "FFE070", "A87A10", "FFFFFF")),
+    ("los_feld", scratch_field)]
 
 
 def write_items(out):

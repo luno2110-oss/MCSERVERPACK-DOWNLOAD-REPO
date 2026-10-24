@@ -58,6 +58,7 @@ public final class CasinoVipListener implements Listener {
     public void onQuit(PlayerQuitEvent e) {
         plugin.casinoMusic().stop(e.getPlayer());
         plugin.casinoMusic().forget(e.getPlayer());
+        plugin.casinoHolos().forget(e.getPlayer());
     }
 
     @EventHandler(ignoreCancelled = true)

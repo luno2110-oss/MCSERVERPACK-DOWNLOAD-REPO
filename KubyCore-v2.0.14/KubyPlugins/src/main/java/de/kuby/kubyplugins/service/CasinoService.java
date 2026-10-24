@@ -285,26 +285,13 @@ public final class CasinoService {
     }
 
     /** Aktualisiert den schwebenden Jackpot-Text über dem Kassentisch oder legt ihn neu an. */
+    /** Der alte Jackpot-Text über dem Kassentisch ist durch das Jackpot-Hologramm ersetzt: Reste entfernen. */
     private void updateDisplay() {
         Location k = kasseLocation();
         if (k == null || k.getWorld() == null || !k.getWorld().isChunkLoaded(k.getBlockX() >> 4, k.getBlockZ() >> 4)) return;
-        Location at = k.clone().add(0, 1.6, 0);
-        TextDisplay display = null;
-        for (TextDisplay d : k.getWorld().getNearbyEntitiesByType(TextDisplay.class, at, 1)) {
-            if (d.getPersistentDataContainer().has(tag, PersistentDataType.BYTE)) {
-                display = d;
-                break;
-            }
+        for (TextDisplay d : k.getWorld().getNearbyEntitiesByType(TextDisplay.class, k.clone().add(0, 1.6, 0), 1)) {
+            if (d.getPersistentDataContainer().has(tag, PersistentDataType.BYTE)) d.remove();
         }
-        if (display == null) {
-            display = k.getWorld().spawn(at, TextDisplay.class, d -> {
-                d.getPersistentDataContainer().set(tag, PersistentDataType.BYTE, (byte) 1);
-                d.setPersistent(true);
-            });
-        }
-        String draw = plugin.jackpotDraw() == null ? ""
-                : "\n<gray>Ziehung " + plugin.jackpotDraw().nextDrawLabel() + " · " + plugin.jackpotDraw().participantCount() + " dabei";
-        display.text(Msg.parse("<gold>JACKPOT <yellow>" + Msg.coins(jackpot) + "$" + draw));
     }
 
     public synchronized void save() {
