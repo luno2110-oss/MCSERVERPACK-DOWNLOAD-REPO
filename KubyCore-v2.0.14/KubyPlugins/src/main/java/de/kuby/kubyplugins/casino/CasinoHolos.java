@@ -238,14 +238,14 @@ public final class CasinoHolos implements Listener {
         b.append(icon(KitData.SmallIcon.C_PINK)).append(dot())
                 .append(Component.text("Jeder, der diese Woche gespielt hat, ist dabei", LIGHT)).append(Component.newline());
         if (next != null) {
-            b.append(item('\ue922')).append(dot()).append(Component.text("Ziehung: ", LIGHT))
+            b.append(item(KitData.Icon.CLOCK.c16)).append(dot()).append(Component.text("Ziehung: ", LIGHT))
                     .append(Component.text(next, YELLOW)).append(dot())
                     .append(Component.text("noch " + left, LIGHT)).append(Component.newline());
             b.append(icon(KitData.SmallIcon.S_STAR)).append(dot())
                     .append(Component.text(CasinoText.num(players), NamedTextColor.WHITE))
                     .append(Component.text(players == 1 ? " Spieler ist schon dabei" : " Spieler sind schon dabei", LIGHT));
             if (winner != null) {
-                b.append(Component.newline()).append(item('\ue93a')).append(dot()).append(Component.text("Letzter Gewinner: ", GRAY))
+                b.append(Component.newline()).append(item(KitData.Icon.TOTEM.c16)).append(dot()).append(Component.text("Letzter Gewinner: ", GRAY))
                         .append(Component.text(winner, NamedTextColor.WHITE)).append(Component.text("  "))
                         .append(Component.text(CasinoText.chips(amount), YELLOW));
             }

@@ -498,23 +498,6 @@ public final class CasinoScreens {
         Consumer<Player> travel();
     }
 
-    /** Bricht Text an Leerzeichen um, sodass jede Zeile höchstens max Pixel breit ist. */
-    public static List<String> wrap(String text, int max) {
-        List<String> out = new java.util.ArrayList<>();
-        StringBuilder line = new StringBuilder();
-        for (String word : text.split(" ")) {
-            String probe = line.isEmpty() ? word : line + " " + word;
-            if (Canvas.width(probe, false) > max && !line.isEmpty()) {
-                out.add(line.toString());
-                line = new StringBuilder(word);
-            } else {
-                line = new StringBuilder(probe);
-            }
-        }
-        if (!line.isEmpty()) out.add(line.toString());
-        return out;
-    }
-
     public static Canvas help(HelpView v, HelpActions a) {
         Canvas c = new Canvas(W);
         head(c, v.icon(), v.title(), v.sub());
@@ -562,7 +545,7 @@ public final class CasinoScreens {
             List<String> lines = new java.util.ArrayList<>();
             List<Boolean> starts = new java.util.ArrayList<>();
             for (String para : v.how()) {
-                List<String> w = wrap(para, W - 34);
+                List<String> w = Canvas.wrap(para, W - 34);
                 for (int k = 0; k < w.size(); k++) {
                     lines.add(w.get(k));
                     starts.add(k == 0);

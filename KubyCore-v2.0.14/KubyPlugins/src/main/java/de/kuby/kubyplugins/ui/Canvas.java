@@ -166,6 +166,23 @@ public final class Canvas {
         return sb.toString().stripTrailing() + dots;
     }
 
+    /** Bricht Text an Leerzeichen um, sodass jede Zeile höchstens max Pixel breit ist. */
+    public static List<String> wrap(String text, int max) {
+        List<String> out = new ArrayList<>();
+        StringBuilder line = new StringBuilder();
+        for (String word : text.split(" ")) {
+            String probe = line.isEmpty() ? word : line + " " + word;
+            if (width(probe, false) > max && !line.isEmpty()) {
+                out.add(line.toString());
+                line = new StringBuilder(word);
+            } else {
+                line = new StringBuilder(probe);
+            }
+        }
+        if (!line.isEmpty()) out.add(line.toString());
+        return out;
+    }
+
     /** Text ab x (links). Gibt die Breite zurück. */
     public int text(int x, int y, String text, TextColor color, boolean bold) {
         String t = clean(text);

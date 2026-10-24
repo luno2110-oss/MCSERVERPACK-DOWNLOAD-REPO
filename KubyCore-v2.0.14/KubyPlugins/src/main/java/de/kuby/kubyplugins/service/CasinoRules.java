@@ -35,9 +35,9 @@ public final class CasinoRules {
 
     private record Btn(String label, String tooltip, boolean red, Consumer<Player> onClick) {}
 
-    private record Page(String title, String subtitle, Ui.Icon icon, List<String> how, List<String[]> commands,
+    private record Page(String title, String subtitle, de.kuby.kubyplugins.ui.KitData.Icon icon, List<String> how, List<String[]> commands,
                         List<String[]> rows, String own) {
-        Page(String title, String subtitle, Ui.Icon icon, List<String> how, List<String[]> commands) {
+        Page(String title, String subtitle, de.kuby.kubyplugins.ui.KitData.Icon icon, List<String> how, List<String[]> commands) {
             this(title, subtitle, icon, how, commands, List.of(), null);
         }
     }
@@ -81,7 +81,7 @@ public final class CasinoRules {
             rows.add(new String[]{"#" + (i + 1), name == null ? "?" : name,
                     (net >= 0 ? "+" : "-") + de.kuby.kubyplugins.casino.CasinoText.num(Math.abs(net)) + " Chips"});
         }
-        return new Page("RANGLISTE", "Die besten Spieler im Casino", Ui.Icon.TROPHY, lines, List.of(), rows, own);
+        return new Page("RANGLISTE", "Die besten Spieler im Casino", de.kuby.kubyplugins.ui.KitData.Icon.TOTEM, lines, List.of(), rows, own);
     }
 
     private static Page overview(KubyPlugins plugin) {
@@ -113,7 +113,7 @@ public final class CasinoRules {
                 new String[]{"/poker", "Poker in der VIP-Lounge"},
                 new String[]{"/casino status", "Deine Chips und der Jackpot"},
                 new String[]{"/casino regeln", "Diese Hilfe"});
-        return new Page("CASINO", "Slots, Roulette, Blackjack, Poker und Crash", Ui.Icon.DICE, how, commands);
+        return new Page("CASINO", "Slots, Roulette, Blackjack, Poker und Crash", de.kuby.kubyplugins.ui.KitData.Icon.CHIP_RED, how, commands);
     }
 
     private static Page gamePage(KubyPlugins plugin, String game) {
@@ -121,11 +121,11 @@ public final class CasinoRules {
         List<String> how;
         List<String[]> commands = new ArrayList<>();
         String subtitle;
-        Ui.Icon icon;
+        de.kuby.kubyplugins.ui.KitData.Icon icon;
         switch (game) {
             case "blackjack" -> {
                 subtitle = "Näher an 21 als der Dealer";
-                icon = Ui.Icon.CARDS;
+                icon = de.kuby.kubyplugins.ui.KitData.Icon.CHIP_BLACK;
                 how = List.of(
                         "Rechtsklick auf einen Hocker oder den Dealer: hinsetzen. Klick Chips aus dem Rack vor dir auf dein Feld ("
                                 + c.getLong("casino.blackjack.min-bet", 10) + " bis " + de.kuby.kubyplugins.casino.CasinoText.num(c.getLong("casino.blackjack.max-bet", 10000))
@@ -139,7 +139,7 @@ public final class CasinoRules {
             }
             case "roulette" -> {
                 subtitle = "Europäisches Roulette, 0 bis 36";
-                icon = Ui.Icon.ROULETTE;
+                icon = de.kuby.kubyplugins.ui.KitData.Icon.ROULETTE_WHEEL;
                 how = List.of(
                         "Am Tisch oder beim Croupier öffnest du mit /roulette das Menü. Chip wählen, dann auf ein Feld klicken.",
                         "Der erste Einsatz startet die Runde, nach " + c.getLong("casino.roulette.wait-seconds", 20)
@@ -150,7 +150,7 @@ public final class CasinoRules {
             }
             case "slots" -> {
                 subtitle = "Drei gleiche auf der Mittellinie";
-                icon = Ui.Icon.SLOTS;
+                icon = de.kuby.kubyplugins.ui.KitData.Icon.SLOT_BIG;
                 how = List.of(
                         "Rechtsklick auf den Hebel dreht die Walzen. Auf dem Hocker davor sitzt du bequem und hast den Automaten für dich.",
                         "Der Knopf am Bedienfeld wählt den Einsatz: Klick erhöht, Schleichen + Klick senkt (10 bis 5.000 Chips).",
@@ -159,7 +159,7 @@ public final class CasinoRules {
             }
             case "losbude" -> {
                 subtitle = "Rubbellose für Chips";
-                icon = Ui.Icon.DICE;
+                icon = de.kuby.kubyplugins.ui.KitData.Icon.CHIP_PINK;
                 how = List.of(
                         "Rechtsklick auf die Figur an der Losbude. Bronze-Los 100, Silber-Los 1.000, Gold-Los 10.000 Chips.",
                         "Feld für Feld freirubbeln oder alles auf einmal aufdecken. Drei gleiche Symbole gewinnen.",
@@ -168,7 +168,7 @@ public final class CasinoRules {
             }
             default -> {
                 subtitle = "Rechtzeitig aussteigen";
-                icon = Ui.Icon.CRASH;
+                icon = de.kuby.kubyplugins.ui.KitData.Icon.CHIP_PURPLE;
                 how = List.of(
                         "Einsatz beim Crash-Creeper oder an den Schildern unter dem Bildschirm setzen ("
                                 + c.getLong("casino.crash.min-bet", 10) + " bis " + de.kuby.kubyplugins.casino.CasinoText.num(c.getLong("casino.crash.max-bet", 100000)) + " Chips).",
@@ -205,7 +205,7 @@ public final class CasinoRules {
             for (int k = 0; k < size; k++) tabs.add(navName(k));
             boolean ranking = ORDER.get(i).equals("rangliste");
             de.kuby.kubyplugins.casino.CasinoScreens.HelpView view = new de.kuby.kubyplugins.casino.CasinoScreens.HelpView(
-                    page.title(), page.subtitle(), kitIcon(ORDER.get(i)), ranking ? List.of() : clean(page.how()),
+                    page.title(), page.subtitle(), page.icon(), ranking ? List.of() : clean(page.how()),
                     page.commands(), page.rows(), ranking ? page.own() : null, tabs, i);
             de.kuby.kubyplugins.ui.UiDialog.show(p, de.kuby.kubyplugins.casino.CasinoScreens.help(view,
                     new de.kuby.kubyplugins.casino.CasinoScreens.HelpActions() {
@@ -300,18 +300,6 @@ public final class CasinoRules {
             case "slots" -> "Slots";
             case "losbude" -> "Losbude";
             default -> "Crash";
-        };
-    }
-
-    private static de.kuby.kubyplugins.ui.KitData.Icon kitIcon(String key) {
-        return switch (key) {
-            case "blackjack" -> de.kuby.kubyplugins.ui.KitData.Icon.CHIP_BLACK;
-            case "roulette" -> de.kuby.kubyplugins.ui.KitData.Icon.ROULETTE_WHEEL;
-            case "slots" -> de.kuby.kubyplugins.ui.KitData.Icon.SLOT_BIG;
-            case "crash" -> de.kuby.kubyplugins.ui.KitData.Icon.CHIP_PURPLE;
-            case "losbude" -> de.kuby.kubyplugins.ui.KitData.Icon.CHIP_PINK;
-            case "rangliste" -> de.kuby.kubyplugins.ui.KitData.Icon.TOTEM;
-            default -> de.kuby.kubyplugins.ui.KitData.Icon.CHIP_RED;
         };
     }
 }

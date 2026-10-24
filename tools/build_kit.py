@@ -574,6 +574,11 @@ VANILLA_ICONS = {
     "barrier": "item/barrier.png", "iron_ingot": "item/iron_ingot.png", "hopper": "item/hopper.png",
     "sunflower": "block/sunflower_front.png", "lily": "block/lily_pad.png",
     "rabbit_foot": "item/rabbit_foot.png", "feather": "item/feather.png", "book_plain": "item/book.png",
+    # Survival-Hilfe (neue Einträge immer hinten anhängen: die Zeichen folgen der Reihenfolge)
+    "written_book": "item/written_book.png", "golden_axe": "item/golden_axe.png", "iron_pickaxe": "item/iron_pickaxe.png",
+    "diamond_pickaxe": "item/diamond_pickaxe.png", "oak_sign": "item/oak_sign.png", "wheat": "item/wheat.png",
+    "lead": "item/lead.png", "campfire": "item/campfire.png", "oak_door": "item/oak_door.png",
+    "comparator": "item/comparator.png", "firework_rocket": "item/firework_rocket.png",
 }
 
 
