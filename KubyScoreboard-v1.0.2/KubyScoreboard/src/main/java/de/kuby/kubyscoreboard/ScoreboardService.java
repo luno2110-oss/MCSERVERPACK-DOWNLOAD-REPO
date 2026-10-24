@@ -54,6 +54,8 @@ public final class ScoreboardService {
     private final Map<UUID, Counter> counters = new HashMap<>();
     private final Map<UUID, String[]> lastLines = new HashMap<>();
     private final Map<UUID, String> lastTitle = new HashMap<>();
+    /** Spieler im Casino (für die Casino-Ansicht). */
+    private int inCasino;
 
     public ScoreboardService(JavaPlugin addon, KubyPlugins plugin) {
         this.addon = addon;
@@ -92,6 +94,13 @@ public final class ScoreboardService {
     }
 
     private void tick() {
+        int n = 0;
+        if (plugin.casinoMusic() != null) {
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                if (ModeService.SURVIVAL.equals(plugin.modes().modeOf(p.getUniqueId())) && plugin.casinoMusic().inCasino(p.getLocation())) n++;
+            }
+        }
+        inCasino = n;
         for (Player p : Bukkit.getOnlinePlayers()) {
             if (!boards.containsKey(p.getUniqueId())) join(p);
             update(p);
@@ -115,6 +124,10 @@ public final class ScoreboardService {
         String mode = plugin.modes().modeOf(id);
         long balance = plugin.economy().balance(id);
         long shown = counterTick(p, balance, mode);
+        // Im Casino (Survival, Region "casino") eigene Ansicht wie im Clip
+        if (ModeService.SURVIVAL.equals(mode) && plugin.casinoMusic() != null && plugin.casinoMusic().inCasino(p.getLocation())) {
+            mode = "casino";
+        }
 
         // Mit geladenem Grafik-Pack: Rahmen, Logo und Icons. Ohne: reine Text-Version.
         boolean textured = addon.getConfig().getBoolean("scoreboard-logo-title", true) && plugin.uiPack().active(p);
@@ -274,6 +287,23 @@ public final class ScoreboardService {
                 out.add(ind.apply(ScoreboardText.icon(ScoreboardText.I_SPAWN) + hint1));
                 // Zweite Zeile eingerückt mit orangem Pfeil, Befehl in normaler Schrift
                 out.add(textured ? SbUi.indent(ScoreboardText.icon(ScoreboardText.I_ARROW) + hint2, 16) : "<gold>→ " + hint2);
+            }
+            case "casino" -> {
+                out.add(ind.apply(row(ScoreboardText.I_RANK, "RANG", "<gray>" + rank)));
+                out.add(ind.apply(ScoreboardText.icon(ScoreboardText.I_NAME) + "<white>" + p.getName()));
+                out.add("");
+                out.add(ind.apply(row(ScoreboardText.I_COIN, "COINS", money)));
+                out.add(ind.apply(row(ScoreboardText.I_CHIP, "CHIPS", "<#F2A02A>" + ScoreboardText.number(plugin.casino().chips(id)))));
+                out.add("");
+                out.add(ind.apply(row(ScoreboardText.I_SEVEN, "LETZTER GEWINN", "")));
+                Long last = plugin.casinoLog().lastNet(id);
+                String lastText = last == null ? "<gray>—" : last > 0 ? "<green>+" + ScoreboardText.number(last)
+                        : last < 0 ? "<red>-" + ScoreboardText.number(-last) : "<gray>±0";
+                out.add(textured ? SbUi.indent(lastText, 10) : "  " + lastText);
+                out.add("");
+                out.add(ind.apply(row(ScoreboardText.I_DICE, "IM CASINO", "<aqua>" + inCasino)));
+                // Platz unten für Slot-Automat und Roulette-Rad
+                if (textured) out.add("");
             }
             default -> {
                 out.add(ind.apply(row(ScoreboardText.I_RANK, "RANG", "<gray>" + rank)));

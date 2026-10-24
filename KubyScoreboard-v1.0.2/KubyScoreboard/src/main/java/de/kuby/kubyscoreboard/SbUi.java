@@ -30,11 +30,14 @@ final class SbUi {
     static String title(String mode, int lineCount) {
         int n = Math.max(2, Math.min(lineCount, MAX_LINES));
         String back = Ui.spaceChars(-FRAME_ADV);
+        // Casino: eigener rot-oranger Rahmen mit Deko (0xE180 / 0xE1C0), sonst Gold mit Ranken (0xE100 / 0xE140)
+        int top = "casino".equals(mode) ? 0xE180 : 0xE100;
+        int bottom = "casino".equals(mode) ? 0xE1C0 : 0xE140;
         StringBuilder g = new StringBuilder(Ui.spaceChars(-FRAME_LEFT));
-        g.append('').append(back);
-        for (int k = 1; k <= n - 2; k++) g.append((char) (0xE100 + k)).append(back);
+        g.append((char) top).append(back);
+        for (int k = 1; k <= n - 2; k++) g.append((char) (top + k)).append(back);
         // Unterteil: die letzten zwei Zeilen und der untere Rand
-        g.append((char) (0xE140 + n - 1)).append(back);
+        g.append((char) (bottom + n - 1)).append(back);
         g.append(glyph(mode, ''));
         g.append(Ui.spaceChars(W - (FRAME_ADV - FRAME_LEFT)));
         return "<font:" + FONT + ">" + g + "</font>";
@@ -61,6 +64,7 @@ final class SbUi {
         return switch (mode) {
             case "smp" -> base;
             case "survival" -> (char) (base + 1);
+            case "casino" -> (char) (base + 3);
             default -> (char) (base + 2);
         };
     }

@@ -483,6 +483,330 @@
    "chars": [
     "\ue020"
    ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/c_frame_top.png",
+   "height": 19,
+   "ascent": 18,
+   "chars": [
+    "\ue180"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/c_frame_mid_1.png",
+   "height": 9,
+   "ascent": -1,
+   "chars": [
+    "\ue181"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/c_frame_bottom_1.png",
+   "height": 25,
+   "ascent": -1,
+   "chars": [
+    "\ue1c1"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/c_frame_mid_2.png",
+   "height": 9,
+   "ascent": -10,
+   "chars": [
+    "\ue182"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/c_frame_bottom_2.png",
+   "height": 25,
+   "ascent": -10,
+   "chars": [
+    "\ue1c2"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/c_frame_mid_3.png",
+   "height": 9,
+   "ascent": -19,
+   "chars": [
+    "\ue183"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/c_frame_bottom_3.png",
+   "height": 25,
+   "ascent": -19,
+   "chars": [
+    "\ue1c3"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/c_frame_mid_4.png",
+   "height": 9,
+   "ascent": -28,
+   "chars": [
+    "\ue184"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/c_frame_bottom_4.png",
+   "height": 25,
+   "ascent": -28,
+   "chars": [
+    "\ue1c4"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/c_frame_mid_5.png",
+   "height": 9,
+   "ascent": -37,
+   "chars": [
+    "\ue185"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/c_frame_bottom_5.png",
+   "height": 25,
+   "ascent": -37,
+   "chars": [
+    "\ue1c5"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/c_frame_mid_6.png",
+   "height": 9,
+   "ascent": -46,
+   "chars": [
+    "\ue186"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/c_frame_bottom_6.png",
+   "height": 25,
+   "ascent": -46,
+   "chars": [
+    "\ue1c6"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/c_frame_mid_7.png",
+   "height": 9,
+   "ascent": -55,
+   "chars": [
+    "\ue187"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/c_frame_bottom_7.png",
+   "height": 25,
+   "ascent": -55,
+   "chars": [
+    "\ue1c7"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/c_frame_mid_8.png",
+   "height": 9,
+   "ascent": -64,
+   "chars": [
+    "\ue188"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/c_frame_bottom_8.png",
+   "height": 25,
+   "ascent": -64,
+   "chars": [
+    "\ue1c8"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/c_frame_mid_9.png",
+   "height": 9,
+   "ascent": -73,
+   "chars": [
+    "\ue189"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/c_frame_bottom_9.png",
+   "height": 25,
+   "ascent": -73,
+   "chars": [
+    "\ue1c9"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/c_frame_mid_10.png",
+   "height": 9,
+   "ascent": -82,
+   "chars": [
+    "\ue18a"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/c_frame_bottom_10.png",
+   "height": 25,
+   "ascent": -82,
+   "chars": [
+    "\ue1ca"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/c_frame_mid_11.png",
+   "height": 9,
+   "ascent": -91,
+   "chars": [
+    "\ue18b"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/c_frame_bottom_11.png",
+   "height": 25,
+   "ascent": -91,
+   "chars": [
+    "\ue1cb"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/c_frame_mid_12.png",
+   "height": 9,
+   "ascent": -100,
+   "chars": [
+    "\ue18c"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/c_frame_bottom_12.png",
+   "height": 25,
+   "ascent": -100,
+   "chars": [
+    "\ue1cc"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/c_frame_mid_13.png",
+   "height": 9,
+   "ascent": -109,
+   "chars": [
+    "\ue18d"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/c_frame_bottom_13.png",
+   "height": 25,
+   "ascent": -109,
+   "chars": [
+    "\ue1cd"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/c_frame_mid_14.png",
+   "height": 9,
+   "ascent": -118,
+   "chars": [
+    "\ue18e"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/c_frame_bottom_14.png",
+   "height": 25,
+   "ascent": -118,
+   "chars": [
+    "\ue1ce"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/c_frame_mid_15.png",
+   "height": 9,
+   "ascent": -127,
+   "chars": [
+    "\ue18f"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/c_frame_bottom_15.png",
+   "height": 25,
+   "ascent": -127,
+   "chars": [
+    "\ue1cf"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/logo_casino.png",
+   "height": 43,
+   "ascent": 42,
+   "chars": [
+    "\ue053"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_name.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    "\ue021"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_chip.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    "\ue022"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_seven.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    "\ue023"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_dice.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    "\ue024"
+   ]
   }
  ]
 }

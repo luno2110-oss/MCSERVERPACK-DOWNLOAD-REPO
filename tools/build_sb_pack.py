@@ -612,6 +612,9 @@ def build(out, spaces):
         save(logo(word, arrows=(mode == "smp")), "logo_" + mode, LOGO_H, LOGO_H - 1, chr(0xE050 + i))
     for i, name in enumerate(ICON_ORDER):
         save(icon(name), "sb_" + name, 8, 7, chr(0xE010 + i))
+    # Casino-Variante (Rahmen, Logo, Deko, Icons), siehe build_sb_casino.py
+    import build_sb_casino
+    build_sb_casino.build(save)
 
     with open(os.path.join(font, "sb.json"), "w", encoding="utf-8") as f:
         json.dump({"providers": providers}, f, ensure_ascii=True, indent=1)

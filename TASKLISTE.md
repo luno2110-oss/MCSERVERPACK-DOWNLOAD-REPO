@@ -29,7 +29,8 @@ Prinzip: Keine GUI. Spiel läuft über physische Dinge am Tisch (Karten, Chips, 
     - [x] Ranking-Tafel an der Wand: „CASINO RANKING“, „Top Casino-Spieler“, Platz 1–3 mit Gold/Silber/Bronze, Plus in Grün, „Mehr Statistiken: /casino stats“. `/casino holo ranking` (auf die Wand schauen)
     - [x] Eingang: „CASINO“ (pink→gelb), „Willkommen! schön, dass du da bist“, Coins gegen Chips, „Viel Spaß und viel Glück“. `/casino holo eingang`
     - [x] Losbude: Figur mit Regenbogen-Titel „LOSBUDE“ zwischen Kleeblättern und den Zeilen aus dem Clip (`/casino npc losbude`). Truhe „» LOSBUDE“ mit Bronze- (100), Silber- (1.000) und Gold-Los (10.000), Gewinnplan; Rubbellos mit neun Feldern zum Freirubbeln oder „Alles aufdecken“, drei gleiche Symbole gewinnen (Kirsche 1x, Zitrone 2x, Glocke 5x, Stern 10x, Sieben 50x), Gewinnchance etwa 1 zu 3, Rückfluss etwa 88 %. Ergebnis wird beim Kauf gutgeschrieben (nichts geht verloren, auch beim Schließen)
-    - [ ] Scoreboard im Casino (Rang, Chips, Coins, Letzter Gewinn, Im Casino) und Casino-Hilfe auf dem Kit
+    - [x] Scoreboard im Casino wie im Clip: eigene Sidebar, sobald man in Survival in der Casino-Region steht: rot-oranger Rahmen mit Funkeln, Logo „KUBY CASINO“ mit Spielkarten-Fächer, Chips und Münzstapeln, unten Slot-Automat und Roulette-Rad. Zeilen: Rang, Name (Namensschild), Coins, Chips, Letzter Gewinn (+ grün / - rot / — ), Im Casino (Anzahl)
+    - [ ] Casino-Hilfe auf dem Kit (siehe 5.31)
 - [~] 1.1 Grundlagen (Code fertig, Build und Test offen)
   - [x] Casino-Bereich als Region: Region mit ID `casino` anlegen, Schutz über das Regionssystem
   - [x] Chips als eigene Währung, Umtausch $ ↔ Chips am Kassentisch (`/casino kaufen|verkaufen`, Kassentisch per `/casino kasse`)

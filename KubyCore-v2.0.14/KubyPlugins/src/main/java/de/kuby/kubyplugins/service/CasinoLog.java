@@ -43,6 +43,7 @@ public final class CasinoLog {
     private final Deque<String> recent = new ArrayDeque<>();
     private final Map<String, Totals> totals = new LinkedHashMap<>();
     private final Map<UUID, Long> playerNet = new java.util.HashMap<>();
+    private final Map<UUID, Long> lastNet = new java.util.HashMap<>();
     private long jackpotsPaid;
     private long jackpotMoney;
     private long exchangeTax;
@@ -106,6 +107,7 @@ public final class CasinoLog {
         t.paid += paid;
         long net = paid - staked;
         playerNet.merge(player, net, Long::sum);
+        lastNet.put(player, net);
         write(String.format("%s | %s | %s | Einsatz %d | Auszahlung %d | %s%d",
                 LocalDateTime.now().format(TIME), nameOf(player), game, staked, paid, net >= 0 ? "+" : "", net));
     }
@@ -149,6 +151,11 @@ public final class CasinoLog {
         int rank = 1;
         for (long v : playerNet.values()) if (v > mine) rank++;
         return rank;
+    }
+
+    /** Ergebnis der letzten Runde (Gewinn minus Einsatz), null wenn der Spieler seit dem Start nicht gespielt hat. */
+    public synchronized Long lastNet(UUID id) {
+        return lastNet.get(id);
     }
 
     public synchronized long netOf(UUID id) {
