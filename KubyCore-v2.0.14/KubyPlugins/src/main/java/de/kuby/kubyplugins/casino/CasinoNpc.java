@@ -39,18 +39,22 @@ public final class CasinoNpc implements Listener {
 
     /** Rolle einer Figur: Titel, Zeilen darunter, Aktion beim Rechtsklick. */
     public enum Role {
-        KASSE("Kasse", "kasse", null),
-        CROUPIER("Roulette", "croupier", TextColor.color(0xF0303E));
+        KASSE("Kasse", "kasse", null, KitData.SmallIcon.C_PINK),
+        CROUPIER("Roulette", "croupier", TextColor.color(0xF0303E), KitData.SmallIcon.C_PINK),
+        CRASH("Crash", "crash", TextColor.color(0xF2402E), KitData.SmallIcon.C_WHITE);
 
         public final String title;
         public final String id;
         /** Farbe des Titels (helle Titelschrift eingefärbt); null = Gold-Verlauf. */
         public final TextColor titleColor;
+        /** Chip links und rechts vom Titel. */
+        public final KitData.SmallIcon chip;
 
-        Role(String title, String id, TextColor titleColor) {
+        Role(String title, String id, TextColor titleColor, KitData.SmallIcon chip) {
             this.title = title;
             this.id = id;
             this.titleColor = titleColor;
+            this.chip = chip;
         }
 
         public static Role of(String id) {
@@ -86,6 +90,13 @@ public final class CasinoNpc implements Listener {
                 prepare(v);
             });
             case CROUPIER -> mannequin(loc, "Croupier", "croupier");
+            // geladener Creeper (blaue Aura) wie im Clip; ohne KI zündet er nie
+            case CRASH -> loc.getWorld().spawn(loc, org.bukkit.entity.Creeper.class, c -> {
+                c.setPowered(true);
+                c.setMaxFuseTicks(Integer.MAX_VALUE / 2);
+                c.setExplosionRadius(0);
+                prepare(c);
+            });
         };
         npc.getPersistentDataContainer().set(roleKey, PersistentDataType.STRING, role.id);
         spawnHolo(role, npc);
@@ -124,10 +135,10 @@ public final class CasinoNpc implements Listener {
         String owner = npc.getUniqueId().toString();
         TextComponent.Builder title = Component.text();
         Key chipFont = Key.key("kuby", "k/i-5");
-        title.append(Component.text(String.valueOf(KitData.SmallIcon.C_PINK.c)).font(chipFont).color(NamedTextColor.WHITE));
+        title.append(Component.text(String.valueOf(role.chip.c)).font(chipFont).color(NamedTextColor.WHITE));
         title.append(Component.text(de.kuby.kubyplugins.ui.Canvas.titleChars(" " + role.title + " ", role.titleColor == null))
                 .font(Key.key("kuby", "title")).color(role.titleColor == null ? NamedTextColor.WHITE : role.titleColor));
-        title.append(Component.text(String.valueOf(KitData.SmallIcon.C_PINK.c)).font(chipFont).color(NamedTextColor.WHITE));
+        title.append(Component.text(String.valueOf(role.chip.c)).font(chipFont).color(NamedTextColor.WHITE));
         holo(base.clone().add(0, 2.62, 0), title.build(), 0.62f, owner);
         holo(base.clone().add(0, 2.12, 0), body(role), 1.0f, owner);
     }
@@ -140,7 +151,7 @@ public final class CasinoNpc implements Listener {
                     .append(Component.text(" Chips", light)).append(Component.newline())
                     .append(Component.text("➜ ", NamedTextColor.YELLOW)).append(Component.text("Rechtsklick", light))
                     .build();
-            case CROUPIER -> Component.text()
+            case CROUPIER, CRASH -> Component.text()
                     .append(Component.text("Einsatz setzen", light)).append(Component.newline())
                     .append(Component.text("➜ ", NamedTextColor.YELLOW)).append(Component.text("Rechtsklick", light))
                     .build();
@@ -210,6 +221,12 @@ public final class CasinoNpc implements Listener {
         if (roleOf(e.getEntity()) != null) e.setCancelled(true);
     }
 
+    /** Der Crash-Creeper explodiert nie. */
+    @EventHandler(ignoreCancelled = true)
+    public void onPrime(org.bukkit.event.entity.ExplosionPrimeEvent e) {
+        if (roleOf(e.getEntity()) != null) e.setCancelled(true);
+    }
+
     private Consumer<Player> action(Role role) {
         return switch (role) {
             case KASSE -> p -> {
@@ -221,6 +238,7 @@ public final class CasinoNpc implements Listener {
                 new KasseMenu(plugin).open(p);
             };
             case CROUPIER -> p -> plugin.roulette().open(p);
+            case CRASH -> p -> plugin.crash().open(p);
         };
     }
 

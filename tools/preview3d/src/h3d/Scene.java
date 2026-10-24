@@ -60,6 +60,45 @@ public final class Scene {
                 t.chip("dutzend2", 0, 1000);
                 t.light(RouletteTable.position(17), true);
             }
+            case "crash", "crash_bereit", "crash_crash" -> {
+                de.kuby.kubyplugins.casino.CrashScreen c = new de.kuby.kubyplugins.casino.CrashScreen(
+                        new Location(w, 0.5, 2.5, 0.01), 0f, 6, 3, null, null, tag);
+                c.build();
+                net.kyori.adventure.key.Key title = net.kyori.adventure.key.Key.key("kuby", "title");
+                net.kyori.adventure.text.format.TextColor green = net.kyori.adventure.text.format.TextColor.color(0x5AE878);
+                net.kyori.adventure.text.format.TextColor red = net.kyori.adventure.text.format.TextColor.color(0xFF4A4A);
+                Component hint = Component.text("Sneaken + Klick = Auszahlen", net.kyori.adventure.text.format.TextColor.color(0x9A9AA4));
+                double cur = args[0].equals("crash_crash") ? 1.48 : 1.45;
+                if (args[0].equals("crash_bereit")) {
+                    c.texts(Component.text(de.kuby.kubyplugins.ui.Canvas.titleChars("BEREIT", false)).font(title).color(NamedTextColor.WHITE), 0.6f,
+                            Component.text("Einsätze", net.kyori.adventure.text.format.TextColor.color(0xF6E23A))
+                                    .append(Component.text(" — ", NamedTextColor.GRAY)).append(Component.text("9s", NamedTextColor.WHITE)), hint);
+                    c.hideCurve();
+                } else {
+                    boolean crashed = args[0].equals("crash_crash");
+                    String v = String.format(java.util.Locale.GERMAN, "%.2fx", cur);
+                    Component big = Component.text(v, crashed ? red : green).decorate(net.kyori.adventure.text.format.TextDecoration.BOLD);
+                    c.texts(big, 1.0f, crashed ? Component.text("CRASH", red).decorate(net.kyori.adventure.text.format.TextDecoration.BOLD)
+                            .append(Component.text(" — 1 Spieler verloren 50 Chips", NamedTextColor.WHITE)
+                                    .decoration(net.kyori.adventure.text.format.TextDecoration.BOLD, false))
+                            : Component.text("Läuft", NamedTextColor.GRAY), crashed ? Component.empty() : hint);
+                    double rate = 0.07, t = Math.log(cur) / rate, tMax = Math.max(10, t * 1.06), mMax = Math.max(1.8, 1 + (cur - 1) * 1.1);
+                    int n = de.kuby.kubyplugins.casino.CrashScreen.SEGMENTS;
+                    double[] xs = new double[n + 1], ys = new double[n + 1];
+                    for (int i = 0; i <= n; i++) {
+                        double ti = t * i / n, m = Math.exp(rate * ti);
+                        xs[i] = c.plotLeft() + ti / tMax * c.plotWidth();
+                        ys[i] = c.plotBottom() + (m - 1) / (mMax - 1) * c.plotHeight();
+                    }
+                    c.curve(xs, ys, crashed, big);
+                }
+                c.rounds(Component.text("LETZTE RUNDEN", net.kyori.adventure.text.format.TextColor.color(0xF2A02A))
+                        .decorate(net.kyori.adventure.text.format.TextDecoration.BOLD).append(Component.newline())
+                        .append(Component.text("1,96x", net.kyori.adventure.text.format.TextColor.color(0xFF6A6A))
+                                .decoration(net.kyori.adventure.text.format.TextDecoration.BOLD, false))
+                        .append(Component.text(" · ", NamedTextColor.DARK_GRAY).decoration(net.kyori.adventure.text.format.TextDecoration.BOLD, false))
+                        .append(Component.text("3,19x", green).decoration(net.kyori.adventure.text.format.TextDecoration.BOLD, false)));
+            }
             default -> throw new IllegalArgumentException(args[0]);
         }
         try (FileWriter fw = new FileWriter(args[1])) {

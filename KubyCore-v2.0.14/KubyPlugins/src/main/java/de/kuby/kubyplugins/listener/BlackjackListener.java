@@ -13,7 +13,7 @@ import org.bukkit.inventory.EquipmentSlot;
 
 /**
  * Rechtsklick auf den Blackjack-Tisch startet eine Runde, Rechtsklick auf den Slots-Automaten eine Drehung,
- * Rechtsklick auf den Crash-Automaten steigt ein oder aus. Schleichen + Rechtsklick öffnet die Regeln des Spiels,
+ * Schleichen + Rechtsklick öffnet die Regeln des Spiels,
  * Rechtsklick auf Kassentisch oder Roulette-Tisch öffnet das Regelbuch.
  * Weggehen, Ausloggen und Sterben beenden eine Blackjack-Runde.
  */
@@ -33,7 +33,6 @@ public final class BlackjackListener implements Listener {
         Player p = e.getPlayer();
         String game;
         if (plugin.roulette().isTable(at)) game = "roulette";
-        else if (plugin.crash().isMachine(at)) game = "crash";
         else if (plugin.casino().isKasse(at)) game = "kasse";
         else return;
         e.setCancelled(true);
@@ -48,13 +47,6 @@ public final class BlackjackListener implements Listener {
             CasinoRules.open(plugin, p, game);
             return;
         }
-        if (game.equals("roulette")) {
-            plugin.roulette().open(p);
-            return;
-        }
-        String err = switch (game) {
-            default -> plugin.crash().click(p);
-        };
-        if (err != null) Msg.send(p, "<red>" + err);
+        plugin.roulette().open(p);
     }
 }

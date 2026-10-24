@@ -458,8 +458,63 @@ def chip_single(name):
     return p.image(outline=rgb("1A1020"))
 
 
+def crash_info():
+    """Info-Kopf der Crash-Truhe wie im Clip: gelber Würfelkopf mit Sonnenbrille, leicht von oben."""
+    p = Pix(16)
+    y0, y1 = rgb("F6CC22"), rgb("D49A12")
+    top, side = rgb("FFE26A"), rgb("B8800E")
+    # Würfel: Oberseite, Front, rechte Seite
+    p.poly([(3, 4), (8, 1.5), (14, 3.5), (9, 6)], top)
+    p.rect(3, 4, 9, 14, y0)
+    p.poly([(9, 6), (14, 3.5), (14, 12), (9, 15)], side)
+    for y in range(4, 15):
+        p.put(3, y, mix(y0, rgb("FFFFFF"), 0.25))
+    # Sonnenbrille über Front und Seite
+    glass = rgb("1A1418")
+    p.rect(3, 8, 9, 9, glass)
+    p.poly([(9, 8), (14, 6), (14, 7.6), (9, 10)], glass)
+    p.put(4, 8, rgb("5A5460"))
+    p.put(10, 8, rgb("5A5460"))
+    # Lächeln
+    for x, y in ((5, 12), (6, 13), (7, 13), (8, 12)):
+        p.put(x, y, rgb("6A3A08"))
+    return p.image(outline=rgb("2A1A08"))
+
+
+def tile(base, hi, lo):
+    """Abgerundete Kachel (14 x 14) mit Lichtkante oben und Schatten unten."""
+    p = Pix(16)
+    p.rect(2, 2, 13, 13, base)
+    p.rect(1, 3, 1, 12, base)
+    p.rect(14, 3, 14, 12, base)
+    p.rect(3, 1, 12, 1, base)
+    p.rect(3, 14, 12, 14, lo)
+    p.rect(3, 1, 12, 1, hi)
+    p.rect(1, 3, 1, 12, hi)
+    p.rect(14, 3, 14, 13, lo)
+    return p
+
+
+def repeat_tile():
+    """Lila Kachel mit Kreispfeil (letzten Einsatz wiederholen)."""
+    p = tile(rgb("9C90C8"), rgb("C8C0EC"), rgb("6A5E98"))
+    w = rgb("F4F2FF")
+    p.sector(8, 8, 2.6, 4.6, 40, 330, w)
+    p.poly([(10.5, 2.5), (13.6, 6.2), (9.2, 7.0)], w)
+    return p.image(outline=rgb("2A2240"))
+
+
+def cashout_tile():
+    """Grüne Kachel mit Pfeil nach oben (auszahlen)."""
+    p = tile(rgb("38B060"), rgb("70DC90"), rgb("1E7A3C"))
+    w = rgb("F4FFF6")
+    p.poly([(8, 3), (12.5, 8), (9.6, 8), (9.6, 12.5), (6.4, 12.5), (6.4, 8), (3.5, 8)], w)
+    return p.image(outline=rgb("0E3A1C"))
+
+
 ITEMS = [("stack_" + n, (lambda n=n: chip_stack(n))) for n in ITEM_CHIPS] + [
-    ("chip_" + n, (lambda n=n: chip_single(n))) for n in ITEM_CHIPS]
+    ("chip_" + n, (lambda n=n: chip_single(n))) for n in ITEM_CHIPS] + [
+    ("crash_info", crash_info), ("repeat", repeat_tile), ("cashout", cashout_tile)]
 
 
 def write_items(out):
@@ -621,6 +676,8 @@ MATERIALS = {
     "screen": ("0C0C10", "flat"),
     "bar": ("62B21A", "flat"),
     "white": ("F2F0EC", "flat"),
+    "teal": ("3FBCB0", "flat"),
+    "crashred": ("D8262C", "flat"),
 }
 
 

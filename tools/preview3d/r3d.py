@@ -387,6 +387,7 @@ def transformation(e):
 
 
 FONTS = pt.Fonts(ROOTS)
+PAD = 24
 
 
 def text_image(comp, line_width, shadow, bg_argb):
@@ -425,14 +426,16 @@ def text_image(comp, line_width, shadow, bg_argb):
     widths = [sum(adv(c, s) for c, s in ln) for ln in wrapped]
     w = max(widths) if widths else 0
     h = len(wrapped) * 10 - 1
-    img = Image.new("RGBA", (w + 1, h + 1), (0, 0, 0, 0))
+    # Glyphen dürfen über den Zeilenkasten hinausragen (z. B. Titelschrift): Rand P ringsum
+    P = PAD
+    img = Image.new("RGBA", (w + 1 + 2 * P, h + 1 + 2 * P), (0, 0, 0, 0))
     a = (bg_argb >> 24) & 255
     if a:
-        img.paste(((bg_argb >> 16) & 255, (bg_argb >> 8) & 255, bg_argb & 255, a), (0, 0, w + 1, h + 1))
+        img.paste(((bg_argb >> 16) & 255, (bg_argb >> 8) & 255, bg_argb & 255, a), (P, P, P + w + 1, P + h + 1))
     for li, line in enumerate(wrapped):
-        x = 1 + (w - widths[li]) / 2.0
+        x = P + 1 + (w - widths[li]) / 2.0
         x = int(round(x))
-        y0 = 1 + li * 10
+        y0 = P + 1 + li * 10
         for ch, st in line:
             font = st.get("font", "minecraft:default")
             ad, cell, ascent, scale, _ = FONTS.glyph(font, ch)
@@ -463,8 +466,8 @@ def draw_text(rs, e, base):
         bg += 1 << 32
     tex, w, h = text_image(comp, e.get("lineWidth", 200), e.get("shadowed", False), bg)
     m = base @ sc(0.025, -0.025, 0.025) @ tr(1 - w / 2.0, -h, 0)
-    # Bild deckt Textraum [-1, w] x [-1, h] ab
-    p = apply(m, [(-1, -1, 0), (-1, h, 0), (w, h, 0), (w, -1, 0)])
+    # Bild deckt Textraum [-1 - PAD, w + PAD] x [-1 - PAD, h + PAD] ab
+    p = apply(m, [(-1 - PAD, -1 - PAD, 0), (-1 - PAD, h + PAD, 0), (w + PAD, h + PAD, 0), (w + PAD, -1 - PAD, 0)])
     rs.quad(p, [(0, 0), (0, 1), (1, 1), (1, 0)], tex, 1.0, translucent=True)
 
 
@@ -595,6 +598,20 @@ def context(rs, name):
             for y in range(0, 3):
                 cube(rs, x, y, -1, "pink_glazed_terracotta")
                 cube(rs, x, y, 0, "pink_glazed_terracotta")
+    if name == "crash":
+        # Wand mit dunklem Rahmen (Schwarzstein) und schwarzer Bildfläche, Holzsäulen, Sims mit Lampen
+        for x in range(-5, 7):
+            for y in range(0, 6):
+                inner = -2 <= x <= 3 and 1 <= y <= 3
+                frame = -3 <= x <= 4 and 0 <= y <= 4
+                side = "black_concrete" if inner else ("polished_blackstone" if frame else "oak_planks")
+                cube(rs, x, y, -1, side)
+        for x in (-4, 5):
+            for y in range(0, 5):
+                cube(rs, x, y, 0, "stripped_oak_log")
+        for x in range(-4, 6):
+            cube(rs, x, 5, 0, "redstone_lamp" if x % 2 else "dark_oak_planks")
+            cube(rs, x, 0, 0, "sandstone_top")
     if name == "roulette":
         for x in range(-4, 6):
             for z in range(-3, 5):

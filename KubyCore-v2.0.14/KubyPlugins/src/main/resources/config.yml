@@ -144,10 +144,12 @@ casino:
     max-round: 100000           # höchstens so viele Chips je Spieler und Runde
     range: 12                   # so nah muss man am Tisch stehen
   crash:
-    bet: 100
-    wait-seconds: 10
-    rate: 0.07
-    max-multiplier: 50
+    min-bet: 10                 # kleinster Einsatz je Runde
+    max-bet: 100000             # größter Einsatz je Spieler und Runde
+    wait-seconds: 10            # Countdown nach dem ersten Einsatz
+    rate: 0.07                  # Tempo: Multiplikator = e^(rate * Sekunden), 2x nach knapp 10 s
+    max-multiplier: 50          # Höchstwert, dort wird automatisch ausgezahlt
+    house-edge: 0.03            # Hausvorteil (3 %): Rückfluss 97 %
   slots:
     jackpot-start: 20000        # Slots-Jackpot (drei Siebener), startet nach einem Gewinn wieder hier
     jackpot-share: 0.02         # so viel von jedem Dreh wandert in den Slots-Jackpot

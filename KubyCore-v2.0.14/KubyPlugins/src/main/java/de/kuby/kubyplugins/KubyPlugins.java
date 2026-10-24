@@ -9,7 +9,6 @@ import de.kuby.kubyplugins.service.EditModeService;
 import de.kuby.kubyplugins.service.MarkerService;
 import de.kuby.kubyplugins.service.CasinoService;
 import de.kuby.kubyplugins.listener.BlackjackListener;
-import de.kuby.kubyplugins.service.CrashService;
 import de.kuby.kubyplugins.service.CasinoLog;
 import de.kuby.kubyplugins.service.JackpotDraw;
 import de.kuby.kubyplugins.service.CasinoVip;
@@ -133,7 +132,7 @@ public final class KubyPlugins extends JavaPlugin {
     private de.kuby.kubyplugins.casino.BlackjackService blackjack;
     private de.kuby.kubyplugins.casino.RouletteGame roulette;
     private de.kuby.kubyplugins.casino.SlotsService slots;
-    private CrashService crash;
+    private de.kuby.kubyplugins.casino.CrashGame crash;
     private CasinoLog casinoLog;
     private JackpotDraw jackpotDraw;
     private CasinoVip casinoVip;
@@ -215,7 +214,7 @@ public final class KubyPlugins extends JavaPlugin {
         blackjack = new de.kuby.kubyplugins.casino.BlackjackService(this);
         roulette = new de.kuby.kubyplugins.casino.RouletteGame(this);
         slots = new de.kuby.kubyplugins.casino.SlotsService(this);
-        crash = new CrashService(this);
+        crash = new de.kuby.kubyplugins.casino.CrashGame(this);
         edit = new EditModeService(this);
         regions = new RegionService(this);
         hubSettings = new HubSettingsService(this);
@@ -321,6 +320,7 @@ public final class KubyPlugins extends JavaPlugin {
             if (sender instanceof org.bukkit.entity.Player p) roulette.open(p);
             return true;
         }, "roulette");
+        setAll(crash, "cashout");
         setAll(new AdminCommand(this), "kadmin");
         setAll(new HelpCommand(this), "befehle", "menu");
         setAll(new ExtraCommand(this), "dailypot", "trade", "tags", "rtpqueue", "meta", "booster", "xpshop", "battlepass", "cosmetics", "turnier", "verify", "versichern", "enderchest", "kristaltrade", "investments", "quizvote", "totenkiste", "kits", "hub", "tpa", "tpaccept", "tpadeny", "spielzeit");
@@ -345,6 +345,7 @@ public final class KubyPlugins extends JavaPlugin {
         getServer().getPluginManager().registerEvents(roulette, this);
         getServer().getPluginManager().registerEvents(blackjack, this);
         getServer().getPluginManager().registerEvents(slots, this);
+        getServer().getPluginManager().registerEvents(crash, this);
         getServer().getPluginManager().registerEvents(new CasinoVipListener(this), this);
         getServer().getPluginManager().registerEvents(votes, this);
         getServer().getPluginManager().registerEvents(uiPack, this);
@@ -550,7 +551,7 @@ public final class KubyPlugins extends JavaPlugin {
     public de.kuby.kubyplugins.casino.BlackjackService blackjack() { return blackjack; }
     public de.kuby.kubyplugins.casino.RouletteGame roulette() { return roulette; }
     public de.kuby.kubyplugins.casino.SlotsService slots() { return slots; }
-    public CrashService crash() { return crash; }
+    public de.kuby.kubyplugins.casino.CrashGame crash() { return crash; }
     public CasinoLog casinoLog() { return casinoLog; }
     public JackpotDraw jackpotDraw() { return jackpotDraw; }
     public CasinoVip casinoVip() { return casinoVip; }

@@ -153,10 +153,13 @@ public final class CasinoRules {
                 subtitle = "Rechtzeitig aussteigen";
                 icon = Ui.Icon.CRASH;
                 how = List.of(
-                        "Rechtsklick auf den Automaten steigt ein. Einsatz: " + c.getLong("casino.crash.bet", 10) + " Chips.",
-                        "Nach " + c.getLong("casino.crash.wait-seconds", 10) + " Sekunden steigt der Multiplikator.",
-                        "Rechtsklick steigt aus: Einsatz mal Multiplikator. Wer beim Crash drin ist, verliert.",
-                        "Höchstens " + Math.round(c.getDouble("casino.crash.max-multiplier", 50)) + "x.");
+                        "Einsatz beim Crash-Creeper oder an den Schildern unter dem Bildschirm setzen ("
+                                + c.getLong("casino.crash.min-bet", 10) + " bis " + c.getLong("casino.crash.max-bet", 100000) + " Chips).",
+                        "Nach " + c.getLong("casino.crash.wait-seconds", 10) + " Sekunden steigt der Multiplikator, die Kurve wächst.",
+                        "Steig aus mit Schleichen + Klick, Klick oder Schlag aufs Schild, dem Chat-Knopf oder /cashout:"
+                                + " Einsatz mal Multiplikator. Wer beim Crash noch drin ist, verliert den Einsatz.",
+                        "Bei " + Math.round(c.getDouble("casino.crash.max-multiplier", 50)) + "x wird automatisch ausgezahlt.");
+                commands.add(new String[]{"/cashout", "Jetzt aussteigen"});
             }
         }
         return new Page(title(game).toUpperCase(), subtitle, icon, how, commands);

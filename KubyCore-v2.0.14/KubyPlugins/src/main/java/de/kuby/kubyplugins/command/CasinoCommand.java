@@ -80,7 +80,11 @@ public final class CasinoCommand implements CommandExecutor {
             case "roulette-tisch" -> rouletteTable(p, args);
             case "automat" -> Msg.send(p, "<gray>Slot-Automaten baust du jetzt mit <white>/casino slots automat [Breite]</white>.");
             case "slots" -> plugin.slots().command(p, args);
-            case "crash" -> crashMachine(p);
+            case "crash" -> plugin.crash().command(p, args);
+            case "cashout", "auszahlen" -> {
+                String err = plugin.crash().cashout(p);
+                if (err != null) de.kuby.kubyplugins.casino.CasinoText.error(p, err);
+            }
             case "regeln" -> {
                 String game = args.length > 1 ? args[1].toLowerCase() : null;
                 if (!CasinoRules.open(plugin, p, game)) {
@@ -233,17 +237,4 @@ public final class CasinoCommand implements CommandExecutor {
         Msg.send(p, "<green>Roulette-Tisch aufgebaut (" + width + " x " + depth + " Blöcke). Croupier: /casino npc croupier");
     }
 
-    private void crashMachine(Player p) {
-        if (!p.hasPermission("kuby.admin")) {
-            Msg.send(p, "<red>Nur Admins können den Crash-Automaten setzen.");
-            return;
-        }
-        Block target = p.getTargetBlockExact(6);
-        if (target == null) {
-            Msg.send(p, "<red>Schau auf den Block, der der Crash-Automat wird.");
-            return;
-        }
-        plugin.crash().setMachine(target.getLocation());
-        Msg.send(p, "<green>Crash-Automat gesetzt. Rechtsklick steigt ein, während der Runde aus.");
-    }
 }

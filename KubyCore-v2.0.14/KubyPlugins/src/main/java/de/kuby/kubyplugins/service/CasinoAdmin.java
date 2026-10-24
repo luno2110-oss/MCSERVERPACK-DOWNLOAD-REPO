@@ -33,7 +33,8 @@ public final class CasinoAdmin {
             new Setting("roulette_max", "casino.roulette.max-bet", "Roulette-Höchsteinsatz (Chips)", 100, 100000, 100, 5000, 1),
             new Setting("roulette_wait", "casino.roulette.wait-seconds", "Roulette-Wartezeit (Sekunden)", 5, 120, 5, 20, 1),
             new Setting("slots_share", "casino.slots.jackpot-share", "Slots-Jackpot-Anteil (%)", 0, 10, 0.5f, 0.02, 100),
-            new Setting("crash_bet", "casino.crash.bet", "Crash-Einsatz (Chips)", 10, 10000, 10, 100, 1),
+            new Setting("crash_maxbet", "casino.crash.max-bet", "Crash-Höchsteinsatz (Chips)", 1000, 1000000, 1000, 100000, 1),
+            new Setting("crash_wait", "casino.crash.wait-seconds", "Crash-Wartezeit (Sekunden)", 5, 60, 1, 10, 1),
             new Setting("crash_max", "casino.crash.max-multiplier", "Crash-Höchstwert (x)", 2, 100, 1, 50, 1),
             new Setting("jackpot_share", "casino.jackpot-share", "Jackpot-Anteil (%)", 0, 10, 0.5f, 0.01, 100));
 
@@ -62,7 +63,7 @@ public final class CasinoAdmin {
                 + " " + mark("Blackjack", plugin.blackjack().hasTable())
                 + " " + mark("Roulette", plugin.roulette().hasTable())
                 + " " + mark("Slots", plugin.slots().hasMachine())
-                + " " + mark("Crash", plugin.crash().hasMachine())
+                + " " + mark("Crash", plugin.crash().hasScreen())
                 + " " + mark("Poker", plugin.poker().hasTable())));
 
         StringBuilder payout = new StringBuilder("<red><b>AUSZAHLUNG</b></red>");
@@ -127,7 +128,7 @@ public final class CasinoAdmin {
         buttons.add(command("Blackjack-Tisch hier", "casino blackjack tisch"));
         buttons.add(command("Roulette-Tisch", "casino roulette-tisch"));
         buttons.add(command("Slots-Automat hier", "casino slots automat"));
-        buttons.add(command("Crash-Automat", "casino crash"));
+        buttons.add(command("Crash-Bildschirm hier", "casino crash bildschirm"));
         buttons.add(command("Poker-Tisch", "casino poker-tisch"));
         buttons.add(button("<white>Barkeeper setzen", "Stellt einen Barkeeper an deine Position", (pl, response) -> pl.performCommand("casino barkeeper")));
         buttons.add(button("<white>Protokoll", "Die letzten Einträge", (pl, response) -> pl.showDialog(logDialog(plugin))));

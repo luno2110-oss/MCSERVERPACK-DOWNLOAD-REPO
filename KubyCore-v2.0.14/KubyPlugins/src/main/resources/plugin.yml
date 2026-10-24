@@ -121,6 +121,9 @@ commands:
   roulette:
     description: "Roulette-Menü (am Roulette-Tisch)"
     usage: "/roulette"
+  cashout:
+    description: "Crash: jetzt aussteigen"
+    usage: "/cashout"
   coinflip:
     description: "Münzwurf um Coins"
     usage: "/coinflip <Betrag>"
