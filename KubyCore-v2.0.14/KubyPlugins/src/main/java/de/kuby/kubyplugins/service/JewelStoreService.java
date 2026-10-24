@@ -64,10 +64,16 @@ public final class JewelStoreService {
 
     /** Gibt null bei Erfolg zurück. */
     public String buy(Player p, String mode, Item it) {
-        if (!plugin.jewels().take(p.getUniqueId(), it.price())) {
-            return "Dir fehlen " + (it.price() - plugin.jewels().balance(p.getUniqueId())) + " Juwelen.";
+        return buyFor(p, p, mode, it);
+    }
+
+    /** Kauf für einen anderen Spieler (Geschenk): bezahlt wird mit den Juwelen von payer. Null bei Erfolg. */
+    public String buyFor(Player payer, Player target, String mode, Item it) {
+        if (target == null || !target.isOnline()) return "Verschenken geht nur an Spieler, die gerade online sind.";
+        if (!plugin.jewels().take(payer.getUniqueId(), it.price())) {
+            return "Dir fehlen " + (it.price() - plugin.jewels().balance(payer.getUniqueId())) + " Juwelen.";
         }
-        String cmd = it.command().replace("%player%", p.getName());
+        String cmd = it.command().replace("%player%", target.getName());
         Bukkit.getScheduler().runTask(plugin, () ->
                 plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), cmd));
         return null;

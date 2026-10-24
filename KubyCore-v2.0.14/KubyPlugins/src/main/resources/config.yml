@@ -642,3 +642,6 @@ bank:
   radius: 8
   max-friend-accounts: 3          # Konten mit Freunden je Spieler (als Mitglied oder Besitzer)
   max-members: 5                  # Mitglieder je Konto mit Freunden
+# Kopf-Datenbank /heads (KubySurvival): Preis je Kopf. Köpfe stehen in plugins/KubySurvival/heads.yml.
+heads:
+  price: 1000

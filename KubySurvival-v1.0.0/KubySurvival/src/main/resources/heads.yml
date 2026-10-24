@@ -1,0 +1,73 @@
+# Kopf-Datenbank für /heads (Survival). Jeder Kopf kostet heads.price Coins (config.yml im Kern, Standard 1.000).
+# Kategorie -> Liste "Name;Quelle". Quelle ist
+#   - ein Spielername: Kopf dieses Accounts (z. B. die offiziellen MHF_-Köpfe von Mojang),
+#   - "textur:<base64>": eigener Kopf (anlegen mit /kp heads add <kategorie> <Name>, Kopf in der Hand),
+#   - "item:<MATERIAL>": Vanilla-Kopf (z. B. item:CREEPER_HEAD).
+# Dazu findet /heads <Name> den Kopf jedes Spielers.
+kategorien:
+  deko:
+    name: "Deko & Essen"
+    koepfe:
+      - "Apfel;MHF_Apple"
+      - "Kuchen;MHF_Cake"
+      - "Melone;MHF_Melon"
+      - "Kürbis;MHF_Pumpkin"
+      - "Kaktus;MHF_Cactus"
+      - "Kokosnuss braun;MHF_CoconutB"
+      - "Kokosnuss grün;MHF_CoconutG"
+      - "Eichenstamm;MHF_OakLog"
+      - "Truhe;MHF_Chest"
+      - "TNT;MHF_TNT"
+      - "TNT rot;MHF_TNT2"
+      - "Geschenk rot;MHF_Present1"
+      - "Geschenk grün;MHF_Present2"
+  zeichen:
+    name: "Pfeile & Zeichen"
+    koepfe:
+      - "Pfeil hoch;MHF_ArrowUp"
+      - "Pfeil runter;MHF_ArrowDown"
+      - "Pfeil links;MHF_ArrowLeft"
+      - "Pfeil rechts;MHF_ArrowRight"
+      - "Fragezeichen;MHF_Question"
+      - "Ausrufezeichen;MHF_Exclamation"
+  tiere:
+    name: "Tiere & Monster"
+    koepfe:
+      - "Blaze;MHF_Blaze"
+      - "Höhlenspinne;MHF_CaveSpider"
+      - "Huhn;MHF_Chicken"
+      - "Kuh;MHF_Cow"
+      - "Creeper;MHF_Creeper"
+      - "Enderman;MHF_Enderman"
+      - "Ghast;MHF_Ghast"
+      - "Eisengolem;MHF_Golem"
+      - "Magmawürfel;MHF_LavaSlime"
+      - "Pilzkuh;MHF_MushroomCow"
+      - "Ozelot;MHF_Ocelot"
+      - "Schwein;MHF_Pig"
+      - "Zombie-Pigman;MHF_PigZombie"
+      - "Schaf;MHF_Sheep"
+      - "Skelett;MHF_Skeleton"
+      - "Schleim;MHF_Slime"
+      - "Spinne;MHF_Spider"
+      - "Tintenfisch;MHF_Squid"
+      - "Dorfbewohner;MHF_Villager"
+      - "Witherskelett;MHF_WSkeleton"
+      - "Zombie;MHF_Zombie"
+  figuren:
+    name: "Figuren"
+    koepfe:
+      - "Steve;MHF_Steve"
+      - "Alex;MHF_Alex"
+      - "Herobrine;MHF_Herobrine"
+      - "Notch;Notch"
+      - "Jeb;jeb_"
+      - "Dinnerbone;Dinnerbone"
+      - "Grumm;Grumm"
+  mobkoepfe:
+    name: "Mob-Köpfe"
+    koepfe:
+      - "Creeper-Kopf;item:CREEPER_HEAD"
+      - "Zombie-Kopf;item:ZOMBIE_HEAD"
+      - "Skelettschädel;item:SKELETON_SKULL"
+      - "Piglin-Kopf;item:PIGLIN_HEAD"

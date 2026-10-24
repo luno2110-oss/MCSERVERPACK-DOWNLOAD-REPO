@@ -74,3 +74,7 @@ commands:
     description: "Bank: Ehe-Konto und Konten mit Freunden"
     usage: "/bank [einzahlen|abheben <Betrag> [Konto]]"
     aliases: [konto]
+  heads:
+    description: "Kopf-Datenbank: Deko-Köpfe und Spielerköpfe kaufen"
+    usage: "/heads [Suchbegriff]"
+    aliases: [koepfe, kopf]

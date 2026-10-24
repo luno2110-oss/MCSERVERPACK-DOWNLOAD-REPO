@@ -21,6 +21,7 @@ import de.kuby.kubysurvival.jobs.JobMenu;
 import de.kuby.kubysurvival.jobs.JobService;
 import de.kuby.kubysurvival.jobs.LevelCommand;
 import de.kuby.kubysurvival.jobs.TokenShopMenu;
+import de.kuby.kubysurvival.heads.HeadService;
 import de.kuby.kubysurvival.marry.BankService;
 import de.kuby.kubysurvival.marry.MarryCommand;
 import de.kuby.kubysurvival.marry.MarryMenus;
@@ -276,6 +277,14 @@ public final class KubySurvival extends JavaPlugin {
         });
         core.registerKpSub("bank", (p, args) -> {
             if (p.hasPermission("kuby.admin")) marryCommand.adminBank(p, args);
+            else Msg.send(p, "<red>Nur Admins.");
+        });
+        HeadService heads = new HeadService(this, core);
+        command("heads", heads);
+        PluginCommand headsCmd = getCommand("heads");
+        if (headsCmd != null) headsCmd.setTabCompleter(heads);
+        core.registerKpSub("heads", (p, args) -> {
+            if (p.hasPermission("kuby.admin")) heads.admin(p, args);
             else Msg.send(p, "<red>Nur Admins.");
         });
         core.registerKpSub("angel", angelCommand::admin);
