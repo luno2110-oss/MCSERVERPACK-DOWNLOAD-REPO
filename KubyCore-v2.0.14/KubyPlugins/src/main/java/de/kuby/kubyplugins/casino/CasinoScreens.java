@@ -481,4 +481,112 @@ public final class CasinoScreens {
         c.textCenter(W / 2, ly + 15 + 18 * n + 7, "Lautstärke: Optionen > Musik & Töne > Jukebox/Notenblöcke", GRAY, false);
         return c;
     }
+
+    // =================================================================================================================
+    // Casino-Hilfe (/casino regeln)
+    // =================================================================================================================
+
+    /**
+     * Eine Hilfeseite. tabs = Namen aller Seiten, active = diese Seite. rows: Rangliste (Platz, Name, Wert), sonst leer.
+     */
+    public record HelpView(String title, String sub, KitData.Icon icon, List<String> how, List<String[]> commands,
+                           List<String[]> rows, String own, List<String> tabs, int active) {}
+
+    public interface HelpActions {
+        Consumer<Player> tab(int index);
+
+        Consumer<Player> travel();
+    }
+
+    /** Bricht Text an Leerzeichen um, sodass jede Zeile höchstens max Pixel breit ist. */
+    public static List<String> wrap(String text, int max) {
+        List<String> out = new java.util.ArrayList<>();
+        StringBuilder line = new StringBuilder();
+        for (String word : text.split(" ")) {
+            String probe = line.isEmpty() ? word : line + " " + word;
+            if (Canvas.width(probe, false) > max && !line.isEmpty()) {
+                out.add(line.toString());
+                line = new StringBuilder(word);
+            } else {
+                line = new StringBuilder(probe);
+            }
+        }
+        if (!line.isEmpty()) out.add(line.toString());
+        return out;
+    }
+
+    public static Canvas help(HelpView v, HelpActions a) {
+        Canvas c = new Canvas(W);
+        head(c, v.icon(), v.title(), v.sub());
+        int hw = Canvas.width("Hinreisen", true) + 14;
+        c.smallButton(378 - hw, 9, hw, KitData.Small.GOLD, "Hinreisen", GOLD_SOFT, true);
+        c.action(378 - hw, 9, hw, 16, a.travel(), "Zum Casino teleportieren (nur in Survival)");
+        // Reiter über die ganze Breite: der Rest wird gleichmäßig als Innenabstand verteilt
+        int n = v.tabs().size(), gap = 2, ty = 55;
+        boolean bold = true;
+        int text = 0;
+        for (String t : v.tabs()) text += Canvas.width(t, true);
+        if (text + 6 * n + gap * (n - 1) > W) {
+            bold = false;
+            text = 0;
+            for (String t : v.tabs()) text += Canvas.width(t, false);
+        }
+        int spare = W - gap * (n - 1) - text, x = 0;
+        for (int i = 0; i < n; i++) {
+            String label = v.tabs().get(i);
+            int w = Canvas.width(label, bold) + spare / n + (i < spare % n ? 1 : 0);
+            boolean on = i == v.active();
+            c.smallButton(x, ty, w, on ? KitData.Small.GREEN : KitData.Small.DARK, label, on ? ON_GREEN : LIGHT, bold);
+            if (!on) c.action(x, ty, w, 16, a.tab(i), "Seite " + label);
+            x += w + gap;
+        }
+        int y = ty + 21;
+        if (!v.rows().isEmpty() || v.own() != null) {
+            int h = 26 + 11 * Math.max(1, v.rows().size()) + (v.own() == null ? 0 : 14);
+            c.box(0, y, W, h, KitData.Box.CASINO_DARK);
+            c.text(10, y + 8, Canvas.caps("Am meisten Plus"), GOLD, true);
+            c.textRight(380, y + 8, "Gewinne minus Einsätze", GRAY, false);
+            int ry = y + 21;
+            TextColor[] medal = {TextColor.color(0xFFC83A), TextColor.color(0xC8CCD8), TextColor.color(0xE0884A)};
+            if (v.rows().isEmpty()) c.text(14, ry, "Noch hat niemand gespielt.", GRAY, false);
+            for (int i = 0; i < v.rows().size(); i++) {
+                String[] r = v.rows().get(i);
+                c.text(14, ry + 11 * i, r[0], i < 3 ? medal[i] : GRAY, true);
+                c.text(40, ry + 11 * i, r[1], WHITE, false);
+                c.textRight(376, ry + 11 * i, r[2], r[2].startsWith("-") ? RED : GREEN, false);
+            }
+            if (v.own() != null) c.text(14, y + h - 14, v.own(), GOLD_SOFT, true);
+            y += h + 3;
+        }
+        if (!v.how().isEmpty()) {
+            List<String> lines = new java.util.ArrayList<>();
+            List<Boolean> starts = new java.util.ArrayList<>();
+            for (String para : v.how()) {
+                List<String> w = wrap(para, W - 34);
+                for (int k = 0; k < w.size(); k++) {
+                    lines.add(w.get(k));
+                    starts.add(k == 0);
+                }
+            }
+            int h = 24 + 10 * lines.size();
+            c.box(0, y, W, h, KitData.Box.CASINO_DARK);
+            c.text(10, y + 8, Canvas.caps("So geht's"), GOLD, true);
+            for (int i = 0; i < lines.size(); i++) {
+                if (starts.get(i)) c.text(12, y + 20 + 10 * i, "▶", BTN_GRAY, false);
+                c.text(22, y + 20 + 10 * i, lines.get(i), LIGHT, false);
+            }
+            y += h + 3;
+        }
+        if (!v.commands().isEmpty()) {
+            int h = 24 + 11 * v.commands().size();
+            c.box(0, y, W, h, KitData.Box.CASINO_DARK);
+            c.text(10, y + 8, Canvas.caps("Befehle"), GOLD, true);
+            for (int i = 0; i < v.commands().size(); i++) {
+                String[] cmd = v.commands().get(i);
+                c.text(14, y + 20 + 11 * i, cmd[0], TextColor.color(0x5FE3C4), false);
+                c.textRight(376, y + 20 + 11 * i, cmd[1], GRAY, false);
+            }
+        }
+        return c;
+    }
 }

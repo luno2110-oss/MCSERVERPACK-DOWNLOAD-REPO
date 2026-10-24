@@ -11,7 +11,6 @@ import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
-import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
@@ -22,29 +21,29 @@ import java.util.function.Consumer;
 
 /**
  * Casino-Hilfe als Dialog-Fenster im Stil der Hilfe-Referenz: Kopf mit Icon, Abschnitt "So geht's", Befehle und Buttons.
- * Mit geladenem Grafik-Pack (KubyUI) kommen Rahmen, Icons und Buttons aus dem Pack, sonst die normale Ansicht.
+ * Mit geladenem Grafik-Pack (KubyUI) im Casino-Stil auf dem Dialog-Kit (Reiter für alle Seiten), sonst die normale Ansicht.
  * Die Zahlen (Einsätze, Wartezeiten, Preis) kommen aus der config.yml.
  */
 public final class CasinoRules {
 
-    public static final List<String> GAMES = List.of("blackjack", "roulette", "slots", "crash");
+    public static final List<String> GAMES = List.of("blackjack", "roulette", "slots", "crash", "losbude");
 
     private static final int WIDTH = 320;
-    private static final TextColor PINK = TextColor.color(0xFF5D73);
-    private static final TextColor TITLE_RED = TextColor.color(0xFF4D67);
-    private static final TextColor BODY = TextColor.color(0xE8E8E8);
-    private static final TextColor SUB = TextColor.color(0xBDBDBD);
-    private static final TextColor CMD = TextColor.color(0x5FE3C4);
     /** Platzhalter für Icons im Text. Ohne Grafik-Pack werden daraus normale Zeichen. */
     private static final Map<String, String> PLAIN_TOKENS = Map.of(
             "{club}", "♣", "{diamond}", "♦", "{heart}", "♥", "{star}", "★", "{seven}", "7");
 
     private record Btn(String label, String tooltip, boolean red, Consumer<Player> onClick) {}
 
-    private record Page(String title, String subtitle, Ui.Icon icon, List<String> how, List<String[]> commands) {}
+    private record Page(String title, String subtitle, Ui.Icon icon, List<String> how, List<String[]> commands,
+                        List<String[]> rows, String own) {
+        Page(String title, String subtitle, Ui.Icon icon, List<String> how, List<String[]> commands) {
+            this(title, subtitle, icon, how, commands, List.of(), null);
+        }
+    }
 
     /** Reihenfolge der Seiten zum Blättern (wie in der Hilfe-Referenz: "< vorherige | Hinreisen | nächste >"). */
-    private static final List<String> ORDER = List.of("casino", "blackjack", "roulette", "slots", "crash", "rangliste");
+    private static final List<String> ORDER = List.of("casino", "blackjack", "roulette", "slots", "crash", "losbude", "rangliste");
 
     private CasinoRules() {
     }
@@ -72,9 +71,17 @@ public final class CasinoRules {
         }
         int rank = plugin.casinoLog().rankOf(p.getUniqueId());
         long mine = plugin.casinoLog().netOf(p.getUniqueId());
-        lines.add(rank == 0 ? "Du hast noch nicht gespielt."
-                : "Dein Platz: " + rank + "  (" + (mine >= 0 ? "+" : "") + mine + " Chips)");
-        return new Page("RANGLISTE", "Am meisten Plus: Gewinne minus Einsätze", Ui.Icon.TROPHY, lines, List.of());
+        String own = rank == 0 ? "Du hast noch nicht gespielt."
+                : "Dein Platz: " + rank + "  (" + (mine >= 0 ? "+" : "") + de.kuby.kubyplugins.casino.CasinoText.num(mine) + " Chips)";
+        lines.add(own);
+        List<String[]> rows = new ArrayList<>();
+        for (int i = 0; i < top.size(); i++) {
+            String name = org.bukkit.Bukkit.getOfflinePlayer(top.get(i).getKey()).getName();
+            long net = top.get(i).getValue();
+            rows.add(new String[]{"#" + (i + 1), name == null ? "?" : name,
+                    (net >= 0 ? "+" : "-") + de.kuby.kubyplugins.casino.CasinoText.num(Math.abs(net)) + " Chips"});
+        }
+        return new Page("RANGLISTE", "Die besten Spieler im Casino", Ui.Icon.TROPHY, lines, List.of(), rows, own);
     }
 
     private static Page overview(KubyPlugins plugin) {
@@ -82,10 +89,11 @@ public final class CasinoRules {
                 "Im Casino spielst du mit Chips an Slots, Roulette, Blackjack und Crash. In der VIP-Lounge gibt es Poker.",
                 "Chips tauschst du an der Kasse gegen Coins und wieder zurück. 1 Chip = 1 Coin, beim Auszahlen "
                         + plugin.getConfig().getInt("casino.cashout-tax-percent", 5) + " % Steuer.",
-                "Jeden " + drawDay(plugin) + " um " + plugin.getConfig().getString("casino.jackpot.draw-time", "19:00")
+                "Jeden " + drawDay(plugin) + " um " + plugin.getConfig().getString("casino.jackpot.draw-time", "18:00")
                         + " Uhr wird der Jackpot ausgelost. Er wächst mit jedem Einsatz im Casino. Wer seit der letzten Ziehung"
-                        + " einmal gespielt hat, ist dabei, und einer gewinnt den ganzen Topf.",
-                "Im Casino läuft Musik. Mit /music suchst du dir Songs aus, das geht nur im Casino.",
+                        + " einmal gespielt hat, ist dabei, und einer gewinnt den ganzen Topf in Chips.",
+                "Im Casino läuft Musik. Bei DJ Mia oder mit /music suchst du dir Songs aus oder schaltest sie aus.",
+                "An der Losbude gibt es Rubbellose für Chips: aufdecken, drei gleiche Symbole gewinnen.",
                 "In der VIP-Lounge geben dir die Barkeeper einmal am Tag "
                         + plugin.getConfig().getLong("casino.vip.daily-chips", 500) + " Chips. Rein darfst du mit dem Legend-Rang"
                         + " oder als einer der besten " + plugin.getConfig().getInt("casino.vip.top", 10)
@@ -120,7 +128,7 @@ public final class CasinoRules {
                 icon = Ui.Icon.CARDS;
                 how = List.of(
                         "Rechtsklick auf einen Hocker oder den Dealer: hinsetzen. Klick Chips aus dem Rack vor dir auf dein Feld ("
-                                + c.getLong("casino.blackjack.min-bet", 10) + " bis " + c.getLong("casino.blackjack.max-bet", 10000)
+                                + c.getLong("casino.blackjack.min-bet", 10) + " bis " + de.kuby.kubyplugins.casino.CasinoText.num(c.getLong("casino.blackjack.max-bet", 10000))
                                 + " Chips), der erste Einsatz startet die Runde.",
                         "Bildkarten zählen 10, Asse 1 oder 11. Bist du dran, klickst du Karte, Halten, Doppeln oder Teilen."
                                 + " Der Dealer zieht bis 17.",
@@ -149,12 +157,21 @@ public final class CasinoRules {
                         "Drei gleiche zahlen 8- bis 80-fach, Kirschen schon einzeln. Den Gewinnplan zeigt das Schild am Automaten.",
                         "Drei Siebener knacken den Jackpot. Ein Teil jedes Drehs wandert hinein, voller Einsatz holt den größten Anteil.");
             }
+            case "losbude" -> {
+                subtitle = "Rubbellose für Chips";
+                icon = Ui.Icon.DICE;
+                how = List.of(
+                        "Rechtsklick auf die Figur an der Losbude. Bronze-Los 100, Silber-Los 1.000, Gold-Los 10.000 Chips.",
+                        "Feld für Feld freirubbeln oder alles auf einmal aufdecken. Drei gleiche Symbole gewinnen.",
+                        "Kirsche 1-fach, Zitrone 2-fach, Glocke 5-fach, Stern 10-fach, Sieben 50-fach des Lospreises."
+                                + " Etwa jedes dritte Los gewinnt.");
+            }
             default -> {
                 subtitle = "Rechtzeitig aussteigen";
                 icon = Ui.Icon.CRASH;
                 how = List.of(
                         "Einsatz beim Crash-Creeper oder an den Schildern unter dem Bildschirm setzen ("
-                                + c.getLong("casino.crash.min-bet", 10) + " bis " + c.getLong("casino.crash.max-bet", 100000) + " Chips).",
+                                + c.getLong("casino.crash.min-bet", 10) + " bis " + de.kuby.kubyplugins.casino.CasinoText.num(c.getLong("casino.crash.max-bet", 100000)) + " Chips).",
                         "Nach " + c.getLong("casino.crash.wait-seconds", 10) + " Sekunden steigt der Multiplikator, die Kurve wächst.",
                         "Steig aus mit Schleichen + Klick, Klick oder Schlag aufs Schild, dem Chat-Knopf oder /cashout:"
                                 + " Einsatz mal Multiplikator. Wer beim Crash noch drin ist, verliert den Einsatz.",
@@ -182,7 +199,40 @@ public final class CasinoRules {
                 new Btn("< " + navName(prev), "Zurück: " + navName(prev), false, pl -> show(plugin, pl, prev)),
                 new Btn("Hinreisen", "Zum Casino teleportieren", true, pl -> plugin.casino().travel(pl)),
                 new Btn(navName(next) + " >", "Weiter: " + navName(next), false, pl -> show(plugin, pl, next)));
-        p.showDialog(plugin.uiPack().active(p) ? textured(page, buttons) : plain(page, buttons));
+        if (plugin.uiPack().active(p)) {
+            // Casino-Stil auf dem Dialog-Kit: Reiter für alle Seiten statt Blättern
+            List<String> tabs = new ArrayList<>();
+            for (int k = 0; k < size; k++) tabs.add(navName(k));
+            boolean ranking = ORDER.get(i).equals("rangliste");
+            de.kuby.kubyplugins.casino.CasinoScreens.HelpView view = new de.kuby.kubyplugins.casino.CasinoScreens.HelpView(
+                    page.title(), page.subtitle(), kitIcon(ORDER.get(i)), ranking ? List.of() : clean(page.how()),
+                    page.commands(), page.rows(), ranking ? page.own() : null, tabs, i);
+            de.kuby.kubyplugins.ui.UiDialog.show(p, de.kuby.kubyplugins.casino.CasinoScreens.help(view,
+                    new de.kuby.kubyplugins.casino.CasinoScreens.HelpActions() {
+                        @Override
+                        public Consumer<Player> tab(int k) {
+                            return pl -> show(plugin, pl, k);
+                        }
+
+                        @Override
+                        public Consumer<Player> travel() {
+                            return pl -> plugin.casino().travel(pl);
+                        }
+                    }), 330);
+            return;
+        }
+        p.showDialog(plain(page, buttons));
+    }
+
+    /** Platzhalter für Icons ({club} ...) durch Zeichen ersetzen. */
+    private static List<String> clean(List<String> how) {
+        List<String> out = new ArrayList<>();
+        for (String line : how) {
+            String text = line;
+            for (Map.Entry<String, String> t : PLAIN_TOKENS.entrySet()) text = text.replace(t.getKey(), t.getValue());
+            out.add(text);
+        }
+        return out;
     }
 
     private static String navName(int index) {
@@ -192,30 +242,6 @@ public final class CasinoRules {
             case "rangliste" -> "Rangliste";
             default -> title(key);
         };
-    }
-
-    /** Mit Grafik-Pack: Titelleiste, Kästen mit Rahmen und Icons, eigene Buttons. */
-    private static Dialog textured(Page page, List<Btn> navButtons) {
-        Ui.Panel head = new Ui.Panel()
-                .headIcon(Ui.Icon.BACK, 8)
-                .headIcon(page.icon(), 26)
-                .text(48, page.title(), TITLE_RED, true)
-                .text(48, page.subtitle(), SUB, false);
-        Ui.Panel how = new Ui.Panel().text(7, "SO GEHT'S", PINK, true);
-        for (String line : page.how()) how.bullet(line, BODY);
-        List<Ui.Panel> panels = new ArrayList<>(List.of(head, how));
-        if (!page.commands().isEmpty()) {
-            Ui.Panel cmds = new Ui.Panel().text(7, "BEFEHLE", PINK, true);
-            for (String[] cmd : page.commands()) cmds.columns(cmd[0], CMD, cmd[1], BODY, 120);
-            panels.add(cmds);
-        }
-        List<ActionButton> buttons = new ArrayList<>();
-        for (Btn b : navButtons) buttons.add(button(Ui.button(b.label(), b.red()), b.tooltip(), b.onClick()));
-        DialogBase base = DialogBase.builder(Ui.titleBar("Hilfe"))
-                .canCloseWithEscape(true)
-                .body(List.of(DialogBody.plainMessage(Ui.stack(panels), WIDTH)))
-                .build();
-        return Dialog.create(b -> b.empty().base(base).type(DialogType.multiAction(buttons).columns(3).build()));
     }
 
     /** Ohne Grafik-Pack: normale Texte. */
@@ -272,7 +298,20 @@ public final class CasinoRules {
             case "blackjack" -> "Blackjack";
             case "roulette" -> "Roulette";
             case "slots" -> "Slots";
+            case "losbude" -> "Losbude";
             default -> "Crash";
+        };
+    }
+
+    private static de.kuby.kubyplugins.ui.KitData.Icon kitIcon(String key) {
+        return switch (key) {
+            case "blackjack" -> de.kuby.kubyplugins.ui.KitData.Icon.CHIP_BLACK;
+            case "roulette" -> de.kuby.kubyplugins.ui.KitData.Icon.ROULETTE_WHEEL;
+            case "slots" -> de.kuby.kubyplugins.ui.KitData.Icon.SLOT_BIG;
+            case "crash" -> de.kuby.kubyplugins.ui.KitData.Icon.CHIP_PURPLE;
+            case "losbude" -> de.kuby.kubyplugins.ui.KitData.Icon.CHIP_PINK;
+            case "rangliste" -> de.kuby.kubyplugins.ui.KitData.Icon.TOTEM;
+            default -> de.kuby.kubyplugins.ui.KitData.Icon.CHIP_RED;
         };
     }
 }
