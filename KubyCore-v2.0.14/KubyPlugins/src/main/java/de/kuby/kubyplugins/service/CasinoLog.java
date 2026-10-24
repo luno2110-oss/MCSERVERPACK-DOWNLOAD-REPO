@@ -45,6 +45,7 @@ public final class CasinoLog {
     private final Map<UUID, Long> playerNet = new java.util.HashMap<>();
     private long jackpotsPaid;
     private long jackpotMoney;
+    private long exchangeTax;
 
     public CasinoLog(KubyPlugins plugin) {
         this.plugin = plugin;
@@ -72,6 +73,29 @@ public final class CasinoLog {
         }
         jackpotsPaid = yml.getLong("jackpot.count");
         jackpotMoney = yml.getLong("jackpot.money");
+        exchangeTax = yml.getLong("kasse.tax");
+        // früher 1 Chip = casino.chip-price Coins, jetzt 1 Coin: Summen einmalig umrechnen (wie CasinoService)
+        long unit = yml.getLong("chip-unit", statsFile.exists() ? plugin.getConfig().getLong("casino.chip-price", 100) : 1);
+        if (unit > 1) {
+            for (Totals t : totals.values()) {
+                t.staked *= unit;
+                t.paid *= unit;
+            }
+            playerNet.replaceAll((id, v) -> v * unit);
+            save();
+        }
+    }
+
+    /** Hält einen Umtausch an der Kasse fest: positive Chips = gekauft, negative = ausgezahlt. */
+    public synchronized void exchange(UUID player, long chips, long tax) {
+        exchangeTax += tax;
+        write(String.format("%s | %s | KASSE | %s%d Chips%s", LocalDateTime.now().format(TIME), nameOf(player),
+                chips >= 0 ? "+" : "", chips, tax > 0 ? " | Steuer " + tax : ""));
+    }
+
+    /** Summe der Steuern an der Kasse (Coins). */
+    public synchronized long exchangeTax() {
+        return exchangeTax;
     }
 
     /** Hält eine Runde fest: Einsatz und Auszahlung in Chips. */
@@ -149,6 +173,8 @@ public final class CasinoLog {
         for (Map.Entry<UUID, Long> e : playerNet.entrySet()) out.set("players." + e.getKey(), e.getValue());
         out.set("jackpot.count", jackpotsPaid);
         out.set("jackpot.money", jackpotMoney);
+        out.set("kasse.tax", exchangeTax);
+        out.set("chip-unit", 1);
         try {
             plugin.getDataFolder().mkdirs();
             out.save(statsFile);

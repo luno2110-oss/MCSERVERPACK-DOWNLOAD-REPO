@@ -43,9 +43,11 @@ public final class BlackjackListener implements Listener {
         else if (plugin.casino().isKasse(at)) game = "kasse";
         else return;
         e.setCancelled(true);
-        // Kassentisch, Roulette-Tisch (Einsätze per Befehl) und Schleichen + Rechtsklick öffnen die Regeln.
+        // Kassentisch öffnet die Kasse; Roulette-Tisch (Einsätze per Befehl) und Schleichen + Rechtsklick die Regeln.
         if (game.equals("kasse")) {
-            CasinoRules.open(plugin, p, null);
+            String blocked = plugin.casino().checkMode(p);
+            if (blocked != null) Msg.send(p, "<red>" + blocked);
+            else new de.kuby.kubyplugins.casino.KasseMenu(plugin).open(p);
             return;
         }
         if (p.isSneaking() || game.equals("roulette")) {

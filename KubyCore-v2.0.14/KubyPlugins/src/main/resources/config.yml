@@ -109,7 +109,7 @@ jewels:
 
 casino:
   open: true
-  chip-price: 100
+  # 1 Chip = 1 Coin (wie im Referenz-Clip). Alte Stände mit 100 Coins je Chip werden beim Start einmalig umgerechnet.
   cashout-tax-percent: 5        # Steuer beim Rücktausch Chips -> Coins (Farmpass: keine)
   jackpot-start: 10000
   kasse-radius: 5
@@ -134,17 +134,17 @@ casino:
     max-buyin-bb: 200
     turn-seconds: 30
   blackjack:
-    bet: 1
+    bet: 100
   roulette:
     wait-seconds: 20
-    max-bet: 50
+    max-bet: 5000
   crash:
-    bet: 10
+    bet: 100
     wait-seconds: 10
     rate: 0.07
     max-multiplier: 50
   slots:
-    bet: 1
+    bet: 100
 
 coinflip:
   max-bet: 5000

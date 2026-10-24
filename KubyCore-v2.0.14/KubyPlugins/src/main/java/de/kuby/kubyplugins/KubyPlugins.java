@@ -141,6 +141,7 @@ public final class KubyPlugins extends JavaPlugin {
     private JackpotDraw jackpotDraw;
     private CasinoVip casinoVip;
     private CasinoMusic casinoMusic;
+    private de.kuby.kubyplugins.casino.CasinoNpc casinoNpc;
     private PokerService poker;
     private VoteService votes;
     private AchievementService achievements;
@@ -199,6 +200,7 @@ public final class KubyPlugins extends JavaPlugin {
         jackpotDraw.start();
         casinoVip = new CasinoVip(this);
         casinoMusic = new CasinoMusic(this);
+        casinoNpc = new de.kuby.kubyplugins.casino.CasinoNpc(this);
         poker = new PokerService(this);
         poker.start();
         votes = new VoteService(this);
@@ -338,6 +340,7 @@ public final class KubyPlugins extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new EditListener(this), this);
         getServer().getPluginManager().registerEvents(new RegionListener(this), this);
         getServer().getPluginManager().registerEvents(new BlackjackListener(this), this);
+        getServer().getPluginManager().registerEvents(casinoNpc, this);
         getServer().getPluginManager().registerEvents(new CasinoVipListener(this), this);
         getServer().getPluginManager().registerEvents(votes, this);
         getServer().getPluginManager().registerEvents(uiPack, this);
@@ -548,6 +551,7 @@ public final class KubyPlugins extends JavaPlugin {
     public JackpotDraw jackpotDraw() { return jackpotDraw; }
     public CasinoVip casinoVip() { return casinoVip; }
     public CasinoMusic casinoMusic() { return casinoMusic; }
+    public de.kuby.kubyplugins.casino.CasinoNpc casinoNpc() { return casinoNpc; }
     public PokerService poker() { return poker; }
     public VoteService votes() { return votes; }
     public AchievementService achievements() { return achievements; }

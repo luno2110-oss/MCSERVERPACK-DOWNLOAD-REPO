@@ -53,6 +53,8 @@ public final class CasinoMusic {
     private final Map<UUID, Integer> choice = new HashMap<>();
     private final Map<UUID, BukkitTask> loops = new HashMap<>();
     private final Map<UUID, Song> playing = new HashMap<>();
+    /** Wer gerade im Casino steht (für die Begrüßung beim Betreten). */
+    private final java.util.Set<UUID> present = new java.util.HashSet<>();
 
     public CasinoMusic(KubyPlugins plugin) {
         this.plugin = plugin;
@@ -76,9 +78,21 @@ public final class CasinoMusic {
     /** Startet die Musik, wenn der Spieler im Casino steht, sonst stoppt sie. */
     public synchronized void update(Player p, Location at) {
         boolean inside = at != null && inCasino(at);
+        if (inside && present.add(p.getUniqueId())) {
+            de.kuby.kubyplugins.casino.CasinoText.send(p, "Dein Stand <#F2C94C>"
+                    + de.kuby.kubyplugins.casino.CasinoText.chips(plugin.casino().chips(p.getUniqueId()))
+                    + "</#F2C94C> <dark_gray>·</dark_gray> Kasse am Wechsel-NPC");
+        } else if (!inside) {
+            present.remove(p.getUniqueId());
+        }
         boolean on = playing.containsKey(p.getUniqueId());
         if (inside && !on) start(p);
         if (!inside && on) stop(p);
+    }
+
+    /** Beim Ausloggen: nächstes Betreten zählt wieder als neu. */
+    public synchronized void forget(Player p) {
+        present.remove(p.getUniqueId());
     }
 
     public synchronized void stop(Player p) {

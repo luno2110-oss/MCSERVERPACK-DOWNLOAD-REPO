@@ -615,7 +615,8 @@ def build(out, spaces, vroot, own_icons=(), small_icons=(), big_icons=()):
     shutil.rmtree(fdir, ignore_errors=True)
     os.makedirs(tex)
     os.makedirs(fdir)
-    space_prov = {"type": "space", "advances": dict(spaces)}
+    space_prov = {"type": "space", "advances": {**spaces, **build_title.space_advances(TITLE_GOLD),
+                                                **build_title.space_advances(TITLE_WHITE)}}
     text_space = {"type": "space", "advances": {**spaces, " ": 4, "‌": 0}}
 
     # ---- Textschriften ----
@@ -745,7 +746,9 @@ def build(out, spaces, vroot, own_icons=(), small_icons=(), big_icons=()):
     icons = icons + [(name, None) for name, _ in big_icons]
 
     # Titelschrift auch als eigene Schrift kuby:title (Hologramme, Titel): Versal-Unterkante auf der Grundlinie
-    title_font = {"providers": [{"type": "space", "advances": {" ": build_title.SPACE_ADV}},
+    title_font = {"providers": [{"type": "space", "advances": {" ": build_title.SPACE_ADV,
+                                                               **build_title.space_advances(TITLE_GOLD),
+                                                               **build_title.space_advances(TITLE_WHITE)}},
                                 {"type": "bitmap", "file": "kuby:k/title_gold.png", "height": build_title.CELL_H,
                                  "ascent": 15, "chars": title_gold_chars},
                                 {"type": "bitmap", "file": "kuby:k/title_white.png", "height": build_title.CELL_H,

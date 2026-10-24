@@ -66,6 +66,12 @@ public final class CasinoCommand implements CommandExecutor {
             }
             case "jackpot" -> jackpot(p, args);
             case "kasse" -> kasse(p);
+            case "npc" -> plugin.casinoNpc().command(p, args);
+            case "wechseln", "chips" -> {
+                String blocked = plugin.casino().checkUse(p);
+                if (blocked != null) Msg.send(p, "<red>" + blocked);
+                else new de.kuby.kubyplugins.casino.KasseMenu(plugin).open(p);
+            }
             case "tisch" -> tisch(p);
             case "hit" -> answer(p, plugin.blackjack().hit(p.getUniqueId()));
             case "stand" -> answer(p, plugin.blackjack().stand(p.getUniqueId()));
@@ -85,8 +91,8 @@ public final class CasinoCommand implements CommandExecutor {
     }
 
     private void status(Player p) {
-        Msg.send(p, "<gold>Casino <gray>| <white>Chips: <yellow>" + plugin.casino().chips(p.getUniqueId())
-                + " <gray>| Preis je Chip: <white>" + Msg.coins(plugin.casino().price()) + "$");
+        Msg.send(p, "<gold>Casino <gray>| <white>Chips: <yellow>" + Msg.coins(plugin.casino().chips(p.getUniqueId()))
+                + " <gray>| 1 Chip = 1 Coin");
         Msg.send(p, "<gold>JACKPOT <yellow>" + Msg.coins(plugin.casino().jackpot()) + "$");
     }
 
@@ -112,7 +118,7 @@ public final class CasinoCommand implements CommandExecutor {
             Msg.send(p, "<red>" + err);
             return;
         }
-        Msg.send(p, (buy ? "<green>Gekauft: " : "<green>Verkauft: ") + count + " Chips");
+        Msg.send(p, (buy ? "<green>Gekauft: " : "<green>Ausgezahlt: ") + Msg.coins(count) + " Chips");
     }
 
     private void jackpot(Player p, String[] args) {

@@ -373,8 +373,130 @@ def write_tooltip(out):
                                        "stretch_inner": True}}}, f)
 
 
+# =====================================================================================================================
+# Chip-Items für Kasse und Tische (16 x 16): Stapel (Kaufen) und einzelne Chips (Auszahlen)
+# =====================================================================================================================
+ITEM_CHIPS = {
+    # name: (Grundfarbe, Schatten, Flecken, Oberseite)
+    "white": ("ECEAF6", "AAA4CC", "8E86C0", "F8F8FF"),
+    "pink": ("D82070", "8A1048", "FFFFFF", "E8508C"),
+    "blue": ("3AA8F2", "1E62B6", "FFFFFF", "6CC4FA"),
+    "dark": ("3E2E5E", "221836", "FFFFFF", "5A4682"),
+    "green": ("2FB872", "17724A", "FFFFFF", "5AD898"),
+    "red": ("E42828", "8A1010", "FFFFFF", "F05454"),
+    "black": ("2E2D33", "151418", "F4C21A", "46454C"),
+    "purple": ("9030E0", "561890", "FFFFFF", "AA58F0"),
+    "gold": ("F4C21C", "B07A0C", "B4141E", "FFE070"),
+}
+
+
+def chip_stack(name, layers=4):
+    """Chip-Stapel leicht von oben: Seiten mit Streifen, oben die Chip-Fläche mit Randflecken."""
+    base, dark, spot, top = (rgb(v) for v in ITEM_CHIPS[name])
+    p = Pix(16)
+    white = rgb("FFFFFF")
+    bottom = 14
+    for i in range(layers):
+        yb = bottom - 2 * i
+        for x in range(3, 13):
+            p.put(x, yb, dark)
+            p.put(x, yb - 1, base)
+        for x in ((5, 6) if i % 2 == 0 else (9, 10)):
+            p.put(x, yb - 1, spot)
+        p.put(3, yb - 1, mix(base, white, 0.3))
+        p.put(12, yb - 1, shade(base, 0.8))
+    cx, ty = 7.99, bottom - 2 * layers - 1.0
+
+    def ell(rx, ry, col):
+        for yy in range(16):
+            for xx in range(16):
+                dx, dy = (xx + 0.5 - cx) / rx, (yy + 0.5 - ty) / ry
+                if dx * dx + dy * dy <= 1.0:
+                    p.put(xx, yy, col)
+
+    ell(5.0, 2.9, base)
+    ell(3.1, 1.6, top)
+    for xx, yy in ((cx - 4.3, ty), (cx + 4.3, ty), (cx - 0.5, ty - 2.3), (cx - 0.5, ty + 2.2)):
+        p.put(int(xx), int(yy), spot)
+    p.put(7, int(ty), mix(top, white, 0.6))
+    p.put(8, int(ty), mix(top, white, 0.35))
+    return p.image(outline=rgb("1A1020"))
+
+
+def chip_single(name):
+    base, dark, spot, top = (rgb(v) for v in ITEM_CHIPS[name])
+    p = Pix(16)
+    c = 7.99
+    # Rand (Dicke) unten
+    for yy in range(16):
+        for xx in range(16):
+            dx, dy = (xx + 0.5 - c) / 5.6, (yy + 0.5 - 9.0) / 5.2
+            if dx * dx + dy * dy <= 1.0:
+                p.put(xx, yy, dark)
+    for yy in range(16):
+        for xx in range(16):
+            dx, dy = (xx + 0.5 - c) / 5.6, (yy + 0.5 - 8.0) / 5.2
+            d = dx * dx + dy * dy
+            if d <= 1.0:
+                p.put(xx, yy, base if d > 0.42 else top)
+    for a in (30, 90, 150, 210, 270, 330):
+        r = math.radians(a)
+        p.put(int(c + 4.6 * math.cos(r)), int(8.0 + 4.3 * math.sin(r)), spot)
+    p.put(6, 6, mix(top, rgb("FFFFFF"), 0.55))
+    return p.image(outline=rgb("1A1020"))
+
+
+ITEMS = [("stack_" + n, (lambda n=n: chip_stack(n))) for n in ITEM_CHIPS] + [
+    ("chip_" + n, (lambda n=n: chip_single(n))) for n in ITEM_CHIPS]
+
+
+def write_items(out):
+    tex = os.path.join(out, "assets/kuby/textures/item/casino")
+    models = os.path.join(out, "assets/kuby/models/item/casino")
+    items = os.path.join(out, "assets/kuby/items/casino")
+    for d in (tex, models, items):
+        os.makedirs(d, exist_ok=True)
+    for name, fn in ITEMS:
+        fn().save(os.path.join(tex, name + ".png"))
+        with open(os.path.join(models, name + ".json"), "w", encoding="utf-8") as fh:
+            json.dump({"parent": "minecraft:item/generated", "textures": {"layer0": "kuby:item/casino/" + name}}, fh)
+        with open(os.path.join(items, name + ".json"), "w", encoding="utf-8") as fh:
+            json.dump({"model": {"type": "minecraft:model", "model": "kuby:item/casino/" + name}}, fh)
+
+
+# Slot-Markierung in Truhen (wie im Clip): goldene Eck-Klammern statt weißer Fläche
+def slot_highlight():
+    img = Image.new("RGBA", (24, 24), T)
+    dark, line, hi, lo = rgb("3A2434"), rgb("A85C18"), rgb("E6B23A"), rgb("C47E24")
+    for y in range(2, 22):
+        for x in (2, 21):
+            img.putpixel((x, y), dark)
+    for y in range(3, 21):
+        img.putpixel((3, y), line)
+        img.putpixel((20, y), line)
+    for xs in (range(2, 9), range(15, 22)):
+        for x in xs:
+            img.putpixel((x, 2), dark)
+            img.putpixel((x, 21), dark)
+        for x in xs:
+            if 3 <= x <= 20:
+                img.putpixel((x, 3), hi)
+                img.putpixel((x, 20), lo)
+    return img
+
+
+def write_slot_highlight(out):
+    d = os.path.join(out, "assets/minecraft/textures/gui/sprites/container")
+    os.makedirs(d, exist_ok=True)
+    slot_highlight().save(os.path.join(d, "slot_highlight_front.png"))
+    with open(os.path.join(d, "slot_highlight_front.png.mcmeta"), "w", encoding="utf-8") as f:
+        json.dump({"gui": {"scaling": {"type": "nine_slice", "width": 24, "height": 24, "border": 8}}}, f)
+
+
 def build(out):
-    """Gibt (icons16, small, big) als [(name, bild)] zurück; schreibt den Tooltip-Rahmen."""
+    """Gibt (icons16, small, big) als [(name, bild)] zurück; schreibt Tooltip-Rahmen, Slot-Markierung, Chip-Items."""
     if out:
         write_tooltip(out)
+        write_slot_highlight(out)
+        write_items(out)
     return ([(n, f()) for n, f in ICONS16], [(n, f()) for n, f in SMALL], [(n, f()) for n, f in BIG])

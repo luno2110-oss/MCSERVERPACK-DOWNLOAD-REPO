@@ -80,8 +80,8 @@ public final class CasinoRules {
     private static Page overview(KubyPlugins plugin) {
         List<String> how = List.of(
                 "Im Casino spielst du mit Chips an Slots, Roulette, Blackjack und Crash. In der VIP-Lounge gibt es Poker.",
-                "Chips tauschst du an der Kasse gegen Coins und wieder zurück. 1 Chip = "
-                        + Msg.coins(plugin.casino().price()) + " Coins.",
+                "Chips tauschst du an der Kasse gegen Coins und wieder zurück. 1 Chip = 1 Coin, beim Auszahlen "
+                        + plugin.getConfig().getInt("casino.cashout-tax-percent", 5) + " % Steuer.",
                 "Jeden " + drawDay(plugin) + " um " + plugin.getConfig().getString("casino.jackpot.draw-time", "19:00")
                         + " Uhr wird der Jackpot ausgelost. Er wächst mit jedem Einsatz im Casino. Wer seit der letzten Ziehung"
                         + " einmal gespielt hat, ist dabei, und einer gewinnt den ganzen Topf.",

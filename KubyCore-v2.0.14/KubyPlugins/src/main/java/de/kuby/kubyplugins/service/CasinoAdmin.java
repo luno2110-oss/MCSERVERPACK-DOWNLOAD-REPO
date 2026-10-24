@@ -29,12 +29,11 @@ public final class CasinoAdmin {
     private record Setting(String key, String path, String label, float min, float max, float step, double def, double scale) {}
 
     private static final List<Setting> SETTINGS = List.of(
-            new Setting("chip_price", "casino.chip-price", "Chip-Preis (Coins)", 10, 10000, 10, 100, 1),
-            new Setting("bj_bet", "casino.blackjack.bet", "Blackjack-Einsatz (Chips)", 1, 100, 1, 1, 1),
-            new Setting("roulette_max", "casino.roulette.max-bet", "Roulette-Höchsteinsatz (Chips)", 1, 1000, 1, 50, 1),
+            new Setting("bj_bet", "casino.blackjack.bet", "Blackjack-Einsatz (Chips)", 10, 10000, 10, 100, 1),
+            new Setting("roulette_max", "casino.roulette.max-bet", "Roulette-Höchsteinsatz (Chips)", 100, 100000, 100, 5000, 1),
             new Setting("roulette_wait", "casino.roulette.wait-seconds", "Roulette-Wartezeit (Sekunden)", 5, 120, 5, 20, 1),
-            new Setting("slots_bet", "casino.slots.bet", "Slots-Einsatz (Chips)", 1, 100, 1, 1, 1),
-            new Setting("crash_bet", "casino.crash.bet", "Crash-Einsatz (Chips)", 1, 500, 1, 10, 1),
+            new Setting("slots_bet", "casino.slots.bet", "Slots-Einsatz (Chips)", 10, 5000, 10, 100, 1),
+            new Setting("crash_bet", "casino.crash.bet", "Crash-Einsatz (Chips)", 10, 10000, 10, 100, 1),
             new Setting("crash_max", "casino.crash.max-multiplier", "Crash-Höchstwert (x)", 2, 100, 1, 50, 1),
             new Setting("jackpot_share", "casino.jackpot-share", "Jackpot-Anteil (%)", 0, 10, 0.5f, 0.01, 100));
 

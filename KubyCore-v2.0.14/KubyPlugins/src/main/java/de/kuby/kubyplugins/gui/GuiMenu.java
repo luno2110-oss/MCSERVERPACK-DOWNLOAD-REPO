@@ -40,14 +40,33 @@ public abstract class GuiMenu implements InventoryHolder {
         inventory.clear();
         actions.clear();
         build(player);
-        for (int i = 0; i < inventory.getSize(); i++) {
-            if (inventory.getItem(i) == null) inventory.setItem(i, Items.filler());
+        if (fillEmpty()) {
+            for (int i = 0; i < inventory.getSize(); i++) {
+                if (inventory.getItem(i) == null) inventory.setItem(i, Items.filler());
+            }
         }
         player.openInventory(inventory);
         Sfx.play(plugin, player, Sfx.Kind.OPEN);
     }
 
     protected abstract void build(Player player);
+
+    /** Leere Plätze mit Glas füllen (Standard). Menüs im Clip-Stil lassen sie leer. */
+    protected boolean fillEmpty() {
+        return true;
+    }
+
+    /** Baut den Inhalt neu, ohne das Fenster zu schließen (Mauszeiger bleibt stehen). */
+    public void refresh(Player player) {
+        inventory.clear();
+        actions.clear();
+        build(player);
+        if (fillEmpty()) {
+            for (int i = 0; i < inventory.getSize(); i++) {
+                if (inventory.getItem(i) == null) inventory.setItem(i, Items.filler());
+            }
+        }
+    }
 
     protected void set(int slot, ItemStack item, Consumer<InventoryClickEvent> action) {
         inventory.setItem(slot, item);

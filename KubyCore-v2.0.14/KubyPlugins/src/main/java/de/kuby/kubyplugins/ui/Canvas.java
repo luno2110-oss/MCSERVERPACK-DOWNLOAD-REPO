@@ -383,14 +383,21 @@ public final class Canvas {
      * Titel in der großen Titelschrift (Versalhöhe 17 px), y = Oberkante der Großbuchstaben. gold = fertig gefärbt
      * (Gold-Verlauf), sonst hell und mit color eingefärbt. Gibt die Breite zurück.
      */
-    public int title(int x, int y, String text, boolean gold, TextColor color) {
+    /** Zeichen der Titelschrift für einen Text (Schriften kuby:title und kuby:k/i...). */
+    public static String titleChars(String text, boolean gold) {
         String t = titleText(text);
         char base = gold ? KitData.TITLE_GOLD : KitData.TITLE_WHITE;
         StringBuilder chars = new StringBuilder(t.length());
         for (char c : t.toCharArray()) chars.append((char) (base + KitData.TITLE_CHARS.indexOf(c)));
+        return chars.toString();
+    }
+
+    public int title(int x, int y, String text, boolean gold, TextColor color) {
+        String t = titleText(text);
+        String chars = titleChars(t, gold);
         int w = titleWidth(t);
         int top = y - KitData.TITLE_TOP;
-        glyphs.add(new Glyph(Kind.ICON, x, top, w, KitData.TITLE_H, w, Z_TEXT, chars.toString(),
+        glyphs.add(new Glyph(Kind.ICON, x, top, w, KitData.TITLE_H, w, Z_TEXT, chars,
                 gold || color == null ? NamedTextColor.WHITE : color, false,
                 Math.max(KitData.I_MIN, 7 - KitData.TITLE_H), KitData.I_MAX, top, top + KitData.TITLE_H));
         return w;

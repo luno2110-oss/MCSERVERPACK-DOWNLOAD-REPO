@@ -168,12 +168,17 @@ def sheet(pal, cols=16):
     return img, adv, cols, rows
 
 
+def space_advances(first):
+    """Leerzeichen der Titelschrift als Space-Provider-Eintrag."""
+    return {chr(first + ORDER.index(" ")): SPACE_ADV}
+
+
 def chars(first, cols, rows):
     out = []
     for r in range(rows):
         line = ""
         for c in range(cols):
             i = r * cols + c
-            line += chr(first + i) if i < len(ORDER) else "\u0000"
+            line += chr(first + i) if i < len(ORDER) and ORDER[i] != " " else "\u0000"
         out.append(line)
     return out

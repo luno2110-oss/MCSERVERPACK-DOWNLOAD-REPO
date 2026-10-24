@@ -52,7 +52,46 @@ public final class CasinoService {
         jackpot = yml.getLong("jackpot", plugin.getConfig().getLong("casino.jackpot-start", 10000));
         kasse = yml.getString("kasse");
         tisch = yml.getString("tisch");
+        migrateChipUnit(yml);
     }
+
+    /**
+     * Früher kostete ein Chip casino.chip-price Coins (Standard 100), jetzt wie im Referenz-Clip 1 Coin. Alte Stände,
+     * Jackpot und Poker-Treuhand werden einmalig auf den neuen Wert umgerechnet (casino.yml merkt sich chip-unit: 1).
+     */
+    private void migrateChipUnit(YamlConfiguration yml) {
+        long unit = yml.getLong("chip-unit", file.exists() ? plugin.getConfig().getLong("casino.chip-price", 100) : 1);
+        if (unit <= 1) {
+            if (!yml.contains("chip-unit")) save();
+            return;
+        }
+        chips.replaceAll((id, v) -> v * unit);
+        jackpot *= unit;
+        File pokerFile = new File(plugin.getDataFolder(), "poker.yml");
+        if (pokerFile.exists()) {
+            YamlConfiguration poker = YamlConfiguration.loadConfiguration(pokerFile);
+            ConfigurationSection escrow = poker.getConfigurationSection("escrow");
+            if (escrow != null) {
+                for (String key : escrow.getKeys(false)) escrow.set(key, escrow.getLong(key) * unit);
+                try {
+                    poker.save(pokerFile);
+                } catch (IOException e) {
+                    plugin.getLogger().warning("poker.yml konnte nicht umgerechnet werden: " + e.getMessage());
+                }
+            }
+        }
+        // Einsätze der Spiele in der Config auf den neuen Chip-Wert umrechnen
+        for (String path : new String[]{"casino.blackjack.bet", "casino.roulette.max-bet", "casino.slots.bet", "casino.crash.bet"}) {
+            if (plugin.getConfig().contains(path)) plugin.getConfig().set(path, plugin.getConfig().getLong(path) * unit);
+        }
+        plugin.getConfig().set("casino.chip-price", null);
+        plugin.saveConfig();
+        plugin.getLogger().info("Casino: Chips auf 1 Coin je Chip umgerechnet (vorher " + unit + " Coins je Chip).");
+        save();
+    }
+
+    /** Ein Chip ist einen Coin wert (wie im Referenz-Clip). */
+    public static final long CHIP_VALUE = 1;
 
     public synchronized long chips(UUID id) {
         return chips.getOrDefault(id, 0L);
@@ -77,6 +116,11 @@ public final class CasinoService {
         return won;
     }
 
+    /** Prüft nur den Modus (Survival). Gibt null bei Erfolg zurück, sonst eine Meldung. */
+    public String checkMode(Player p) {
+        return SURVIVAL.equals(plugin.modes().modeOf(p.getUniqueId())) ? null : "Das Casino gibt es nur in Survival.";
+    }
+
     /** Prüft Modus und Kassentisch. Gibt null bei Erfolg zurück, sonst eine Meldung. */
     public String checkUse(Player p) {
         if (!SURVIVAL.equals(plugin.modes().modeOf(p.getUniqueId()))) {
@@ -97,17 +141,18 @@ public final class CasinoService {
         return kasseLocation() != null;
     }
 
-    /** Kauft Chips. Gibt null bei Erfolg zurück, sonst eine Meldung. */
+    /** Kauft Chips (1 Chip = 1 Coin). Gibt null bei Erfolg zurück, sonst eine Meldung. */
     public synchronized String buy(Player p, long count) {
         String closed = closedMessage();
         if (closed != null) return closed;
         if (count <= 0) return "Die Anzahl muss größer als 0 sein.";
-        long cost = count * price();
+        long cost = count * CHIP_VALUE;
         if (!plugin.economy().withdraw(p.getUniqueId(), cost)) {
-            return "Nicht genug$. " + count + " Chips kosten " + Msg.coins(cost) + "$.";
+            return "So viele Coins hast du nicht.";
         }
         chips.merge(p.getUniqueId(), count, Long::sum);
         save();
+        plugin.casinoLog().exchange(p.getUniqueId(), count, 0);
         return null;
     }
 
@@ -115,18 +160,29 @@ public final class CasinoService {
     public synchronized String sell(Player p, long count) {
         if (count <= 0) return "Die Anzahl muss größer als 0 sein.";
         long have = chips(p.getUniqueId());
-        if (have < count) return "Du hast nur " + have + " Chips.";
+        if (have < count) return "So viele Chips hast du nicht.";
         chips.put(p.getUniqueId(), have - count);
-        long gross = count * price();
-        // Casino-Steuer beim Auszahlen (Farmpass: steuerfrei).
-        int taxPercent = plugin.hasPerk("farmpass", p.getUniqueId()) ? 0 : plugin.getConfig().getInt("casino.cashout-tax-percent", 0);
-        plugin.economy().deposit(p.getUniqueId(), gross - gross * taxPercent / 100);
+        long tax = tax(p, count);
+        plugin.economy().deposit(p.getUniqueId(), count * CHIP_VALUE - tax);
         save();
+        plugin.casinoLog().exchange(p.getUniqueId(), -count, tax);
         return null;
     }
 
+    /** Steuer in Prozent beim Auszahlen (Farmpass: steuerfrei). */
+    public int taxPercent(Player p) {
+        return plugin.hasPerk("farmpass", p.getUniqueId()) ? 0 : plugin.getConfig().getInt("casino.cashout-tax-percent", 5);
+    }
+
+    /** Steuer in Coins für eine Auszahlung (aufgerundet, ganze Coins). */
+    public long tax(Player p, long count) {
+        long gross = count * CHIP_VALUE;
+        return (gross * taxPercent(p) + 99) / 100;
+    }
+
+    /** Preis eines Chips in Coins (fest 1). */
     public long price() {
-        return plugin.getConfig().getLong("casino.chip-price", 100);
+        return CHIP_VALUE;
     }
 
     /** Nimmt Chips weg, etwa für den Einsatz. False, wenn nicht genug da ist. */
@@ -188,9 +244,12 @@ public final class CasinoService {
     }
 
     public boolean nearKasse(Location l) {
+        double r = plugin.getConfig().getDouble("casino.kasse-radius", 5);
+        if (plugin.casinoNpc() != null && plugin.casinoNpc().near(l, de.kuby.kubyplugins.casino.CasinoNpc.Role.KASSE, r)) {
+            return true;
+        }
         Location k = kasseLocation();
         if (k == null || l.getWorld() == null || !l.getWorld().equals(k.getWorld())) return false;
-        double r = plugin.getConfig().getDouble("casino.kasse-radius", 5);
         return l.distanceSquared(k) <= r * r;
     }
 
@@ -254,6 +313,7 @@ public final class CasinoService {
             out.set("chips." + e.getKey(), e.getValue());
         }
         out.set("jackpot", jackpot);
+        out.set("chip-unit", 1);
         if (kasse != null) out.set("kasse", kasse);
         if (tisch != null) out.set("tisch", tisch);
         try {
