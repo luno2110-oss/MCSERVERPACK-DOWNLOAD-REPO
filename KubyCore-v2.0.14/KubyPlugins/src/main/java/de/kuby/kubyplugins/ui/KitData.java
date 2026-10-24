@@ -432,7 +432,8 @@ public final class KitData {
         CHIP_PINK('\uea78', 17, '\uec78', 33),
         ROULETTE_WHEEL('\uedc0', 17, '\ued80', 32),
         JUKEBOX('\uedc1', 15, '\ued81', 29),
-        VINYL('\uedc2', 17, '\ued82', 32);
+        VINYL('\uedc2', 17, '\ued82', 32),
+        SLOT_BIG('\uedc3', 15, '\ued83', 29);
 
         public final char c16, c32;
         public final int adv16, adv32;
@@ -463,7 +464,17 @@ public final class KitData {
         S_COIN('\ued0d', 11, 10),
         S_NOTE('\ued0e', 9, 7),
         S_NOTE_GOLD('\ued0f', 9, 7),
-        S_MUTE('\ued10', 11, 8);
+        S_MUTE('\ued10', 11, 8),
+        Y_CHERRY('\ued11', 15, 15),
+        Y_LEMON('\ued12', 16, 14),
+        Y_BANANA('\ued13', 17, 12),
+        Y_BELL('\ued14', 16, 16),
+        Y_STAR('\ued15', 15, 14),
+        Y_CLOVER('\ued16', 15, 16),
+        Y_CHIP('\ued17', 16, 15),
+        Y_COIN('\ued18', 16, 15),
+        Y_DIAMOND('\ued19', 16, 14),
+        Y_SEVEN('\ued1a', 15, 15);
 
         public final char c;
         public final int advance, height;

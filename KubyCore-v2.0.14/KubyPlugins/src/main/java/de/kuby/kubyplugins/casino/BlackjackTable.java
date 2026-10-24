@@ -128,13 +128,24 @@ public final class BlackjackTable {
         return (float) Math.atan2(d.x, d.z);
     }
 
+    /** Abstand der Dealer-Karten von der geraden Tischkante. */
+    private static final double DEALER_CARDS = 0.64;
+
+    /**
+     * Flaches Item auf dem Tisch, Vorderseite oben, Oberkante zeigt in Richtung -dir(angle). Der Client dreht Items um
+     * 180° (Vorderseite nach -Z), deshalb zuerst zurückdrehen.
+     */
+    private static Quaternionf flatItem(float angle) {
+        return new Quaternionf().rotateY(angle).rotateX((float) Math.toRadians(-90)).rotateY((float) Math.PI);
+    }
+
     public Location seatLocation(int seat) {
         return onSeatAxis(seat, radius + 0.5, 0, 0);
     }
 
     /** Fester Punkt der Runde: Kartenfeld eines Platzes (Mitte). */
     public Location field(int seat) {
-        return onSeatAxis(seat, radius - 1.0, 0, FELT_Y);
+        return onSeatAxis(seat, radius - 1.1, 0, FELT_Y);
     }
 
     // =================================================================================================================
@@ -211,8 +222,10 @@ public final class BlackjackTable {
             m.getPersistentDataContainer().set(click, PersistentDataType.STRING, id + ":dealer:0");
         });
         dealerText = text(at(fwd(), -0.75, 2.25), Component.empty(), 0.9f, true);
-        Location rackAt = origin.clone().add(fwd().x * 0.38 - r.x * 0.95, FELT_Y + 0.03, fwd().z * 0.38 - r.z * 0.95);
-        box(rackAt, angleOf(fwd()), 0.9f, 0.06f, 0.22f, "rack");
+        // Chip-Rack des Dealers mittig vor ihm: dunkles Tablett mit goldener Kante (wie im Clip)
+        Location rackAt = origin.clone().add(fwd().x * 0.3, FELT_Y + 0.03, fwd().z * 0.3);
+        box(rackAt, angleOf(fwd()), 0.95f, 0.05f, 0.24f, "black");
+        box(rackAt.clone().add(fwd().x * 0.12, 0.01, fwd().z * 0.12), angleOf(fwd()), 0.95f, 0.04f, 0.025f, "gold");
         String[] stacks = {"white", "pink", "blue", "green", "dark"};
         for (int i = 0; i < stacks.length; i++) {
             Location c = rackAt.clone().add(r.x * (i - 2) * 0.17, 0.12, r.z * (i - 2) * 0.17);
@@ -224,21 +237,28 @@ public final class BlackjackTable {
                 mark(e, "static");
             });
         }
-        Location shoeAt = origin.clone().add(fwd().x * 0.42 + r.x * 1.15, FELT_Y + 0.12, fwd().z * 0.42 + r.z * 1.15);
+        // Kartenschlitten rechts vom Dealer (aus Spielersicht)
+        Location shoeAt = origin.clone().add(fwd().x * 0.42 - r.x * 1.3, FELT_Y + 0.12, fwd().z * 0.42 - r.z * 1.3);
         box(shoeAt, angleOf(fwd()), 0.32f, 0.22f, 0.42f, "black");
         box(shoeAt.clone().add(0, 0.115, 0), angleOf(fwd()), 0.34f, 0.02f, 0.44f, "gold");
         w.spawn(shoeAt.clone().add(fwd().x * 0.23, -0.02, fwd().z * 0.23), ItemDisplay.class, e -> {
             e.setItemStack(model("card_back"));
             e.setTransformation(new Transformation(new Vector3f(), new Quaternionf().rotateY(angleOf(fwd()) + (float) Math.PI)
-                    .rotateX((float) Math.toRadians(-70)), new Vector3f(0.32f, 0.32f, 0.32f), new Quaternionf()));
+                    .rotateX((float) Math.toRadians(-70)).rotateY((float) Math.PI), new Vector3f(0.32f, 0.32f, 0.32f), new Quaternionf()));
             mark(e, "static");
         });
+        // Aufdruck auf dem Filz
+        TextDisplay rules = text(at(fwd(), 1.12, FELT_Y + 0.01), Component.text("BLACKJACK ZAHLT 3 ZU 2", TextColor.color(0xE8B23A))
+                .append(Component.newline()).append(Component.text("Dealer zieht bis 16, steht ab 17", TextColor.color(0x8E9A7A))),
+                0.4f, false);
+        flatToDealer(rules, 0.4f);
         for (int s = 0; s < SEATS; s++) {
             seatText[s] = text(seatLocation(s).add(0, 1.55, 0), Component.empty(), 0.7f, true);
             resultText[s] = text(field(s).add(0, 0.55, 0), Component.empty(), 0.75f, true);
         }
         for (int s = 0; s <= SEATS; s++) {
-            Location tl = s == SEATS ? at(fwd(), 0.95, FELT_Y + 0.01) : onSeatAxis(s, radius - 1.95, 0, FELT_Y + 0.01);
+            Location tl = s == SEATS ? at(fwd(), DEALER_CARDS, FELT_Y + 0.01).add(r.x * -0.74, 0, r.z * -0.74)
+                    : onSeatAxis(s, radius - 1.45, -0.4, FELT_Y + 0.01);
             totals[s] = text(tl, Component.empty(), 0.6f, false);
             if (s < SEATS) flatText(totals[s], s, 0.6f);
             else flatToDealer(totals[s], 0.6f);
@@ -353,7 +373,8 @@ public final class BlackjackTable {
     public ArmorStand seatVehicle(int seat) {
         ArmorStand a = seatVehicle[seat];
         if (a != null && a.isValid()) return a;
-        Location l = seatLocation(seat).add(0, 0.42, 0);
+        // Reiter sitzt 0,6 unter dem Sitzpunkt, Hüfte 0,7 über seinen Füßen: Hüfte genau auf dem Polster (0,82)
+        Location l = seatLocation(seat).add(0, 0.72, 0);
         l.setYaw(yaw + 180 + (float) SEAT_ANGLES[seat]);
         a = l.getWorld().spawn(l, ArmorStand.class, e -> {
             e.setInvisible(true);
@@ -390,18 +411,18 @@ public final class BlackjackTable {
         if (seat == SEATS) {
             Vector3f r = right();
             double side = (k - 1) * 0.25 - 0.1;
-            l = at(fwd(), 0.95 + 0.3, FELT_Y + 0.008 + 0.004 * k).add(r.x * side, 0, r.z * side);
+            l = at(fwd(), DEALER_CARDS, FELT_Y + 0.008 + 0.004 * k).add(r.x * side, 0, r.z * side);
             ang = angleOf(fwd());
         } else {
             double base = handsAtSeat > 1 ? (hand == 0 ? -0.32 : 0.32) : 0;
-            l = onSeatAxis(seat, radius - 1.6, base + k * 0.11 - 0.05, FELT_Y + 0.008 + 0.004 * k);
+            l = onSeatAxis(seat, radius - 1.6, base + k * 0.15 - 0.07, FELT_Y + 0.008 + 0.004 * k);
             // Oberkante der Karte zeigt zur Tischmitte: vom Platz aus richtig herum lesbar
             ang = angleOf(dir(SEAT_ANGLES[seat]));
         }
         float a = ang;
         ItemDisplay e = l.getWorld().spawn(l, ItemDisplay.class, d -> {
             d.setItemStack(model(card == null ? "card_back" : card.model()));
-            d.setTransformation(new Transformation(new Vector3f(0, 0.3f, 0), new Quaternionf().rotateY(a).rotateX((float) Math.toRadians(-90)),
+            d.setTransformation(new Transformation(new Vector3f(0, 0.3f, 0), flatItem(a),
                     new Vector3f(0.56f, 0.56f, 0.56f), new Quaternionf()));
             d.setInterpolationDuration(5);
             mark(d, "card");
@@ -410,7 +431,7 @@ public final class BlackjackTable {
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             if (!e.isValid()) return;
             e.setInterpolationDelay(0);
-            e.setTransformation(new Transformation(new Vector3f(), new Quaternionf().rotateY(a).rotateX((float) Math.toRadians(-90)),
+            e.setTransformation(new Transformation(new Vector3f(), flatItem(a),
                     new Vector3f(0.5f, 0.5f, 0.5f), new Quaternionf()));
         }, 2L);
         cards.get(seat).add(e);
@@ -450,18 +471,17 @@ public final class BlackjackTable {
             Location l = f.clone().add(0, 0.016 + 0.022 * i, 0);
             chips.get(seat).add(l.getWorld().spawn(l, ItemDisplay.class, e -> {
                 e.setItemStack(model("chip_" + chipColor(v)));
-                e.setTransformation(new Transformation(new Vector3f(), new Quaternionf().rotateY((float) (Math.random() * 0.6))
-                        .rotateX((float) Math.toRadians(-90)), new Vector3f(0.3f, 0.3f, 0.3f), new Quaternionf()));
+                e.setTransformation(new Transformation(new Vector3f(), flatItem((float) (Math.random() * 0.6)), new Vector3f(0.3f, 0.3f, 0.3f), new Quaternionf()));
                 mark(e, "chip");
             }));
         }
-        Location tl = onSeatAxis(seat, radius - 1.0, -0.42, FELT_Y + 0.25);
+        Location tl = onSeatAxis(seat, radius - 1.1, -0.4, FELT_Y + 0.06);
         TextDisplay t = tl.getWorld().spawn(tl, TextDisplay.class, e -> {
             e.text(Component.text(CasinoText.num(total), TextColor.color(0xF2C94C)).decorate(TextDecoration.BOLD));
             e.setBillboard(Display.Billboard.VERTICAL);
             e.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
             e.setShadowed(true);
-            e.setTransformation(new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(0.5f, 0.5f, 0.5f), new Quaternionf()));
+            e.setTransformation(new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(0.42f, 0.42f, 0.42f), new Quaternionf()));
             mark(e, "chip");
         });
         chips.get(seat).add(t);
@@ -493,13 +513,12 @@ public final class BlackjackTable {
         if (values == null) return;
         for (int i = 0; i < values.length; i++) {
             long v = values[i];
-            double side = (i - (values.length - 1) / 2.0) * 0.17;
-            Location l = onSeatAxis(seat, radius - 0.62, side, FELT_Y + 0.012);
+            double side = ((values.length - 1) / 2.0 - i) * 0.21;
+            Location l = onSeatAxis(seat, radius - 0.72, side, FELT_Y + 0.012);
             Vector3f d = dir(SEAT_ANGLES[seat]);
             rack.get(seat).add(l.getWorld().spawn(l, ItemDisplay.class, e -> {
                 e.setItemStack(model("chip_" + chipColor(v)));
-                e.setTransformation(new Transformation(new Vector3f(), new Quaternionf().rotateY(angleOf(d))
-                        .rotateX((float) Math.toRadians(-90)), new Vector3f(0.26f, 0.26f, 0.26f), new Quaternionf()));
+                e.setTransformation(new Transformation(new Vector3f(), flatItem(angleOf(d)), new Vector3f(0.24f, 0.24f, 0.24f), new Quaternionf()));
                 mark(e, "rack");
             }));
             rack.get(seat).add(l.getWorld().spawn(l.clone().add(0, 0.13, 0), TextDisplay.class, e -> {
@@ -507,13 +526,13 @@ public final class BlackjackTable {
                 e.setBillboard(Display.Billboard.VERTICAL);
                 e.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
                 e.setShadowed(true);
-                e.setTransformation(new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(0.32f, 0.32f, 0.32f),
+                e.setTransformation(new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(0.26f, 0.26f, 0.26f),
                         new Quaternionf()));
                 mark(e, "rack");
             }));
             int k = i;
             rack.get(seat).add(l.getWorld().spawn(l.clone().add(0, -0.02, 0), Interaction.class, e -> {
-                e.setInteractionWidth(0.16f);
+                e.setInteractionWidth(0.19f);
                 e.setInteractionHeight(0.12f);
                 e.setResponsive(true);
                 mark(e, "rack");
@@ -538,8 +557,8 @@ public final class BlackjackTable {
         Vector3f d = dir(SEAT_ANGLES[seat]);
         for (int i = 0; i < ACTIONS.length; i++) {
             if (!allowed[i]) continue;
-            double side = (i - 1.5) * 0.37;
-            Location l = onSeatAxis(seat, radius - 0.62, side, FELT_Y + 0.008);
+            double side = (1.5 - i) * 0.37;
+            Location l = onSeatAxis(seat, radius - 0.72, side, FELT_Y + 0.008);
             actions.get(seat).add(box(l, angleOf(d), 0.34f, 0.016f, 0.15f, "gold"));
             actions.get(seat).get(actions.get(seat).size() - 1).getPersistentDataContainer()
                     .set(tag, PersistentDataType.STRING, id + ":action");

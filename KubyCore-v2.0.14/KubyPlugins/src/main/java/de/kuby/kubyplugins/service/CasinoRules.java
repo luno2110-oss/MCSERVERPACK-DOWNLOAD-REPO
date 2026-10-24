@@ -141,13 +141,13 @@ public final class CasinoRules {
                 commands.add(new String[]{"/casino setzen <Einsatz> <rot|schwarz|0-36>", "Einsatz per Befehl"});
             }
             case "slots" -> {
-                subtitle = "Drei gleiche gewinnen";
+                subtitle = "Drei gleiche auf der Mittellinie";
                 icon = Ui.Icon.SLOTS;
                 how = List.of(
-                        "Rechtsklick auf den Hebel dreht. Einsatz: " + c.getLong("casino.slots.bet", 1) + " Chip(s).",
-                        "{club} 8-fach   {diamond} 12-fach   {heart} 25-fach   {star} 60-fach",
-                        c.getBoolean("casino.jackpot.seven-wins", false)
-                                ? "{seven} {seven} {seven} 100-fach und der Jackpot." : "{seven} {seven} {seven} 100-fach.");
+                        "Rechtsklick auf den Hebel dreht die Walzen. Auf dem Hocker davor sitzt du bequem und hast den Automaten für dich.",
+                        "Der Knopf am Bedienfeld wählt den Einsatz: Klick erhöht, Schleichen + Klick senkt (10 bis 5.000 Chips).",
+                        "Drei gleiche zahlen 8- bis 80-fach, Kirschen schon einzeln. Den Gewinnplan zeigt das Schild am Automaten.",
+                        "Drei Siebener knacken den Jackpot. Ein Teil jedes Drehs wandert hinein, voller Einsatz holt den größten Anteil.");
             }
             default -> {
                 subtitle = "Rechtzeitig aussteigen";

@@ -33,7 +33,6 @@ public final class BlackjackListener implements Listener {
         Player p = e.getPlayer();
         String game;
         if (plugin.roulette().isTable(at)) game = "roulette";
-        else if (plugin.slots().isMachine(at)) game = "slots";
         else if (plugin.crash().isMachine(at)) game = "crash";
         else if (plugin.casino().isKasse(at)) game = "kasse";
         else return;
@@ -54,7 +53,6 @@ public final class BlackjackListener implements Listener {
             return;
         }
         String err = switch (game) {
-            case "slots" -> plugin.slots().pull(p);
             default -> plugin.crash().click(p);
         };
         if (err != null) Msg.send(p, "<red>" + err);

@@ -9,7 +9,6 @@ import de.kuby.kubyplugins.service.EditModeService;
 import de.kuby.kubyplugins.service.MarkerService;
 import de.kuby.kubyplugins.service.CasinoService;
 import de.kuby.kubyplugins.listener.BlackjackListener;
-import de.kuby.kubyplugins.service.SlotsService;
 import de.kuby.kubyplugins.service.CrashService;
 import de.kuby.kubyplugins.service.CasinoLog;
 import de.kuby.kubyplugins.service.JackpotDraw;
@@ -133,7 +132,7 @@ public final class KubyPlugins extends JavaPlugin {
     private CasinoService casino;
     private de.kuby.kubyplugins.casino.BlackjackService blackjack;
     private de.kuby.kubyplugins.casino.RouletteGame roulette;
-    private SlotsService slots;
+    private de.kuby.kubyplugins.casino.SlotsService slots;
     private CrashService crash;
     private CasinoLog casinoLog;
     private JackpotDraw jackpotDraw;
@@ -215,7 +214,7 @@ public final class KubyPlugins extends JavaPlugin {
                 p -> new de.kuby.kubyplugins.gui.AchievementMenu(this, 0).open(p)));
         blackjack = new de.kuby.kubyplugins.casino.BlackjackService(this);
         roulette = new de.kuby.kubyplugins.casino.RouletteGame(this);
-        slots = new SlotsService(this);
+        slots = new de.kuby.kubyplugins.casino.SlotsService(this);
         crash = new CrashService(this);
         edit = new EditModeService(this);
         regions = new RegionService(this);
@@ -345,6 +344,7 @@ public final class KubyPlugins extends JavaPlugin {
         getServer().getPluginManager().registerEvents(casinoNpc, this);
         getServer().getPluginManager().registerEvents(roulette, this);
         getServer().getPluginManager().registerEvents(blackjack, this);
+        getServer().getPluginManager().registerEvents(slots, this);
         getServer().getPluginManager().registerEvents(new CasinoVipListener(this), this);
         getServer().getPluginManager().registerEvents(votes, this);
         getServer().getPluginManager().registerEvents(uiPack, this);
@@ -549,7 +549,7 @@ public final class KubyPlugins extends JavaPlugin {
     public CasinoService casino() { return casino; }
     public de.kuby.kubyplugins.casino.BlackjackService blackjack() { return blackjack; }
     public de.kuby.kubyplugins.casino.RouletteGame roulette() { return roulette; }
-    public SlotsService slots() { return slots; }
+    public de.kuby.kubyplugins.casino.SlotsService slots() { return slots; }
     public CrashService crash() { return crash; }
     public CasinoLog casinoLog() { return casinoLog; }
     public JackpotDraw jackpotDraw() { return jackpotDraw; }

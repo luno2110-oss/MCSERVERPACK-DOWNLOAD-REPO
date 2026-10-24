@@ -127,19 +127,23 @@ public final class RouletteTable {
             int idx = i;
             Location at = fieldAt[i];
             Quaternionf rot = new Quaternionf().rotateY((float) Math.atan2(outward[i].x, outward[i].z));
-            float size = (float) Math.min(0.86, spacing * 0.94);
+            float size = (float) Math.min(0.86, spacing * 0.9);
+            // in den Kurven schmaler, damit sich die gedrehten Felder innen nicht überlappen
+            double turn = Math.max(outward[i].angle(outward[(i + 1) % 37]), outward[i].angle(outward[(i + 36) % 37]));
+            float wide = (float) Math.max(size * 0.6, size - size * Math.sin(turn));
             float height = fieldHeight(n);
             fields[i] = w.spawn(at, BlockDisplay.class, d -> {
                 d.setBlock(fieldBlock(n));
-                Vector3f c = new Vector3f(size / 2, 0, size / 2);
+                Vector3f c = new Vector3f(wide / 2, 0, size / 2);
                 rot.transform(c);
-                d.setTransformation(new Transformation(c.negate(), new Quaternionf(rot), new Vector3f(size, height, size),
+                d.setTransformation(new Transformation(c.negate(), new Quaternionf(rot), new Vector3f(wide, height, size),
                         new Quaternionf()));
                 mark(d, "field");
             });
             numbers[i] = w.spawn(at.clone().add(0, height + 0.006, 0), TextDisplay.class, d -> {
                 d.text(numberText(n, false));
-                flat(d, (float) Math.atan2(outward[idx].x, outward[idx].z), 1.5f, -0.13f);
+                // Zahl passt aufs Feld, auch bei kleinen Tischen
+                flat(d, (float) Math.atan2(outward[idx].x, outward[idx].z), Math.min(1.15f, size * 2.1f), -0.13f);
                 mark(d, "number");
             });
         }
@@ -163,11 +167,11 @@ public final class RouletteTable {
         });
     }
 
-    /** Punkt auf dem abgerundeten Rechteck (Superellipse, Exponent 4) in Tisch-Koordinaten. */
+    /** Punkt auf dem abgerundeten Rechteck (Superellipse, Exponent 3: Ecken rund genug für die Felder). */
     private double[] shape(double t) {
         double c = Math.cos(t), s = Math.sin(t);
-        double u = rx * Math.signum(s) * Math.pow(Math.abs(s), 0.5);
-        double v = rz * Math.signum(c) * Math.pow(Math.abs(c), 0.5);
+        double u = rx * Math.signum(s) * Math.pow(Math.abs(s), 2.0 / 3);
+        double v = rz * Math.signum(c) * Math.pow(Math.abs(c), 2.0 / 3);
         return new double[]{u, v};
     }
 
@@ -305,7 +309,9 @@ public final class RouletteTable {
         item.setItemMeta(meta);
         ItemDisplay d = center.getWorld().spawn(place, ItemDisplay.class, e -> {
             e.setItemStack(item);
-            Quaternionf q = new Quaternionf().rotateY((float) (Math.random() * Math.PI * 2)).rotateX((float) Math.toRadians(-90));
+            // Vorderseite nach oben (der Client dreht Items um 180°, daher am Ende zurückdrehen)
+            Quaternionf q = new Quaternionf().rotateY((float) (Math.random() * Math.PI * 2)).rotateX((float) Math.toRadians(-90))
+                    .rotateY((float) Math.PI);
             e.setTransformation(new Transformation(new Vector3f(), q, new Vector3f(0.34f, 0.34f, 0.34f), new Quaternionf()));
             mark(e, "chip");
         });

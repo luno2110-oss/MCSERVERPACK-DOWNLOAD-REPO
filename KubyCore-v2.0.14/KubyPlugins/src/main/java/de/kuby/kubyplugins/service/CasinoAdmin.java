@@ -32,7 +32,7 @@ public final class CasinoAdmin {
             new Setting("bj_max", "casino.blackjack.max-bet", "Blackjack-Höchsteinsatz (Chips)", 100, 100000, 100, 10000, 1),
             new Setting("roulette_max", "casino.roulette.max-bet", "Roulette-Höchsteinsatz (Chips)", 100, 100000, 100, 5000, 1),
             new Setting("roulette_wait", "casino.roulette.wait-seconds", "Roulette-Wartezeit (Sekunden)", 5, 120, 5, 20, 1),
-            new Setting("slots_bet", "casino.slots.bet", "Slots-Einsatz (Chips)", 10, 5000, 10, 100, 1),
+            new Setting("slots_share", "casino.slots.jackpot-share", "Slots-Jackpot-Anteil (%)", 0, 10, 0.5f, 0.02, 100),
             new Setting("crash_bet", "casino.crash.bet", "Crash-Einsatz (Chips)", 10, 10000, 10, 100, 1),
             new Setting("crash_max", "casino.crash.max-multiplier", "Crash-Höchstwert (x)", 2, 100, 1, 50, 1),
             new Setting("jackpot_share", "casino.jackpot-share", "Jackpot-Anteil (%)", 0, 10, 0.5f, 0.01, 100));
@@ -126,7 +126,7 @@ public final class CasinoAdmin {
         buttons.add(command("Kasse setzen", "casino kasse"));
         buttons.add(command("Blackjack-Tisch hier", "casino blackjack tisch"));
         buttons.add(command("Roulette-Tisch", "casino roulette-tisch"));
-        buttons.add(command("Slots-Automat", "casino automat"));
+        buttons.add(command("Slots-Automat hier", "casino slots automat"));
         buttons.add(command("Crash-Automat", "casino crash"));
         buttons.add(command("Poker-Tisch", "casino poker-tisch"));
         buttons.add(button("<white>Barkeeper setzen", "Stellt einen Barkeeper an deine Position", (pl, response) -> pl.performCommand("casino barkeeper")));

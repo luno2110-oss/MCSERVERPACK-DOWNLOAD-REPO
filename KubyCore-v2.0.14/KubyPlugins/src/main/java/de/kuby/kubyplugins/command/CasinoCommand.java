@@ -78,7 +78,8 @@ public final class CasinoCommand implements CommandExecutor {
             case "blackjack" -> plugin.blackjack().command(p, args);
             case "setzen" -> rouletteBet(p, args);
             case "roulette-tisch" -> rouletteTable(p, args);
-            case "automat" -> slotsMachine(p);
+            case "automat" -> Msg.send(p, "<gray>Slot-Automaten baust du jetzt mit <white>/casino slots automat [Breite]</white>.");
+            case "slots" -> plugin.slots().command(p, args);
             case "crash" -> crashMachine(p);
             case "regeln" -> {
                 String game = args.length > 1 ? args[1].toLowerCase() : null;
@@ -230,20 +231,6 @@ public final class CasinoCommand implements CommandExecutor {
         float yaw = Math.round(p.getLocation().getYaw() / 90f) * 90f;
         plugin.roulette().setTable(center, width, depth, yaw);
         Msg.send(p, "<green>Roulette-Tisch aufgebaut (" + width + " x " + depth + " Blöcke). Croupier: /casino npc croupier");
-    }
-
-    private void slotsMachine(Player p) {
-        if (!p.hasPermission("kuby.admin")) {
-            Msg.send(p, "<red>Nur Admins können den Slots-Automaten setzen.");
-            return;
-        }
-        Block target = p.getTargetBlockExact(6);
-        if (target == null) {
-            Msg.send(p, "<red>Schau auf den Block, der der Slots-Automat wird (am besten ein Hebel).");
-            return;
-        }
-        plugin.slots().setMachine(target.getLocation());
-        Msg.send(p, "<green>Slots-Automat gesetzt. Rechtsklick auf den Block startet eine Drehung.");
     }
 
     private void crashMachine(Player p) {

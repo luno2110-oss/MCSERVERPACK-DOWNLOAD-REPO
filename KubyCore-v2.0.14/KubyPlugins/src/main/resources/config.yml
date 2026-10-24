@@ -149,7 +149,8 @@ casino:
     rate: 0.07
     max-multiplier: 50
   slots:
-    bet: 100
+    jackpot-start: 20000        # Slots-Jackpot (drei Siebener), startet nach einem Gewinn wieder hier
+    jackpot-share: 0.02         # so viel von jedem Dreh wandert in den Slots-Jackpot
 
 coinflip:
   max-bet: 5000

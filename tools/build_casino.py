@@ -314,7 +314,19 @@ SMALL = [("s_chip_" + n, (lambda n=n: chip_small(n))) for n in ("red", "blue", "
     ("c_" + n, (lambda n=n: chip(n, 19))) for n in CHIPS] + [
     ("s_star", star_small), ("s_coin", coin_small), ("s_note", note_small), ("s_note_gold", lambda: note_small("F6D27A")),
     ("s_mute", mute_small)]
-BIG = [("roulette_wheel", roulette_wheel), ("jukebox", jukebox), ("vinyl", vinyl)]
+# Slot-Symbole 16 px (Namen y_<symbol>) – nach SYMBOLS definiert, darum unten angehängt
+BIG = [("roulette_wheel", roulette_wheel), ("jukebox", jukebox), ("vinyl", vinyl), ("slot_big", lambda: _sym(sym_seven))]
+
+
+def _small_symbol(fn):
+    """Slot-Symbol auf 16 px verkleinert (für den Gewinnplan im Dialog)."""
+    img = _sym(fn).resize((16, 16), Image.BOX)
+    px = img.load()
+    for y in range(16):
+        for x in range(16):
+            r, g, b, a = px[x, y]
+            px[x, y] = (r, g, b, 255) if a >= 110 else T
+    return img
 
 
 # =====================================================================================================================
@@ -662,6 +674,150 @@ def write_cards_and_materials(out):
                            "elements": [{"from": [0, 0, 0], "to": [16, 16, 16], "faces": faces}]})
 
 
+# =====================================================================================================================
+# Slot-Symbole (32 x 32, dicke dunkle Kontur) und verwischte Fassungen für das Drehen
+# =====================================================================================================================
+def _sym(draw):
+    p = Pix(32)
+    draw(p)
+    return p.image(outline=rgb("1A1218"))
+
+
+def sym_cherry(p):
+    stem = rgb("3E8A2A")
+    p.line(11, 17, 17, 6, stem, 1.6)
+    p.line(22, 18, 17, 6, stem, 1.6)
+    p.poly([(17, 6), (25, 3), (27, 7), (20, 8)], rgb("4CB43A"))
+    for cx, cy in ((10.5, 21.5), (21.5, 22.5)):
+        p.disk(cx, cy, 5.6, rgb("C81E2C"))
+        p.disk(cx - 1.6, cy - 1.8, 2.0, rgb("F05864"))
+        p.put(int(cx - 2), int(cy - 3), rgb("FFD0D4"))
+
+
+def sym_lemon(p):
+    p.poly([(5, 17), (9, 9), (16, 6), (24, 8), (28, 14), (26, 22), (19, 26), (10, 25)], rgb("F6D21C"))
+    p.poly([(9, 12), (14, 8), (19, 8), (14, 12)], rgb("FFF080"))
+    p.poly([(22, 5), (27, 2), (29, 5), (25, 8)], rgb("4CB43A"))
+    p.put(5, 17, rgb("D8A80C"))
+
+
+def sym_banana(p):
+    body, light, dark = rgb("F6D22A"), rgb("FFF08A"), rgb("D4A414")
+    for y in range(32):
+        for x in range(32):
+            px, py = x + 0.5, y + 0.5
+            outer = math.hypot(px - 15, py + 1) <= 23.5
+            inner = math.hypot(px - 13, py + 6) <= 22.5
+            if outer and not inner and 3 <= px <= 29:
+                p.put(x, y, body)
+                if math.hypot(px - 13, py + 6) <= 24.0:
+                    p.put(x, y, light)
+                if math.hypot(px - 15, py + 1) >= 22.4:
+                    p.put(x, y, dark)
+    p.rect(27, 7, 29, 11, rgb("6A4A18"))
+    p.rect(3, 9, 4, 11, rgb("4A3010"))
+
+
+def sym_bell(p):
+    gold, dark = rgb("F2B81C"), rgb("C08010")
+    p.poly([(16, 4), (21, 7), (23, 14), (25, 21), (28, 24), (4, 24), (7, 21), (9, 14), (11, 7)], gold)
+    p.poly([(12, 9), (15, 7), (14, 16), (11, 19)], rgb("FFE070"))
+    p.rect(5, 23, 27, 25, dark)
+    p.disk(16, 27.5, 2.6, dark)
+    p.disk(16, 3.5, 1.8, dark)
+
+
+def sym_star(p):
+    pts = []
+    for i in range(8):
+        a = math.radians(-90 + i * 45)
+        r = 13.5 if i % 2 == 0 else 3.6
+        pts.append((16 + r * math.cos(a), 16 + r * math.sin(a)))
+    p.poly(pts, rgb("4A4E5A"))
+    p.disk(16, 16, 3.8, rgb("C8CCD8"))
+    p.disk(15, 15, 1.8, rgb("FFFFFF"))
+
+
+def sym_clover(p):
+    g, l = rgb("2EA83A"), rgb("6CDC5A")
+    for cx, cy in ((11, 11), (21, 11), (11, 21), (21, 21)):
+        p.disk(cx, cy, 5.6, g)
+        p.disk(cx - 1.2, cy - 1.4, 2.2, l)
+    p.line(16, 16, 21, 29, rgb("1E7A28"), 2.0)
+
+
+def sym_chip(p):
+    c = 16
+    p.disk(c, c, 12.5, rgb("D21E2C"))
+    for a in (30, 90, 150, 210, 270, 330):
+        p.sector(c, c, 8.5, 12.6, a - 13, a + 13, rgb("FFFFFF"))
+    p.ring(c, c, 7.0, 8.4, rgb("8A0A14"))
+    p.disk(c, c, 7.0, rgb("EC3A46"))
+    p.sector(c, c, 7.0, 8.4, 190, 260, rgb("F6909A"))
+
+
+def sym_coin(p):
+    c = 16
+    p.disk(c, c, 12.5, rgb("E8A814"))
+    p.disk(c, c, 10.4, rgb("F8D040"))
+    p.ring(c, c, 6.0, 8.2, rgb("C88A10"))
+    p.sector(c, c, 6.0, 8.2, 40, 320, rgb("C88A10"))
+    p.rect(20, 13, 24, 19, rgb("F8D040"))
+    p.sector(c, c, 10.4, 12.5, 200, 280, rgb("FFE890"))
+
+
+def sym_diamond(p):
+    p.poly([(4, 12), (10, 5), (22, 5), (28, 12), (16, 28)], rgb("3A8CF0"))
+    p.poly([(4, 12), (28, 12), (16, 28)], rgb("2468D0"))
+    p.poly([(10, 5), (16, 12), (22, 5)], rgb("9AD4FF"))
+    p.poly([(4, 12), (10, 5), (12, 12)], rgb("6CB4FF"))
+    p.line(9, 13, 15, 24, rgb("8ACBFF"), 1.0)
+
+
+def sym_seven(p):
+    red, gold = rgb("E01E24"), rgb("F6C21C")
+    p.poly([(5, 4), (27, 4), (27, 9), (17, 28), (10, 28), (19, 10), (5, 10)], gold)
+    p.poly([(7, 6), (25, 6), (25, 9), (15.5, 26), (12.5, 26), (21, 8), (7, 8)], red)
+
+
+SYMBOLS = [("cherry", sym_cherry), ("lemon", sym_lemon), ("banana", sym_banana), ("bell", sym_bell), ("star", sym_star),
+           ("clover", sym_clover), ("chip", sym_chip), ("coin", sym_coin), ("diamond", sym_diamond), ("seven", sym_seven)]
+
+
+def blur(img):
+    """Senkrecht verwischt (für drehende Walzen)."""
+    out = Image.new("RGBA", img.size, T)
+    acc = [[(0, 0, 0, 0) for _ in range(32)] for _ in range(32)]
+    for y in range(32):
+        for x in range(32):
+            r = g = b = a = 0
+            for dy in (-3, -2, -1, 0, 1, 2, 3):
+                yy = y + dy
+                if 0 <= yy < 32:
+                    pr, pg, pb, pa = img.getpixel((x, yy))
+                    r, g, b, a = r + pr * pa, g + pg * pa, b + pb * pa, a + pa
+            if a:
+                out.putpixel((x, y), (r // a, g // a, b // a, min(255, a // 7 + 20) if a // 7 > 30 else 0))
+    return out
+
+
+SMALL += [("y_" + n, (lambda fn=fn: _small_symbol(fn))) for n, fn in SYMBOLS]
+
+
+def write_slot_symbols(out):
+    tex = os.path.join(out, "assets/kuby/textures/item/casino")
+    models = os.path.join(out, "assets/kuby/models/item/casino")
+    items = os.path.join(out, "assets/kuby/items/casino")
+    for name, fn in SYMBOLS:
+        img = _sym(fn)
+        for nm, im in (("slot_" + name, img), ("slot_" + name + "_blur", blur(img))):
+            im.save(os.path.join(tex, nm + ".png"))
+            with open(os.path.join(models, nm + ".json"), "w", encoding="utf-8") as fh:
+                json.dump({"parent": "minecraft:item/generated", "textures": {"layer0": "kuby:item/casino/" + nm}}, fh)
+            with open(os.path.join(items, nm + ".json"), "w", encoding="utf-8") as fh:
+                json.dump({"model": {"type": "minecraft:model", "model": "kuby:item/casino/" + nm}}, fh)
+
+
 def build(out):
     """Gibt (icons16, small, big) als [(name, bild)] zurück; schreibt Tooltip-Rahmen, Slot-Markierung, Chip-Items,
     Spielkarten und Tisch-Materialien."""
@@ -670,4 +826,5 @@ def build(out):
         write_slot_highlight(out)
         write_items(out)
         write_cards_and_materials(out)
+        write_slot_symbols(out)
     return ([(n, f()) for n, f in ICONS16], [(n, f()) for n, f in SMALL], [(n, f()) for n, f in BIG])
