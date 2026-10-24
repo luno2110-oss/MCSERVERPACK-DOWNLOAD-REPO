@@ -66,3 +66,11 @@ commands:
   tutorial:
     description: "Tour durch Survival: /tutorial [weiter|stop]"
     usage: "/tutorial"
+  marry:
+    description: "Heiraten: Antrag, Ja-Wort beim Priester, zum Partner, Scheidung"
+    usage: "/marry [propose <Spieler>|accept|deny|cancel|church|tp|divorce]"
+    aliases: [heiraten, ehe]
+  bank:
+    description: "Bank: Ehe-Konto und Konten mit Freunden"
+    usage: "/bank [einzahlen|abheben <Betrag> [Konto]]"
+    aliases: [konto]

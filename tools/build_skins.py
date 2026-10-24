@@ -1,7 +1,8 @@
-"""Skins für Casino-Figuren (Mannequins mit Textur aus dem Pack, z. B. kuby:entity/casino/croupier).
+"""Skins für Figuren (Mannequins mit Textur aus dem Pack, z. B. kuby:entity/casino/croupier).
 
-64 x 64, schlanke Arme (3 px). Jedes Körperteil wird je Seite aus Zeilen-Mustern gemalt. Eigene Zeichnungen im Stil
-der Referenz (Croupier: rosa Haare, Dienstmädchen-Kleid).
+64 x 64, Casino-Figuren mit schlanken Armen (3 px), Priester und Bankier (kuby:entity/survival/...) mit breiten
+Armen (4 px). Jedes Körperteil wird je Seite aus Zeilen-Mustern gemalt. Eigene Zeichnungen im Stil der Referenz
+(Croupier: rosa Haare, Dienstmädchen-Kleid).
 """
 import os
 
@@ -32,6 +33,9 @@ UV = {
     "larm": part_uv(32, 48, 3, 12, 4), "lsleeve": part_uv(48, 48, 3, 12, 4),
     "rleg": part_uv(0, 16, 4, 12, 4), "rpants": part_uv(0, 32, 4, 12, 4),
     "lleg": part_uv(16, 48, 4, 12, 4), "lpants": part_uv(0, 48, 4, 12, 4),
+    # breite Arme (klassisches Modell)
+    "rarm4": part_uv(40, 16, 4, 12, 4), "rsleeve4": part_uv(40, 32, 4, 12, 4),
+    "larm4": part_uv(32, 48, 4, 12, 4), "lsleeve4": part_uv(48, 48, 4, 12, 4),
 }
 
 
@@ -296,11 +300,175 @@ def mia():
     return s.img
 
 
-SKINS = {"croupier": croupier, "mia": mia}
+def priester():
+    """Priester: graue Haare, schwarze Soutane mit weißem Kollar, cremefarbene Stola mit goldenen Kreuzen."""
+    s = Skin({
+        "G": "C8C8CC", "g": "A4A4AC", "d": "84848E",       # Haare
+        "S": "F2D2B8", "s": "DDB89C", "o": "C89C80",       # Haut
+        "E": "3A4A6A", "m": "B47C6C",                       # Augen, Mund
+        "K": "1E1E24", "k": "141418", "n": "2E2E36",       # Soutane
+        "W": "F6F6F2", "w": "D8D8D4",                       # Kollar
+        "C": "F2EAD2", "c": "D8CCAE",                       # Stola
+        "Y": "E8B830", "y": "B8901C",                       # Gold
+        "F": "101014", "f": "34343C",                       # Schuhe
+    })
+    s.fill("head", "top", "G")
+    s.paint("head", "top", ["gGGgGGgG", "GGgGGGGg", "GgGGGgGG", "GGGgGGGG", "gGGGGgGG", "GGgGGGGg", "GGGGgGGG", "dgGGGGgd"])
+    s.fill("head", "bottom", "s")
+    s.paint("head", "front", [
+        "GGgGGgGG",
+        "gSSSSSSg",
+        "SggSSggS",
+        "SWESSEWS",
+        "SSSSSSSS",
+        "SSSooSSS",
+        "SSmmmmSS",
+        "sSSSSSSs",
+    ])
+    s.paint("head", "right", ["GGgGGGGg", "gGGGGGgS", "dGGGGgSS", "dgGGGSSS", "dgGGgSoS", "dgGgSSSS", "ddgSSSSs", "dddssSss"])
+    s.paint("head", "left", ["gGGGGgGG", "SgGGGGGg", "SSgGGGGd", "SSSGGGgd", "SoSgGGgd", "SSSSgGgd", "sSSSSgdd", "sssSsddd"])
+    s.paint("head", "back", ["GGgGGGgG", "GgGGgGGG", "GGGGGGgG", "gGGgGGGG", "GGGGGGGg", "dgGGgGGd", "ddgGGgdd", "sddggdds"])
+    # Körper: Soutane mit Knopfleiste, Kollar oben, Stola vorn
+    s.paint("body", "front", [
+        "KCKWWKCK",
+        "KCKwwKCK",
+        "KCKnnKCK",
+        "KCKKKKCK",
+        "KCKnnKCK",
+        "KCKKKKCK",
+        "KCKnnKCK",
+        "kCKKKKCk",
+        "KCKnnKCK",
+        "KYKKKKYK",
+        "YYYKKYYY",
+        "KYKKKKYK",
+    ])
+    s.paint("body", "back", [
+        "KKKKKKKK",
+        "KKKnnKKK",
+        "KKKKKKKK",
+        "KKKKKKKK",
+        "KKKKKKKK",
+        "KKKKKKKK",
+        "kKKKKKKk",
+        "KKKKKKKK",
+        "KKKKKKKK",
+        "KKKKKKKK",
+        "KKKKKKKK",
+        "KKKKKKKK",
+    ])
+    for side in ("right", "left"):
+        s.column("body", side, "KKKKKKkKKKKK")
+    s.fill("body", "top", "K")
+    s.paint("body", "top", ["KKKKKKKK", "KKKKKKKK", "KKKWWKKK", "KKKKKKKK"])
+    s.fill("body", "bottom", "K")
+    # Arme: schwarze Ärmel, weiße Manschette, Hände
+    for arm in ("rarm4", "larm4"):
+        for side in ("front", "back", "right", "left"):
+            s.column(arm, side, "KKKKKKKKKWSS")
+        s.fill(arm, "top", "K")
+        s.fill(arm, "bottom", "S")
+    for sl in ("rsleeve4", "lsleeve4"):
+        for side in ("front", "back", "right", "left"):
+            s.column(sl, side, "nK..........")
+    # Beine: Soutane bis zu den Knöcheln, schwarze Schuhe
+    for leg in ("rleg", "lleg"):
+        for side in ("front", "back", "right", "left"):
+            s.column(leg, side, "KKKKKKKKKkFF")
+        s.fill(leg, "top", "K")
+        s.fill(leg, "bottom", "F")
+    s.paint("rleg", "front", ["", "", "", "", "", "", "", "", "", "", "", "Ffff"])
+    s.paint("lleg", "front", ["", "", "", "", "", "", "", "", "", "", "", "ffff"])
+    return s.img
+
+
+def bankier():
+    """Bankier: dunkle, nach hinten gekämmte Haare, Schnurrbart, dunkelblauer Anzug, weißes Hemd, rote Krawatte,
+    goldene Uhrkette."""
+    s = Skin({
+        "H": "4A3222", "h": "3A2618", "d": "2A1A10",       # Haare
+        "S": "F0CCAE", "s": "DAB092", "o": "C49478",       # Haut
+        "E": "3A2A1E", "M": "4A3222", "m": "B47C6C",       # Augen, Bart, Mund
+        "N": "1E2A4A", "n": "16203A", "b": "2A3A60",       # Anzug
+        "W": "F4F4F0", "w": "D6D6D2",                       # Hemd
+        "R": "C8283A", "r": "8E1A28",                       # Krawatte
+        "Y": "F0C840",                                      # Uhrkette
+        "F": "1A1410", "f": "4A3A30",                       # Schuhe
+    })
+    s.fill("head", "top", "H")
+    s.paint("head", "top", ["hHHhHHHh", "HHhHHhHH", "HHHHHHHH", "HhHHhHHH", "HHHHHHhH", "HHhHHHHH", "hHHHHhHH", "dhHHHHhd"])
+    s.fill("head", "bottom", "s")
+    s.paint("head", "front", [
+        "HHHHHHHH",
+        "HHHHHHhH",
+        "SddSSddS",
+        "SWESSEWS",
+        "SSSSSSSS",
+        "SSSooSSS",
+        "SSMMMMSS",
+        "sSSmmSSs",
+    ])
+    s.paint("head", "right", ["HHHHHHHh", "HHHHHHhh", "dHHHHhSS", "dhHHhSSS", "dhHHSSoS", "dhHhSSSS", "ddhSSSSs", "dddssSss"])
+    s.paint("head", "left", ["hHHHHHHH", "hhHHHHHH", "SShHHHHd", "SSShHHhd", "SoSSHHhd", "SSSShHhd", "sSSSShdd", "sssSsddd"])
+    s.paint("head", "back", ["HHHHHHHH", "HhHHHhHH", "HHHhHHHH", "HHHHHHHH", "hHHHHHHh", "dhHHHHhd", "ddhHHhdd", "sddhhdds"])
+    s.paint("body", "front", [
+        "NNWRRWNN",
+        "NNWrRWNN",
+        "NbNRRNbN",
+        "NNNRRNNN",
+        "NNbRrbNN",
+        "NNNrRNNN",
+        "NYYNNNNN",
+        "nNNYNNNn",
+        "NNNNNNNN",
+        "NbNNNNbN",
+        "NNNNNNNN",
+        "nNNNNNNn",
+    ])
+    s.paint("body", "back", [
+        "NNNNNNNN",
+        "NNNNNNNN",
+        "NNNNNNNN",
+        "NNNNNNNN",
+        "NNNNNNNN",
+        "NNNNNNNN",
+        "nNNNNNNn",
+        "NNNNNNNN",
+        "NNNbbNNN",
+        "NNNNNNNN",
+        "NNNNNNNN",
+        "nNNNNNNn",
+    ])
+    for side in ("right", "left"):
+        s.column("body", side, "NNNNNNnNNNNn")
+    s.fill("body", "top", "N")
+    s.paint("body", "top", ["NNNNNNNN", "NNNNNNNN", "NNWRRWNN", "NNNNNNNN"])
+    s.fill("body", "bottom", "N")
+    for arm in ("rarm4", "larm4"):
+        for side in ("front", "back", "right", "left"):
+            s.column(arm, side, "NNNNNNNNNWSS")
+        s.fill(arm, "top", "N")
+        s.fill(arm, "bottom", "S")
+    for sl in ("rsleeve4", "lsleeve4"):
+        for side in ("front", "back", "right", "left"):
+            s.column(sl, side, "bN..........")
+    for leg in ("rleg", "lleg"):
+        for side in ("front", "back", "right", "left"):
+            s.column(leg, side, "NNNNNNNNNnFF")
+        s.fill(leg, "top", "N")
+        s.fill(leg, "bottom", "F")
+    s.paint("rleg", "front", ["", "", "", "", "", "", "", "", "", "", "", "Ffff"])
+    s.paint("lleg", "front", ["", "", "", "", "", "", "", "", "", "", "", "ffff"])
+    return s.img
+
+
+# Name -> (Malfunktion, Ordner unter kuby:entity/)
+SKINS = {"croupier": (croupier, "casino"), "mia": (mia, "casino"),
+         "priester": (priester, "survival"), "bankier": (bankier, "survival")}
 
 
 def build(out):
-    d = os.path.join(out, "assets/kuby/textures/entity/casino")
-    os.makedirs(d, exist_ok=True)
-    for name, fn in SKINS.items():
+    for name, (fn, folder) in SKINS.items():
+        d = os.path.join(out, "assets/kuby/textures/entity", folder)
+        os.makedirs(d, exist_ok=True)
         fn().save(os.path.join(d, name + ".png"))

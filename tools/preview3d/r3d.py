@@ -483,7 +483,7 @@ def player_boxes(slim):
     ]
 
 
-def draw_player(rs, e, skin_img):
+def draw_player(rs, e, skin_img, slim=True):
     """Spieler stehend; lokale Achsen: l = linke Seite der Figur, u = oben, f = vorne."""
     yaw = math.radians(e.get("yaw", 0))
     f = np.array([-math.sin(yaw), 0, math.cos(yaw)])
@@ -498,10 +498,10 @@ def draw_player(rs, e, skin_img):
     def P(l, u, ff):
         return pos + (left * l + up * u + f * ff) * k
 
-    for part, a, b, infl in player_boxes(True):
+    for part, a, b, infl in player_boxes(slim):
         l0, u0, f0 = a[0] - infl, a[1] - infl, a[2] - infl
         l1, u1, f1 = b[0] + infl, b[1] + infl, b[2] + infl
-        uv = bs.UV[part]
+        uv = bs.UV[part + "4"] if not slim and ("arm" in part or "sleeve" in part) else bs.UV[part]
         faces = {
             "front": [P(l0, u1, f1), P(l0, u0, f1), P(l1, u0, f1), P(l1, u1, f1)],
             "back": [P(l1, u1, f0), P(l1, u0, f0), P(l0, u0, f0), P(l0, u1, f0)],
@@ -547,10 +547,11 @@ def draw_entity(rs, e, opts):
         draw_text(rs, e, base)
     elif t == "Mannequin":
         prof = str(e.get("profile", ""))
-        mm = re.search(r"kuby:entity/casino/(\w+)", prof)
+        mm = re.search(r"kuby:entity/\w+/(\w+)", prof)
         name = mm.group(1) if mm else "croupier"
-        skin = bs.SKINS[name]() if name in bs.SKINS else bs.SKINS["croupier"]()
-        draw_player(rs, e, skin)
+        fn = bs.SKINS.get(name, bs.SKINS["croupier"])
+        fn = fn[0] if isinstance(fn, tuple) else fn
+        draw_player(rs, e, fn(), "CLASSIC" not in prof)
     elif t == "Interaction" and opts.get("hit"):
         w, h = e.get("interactionWidth", 1), e.get("interactionHeight", 1)
         p = pos

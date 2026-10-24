@@ -165,6 +165,25 @@ public final class Scene {
                     }
                 }
             }
+            case "survival_npcs" -> {
+                // Priester und Bankier wie SurvivalNpc (KubySurvival): breite Arme, Schild darüber
+                String[][] npcs = {{"priester", "PRIESTER", "#FF7AC0", "Rechtsklick · Heiraten"},
+                        {"bankier", "BANKIER", "#F2C84A", "Rechtsklick · Bank und Konten"}};
+                for (int i = 0; i < npcs.length; i++) {
+                    String[] n = npcs[i];
+                    Location base = new Location(w, -1.5 + 3 * i, 0, 0.5);
+                    w.spawn(base.clone().add(0, 2.15, 0), org.bukkit.entity.TextDisplay.class, d -> {
+                        d.text(de.kuby.kubyplugins.util.Msg.parse("<" + n[2] + "><b>" + n[1] + "</b></" + n[2] + ">\n<gray>" + n[3]));
+                        d.setBillboard(org.bukkit.entity.Display.Billboard.VERTICAL);
+                        d.setBackgroundColor(org.bukkit.Color.fromARGB(0, 0, 0, 0));
+                        d.setShadowed(true);
+                    });
+                    w.spawn(base, org.bukkit.entity.Mannequin.class, m -> m.setProfile(
+                            io.papermc.paper.datacomponent.item.ResolvableProfile.resolvableProfile().name("x")
+                                    .skinPatch(sp -> sp.body(net.kyori.adventure.key.Key.key("kuby", "entity/survival/" + n[0]))
+                                            .model(org.bukkit.profile.PlayerTextures.SkinModel.CLASSIC)).build()));
+                }
+            }
             default -> throw new IllegalArgumentException(args[0]);
         }
         try (FileWriter fw = new FileWriter(args[1])) {

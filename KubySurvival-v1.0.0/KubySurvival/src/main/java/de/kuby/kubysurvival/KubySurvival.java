@@ -21,6 +21,11 @@ import de.kuby.kubysurvival.jobs.JobMenu;
 import de.kuby.kubysurvival.jobs.JobService;
 import de.kuby.kubysurvival.jobs.LevelCommand;
 import de.kuby.kubysurvival.jobs.TokenShopMenu;
+import de.kuby.kubysurvival.marry.BankService;
+import de.kuby.kubysurvival.marry.MarryCommand;
+import de.kuby.kubysurvival.marry.MarryMenus;
+import de.kuby.kubysurvival.marry.MarryService;
+import de.kuby.kubysurvival.marry.SurvivalNpc;
 import de.kuby.kubysurvival.angeln.AngelService;
 import de.kuby.kubysurvival.farm.FarmWorldService;
 import de.kuby.kubysurvival.farmpass.FarmpassCommand;
@@ -53,7 +58,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-/** Survival-Teil: Angeln (Fischarten, Level, Rute, Fischbuch, Turnier, Händler) und Landclaims. Braucht KubyCore. */
+/** Survival-Teil: Angeln, Landclaims, Jobs, Quests, Haustiere, Heiraten und Bank und mehr. Braucht KubyCore. */
 public final class KubySurvival extends JavaPlugin {
 
     private KubyPlugins core;
@@ -74,6 +79,8 @@ public final class KubySurvival extends JavaPlugin {
     private PetService pets;
     private BackpackService backpacks;
     private ChestShopService chestShops;
+    private MarryService marry;
+    private BankService bank;
 
     public KubyPlugins core() { return core; }
     public AngelService angeln() { return angeln; }
@@ -91,6 +98,8 @@ public final class KubySurvival extends JavaPlugin {
     public PetService pets() { return pets; }
     public BackpackService backpacks() { return backpacks; }
     public ChestShopService chestShops() { return chestShops; }
+    public MarryService marry() { return marry; }
+    public BankService bank() { return bank; }
 
     @Override
     public void onEnable() {
@@ -118,6 +127,14 @@ public final class KubySurvival extends JavaPlugin {
         getServer().getPluginManager().registerEvents(backpacks, this);
         chestShops = new ChestShopService(this, core);
         getServer().getPluginManager().registerEvents(chestShops, this);
+        SurvivalNpc npcs = new SurvivalNpc(this);
+        getServer().getPluginManager().registerEvents(npcs, this);
+        marry = new MarryService(this, core, npcs);
+        bank = new BankService(this, core, npcs);
+        MarryMenus marryMenus = new MarryMenus(this, core, marry, bank);
+        marry.wire(bank, marryMenus);
+        getServer().getPluginManager().registerEvents(marry, this);
+        MarryCommand marryCommand = new MarryCommand(core, marry, bank, marryMenus, npcs);
         getServer().getPluginManager().registerEvents(farm, this);
         core.homes().registerBlock(l -> farm.isFarm(l.getWorld()) ? "In der Farmwelt kannst du kein Home setzen. Sie wird jede Woche neu erstellt." : null);
         core.homes().registerBlock(l -> {
@@ -247,6 +264,20 @@ public final class KubySurvival extends JavaPlugin {
             return true;
         });
 
+        command("marry", marryCommand);
+        command("bank", marryCommand);
+        for (String name : new String[]{"marry", "bank"}) {
+            PluginCommand pc = getCommand(name);
+            if (pc != null) pc.setTabCompleter(marryCommand);
+        }
+        core.registerKpSub("heiraten", (p, args) -> {
+            if (p.hasPermission("kuby.admin")) marryCommand.adminMarry(p, args);
+            else Msg.send(p, "<red>Nur Admins.");
+        });
+        core.registerKpSub("bank", (p, args) -> {
+            if (p.hasPermission("kuby.admin")) marryCommand.adminBank(p, args);
+            else Msg.send(p, "<red>Nur Admins.");
+        });
         core.registerKpSub("angel", angelCommand::admin);
         core.registerStat("claimblocks", claims::available);
         // Werte für die Erfolge im Kern.
@@ -286,6 +317,10 @@ public final class KubySurvival extends JavaPlugin {
                 p -> new WarpMenu(this, false, 0).open(p)));
         core.registerMainEntry(new KubyPlugins.MainEntry(Material.GOLDEN_AXE, "Grundstücke", "Landclaims sichern",
                 p -> p.performCommand("claim")));
+        core.registerMainEntry(new KubyPlugins.MainEntry(Material.POPPY, "Heiraten", "Antrag, Hochzeit und Ehe-Konto",
+                marryMenus::marry));
+        core.registerMainEntry(new KubyPlugins.MainEntry(Material.GOLD_INGOT, "Bank", "Ehe-Konto und Konten mit Freunden",
+                marryMenus::bank));
 
         getServer().getScheduler().runTaskTimer(this, () -> {
             angeln.tick();
@@ -304,6 +339,8 @@ public final class KubySurvival extends JavaPlugin {
             backpacks.save();
             farmpass.save();
             pets.save();
+            marry.save();
+            bank.save();
         }, 6000L, 6000L);
         getServer().getScheduler().runTaskLater(this, () -> {
             for (AngelService.Zone z : angeln.zones()) angelHolo.spawn(z);
@@ -327,6 +364,8 @@ public final class KubySurvival extends JavaPlugin {
         if (pets != null) pets.shutdown();
         if (backpacks != null) backpacks.shutdown();
         if (intro != null) intro.save();
+        if (marry != null) marry.save();
+        if (bank != null) bank.save();
     }
 
     private void command(String name, org.bukkit.command.CommandExecutor exec) {

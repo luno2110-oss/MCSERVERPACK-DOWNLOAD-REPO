@@ -628,3 +628,17 @@ tutorial:
   reward-coins: 500
   reward-tokens: 3
   stations: []
+# Heiraten (KubySurvival): Antrag mit /marry propose, Ja-Wort beim Priester (/kp heiraten priester), beide müssen im
+# Umkreis stehen. Die Hochzeit zahlt, wer gefragt hat. Nach der Scheidung Sperre für beide.
+marry:
+  cost: 5000                      # Coins für die Hochzeit
+  proposal-minutes: 10            # so lange gilt ein Antrag
+  priest-radius: 10               # beide Partner höchstens so weit vom Priester
+  divorce-cooldown-days: 7        # danach dürfen beide wieder heiraten
+# Bank (KubySurvival): Ehe-Konto und Konten mit Freunden. Bankier per /kp bank bankier, "an der Bank" = in bank.radius
+# Blöcken um ihn. Unterwegs höchstens limit-away Coins je Buchung, an der Bank ohne Grenze.
+bank:
+  limit-away: 10000
+  radius: 8
+  max-friend-accounts: 3          # Konten mit Freunden je Spieler (als Mitglied oder Besitzer)
+  max-members: 5                  # Mitglieder je Konto mit Freunden
