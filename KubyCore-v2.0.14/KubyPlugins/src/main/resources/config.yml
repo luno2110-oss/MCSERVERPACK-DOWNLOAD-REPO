@@ -137,7 +137,9 @@ casino:
     bet: 100
   roulette:
     wait-seconds: 20
-    max-bet: 5000
+    min-bet: 10
+    max-round: 100000           # höchstens so viele Chips je Spieler und Runde
+    range: 12                   # so nah muss man am Tisch stehen
   crash:
     bet: 100
     wait-seconds: 10

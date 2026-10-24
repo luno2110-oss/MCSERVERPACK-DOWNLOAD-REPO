@@ -226,23 +226,23 @@ public final class Canvas {
     }
 
     public Canvas box(int x, int y, int w, int h, KitData.Box style, int z) {
-        w = Math.max(w, 2 * KitData.CAP + KitData.SEG);
+        w = Math.max(w, style.narrow != null ? 2 * KitData.CAP : 2 * KitData.CAP + KitData.SEG);
         h = Math.max(h, 14);
-        row(x, y, w, style.p[0], z);
+        row(x, y, w, style.p[0], style.narrow == null ? null : style.narrow[0], z);
         // Mittelzeilen dürfen in die geraden Teile der oberen und unteren Zeile ragen (ab Zeile style.straight)
         int lo = y + style.straight;
         int hi = y + h - LINE - style.straight;
         for (int p = y + LINE; p < y + h - LINE; p += LINE) {
-            row(x, Math.max(Math.min(lo, hi), Math.min(p, hi)), w, style.p[1], z);
+            row(x, Math.max(Math.min(lo, hi), Math.min(p, hi)), w, style.p[1], style.narrow == null ? null : style.narrow[1], z);
         }
-        row(x, y + h - LINE, w, style.p[2], z);
+        row(x, y + h - LINE, w, style.p[2], style.narrow == null ? null : style.narrow[2], z);
         return this;
     }
 
-    private void row(int x, int y, int w, KitData.Piece[] lmr, int z) {
+    private void row(int x, int y, int w, KitData.Piece[] lmr, KitData.Piece[] narrow, int z) {
         KitData.Piece l = lmr[0], m = lmr[1], r = lmr[2];
         piece(x, y, l, z);
-        span(x + l.width(), x + w - r.width(), y, m, null, z);
+        span(x + l.width(), x + w - r.width(), y, m, narrow, z);
         piece(x + w - r.width(), y, r, z);
     }
 

@@ -60,7 +60,7 @@ public final class CasinoInput {
     }
 
     /** "1.000", "1000", "1k", "2,5k" -> Zahl; -1 bei ungültiger Eingabe. */
-    static long parse(String raw) {
+    public static long parse(String raw) {
         if (raw == null) return -1;
         String s = raw.trim().toLowerCase().replace(" ", "");
         if (s.isEmpty()) return -1;

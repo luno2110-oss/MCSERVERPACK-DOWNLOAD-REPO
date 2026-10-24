@@ -23,7 +23,8 @@ public final class KitData {
 
     /** Kasten-Stile (Rahmen aus Zeilen zu 9 px). */
     public enum Box {
-        NAVY(5, new Piece('\ue400', 9, 8, 9),
+        NAVY(5, null,
+                new Piece('\ue400', 9, 8, 9),
                 new Piece('\ue500', 33, 32, 9),
                 new Piece('\ue401', 9, 8, 9),
                 new Piece('\ue402', 9, 8, 9),
@@ -32,7 +33,8 @@ public final class KitData {
                 new Piece('\ue404', 9, 8, 9),
                 new Piece('\ue502', 33, 32, 9),
                 new Piece('\ue405', 9, 8, 9)),
-        GREEN(5, new Piece('\ue406', 9, 8, 9),
+        GREEN(5, null,
+                new Piece('\ue406', 9, 8, 9),
                 new Piece('\ue503', 33, 32, 9),
                 new Piece('\ue407', 9, 8, 9),
                 new Piece('\ue408', 9, 8, 9),
@@ -41,7 +43,8 @@ public final class KitData {
                 new Piece('\ue40a', 9, 8, 9),
                 new Piece('\ue505', 33, 32, 9),
                 new Piece('\ue40b', 9, 8, 9)),
-        GOLD(5, new Piece('\ue40c', 9, 8, 9),
+        GOLD(5, null,
+                new Piece('\ue40c', 9, 8, 9),
                 new Piece('\ue506', 33, 32, 9),
                 new Piece('\ue40d', 9, 8, 9),
                 new Piece('\ue40e', 9, 8, 9),
@@ -50,7 +53,8 @@ public final class KitData {
                 new Piece('\ue410', 9, 8, 9),
                 new Piece('\ue508', 33, 32, 9),
                 new Piece('\ue411', 9, 8, 9)),
-        PURPLE(5, new Piece('\ue412', 9, 8, 9),
+        PURPLE(5, null,
+                new Piece('\ue412', 9, 8, 9),
                 new Piece('\ue509', 33, 32, 9),
                 new Piece('\ue413', 9, 8, 9),
                 new Piece('\ue414', 9, 8, 9),
@@ -59,7 +63,8 @@ public final class KitData {
                 new Piece('\ue416', 9, 8, 9),
                 new Piece('\ue50b', 33, 32, 9),
                 new Piece('\ue417', 9, 8, 9)),
-        TEAL(5, new Piece('\ue418', 9, 8, 9),
+        TEAL(5, null,
+                new Piece('\ue418', 9, 8, 9),
                 new Piece('\ue50c', 33, 32, 9),
                 new Piece('\ue419', 9, 8, 9),
                 new Piece('\ue41a', 9, 8, 9),
@@ -68,7 +73,8 @@ public final class KitData {
                 new Piece('\ue41c', 9, 8, 9),
                 new Piece('\ue50e', 33, 32, 9),
                 new Piece('\ue41d', 9, 8, 9)),
-        GRAY(5, new Piece('\ue41e', 9, 8, 9),
+        GRAY(5, null,
+                new Piece('\ue41e', 9, 8, 9),
                 new Piece('\ue50f', 33, 32, 9),
                 new Piece('\ue41f', 9, 8, 9),
                 new Piece('\ue420', 9, 8, 9),
@@ -77,7 +83,8 @@ public final class KitData {
                 new Piece('\ue422', 9, 8, 9),
                 new Piece('\ue511', 33, 32, 9),
                 new Piece('\ue423', 9, 8, 9)),
-        RED(5, new Piece('\ue424', 9, 8, 9),
+        RED(5, null,
+                new Piece('\ue424', 9, 8, 9),
                 new Piece('\ue512', 33, 32, 9),
                 new Piece('\ue425', 9, 8, 9),
                 new Piece('\ue426', 9, 8, 9),
@@ -86,7 +93,8 @@ public final class KitData {
                 new Piece('\ue428', 9, 8, 9),
                 new Piece('\ue514', 33, 32, 9),
                 new Piece('\ue429', 9, 8, 9)),
-        CASINO(6, new Piece('\ue42a', 9, 8, 9),
+        CASINO(6, null,
+                new Piece('\ue42a', 9, 8, 9),
                 new Piece('\ue515', 33, 32, 9),
                 new Piece('\ue42b', 9, 8, 9),
                 new Piece('\ue42c', 9, 8, 9),
@@ -95,7 +103,8 @@ public final class KitData {
                 new Piece('\ue42e', 9, 8, 9),
                 new Piece('\ue517', 33, 32, 9),
                 new Piece('\ue42f', 9, 8, 9)),
-        FELT(5, new Piece('\ue430', 9, 8, 9),
+        FELT(5, null,
+                new Piece('\ue430', 9, 8, 9),
                 new Piece('\ue518', 33, 32, 9),
                 new Piece('\ue431', 9, 8, 9),
                 new Piece('\ue432', 9, 8, 9),
@@ -104,7 +113,8 @@ public final class KitData {
                 new Piece('\ue434', 9, 8, 9),
                 new Piece('\ue51a', 33, 32, 9),
                 new Piece('\ue435', 9, 8, 9)),
-        CASINO_DARK(5, new Piece('\ue436', 9, 8, 9),
+        CASINO_DARK(5, null,
+                new Piece('\ue436', 9, 8, 9),
                 new Piece('\ue51b', 33, 32, 9),
                 new Piece('\ue437', 9, 8, 9),
                 new Piece('\ue438', 9, 8, 9),
@@ -113,41 +123,60 @@ public final class KitData {
                 new Piece('\ue43a', 9, 8, 9),
                 new Piece('\ue51d', 33, 32, 9),
                 new Piece('\ue43b', 9, 8, 9)),
-        FIELD_RED(5, new Piece('\ue43c', 9, 8, 9),
+        FIELD_RED(5, new Piece[]{new Piece('\ue51f', 17, 16, 9), new Piece('\ue43e', 9, 8, 9), new Piece('\ue43f', 5, 4, 9), new Piece('\ue440', 3, 2, 9), new Piece('\ue441', 2, 1, 9), new Piece('\ue521', 17, 16, 9), new Piece('\ue444', 9, 8, 9), new Piece('\ue445', 5, 4, 9), new Piece('\ue446', 3, 2, 9), new Piece('\ue447', 2, 1, 9), new Piece('\ue523', 17, 16, 9), new Piece('\ue44a', 9, 8, 9), new Piece('\ue44b', 5, 4, 9), new Piece('\ue44c', 3, 2, 9), new Piece('\ue44d', 2, 1, 9)},
+                new Piece('\ue43c', 9, 8, 9),
                 new Piece('\ue51e', 33, 32, 9),
                 new Piece('\ue43d', 9, 8, 9),
-                new Piece('\ue43e', 9, 8, 9),
-                new Piece('\ue51f', 33, 32, 9),
-                new Piece('\ue43f', 9, 8, 9),
-                new Piece('\ue440', 9, 8, 9),
+                new Piece('\ue442', 9, 8, 9),
                 new Piece('\ue520', 33, 32, 9),
-                new Piece('\ue441', 9, 8, 9)),
-        FIELD_GREEN(5, new Piece('\ue442', 9, 8, 9),
-                new Piece('\ue521', 33, 32, 9),
                 new Piece('\ue443', 9, 8, 9),
-                new Piece('\ue444', 9, 8, 9),
+                new Piece('\ue448', 9, 8, 9),
                 new Piece('\ue522', 33, 32, 9),
-                new Piece('\ue445', 9, 8, 9),
-                new Piece('\ue446', 9, 8, 9),
-                new Piece('\ue523', 33, 32, 9),
-                new Piece('\ue447', 9, 8, 9)),
-        FIELD_BLACK(5, new Piece('\ue448', 9, 8, 9),
+                new Piece('\ue449', 9, 8, 9)),
+        FIELD_GREEN(5, new Piece[]{new Piece('\ue525', 17, 16, 9), new Piece('\ue450', 9, 8, 9), new Piece('\ue451', 5, 4, 9), new Piece('\ue452', 3, 2, 9), new Piece('\ue453', 2, 1, 9), new Piece('\ue527', 17, 16, 9), new Piece('\ue456', 9, 8, 9), new Piece('\ue457', 5, 4, 9), new Piece('\ue458', 3, 2, 9), new Piece('\ue459', 2, 1, 9), new Piece('\ue529', 17, 16, 9), new Piece('\ue45c', 9, 8, 9), new Piece('\ue45d', 5, 4, 9), new Piece('\ue45e', 3, 2, 9), new Piece('\ue45f', 2, 1, 9)},
+                new Piece('\ue44e', 9, 8, 9),
                 new Piece('\ue524', 33, 32, 9),
-                new Piece('\ue449', 9, 8, 9),
-                new Piece('\ue44a', 9, 8, 9),
-                new Piece('\ue525', 33, 32, 9),
-                new Piece('\ue44b', 9, 8, 9),
-                new Piece('\ue44c', 9, 8, 9),
+                new Piece('\ue44f', 9, 8, 9),
+                new Piece('\ue454', 9, 8, 9),
                 new Piece('\ue526', 33, 32, 9),
-                new Piece('\ue44d', 9, 8, 9));
+                new Piece('\ue455', 9, 8, 9),
+                new Piece('\ue45a', 9, 8, 9),
+                new Piece('\ue528', 33, 32, 9),
+                new Piece('\ue45b', 9, 8, 9)),
+        FIELD_BLACK(5, new Piece[]{new Piece('\ue52b', 17, 16, 9), new Piece('\ue462', 9, 8, 9), new Piece('\ue463', 5, 4, 9), new Piece('\ue464', 3, 2, 9), new Piece('\ue465', 2, 1, 9), new Piece('\ue52d', 17, 16, 9), new Piece('\ue468', 9, 8, 9), new Piece('\ue469', 5, 4, 9), new Piece('\ue46a', 3, 2, 9), new Piece('\ue46b', 2, 1, 9), new Piece('\ue52f', 17, 16, 9), new Piece('\ue46e', 9, 8, 9), new Piece('\ue46f', 5, 4, 9), new Piece('\ue470', 3, 2, 9), new Piece('\ue471', 2, 1, 9)},
+                new Piece('\ue460', 9, 8, 9),
+                new Piece('\ue52a', 33, 32, 9),
+                new Piece('\ue461', 9, 8, 9),
+                new Piece('\ue466', 9, 8, 9),
+                new Piece('\ue52c', 33, 32, 9),
+                new Piece('\ue467', 9, 8, 9),
+                new Piece('\ue46c', 9, 8, 9),
+                new Piece('\ue52e', 33, 32, 9),
+                new Piece('\ue46d', 9, 8, 9)),
+        FIELD_FELT(5, new Piece[]{new Piece('\ue531', 17, 16, 9), new Piece('\ue474', 9, 8, 9), new Piece('\ue475', 5, 4, 9), new Piece('\ue476', 3, 2, 9), new Piece('\ue477', 2, 1, 9), new Piece('\ue533', 17, 16, 9), new Piece('\ue47a', 9, 8, 9), new Piece('\ue47b', 5, 4, 9), new Piece('\ue47c', 3, 2, 9), new Piece('\ue47d', 2, 1, 9), new Piece('\ue535', 17, 16, 9), new Piece('\ue480', 9, 8, 9), new Piece('\ue481', 5, 4, 9), new Piece('\ue482', 3, 2, 9), new Piece('\ue483', 2, 1, 9)},
+                new Piece('\ue472', 9, 8, 9),
+                new Piece('\ue530', 33, 32, 9),
+                new Piece('\ue473', 9, 8, 9),
+                new Piece('\ue478', 9, 8, 9),
+                new Piece('\ue532', 33, 32, 9),
+                new Piece('\ue479', 9, 8, 9),
+                new Piece('\ue47e', 9, 8, 9),
+                new Piece('\ue534', 33, 32, 9),
+                new Piece('\ue47f', 9, 8, 9));
 
         /** [Zeile oben/mitte/unten][links/mitte/rechts] */
         public final Piece[][] p;
         /** Ab dieser Zeile ist die Ecke gerade: so weit dürfen Mittelzeilen in die obere und untere ragen. */
         public final int straight;
 
-        Box(int straight, Piece... all) {
+        /** Schmale Mittelstücke je Zeile (oben, mitte, unten) in 16, 8, 4, 2, 1 px, sonst null. */
+        public final Piece[][] narrow;
+
+        Box(int straight, Piece[] narrow, Piece... all) {
             this.straight = straight;
+            this.narrow = narrow == null ? null : new Piece[][]{
+                    java.util.Arrays.copyOfRange(narrow, 0, 5), java.util.Arrays.copyOfRange(narrow, 5, 10),
+                    java.util.Arrays.copyOfRange(narrow, 10, 15)};
             p = new Piece[][]{{all[0], all[1], all[2]}, {all[3], all[4], all[5]}, {all[6], all[7], all[8]}};
         }
     }
@@ -219,11 +248,11 @@ public final class KitData {
 
     /** Balken-Füllfarben; Stücke in den Breiten 1, 2, 4, 8, 16, 32. */
     public enum Fill {
-        GOLD(new Piece('\ue454', 2, 1, 5), new Piece('\ue455', 3, 2, 5), new Piece('\ue456', 5, 4, 5), new Piece('\ue457', 9, 8, 5), new Piece('\ue529', 17, 16, 5), new Piece('\ue52a', 33, 32, 5)),
-        CYAN(new Piece('\ue458', 2, 1, 5), new Piece('\ue459', 3, 2, 5), new Piece('\ue45a', 5, 4, 5), new Piece('\ue45b', 9, 8, 5), new Piece('\ue52b', 17, 16, 5), new Piece('\ue52c', 33, 32, 5)),
-        GREEN(new Piece('\ue45c', 2, 1, 5), new Piece('\ue45d', 3, 2, 5), new Piece('\ue45e', 5, 4, 5), new Piece('\ue45f', 9, 8, 5), new Piece('\ue52d', 17, 16, 5), new Piece('\ue52e', 33, 32, 5)),
-        PURPLE(new Piece('\ue460', 2, 1, 5), new Piece('\ue461', 3, 2, 5), new Piece('\ue462', 5, 4, 5), new Piece('\ue463', 9, 8, 5), new Piece('\ue52f', 17, 16, 5), new Piece('\ue530', 33, 32, 5)),
-        RED(new Piece('\ue464', 2, 1, 5), new Piece('\ue465', 3, 2, 5), new Piece('\ue466', 5, 4, 5), new Piece('\ue467', 9, 8, 5), new Piece('\ue531', 17, 16, 5), new Piece('\ue532', 33, 32, 5));
+        GOLD(new Piece('\ue48a', 2, 1, 5), new Piece('\ue48b', 3, 2, 5), new Piece('\ue48c', 5, 4, 5), new Piece('\ue48d', 9, 8, 5), new Piece('\ue538', 17, 16, 5), new Piece('\ue539', 33, 32, 5)),
+        CYAN(new Piece('\ue48e', 2, 1, 5), new Piece('\ue48f', 3, 2, 5), new Piece('\ue490', 5, 4, 5), new Piece('\ue491', 9, 8, 5), new Piece('\ue53a', 17, 16, 5), new Piece('\ue53b', 33, 32, 5)),
+        GREEN(new Piece('\ue492', 2, 1, 5), new Piece('\ue493', 3, 2, 5), new Piece('\ue494', 5, 4, 5), new Piece('\ue495', 9, 8, 5), new Piece('\ue53c', 17, 16, 5), new Piece('\ue53d', 33, 32, 5)),
+        PURPLE(new Piece('\ue496', 2, 1, 5), new Piece('\ue497', 3, 2, 5), new Piece('\ue498', 5, 4, 5), new Piece('\ue499', 9, 8, 5), new Piece('\ue53e', 17, 16, 5), new Piece('\ue53f', 33, 32, 5)),
+        RED(new Piece('\ue49a', 2, 1, 5), new Piece('\ue49b', 3, 2, 5), new Piece('\ue49c', 5, 4, 5), new Piece('\ue49d', 9, 8, 5), new Piece('\ue540', 17, 16, 5), new Piece('\ue541', 33, 32, 5));
 
         public final Piece[] p;
 
@@ -232,10 +261,10 @@ public final class KitData {
         }
     }
 
-    public static final Piece BAR_L = new Piece('\ue44e', 9, 8, 7);
-    public static final Piece BAR_M = new Piece('\ue527', 33, 32, 7);
-    public static final Piece BAR_R = new Piece('\ue44f', 9, 8, 7);
-    public static final Piece[] BAR_NARROW = {new Piece('\ue528', 17, 16, 7), new Piece('\ue450', 9, 8, 7), new Piece('\ue451', 5, 4, 7), new Piece('\ue452', 3, 2, 7), new Piece('\ue453', 2, 1, 7)};
+    public static final Piece BAR_L = new Piece('\ue484', 9, 8, 7);
+    public static final Piece BAR_M = new Piece('\ue536', 33, 32, 7);
+    public static final Piece BAR_R = new Piece('\ue485', 9, 8, 7);
+    public static final Piece[] BAR_NARROW = {new Piece('\ue537', 17, 16, 7), new Piece('\ue486', 9, 8, 7), new Piece('\ue487', 5, 4, 7), new Piece('\ue488', 3, 2, 7), new Piece('\ue489', 2, 1, 7)};
     public static final Piece BACK = new Piece('\ue780', 21, 20, 20);
 
     /** Icons: Zeichen und Vorschub für 16 px und 32 px (Schriften kuby:k/i<s>). */

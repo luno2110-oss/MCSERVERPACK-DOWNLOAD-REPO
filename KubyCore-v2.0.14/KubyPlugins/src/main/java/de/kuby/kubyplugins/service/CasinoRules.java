@@ -130,10 +130,12 @@ public final class CasinoRules {
                 subtitle = "Europäisches Roulette, 0 bis 36";
                 icon = Ui.Icon.ROULETTE;
                 how = List.of(
-                        "Setze am Tisch bis zu " + c.getLong("casino.roulette.max-bet", 50) + " Chips auf eine Zahl oder eine Farbe.",
-                        "Nach " + c.getLong("casino.roulette.wait-seconds", 20) + " Sekunden dreht das Rad.",
-                        "Zahl: 36-fach. Rot oder Schwarz: doppelt. Die 0 ist grün.");
-                commands.add(new String[]{"/casino setzen <Einsatz> <rot|schwarz|0-36>", "Einsatz setzen"});
+                        "Am Tisch oder beim Croupier öffnest du mit /roulette das Menü. Chip wählen, dann auf ein Feld klicken.",
+                        "Der erste Einsatz startet die Runde, nach " + c.getLong("casino.roulette.wait-seconds", 20)
+                                + " Sekunden läuft das Licht über die Zahlen und bleibt auf dem Ergebnis stehen.",
+                        "Rot, Schwarz, Gerade, Ungerade, 1–18, 19–36: 1:1. Dutzend und Kolonne: 2:1. Zahl: 35:1.");
+                commands.add(new String[]{"/roulette", "Roulette-Menü"});
+                commands.add(new String[]{"/casino setzen <Einsatz> <rot|schwarz|0-36>", "Einsatz per Befehl"});
             }
             case "slots" -> {
                 subtitle = "Drei gleiche gewinnen";

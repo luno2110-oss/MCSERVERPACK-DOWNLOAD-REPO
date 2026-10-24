@@ -118,6 +118,9 @@ commands:
   music:
     description: "Casino-Musik aussuchen (nur im Casino)"
     usage: "/music"
+  roulette:
+    description: "Roulette-Menü (am Roulette-Tisch)"
+    usage: "/roulette"
   coinflip:
     description: "Münzwurf um Coins"
     usage: "/coinflip <Betrag>"

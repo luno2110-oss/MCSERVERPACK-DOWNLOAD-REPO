@@ -39,14 +39,18 @@ public final class CasinoNpc implements Listener {
 
     /** Rolle einer Figur: Titel, Zeilen darunter, Aktion beim Rechtsklick. */
     public enum Role {
-        KASSE("Kasse", "kasse");
+        KASSE("Kasse", "kasse", null),
+        CROUPIER("Roulette", "croupier", TextColor.color(0xF0303E));
 
         public final String title;
         public final String id;
+        /** Farbe des Titels (helle Titelschrift eingefärbt); null = Gold-Verlauf. */
+        public final TextColor titleColor;
 
-        Role(String title, String id) {
+        Role(String title, String id, TextColor titleColor) {
             this.title = title;
             this.id = id;
+            this.titleColor = titleColor;
         }
 
         public static Role of(String id) {
@@ -81,10 +85,25 @@ public final class CasinoNpc implements Listener {
                 v.setVillagerLevel(5);
                 prepare(v);
             });
+            case CROUPIER -> mannequin(loc, "Croupier", "croupier");
         };
         npc.getPersistentDataContainer().set(roleKey, PersistentDataType.STRING, role.id);
         spawnHolo(role, npc);
         return npc;
+    }
+
+    /** Figur mit eigenem Skin aus dem Pack (kuby:entity/casino/&lt;skin&gt;), schlanke Arme. */
+    private Entity mannequin(Location loc, String name, String skin) {
+        return loc.getWorld().spawn(loc, org.bukkit.entity.Mannequin.class, m -> {
+            m.setProfile(io.papermc.paper.datacomponent.item.ResolvableProfile.resolvableProfile()
+                    .name(name)
+                    .skinPatch(sp -> sp.body(Key.key("kuby", "entity/casino/" + skin))
+                            .model(org.bukkit.profile.PlayerTextures.SkinModel.SLIM))
+                    .build());
+            m.setImmovable(true);
+            m.setDescription(null);
+            prepare(m);
+        });
     }
 
     private void prepare(LivingEntity e) {
@@ -106,8 +125,8 @@ public final class CasinoNpc implements Listener {
         TextComponent.Builder title = Component.text();
         Key chipFont = Key.key("kuby", "k/i-5");
         title.append(Component.text(String.valueOf(KitData.SmallIcon.C_PINK.c)).font(chipFont).color(NamedTextColor.WHITE));
-        title.append(Component.text(de.kuby.kubyplugins.ui.Canvas.titleChars(" " + role.title + " ", true))
-                .font(Key.key("kuby", "title")).color(NamedTextColor.WHITE));
+        title.append(Component.text(de.kuby.kubyplugins.ui.Canvas.titleChars(" " + role.title + " ", role.titleColor == null))
+                .font(Key.key("kuby", "title")).color(role.titleColor == null ? NamedTextColor.WHITE : role.titleColor));
         title.append(Component.text(String.valueOf(KitData.SmallIcon.C_PINK.c)).font(chipFont).color(NamedTextColor.WHITE));
         holo(base.clone().add(0, 2.62, 0), title.build(), 0.62f, owner);
         holo(base.clone().add(0, 2.12, 0), body(role), 1.0f, owner);
@@ -119,6 +138,10 @@ public final class CasinoNpc implements Listener {
             case KASSE -> Component.text()
                     .append(Component.text("Coins ", light)).append(Component.text("⇄", NamedTextColor.GRAY))
                     .append(Component.text(" Chips", light)).append(Component.newline())
+                    .append(Component.text("➜ ", NamedTextColor.YELLOW)).append(Component.text("Rechtsklick", light))
+                    .build();
+            case CROUPIER -> Component.text()
+                    .append(Component.text("Einsatz setzen", light)).append(Component.newline())
                     .append(Component.text("➜ ", NamedTextColor.YELLOW)).append(Component.text("Rechtsklick", light))
                     .build();
         };
@@ -197,6 +220,7 @@ public final class CasinoNpc implements Listener {
                 }
                 new KasseMenu(plugin).open(p);
             };
+            case CROUPIER -> p -> plugin.roulette().open(p);
         };
     }
 

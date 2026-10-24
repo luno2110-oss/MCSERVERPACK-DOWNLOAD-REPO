@@ -554,6 +554,7 @@ import build_kit  # noqa: E402
 import build_fish  # noqa: E402
 import build_angel_icons  # noqa: E402
 import build_casino  # noqa: E402
+import build_skins  # noqa: E402
 import build_sym  # noqa: E402
 
 build_sym.build(OUT)
@@ -565,6 +566,7 @@ if VANILLA and os.path.isdir(VANILLA):
     own += [("fishx_" + f[0], build_fish.render(f, silhouette=True)) for f in build_fish.FISH]
     own += build_angel_icons.build(OUT)
     casino16, casino_small, casino_big = build_casino.build(OUT)
+    build_skins.build(OUT)
     own += casino16
     build_kit.build(OUT, {**neg, **pos}, VANILLA, own, casino_small, casino_big)
 else:

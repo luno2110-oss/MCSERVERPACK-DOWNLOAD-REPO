@@ -10,7 +10,6 @@ import de.kuby.kubyplugins.service.MarkerService;
 import de.kuby.kubyplugins.service.CasinoService;
 import de.kuby.kubyplugins.service.BlackjackService;
 import de.kuby.kubyplugins.listener.BlackjackListener;
-import de.kuby.kubyplugins.service.RouletteService;
 import de.kuby.kubyplugins.service.SlotsService;
 import de.kuby.kubyplugins.service.CrashService;
 import de.kuby.kubyplugins.service.CasinoLog;
@@ -134,7 +133,7 @@ public final class KubyPlugins extends JavaPlugin {
     private MarkerService markers;
     private CasinoService casino;
     private BlackjackService blackjack;
-    private RouletteService roulette;
+    private de.kuby.kubyplugins.casino.RouletteGame roulette;
     private SlotsService slots;
     private CrashService crash;
     private CasinoLog casinoLog;
@@ -216,7 +215,7 @@ public final class KubyPlugins extends JavaPlugin {
         registerMainEntry(new MainEntry(org.bukkit.Material.NETHER_STAR, "Erfolge", "Fortschritt und Belohnungen",
                 p -> new de.kuby.kubyplugins.gui.AchievementMenu(this, 0).open(p)));
         blackjack = new BlackjackService(this);
-        roulette = new RouletteService(this);
+        roulette = new de.kuby.kubyplugins.casino.RouletteGame(this);
         slots = new SlotsService(this);
         crash = new CrashService(this);
         edit = new EditModeService(this);
@@ -320,6 +319,10 @@ public final class KubyPlugins extends JavaPlugin {
             if (sender instanceof org.bukkit.entity.Player p) casinoMusic.openMenu(p);
             return true;
         }, "music");
+        setAll((sender, command, label, args) -> {
+            if (sender instanceof org.bukkit.entity.Player p) roulette.open(p);
+            return true;
+        }, "roulette");
         setAll(new AdminCommand(this), "kadmin");
         setAll(new HelpCommand(this), "befehle", "menu");
         setAll(new ExtraCommand(this), "dailypot", "trade", "tags", "rtpqueue", "meta", "booster", "xpshop", "battlepass", "cosmetics", "turnier", "verify", "versichern", "enderchest", "kristaltrade", "investments", "quizvote", "totenkiste", "kits", "hub", "tpa", "tpaccept", "tpadeny", "spielzeit");
@@ -341,6 +344,7 @@ public final class KubyPlugins extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new RegionListener(this), this);
         getServer().getPluginManager().registerEvents(new BlackjackListener(this), this);
         getServer().getPluginManager().registerEvents(casinoNpc, this);
+        getServer().getPluginManager().registerEvents(roulette, this);
         getServer().getPluginManager().registerEvents(new CasinoVipListener(this), this);
         getServer().getPluginManager().registerEvents(votes, this);
         getServer().getPluginManager().registerEvents(uiPack, this);
@@ -544,7 +548,7 @@ public final class KubyPlugins extends JavaPlugin {
     public MarkerService markers() { return markers; }
     public CasinoService casino() { return casino; }
     public BlackjackService blackjack() { return blackjack; }
-    public RouletteService roulette() { return roulette; }
+    public de.kuby.kubyplugins.casino.RouletteGame roulette() { return roulette; }
     public SlotsService slots() { return slots; }
     public CrashService crash() { return crash; }
     public CasinoLog casinoLog() { return casinoLog; }

@@ -125,8 +125,12 @@ CASINO_BOXES = {
                         colors={"L": "6C5A2C", "D": "433813", "N": "15723B"}, first="1E8749", last="17703A"),
     "field_black": dict(corner=CORNER_FIELD, straight=5, edge="KLD",
                         colors={"L": "665628", "D": "47381C", "N": "222126"}, first="2A292E", last="232024"),
+    "field_felt": dict(corner=CORNER_FIELD, straight=5, edge="KLD",
+                       colors={"L": "6C5A2C", "D": "433813", "N": "0E4A26"}, first="135A30", last="0C4420"),
 }
 ALL_BOXES = list(BOXES) + list(CASINO_BOXES)
+# Kästen, die auch schmaler als 48 px gehen (Zahlenfelder im Roulette-Raster): schmale Mittelstücke
+NARROW_BOXES = ("field_red", "field_green", "field_black", "field_felt")
 
 # Knöpfe 22 px: (Rand, Füllung oben hell, Füllung, Schatten 1, Schatten 2) oder Umriss-Knopf (Rand, Füllung)
 BUTTONS = {
@@ -510,6 +514,9 @@ def build_pieces():
             caps9.add(("box", style, row, "l"), full.crop((0, y, CAP, y + ROW)))
             segs9.add(("box", style, row, "m"), full.crop((CAP, y, CAP + SEG, y + ROW)))
             caps9.add(("box", style, row, "r"), full.crop((CAP + SEG, y, 2 * CAP + SEG, y + ROW)))
+            if style in NARROW_BOXES:
+                for w in NARROW:
+                    (segs9 if w > CAP else caps9).add(("box", style, row, w), full.crop((CAP, y, CAP + w, y + ROW)))
     # Knöpfe 22 px; schmale Mittelstücke (16, 8, 4, 2, 1) für kurze Knöpfe
     for style in BUTTONS:
         full = draw_button(CAP + SEG + CAP, BTN_H, style)
@@ -829,7 +836,13 @@ def write_java(sheets, widths, icons, icon_chars, icon_adv, small_data=(), title
         for row in ("top", "mid", "bot"):
             for side, kind in (("l", "l"), ("m", "m"), ("r", "r")):
                 parts.append(piece(("box", style, row, side)))
-        rows.append("        %s(%d, %s)" % (style.upper(), box_straight(style), ",\n                ".join(parts)))
+        if style in NARROW_BOXES:
+            narrow = "new Piece[]{" + ", ".join(piece(("box", style, row, w)) for row in ("top", "mid", "bot")
+                                                 for w in NARROW) + "}"
+        else:
+            narrow = "null"
+        rows.append("        %s(%d, %s,\n                %s)" % (style.upper(), box_straight(style), narrow,
+                                                         ",\n                ".join(parts)))
     L.append(",\n".join(rows) + ";")
     L.append("")
     L.append("        /** [Zeile oben/mitte/unten][links/mitte/rechts] */")
@@ -837,8 +850,14 @@ def write_java(sheets, widths, icons, icon_chars, icon_adv, small_data=(), title
     L.append("        /** Ab dieser Zeile ist die Ecke gerade: so weit dürfen Mittelzeilen in die obere und untere ragen. */")
     L.append("        public final int straight;")
     L.append("")
-    L.append("        Box(int straight, Piece... all) {")
+    L.append("        /** Schmale Mittelstücke je Zeile (oben, mitte, unten) in 16, 8, 4, 2, 1 px, sonst null. */")
+    L.append("        public final Piece[][] narrow;")
+    L.append("")
+    L.append("        Box(int straight, Piece[] narrow, Piece... all) {")
     L.append("            this.straight = straight;")
+    L.append("            this.narrow = narrow == null ? null : new Piece[][]{")
+    L.append("                    java.util.Arrays.copyOfRange(narrow, 0, 5), java.util.Arrays.copyOfRange(narrow, 5, 10),")
+    L.append("                    java.util.Arrays.copyOfRange(narrow, 10, 15)};")
     L.append("            p = new Piece[][]{{all[0], all[1], all[2]}, {all[3], all[4], all[5]}, {all[6], all[7], all[8]}};")
     L.append("        }")
     L.append("    }")
