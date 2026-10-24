@@ -551,9 +551,19 @@ build_sb_pack.build(OUT, {**neg, **pos})
 # im Ordner KUBY_VANILLA; ohne den bleibt das vorhandene Kit unverändert.
 import build_kit  # noqa: E402
 
+import build_fish  # noqa: E402
+import build_angel_icons  # noqa: E402
+import build_sym  # noqa: E402
+
+build_sym.build(OUT)
+
 VANILLA = os.environ.get("KUBY_VANILLA")
 if VANILLA and os.path.isdir(VANILLA):
-    build_kit.build(OUT, {**neg, **pos}, VANILLA)
+    build_fish.build(OUT)
+    own = [("fish_" + f[0], build_fish.render(f)) for f in build_fish.FISH]
+    own += [("fishx_" + f[0], build_fish.render(f, silhouette=True)) for f in build_fish.FISH]
+    own += build_angel_icons.build(OUT)
+    build_kit.build(OUT, {**neg, **pos}, VANILLA, own)
 else:
     print("Hinweis: KUBY_VANILLA nicht gesetzt, Dialog-Kit nicht neu gebaut")
 

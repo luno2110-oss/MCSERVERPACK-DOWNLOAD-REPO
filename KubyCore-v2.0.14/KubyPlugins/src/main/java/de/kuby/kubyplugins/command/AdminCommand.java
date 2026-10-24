@@ -26,6 +26,10 @@ public final class AdminCommand implements CommandExecutor {
             Msg.send(p, "<red>Keine Berechtigung.");
             return true;
         }
+        if (args.length > 0 && args[0].equalsIgnoreCase("kittest")) {
+            de.kuby.kubyplugins.ui.KitDemo.open(p, 0);
+            return true;
+        }
         new AdminMenu(plugin).open(p);
         return true;
     }

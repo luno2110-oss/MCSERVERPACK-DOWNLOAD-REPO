@@ -407,7 +407,7 @@ def build_pieces():
 # Name -> Vanilla-Textur (minecraft:item/...) ; je Icon gibt es 16 px (1x) und 32 px (2x)
 VANILLA_ICONS = {
     "rod": "item/fishing_rod.png", "book": "item/enchanted_book.png", "knowledge_book": "item/knowledge_book.png",
-    "emerald": "item/emerald.png", "chest": "item/chest_minecart.png", "gold_helmet": "item/golden_helmet.png",
+    "emerald": "item/emerald.png", "gold_helmet": "item/golden_helmet.png",
     "cod": "item/cod.png", "salmon": "item/salmon.png", "tropical": "item/tropical_fish.png",
     "puffer": "item/pufferfish.png", "gold_ingot": "item/gold_ingot.png", "gold_nugget": "item/gold_nugget.png",
     "diamond": "item/diamond.png", "amethyst": "item/amethyst_shard.png", "bundle": "item/bundle.png",
@@ -417,8 +417,9 @@ VANILLA_ICONS = {
     "glow_ink": "item/glow_ink_sac.png", "ink": "item/ink_sac.png", "experience": "item/experience_bottle.png",
     "music_disc": "item/music_disc_cat.png", "jukebox": "item/music_disc_13.png", "name_tag": "item/name_tag.png",
     "totem": "item/totem_of_undying.png", "star": "item/nether_star.png", "writable": "item/writable_book.png",
-    "barrier": "item/barrier.png", "anvil": "item/iron_ingot.png", "hopper": "item/hopper.png",
+    "barrier": "item/barrier.png", "iron_ingot": "item/iron_ingot.png", "hopper": "item/hopper.png",
     "sunflower": "block/sunflower_front.png", "lily": "block/lily_pad.png",
+    "rabbit_foot": "item/rabbit_foot.png", "feather": "item/feather.png", "book_plain": "item/book.png",
 }
 
 
@@ -452,7 +453,8 @@ def write_font(fdir, name, providers):
         json.dump({"providers": providers}, f, ensure_ascii=True, separators=(",", ":"))
 
 
-def build(out, spaces, vroot):
+def build(out, spaces, vroot, own_icons=()):
+    """own_icons: [(name, Bild 16 x 16)] aus build_fish.py und build_angel_icons.py."""
     tex = os.path.join(out, "assets/kuby/textures/k")
     fdir = os.path.join(out, "assets/kuby/font/k")
     shutil.rmtree(tex, ignore_errors=True)
@@ -494,10 +496,31 @@ def build(out, spaces, vroot):
         write_font(fdir, "b%d" % s, providers)
 
     # ---- Icons ----
+    # Vanilla-Texturen einzeln referenziert, eigene Icons in einem Bogen (ein Provider je Schrift und Größe)
     icons = build_icons(vroot)
     icon_chars = {}
+    icon_adv = {}
     for i, (name, file) in enumerate(icons):
         icon_chars[name] = (chr(0xE900 + 2 * i), chr(0xE901 + 2 * i))    # 16 px, 32 px
+        icon_adv[name] = icon_advances(vroot, file)
+    cols = 16
+    rows = max(1, (len(own_icons) + cols - 1) // cols)
+    own_sheet = Image.new("RGBA", (16 * cols, 16 * rows), T)
+    own16 = []
+    own32 = []
+    for i, (name, img) in enumerate(own_icons):
+        own_sheet.alpha_composite(img, ((i % cols) * 16, (i // cols) * 16))
+        icon_chars[name] = (chr(0xEA00 + i), chr(0xEC00 + i))
+        bbox = img.getchannel("A").getbbox()
+        w = bbox[2] if bbox else 0
+        icon_adv[name] = (w + 1, 2 * w + 1)
+    for r in range(rows):
+        own16.append("".join(chr(0xEA00 + r * cols + c) if r * cols + c < len(own_icons) else "\u0000"
+                             for c in range(cols)))
+        own32.append("".join(chr(0xEC00 + r * cols + c) if r * cols + c < len(own_icons) else "\u0000"
+                             for c in range(cols)))
+    if own_icons:
+        own_sheet.save(os.path.join(tex, "icons.png"))
     for s in I_SHIFTS:
         providers = [space_prov]
         asc = 7 - s
@@ -507,10 +530,17 @@ def build(out, spaces, vroot):
                 providers.append({"type": "bitmap", "file": file, "height": 16, "ascent": asc, "chars": [c16]})
             if asc <= 32:
                 providers.append({"type": "bitmap", "file": file, "height": 32, "ascent": asc, "chars": [c32]})
+        if own_icons:
+            if asc <= 16:
+                providers.append({"type": "bitmap", "file": "kuby:k/icons.png", "height": 16, "ascent": asc,
+                                  "chars": own16})
+            if asc <= 32:
+                providers.append({"type": "bitmap", "file": "kuby:k/icons.png", "height": 32, "ascent": asc,
+                                  "chars": own32})
         write_font(fdir, "i%d" % s, providers)
+    icons = icons + [(name, None) for name, _ in own_icons]
 
     widths = text_widths(vroot)
-    icon_adv = {name: icon_advances(vroot, file) for name, file in icons}
     write_java(sheets, widths, icons, icon_chars, icon_adv)
     n_fonts = len(T_SHIFTS) + len(B_SHIFTS) + len(I_SHIFTS)
     print("ok kit: %d Schriften, %d Stücke, %d Icons, %d Textzeichen" % (
