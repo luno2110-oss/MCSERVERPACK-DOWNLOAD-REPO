@@ -8,11 +8,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.EquipmentSlot;
 
 /**
@@ -36,8 +32,7 @@ public final class BlackjackListener implements Listener {
         Location at = e.getClickedBlock().getLocation();
         Player p = e.getPlayer();
         String game;
-        if (plugin.blackjack().isTable(at)) game = "blackjack";
-        else if (plugin.roulette().isTable(at)) game = "roulette";
+        if (plugin.roulette().isTable(at)) game = "roulette";
         else if (plugin.slots().isMachine(at)) game = "slots";
         else if (plugin.crash().isMachine(at)) game = "crash";
         else if (plugin.casino().isKasse(at)) game = "kasse";
@@ -59,30 +54,9 @@ public final class BlackjackListener implements Listener {
             return;
         }
         String err = switch (game) {
-            case "blackjack" -> plugin.blackjack().start(p);
             case "slots" -> plugin.slots().pull(p);
             default -> plugin.crash().click(p);
         };
         if (err != null) Msg.send(p, "<red>" + err);
-    }
-
-    @EventHandler
-    public void onMove(PlayerMoveEvent e) {
-        if (e.hasChangedBlock()) plugin.blackjack().checkAway(e.getPlayer(), e.getTo());
-    }
-
-    @EventHandler
-    public void onTeleport(PlayerTeleportEvent e) {
-        plugin.blackjack().checkAway(e.getPlayer(), e.getTo());
-    }
-
-    @EventHandler
-    public void onQuit(PlayerQuitEvent e) {
-        plugin.blackjack().leave(e.getPlayer().getUniqueId());
-    }
-
-    @EventHandler
-    public void onDeath(PlayerDeathEvent e) {
-        plugin.blackjack().leave(e.getEntity().getUniqueId());
     }
 }

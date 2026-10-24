@@ -29,7 +29,7 @@ public final class CasinoAdmin {
     private record Setting(String key, String path, String label, float min, float max, float step, double def, double scale) {}
 
     private static final List<Setting> SETTINGS = List.of(
-            new Setting("bj_bet", "casino.blackjack.bet", "Blackjack-Einsatz (Chips)", 10, 10000, 10, 100, 1),
+            new Setting("bj_max", "casino.blackjack.max-bet", "Blackjack-Höchsteinsatz (Chips)", 100, 100000, 100, 10000, 1),
             new Setting("roulette_max", "casino.roulette.max-bet", "Roulette-Höchsteinsatz (Chips)", 100, 100000, 100, 5000, 1),
             new Setting("roulette_wait", "casino.roulette.wait-seconds", "Roulette-Wartezeit (Sekunden)", 5, 120, 5, 20, 1),
             new Setting("slots_bet", "casino.slots.bet", "Slots-Einsatz (Chips)", 10, 5000, 10, 100, 1),
@@ -59,7 +59,7 @@ public final class CasinoAdmin {
                 + "<white>Jackpot: <gold>" + Msg.coins(plugin.casino().jackpot()) + " Coins"
                 + " <gray>· Ziehung " + plugin.jackpotDraw().nextDrawLabel() + " · " + plugin.jackpotDraw().participantCount() + " Teilnehmer\n"
                 + "<white>Aufbau: " + mark("Kasse", plugin.casino().hasKasse())
-                + " " + mark("Blackjack", plugin.casino().tableLocation() != null)
+                + " " + mark("Blackjack", plugin.blackjack().hasTable())
                 + " " + mark("Roulette", plugin.roulette().hasTable())
                 + " " + mark("Slots", plugin.slots().hasMachine())
                 + " " + mark("Crash", plugin.crash().hasMachine())
@@ -124,7 +124,7 @@ public final class CasinoAdmin {
                     pl.showDialog(main(plugin));
                 }));
         buttons.add(command("Kasse setzen", "casino kasse"));
-        buttons.add(command("Blackjack-Tisch", "casino tisch"));
+        buttons.add(command("Blackjack-Tisch hier", "casino blackjack tisch"));
         buttons.add(command("Roulette-Tisch", "casino roulette-tisch"));
         buttons.add(command("Slots-Automat", "casino automat"));
         buttons.add(command("Crash-Automat", "casino crash"));

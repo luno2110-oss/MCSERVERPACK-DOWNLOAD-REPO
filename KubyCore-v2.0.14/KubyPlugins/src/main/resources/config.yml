@@ -134,7 +134,10 @@ casino:
     max-buyin-bb: 200
     turn-seconds: 30
   blackjack:
-    bet: 100
+    min-bet: 10
+    max-bet: 10000              # je Platz und Runde (vor Doppeln/Teilen)
+    bet-seconds: 8              # Countdown nach dem ersten Einsatz
+    turn-seconds: 15            # Zeit pro Zug, danach wird gehalten
   roulette:
     wait-seconds: 20
     min-bet: 10

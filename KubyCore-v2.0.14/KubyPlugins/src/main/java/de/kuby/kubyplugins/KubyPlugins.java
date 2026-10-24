@@ -8,7 +8,6 @@ import de.kuby.kubyplugins.listener.EditListener;
 import de.kuby.kubyplugins.service.EditModeService;
 import de.kuby.kubyplugins.service.MarkerService;
 import de.kuby.kubyplugins.service.CasinoService;
-import de.kuby.kubyplugins.service.BlackjackService;
 import de.kuby.kubyplugins.listener.BlackjackListener;
 import de.kuby.kubyplugins.service.SlotsService;
 import de.kuby.kubyplugins.service.CrashService;
@@ -132,7 +131,7 @@ public final class KubyPlugins extends JavaPlugin {
     private ModuleService modules;
     private MarkerService markers;
     private CasinoService casino;
-    private BlackjackService blackjack;
+    private de.kuby.kubyplugins.casino.BlackjackService blackjack;
     private de.kuby.kubyplugins.casino.RouletteGame roulette;
     private SlotsService slots;
     private CrashService crash;
@@ -214,7 +213,7 @@ public final class KubyPlugins extends JavaPlugin {
         registerStat("casino_plus", id -> Math.max(0L, casinoLog.netOf(id)));
         registerMainEntry(new MainEntry(org.bukkit.Material.NETHER_STAR, "Erfolge", "Fortschritt und Belohnungen",
                 p -> new de.kuby.kubyplugins.gui.AchievementMenu(this, 0).open(p)));
-        blackjack = new BlackjackService(this);
+        blackjack = new de.kuby.kubyplugins.casino.BlackjackService(this);
         roulette = new de.kuby.kubyplugins.casino.RouletteGame(this);
         slots = new SlotsService(this);
         crash = new CrashService(this);
@@ -345,6 +344,7 @@ public final class KubyPlugins extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new BlackjackListener(this), this);
         getServer().getPluginManager().registerEvents(casinoNpc, this);
         getServer().getPluginManager().registerEvents(roulette, this);
+        getServer().getPluginManager().registerEvents(blackjack, this);
         getServer().getPluginManager().registerEvents(new CasinoVipListener(this), this);
         getServer().getPluginManager().registerEvents(votes, this);
         getServer().getPluginManager().registerEvents(uiPack, this);
@@ -547,7 +547,7 @@ public final class KubyPlugins extends JavaPlugin {
     public ModuleService modules() { return modules; }
     public MarkerService markers() { return markers; }
     public CasinoService casino() { return casino; }
-    public BlackjackService blackjack() { return blackjack; }
+    public de.kuby.kubyplugins.casino.BlackjackService blackjack() { return blackjack; }
     public de.kuby.kubyplugins.casino.RouletteGame roulette() { return roulette; }
     public SlotsService slots() { return slots; }
     public CrashService crash() { return crash; }

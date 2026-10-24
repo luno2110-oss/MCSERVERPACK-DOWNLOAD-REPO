@@ -493,10 +493,181 @@ def write_slot_highlight(out):
         json.dump({"gui": {"scaling": {"type": "nine_slice", "width": 24, "height": 24, "border": 8}}}, f)
 
 
+# =====================================================================================================================
+# Spielkarten (32 x 32, Karte 24 x 30 mittig) und Materialien für Tische (Würfel-Modelle für Item-Anzeigen)
+# =====================================================================================================================
+RANKS = {
+    "A": [".XXX.", "XX.XX", "XX.XX", "XXXXX", "XX.XX", "XX.XX", "XX.XX"],
+    "2": ["XXXX.", "...XX", "...XX", ".XXX.", "XX...", "XX...", "XXXXX"],
+    "3": ["XXXX.", "...XX", "...XX", ".XXX.", "...XX", "...XX", "XXXX."],
+    "4": ["XX.XX", "XX.XX", "XX.XX", "XXXXX", "...XX", "...XX", "...XX"],
+    "5": ["XXXXX", "XX...", "XXXX.", "...XX", "...XX", "...XX", "XXXX."],
+    "6": [".XXX.", "XX...", "XX...", "XXXX.", "XX.XX", "XX.XX", ".XXX."],
+    "7": ["XXXXX", "...XX", "..XX.", "..XX.", ".XX..", ".XX..", ".XX.."],
+    "8": [".XXX.", "XX.XX", "XX.XX", ".XXX.", "XX.XX", "XX.XX", ".XXX."],
+    "9": [".XXX.", "XX.XX", "XX.XX", ".XXXX", "...XX", "...XX", ".XXX."],
+    "10": ["X.XXX", "X.X.X", "X.X.X", "X.X.X", "X.X.X", "X.X.X", "X.XXX"],
+    "J": ["..XXX", "...XX", "...XX", "...XX", "XX.XX", "XX.XX", ".XXX."],
+    "Q": [".XXX.", "XX.XX", "XX.XX", "XX.XX", "XX.XX", ".XXX.", "...XX"],
+    "K": ["XX.XX", "XX.XX", "XXXX.", "XXX..", "XXXX.", "XX.XX", "XX.XX"],
+}
+SUITS_SMALL = {
+    "h": [".XX.XX.", "XXXXXXX", "XXXXXXX", ".XXXXX.", "..XXX..", "...X..."],
+    "d": ["...X...", "..XXX..", ".XXXXX.", "XXXXXXX", ".XXXXX.", "..XXX..", "...X..."],
+    "s": ["...X...", "..XXX..", ".XXXXX.", "XXXXXXX", "XXXXXXX", "...X...", "..XXX.."],
+    "c": ["..XXX..", "..XXX..", "XX.X.XX", "XXXXXXX", "XX.X.XX", "...X...", "..XXX.."],
+}
+CARD_RED, CARD_BLACK = rgb("D0202C"), rgb("1C1A22")
+
+
+def suit_big(suit, size=12):
+    """Großes Farbzeichen aus Formen (12 x 12)."""
+    p = Pix(size)
+    c = size / 2
+    col = CARD_RED if suit in "hd" else CARD_BLACK
+    if suit == "h":
+        p.disk(c - 2.6, 4.2, 3.0, col)
+        p.disk(c + 2.6, 4.2, 3.0, col)
+        p.poly([(0.6, 5.0), (size - 0.6, 5.0), (c, size - 0.4)], col)
+    elif suit == "d":
+        p.poly([(c, 0.0), (size - 2.0, c), (c, size), (2.0, c)], col)
+    elif suit == "s":
+        p.poly([(c, 0.2), (size - 0.4, 6.4), (0.4, 6.4)], col)
+        p.disk(c - 2.6, 6.8, 2.9, col)
+        p.disk(c + 2.6, 6.8, 2.9, col)
+        p.poly([(c - 0.6, 7.0), (c + 0.6, 7.0), (c + 2.6, size - 0.2), (c - 2.6, size - 0.2)], col)
+    else:
+        p.disk(c, 2.8, 2.5, col)
+        p.disk(c - 3.3, 6.6, 2.5, col)
+        p.disk(c + 3.3, 6.6, 2.5, col)
+        p.rect(int(c) - 1, 4, int(c), 8, col)
+        p.poly([(c - 0.8, 7.0), (c + 0.8, 7.0), (c + 2.8, size - 0.2), (c - 2.8, size - 0.2)], col)
+    return p.image(outline=None)
+
+
+def card(rank, suit):
+    img = Image.new("RGBA", (32, 32), T)
+    px = img.load()
+    x0, y0, x1, y1 = 4, 1, 27, 30
+    for y in range(y0, y1 + 1):
+        for x in range(x0, x1 + 1):
+            corner = (x in (x0, x1)) and (y in (y0, y1))
+            if corner:
+                continue
+            edge = x in (x0, x1) or y in (y0, y1)
+            px[x, y] = rgb("B8B4C0") if edge else rgb("FAF9F4")
+    col = CARD_RED if suit in "hd" else CARD_BLACK
+    glyph = RANKS[rank]
+    for gy, row in enumerate(glyph):
+        for gx, ch in enumerate(row):
+            if ch == "X":
+                px[6 + gx, 3 + gy] = col
+    for gy, row in enumerate(SUITS_SMALL[suit]):
+        for gx, ch in enumerate(row):
+            if ch == "X":
+                px[13 + gx, 3 + gy] = col
+    big = suit_big(suit)
+    img.alpha_composite(big, (16 - 6, 15))
+    return img
+
+
+def card_back():
+    img = Image.new("RGBA", (32, 32), T)
+    px = img.load()
+    x0, y0, x1, y1 = 4, 1, 27, 30
+    for y in range(y0, y1 + 1):
+        for x in range(x0, x1 + 1):
+            if (x in (x0, x1)) and (y in (y0, y1)):
+                continue
+            edge = x in (x0, x1) or y in (y0, y1)
+            inner = x in (x0 + 2, x1 - 2) or y in (y0 + 2, y1 - 2)
+            if edge:
+                px[x, y] = rgb("F4F0E8")
+            elif x in (x0 + 1, x1 - 1) or y in (y0 + 1, y1 - 1):
+                px[x, y] = rgb("F4F0E8")
+            elif inner:
+                px[x, y] = rgb("E8B830")
+            else:
+                diamond = (x + y) % 4 == 0 or (x - y) % 4 == 0
+                px[x, y] = rgb("A81E2C") if diamond else rgb("7A1020")
+    return img
+
+
+SUIT_IDS = "hdsc"
+CARD_RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
+
+# Materialien: Würfel mit flacher Farbe (Tisch, Polster, Gold); Name -> (Farbe, Muster)
+MATERIALS = {
+    "felt": ("52672C", "flat"),
+    "rim": ("6E4126", "rim"),
+    "wood": ("4A2E16", "planks"),
+    "gold": ("F8D23E", "gold"),
+    "cushion": ("2F6440", "cushion"),
+    "frame": ("C88C2A", "frame"),
+    "black": ("1E1C22", "flat"),
+    "rack": ("7A4A22", "planks"),
+    "screen": ("0C0C10", "flat"),
+    "bar": ("62B21A", "flat"),
+    "white": ("F2F0EC", "flat"),
+}
+
+
+def material(name):
+    base, kind = MATERIALS[name]
+    b = rgb(base)
+    img = Image.new("RGBA", (16, 16), b)
+    px = img.load()
+    for y in range(16):
+        for x in range(16):
+            c = b
+            if kind == "rim":
+                c = mix(b, rgb("FFFFFF"), 0.06) if y < 3 else (shade(b, 0.92) if y > 12 else b)
+            elif kind == "planks":
+                c = shade(b, 0.82) if y % 4 == 3 else (mix(b, rgb("FFFFFF"), 0.04) if (x * 7 + y * 3) % 11 == 0 else b)
+            elif kind == "gold":
+                c = mix(b, rgb("FFF4B0"), 0.35) if (x + y) % 9 == 0 or y == 0 else (shade(b, 0.9) if y == 15 else b)
+            elif kind == "cushion":
+                c = mix(b, rgb("FFFFFF"), 0.08) if x in (0, 15) or y in (0, 15) else b
+            elif kind == "frame":
+                c = mix(b, rgb("FFE090"), 0.3) if x == 0 or y == 0 else (shade(b, 0.8) if x == 15 or y == 15 else b)
+            px[x, y] = c
+    return img
+
+
+def write_cards_and_materials(out):
+    tex = os.path.join(out, "assets/kuby/textures/item/casino")
+    models = os.path.join(out, "assets/kuby/models/item/casino")
+    items = os.path.join(out, "assets/kuby/items/casino")
+    btex = os.path.join(out, "assets/kuby/textures/block/casino")
+    for d in (tex, models, items, btex):
+        os.makedirs(d, exist_ok=True)
+
+    def item(name, model):
+        with open(os.path.join(models, name + ".json"), "w", encoding="utf-8") as fh:
+            json.dump(model, fh)
+        with open(os.path.join(items, name + ".json"), "w", encoding="utf-8") as fh:
+            json.dump({"model": {"type": "minecraft:model", "model": "kuby:item/casino/" + name}}, fh)
+
+    for s in SUIT_IDS:
+        for r in CARD_RANKS:
+            name = "card_" + r.lower() + s
+            card(r, s).save(os.path.join(tex, name + ".png"))
+            item(name, {"parent": "minecraft:item/generated", "textures": {"layer0": "kuby:item/casino/" + name}})
+    card_back().save(os.path.join(tex, "card_back.png"))
+    item("card_back", {"parent": "minecraft:item/generated", "textures": {"layer0": "kuby:item/casino/card_back"}})
+    faces = {d: {"texture": "#all", "uv": [0, 0, 16, 16]} for d in ("north", "south", "east", "west", "up", "down")}
+    for name in MATERIALS:
+        material(name).save(os.path.join(btex, name + ".png"))
+        item("m_" + name, {"textures": {"all": "kuby:block/casino/" + name, "particle": "kuby:block/casino/" + name},
+                           "elements": [{"from": [0, 0, 0], "to": [16, 16, 16], "faces": faces}]})
+
+
 def build(out):
-    """Gibt (icons16, small, big) als [(name, bild)] zurück; schreibt Tooltip-Rahmen, Slot-Markierung, Chip-Items."""
+    """Gibt (icons16, small, big) als [(name, bild)] zurück; schreibt Tooltip-Rahmen, Slot-Markierung, Chip-Items,
+    Spielkarten und Tisch-Materialien."""
     if out:
         write_tooltip(out)
         write_slot_highlight(out)
         write_items(out)
+        write_cards_and_materials(out)
     return ([(n, f()) for n, f in ICONS16], [(n, f()) for n, f in SMALL], [(n, f()) for n, f in BIG])

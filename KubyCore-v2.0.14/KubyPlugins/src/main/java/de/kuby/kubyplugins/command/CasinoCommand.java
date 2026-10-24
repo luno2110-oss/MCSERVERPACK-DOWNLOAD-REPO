@@ -72,9 +72,10 @@ public final class CasinoCommand implements CommandExecutor {
                 if (blocked != null) Msg.send(p, "<red>" + blocked);
                 else new de.kuby.kubyplugins.casino.KasseMenu(plugin).open(p);
             }
-            case "tisch" -> tisch(p);
-            case "hit" -> answer(p, plugin.blackjack().hit(p.getUniqueId()));
-            case "stand" -> answer(p, plugin.blackjack().stand(p.getUniqueId()));
+            case "tisch" -> Msg.send(p, "<gray>Blackjack-Tische baust du jetzt mit <white>/casino blackjack tisch [Radius]</white>.");
+            case "hit", "karte" -> answer(p, plugin.blackjack().action(p, 0));
+            case "stand", "halten" -> answer(p, plugin.blackjack().action(p, 1));
+            case "blackjack" -> plugin.blackjack().command(p, args);
             case "setzen" -> rouletteBet(p, args);
             case "roulette-tisch" -> rouletteTable(p, args);
             case "automat" -> slotsMachine(p);

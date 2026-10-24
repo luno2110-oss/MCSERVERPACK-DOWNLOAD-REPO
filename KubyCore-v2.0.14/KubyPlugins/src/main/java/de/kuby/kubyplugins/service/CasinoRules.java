@@ -119,12 +119,15 @@ public final class CasinoRules {
                 subtitle = "Näher an 21 als der Dealer";
                 icon = Ui.Icon.CARDS;
                 how = List.of(
-                        "Rechtsklick auf den Tisch startet eine Runde. Einsatz: " + c.getLong("casino.blackjack.bet", 1) + " Chip(s).",
-                        "Bildkarten zählen 10, Asse 1 oder 11. Der Dealer zieht bis 17.",
-                        "Sieg: doppelter Einsatz. Blackjack: 2,5-fach. Gleichstand: Einsatz zurück.",
-                        "Wer weggeht oder ausloggt, hält automatisch.");
-                commands.add(new String[]{"/casino hit", "Karte ziehen"});
-                commands.add(new String[]{"/casino stand", "Halten"});
+                        "Rechtsklick auf einen Hocker oder den Dealer: hinsetzen. Klick Chips aus dem Rack vor dir auf dein Feld ("
+                                + c.getLong("casino.blackjack.min-bet", 10) + " bis " + c.getLong("casino.blackjack.max-bet", 10000)
+                                + " Chips), der erste Einsatz startet die Runde.",
+                        "Bildkarten zählen 10, Asse 1 oder 11. Bist du dran, klickst du Karte, Halten, Doppeln oder Teilen."
+                                + " Der Dealer zieht bis 17.",
+                        "Gewinn: 1:1. Blackjack: 3:2. Gleichstand: Einsatz zurück.",
+                        "Aufstehen mit Schleichen. Wer mitten in der Runde aufsteht, hält automatisch.");
+                commands.add(new String[]{"/casino karte", "Karte ziehen"});
+                commands.add(new String[]{"/casino halten", "Halten"});
             }
             case "roulette" -> {
                 subtitle = "Europäisches Roulette, 0 bis 36";
