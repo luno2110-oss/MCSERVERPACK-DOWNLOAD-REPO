@@ -652,6 +652,9 @@ VANILLA_ICONS = {
     "diamond_pickaxe": "item/diamond_pickaxe.png", "oak_sign": "item/oak_sign.png", "wheat": "item/wheat.png",
     "lead": "item/lead.png", "campfire": "item/campfire.png", "oak_door": "item/oak_door.png",
     "comparator": "item/comparator.png", "firework_rocket": "item/firework_rocket.png",
+    # Spielzeit und Kisten
+    "trial_key": "item/trial_key.png", "ominous_trial_key": "item/ominous_trial_key.png",
+    "tripwire_hook": "block/tripwire_hook.png",
 }
 
 

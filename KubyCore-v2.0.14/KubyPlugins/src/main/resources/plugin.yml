@@ -189,7 +189,14 @@ commands:
   tpadeny:
     description: "Teleport-Anfrage ablehnen"
   spielzeit:
-    description: "Spielzeit-Belohnungen ansehen"
+    description: "Spielzeit-Stufen ansehen und abholen"
+  playtime:
+    description: "Spielzeit-Stufen ansehen und abholen"
+    usage: "/playtime [claim]"
+  keys:
+    description: "Deine Kisten-Schlüssel"
+    usage: "/keys [give <Spieler> <Art> [Anzahl]]"
+    aliases: [schluessel]
 
 permissions:
   kuby.report.see:

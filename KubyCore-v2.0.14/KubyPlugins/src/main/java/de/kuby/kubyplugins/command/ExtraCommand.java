@@ -2,7 +2,6 @@ package de.kuby.kubyplugins.command;
 
 import de.kuby.kubyplugins.util.Sfx;
 import de.kuby.kubyplugins.gui.TeleportEffectMenu;
-import de.kuby.kubyplugins.gui.PlaytimeMenu;
 import de.kuby.kubyplugins.service.ModeService;
 import de.kuby.kubyplugins.gui.KitMenu;
 import de.kuby.kubyplugins.gui.QuizVoteMenu;
@@ -66,7 +65,19 @@ public final class ExtraCommand implements CommandExecutor {
                 String err = plugin.tpa().deny(p);
                 if (err != null) Msg.send(p, "<red>" + err);
             }
-            case "spielzeit" -> new PlaytimeMenu(plugin).open(p);
+            case "spielzeit", "playtime" -> {
+                if (args.length > 0 && (args[0].equalsIgnoreCase("claim") || args[0].equalsIgnoreCase("abholen"))) {
+                    int n = plugin.playtime().claimAll(p);
+                    if (n < 0) Msg.send(p, "<red>" + plugin.playtime().blocked(p));
+                    else if (n == 0) Msg.send(p, "<gray>Gerade ist keine Spielzeit-Stufe fertig. <white>/playtime");
+                    else {
+                        Msg.send(p, "<#F2C84A><b>SPIELZEIT</b> <dark_gray>▶ <gray>" + n + (n == 1 ? " Stufe" : " Stufen") + " abgeholt.");
+                        Sfx.play(plugin, p, Sfx.Kind.SUCCESS_BIG);
+                    }
+                } else {
+                    new de.kuby.kubyplugins.gui.PlaytimeScreen(plugin).open(p);
+                }
+            }
             case "hub" -> {
                 String err = plugin.modes().switchTo(p, ModeService.HUB);
                 if (err != null) Msg.send(p, "<red>" + err);

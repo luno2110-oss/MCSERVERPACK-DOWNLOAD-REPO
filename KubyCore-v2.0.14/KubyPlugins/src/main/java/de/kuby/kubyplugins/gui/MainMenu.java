@@ -59,7 +59,7 @@ public final class MainMenu extends GuiMenu {
         list.add(new Entry(Material.IRON_CHESTPLATE, "Kits", "Starter- und Rang-Kits abholen", p -> new KitMenu(plugin).open(p)));
         list.add(new Entry(Material.AMETHYST_SHARD, "Kosmetik", "Spuren und Kill-Effekte", p -> new CosmeticsMenu(plugin).open(p)));
         // Seite 3: Schutz und Lager
-        list.add(new Entry(Material.CLOCK, "Spielzeit", "Belohnungen nach Spielzeit", p -> new PlaytimeMenu(plugin).open(p)));
+        list.add(new Entry(Material.CLOCK, "Spielzeit", "Stufen nach aktiver Spielzeit", p -> new PlaytimeScreen(plugin).open(p)));
         list.add(new Entry(Material.ENDER_CHEST, "Enderchest", "Dein erweiterbares Lager", p -> p.openInventory(plugin.enderchests().open(p))));
         for (KubyPlugins.MainEntry e : plugin.mainEntries()) {
             list.add(new Entry(e.icon(), e.name(), e.desc(), e.action()));

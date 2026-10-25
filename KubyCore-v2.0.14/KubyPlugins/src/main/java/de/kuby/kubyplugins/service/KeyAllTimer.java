@@ -47,7 +47,11 @@ public final class KeyAllTimer {
         for (Player p : plugin.getServer().getOnlinePlayers()) {
             plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(),
                     template.replace("{player}", p.getName()).replace("%player%", p.getName()));
-            Msg.send(p, "<aqua>Stunden-Keyall: <white>1 Universalschlüssel erhalten!"); Sfx.play(plugin, p, Sfx.Kind.PING);
+            // Eigene Schlüssel melden sich selbst (+1 Keyall-Schlüssel), fremde Kisten-Plugins nicht
+            if (!template.trim().startsWith("keys ")) {
+                Msg.send(p, "<aqua>Stunden-Keyall: <white>1 Schlüssel erhalten!");
+                Sfx.play(plugin, p, Sfx.Kind.PING);
+            }
         }
     }
 }

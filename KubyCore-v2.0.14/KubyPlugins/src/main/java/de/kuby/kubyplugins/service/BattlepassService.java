@@ -128,7 +128,7 @@ public final class BattlepassService implements ModeData {
     }
 
     private List<Reward> defaults() {
-        String keyCmd = plugin.getConfig().getString("battlepass.key-command", "crate givekey keyall_key %player%");
+        String keyCmd = plugin.getConfig().getString("battlepass.key-command", "keys give %player% keyall 1");
         List<Reward> list = new ArrayList<>();
         for (int lvl = 1; lvl <= MAX_LEVEL; lvl++) {
             if (lvl % 3 == 0) list.add(new Reward(lvl, FREE, "COINS", String.valueOf(lvl * 50L)));

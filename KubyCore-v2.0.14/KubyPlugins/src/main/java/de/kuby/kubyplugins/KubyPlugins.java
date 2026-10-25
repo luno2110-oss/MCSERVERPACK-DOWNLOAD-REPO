@@ -1,6 +1,7 @@
 package de.kuby.kubyplugins;
 
 import de.kuby.kubyplugins.service.JewelStoreService;
+import de.kuby.kubyplugins.service.KeyService;
 import de.kuby.kubyplugins.listener.RegionListener;
 import de.kuby.kubyplugins.service.HubSettingsService;
 import de.kuby.kubyplugins.service.RegionService;
@@ -232,7 +233,9 @@ public final class KubyPlugins extends JavaPlugin {
         modes.registerBusyCheck(p -> blackjack.inGame(p.getUniqueId()));
         modes.registerBusyCheck(p -> poker.isSeated(p.getUniqueId()));
         modes.registerExtras(java.util.List.of(homes, battlepass, cosmetics, kits, tags, daily, investments, shopStorage));
+        keys = new KeyService(this);
         playtime = new PlaytimeService(this);
+        getServer().getPluginManager().registerEvents(playtime, this);
         tpa = new TpaService(this);
         teleportFx = new TeleportEffectService(this);
         jewels = new JewelService(this);
@@ -253,6 +256,7 @@ public final class KubyPlugins extends JavaPlugin {
         setAll(new SocialCommand(this), "friend", "friends", "msg", "r", "inbox", "bounty", "bounties",
                 "stats", "trophaeen", "ranking");
         setAll(new JewelCommand(this), "juwelen", "juwelenshop");
+        setAll(new de.kuby.kubyplugins.command.KeysCommand(this), "keys");
         support = new de.kuby.kubyplugins.support.SupportService(this);
         de.kuby.kubyplugins.support.SupportMenus supportMenus = new de.kuby.kubyplugins.support.SupportMenus(this, support);
         setAll(supportMenus, "support", "discord");
@@ -331,7 +335,7 @@ public final class KubyPlugins extends JavaPlugin {
         setAll(crash, "cashout");
         setAll(new AdminCommand(this), "kadmin");
         setAll(new HelpCommand(this), "befehle", "menu");
-        setAll(new ExtraCommand(this), "dailypot", "trade", "tags", "rtpqueue", "meta", "booster", "xpshop", "battlepass", "cosmetics", "turnier", "verify", "versichern", "enderchest", "kristaltrade", "investments", "quizvote", "totenkiste", "kits", "hub", "tpa", "tpaccept", "tpadeny", "spielzeit");
+        setAll(new ExtraCommand(this), "dailypot", "trade", "tags", "rtpqueue", "meta", "booster", "xpshop", "battlepass", "cosmetics", "turnier", "verify", "versichern", "enderchest", "kristaltrade", "investments", "quizvote", "totenkiste", "kits", "hub", "tpa", "tpaccept", "tpadeny", "spielzeit", "playtime");
         setAll(new KpCommand(this), "kp");
         getServer().getPluginManager().registerEvents(new TradeListener(this), this);
         getServer().getPluginManager().registerEvents(new QuizListener(this), this);
@@ -509,6 +513,17 @@ public final class KubyPlugins extends JavaPlugin {
     /** Texte von Addons für Anzeigen (z. B. der aktuelle Job). Leer, wenn kein Addon den Wert liefert. */
     private final java.util.Map<String, java.util.function.Function<java.util.UUID, String>> textProviders = new java.util.HashMap<>();
     public void registerText(String key, java.util.function.Function<java.util.UUID, String> fn) { textProviders.put(key, fn); }
+
+    /** Gutschriften von Addons, z. B. "tokens" aus Survival (für Spielzeit, Kisten). */
+    private final java.util.Map<String, java.util.function.BiConsumer<java.util.UUID, Long>> givers = new java.util.HashMap<>();
+    public void registerGiver(String kind, java.util.function.BiConsumer<java.util.UUID, Long> fn) { givers.put(kind, fn); }
+    /** Schreibt gut, wenn ein Addon die Art kennt. False, wenn niemand sie liefert. */
+    public boolean give(String kind, java.util.UUID id, long amount) {
+        java.util.function.BiConsumer<java.util.UUID, Long> fn = givers.get(kind);
+        if (fn == null) return false;
+        fn.accept(id, amount);
+        return true;
+    }
     public String textValue(String key, java.util.UUID id) {
         java.util.function.Function<java.util.UUID, String> fn = textProviders.get(key);
         if (fn == null) return "";
@@ -561,6 +576,8 @@ public final class KubyPlugins extends JavaPlugin {
         return "<green>" + String.format(java.util.Locale.GERMANY, "%,d", economy.balance(p.getUniqueId())) + "$";
     }
     public PlaytimeService playtime() { return playtime; }
+    private KeyService keys;
+    public KeyService keys() { return keys; }
     public TpaService tpa() { return tpa; }
     public WorldService worlds() { return worlds; }
     public ModuleService modules() { return modules; }

@@ -132,6 +132,8 @@ public final class KubySurvival extends JavaPlugin {
         pets = new PetService(this, core);
         getServer().getPluginManager().registerEvents(pets, this);
         tokens = new TokenService(this, core);
+        // Tokens als Belohnung im Kern (Spielzeit-Stufen, Kisten)
+        core.registerGiver("tokens", (id, n) -> tokens.give(id, n, "Belohnung"));
         getServer().getPluginManager().registerEvents(tokens, this);
         backpacks = new BackpackService(this, core);
         getServer().getPluginManager().registerEvents(backpacks, this);

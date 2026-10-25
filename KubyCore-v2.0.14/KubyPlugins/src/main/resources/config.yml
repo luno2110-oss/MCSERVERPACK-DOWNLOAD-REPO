@@ -164,12 +164,10 @@ quiz:
     - "Wie viele Seiten hat ein Würfel?;6;200"
     - "Welches Erz braucht man für Diamantrüstung?;diamant;300"
 
-# Kisten und Schlüssel laufen über Phoenix Crates.
-# Stündlicher Universal-Schlüssel (Schlüssel-Name: keyall_key).
-# Trage hier den Phoenix-Befehl ein, {player} wird durch den Spielernamen ersetzt.
-# Beispiel (bitte an deine Phoenix-Syntax anpassen): "crates givekey {player} keyall_key 1"
+# Stündlicher Keyall-Schlüssel für alle, die online sind (virtuelle Schlüssel, /keys).
+# %player% wird durch den Spielernamen ersetzt. Mit einem anderen Kisten-Plugin hier dessen Befehl eintragen.
 keyall:
-  command: "crate givekey keyall_key %player%"
+  command: "keys give %player% keyall 1"
 
 dailypot:
   ticket-price: 200
@@ -216,7 +214,7 @@ meta:
 
 battlepass:
   premium-price: 950
-  key-command: "crate givekey keyall_key %player%"
+  key-command: "keys give %player% keyall 1"
   xp-per-level: 100
   quests:
     - "kill;Spieler besiegen;10;30"
@@ -448,16 +446,49 @@ modes:
   survival:
     world: survival
 
+# Spielzeit (/playtime): Stufen nach aktiver Zeit im jeweiligen Modus (wer sich idle-minutes lang nicht bewegt,
+# zählt nicht). Format: "Stunden;Belohnung,Belohnung,..." mit coins:N, tokens:N (Survival), jewels:N, xp:N,
+# key:<Art>:N (Arten unter keys.types), tag:<Titel-ID>, cmd:<Befehl mit %player%>.
+# Abholen nur mit verlinktem Discord (require-discord; gilt nur, wenn DiscordSRV installiert ist).
 playtime:
-  rewards:
-    - "60;XP;500"
-    - "120;COINS;3000"
-    - "180;TAG;neuling"
-    - "300;JEWELS;5"
-    - "600;TAG;arbeitslos"
-    - "900;COMMAND;crate givekey keyall_key %player%"
-    - "1200;TAG;hobbylos"
-    - "2400;TAG;sweater"
+  require-discord: true
+  idle-minutes: 5
+  stages:
+    survival:
+      - "1;coins:500,tokens:1"
+      - "3;coins:1000,tokens:1,key:vote:1"
+      - "6;coins:1500,tokens:2"
+      - "10;coins:2000,tokens:2,jewels:2"
+      - "15;coins:2500,tokens:2,key:selten:1"
+      - "24;coins:3000,tokens:3"
+      - "36;coins:4000,tokens:3,jewels:3"
+      - "50;coins:5000,tokens:4,key:selten:1"
+      - "75;coins:6000,tokens:4,jewels:5"
+      - "100;coins:8000,tokens:5,key:episch:1"
+      - "150;coins:10000,tokens:5,jewels:5"
+      - "200;coins:12500,tokens:6,key:episch:1"
+      - "300;coins:15000,tokens:8,jewels:10"
+      - "400;coins:20000,tokens:10,key:legendaer:1"
+      - "500;coins:25000,tokens:12,key:legendaer:1,jewels:15"
+    smp:
+      - "1;xp:500"
+      - "2;coins:3000"
+      - "3;tag:neuling"
+      - "5;jewels:5"
+      - "10;tag:arbeitslos"
+      - "15;key:keyall:1"
+      - "20;tag:hobbylos"
+      - "40;tag:sweater"
+
+# Kisten-Schlüssel (virtuell, /keys): "id;Name;#Farbe". Der Name ist der der Kiste, angezeigt als "<Name>-Schlüssel".
+# Vergabe: /keys give <Spieler> <id> [Anzahl] (Konsole/Admins, z. B. aus dem Juwelenshop oder von Votes).
+keys:
+  types:
+    - "keyall;Keyall;#F8D35A"
+    - "vote;Vote;#6CE86E"
+    - "selten;Selten;#64C0FF"
+    - "episch;Episch;#C77DFF"
+    - "legendaer;Legendär;#FFB02E"
 
 xp-sources:
   # Keine XP für selbst gesetzte Erze (auch nach Neustart und Kolben) und für Mobs aus Spawnern/Spawn-Eiern.
@@ -540,7 +571,7 @@ jewelshop:
         - "warrior;Warrior;NAME_TAG;1500;lp user %player% parent add warrior;Mehr Homes und Vorteile"
         - "legend;Legend;NAME_TAG;3000;lp user %player% parent add legend;Die höchste Stufe"
       keys:
-        - "keyall;Universal-Schlüssel;TRIPWIRE_HOOK;50;crate givekey %player% keyall_key 1;Öffnet Phoenix-Kisten"
+        - "keyall;Keyall-Schlüssel;TRIPWIRE_HOOK;50;keys give %player% keyall 1;Öffnet die Keyall-Kiste am Spawn"
   smp:
     categories:
       - "ranks;Ränge;NAME_TAG;ITEMS;true"
@@ -555,7 +586,7 @@ jewelshop:
         - "warrior;Warrior;NAME_TAG;1500;lp user %player% parent add warrior;Mehr Homes und Vorteile"
         - "legend;Legend;NAME_TAG;3000;lp user %player% parent add legend;Die höchste Stufe"
       keys:
-        - "keyall;Universal-Schlüssel;TRIPWIRE_HOOK;50;crate givekey %player% keyall_key 1;Öffnet Phoenix-Kisten"
+        - "keyall;Keyall-Schlüssel;TRIPWIRE_HOOK;50;keys give %player% keyall 1;Öffnet die Keyall-Kiste am Spawn"
 
 # Custom Items (ohne externes Plugin). Format: id;Name;MATERIAL;namespace:modell;Lore1|Lore2
 custom-items: []
