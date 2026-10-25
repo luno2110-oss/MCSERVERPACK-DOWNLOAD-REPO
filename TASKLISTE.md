@@ -107,6 +107,8 @@ Reihenfolge wie das Hilfe-Karussell der Referenz. Jede Seite: Titel, Untertitel,
 
 - [x] Abschluss-Prüfung Gruppe 4 (Dupes/Exploits): Möbel können nicht doppelt zurückgegeben werden (zwei Spieler im selben Moment), Support-Weitergabe nur durch den zuständigen Helfer oder das Team, Kisten nehmen den Schlüssel vor dem Gewinn und sperren während der Animation, Kosmetik-Kauf prüft Besitz und Preis, Spielzeit-Stufen je Modus nur einmal, Bank/Ehe-Konto bucht nur mit Deckung, Gräber geben Items nur einmal zurück (geprüft)
 
+- [x] Grafik-Prüfung: **Fehler behoben**, durch den Paper 1.21.11 (Build 132) alle Grafik-Menüs ablehnte („Dialogs that pause the game must use after_action …“, z. B. `/angeln`): Menüs pausieren nicht mehr. Geprüft: Pack frisch gebaut = Pack im Repo (Zeichen-Tabelle identisch), alle 192 Modelle/Items/Texturen/Skins vorhanden, alle 962 Sonderzeichen im Code in den richtigen Schriften (Menüs, Scoreboard, Info-Leiste, Hotbar, Chat-Symbole), 68 Menü-Vorschauen mit 27.740 Textabschnitten ohne fehlende Zeichen, Pack-URL öffentlich erreichbar. Neu: CI-Server-Test startet nach jedem Build einen echten Paper-1.21.11-Server mit allen Jars, führt `kp selftest` aus (baut 41 Dialoge mit dem echten Server-Code) und prüft das Log; Log als Release „server-test“
+
 ## Ordnergruppe 5 – Scoreboard und Anzeigen (Refs: Video Scoreboard_Money, GELD_XP-Anzeige)
 - [x] 5.1 Sidebar SMP (v1.32)
 - [x] 5.2 Sidebar Survival nach Clip (v1.34). Level, Job, Tokens zeigen noch „—“, die Systeme fehlen
