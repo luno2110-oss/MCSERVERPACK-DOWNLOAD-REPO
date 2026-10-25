@@ -21,9 +21,17 @@ public final class JewelStoreService {
     public record Item(String id, String name, Material icon, long price, String command, String lore) {}
 
     private final KubyPlugins plugin;
+    /** Kategorien, die Addons im Code anmelden (z. B. Möbel aus KubySurvival): Modus -> Kategorie -> Artikel. */
+    private final java.util.Map<String, java.util.Map<Cat, java.util.function.Supplier<List<Item>>>> extra =
+            new java.util.concurrent.ConcurrentHashMap<>();
 
     public JewelStoreService(KubyPlugins plugin) {
         this.plugin = plugin;
+    }
+
+    /** Addons: eigene Kategorie (Typ ITEMS) mit Artikeln aus dem Code, erscheint hinter denen aus der config.yml. */
+    public void registerCategory(String mode, Cat cat, java.util.function.Supplier<List<Item>> items) {
+        extra.computeIfAbsent(normalize(mode), k -> new java.util.LinkedHashMap<>()).put(cat, items);
     }
 
     public static String normalize(String mode) {
@@ -46,10 +54,14 @@ public final class JewelStoreService {
             out.add(new Cat(p[0].trim(), p[1].trim(), icon(p[2]), p[3].trim().toUpperCase(Locale.ROOT),
                     Boolean.parseBoolean(p[4].trim())));
         }
+        out.addAll(extra.getOrDefault(normalize(mode), java.util.Map.of()).keySet());
         return out;
     }
 
     public List<Item> items(String mode, String catId) {
+        for (var e : extra.getOrDefault(normalize(mode), java.util.Map.of()).entrySet()) {
+            if (e.getKey().id().equals(catId)) return e.getValue().get();
+        }
         List<Item> out = new ArrayList<>();
         for (String raw : plugin.getConfig().getStringList("jewelshop." + normalize(mode) + ".items." + catId)) {
             String[] p = raw.split(";", 6);

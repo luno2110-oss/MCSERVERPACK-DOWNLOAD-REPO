@@ -23,6 +23,9 @@ import de.kuby.kubysurvival.jobs.LevelCommand;
 import de.kuby.kubysurvival.jobs.TokenShopMenu;
 import de.kuby.kubysurvival.heads.HeadService;
 import de.kuby.kubysurvival.graves.GraveCommand;
+import de.kuby.kubysurvival.furniture.FurnitureCatalog;
+import de.kuby.kubysurvival.furniture.FurnitureCommand;
+import de.kuby.kubysurvival.furniture.FurnitureService;
 import de.kuby.kubysurvival.graves.GraveService;
 import de.kuby.kubysurvival.marry.BankService;
 import de.kuby.kubysurvival.marry.MarryCommand;
@@ -85,6 +88,7 @@ public final class KubySurvival extends JavaPlugin {
     private MarryService marry;
     private BankService bank;
     private GraveService graves;
+    private FurnitureService furniture;
 
     public KubyPlugins core() { return core; }
     public AngelService angeln() { return angeln; }
@@ -105,6 +109,7 @@ public final class KubySurvival extends JavaPlugin {
     public MarryService marry() { return marry; }
     public BankService bank() { return bank; }
     public GraveService graves() { return graves; }
+    public FurnitureService furniture() { return furniture; }
 
     @Override
     public void onEnable() {
@@ -286,6 +291,24 @@ public final class KubySurvival extends JavaPlugin {
         graves = new GraveService(this, core);
         getServer().getPluginManager().registerEvents(graves, this);
         command("grab", new GraveCommand(core, graves));
+        furniture = new FurnitureService(this, core);
+        getServer().getPluginManager().registerEvents(furniture, this);
+        FurnitureCommand furnitureCommand = new FurnitureCommand(furniture);
+        for (String name : new String[]{"sit", "lay", "moebel"}) {
+            command(name, furnitureCommand);
+            PluginCommand pc = getCommand(name);
+            if (pc != null) pc.setTabCompleter(furnitureCommand);
+        }
+        // Möbel im Juwelenshop (Survival): Preis nach Größe, Kauf gibt das Möbel-Item
+        core.jewelStore().registerCategory(de.kuby.kubyplugins.service.ModeService.SURVIVAL,
+                new de.kuby.kubyplugins.service.JewelStoreService.Cat("moebel", "Möbel", Material.OAK_STAIRS, "ITEMS", true), () -> {
+                    java.util.List<de.kuby.kubyplugins.service.JewelStoreService.Item> list = new java.util.ArrayList<>();
+                    for (FurnitureCatalog.Def d : FurnitureCatalog.all()) {
+                        list.add(new de.kuby.kubyplugins.service.JewelStoreService.Item(d.id(), d.name(), d.icon(), d.size().price,
+                                "moebel give %player% " + d.id(), "Möbel · " + d.size().label + (d.seat() ? " · Sitzplatz" : "")));
+                    }
+                    return list;
+                });
         HeadService heads = new HeadService(this, core);
         command("heads", heads);
         PluginCommand headsCmd = getCommand("heads");
@@ -358,6 +381,7 @@ public final class KubySurvival extends JavaPlugin {
             marry.save();
             bank.save();
             graves.save();
+            furniture.save();
         }, 6000L, 6000L);
         getServer().getScheduler().runTaskLater(this, () -> {
             for (AngelService.Zone z : angeln.zones()) angelHolo.spawn(z);
@@ -384,6 +408,7 @@ public final class KubySurvival extends JavaPlugin {
         if (marry != null) marry.save();
         if (bank != null) bank.save();
         if (graves != null) graves.save();
+        if (furniture != null) furniture.shutdown();
     }
 
     private void command(String name, org.bukkit.command.CommandExecutor exec) {

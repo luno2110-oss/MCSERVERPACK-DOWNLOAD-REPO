@@ -17,7 +17,7 @@ import java.util.List;
 public final class JewelStoreMenu extends GuiMenu {
 
     static final int[] CONTENT = {10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34};
-    static final int[] TABS = {2, 3, 4, 5, 6};
+    static final int[] TABS = {1, 2, 3, 4, 5, 6, 7};
 
     private final String mode;
     private final int cat;

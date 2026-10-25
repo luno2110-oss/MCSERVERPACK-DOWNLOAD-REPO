@@ -82,3 +82,14 @@ commands:
     description: "Deine Gräber mit Welt, Koordinaten und Restzeit"
     usage: "/grab"
     aliases: [graeber, graves, grave]
+  sit:
+    description: "Auf den Boden setzen (aufstehen mit Schleichen)"
+    usage: "/sit"
+  lay:
+    description: "Hinlegen, zählt beim Überspringen der Nacht mit (aufstehen mit Schleichen)"
+    usage: "/lay"
+    aliases: [liegen]
+  moebel:
+    description: "Deine Möbel (kaufen im /juwelenshop)"
+    usage: "/moebel"
+    aliases: [furniture]

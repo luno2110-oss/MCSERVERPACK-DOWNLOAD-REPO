@@ -651,3 +651,6 @@ graves:
   minutes: 30
   farmpass-minutes: 60
   xp-percent: 100                 # Anteil der XP, der ins Grab kommt
+# Möbel (KubySurvival): Kauf im Juwelenshop (Kategorie Möbel, Preis nach Größe), höchstens so viele je Spieler.
+furniture:
+  max: 50

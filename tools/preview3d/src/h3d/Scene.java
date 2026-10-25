@@ -165,6 +165,34 @@ public final class Scene {
                     }
                 }
             }
+            case "furniture" -> {
+                // Möbel aus KubySurvival (FurnitureCatalog) per Reflexion, damit der Kern ohne KubySurvival baut
+                try {
+                    Class<?> cat = Class.forName("de.kuby.kubysurvival.furniture.FurnitureCatalog");
+                    java.util.List<?> defs = (java.util.List<?>) cat.getMethod("all").invoke(null);
+                    int k = 0;
+                    for (Object d : defs) {
+                        java.util.List<?> parts = (java.util.List<?>) d.getClass().getMethod("parts").invoke(d);
+                        int width = (Integer) d.getClass().getMethod("width").invoke(d);
+                        double ox = (k % 6) * 2.5, oz = (k / 6) * 3.0;
+                        k++;
+                        for (Object pt : parts) {
+                            Class<?> pc = pt.getClass();
+                            org.bukkit.Material m = (org.bukkit.Material) pc.getMethod("m").invoke(pt);
+                            float[] v = new float[6];
+                            String[] names = {"x", "y", "z", "sx", "sy", "sz"};
+                            for (int i = 0; i < 6; i++) v[i] = (Float) pc.getMethod(names[i]).invoke(pt);
+                            w.spawn(new Location(w, ox + 0.5, 0, oz + 0.5), org.bukkit.entity.BlockDisplay.class, bd -> {
+                                bd.setBlock(m.createBlockData());
+                                bd.setTransformation(new org.bukkit.util.Transformation(new org.joml.Vector3f(v[0], v[1], v[2]),
+                                        new org.joml.Quaternionf(), new org.joml.Vector3f(v[3], v[4], v[5]), new org.joml.Quaternionf()));
+                            });
+                        }
+                    }
+                } catch (ReflectiveOperationException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
             case "grave" -> {
                 // Grabstein wie GraveService.spawn (KubySurvival): Sockel, Stein, Kappe, Kreuz, Schild
                 Location at = new Location(w, 0.5, 0, 0.5);
