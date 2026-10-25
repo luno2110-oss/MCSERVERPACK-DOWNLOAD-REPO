@@ -46,7 +46,7 @@ public final class GraveCommand implements CommandExecutor {
 
     public void open(Player p) {
         List<GraveService.Grave> list = graves.of(p.getUniqueId());
-        Canvas c = new Canvas(W);
+        Canvas c = new Canvas(W).heading("Grab", net.kyori.adventure.text.format.TextColor.color(0x9FA1A7));
         c.box(0, 0, W, 51, KitData.Box.GRAY);
         c.smallIcon(13, 16, KitData.SmallIcon.H_GRAVE);
         c.text(41, 15, "DEINE GRÄBER", TITLE, true);

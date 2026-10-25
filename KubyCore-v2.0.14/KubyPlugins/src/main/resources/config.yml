@@ -644,6 +644,43 @@ crates:
         - "6;key:vote:1"
         - "4;key:selten:1"
   smp:
+    selten:
+      name: "Seltene Kiste"
+      key: selten
+      rewards:
+        - "26;coins:5000"
+        - "16;item:GOLDEN_APPLE:6;6 Goldene Äpfel"
+        - "14;item:DIAMOND:6;6 Diamanten"
+        - "12;item:EXPERIENCE_BOTTLE:48;48 Erfahrungsfläschchen"
+        - "10;jewels:5"
+        - "8;item:ENDER_PEARL:16;16 Enderperlen"
+        - "8;key:keyall:1"
+        - "6;item:TOTEM_OF_UNDYING:1;Totem der Unsterblichkeit"
+    episch:
+      name: "Epische Kiste"
+      key: episch
+      rewards:
+        - "24;coins:12000"
+        - "16;jewels:15"
+        - "14;item:DIAMOND_BLOCK:2;2 Diamantblöcke"
+        - "12;item:TOTEM_OF_UNDYING:2;2 Totems der Unsterblichkeit"
+        - "10;item:ENCHANTED_GOLDEN_APPLE:1;Verzauberter Goldapfel"
+        - "9;cosmetic:hut_zylinder"
+        - "8;item:NETHERITE_SCRAP:2;2 Netheritplatten"
+        - "7;key:legendaer:1"
+    legendaer:
+      name: "Legendäre Kiste"
+      key: legendaer
+      rewards:
+        - "22;coins:30000"
+        - "16;jewels:30"
+        - "14;item:NETHERITE_INGOT:1;1 Netheritbarren"
+        - "12;item:ENCHANTED_GOLDEN_APPLE:3;3 Verzauberte Goldäpfel"
+        - "10;item:TOTEM_OF_UNDYING:4;4 Totems der Unsterblichkeit"
+        - "9;cosmetic:hut_krone"
+        - "8;item:ELYTRA:1;Elytren"
+        - "6;item:BEACON:1;Leuchtfeuer"
+        - "3;cosmetic:hut_heiligenschein"
     keyall:
       name: "Keyall-Kiste"
       key: keyall
@@ -777,6 +814,114 @@ jewelshop:
         - "legend;Legend;NAME_TAG;3000;lp user %player% parent add legend;Die höchste Stufe"
       keys:
         - "keyall;Keyall-Schlüssel;TRIPWIRE_HOOK;50;keys give %player% keyall 1;Öffnet die Keyall-Kiste am Spawn"
+
+# Juwelenshop im SMP (/juwelenshop, Dialog wie in der Referenz). Survival und Skyblock nutzen weiter jewelshop oben.
+# style: Kasten-Farbe (gold, blue, red, violet, green, store, vip, platin, devil, legend, pass, legendary, cyborg)
+# icon:  Grafik (rank_vip, rank_platin, rank_devil, rank_legend, pass, key_legendary, key_auran, key_cyborg,
+#        pack_starter, pack_profi, pack_ultimate, crown, ticket, crate, chest)
+# Ränge: Reihenfolge von niedrig nach hoch; erkannt über LuckPerms group.<id> oder kuby.rank.<id>. Wer schon einen
+# Rang hat, zahlt beim Aufstieg nur den Unterschied. %player% = Käufer bzw. Beschenkter.
+# Kisten: Preis je Schlüssel, key = Schlüssel-Art aus keys.types (landet im SMP-Schlüsselkonto, /keys).
+# Pakete: contents "Schlüssel-Art;Anzahl" (Name und Farbe aus keys.types).
+jewelshop-smp:
+  store-text: ""                # Text unter "Zum Store"; leer = jewels.store-url ohne https://
+  ranks:
+    vip:
+      name: "VIP Rang"
+      style: vip
+      icon: rank_vip
+      color: "#FCFC54"
+      lines:
+        - "Alle Member-Vorteile · 10 Homes"
+        - "Kit VIP · 30 Freundesplätze"
+      price: 1000
+      command: "lp user %player% parent add vip"
+    ultimate:
+      name: "Ultimate Rang"
+      style: platin
+      icon: rank_platin
+      color: "#54FCFC"
+      lines:
+        - "Alle VIP-Vorteile · 15 Homes"
+        - "Kit Ultimate · 40 Freundesplätze"
+      price: 3500
+      command: "lp user %player% parent add ultimate"
+    warrior:
+      name: "Warrior Rang"
+      style: devil
+      icon: rank_devil
+      color: "#FC5454"
+      lines:
+        - "Alle Ultimate-Vorteile · 20 Homes"
+        - "Kit Warrior · 50 Freundesplätze"
+      price: 5000
+      command: "lp user %player% parent add warrior"
+    legend:
+      name: "Legend Rang"
+      style: legend
+      icon: rank_legend
+      color: "#FC6A00"
+      lines:
+        - "Alle Warrior-Vorteile · 30 Homes"
+        - "Kit Legend · 75 Freunde · Casino-VIP"
+      price: 10000
+      command: "lp user %player% parent add legend"
+  battlepass:
+    name: "Battle Pass"
+    style: pass
+    icon: pass
+    color: "#D645EC"
+    lines:
+      - "Exklusive Belohnungen freischalten"
+      - "Zugang zu Premium-Stufen"
+    price: 1000
+  crates:
+    legendaer:
+      name: "Legendär Crate Schlüssel"
+      style: legendary
+      icon: key_legendary
+      color: "#FCA800"
+      line: "Zugang zu legendären Belohnungen"
+      price: 500
+      key: legendaer
+    episch:
+      name: "Episch Crate Schlüssel"
+      style: platin
+      icon: key_auran
+      color: "#54FCFC"
+      line: "Seltene Items, Juwelen und Kosmetik"
+      price: 300
+      key: episch
+    selten:
+      name: "Selten Crate Schlüssel"
+      style: cyborg
+      icon: key_cyborg
+      color: "#00FCD2"
+      line: "Gute Items und Coins für den Start"
+      price: 150
+      key: selten
+  packages:
+    starter:
+      name: "Starter"
+      style: gold
+      icon: pack_starter
+      color: "#FCD45D"
+      price: 1250
+      contents: ["legendaer;2", "episch;1", "selten;1"]
+    profi:
+      name: "Profi"
+      style: blue
+      icon: pack_profi
+      color: "#62CAFC"
+      price: 2750
+      contents: ["episch;3", "legendaer;1", "selten;2"]
+    ultimate:
+      name: "Ultimate"
+      style: red
+      icon: pack_ultimate
+      color: "#FC7986"
+      price: 5000
+      contents: ["legendaer;5", "episch;3", "selten;2", "keyall;2"]
 
 # Custom Items (ohne externes Plugin). Format: id;Name;MATERIAL;namespace:modell;Lore1|Lore2
 custom-items: []

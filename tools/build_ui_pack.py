@@ -68,7 +68,10 @@ if VANILLA and os.path.isdir(VANILLA):
     small += build_settings.small_icons(VANILLA)
     # Hüte (Modelle kuby:hat/<id>) und ihre Icons (32 px) hinter den Casino-Icons
     hat_big = build_hats.build(OUT)
-    build_kit.build(OUT, {**neg, **pos}, VANILLA, own, small, casino_big + hat_big + build_settings.big_icons())
+    # Juwelenshop (SMP): große Grafiken als Sprites
+    import build_jewelshop  # noqa: E402
+    build_kit.build(OUT, {**neg, **pos}, VANILLA, own, small, casino_big + hat_big + build_settings.big_icons(),
+                    build_jewelshop.sprites())
     # Icons für Hologramm-Zeilen (kuby:holo): dieselben Zeichen wie kuby:k/i0, aber nur 9 px hoch wie Text
     with open(os.path.join(OUT, "assets/kuby/font/k/i0.json"), encoding="utf-8") as fh:
         i0 = json.load(fh)
@@ -87,12 +90,15 @@ if VANILLA and os.path.isdir(VANILLA):
 else:
     print("Hinweis: KUBY_VANILLA nicht gesetzt, Dialog-Kit nicht neu gebaut")
 
-# Das Warn-Zeichen ("!") oben in Server-Dialogen ausblenden, die Menüs zeichnen ihren eigenen Kopf.
+# Das Warn-Zeichen ("!") neben dem Titel jedes Server-Dialogs wird zum Kuby-Logo (wie das C beim Chaos-Server).
 # Der Knopf bleibt anklickbar, Esc schließt jedes Menü.
+import build_logo  # noqa: E402
+
 WARN = os.path.join(OUT, "assets/minecraft/textures/gui/sprites/dialog")
 os.makedirs(WARN, exist_ok=True)
-for name in ("warning_button", "warning_button_disabled", "warning_button_highlighted"):
-    Image.new("RGBA", (20, 20), T).save(os.path.join(WARN, name + ".png"))
+for name, state in (("warning_button", "normal"), ("warning_button_disabled", "disabled"),
+                    ("warning_button_highlighted", "highlighted")):
+    build_logo.logo(state).save(os.path.join(WARN, name + ".png"))
 
 
 # ---------- Prüfung: Fehler in einer Schrift-Datei lassen Minecraft die ganze Schrift verwerfen ----------

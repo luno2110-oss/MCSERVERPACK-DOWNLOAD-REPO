@@ -130,7 +130,7 @@ public final class StatsScreen {
 
     /** Nur Darstellung (auch für Vorschauen ohne Server). */
     public static Canvas canvas(View v, java.util.function.Function<String, Consumer<Player>> run) {
-        Canvas c = new Canvas(W);
+        Canvas c = new Canvas(W).heading("Statistik", net.kyori.adventure.text.format.TextColor.color(0x9FA1A7));
         c.box(0, 0, W, 51, KitData.Box.GRAY);
         c.smallIcon(13, 16, KitData.SmallIcon.H_CHART);
         c.text(41, 15, "STATISTIK", Ui.Theme.GRAY.title, true);

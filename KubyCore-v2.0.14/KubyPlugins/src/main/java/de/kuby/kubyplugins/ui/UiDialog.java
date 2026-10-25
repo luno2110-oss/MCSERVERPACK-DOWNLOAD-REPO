@@ -37,7 +37,7 @@ public final class UiDialog {
             for (int i = lines; i < want; i++) b.append(Component.newline()).append(Ui.space(canvas.width()));
             body = b.build();
         }
-        DialogBase base = DialogBase.builder(Component.empty())
+        DialogBase base = DialogBase.builder(canvas.heading())
                 .canCloseWithEscape(true)
                 // Paper verlangt: ein Dialog, der nach Klicks offen bleibt (NONE), darf das Spiel nicht pausieren
                 .pause(false)

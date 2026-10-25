@@ -246,6 +246,7 @@ public final class KubyPlugins extends JavaPlugin {
         translator = new de.kuby.kubyplugins.service.TranslateService(this);
         getServer().getPluginManager().registerEvents(translator, this);
         settingsScreen = new de.kuby.kubyplugins.gui.SettingsScreen(this);
+        jewelShop = new de.kuby.kubyplugins.gui.JewelShopScreen(this);
         getServer().getPluginManager().registerEvents(new de.kuby.kubyplugins.listener.ChatSettingsListener(this), this);
         playtime = new PlaytimeService(this);
         getServer().getPluginManager().registerEvents(playtime, this);
@@ -477,6 +478,9 @@ public final class KubyPlugins extends JavaPlugin {
     public de.kuby.kubyplugins.service.DisplaySettings displaySettings() { return displaySettings; }
     public de.kuby.kubyplugins.service.TranslateService translator() { return translator; }
     public de.kuby.kubyplugins.gui.SettingsScreen settingsScreen() { return settingsScreen; }
+    private de.kuby.kubyplugins.gui.JewelShopScreen jewelShop;
+    /** Juwelenshop-Dialog im SMP. */
+    public de.kuby.kubyplugins.gui.JewelShopScreen jewelShop() { return jewelShop; }
     public HotbarDisplay hotbar() { return hotbar; }
     public DailyPotService dailyPot() { return dailyPot; }
     public TagService tags() { return tags; }

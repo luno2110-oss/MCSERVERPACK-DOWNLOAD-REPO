@@ -208,7 +208,7 @@ public final class CosmeticsScreen {
 
     /** Nur Darstellung (auch für Vorschauen ohne Server). */
     public static Canvas canvas(View v, Actions a) {
-        Canvas c = new Canvas(W);
+        Canvas c = new Canvas(W).heading("Kosmetik", net.kyori.adventure.text.format.TextColor.color(0xD08CFF));
         c.box(0, 0, W, 51, KitData.Box.PURPLE);
         c.smallIcon(13, 18, KitData.SmallIcon.H_HAT);
         c.text(41, 15, "KOSMETIK", Ui.Theme.PINK.title, true);

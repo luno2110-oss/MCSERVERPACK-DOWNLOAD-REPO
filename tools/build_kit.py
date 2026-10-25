@@ -131,7 +131,10 @@ CASINO_BOXES = {
 # Einstellungen-Menü (Referenzen2): Kästen als 9-Slice aus den Referenzbildern (tools/assets/settings)
 import build_settings  # noqa: E402
 
+import build_jewelshop  # noqa: E402
+
 SLICED_BOXES = build_settings.boxes()
+SLICED_BOXES.update(build_jewelshop.boxes())
 ALL_BOXES = list(BOXES) + list(CASINO_BOXES) + list(SLICED_BOXES)
 # Kästen, die auch schmaler als 48 px gehen (Zahlenfelder im Roulette-Raster): schmale Mittelstücke
 NARROW_BOXES = ("field_red", "field_green", "field_black", "field_felt")
@@ -704,9 +707,35 @@ def write_font(fdir, name, providers):
 TITLE_GOLD, TITLE_WHITE = 0xEE00, 0xEF00
 SMALL_FIRST, SMALL_CELL = 0xED00, 20
 BIG_FIRST = 0xED80          # eigene 32-px-Icons: ED80 + i (32 px), EDC0 + i (16 px)
+SPRITE_FIRST = 0xF000       # Kacheln (32 x 32) großer Grafiken: F000 + i
 
 
-def build(out, spaces, vroot, own_icons=(), small_icons=(), big_icons=()):
+def sprite_tiles(sprites):
+    """Zerlegt Grafiken in 32-px-Kacheln. Gibt (Kacheln [(Zeichen, Bild)], Daten [(name, w, h, Spalten, Zeichen,
+    Vorschübe)]) zurück; leere Kacheln bekommen Zeichen 0."""
+    tiles, data = [], []
+    for name, img in sprites:
+        cols, rows = (img.width + 31) // 32, (img.height + 31) // 32
+        chars, advs = [], []
+        for r in range(rows):
+            for c in range(cols):
+                tile = Image.new("RGBA", (32, 32), T)
+                tile.alpha_composite(img.crop((c * 32, r * 32, min(img.width, c * 32 + 32),
+                                               min(img.height, r * 32 + 32))), (0, 0))
+                bbox = tile.getchannel("A").getbbox()
+                if not bbox:
+                    chars.append("\u0000")
+                    advs.append(0)
+                    continue
+                ch = chr(SPRITE_FIRST + len(tiles))
+                tiles.append((ch, tile))
+                chars.append(ch)
+                advs.append(bbox[2] + 1)
+        data.append((name, img.width, img.height, cols, "".join(chars), advs))
+    return tiles, data
+
+
+def build(out, spaces, vroot, own_icons=(), small_icons=(), big_icons=(), sprites=()):
     """own_icons: [(name, Bild 16 x 16)] aus build_fish.py, build_angel_icons.py und build_casino.py.
     small_icons: [(name, Bild bis 20 x 20)] in Originalgröße (Chips, Sterne, Noten).
     big_icons: [(name, Bild 32 x 32)] in Originalgröße (Roulette-Rad, Jukebox, Schallplatte)."""
@@ -799,6 +828,18 @@ def build(out, spaces, vroot, own_icons=(), small_icons=(), big_icons=()):
         for i, (name, img) in enumerate(big_icons):
             bimg.alpha_composite(img, (32 * i, 0))
         bimg.save(os.path.join(tex, "icons32.png"))
+    # große Grafiken (Juwelenshop): Kacheln 32 x 32 in einem Bogen
+    stiles, sprite_data = sprite_tiles(sprites)
+    sprite_rows = []
+    if stiles:
+        scols = 16
+        srows = (len(stiles) + scols - 1) // scols
+        spimg = Image.new("RGBA", (32 * scols, 32 * srows), T)
+        for i, (ch, tile) in enumerate(stiles):
+            spimg.alpha_composite(tile, ((i % scols) * 32, (i // scols) * 32))
+        spimg.save(os.path.join(tex, "sprites.png"))
+        sprite_rows = ["".join(stiles[r * scols + c][0] if r * scols + c < len(stiles) else "\u0000"
+                               for c in range(scols)) for r in range(srows)]
     # Titelschrift
     gimg, title_adv, tcols, trows = build_title.sheet(build_title.GOLD)
     wimg, _, _, _ = build_title.sheet(build_title.WHITE)
@@ -832,6 +873,9 @@ def build(out, spaces, vroot, own_icons=(), small_icons=(), big_icons=()):
             if asc <= 16:
                 providers.append({"type": "bitmap", "file": "kuby:k/icons32.png", "height": 16, "ascent": asc,
                                   "chars": ["".join(chr(BIG_FIRST + 0x40 + i) for i in range(len(big_icons)))]})
+        if sprite_rows and asc <= 32:
+            providers.append({"type": "bitmap", "file": "kuby:k/sprites.png", "height": 32, "ascent": asc,
+                              "chars": sprite_rows})
         if asc <= build_title.CELL_H:
             providers.append({"type": "bitmap", "file": "kuby:k/title_gold.png", "height": build_title.CELL_H,
                               "ascent": asc, "chars": title_gold_chars})
@@ -858,7 +902,7 @@ def build(out, spaces, vroot, own_icons=(), small_icons=(), big_icons=()):
         json.dump(title_font, f, ensure_ascii=True, separators=(",", ":"))
 
     widths = text_widths(vroot)
-    write_java(sheets, widths, icons, icon_chars, icon_adv, small_data, title_adv)
+    write_java(sheets, widths, icons, icon_chars, icon_adv, small_data, title_adv, sprite_data)
     n_fonts = len(T_SHIFTS) + len(B_SHIFTS) + len(I_SHIFTS)
     print("ok kit: %d Schriften, %d Stücke, %d Icons, %d Textzeichen" % (
         n_fonts, sum(len(s.cells) for s in sheets), len(icons), len(widths)))
@@ -886,7 +930,7 @@ def jstr(s):
     return '"' + "".join(out) + '"'
 
 
-def write_java(sheets, widths, icons, icon_chars, icon_adv, small_data=(), title_adv=()):
+def write_java(sheets, widths, icons, icon_chars, icon_adv, small_data=(), title_adv=(), sprite_data=()):
     by = {}
     for sh in sheets:
         for i, (key, img) in enumerate(sh.cells):
@@ -1057,6 +1101,26 @@ def write_java(sheets, widths, icons, icon_chars, icon_adv, small_data=(), title
     L.append("    }")
     L.append("")
     L.append("    public static final int SMALL_CELL = %d;" % SMALL_CELL)
+    L.append("")
+    L.append("    /** Große Grafiken in Originalgröße aus 32-px-Kacheln (Zeichen 0 = leere Kachel), Vorschub je Kachel. */")
+    L.append("    public enum Sprite {")
+    rows = []
+    for name, w, h, cols, chars, advs in sprite_data:
+        rows.append("        %s(%d, %d, %d, %s, %s)" % (name.upper(), w, h, cols, jstr(chars),
+                                                       jstr("".join(chr(0x30 + a) for a in advs))))
+    L.append(",\n".join(rows) + ";" if rows else "        ;")
+    L.append("")
+    L.append("        public final int width, height, cols;")
+    L.append("        public final String chars, advances;")
+    L.append("")
+    L.append("        Sprite(int width, int height, int cols, String chars, String advances) {")
+    L.append("            this.width = width;")
+    L.append("            this.height = height;")
+    L.append("            this.cols = cols;")
+    L.append("            this.chars = chars;")
+    L.append("            this.advances = advances;")
+    L.append("        }")
+    L.append("    }")
     L.append("")
     L.append("    /** Titelschrift (Schriften kuby:k/i<s> und kuby:title): Zeichen in TITLE_CHARS, Glyphe = Start + Index. */")
     L.append("    public static final String TITLE_CHARS = %s;" % jstr("".join(build_title.ORDER)))

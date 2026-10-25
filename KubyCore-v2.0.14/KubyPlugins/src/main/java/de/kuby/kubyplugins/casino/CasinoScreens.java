@@ -183,7 +183,7 @@ public final class CasinoScreens {
     }
 
     public static Canvas roulette(RouletteView v, RouletteActions a) {
-        Canvas c = new Canvas(W);
+        Canvas c = new Canvas(W).heading("Roulette", net.kyori.adventure.text.format.TextColor.color(0xF2B829));
         head(c, KitData.Icon.ROULETTE_WHEEL, "ROULETTE", v.status());
         // rechts: Deine Chips
         c.smallIcon(299, 21, KitData.SmallIcon.S_CHIP_RED);
@@ -281,7 +281,7 @@ public final class CasinoScreens {
 
     /** Verlauf: die letzten 36 Ergebnisse als Felder, darunter Statistik der letzten 100 Runden. */
     public static Canvas rouletteHistory(List<Integer> history, Consumer<Player> back) {
-        Canvas c = new Canvas(W);
+        Canvas c = new Canvas(W).heading("Roulette", net.kyori.adventure.text.format.TextColor.color(0xF2B829));
         head(c, KitData.Icon.ROULETTE_WHEEL, "VERLAUF", "Die letzten Ergebnisse am Tisch");
         c.smallButton(318, 17, 60, KitData.Small.GOLD, "‹ Zurück", GOLD_SOFT, true);
         c.action(316, 15, 64, 20, back, "Zurück zum Roulette");
@@ -348,7 +348,7 @@ public final class CasinoScreens {
     // =================================================================================================================
 
     public static Canvas slotsPaytable(long jackpot, long bet) {
-        Canvas c = new Canvas(W);
+        Canvas c = new Canvas(W).heading("Slots", net.kyori.adventure.text.format.TextColor.color(0xF2B829));
         head(c, KitData.Icon.SLOT_BIG, "SLOTS", "Gewinnplan · gewertet wird die Mittellinie");
         c.text(315, 16, "Jackpot", GRAY);
         c.textRight(378, 26, num(jackpot), GOLD, true);
@@ -417,7 +417,7 @@ public final class CasinoScreens {
     }
 
     public static Canvas music(MusicView v, MusicActions a) {
-        Canvas c = new Canvas(W);
+        Canvas c = new Canvas(W).heading("Casino-Musik", net.kyori.adventure.text.format.TextColor.color(0xF2B829));
         head(c, KitData.Icon.JUKEBOX, "CASINO", "Musik · Dein Soundtrack im Casino");
         String pill = v.choice() == -1 ? "Alle Songs" : v.choice() == -2 ? "Musik aus" : v.songs().get(v.choice()).name();
         int pw = Canvas.width(pill, true) + 13;
@@ -499,7 +499,7 @@ public final class CasinoScreens {
     }
 
     public static Canvas help(HelpView v, HelpActions a) {
-        Canvas c = new Canvas(W);
+        Canvas c = new Canvas(W).heading("Casino", net.kyori.adventure.text.format.TextColor.color(0xF2B829));
         head(c, v.icon(), v.title(), v.sub());
         int hw = Canvas.width("Hinreisen", true) + 14;
         c.smallButton(378 - hw, 9, hw, KitData.Small.GOLD, "Hinreisen", GOLD_SOFT, true);

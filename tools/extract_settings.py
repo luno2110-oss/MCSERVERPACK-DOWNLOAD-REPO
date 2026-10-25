@@ -17,9 +17,8 @@ import sys
 import numpy as np
 from PIL import Image
 
-REF = sys.argv[1]
-OUT = sys.argv[2]
-os.makedirs(OUT, exist_ok=True)
+REF = sys.argv[1] if __name__ == "__main__" else "."
+OUT = sys.argv[2] if __name__ == "__main__" else "."
 
 
 def load(name):
@@ -95,61 +94,67 @@ def blank(im, text_rgb, fill_rgb):
     return Image.fromarray(arr, "RGBA")
 
 
-SHOTS = {
-    "blue": ("n_064945.png", 0),
-    "orange": ("n_064949.png", 1),
-    "gold": ("n_064952.png", 2),
-    "teal": ("n_064954.png", 3),
-    "violet": ("n_065020.png", 4),
-}
-FILL = {"blue": (10, 26, 40), "orange": (39, 27, 5), "gold": (39, 30, 10), "teal": (7, 32, 31), "violet": (21, 16, 40)}
-PILL_FILL = {"blue": (37, 100, 150), "orange": (151, 104, 19), "gold": (151, 119, 36), "teal": (28, 125, 113),
-             "violet": (82, 64, 150)}
-TEXT_DARK = (28, 18, 45)
+def main():
+    os.makedirs(OUT, exist_ok=True)
+    SHOTS = {
+        "blue": ("n_064945.png", 0),
+        "orange": ("n_064949.png", 1),
+        "gold": ("n_064952.png", 2),
+        "teal": ("n_064954.png", 3),
+        "violet": ("n_065020.png", 4),
+    }
+    FILL = {"blue": (10, 26, 40), "orange": (39, 27, 5), "gold": (39, 30, 10), "teal": (7, 32, 31), "violet": (21, 16, 40)}
+    PILL_FILL = {"blue": (37, 100, 150), "orange": (151, 104, 19), "gold": (151, 119, 36), "teal": (28, 125, 113),
+                 "violet": (82, 64, 150)}
+    TEXT_DARK = (28, 18, 45)
 
-for name, (f, tab) in SHOTS.items():
-    a = load(f)
-    # Inhaltskasten (Umriss-Stil) und aktiver Reiter (gefüllter Stil)
-    bottom = 230 if name != "violet" else 176
-    nine(a, 0, 90, 389, bottom, 195, 52).save(os.path.join(OUT, "box_%s.png" % name))
-    tx = tab * 79
-    # Mittelspalte 7: gleich hinter der Ecke, dort steht nie Schrift (fette Beschriftungen reichen bis Spalte 8)
-    nine(a, tx, 54, tx + 73, 87, 7, 17).save(os.path.join(OUT, "boxf_%s.png" % name))
-    p = pill(a, 146, 122, FILL[name])
-    p.save(os.path.join(OUT, "pill_on_%s.png" % name))
-    blank(p, TEXT_DARK, PILL_FILL[name]).save(os.path.join(OUT, "pill_on_%s_blank.png" % name))
+    for name, (f, tab) in SHOTS.items():
+        a = load(f)
+        # Inhaltskasten (Umriss-Stil) und aktiver Reiter (gefüllter Stil)
+        bottom = 230 if name != "violet" else 176
+        nine(a, 0, 90, 389, bottom, 195, 52).save(os.path.join(OUT, "box_%s.png" % name))
+        tx = tab * 79
+        # Mittelspalte 7: gleich hinter der Ecke, dort steht nie Schrift (fette Beschriftungen reichen bis Spalte 8)
+        nine(a, tx, 54, tx + 73, 87, 7, 17).save(os.path.join(OUT, "boxf_%s.png" % name))
+        p = pill(a, 146, 122, FILL[name])
+        p.save(os.path.join(OUT, "pill_on_%s.png" % name))
+        blank(p, TEXT_DARK, PILL_FILL[name]).save(os.path.join(OUT, "pill_on_%s_blank.png" % name))
 
-a = load("n_064945.png")
-nine(a, 0, 0, 389, 50, 195, 25).save(os.path.join(OUT, "box_head.png"))
-nine(a, 79, 54, 152, 87, 7, 17).save(os.path.join(OUT, "box_gray.png"))
-nine(a, 0, 243, 191, 269, 30, 13).save(os.path.join(OUT, "box_button.png"))
-off = pill(a, 146, 149, (21, 22, 24))
-off.save(os.path.join(OUT, "pill_off.png"))
-# Text "AUS" ist grau: die hellsten Pixel innerhalb der Pille (ohne Knopf) ermitteln
-arr = np.array(off).astype(int)
-print("AUS-Farben:", sorted({tuple(arr[y, x, :3]) for y in range(3, 11) for x in range(14, 36)})[:12])
+    a = load("n_064945.png")
+    nine(a, 0, 0, 389, 50, 195, 25).save(os.path.join(OUT, "box_head.png"))
+    nine(a, 79, 54, 152, 87, 7, 17).save(os.path.join(OUT, "box_gray.png"))
+    nine(a, 0, 243, 191, 269, 30, 13).save(os.path.join(OUT, "box_button.png"))
+    off = pill(a, 146, 149, (21, 22, 24))
+    off.save(os.path.join(OUT, "pill_off.png"))
+    # Text "AUS" ist grau: die hellsten Pixel innerhalb der Pille (ohne Knopf) ermitteln
+    arr = np.array(off).astype(int)
+    print("AUS-Farben:", sorted({tuple(arr[y, x, :3]) for y in range(3, 11) for x in range(14, 36)})[:12])
 
-# Mehrfach-Schalter (16 hoch): türkis gefüllt (Actionbar) und grau (Auto-TPA "Aus")
-t = load("n_064954.png")
-small(t, 313, 121, 376, 136).save(os.path.join(OUT, "small_teal.png"))
-o = load("n_064949.png")
-small(o, 313, 175, 376, 190).save(os.path.join(OUT, "small_gray.png"))
+    # Mehrfach-Schalter (16 hoch): türkis gefüllt (Actionbar) und grau (Auto-TPA "Aus")
+    t = load("n_064954.png")
+    small(t, 313, 121, 376, 136).save(os.path.join(OUT, "small_teal.png"))
+    o = load("n_064949.png")
+    small(o, 313, 175, 376, 190).save(os.path.join(OUT, "small_gray.png"))
 
-# Icons
-a = load("n_064945.png")
-sprite(a, 10, 9, 40, 39, (21, 16, 40)).save(os.path.join(OUT, "icon_gear_big.png"))
-sprite(a, 277, 18, 290, 32, (21, 16, 40)).save(os.path.join(OUT, "icon_check.png"))
-GRAY = (21, 22, 24)
-# Reiter-Icons: inaktiv (grauer Reiter) und aktiv (gefüllter Reiter) vereinigt
-TAB_ICONS = {"chat": ((29, 57, 44, 71), "n_064949.png", "n_064945.png", "blue"),
-             "envelope": ((108, 58, 123, 70), "n_064945.png", "n_064949.png", "orange"),
-             "bell": ((188, 57, 201, 72), "n_064945.png", "n_064952.png", "gold"),
-             "eye": ((266, 59, 281, 69), "n_064945.png", "n_064954.png", "teal"),
-             "gear": ((345, 57, 360, 72), "n_064945.png", "n_065020.png", "violet")}
-for name, (box, inactive, active, col) in TAB_ICONS.items():
-    # Randpixel sind halbtransparent gemischt: aus dem grauen Reiter geschnitten passt es in vier von fünf Reitern
-    # genau (Vereinigung mit dem aktiven Reiter ergab mehr Abweichungen), im aktiven fehlen 2-3 Kantenpixel
-    sprite(load(inactive), *box, GRAY).save(os.path.join(OUT, "icon_%s.png" % name))
-sprite(a, 10, 248, 25, 263, GRAY).save(os.path.join(OUT, "icon_gear_button.png"))
-sprite(a, 9, 97, 24, 111, (10, 26, 40)).save(os.path.join(OUT, "icon_chat_section.png"))
-print("fertig", sorted(os.listdir(OUT)))
+    # Icons
+    a = load("n_064945.png")
+    sprite(a, 10, 9, 40, 39, (21, 16, 40)).save(os.path.join(OUT, "icon_gear_big.png"))
+    sprite(a, 277, 18, 290, 32, (21, 16, 40)).save(os.path.join(OUT, "icon_check.png"))
+    GRAY = (21, 22, 24)
+    # Reiter-Icons: inaktiv (grauer Reiter) und aktiv (gefüllter Reiter) vereinigt
+    TAB_ICONS = {"chat": ((29, 57, 44, 71), "n_064949.png", "n_064945.png", "blue"),
+                 "envelope": ((108, 58, 123, 70), "n_064945.png", "n_064949.png", "orange"),
+                 "bell": ((188, 57, 201, 72), "n_064945.png", "n_064952.png", "gold"),
+                 "eye": ((266, 59, 281, 69), "n_064945.png", "n_064954.png", "teal"),
+                 "gear": ((345, 57, 360, 72), "n_064945.png", "n_065020.png", "violet")}
+    for name, (box, inactive, active, col) in TAB_ICONS.items():
+        # Randpixel sind halbtransparent gemischt: aus dem grauen Reiter geschnitten passt es in vier von fünf Reitern
+        # genau (Vereinigung mit dem aktiven Reiter ergab mehr Abweichungen), im aktiven fehlen 2-3 Kantenpixel
+        sprite(load(inactive), *box, GRAY).save(os.path.join(OUT, "icon_%s.png" % name))
+    sprite(a, 10, 248, 25, 263, GRAY).save(os.path.join(OUT, "icon_gear_button.png"))
+    sprite(a, 9, 97, 24, 111, (10, 26, 40)).save(os.path.join(OUT, "icon_chat_section.png"))
+    print("fertig", sorted(os.listdir(OUT)))
+
+
+if __name__ == "__main__":
+    main()

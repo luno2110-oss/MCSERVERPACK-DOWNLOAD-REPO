@@ -72,7 +72,7 @@ public final class Canvas {
         }
     }
 
-    private record Region(int x, int y, int w, int h, Consumer<Player> onClick, Component hover) {
+    private record Region(int x, int y, int w, int h, Consumer<Player> onClick, Component hover, String url) {
         boolean contains(Glyph g) {
             int cx = g.x + g.w / 2;
             int cy = (g.top + g.bottom) / 2;
@@ -92,6 +92,7 @@ public final class Canvas {
     }
 
     private final int width;
+    private Component heading = Component.empty();
     private final List<Glyph> glyphs = new ArrayList<>();
     private final List<Region> regions = new ArrayList<>();
     private int topMargin;
@@ -102,6 +103,19 @@ public final class Canvas {
 
     public int width() {
         return width;
+    }
+
+    /**
+     * Titel über dem Dialog (Minecraft zeigt ihn mittig oben, daneben das Kuby-Logo aus dem Pack), z. B.
+     * "Einstellungen" grau oder "Juwelenshop" grün wie in der Referenz.
+     */
+    public Canvas heading(String text, TextColor color) {
+        heading = Component.text(text, color);
+        return this;
+    }
+
+    public Component heading() {
+        return heading;
     }
 
     // =================================================================================================================
@@ -391,6 +405,21 @@ public final class Canvas {
         return icon.advance;
     }
 
+    /** Große Grafik in Originalgröße (aus 32-px-Kacheln) mit linker oberer Ecke bei (x, y). Gibt die Breite zurück. */
+    public int sprite(int x, int y, KitData.Sprite s) {
+        for (int i = 0; i < s.chars.length(); i++) {
+            char c = s.chars.charAt(i);
+            if (c == 0) continue;
+            int col = i % s.cols, row = i / s.cols;
+            int tx = x + 32 * col, ty = y + 32 * row;
+            int adv = s.advances.charAt(i) - '0';
+            int th = Math.min(32, s.height - 32 * row);
+            glyphs.add(new Glyph(Kind.ICON, tx, ty, adv - 1, th, adv, Z_ICON, String.valueOf(c), NamedTextColor.WHITE,
+                    false, Math.max(KitData.I_MIN, 7 - 32), KitData.I_MAX, ty, ty + th));
+        }
+        return s.width;
+    }
+
     // =================================================================================================================
     // Titelschrift
     // =================================================================================================================
@@ -464,7 +493,13 @@ public final class Canvas {
 
     /** Macht ein Rechteck klickbar; alle Zeichen, deren Mitte darin liegt, bekommen Klick und Tooltip. */
     public Canvas action(int x, int y, int w, int h, Consumer<Player> onClick, Component hover) {
-        regions.add(new Region(x, y, w, h, onClick, hover));
+        regions.add(new Region(x, y, w, h, onClick, hover, null));
+        return this;
+    }
+
+    /** Macht ein Rechteck zu einem Link (Minecraft fragt vor dem Öffnen im Browser nach). */
+    public Canvas actionUrl(int x, int y, int w, int h, String url, Component hover) {
+        regions.add(new Region(x, y, w, h, null, hover, url));
         return this;
     }
 
@@ -593,6 +628,7 @@ public final class Canvas {
                 int idx = regions.indexOf(s.region());
                 String token = idx >= 0 ? tokens.get(idx) : null;
                 if (token != null) c.clickEvent(UiClicks.click(token));
+                else if (s.region().url() != null) c.clickEvent(ClickEvent.openUrl(s.region().url()));
                 if (s.region().hover() != null) c.hoverEvent(HoverEvent.showText(s.region().hover()));
             }
             b.append(c.build());

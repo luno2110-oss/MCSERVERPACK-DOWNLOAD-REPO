@@ -280,7 +280,7 @@ public final class SettingsScreen {
     /** Nur Darstellung (auch für Vorschauen ohne Server). */
     public static Canvas canvas(View v, Actions a) {
         boolean en = v.english();
-        Canvas c = new Canvas(W);
+        Canvas c = new Canvas(W).heading("Einstellungen", net.kyori.adventure.text.format.TextColor.color(0x9FA1A7));
         head(c, en ? "SETTINGS" : "EINSTELLUNGEN", en ? "One click switches instantly" : "Ein Klick schaltet sofort um",
                 List.of(Span.bold(String.valueOf(v.on()), COUNT), Span.of("/" + v.total(), SUB)));
         c.smallIcon(277, 18, KitData.SmallIcon.SET_CHECK);
@@ -351,7 +351,7 @@ public final class SettingsScreen {
     /** Sprachseite: Kopf, eine Kachel je Sprache und zurück zu den Einstellungen. */
     public static Canvas languageCanvas(List<String> languages, int current, boolean en,
                                         java.util.function.IntFunction<Consumer<Player>> pick, Consumer<Player> back) {
-        Canvas c = new Canvas(W);
+        Canvas c = new Canvas(W).heading("Sprache · Language", net.kyori.adventure.text.format.TextColor.color(0x9FA1A7));
         head(c, "SPRACHE · LANGUAGE", en ? "Menus and messages" : "Menüs und Meldungen", null);
         Look look = Look.OTHER;
         int rows = Math.max(1, (languages.size() + 1) / 2);

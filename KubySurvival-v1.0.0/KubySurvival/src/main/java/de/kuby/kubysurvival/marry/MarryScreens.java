@@ -134,7 +134,7 @@ public final class MarryScreens {
     }
 
     public static Canvas marry(MarryView v, MarryActions a) {
-        Canvas c = new Canvas(W);
+        Canvas c = new Canvas(W).heading("Heiraten", net.kyori.adventure.text.format.TextColor.color(0xFF7AC0));
         head(c, KitData.Box.PURPLE, KitData.SmallIcon.H_RINGS, "HEIRATEN", PINK, "Antrag, Hochzeit und Ehe-Konto", null,
                 v.married() ? List.of(Span.of("❤ ", PINK), Span.of("verheiratet", LIGHT)) : null);
         int y = 53;
@@ -264,7 +264,7 @@ public final class MarryScreens {
     }
 
     public static Canvas bank(BankView v, BankActions a) {
-        Canvas c = new Canvas(W);
+        Canvas c = new Canvas(W).heading("Bank", net.kyori.adventure.text.format.TextColor.color(0xFF7AC0));
         head(c, KitData.Box.GOLD, KitData.SmallIcon.H_COINS, "BANK", GOLD, "Ehe-Konto und Konten mit Freunden", null, wallet(v.wallet()));
         int y = 53;
         String info = v.atBank() ? "Du bist an der Bank: Ein- und Auszahlen ohne Grenze."
@@ -343,7 +343,7 @@ public final class MarryScreens {
 
     public static Canvas account(AccountDetail d, AccountActions a) {
         AccountView acc = d.account();
-        Canvas c = new Canvas(W);
+        Canvas c = new Canvas(W).heading("Konto", net.kyori.adventure.text.format.TextColor.color(0xFF7AC0));
         KitData.Box style = acc.marriage() ? KitData.Box.PURPLE : KitData.Box.GOLD;
         TextColor accent = acc.marriage() ? PINK : GOLD;
         head(c, style, acc.marriage() ? KitData.SmallIcon.H_RINGS : KitData.SmallIcon.H_PEOPLE, acc.name().toUpperCase(), accent,

@@ -166,7 +166,7 @@ public final class AngelScreens {
                            int ordersDone, boolean hasZone) {}
 
     public static Canvas main(MainView v, Nav nav) {
-        Canvas c = new Canvas(W);
+        Canvas c = new Canvas(W).heading("Angeln", net.kyori.adventure.text.format.TextColor.color(0x55FCFC));
         head(c, Theme.NAVY, null, KitData.Icon.ROD, "ANGELN", v.rank + " · Level " + v.level,
                 List.of(Span.of("Angel-Punkte ", GRAY), Span.bold(AngelText.num(v.points), AQUA)));
 
@@ -243,7 +243,7 @@ public final class AngelScreens {
                            long pageCoins, long pageTokens) {}
 
     public static Canvas book(BookView v, Nav nav) {
-        Canvas c = new Canvas(W);
+        Canvas c = new Canvas(W).heading("Angeln", net.kyori.adventure.text.format.TextColor.color(0x55FCFC));
         String sub = v.pageCaught + "/8 gefangen · " + (v.pageDone ? "Seite komplett ✓"
                 : "volle Seite: " + AngelText.money(v.pageCoins) + " + " + v.pageTokens + " Tokens");
         head(c, Theme.NAVY, nav.main(), KitData.Icon.FISH_BOOK, v.water.upper(), sub,
@@ -276,7 +276,7 @@ public final class AngelScreens {
                              long minPrice, long maxPrice, int bonus, boolean inZoneOnly) {}
 
     public static Canvas detail(DetailView v, Nav nav) {
-        Canvas c = new Canvas(W);
+        Canvas c = new Canvas(W).heading("Angeln", net.kyori.adventure.text.format.TextColor.color(0x55FCFC));
         FishSpecies s = v.species;
         boolean known = v.caught > 0;
         c.box(0, 0, W, 52, KitData.Box.NAVY);
@@ -317,7 +317,7 @@ public final class AngelScreens {
                           long autoSellTokens, String armed, long coins, long tokens) {}
 
     public static Canvas rod(RodView v, Nav nav) {
-        Canvas c = new Canvas(W);
+        Canvas c = new Canvas(W).heading("Angeln", net.kyori.adventure.text.format.TextColor.color(0x55FCFC));
         head(c, Theme.NAVY, nav.main(), KitData.Icon.ROD, "Rute & Upgrades", "Upgrades gelten für jede Angel", null);
         c.box(0, 54, W, 61, KitData.Box.NAVY);
         c.text(10, 64, "Deine Angel", CYAN, true);
@@ -371,7 +371,7 @@ public final class AngelScreens {
     public record BaitView(int[] counts, Bait active, boolean[] canCraft, String[] missing, String armed) {}
 
     public static Canvas baits(BaitView v, Nav nav) {
-        Canvas c = new Canvas(W);
+        Canvas c = new Canvas(W).heading("Angeln", net.kyori.adventure.text.format.TextColor.color(0x55FCFC));
         head(c, Theme.NAVY, nav.main(), KitData.Icon.BUNDLE, "Köder", "Ein aktiver Köder wird bei jedem Fang verbraucht", null);
         int y = 54;
         for (Bait b : Bait.values()) {
@@ -431,7 +431,7 @@ public final class AngelScreens {
                              List<FishSpecies> fishOfDay, int jobBonus, boolean golden, String lastSale) {}
 
     public static Canvas dealer(DealerView v, Nav nav) {
-        Canvas c = new Canvas(W);
+        Canvas c = new Canvas(W).heading("Angeln", net.kyori.adventure.text.format.TextColor.color(0x55FCFC));
         head(c, Theme.GREEN, nav.main(), KitData.Icon.EMERALD, "Fischhändler",
                 v.budgetLeft > 0 ? "Diese Stunde noch " + AngelText.money(v.budgetLeft) + " zum vollen Preis"
                         : "Stundenbudget voll: Fische bringen gerade weniger",
@@ -480,7 +480,7 @@ public final class AngelScreens {
     public record OrderView(List<AngelProfile.Order> orders, boolean bonusDone, long secondsLeft) {}
 
     public static Canvas orders(OrderView v, Nav nav) {
-        Canvas c = new Canvas(W);
+        Canvas c = new Canvas(W).heading("Angeln", net.kyori.adventure.text.format.TextColor.color(0x55FCFC));
         head(c, Theme.GOLD, nav.main(), KitData.Icon.BOOK_PLAIN, "Tagesaufträge",
                 "Neue Aufträge in " + AngelText.duration(v.secondsLeft), null);
         int y = 54;
@@ -514,7 +514,7 @@ public final class AngelScreens {
     public record TopView(String tab, List<AngelService.TopEntry> entries, int ownPlace, String ownValue) {}
 
     public static Canvas top(TopView v, Nav nav) {
-        Canvas c = new Canvas(W);
+        Canvas c = new Canvas(W).heading("Angeln", net.kyori.adventure.text.format.TextColor.color(0x55FCFC));
         head(c, Theme.GOLD, nav.main(), KitData.Icon.GOLD_HELMET, "Bestenliste", "Aktualisiert alle zwei Minuten", null);
         List<Consumer<Player>> clicks = new ArrayList<>();
         for (String t : TOP_TABS) clicks.add(nav.top(t));
@@ -551,7 +551,7 @@ public final class AngelScreens {
     // =================================================================================================================
 
     public static Canvas help(Nav nav) {
-        Canvas c = new Canvas(W);
+        Canvas c = new Canvas(W).heading("Angeln", net.kyori.adventure.text.format.TextColor.color(0x55FCFC));
         head(c, Theme.NAVY, nav.main(), KitData.Icon.BOOK, "So funktioniert's", "Angeln in Survival kurz erklärt", null);
         String[][] parts = {
                 {"Angeln", "Wirf die Angel ins Wasser. Wenn es zieht, holst du ein."},

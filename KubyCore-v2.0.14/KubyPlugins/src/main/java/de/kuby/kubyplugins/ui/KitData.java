@@ -292,7 +292,157 @@ public final class KitData {
                 new Piece('\ue4cf', 9, 8, 9),
                 new Piece('\ue4d0', 9, 8, 9),
                 new Piece('\ue55c', 33, 32, 9),
-                new Piece('\ue4d1', 9, 8, 9));
+                new Piece('\ue4d1', 9, 8, 9)),
+        JS_BLUE(5, null,
+                new Piece('\ue4d2', 9, 8, 9),
+                new Piece('\ue55d', 33, 32, 9),
+                new Piece('\ue4d3', 9, 8, 9),
+                new Piece('\ue4d4', 9, 8, 9),
+                new Piece('\ue55e', 33, 32, 9),
+                new Piece('\ue4d5', 9, 8, 9),
+                new Piece('\ue4d6', 9, 8, 9),
+                new Piece('\ue55f', 33, 32, 9),
+                new Piece('\ue4d7', 9, 8, 9)),
+        JS_CYBORG(5, null,
+                new Piece('\ue4d8', 9, 8, 9),
+                new Piece('\ue560', 33, 32, 9),
+                new Piece('\ue4d9', 9, 8, 9),
+                new Piece('\ue4da', 9, 8, 9),
+                new Piece('\ue561', 33, 32, 9),
+                new Piece('\ue4db', 9, 8, 9),
+                new Piece('\ue4dc', 9, 8, 9),
+                new Piece('\ue562', 33, 32, 9),
+                new Piece('\ue4dd', 9, 8, 9)),
+        JS_DEVIL(5, null,
+                new Piece('\ue4de', 9, 8, 9),
+                new Piece('\ue563', 33, 32, 9),
+                new Piece('\ue4df', 9, 8, 9),
+                new Piece('\ue4e0', 9, 8, 9),
+                new Piece('\ue564', 33, 32, 9),
+                new Piece('\ue4e1', 9, 8, 9),
+                new Piece('\ue4e2', 9, 8, 9),
+                new Piece('\ue565', 33, 32, 9),
+                new Piece('\ue4e3', 9, 8, 9)),
+        JS_GOLD(5, null,
+                new Piece('\ue4e4', 9, 8, 9),
+                new Piece('\ue566', 33, 32, 9),
+                new Piece('\ue4e5', 9, 8, 9),
+                new Piece('\ue4e6', 9, 8, 9),
+                new Piece('\ue567', 33, 32, 9),
+                new Piece('\ue4e7', 9, 8, 9),
+                new Piece('\ue4e8', 9, 8, 9),
+                new Piece('\ue568', 33, 32, 9),
+                new Piece('\ue4e9', 9, 8, 9)),
+        JS_GRAY(5, null,
+                new Piece('\ue4ea', 9, 8, 9),
+                new Piece('\ue569', 33, 32, 9),
+                new Piece('\ue4eb', 9, 8, 9),
+                new Piece('\ue4ec', 9, 8, 9),
+                new Piece('\ue56a', 33, 32, 9),
+                new Piece('\ue4ed', 9, 8, 9),
+                new Piece('\ue4ee', 9, 8, 9),
+                new Piece('\ue56b', 33, 32, 9),
+                new Piece('\ue4ef', 9, 8, 9)),
+        JS_GREEN(5, null,
+                new Piece('\ue4f0', 9, 8, 9),
+                new Piece('\ue56c', 33, 32, 9),
+                new Piece('\ue4f1', 9, 8, 9),
+                new Piece('\ue4f2', 9, 8, 9),
+                new Piece('\ue56d', 33, 32, 9),
+                new Piece('\ue4f3', 9, 8, 9),
+                new Piece('\ue4f4', 9, 8, 9),
+                new Piece('\ue56e', 33, 32, 9),
+                new Piece('\ue4f5', 9, 8, 9)),
+        JS_HEAD(5, null,
+                new Piece('\ue4f6', 9, 8, 9),
+                new Piece('\ue56f', 33, 32, 9),
+                new Piece('\ue4f7', 9, 8, 9),
+                new Piece('\ue4f8', 9, 8, 9),
+                new Piece('\ue570', 33, 32, 9),
+                new Piece('\ue4f9', 9, 8, 9),
+                new Piece('\ue4fa', 9, 8, 9),
+                new Piece('\ue571', 33, 32, 9),
+                new Piece('\ue4fb', 9, 8, 9)),
+        JS_LEGEND(5, null,
+                new Piece('\ue4fc', 9, 8, 9),
+                new Piece('\ue572', 33, 32, 9),
+                new Piece('\ue4fd', 9, 8, 9),
+                new Piece('\ue4fe', 9, 8, 9),
+                new Piece('\ue573', 33, 32, 9),
+                new Piece('\ue4ff', 9, 8, 9),
+                new Piece('\ue500', 9, 8, 9),
+                new Piece('\ue574', 33, 32, 9),
+                new Piece('\ue501', 9, 8, 9)),
+        JS_LEGENDARY(5, null,
+                new Piece('\ue502', 9, 8, 9),
+                new Piece('\ue575', 33, 32, 9),
+                new Piece('\ue503', 9, 8, 9),
+                new Piece('\ue504', 9, 8, 9),
+                new Piece('\ue576', 33, 32, 9),
+                new Piece('\ue505', 9, 8, 9),
+                new Piece('\ue506', 9, 8, 9),
+                new Piece('\ue577', 33, 32, 9),
+                new Piece('\ue507', 9, 8, 9)),
+        JS_PASS(5, null,
+                new Piece('\ue508', 9, 8, 9),
+                new Piece('\ue578', 33, 32, 9),
+                new Piece('\ue509', 9, 8, 9),
+                new Piece('\ue50a', 9, 8, 9),
+                new Piece('\ue579', 33, 32, 9),
+                new Piece('\ue50b', 9, 8, 9),
+                new Piece('\ue50c', 9, 8, 9),
+                new Piece('\ue57a', 33, 32, 9),
+                new Piece('\ue50d', 9, 8, 9)),
+        JS_PLATIN(5, null,
+                new Piece('\ue50e', 9, 8, 9),
+                new Piece('\ue57b', 33, 32, 9),
+                new Piece('\ue50f', 9, 8, 9),
+                new Piece('\ue510', 9, 8, 9),
+                new Piece('\ue57c', 33, 32, 9),
+                new Piece('\ue511', 9, 8, 9),
+                new Piece('\ue512', 9, 8, 9),
+                new Piece('\ue57d', 33, 32, 9),
+                new Piece('\ue513', 9, 8, 9)),
+        JS_RED(5, null,
+                new Piece('\ue514', 9, 8, 9),
+                new Piece('\ue57e', 33, 32, 9),
+                new Piece('\ue515', 9, 8, 9),
+                new Piece('\ue516', 9, 8, 9),
+                new Piece('\ue57f', 33, 32, 9),
+                new Piece('\ue517', 9, 8, 9),
+                new Piece('\ue518', 9, 8, 9),
+                new Piece('\ue580', 33, 32, 9),
+                new Piece('\ue519', 9, 8, 9)),
+        JS_STORE(5, null,
+                new Piece('\ue51a', 9, 8, 9),
+                new Piece('\ue581', 33, 32, 9),
+                new Piece('\ue51b', 9, 8, 9),
+                new Piece('\ue51c', 9, 8, 9),
+                new Piece('\ue582', 33, 32, 9),
+                new Piece('\ue51d', 9, 8, 9),
+                new Piece('\ue51e', 9, 8, 9),
+                new Piece('\ue583', 33, 32, 9),
+                new Piece('\ue51f', 9, 8, 9)),
+        JS_VIOLET(5, null,
+                new Piece('\ue520', 9, 8, 9),
+                new Piece('\ue584', 33, 32, 9),
+                new Piece('\ue521', 9, 8, 9),
+                new Piece('\ue522', 9, 8, 9),
+                new Piece('\ue585', 33, 32, 9),
+                new Piece('\ue523', 9, 8, 9),
+                new Piece('\ue524', 9, 8, 9),
+                new Piece('\ue586', 33, 32, 9),
+                new Piece('\ue525', 9, 8, 9)),
+        JS_VIP(5, null,
+                new Piece('\ue526', 9, 8, 9),
+                new Piece('\ue587', 33, 32, 9),
+                new Piece('\ue527', 9, 8, 9),
+                new Piece('\ue528', 9, 8, 9),
+                new Piece('\ue588', 33, 32, 9),
+                new Piece('\ue529', 9, 8, 9),
+                new Piece('\ue52a', 9, 8, 9),
+                new Piece('\ue589', 33, 32, 9),
+                new Piece('\ue52b', 9, 8, 9));
 
         /** [Zeile oben/mitte/unten][links/mitte/rechts] */
         public final Piece[][] p;
@@ -406,11 +556,11 @@ public final class KitData {
 
     /** Balken-Füllfarben; Stücke in den Breiten 1, 2, 4, 8, 16, 32. */
     public enum Fill {
-        GOLD(new Piece('\ue4d8', 2, 1, 5), new Piece('\ue4d9', 3, 2, 5), new Piece('\ue4da', 5, 4, 5), new Piece('\ue4db', 9, 8, 5), new Piece('\ue55f', 17, 16, 5), new Piece('\ue560', 33, 32, 5)),
-        CYAN(new Piece('\ue4dc', 2, 1, 5), new Piece('\ue4dd', 3, 2, 5), new Piece('\ue4de', 5, 4, 5), new Piece('\ue4df', 9, 8, 5), new Piece('\ue561', 17, 16, 5), new Piece('\ue562', 33, 32, 5)),
-        GREEN(new Piece('\ue4e0', 2, 1, 5), new Piece('\ue4e1', 3, 2, 5), new Piece('\ue4e2', 5, 4, 5), new Piece('\ue4e3', 9, 8, 5), new Piece('\ue563', 17, 16, 5), new Piece('\ue564', 33, 32, 5)),
-        PURPLE(new Piece('\ue4e4', 2, 1, 5), new Piece('\ue4e5', 3, 2, 5), new Piece('\ue4e6', 5, 4, 5), new Piece('\ue4e7', 9, 8, 5), new Piece('\ue565', 17, 16, 5), new Piece('\ue566', 33, 32, 5)),
-        RED(new Piece('\ue4e8', 2, 1, 5), new Piece('\ue4e9', 3, 2, 5), new Piece('\ue4ea', 5, 4, 5), new Piece('\ue4eb', 9, 8, 5), new Piece('\ue567', 17, 16, 5), new Piece('\ue568', 33, 32, 5));
+        GOLD(new Piece('\ue532', 2, 1, 5), new Piece('\ue533', 3, 2, 5), new Piece('\ue534', 5, 4, 5), new Piece('\ue535', 9, 8, 5), new Piece('\ue58c', 17, 16, 5), new Piece('\ue58d', 33, 32, 5)),
+        CYAN(new Piece('\ue536', 2, 1, 5), new Piece('\ue537', 3, 2, 5), new Piece('\ue538', 5, 4, 5), new Piece('\ue539', 9, 8, 5), new Piece('\ue58e', 17, 16, 5), new Piece('\ue58f', 33, 32, 5)),
+        GREEN(new Piece('\ue53a', 2, 1, 5), new Piece('\ue53b', 3, 2, 5), new Piece('\ue53c', 5, 4, 5), new Piece('\ue53d', 9, 8, 5), new Piece('\ue590', 17, 16, 5), new Piece('\ue591', 33, 32, 5)),
+        PURPLE(new Piece('\ue53e', 2, 1, 5), new Piece('\ue53f', 3, 2, 5), new Piece('\ue540', 5, 4, 5), new Piece('\ue541', 9, 8, 5), new Piece('\ue592', 17, 16, 5), new Piece('\ue593', 33, 32, 5)),
+        RED(new Piece('\ue542', 2, 1, 5), new Piece('\ue543', 3, 2, 5), new Piece('\ue544', 5, 4, 5), new Piece('\ue545', 9, 8, 5), new Piece('\ue594', 17, 16, 5), new Piece('\ue595', 33, 32, 5));
 
         public final Piece[] p;
 
@@ -419,10 +569,10 @@ public final class KitData {
         }
     }
 
-    public static final Piece BAR_L = new Piece('\ue4d2', 9, 8, 7);
-    public static final Piece BAR_M = new Piece('\ue55d', 33, 32, 7);
-    public static final Piece BAR_R = new Piece('\ue4d3', 9, 8, 7);
-    public static final Piece[] BAR_NARROW = {new Piece('\ue55e', 17, 16, 7), new Piece('\ue4d4', 9, 8, 7), new Piece('\ue4d5', 5, 4, 7), new Piece('\ue4d6', 3, 2, 7), new Piece('\ue4d7', 2, 1, 7)};
+    public static final Piece BAR_L = new Piece('\ue52c', 9, 8, 7);
+    public static final Piece BAR_M = new Piece('\ue58a', 33, 32, 7);
+    public static final Piece BAR_R = new Piece('\ue52d', 9, 8, 7);
+    public static final Piece[] BAR_NARROW = {new Piece('\ue58b', 17, 16, 7), new Piece('\ue52e', 9, 8, 7), new Piece('\ue52f', 5, 4, 7), new Piece('\ue530', 3, 2, 7), new Piece('\ue531', 2, 1, 7)};
     public static final Piece BACK = new Piece('\ue780', 21, 20, 20);
     public static final Piece BACK_HELP = new Piece('\ue781', 23, 22, 22);
 
@@ -757,6 +907,47 @@ public final class KitData {
     }
 
     public static final int SMALL_CELL = 20;
+
+    /** Große Grafiken in Originalgröße aus 32-px-Kacheln (Zeichen 0 = leere Kachel), Vorschub je Kachel. */
+    public enum Sprite {
+        JS_BACK(22, 22, 1, "\uf000", "G"),
+        JS_CART(23, 24, 1, "\uf001", "H"),
+        JS_CHEST(48, 48, 2, "\uf002\uf003\uf004\uf005", "QAQ@"),
+        JS_CRATE(48, 45, 2, "\uf006\uf007\uf008\uf009", "QAQ="),
+        JS_CROWN(43, 46, 2, "\uf00a\uf00b\uf00c\uf00d", "Q<Q:"),
+        JS_EMERALD(14, 16, 1, "\uf00e", "?"),
+        JS_EMERALD_BIG(34, 36, 2, "\uf00f\uf010\uf011\u0000", "Q320"),
+        JS_EMERALD_PRICE(14, 16, 1, "\uf012", "?"),
+        JS_GIFT(22, 24, 1, "\uf013", "G"),
+        JS_KEY_AURAN(19, 29, 1, "\uf014", "D"),
+        JS_KEY_CYBORG(18, 32, 1, "\uf015", "C"),
+        JS_KEY_LEGENDARY(16, 30, 1, "\uf016", "A"),
+        JS_PACK_PROFI(35, 40, 2, "\uf017\uf018\uf019\uf01a", "Q4Q3"),
+        JS_PACK_STARTER(35, 40, 2, "\uf01b\uf01c\uf01d\uf01e", "Q4Q4"),
+        JS_PACK_ULTIMATE(37, 40, 2, "\uf01f\uf020\uf021\uf022", "Q6Q6"),
+        JS_PASS(32, 32, 1, "\uf023", "Q"),
+        JS_RANK_DEVIL(23, 32, 1, "\uf024", "H"),
+        JS_RANK_LEGEND(31, 29, 1, "\uf025", "P"),
+        JS_RANK_PLATIN(31, 32, 1, "\uf026", "P"),
+        JS_RANK_VIP(26, 32, 1, "\uf027", "K"),
+        JS_TICKET(47, 44, 2, "\uf028\uf029\uf02a\uf02b", "Q@Q;"),
+        JS_TITLE(129, 18, 5, "\uf02c\uf02d\uf02e\uf02f\uf030", "QQQQ2"),
+        JS_PILL_AURAN(24, 14, 1, "\uf031", "I"),
+        JS_PILL_CYBORG(24, 14, 1, "\uf032", "I"),
+        JS_PILL_LEGENDARY(24, 14, 1, "\uf033", "I"),
+        JS_PILL_OFF(24, 14, 1, "\uf034", "I");
+
+        public final int width, height, cols;
+        public final String chars, advances;
+
+        Sprite(int width, int height, int cols, String chars, String advances) {
+            this.width = width;
+            this.height = height;
+            this.cols = cols;
+            this.chars = chars;
+            this.advances = advances;
+        }
+    }
 
     /** Titelschrift (Schriften kuby:k/i<s> und kuby:title): Zeichen in TITLE_CHARS, Glyphe = Start + Index. */
     public static final String TITLE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!?.,:-+/%'&#$\u2726\u2605\u00c4\u00d6\u00dc ";

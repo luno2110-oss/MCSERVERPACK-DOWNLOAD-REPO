@@ -424,7 +424,7 @@ public final class SurvivalHelp {
         KitData.Box style = box(t);
         // Casino: roter Kopf, dunkle Kästen wie in der Casino-Hilfe
         KitData.Box body = t == Ui.Theme.CASINO ? KitData.Box.CASINO_DARK : style;
-        Canvas c = new Canvas(W);
+        Canvas c = new Canvas(W).heading("Hilfe", net.kyori.adventure.text.format.TextColor.color(0x9FA1A7));
         c.box(0, 0, W, 51, style);
         c.backHelp(8, 17);
         c.action(8, 17, 22, 22, a.overview(), "Alle Themen der Hilfe");
@@ -486,7 +486,7 @@ public final class SurvivalHelp {
 
     /** Übersicht: alle Themen als Kacheln (Icon und Name in der Farbe des Themas), Klick öffnet die Seite. */
     public static Canvas overview(Actions a) {
-        Canvas c = new Canvas(W);
+        Canvas c = new Canvas(W).heading("Hilfe", net.kyori.adventure.text.format.TextColor.color(0x9FA1A7));
         c.box(0, 0, W, 50, KitData.Box.NAVY);
         c.smallIcon(13, 16, KitData.SmallIcon.H_REGELN);
         c.text(40, 15, "HILFE", TextColor.color(0x64C0FF), true);

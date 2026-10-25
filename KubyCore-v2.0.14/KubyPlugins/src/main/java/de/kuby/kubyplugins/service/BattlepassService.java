@@ -187,6 +187,15 @@ public final class BattlepassService implements ModeData {
         return null;
     }
 
+    /** Schaltet den Premium-Pass frei (Juwelenshop, auch als Geschenk). False, wenn er schon freigeschaltet ist. */
+    public synchronized boolean grantPremium(UUID id) {
+        Data d = data(id);
+        if (d.premium) return false;
+        d.premium = true;
+        save();
+        return true;
+    }
+
     /** Holt alle erreichten, noch nicht abgeholten Belohnungen einer Spur. Gibt die Anzahl der Stufen zurück. */
     public synchronized int claimTrack(Player p, String track) {
         UUID id = p.getUniqueId();

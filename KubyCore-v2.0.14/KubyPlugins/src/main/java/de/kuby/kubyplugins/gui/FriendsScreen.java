@@ -238,7 +238,7 @@ public final class FriendsScreen {
     public static Canvas canvas(View v, Actions a) {
         List<Row> list = v.friends();
         long online = list.stream().filter(Row::online).count();
-        Canvas c = new Canvas(W);
+        Canvas c = new Canvas(W).heading("Freunde", net.kyori.adventure.text.format.TextColor.color(0x5FE07A));
         c.box(0, 0, W, 51, KitData.Box.GREEN);
         c.smallIcon(13, 16, KitData.SmallIcon.H_PEOPLE);
         c.text(41, 15, "FREUNDE", Ui.Theme.GREEN.title, true);

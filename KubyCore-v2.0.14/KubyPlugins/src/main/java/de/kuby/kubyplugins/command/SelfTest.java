@@ -126,6 +126,18 @@ final class SelfTest {
         canvas.accept("Sprache", () -> de.kuby.kubyplugins.gui.SettingsScreen.languageCanvas(List.of("Deutsch", "English"), 0, false,
                 i -> NO, NO));
 
+        // Juwelenshop (SMP): alle Seiten mit dem Inhalt aus der config.yml
+        de.kuby.kubyplugins.gui.JewelShopScreen.Actions ja = new de.kuby.kubyplugins.gui.JewelShopScreen.Actions() {
+            public Consumer<Player> page(de.kuby.kubyplugins.gui.JewelShopScreen.Page pg) { return NO; }
+            public Consumer<Player> buy(String id) { return NO; }
+            public Consumer<Player> amount(String id, int n) { return NO; }
+            public Consumer<Player> gift() { return NO; }
+            public String storeUrl() { return "https://example.org"; }
+        };
+        for (de.kuby.kubyplugins.gui.JewelShopScreen.Page pg : de.kuby.kubyplugins.gui.JewelShopScreen.Page.values()) {
+            canvas.accept("Juwelenshop " + pg, () -> de.kuby.kubyplugins.gui.JewelShopScreen.canvas(plugin.jewelShop().sample(pg), ja));
+        }
+
         // Eingabe-Dialoge wie in Support, Freunde, Casino, Heiraten, Köpfe (Bestätigung, CLOSE, Text und mehrzeilig)
         try {
             DialogBase base = DialogBase.builder(Msg.parse("<b>Test"))

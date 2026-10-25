@@ -101,7 +101,7 @@ public final class SupportMenus implements CommandExecutor, Listener {
     public void main(Player p, String tab) {
         boolean helper = support.canHelp(p);
         boolean team = support.isTeam(p);
-        Canvas c = new Canvas(W);
+        Canvas c = new Canvas(W).heading("Support", net.kyori.adventure.text.format.TextColor.color(0x7BC4FC));
         int unread = support.unreadOf(p.getUniqueId());
         head(c, "SUPPORT", "Fragen stellen, Hilfe bekommen", null,
                 unread > 0 ? List.of(Span.bold(unread + " neue Antwort" + (unread == 1 ? "" : "en"), GOLD)) : null);
@@ -178,7 +178,7 @@ public final class SupportMenus implements CommandExecutor, Listener {
         if (author) support.markRead(t);
         boolean mine = p.getUniqueId().equals(t.helper);
         boolean team = support.isTeam(p);
-        Canvas c = new Canvas(W);
+        Canvas c = new Canvas(W).heading("Support", net.kyori.adventure.text.format.TextColor.color(0x7BC4FC));
         head(c, "#" + t.id + " " + t.title.toUpperCase(Locale.ROOT), "von " + SupportService.nameOf(t.author) + " · "
                 + WHEN.format(Instant.ofEpochMilli(t.created)), pl -> main(pl, author ? "mine" : "offen"),
                 List.of(Span.bold(t.status.label, statusColor(t.status))));
@@ -251,7 +251,7 @@ public final class SupportMenus implements CommandExecutor, Listener {
     private void stars(Player p, int id) {
         Ticket t = support.get(id);
         if (t == null) return;
-        Canvas c = new Canvas(W);
+        Canvas c = new Canvas(W).heading("Support", net.kyori.adventure.text.format.TextColor.color(0x7BC4FC));
         head(c, "WIE GUT WURDE DIR GEHOLFEN?", "Ticket #" + id + (t.helper == null ? "" : " · Helfer: " + SupportService.nameOf(t.helper)),
                 pl -> ticket(pl, id), null);
         int y = 53;
@@ -282,7 +282,7 @@ public final class SupportMenus implements CommandExecutor, Listener {
     // =================================================================================================================
 
     public void top(Player p) {
-        Canvas c = new Canvas(W);
+        Canvas c = new Canvas(W).heading("Support", net.kyori.adventure.text.format.TextColor.color(0x7BC4FC));
         head(c, "BESTE HELFER", "Durchschnitt der Sterne, dann gelöste Tickets", pl -> main(pl, "mine"), null);
         int y = 53;
         List<SupportService.HelperStat> top = support.top(10);

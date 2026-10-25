@@ -2,6 +2,7 @@ package de.kuby.kubyplugins.command;
 
 import de.kuby.kubyplugins.KubyPlugins;
 import de.kuby.kubyplugins.gui.JewelShopMenu;
+import de.kuby.kubyplugins.service.ModeService;
 import de.kuby.kubyplugins.util.Msg;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -27,6 +28,7 @@ public final class JewelCommand implements CommandExecutor {
             return true;
         }
         if (command.getName().equalsIgnoreCase("juwelenshop")) {
+            boolean smp = ModeService.SMP.equals(plugin.modes().modeOf(p.getUniqueId()));
             if (args.length > 0 && (args[0].equalsIgnoreCase("gift") || args[0].equalsIgnoreCase("schenken"))) {
                 Player target = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : null;
                 if (args.length < 2) {
@@ -35,9 +37,24 @@ public final class JewelCommand implements CommandExecutor {
                     Msg.send(p, "<red>" + args[1] + " ist gerade nicht online.");
                 } else if (target.equals(p)) {
                     Msg.send(p, "<red>An dich selbst kannst du nichts verschenken. Kauf es einfach im /juwelenshop.");
+                } else if (smp) {
+                    plugin.jewelShop().openGift(p, target);
                 } else {
                     new de.kuby.kubyplugins.gui.JewelStoreMenu(plugin, plugin.modes().modeOf(p.getUniqueId()), 0, target).open(p);
                 }
+                return true;
+            }
+            if (smp) {
+                // SMP: Dialog wie in der Referenz (Seite direkt: /juwelenshop raenge|battlepass|crates|pakete)
+                String sub = args.length > 0 ? args[0].toLowerCase(Locale.ROOT) : "";
+                de.kuby.kubyplugins.gui.JewelShopScreen.Page page = switch (sub) {
+                    case "raenge", "ränge", "ranks" -> de.kuby.kubyplugins.gui.JewelShopScreen.Page.RANKS;
+                    case "battlepass", "pass" -> de.kuby.kubyplugins.gui.JewelShopScreen.Page.PASS;
+                    case "crates", "kisten", "keys" -> de.kuby.kubyplugins.gui.JewelShopScreen.Page.CRATES;
+                    case "pakete", "packages" -> de.kuby.kubyplugins.gui.JewelShopScreen.Page.PACKS;
+                    default -> de.kuby.kubyplugins.gui.JewelShopScreen.Page.HOME;
+                };
+                plugin.jewelShop().open(p, page);
                 return true;
             }
             new de.kuby.kubyplugins.gui.JewelStoreMenu(plugin, plugin.modes().modeOf(p.getUniqueId()), 0).open(p);

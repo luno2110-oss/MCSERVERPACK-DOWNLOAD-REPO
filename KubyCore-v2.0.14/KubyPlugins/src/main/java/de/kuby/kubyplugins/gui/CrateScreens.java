@@ -102,7 +102,7 @@ public final class CrateScreens {
     }
 
     public static Canvas preview(PreviewView v, Consumer<Player> open, Consumer<Player> keys) {
-        Canvas c = new Canvas(W);
+        Canvas c = new Canvas(W).heading("Kisten", net.kyori.adventure.text.format.TextColor.color(0xF0A050));
         c.box(0, 0, W, 51, KitData.Box.GOLD);
         c.smallIcon(13, 16, KitData.SmallIcon.H_CHEST);
         c.text(41, 15, v.name().toUpperCase(Locale.ROOT), v.color(), true);
@@ -171,7 +171,7 @@ public final class CrateScreens {
     }
 
     public static Canvas keys(KeysView v, java.util.function.Function<String, Consumer<Player>> show, Consumer<Player> spawn) {
-        Canvas c = new Canvas(W);
+        Canvas c = new Canvas(W).heading("Schlüssel", net.kyori.adventure.text.format.TextColor.color(0xF0A050));
         c.box(0, 0, W, 51, KitData.Box.GOLD);
         c.smallIcon(13, 16, KitData.SmallIcon.H_CHEST);
         c.text(41, 15, "SCHLÜSSEL", Ui.Theme.ORANGE.title, true);

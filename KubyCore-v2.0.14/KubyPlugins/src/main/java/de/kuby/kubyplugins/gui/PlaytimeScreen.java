@@ -156,7 +156,7 @@ public final class PlaytimeScreen {
 
     /** Nur Darstellung (auch für Vorschauen ohne Server). */
     public static Canvas canvas(View v, Actions a) {
-        Canvas c = new Canvas(W);
+        Canvas c = new Canvas(W).heading("Spielzeit", net.kyori.adventure.text.format.TextColor.color(0xF8D35A));
         c.box(0, 0, W, 51, KitData.Box.GOLD);
         c.smallIcon(13, 16, KitData.SmallIcon.H_HOURGLASS);
         c.text(41, 15, "SPIELZEIT", Ui.Theme.GOLD.title, true);
