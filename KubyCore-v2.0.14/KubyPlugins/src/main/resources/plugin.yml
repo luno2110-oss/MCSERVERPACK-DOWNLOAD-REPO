@@ -152,7 +152,8 @@ commands:
   battlepass:
     description: "Battlepass mit 100 Stufen öffnen"
   cosmetics:
-    description: "Spuren und Kill-Effekte auswählen"
+    description: "Hüte, Spuren und Effekte auswählen"
+    usage: "/cosmetics [give <Spieler> <ID>]"
   verify:
     description: "Zeigt, ob dein Account mit Discord verknüpft ist"
   support:

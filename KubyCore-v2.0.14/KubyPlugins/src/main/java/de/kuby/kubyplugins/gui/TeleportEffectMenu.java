@@ -31,7 +31,7 @@ public final class TeleportEffectMenu extends GuiMenu {
         }
         UUID id = p.getUniqueId();
         int slot = 0;
-        for (CosmeticService.Item it : plugin.cosmetics().catalogue()) {
+        for (CosmeticService.Item it : plugin.cosmetics().catalogue(p.getUniqueId())) {
             if (!it.kind().equals("TELEPORT")) continue;
             if (slot >= SLOTS.length) break;
             boolean owned = plugin.cosmetics().owns(id, it);

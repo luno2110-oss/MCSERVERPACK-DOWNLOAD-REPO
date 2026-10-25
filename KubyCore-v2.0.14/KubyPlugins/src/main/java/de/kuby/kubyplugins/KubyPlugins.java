@@ -234,6 +234,8 @@ public final class KubyPlugins extends JavaPlugin {
         modes.registerBusyCheck(p -> poker.isSeated(p.getUniqueId()));
         modes.registerExtras(java.util.List.of(homes, battlepass, cosmetics, kits, tags, daily, investments, shopStorage));
         keys = new KeyService(this);
+        hats = new de.kuby.kubyplugins.service.HatService(this);
+        getServer().getPluginManager().registerEvents(hats, this);
         playtime = new PlaytimeService(this);
         getServer().getPluginManager().registerEvents(playtime, this);
         tpa = new TpaService(this);
@@ -257,6 +259,7 @@ public final class KubyPlugins extends JavaPlugin {
                 "stats", "trophaeen", "ranking");
         setAll(new JewelCommand(this), "juwelen", "juwelenshop");
         setAll(new de.kuby.kubyplugins.command.KeysCommand(this), "keys");
+        setAll(new de.kuby.kubyplugins.command.CosmeticsCommand(this), "cosmetics");
         support = new de.kuby.kubyplugins.support.SupportService(this);
         de.kuby.kubyplugins.support.SupportMenus supportMenus = new de.kuby.kubyplugins.support.SupportMenus(this, support);
         setAll(supportMenus, "support", "discord");
@@ -335,7 +338,7 @@ public final class KubyPlugins extends JavaPlugin {
         setAll(crash, "cashout");
         setAll(new AdminCommand(this), "kadmin");
         setAll(new HelpCommand(this), "befehle", "menu");
-        setAll(new ExtraCommand(this), "dailypot", "trade", "tags", "rtpqueue", "meta", "booster", "xpshop", "battlepass", "cosmetics", "turnier", "verify", "versichern", "enderchest", "kristaltrade", "investments", "quizvote", "totenkiste", "kits", "hub", "tpa", "tpaccept", "tpadeny", "spielzeit", "playtime");
+        setAll(new ExtraCommand(this), "dailypot", "trade", "tags", "rtpqueue", "meta", "booster", "xpshop", "battlepass", "turnier", "verify", "versichern", "enderchest", "kristaltrade", "investments", "quizvote", "totenkiste", "kits", "hub", "tpa", "tpaccept", "tpadeny", "spielzeit", "playtime");
         setAll(new KpCommand(this), "kp");
         getServer().getPluginManager().registerEvents(new TradeListener(this), this);
         getServer().getPluginManager().registerEvents(new QuizListener(this), this);
@@ -414,6 +417,7 @@ public final class KubyPlugins extends JavaPlugin {
         totenkisten.saveNow();
         modes.save();
         playtime.save();
+        if (hats != null) hats.removeAll();
         regions.save();
         casino.save();
         casinoLog.save();
@@ -577,6 +581,8 @@ public final class KubyPlugins extends JavaPlugin {
     }
     public PlaytimeService playtime() { return playtime; }
     private KeyService keys;
+    private de.kuby.kubyplugins.service.HatService hats;
+    public de.kuby.kubyplugins.service.HatService hats() { return hats; }
     public KeyService keys() { return keys; }
     public TpaService tpa() { return tpa; }
     public WorldService worlds() { return worlds; }

@@ -8,7 +8,6 @@ import de.kuby.kubyplugins.gui.QuizVoteMenu;
 import de.kuby.kubyplugins.gui.InvestmentsMenu;
 import de.kuby.kubyplugins.gui.KristalTradeMenu;
 import org.bukkit.block.Block;
-import de.kuby.kubyplugins.gui.CosmeticsMenu;
 import de.kuby.kubyplugins.gui.BattlepassMenu;
 import de.kuby.kubyplugins.gui.XpShopMenu;
 import de.kuby.kubyplugins.gui.MetaMenu;
@@ -87,7 +86,6 @@ public final class ExtraCommand implements CommandExecutor {
                 if (err != null) Msg.send(p, "<red>" + err);
                 else Msg.send(p, "<green>Totenkiste gesetzt. Rechtsklick öffnet sie.");
             }
-            case "cosmetics" -> new CosmeticsMenu(plugin).open(p);
             default -> { return false; }
         }
         return true;

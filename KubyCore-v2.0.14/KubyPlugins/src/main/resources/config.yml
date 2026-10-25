@@ -222,7 +222,28 @@ battlepass:
     - "trade;Handel abschließen;2;40"
     - "daily;Täglich abholen;1;20"
 
+# Kosmetik (/cosmetics): ID;HAT|TRAIL|KILL|TELEPORT;Partikel oder Hut-Modell;Anzeige;Seltenheit;Währung;Preis;BP-Stufe
+# Währung: MONEY, XP, JEWELS, NONE (gratis bzw. Battlepass-Stufe), CRATE (nur aus Kisten: /cosmetics give <Spieler> <ID>).
+# Hut-Modelle: zylinder, krone, partyhut, hexenhut, cowboyhut, wikinger, heiligenschein, kochmuetze, strohhut,
+# weihnachtsmuetze, blumenkranz, piratenhut, bauhelm, teufelshoerner, bommelmuetze, katzenohren.
+# cosmetics gilt für alle Modi ohne eigene Liste unter cosmetics-modes.
 cosmetics:
+  - "hut_bommelmuetze;HAT;bommelmuetze;Bommelmütze;COMMON;JEWELS;30;0"
+  - "hut_strohhut;HAT;strohhut;Strohhut;COMMON;JEWELS;30;0"
+  - "hut_kochmuetze;HAT;kochmuetze;Kochmütze;COMMON;JEWELS;30;0"
+  - "hut_bauhelm;HAT;bauhelm;Bauhelm;COMMON;JEWELS;30;0"
+  - "hut_partyhut;HAT;partyhut;Partyhut;COMMON;JEWELS;30;0"
+  - "hut_zylinder;HAT;zylinder;Zylinder;RARE;JEWELS;60;0"
+  - "hut_cowboyhut;HAT;cowboyhut;Cowboyhut;RARE;JEWELS;60;0"
+  - "hut_katzenohren;HAT;katzenohren;Katzenohren;RARE;JEWELS;60;0"
+  - "hut_blumenkranz;HAT;blumenkranz;Blumenkranz;RARE;JEWELS;60;0"
+  - "hut_weihnachtsmuetze;HAT;weihnachtsmuetze;Weihnachtsmütze;RARE;JEWELS;60;0"
+  - "hut_hexenhut;HAT;hexenhut;Hexenhut;EPIC;JEWELS;100;0"
+  - "hut_piratenhut;HAT;piratenhut;Piratenhut;EPIC;JEWELS;100;0"
+  - "hut_wikinger;HAT;wikinger;Wikingerhelm;EPIC;JEWELS;100;0"
+  - "hut_teufelshoerner;HAT;teufelshoerner;Teufelshörner;EPIC;CRATE;0;0"
+  - "hut_krone;HAT;krone;Krone;LEGENDARY;CRATE;0;0"
+  - "hut_heiligenschein;HAT;heiligenschein;Heiligenschein;LEGENDARY;CRATE;0;0"
   - "flame;TRAIL;FLAME;Flammenspur;COMMON;MONEY;2500;0"
   - "happy;TRAIL;HAPPY_VILLAGER;Smaragdfunken;COMMON;XP;1500;0"
   - "snow;TRAIL;SNOWFLAKE;Schneefall;RARE;XP;4000;0"
@@ -238,6 +259,38 @@ cosmetics:
   - "tp_portal;TELEPORT;PORTAL;Portal;RARE;XP;4000;0"
   - "tp_dragon;TELEPORT;DRAGON_BREATH;Drachenatem;EPIC;JEWELS;30;0"
   - "tp_soul;TELEPORT;SOUL;Seelen-Wirbel;LEGENDARY;NONE;0;30"
+
+cosmetics-modes:
+  survival:
+    - "hut_bommelmuetze;HAT;bommelmuetze;Bommelmütze;COMMON;JEWELS;30;0"
+    - "hut_strohhut;HAT;strohhut;Strohhut;COMMON;JEWELS;30;0"
+    - "hut_kochmuetze;HAT;kochmuetze;Kochmütze;COMMON;JEWELS;30;0"
+    - "hut_bauhelm;HAT;bauhelm;Bauhelm;COMMON;JEWELS;30;0"
+    - "hut_partyhut;HAT;partyhut;Partyhut;COMMON;JEWELS;30;0"
+    - "hut_zylinder;HAT;zylinder;Zylinder;RARE;JEWELS;60;0"
+    - "hut_cowboyhut;HAT;cowboyhut;Cowboyhut;RARE;JEWELS;60;0"
+    - "hut_katzenohren;HAT;katzenohren;Katzenohren;RARE;JEWELS;60;0"
+    - "hut_blumenkranz;HAT;blumenkranz;Blumenkranz;RARE;JEWELS;60;0"
+    - "hut_weihnachtsmuetze;HAT;weihnachtsmuetze;Weihnachtsmütze;RARE;JEWELS;60;0"
+    - "hut_hexenhut;HAT;hexenhut;Hexenhut;EPIC;JEWELS;100;0"
+    - "hut_piratenhut;HAT;piratenhut;Piratenhut;EPIC;JEWELS;100;0"
+    - "hut_wikinger;HAT;wikinger;Wikingerhelm;EPIC;JEWELS;100;0"
+    - "hut_teufelshoerner;HAT;teufelshoerner;Teufelshörner;EPIC;CRATE;0;0"
+    - "hut_krone;HAT;krone;Krone;LEGENDARY;CRATE;0;0"
+    - "hut_heiligenschein;HAT;heiligenschein;Heiligenschein;LEGENDARY;CRATE;0;0"
+    - "s_herz;TRAIL;HEART;Herzchen;COMMON;JEWELS;20;0"
+    - "s_noten;TRAIL;NOTE;Musiknoten;COMMON;JEWELS;20;0"
+    - "s_funken;TRAIL;HAPPY_VILLAGER;Smaragdfunken;COMMON;JEWELS;20;0"
+    - "s_schnee;TRAIL;SNOWFLAKE;Schneefall;RARE;JEWELS;40;0"
+    - "s_kirsch;TRAIL;CHERRY_LEAVES;Kirschblüten;RARE;JEWELS;40;0"
+    - "s_flamme;TRAIL;FLAME;Flammenspur;RARE;JEWELS;40;0"
+    - "s_sterne;TRAIL;END_ROD;Sternenstaub;EPIC;JEWELS;70;0"
+    - "s_zauber;TRAIL;ENCHANT;Zauberschrift;EPIC;JEWELS;70;0"
+    - "s_seele;TRAIL;SOUL_FIRE_FLAME;Seelenfeuer;EPIC;CRATE;0;0"
+    - "s_totem;TRAIL;TOTEM_OF_UNDYING;Totem-Glanz;LEGENDARY;CRATE;0;0"
+    - "s_tp_portal;TELEPORT;PORTAL;Portal;RARE;JEWELS;40;0"
+    - "s_tp_drache;TELEPORT;DRAGON_BREATH;Drachenatem;EPIC;JEWELS;70;0"
+    - "s_tp_seele;TELEPORT;SOUL;Seelen-Wirbel;LEGENDARY;CRATE;0;0"
 
 tournament:
   max-players: 16

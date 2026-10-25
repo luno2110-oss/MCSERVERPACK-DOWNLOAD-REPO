@@ -19,9 +19,11 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Kosmetik: Spuren (folgen dem Spieler) und Kill-Effekte (am Ort des Opfers).
- * Jede Kosmetik hat eine Seltenheit und eine Bezahlart: Geld, XP, Juwelen oder nur Battlepass.
- * Format pro Eintrag: ID;SPUR|KILL;PARTIKEL;Anzeige;SELTENHEIT;WÄHRUNG;PREIS;BP-STUFE
+ * Kosmetik: Hüte (Modell auf dem Kopf, HatService), Spuren (folgen dem Spieler), Kill-Effekte (am Ort des Opfers)
+ * und Teleport-Effekte. Jede Kosmetik hat eine Seltenheit und eine Bezahlart: Geld, XP, Juwelen, nur Battlepass
+ * (NONE mit BP-Stufe) oder nur aus Kisten (CRATE, vergeben mit /cosmetics give).
+ * Format pro Eintrag: ID;HAT|TRAIL|KILL|TELEPORT;PARTIKEL oder Hut-Modell;Anzeige;SELTENHEIT;WÄHRUNG;PREIS;BP-STUFE.
+ * Liste je Modus unter cosmetics-modes.&lt;modus&gt;, sonst gilt cosmetics.
  */
 public final class CosmeticService implements ModeData {
 
@@ -40,10 +42,11 @@ public final class CosmeticService implements ModeData {
         }
     }
 
-    public enum Currency { MONEY, XP, JEWELS, NONE }
+    public enum Currency { MONEY, XP, JEWELS, NONE, CRATE }
 
+    /** model: Hut-Modell (kuby:hat/&lt;model&gt;), sonst null; particle: null bei Hüten. */
     public record Item(String id, String kind, Particle particle, String label, Rarity rarity,
-                       Currency currency, long price, int bpLevel) {}
+                       Currency currency, long price, int bpLevel, String model) {}
 
     private final KubyPlugins plugin;
     private final File file;
@@ -51,6 +54,7 @@ public final class CosmeticService implements ModeData {
     private final Map<UUID, String> trail = new HashMap<>();
     private final Map<UUID, String> killFx = new HashMap<>();
     private final Map<UUID, String> teleportFx = new HashMap<>();
+    private final Map<UUID, String> hat = new HashMap<>();
     private final Map<UUID, Location> last = new HashMap<>();
 
     public CosmeticService(KubyPlugins plugin) {
@@ -63,6 +67,8 @@ public final class CosmeticService implements ModeData {
             String t = yml.getString(key + ".trail");
             String k = yml.getString(key + ".kill");
             String tp = yml.getString(key + ".teleport");
+            String h = yml.getString(key + ".hat");
+            if (h != null) hat.put(id, h);
             if (tp != null) teleportFx.put(id, tp);
             if (t != null) trail.put(id, t);
             if (k != null) killFx.put(id, k);
@@ -70,24 +76,59 @@ public final class CosmeticService implements ModeData {
         plugin.getServer().getScheduler().runTaskTimer(plugin, this::tickTrails, 4L, 4L);
     }
 
+    /** Katalog des Modus, in dem der Spieler gerade ist. */
+    public List<Item> catalogue(UUID player) {
+        return catalogue(plugin.modes().modeOf(player));
+    }
+
+    /** Katalog eines Modus (cosmetics-modes.&lt;modus&gt;, sonst cosmetics). */
+    public List<Item> catalogue(String mode) {
+        String path = "cosmetics-modes." + mode;
+        return parse(plugin.getConfig().isList(path) ? plugin.getConfig().getStringList(path)
+                : plugin.getConfig().getStringList("cosmetics"));
+    }
+
+    /** Alle Kosmetiken aller Modi (für Effekte, die nur die ID kennen). */
     public List<Item> catalogue() {
+        List<Item> all = new ArrayList<>(parse(plugin.getConfig().getStringList("cosmetics")));
+        var sec = plugin.getConfig().getConfigurationSection("cosmetics-modes");
+        if (sec != null) for (String m : sec.getKeys(false)) all.addAll(parse(sec.getStringList(m)));
+        return all;
+    }
+
+    /** Geparste Listen kurz zwischenspeichern (Hüte und Spuren fragen mehrmals pro Sekunde). */
+    private final Map<List<String>, List<Item>> parsed = new HashMap<>();
+    private long parsedAt;
+
+    private synchronized List<Item> parse(List<String> raws) {
+        long now = System.currentTimeMillis();
+        if (now - parsedAt > 5000) {
+            parsed.clear();
+            parsedAt = now;
+        }
+        return parsed.computeIfAbsent(raws, this::parseNow);
+    }
+
+    private List<Item> parseNow(List<String> raws) {
         List<Item> list = new ArrayList<>();
-        for (String raw : plugin.getConfig().getStringList("cosmetics")) {
+        for (String raw : raws) {
             String[] p = raw.split(";");
             if (p.length < 6) continue;
             try {
-                Particle particle = Particle.valueOf(p[2].trim().toUpperCase(Locale.ROOT));
                 String kind = p[1].trim().toUpperCase(Locale.ROOT);
+                boolean isHat = kind.equals("HAT");
+                Particle particle = isHat ? null : Particle.valueOf(p[2].trim().toUpperCase(Locale.ROOT));
+                String model = isHat ? p[2].trim().toLowerCase(Locale.ROOT) : null;
                 String label = p[3].trim();
                 if (p.length >= 8) {
                     list.add(new Item(p[0].trim(), kind, particle, label,
                             Rarity.valueOf(p[4].trim().toUpperCase(Locale.ROOT)),
                             Currency.valueOf(p[5].trim().toUpperCase(Locale.ROOT)),
-                            Long.parseLong(p[6].trim()), Integer.parseInt(p[7].trim())));
+                            Long.parseLong(p[6].trim()), Integer.parseInt(p[7].trim()), model));
                 } else {
                     // Altes Format: Coins als Bezahlart, Seltenheit gewöhnlich
                     list.add(new Item(p[0].trim(), kind, particle, label, Rarity.COMMON, Currency.MONEY,
-                            Long.parseLong(p[4].trim()), Integer.parseInt(p[5].trim())));
+                            Long.parseLong(p[4].trim()), Integer.parseInt(p[5].trim()), model));
                 }
             } catch (IllegalArgumentException ex) {
                 plugin.getLogger().warning("Ungültige Kosmetik in der config: " + raw);
@@ -97,15 +138,22 @@ public final class CosmeticService implements ModeData {
     }
 
     public Item find(String id) {
+        if (id == null) return null;
         for (Item i : catalogue()) {
             if (i.id().equals(id)) return i;
         }
         return null;
     }
 
+    /** Freischalten ohne Bezahlen (Kisten, Events, /cosmetics give). */
+    public synchronized void grant(UUID id, Item it) {
+        owned.computeIfAbsent(id, k -> new HashSet<>()).add(it.id());
+        save();
+    }
+
     /** Gratis-Items (ohne Preis und ohne BP-Stufe) gehören jedem. */
     public synchronized boolean owns(UUID id, Item it) {
-        if (it.bpLevel() == 0 && (it.currency() == Currency.NONE || it.price() <= 0)) return true;
+        if (it.currency() != Currency.CRATE && it.bpLevel() == 0 && (it.currency() == Currency.NONE || it.price() <= 0)) return true;
         return owned.getOrDefault(id, Set.of()).contains(it.id());
     }
 
@@ -113,6 +161,7 @@ public final class CosmeticService implements ModeData {
     public synchronized String buy(Player p, Item it) {
         UUID id = p.getUniqueId();
         if (owns(id, it)) return "Diese Kosmetik gehört dir schon.";
+        if (it.currency() == Currency.CRATE) return "Das gibt es nur aus Kisten.";
         if (plugin.battlepass().level(id) < it.bpLevel()) return "Benötigt Battlepass-Stufe " + it.bpLevel() + ".";
         if (it.price() > 0) {
             switch (it.currency()) {
@@ -139,12 +188,18 @@ public final class CosmeticService implements ModeData {
     public synchronized String activeId(UUID id, String kind) {
         if (kind.equals("TRAIL")) return trail.get(id);
         if (kind.equals("KILL")) return killFx.get(id);
+        if (kind.equals("HAT")) return hat.get(id);
         return teleportFx.get(id);
     }
 
     /** Anlegen oder ablegen. */
     public synchronized void toggle(UUID id, Item it) {
-        Map<UUID, String> map = it.kind().equals("TRAIL") ? trail : it.kind().equals("KILL") ? killFx : teleportFx;
+        Map<UUID, String> map = switch (it.kind()) {
+            case "TRAIL" -> trail;
+            case "KILL" -> killFx;
+            case "HAT" -> hat;
+            default -> teleportFx;
+        };
         if (it.id().equals(map.get(id))) map.remove(id);
         else map.put(id, it.id());
         save();
@@ -180,6 +235,7 @@ public final class CosmeticService implements ModeData {
         trail.forEach((id, t) -> out.set(id + ".trail", t));
         killFx.forEach((id, k) -> out.set(id + ".kill", k));
         teleportFx.forEach((id, t) -> out.set(id + ".teleport", t));
+        hat.forEach((id, h) -> out.set(id + ".hat", h));
         try {
             plugin.getDataFolder().mkdirs();
             out.save(file);
@@ -199,6 +255,7 @@ public final class CosmeticService implements ModeData {
         if (trail.containsKey(id)) m.put("trail", trail.get(id));
         if (killFx.containsKey(id)) m.put("kill", killFx.get(id));
         if (teleportFx.containsKey(id)) m.put("tp", teleportFx.get(id));
+        if (hat.containsKey(id)) m.put("hat", hat.get(id));
         return m;
     }
 
@@ -208,6 +265,7 @@ public final class CosmeticService implements ModeData {
         trail.remove(id);
         killFx.remove(id);
         teleportFx.remove(id);
+        hat.remove(id);
         if (m != null) {
             if (m.get("owned") instanceof List<?> l) {
                 Set<String> s = new java.util.HashSet<>();
@@ -217,6 +275,7 @@ public final class CosmeticService implements ModeData {
             if (m.get("trail") != null) trail.put(id, m.get("trail").toString());
             if (m.get("kill") != null) killFx.put(id, m.get("kill").toString());
             if (m.get("tp") != null) teleportFx.put(id, m.get("tp").toString());
+            if (m.get("hat") != null) hat.put(id, m.get("hat").toString());
         }
         save();
     }

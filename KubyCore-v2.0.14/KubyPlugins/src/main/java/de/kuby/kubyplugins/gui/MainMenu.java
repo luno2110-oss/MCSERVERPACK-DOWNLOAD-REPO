@@ -57,7 +57,7 @@ public final class MainMenu extends GuiMenu {
         list.add(new Entry(Material.NAME_TAG, "Titel", "Wähle deinen Titel neben dem Namen", p -> new TagsMenu(plugin).open(p)));
         list.add(new Entry(Material.ENCHANTED_BOOK, "Battlepass", "100 Stufen, Quests und Belohnungen", p -> new BattlepassMenu(plugin, 0).open(p)));
         list.add(new Entry(Material.IRON_CHESTPLATE, "Kits", "Starter- und Rang-Kits abholen", p -> new KitMenu(plugin).open(p)));
-        list.add(new Entry(Material.AMETHYST_SHARD, "Kosmetik", "Spuren und Kill-Effekte", p -> new CosmeticsMenu(plugin).open(p)));
+        list.add(new Entry(Material.AMETHYST_SHARD, "Kosmetik", "Hüte, Spuren und Effekte", p -> new CosmeticsScreen(plugin).open(p)));
         // Seite 3: Schutz und Lager
         list.add(new Entry(Material.CLOCK, "Spielzeit", "Stufen nach aktiver Spielzeit", p -> new PlaytimeScreen(plugin).open(p)));
         list.add(new Entry(Material.ENDER_CHEST, "Enderchest", "Dein erweiterbares Lager", p -> p.openInventory(plugin.enderchests().open(p))));

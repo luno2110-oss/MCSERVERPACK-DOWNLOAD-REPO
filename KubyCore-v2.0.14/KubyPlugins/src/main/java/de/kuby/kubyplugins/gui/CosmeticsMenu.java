@@ -33,13 +33,14 @@ public final class CosmeticsMenu extends GuiMenu {
         }
         set(9, Items.make(Material.AMETHYST_SHARD, "<light_purple>Spuren", List.of(
                 "<gray>Folgen dir beim Laufen")), null);
-        set(27, Items.make(Material.WITHER_SKELETON_SKULL, "<red>Kill-Effekte", List.of(
-                "<gray>Erscheinen am Ort des Gegners")), null);
+        set(27, Items.make(Material.LEATHER_HELMET, "<red>Hüte und Effekte", List.of(
+                "<gray>Hüte sitzen auf deinem Kopf, Kill-Effekte", "<gray>erscheinen am Ort des Gegners")), null);
 
         int t = 0;
         int k = 0;
-        for (CosmeticService.Item it : plugin.cosmetics().catalogue()) {
+        for (CosmeticService.Item it : plugin.cosmetics().catalogue(p.getUniqueId())) {
             boolean trail = it.kind().equals("TRAIL");
+            if (it.kind().equals("TELEPORT")) continue;
             int slot;
             if (trail) {
                 if (t >= TRAIL_SLOTS.length) continue;
@@ -75,13 +76,15 @@ public final class CosmeticsMenu extends GuiMenu {
         boolean locked = !owned && plugin.battlepass().level(id) < it.bpLevel();
         List<String> lore = new ArrayList<>();
         lore.add("<gray>Seltenheit: " + it.rarity().color + it.rarity().label);
-        lore.add("<gray>Art: <white>" + (trail ? "Spur" : "Kill-Effekt"));
+        lore.add("<gray>Art: <white>" + (trail ? "Spur" : it.kind().equals("HAT") ? "Hut" : "Kill-Effekt"));
         lore.add("");
         if (owned) {
             lore.add("<green>✔ Freigeschaltet");
             lore.add(active ? "<yellow>Klick: ablegen" : "<yellow>Klick: anlegen");
         } else if (locked) {
             lore.add("<red>✘ Battlepass-Stufe " + it.bpLevel() + " nötig");
+        } else if (it.currency() == CosmeticService.Currency.CRATE) {
+            lore.add("<light_purple>Nur aus Kisten");
         } else {
             lore.add("<gold>Kosten: " + priceText(it));
             lore.add("<yellow>Klick: kaufen");
