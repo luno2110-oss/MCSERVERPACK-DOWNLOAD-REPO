@@ -81,6 +81,7 @@ public final class KubySurvival extends JavaPlugin {
     private FarmWorldService farm;
     private WarpService warps;
     private TokenService tokens;
+    private de.kuby.kubysurvival.stats.SurvivalStats survivalStats;
     private FarmpassService farmpass;
     private PetService pets;
     private BackpackService backpacks;
@@ -132,6 +133,8 @@ public final class KubySurvival extends JavaPlugin {
         pets = new PetService(this, core);
         getServer().getPluginManager().registerEvents(pets, this);
         tokens = new TokenService(this, core);
+        survivalStats = new de.kuby.kubysurvival.stats.SurvivalStats(this, core);
+        getServer().getPluginManager().registerEvents(survivalStats, this);
         // Tokens als Belohnung im Kern (Spielzeit-Stufen, Kisten)
         core.registerGiver("tokens", (id, n) -> tokens.give(id, n, "Belohnung"));
         getServer().getPluginManager().registerEvents(tokens, this);
@@ -405,6 +408,7 @@ public final class KubySurvival extends JavaPlugin {
         if (warps != null) warps.save();
         if (chestShops != null) chestShops.save();
         if (tokens != null) tokens.save();
+        if (survivalStats != null) survivalStats.save();
         if (farmpass != null) farmpass.shutdown();
         if (pets != null) pets.shutdown();
         if (backpacks != null) backpacks.shutdown();

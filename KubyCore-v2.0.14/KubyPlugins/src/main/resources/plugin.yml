@@ -95,7 +95,8 @@ commands:
   inbox:
     description: "Verpasste Nachrichten anzeigen"
   stats:
-    description: "Deine Statistik anzeigen"
+    description: "Deine Statistik oder die eines anderen Spielers"
+    usage: "/stats [Spieler]"
   ranking:
     description: "Trophäen-Rangliste öffnen"
   juwelen:

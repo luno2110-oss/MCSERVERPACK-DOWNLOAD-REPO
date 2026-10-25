@@ -175,6 +175,13 @@ public final class ModeService {
         save();
     }
 
+    /** Geld eines Spielers in einem Modus: live vom Konto, sonst aus dem gespeicherten Stand (auch offline). */
+    public synchronized long moneyIn(UUID id, String mode) {
+        if (mode.equals(modeOf(id)) && Bukkit.getPlayer(id) != null) return plugin.economy().balance(id);
+        Snap s = snaps.getOrDefault(id, Map.of()).get(mode);
+        return s == null ? 0 : s.money();
+    }
+
     /** Legt ein Item in die Abholbox eines bestimmten Modus (gleiche Regeln wie depositIn). */
     public synchronized void abholboxIn(UUID id, String mode, ItemStack item) {
         if (item == null || item.getType().isAir()) return;

@@ -3,7 +3,6 @@ package de.kuby.kubyplugins.command;
 import de.kuby.kubyplugins.KubyPlugins;
 import de.kuby.kubyplugins.gui.FriendsScreen;
 import de.kuby.kubyplugins.gui.RankingMenu;
-import de.kuby.kubyplugins.service.StatsService;
 import de.kuby.kubyplugins.util.Msg;
 import de.kuby.kubyplugins.util.Sfx;
 import org.bukkit.Bukkit;
@@ -39,7 +38,18 @@ public final class SocialCommand implements CommandExecutor {
             case "msg" -> msg(p, args);
             case "r" -> reply(p, args);
             case "inbox" -> plugin.messages().showInbox(p);
-            case "stats" -> stats(p);
+            case "stats" -> {
+                OfflinePlayer target = p;
+                if (args.length > 0) {
+                    UUID t = FriendsScreen.resolve(args[0]);
+                    if (t == null) {
+                        Msg.send(p, "<red>Spieler nicht gefunden.");
+                        return true;
+                    }
+                    target = Bukkit.getOfflinePlayer(t);
+                }
+                new de.kuby.kubyplugins.gui.StatsScreen(plugin).open(p, target);
+            }
             case "ranking" -> new RankingMenu(plugin).open(p);
             default -> { return false; }
         }
@@ -123,15 +133,6 @@ public final class SocialCommand implements CommandExecutor {
         OfflinePlayer op = Bukkit.getOfflinePlayer(target);
         if (blocked(p, target)) return;
         plugin.messages().send(p, target, op.getName() == null ? "Unbekannt" : op.getName(), String.join(" ", args));
-    }
-
-
-    private void stats(Player p) {
-        StatsService.Stats s = plugin.stats().get(p.getUniqueId());
-        Msg.send(p, "<gold>Deine Statistik:");
-        Msg.send(p, "<gray>Kills: <white>" + s.kills + " <dark_gray>| <gray>Tode: <white>" + s.deaths);
-        Msg.send(p, "<gray>Trophäen: <gold>" + s.trophies + " <dark_gray>| <gray>Liga: <white>" + StatsService.league(s.trophies));
-        Msg.send(p, "<gray>XP: <white>" + s.xp);
     }
 
 
