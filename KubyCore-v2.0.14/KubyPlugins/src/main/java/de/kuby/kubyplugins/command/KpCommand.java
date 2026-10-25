@@ -27,6 +27,10 @@ public final class KpCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (args.length > 0 && args[0].equalsIgnoreCase("selftest") && !(sender instanceof Player)) {
+            SelfTest.run(plugin, sender);
+            return true;
+        }
         if (!(sender instanceof Player p)) {
             sender.sendMessage("Nur Spieler können diesen Befehl nutzen.");
             return true;

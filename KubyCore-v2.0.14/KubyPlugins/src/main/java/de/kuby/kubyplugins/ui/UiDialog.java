@@ -24,6 +24,11 @@ public final class UiDialog {
      *                  Blättern immer an derselben Stelle (Minecraft zentriert den Körper senkrecht).
      */
     public static void show(Player player, Canvas canvas, int minHeight) {
+        player.showDialog(dialog(player, canvas, minHeight));
+    }
+
+    /** Baut den Dialog (ohne ihn zu zeigen); viewer null = ohne Klicks (Selbsttest). */
+    public static Dialog dialog(Player player, Canvas canvas, int minHeight) {
         Component body = canvas.build(player);
         int lines = countLines(body);
         int want = (minHeight + 8) / 9;
@@ -34,10 +39,12 @@ public final class UiDialog {
         }
         DialogBase base = DialogBase.builder(Component.empty())
                 .canCloseWithEscape(true)
+                // Paper verlangt: ein Dialog, der nach Klicks offen bleibt (NONE), darf das Spiel nicht pausieren
+                .pause(false)
                 .afterAction(DialogBase.DialogAfterAction.NONE)
                 .body(List.of(DialogBody.plainMessage(body, Math.min(1024, canvas.width() + 64))))
                 .build();
-        player.showDialog(Dialog.create(b -> b.empty().base(base).type(DialogType.serverLinks(null, 1, 100))));
+        return Dialog.create(b -> b.empty().base(base).type(DialogType.serverLinks(null, 1, 100)));
     }
 
     public static void show(Player player, Canvas canvas) {

@@ -1,0 +1,86 @@
+# Startet nach jedem erfolgreichen Build einen echten Paper-1.21.11-Server mit allen Kuby-Jars aus dem Release "latest",
+# führt "kp selftest" aus (baut alle Grafik-Menüs und Eingabe-Dialoge mit dem echten Server-Code) und prüft das Log
+# auf Fehler beim Laden/Aktivieren der Plugins und im Selbsttest. Das Log liegt als Artefakt am Lauf.
+name: Server-Test
+
+on:
+  workflow_run:
+    workflows: ["Build plugins"]
+    types: [completed]
+  workflow_dispatch:
+
+jobs:
+  server:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Paper und Plugins holen
+        run: |
+          mkdir -p server/plugins
+          cd server
+          UA="KubyPlugins-CI (github.com/${GITHUB_REPOSITORY})"
+          curl -sSf -A "$UA" https://fill.papermc.io/v3/projects/paper/versions/1.21.11/builds -o builds.json
+          URL=$(python3 -c "import json;b=json.load(open('builds.json'));print(b[0]['downloads']['server:default']['url'])")
+          echo "Paper: $URL"
+          curl -sSfL -A "$UA" "$URL" -o paper.jar
+          curl -sSfL "https://github.com/${GITHUB_REPOSITORY}/releases/download/latest/KubyPlugins.zip" -o kuby.zip
+          unzip -q kuby.zip -d kuby
+          cp kuby/*.jar plugins/
+          echo "eula=true" > eula.txt
+          printf "online-mode=false\nlevel-type=minecraft\\:flat\nspawn-protection=0\nview-distance=4\n" > server.properties
+          grep "Stand" kuby/INSTALLATION.txt || true
+
+      - name: Server starten, Selbsttest, stoppen
+        working-directory: server
+        run: |
+          mkfifo console
+          java -Xmx3G -jar paper.jar --nogui < console > server.log 2>&1 &
+          PID=$!
+          exec 3>console
+          for i in $(seq 1 300); do
+            grep -q "Done (" server.log && break
+            if ! kill -0 $PID 2>/dev/null; then echo "Server ist abgestürzt"; break; fi
+            sleep 1
+          done
+          sleep 5
+          echo "kp selftest" >&3
+          sleep 10
+          echo "stop" >&3
+          for i in $(seq 1 60); do kill -0 $PID 2>/dev/null || break; sleep 1; done
+          kill $PID 2>/dev/null || true
+
+      - name: Log prüfen
+        working-directory: server
+        run: |
+          {
+            echo "## Server-Test"
+            grep -m1 "This server is running" server.log || true
+            echo
+            echo "### Plugins"
+            grep -E "Enabling (Kuby|KPJumpRun)" server.log | sed 's/^/    /' || true
+            echo
+            echo "### Selbsttest"
+            grep "SELFTEST" server.log | sed 's/^/    /' || echo "    (keine Ausgabe)"
+          } >> "$GITHUB_STEP_SUMMARY"
+          # Fehler: Plugin lädt/aktiviert nicht, Exceptions aus Kuby-Klassen, Selbsttest-Fehler
+          grep -nE "Could not load|Error occurred while enabling|SELFTEST FEHLER|Exception.*de\.kuby|de\.kuby\..*Exception|at de\.kuby|at KubyCore|at KubySurvival|at KubySMP|at KubySkyblock|at KubyScoreboard" server.log > problems.txt || true
+          if ! grep -q "SELFTEST OK" server.log; then echo "Selbsttest nicht OK oder nicht gelaufen" >> problems.txt; fi
+          if [ -s problems.txt ]; then
+            { echo; echo "### Probleme"; sed 's/^/    /' problems.txt | head -80; } >> "$GITHUB_STEP_SUMMARY"
+            cat problems.txt | head -80
+            exit 1
+          fi
+          echo "Alles ok" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Log hochladen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-log
+          path: server/server.log
