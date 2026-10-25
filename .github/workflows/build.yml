@@ -54,6 +54,7 @@ jobs:
           4. Server starten. Im Log muss "Bukkit plugins (6)" stehen.
 
           KubyCore.jar ist das Hauptplugin, die anderen sind Addons und brauchen KubyCore.
+          Welche fremden Plugins optional sind und welche du nicht brauchst: PLUGINS.md
           TXT
           sed -i 's/^          //' dist/INSTALLATION.txt
           sed -i "s/\${GITHUB_SHA}/${GITHUB_SHA::7}/" dist/INSTALLATION.txt
@@ -62,7 +63,8 @@ jobs:
           python3 tools/check_fonts.py resourcepack/KubyUI
           find resourcepack/KubyUI -exec touch -d '2026-01-01 00:00:00' {} +
           (cd resourcepack/KubyUI && find . -type f | sort | zip -X -q -@ ../../dist/KubyUI-Pack.zip)
-          (cd dist && zip -q KubyPlugins.zip *.jar INSTALLATION.txt KubyUI-Pack.zip)
+          cp PLUGINS.md dist/
+          (cd dist && zip -q KubyPlugins.zip *.jar INSTALLATION.txt PLUGINS.md KubyUI-Pack.zip)
           ls -la dist
 
       - uses: actions/upload-artifact@v4

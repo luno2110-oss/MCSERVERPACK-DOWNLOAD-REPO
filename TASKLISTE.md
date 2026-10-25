@@ -189,8 +189,8 @@ Reihenfolge wie das Hilfe-Karussell der Referenz. Jede Seite: Titel, Untertitel,
 
 ## Ordnergruppe 11 – Plattform
 - [x] Eigene Basis: KubyPlugins für Wirtschaft, Modi, Scoreboard, Homes, Teleport
-- [ ] Optionale Abhängigkeiten dokumentieren: DiscordSRV, WorldEdit, Phoenix Crates (Kisten)
-- [ ] Liste der Plugins, die wir NICHT brauchen (Essentials, Multiverse) und warum
+- [x] Optionale Abhängigkeiten dokumentiert in `PLUGINS.md` (liegt auch in der ZIP): empfohlen LuckPerms; optional DiscordSRV, NuVotifier, WorldEdit; Phoenix Crates nicht mehr nötig (eigene Kisten, 4.27)
+- [x] Liste der Plugins, die wir NICHT brauchen, mit Ersatz und Grund in `PLUGINS.md` (Essentials, Vault, Multiverse, GriefPrevention/WorldGuard, Kisten-, Jobs-, Shop-, Vote-, Spielzeit-, Hologramm-, NPC-, Scoreboard-, Kopf-, Grab-, Item-Pack-, Heirats-, Freundes-, Ticket-Plugins)
 
 ## Punkt 1 – SMP-Trennung (Stand v1.39)
 - [x] Tags pro Modus
