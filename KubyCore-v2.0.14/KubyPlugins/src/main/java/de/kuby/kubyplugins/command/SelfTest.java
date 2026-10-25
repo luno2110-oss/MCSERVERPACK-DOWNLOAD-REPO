@@ -114,8 +114,8 @@ final class SelfTest {
                                     .multiline(TextDialogInput.MultilineOptions.create(6, 90)).build(),
                             DialogInput.text("betrag", Msg.parse("Betrag")).width(160).maxLength(10).initial("").build()))
                     .build();
-            ActionButton yes = ActionButton.create(Msg.parse("Ja"), null, 120, DialogAction.customClick((r, a) -> { }, null));
-            ActionButton no = ActionButton.create(Msg.parse("Nein"), null, 100, DialogAction.customClick((r, a) -> { }, null));
+            ActionButton yes = ActionButton.create(Msg.parse("Ja"), null, 120, DialogAction.customClick((r, a) -> { }, net.kyori.adventure.text.event.ClickCallback.Options.builder().uses(1).build()));
+            ActionButton no = ActionButton.create(Msg.parse("Nein"), null, 100, DialogAction.customClick((r, a) -> { }, net.kyori.adventure.text.event.ClickCallback.Options.builder().uses(1).build()));
             Dialog.create(b -> b.empty().base(base).type(DialogType.confirmation(yes, no)));
             ok[0]++;
         } catch (Throwable t) {

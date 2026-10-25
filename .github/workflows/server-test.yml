@@ -35,7 +35,7 @@ jobs:
           unzip -q kuby.zip -d kuby
           cp kuby/*.jar plugins/
           echo "eula=true" > eula.txt
-          printf "online-mode=false\nlevel-type=minecraft\\:flat\nspawn-protection=0\nview-distance=4\n" > server.properties
+          printf "online-mode=false\nspawn-protection=0\nview-distance=4\n" > server.properties
           grep "Stand" kuby/INSTALLATION.txt || true
 
       - name: Server starten, Selbsttest, stoppen
