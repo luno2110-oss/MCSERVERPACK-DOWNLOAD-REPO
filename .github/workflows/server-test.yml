@@ -14,6 +14,8 @@ jobs:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: write
     steps:
       - uses: actions/setup-java@v4
         with:
@@ -73,10 +75,21 @@ jobs:
           if ! grep -q "SELFTEST OK" server.log; then echo "Selbsttest nicht OK oder nicht gelaufen" >> problems.txt; fi
           if [ -s problems.txt ]; then
             { echo; echo "### Probleme"; sed 's/^/    /' problems.txt | head -80; } >> "$GITHUB_STEP_SUMMARY"
-            cat problems.txt | head -80
+            head -20 problems.txt | while IFS= read -r l; do echo "::error::${l:0:300}"; done
             exit 1
           fi
           echo "Alles ok" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Log als Release-Datei (server-test)
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        working-directory: server
+        run: |
+          touch problems.txt
+          gh release view server-test -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
+            gh release create server-test -R "$GITHUB_REPOSITORY" --title "Server-Test" --notes "Log des letzten Server-Tests" --prerelease
+          gh release upload server-test server.log problems.txt -R "$GITHUB_REPOSITORY" --clobber
 
       - name: Log hochladen
         if: always()
