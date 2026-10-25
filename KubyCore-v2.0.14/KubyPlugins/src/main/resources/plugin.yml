@@ -81,8 +81,8 @@ commands:
   abholen:
     description: "Alle Items aus der Abholbox einsammeln"
   friend:
-    description: "Freunde hinzufügen, annehmen, entfernen"
-    usage: "/friend add|accept|remove <Spieler>"
+    description: "Freunde hinzufügen, annehmen, ablehnen, nachspringen, entfernen"
+    usage: "/friend add|accept|deny|jump|remove <Spieler>, /friend list"
   friends:
     description: "Freundesliste öffnen"
   msg:

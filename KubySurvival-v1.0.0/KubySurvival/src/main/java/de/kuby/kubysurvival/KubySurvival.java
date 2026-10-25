@@ -334,6 +334,8 @@ public final class KubySurvival extends JavaPlugin {
             Job j = jobs.worker(id).job;
             return j == null ? "" : j.display;
         });
+        // Ort für die Freundesliste: Spawn, Farmwelt, Nether, End, Grundstück, Wildnis.
+        core.registerText("place", this::placeOf);
         // Regionen im Kern fragen hierüber, wem ein Besitzer vertraut.
         core.setTrustCheck((owner, who) -> {
             try {
@@ -414,5 +416,32 @@ public final class KubySurvival extends JavaPlugin {
     private void command(String name, org.bukkit.command.CommandExecutor exec) {
         PluginCommand cmd = getCommand(name);
         if (cmd != null) cmd.setExecutor(exec);
+    }
+
+    /** Grober Ort eines Spielers in Survival (für Freunde sichtbar), leer außerhalb von Survival. */
+    private String placeOf(UUID id) {
+        org.bukkit.entity.Player p = org.bukkit.Bukkit.getPlayer(id);
+        if (p == null || !de.kuby.kubyplugins.service.ModeService.SURVIVAL.equals(core.modes().modeOf(id))) return "";
+        org.bukkit.Location l = p.getLocation();
+        org.bukkit.Location spawn = core.modes().spawnOf(de.kuby.kubyplugins.service.ModeService.SURVIVAL);
+        int r = core.getConfig().getInt("survival-hud.spawn-radius", 80);
+        if (spawn != null && spawn.getWorld() == l.getWorld() && spawn.distanceSquared(l) <= (double) r * r) return "Spawn";
+        if (farm != null && farm.isFarm(l.getWorld())) return "Farmwelt";
+        switch (l.getWorld().getEnvironment()) {
+            case NETHER -> {
+                return "Nether";
+            }
+            case THE_END -> {
+                return "End";
+            }
+            default -> {
+            }
+        }
+        ClaimService.Claim c = claims.at(l);
+        if (c != null) {
+            String owner = org.bukkit.Bukkit.getOfflinePlayer(c.owner()).getName();
+            return c.owner().equals(id) ? "eigenes Grundstück" : owner == null ? "Grundstück" : "Grundstück von " + owner;
+        }
+        return "Wildnis";
     }
 }

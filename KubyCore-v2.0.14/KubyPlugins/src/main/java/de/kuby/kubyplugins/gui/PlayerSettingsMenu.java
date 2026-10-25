@@ -13,9 +13,9 @@ import java.util.List;
 /** /settings (allgemein) und /bossbar (Inhalt der Info-Leiste). Klick schaltet an/aus. */
 public final class PlayerSettingsMenu extends GuiMenu {
 
-    private static final String[] GENERAL = {"msg", "friends", "tpa", "sounds", "scoreboard", "infobar"};
+    private static final String[] GENERAL = {"msg", "friends", "tpa", "jump", "sounds", "scoreboard", "infobar"};
     private static final Material[] GENERAL_ICONS = {Material.PAPER, Material.PLAYER_HEAD, Material.ENDER_PEARL,
-            Material.NOTE_BLOCK, Material.OAK_SIGN, Material.WHITE_BANNER};
+            Material.FEATHER, Material.NOTE_BLOCK, Material.OAK_SIGN, Material.WHITE_BANNER};
     private static final String[] BAR = {"infobar", "bar.money", "bar.job", "bar.place", "bar.time", "bar.quest"};
     private static final Material[] BAR_ICONS = {Material.WHITE_BANNER, Material.GOLD_NUGGET, Material.IRON_PICKAXE, Material.COMPASS,
             Material.CLOCK, Material.WRITABLE_BOOK};

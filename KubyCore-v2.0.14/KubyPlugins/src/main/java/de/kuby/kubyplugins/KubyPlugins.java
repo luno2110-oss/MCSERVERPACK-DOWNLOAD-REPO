@@ -258,6 +258,7 @@ public final class KubyPlugins extends JavaPlugin {
         setAll(supportMenus, "support", "discord");
         getServer().getPluginManager().registerEvents(supportMenus, this);
         getServer().getPluginManager().registerEvents(discord, this);
+        getServer().getPluginManager().registerEvents(friends, this);
         setAll(new CoinflipCommand(this), "coinflip");
         setAll(new CasinoCommand(this), "casino");
         setAll(new PokerCommand(this), "poker");

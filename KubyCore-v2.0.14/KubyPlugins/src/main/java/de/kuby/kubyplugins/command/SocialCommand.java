@@ -1,10 +1,11 @@
 package de.kuby.kubyplugins.command;
 
 import de.kuby.kubyplugins.KubyPlugins;
-import de.kuby.kubyplugins.gui.FriendsMenu;
+import de.kuby.kubyplugins.gui.FriendsScreen;
 import de.kuby.kubyplugins.gui.RankingMenu;
 import de.kuby.kubyplugins.service.StatsService;
 import de.kuby.kubyplugins.util.Msg;
+import de.kuby.kubyplugins.util.Sfx;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
@@ -19,9 +20,11 @@ import java.util.UUID;
 public final class SocialCommand implements CommandExecutor {
 
     private final KubyPlugins plugin;
+    private final FriendsScreen friendsScreen;
 
     public SocialCommand(KubyPlugins plugin) {
         this.plugin = plugin;
+        this.friendsScreen = new FriendsScreen(plugin);
     }
 
     @Override
@@ -32,7 +35,7 @@ public final class SocialCommand implements CommandExecutor {
         }
         switch (command.getName().toLowerCase(Locale.ROOT)) {
             case "friend" -> friend(p, args);
-            case "friends" -> new FriendsMenu(plugin).open(p);
+            case "friends" -> friendsScreen.open(p);
             case "msg" -> msg(p, args);
             case "r" -> reply(p, args);
             case "inbox" -> plugin.messages().showInbox(p);
@@ -44,34 +47,52 @@ public final class SocialCommand implements CommandExecutor {
     }
 
     private void friend(Player p, String[] args) {
-        if (args.length < 2) {
-            if (args.length == 0) new FriendsMenu(plugin).open(p);
-            else Msg.send(p, "<red>Nutzung: /friend add|accept|remove <Spieler>");
+        String sub = args.length == 0 ? "" : args[0].toLowerCase(Locale.ROOT);
+        if (sub.isEmpty()) {
+            friendsScreen.open(p);
             return;
         }
-        UUID target = resolve(args[1]);
+        if (sub.equals("list") || sub.equals("liste")) {
+            friendsScreen.chatList(p);
+            return;
+        }
+        if (args.length < 2) {
+            Msg.send(p, "<red>Nutzung: /friend add|accept|deny|jump|remove <Spieler>, /friend list");
+            return;
+        }
+        if (sub.equals("add")) {
+            friendsScreen.request(p, args[1]);
+            return;
+        }
+        UUID target = FriendsScreen.resolve(args[1]);
         if (target == null) {
             Msg.send(p, "<red>Spieler nicht gefunden.");
             return;
         }
-        switch (args[0].toLowerCase(Locale.ROOT)) {
-            case "add" -> {
-                String err = plugin.friends().request(p.getUniqueId(), target);
-                if (err != null) { Msg.send(p, "<red>" + err); return; }
-                Msg.send(p, "<green>Anfrage an <white>" + args[1] + " <green>gesendet.");
-                Player other = Bukkit.getPlayer(target);
-                if (other != null) Msg.send(other, "<gray>Freundesanfrage von <white>" + p.getName()
-                        + "<gray>. Annehmen mit <white>/friend accept " + p.getName());
-            }
-            case "accept" -> {
+        switch (sub) {
+            case "accept", "annehmen" -> {
                 String err = plugin.friends().accept(p.getUniqueId(), target);
-                Msg.send(p, err == null ? "<green>Ihr seid jetzt befreundet!" : "<red>" + err);
+                Msg.send(p, err == null ? "<green>Du und <white>" + args[1] + " <green>seid jetzt Freunde!" : "<red>" + err);
+                Sfx.play(plugin, p, err == null ? Sfx.Kind.SUCCESS : Sfx.Kind.ERROR);
             }
-            case "remove" -> {
+            case "deny", "ablehnen" -> Msg.send(p, plugin.friends().deny(p.getUniqueId(), target)
+                    ? "<gray>Anfrage abgelehnt." : "<red>Keine Anfrage von oder an diesen Spieler.");
+            case "jump", "tp" -> {
+                String err = plugin.friends().jump(p, Bukkit.getPlayer(target));
+                if (err != null) {
+                    Msg.send(p, "<red>" + err);
+                    Sfx.play(plugin, p, Sfx.Kind.ERROR);
+                }
+            }
+            case "remove", "entfernen" -> {
+                if (!plugin.friends().friendsOf(p.getUniqueId()).contains(target)) {
+                    Msg.send(p, "<red>Ihr seid keine Freunde.");
+                    return;
+                }
                 plugin.friends().remove(p.getUniqueId(), target);
-                Msg.send(p, "<gray>Freundschaft beendet.");
+                Msg.send(p, "<gray>Freundschaft mit <white>" + args[1] + " <gray>beendet.");
             }
-            default -> Msg.send(p, "<red>Nutzung: /friend add|accept|remove <Spieler>");
+            default -> Msg.send(p, "<red>Nutzung: /friend add|accept|deny|jump|remove <Spieler>, /friend list");
         }
     }
 

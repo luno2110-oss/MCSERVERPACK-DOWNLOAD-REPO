@@ -655,6 +655,21 @@ graves:
 # Möbel (KubySurvival): Kauf im Juwelenshop (Kategorie Möbel, Preis nach Größe), höchstens so viele je Spieler.
 furniture:
   max: 50
+# Freunde (/friends): Plätze in der Liste, mit Rang mehr (Permission kuby.rank.<name> oder LuckPerms group.<name>).
+# Nachspringen (/friend jump) mit der Teleport-Wartezeit der Homes, danach jump-cooldown-seconds Pause.
+friends:
+  limit: 20
+  ranks:
+    vip: 30
+    ultimate: 40
+    warrior: 50
+    legend: 75
+    platin: 30
+    diamant: 40
+    smaragd: 50
+    netherit: 75
+  jump-cooldown-seconds: 30
+
 # Support-Tickets (/support): Helfer werden kann, wer so viele Stunden gespielt hat (und Discord verlinkt, wenn
 # DiscordSRV da ist). Team = Permission kuby.support.team. Höchstens max-open offene Tickets je Spieler.
 support:

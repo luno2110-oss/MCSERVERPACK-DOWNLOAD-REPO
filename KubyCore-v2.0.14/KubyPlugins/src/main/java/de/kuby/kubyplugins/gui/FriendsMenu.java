@@ -26,11 +26,20 @@ public final class FriendsMenu extends GuiMenu {
             OfflinePlayer op = Bukkit.getOfflinePlayer(id);
             boolean online = op.isOnline();
             String name = op.getName() == null ? "Unbekannt" : op.getName();
-            set(slot++, Items.head(op, (online ? "<green>" : "<gray>") + name, List.of(
-                            online ? "<green>Online" : "<gray>Offline",
+            Player on = Bukkit.getPlayer(id);
+            boolean visible = online && on != null && p.canSee(on);
+            set(slot++, Items.head(op, (visible ? "<green>" : "<gray>") + name, List.of(
+                            visible ? "<green>Online <gray>· " + plugin.friends().whereIs(on) : "<gray>Offline",
+                            visible ? "<gray>Klick: <white>nachspringen" : "",
                             "<gray>Shift + Klick: <red>Freundschaft beenden")),
                     e -> {
-                        if (!e.isShiftClick()) return;
+                        if (!e.isShiftClick()) {
+                            if (!visible) return;
+                            String err = plugin.friends().jump(p, Bukkit.getPlayer(id));
+                            if (err != null) Msg.send(p, "<red>" + err);
+                            else p.closeInventory();
+                            return;
+                        }
                         plugin.friends().remove(p.getUniqueId(), id);
                         Msg.send(p, "<gray>Freundschaft mit <white>" + name + " <gray>beendet.");
                         open(p);
@@ -47,8 +56,13 @@ public final class FriendsMenu extends GuiMenu {
             OfflinePlayer op = Bukkit.getOfflinePlayer(id);
             String name = op.getName() == null ? "Unbekannt" : op.getName();
             set(r++, Items.head(op, "<yellow>Anfrage: <white>" + name, List.of(
-                            "<green>Klick: annehmen")),
+                            "<green>Klick: annehmen", "<gray>Shift + Klick: <red>ablehnen")),
                     e -> {
+                        if (e.isShiftClick()) {
+                            plugin.friends().deny(p.getUniqueId(), id);
+                            open(p);
+                            return;
+                        }
                         String err = plugin.friends().accept(p.getUniqueId(), id);
                         Msg.send(p, err == null ? "<green>Ihr seid jetzt befreundet!" : "<red>" + err); Sfx.play(plugin, p, err == null ? Sfx.Kind.SUCCESS : Sfx.Kind.ERROR);
                         open(p);

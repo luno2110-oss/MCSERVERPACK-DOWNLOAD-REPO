@@ -15,6 +15,11 @@ public final class Teleports {
 
     /** Teleport nach Wartezeit. Wer sich in dieser Zeit bewegt, wird abgebrochen. */
     public static void delayed(KubyPlugins plugin, Player player, Location target, String label) {
+        delayed(plugin, player, () -> target, label);
+    }
+
+    /** Wie oben, das Ziel wird aber erst nach der Wartezeit bestimmt (z. B. ein Spieler, der weiterläuft). Null bricht ab. */
+    public static void delayed(KubyPlugins plugin, Player player, java.util.function.Supplier<Location> where, String label) {
         if (plugin.pvp().inCombat(player.getUniqueId())) {
             Msg.send(player, "<red>Im Kampf kannst du nicht teleportieren.");
             return;
@@ -36,6 +41,8 @@ public final class Teleports {
                 Msg.send(player, "<red>Teleport abgebrochen, du hast dich bewegt.");
                 return;
             }
+            Location target = where.get();
+            if (target == null) return;
             Location before = player.getLocation();
             player.teleportAsync(target);
             plugin.teleportFx().play(player, before);

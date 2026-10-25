@@ -26,6 +26,7 @@ public final class PlayerSettings {
         add("msg", "Private Nachrichten", "Andere dürfen dir /msg schreiben (Freunde immer)", true);
         add("friends", "Freundesanfragen", "Andere dürfen dir Anfragen schicken", true);
         add("tpa", "Teleport-Anfragen", "Andere dürfen /tpa zu dir schicken (Freunde immer)", true);
+        add("jump", "Nachspringen", "Freunde dürfen mit /friend jump zu dir springen", true);
         add("sounds", "Sounds", "Klick-, Erfolgs- und Hinweis-Sounds", true);
         add("scoreboard", "Scoreboard", "Die Anzeige rechts am Bildschirm", true);
         add("infobar", "Info-Leiste", "Die Leiste oben in Survival (Inhalt: /bossbar)", true);
