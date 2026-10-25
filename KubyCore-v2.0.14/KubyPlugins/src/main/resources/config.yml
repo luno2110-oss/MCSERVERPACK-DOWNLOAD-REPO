@@ -533,6 +533,104 @@ playtime:
       - "20;tag:hobbylos"
       - "40;tag:sweater"
 
+# Kisten am Spawn (/keys, Aufstellen: /keys kiste set <id> [modus] mit Blick auf einen Block).
+# Je Modus und Kiste: name, key (Schlüsselart aus keys.types), rewards "Gewicht;Belohnung;Anzeige (optional)".
+# Belohnungen: coins:N, tokens:N (Survival), jewels:N, key:<Art>:N, cosmetic:<ID>, pet:<ID> (/pet give),
+# furniture:<ID> (/moebel give), item:MATERIAL:N, cmd:<Befehl mit %player%>. Chance = Gewicht / Summe der Gewichte.
+# Doppelte Kosmetik wird durch duplicate-jewels Juwelen ersetzt.
+crates:
+  duplicate-jewels: 10
+  survival:
+    vote:
+      name: "Vote-Kiste"
+      key: vote
+      rewards:
+        - "30;coins:750"
+        - "20;coins:1500"
+        - "18;tokens:1"
+        - "10;tokens:2"
+        - "8;item:EXPERIENCE_BOTTLE:16;16 Erfahrungsfläschchen"
+        - "6;item:GOLDEN_CARROT:32;32 Goldene Karotten"
+        - "4;jewels:3"
+        - "3;key:selten:1"
+        - "1;cosmetic:s_herz"
+    selten:
+      name: "Seltene Kiste"
+      key: selten
+      rewards:
+        - "26;coins:3000"
+        - "18;tokens:3"
+        - "12;item:DIAMOND:4;4 Diamanten"
+        - "10;jewels:5"
+        - "8;item:GOLDEN_APPLE:4;4 Goldene Äpfel"
+        - "8;cosmetic:s_noten"
+        - "6;cosmetic:hut_bommelmuetze"
+        - "5;furniture:sessel;Möbel: Sessel"
+        - "4;key:episch:1"
+        - "3;cosmetic:s_kirsch"
+    episch:
+      name: "Epische Kiste"
+      key: episch
+      rewards:
+        - "22;coins:8000"
+        - "16;tokens:6"
+        - "12;jewels:12"
+        - "10;item:NETHERITE_SCRAP:2;2 Netheritplatten"
+        - "9;cosmetic:hut_zylinder"
+        - "8;cosmetic:s_sterne"
+        - "7;cosmetic:s_seele"
+        - "6;furniture:sofa;Möbel: Sofa"
+        - "5;cosmetic:hut_teufelshoerner"
+        - "3;pet:sniffer;Haustier: Schnüffler"
+        - "2;key:legendaer:1"
+    legendaer:
+      name: "Legendäre Kiste"
+      key: legendaer
+      rewards:
+        - "22;coins:25000"
+        - "16;jewels:30"
+        - "14;tokens:15"
+        - "10;item:NETHERITE_INGOT:1;1 Netheritbarren"
+        - "9;cosmetic:s_totem"
+        - "8;cosmetic:hut_krone"
+        - "8;cosmetic:hut_heiligenschein"
+        - "6;cosmetic:s_tp_seele"
+        - "4;pet:skelettpferd;Haustier: Skelettpferd"
+        - "3;item:ELYTRA:1;Elytren"
+    keyall:
+      name: "Keyall-Kiste"
+      key: keyall
+      rewards:
+        - "40;coins:500"
+        - "25;tokens:1"
+        - "15;item:IRON_INGOT:16;16 Eisenbarren"
+        - "10;jewels:1"
+        - "6;key:vote:1"
+        - "4;key:selten:1"
+  smp:
+    keyall:
+      name: "Keyall-Kiste"
+      key: keyall
+      rewards:
+        - "30;coins:1500"
+        - "20;item:GOLDEN_APPLE:4;4 Goldene Äpfel"
+        - "15;item:ENDER_PEARL:8;8 Enderperlen"
+        - "12;item:EXPERIENCE_BOTTLE:32;32 Erfahrungsfläschchen"
+        - "10;jewels:2"
+        - "8;item:DIAMOND:3;3 Diamanten"
+        - "4;item:TOTEM_OF_UNDYING:1;Totem der Unsterblichkeit"
+        - "1;item:ENCHANTED_GOLDEN_APPLE:1;Verzauberter Goldapfel"
+    vote:
+      name: "Vote-Kiste"
+      key: vote
+      rewards:
+        - "35;coins:1000"
+        - "20;item:GOLDEN_CARROT:32;32 Goldene Karotten"
+        - "15;item:ENDER_PEARL:4;4 Enderperlen"
+        - "15;jewels:2"
+        - "10;item:DIAMOND:2;2 Diamanten"
+        - "5;key:keyall:1"
+
 # Kisten-Schlüssel (virtuell, /keys): "id;Name;#Farbe". Der Name ist der der Kiste, angezeigt als "<Name>-Schlüssel".
 # Vergabe: /keys give <Spieler> <id> [Anzahl] (Konsole/Admins, z. B. aus dem Juwelenshop oder von Votes).
 keys:
@@ -624,6 +722,9 @@ jewelshop:
         - "warrior;Warrior;NAME_TAG;1500;lp user %player% parent add warrior;Mehr Homes und Vorteile"
         - "legend;Legend;NAME_TAG;3000;lp user %player% parent add legend;Die höchste Stufe"
       keys:
+        - "selten;Selten-Schlüssel;TRIPWIRE_HOOK;40;keys give %player% selten 1;Öffnet die Seltene Kiste am Spawn"
+        - "episch;Episch-Schlüssel;TRIPWIRE_HOOK;90;keys give %player% episch 1;Öffnet die Epische Kiste am Spawn"
+        - "legendaer;Legendär-Schlüssel;TRIPWIRE_HOOK;200;keys give %player% legendaer 1;Öffnet die Legendäre Kiste am Spawn"
         - "keyall;Keyall-Schlüssel;TRIPWIRE_HOOK;50;keys give %player% keyall 1;Öffnet die Keyall-Kiste am Spawn"
   smp:
     categories:
@@ -648,6 +749,7 @@ custom-items: []
 vote:
   jewels: 2
   coins: 250
+  keys: 1                       # Vote-Schlüssel je Vote (im Modus, in dem man gerade ist; im Hub: Survival)
   streak-bonus:                 # Tage in Folge;Extra-Coins beim ersten Vote des Tages (höchste Stufe zählt)
     - "10;250"
     - "25;500"

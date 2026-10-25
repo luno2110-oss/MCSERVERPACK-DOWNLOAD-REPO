@@ -64,6 +64,14 @@ public final class KeysCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage("/keys give|take <Spieler> <Art> [Anzahl] [Modus]");
             return true;
         }
+        if (sub.equals("kiste") && p.hasPermission("kuby.admin")) {
+            crateAdmin(p, args);
+            return true;
+        }
+        if (!sub.equals("liste")) {
+            plugin.crateScreens().keys(p);
+            return true;
+        }
         String mode = plugin.modes().modeOf(p.getUniqueId());
         Map<String, Integer> mine = plugin.keys().all(p.getUniqueId(), mode);
         Msg.send(p, "<#F0A050><b>SCHLÜSSEL</b> <dark_gray>▶ <gray>Deine Schlüssel in " + ModeService.label(mode) + ":");
@@ -79,13 +87,40 @@ public final class KeysCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    /** /keys kiste set <id> [modus] | remove | list: der Block, auf den du schaust. */
+    private void crateAdmin(Player p, String[] args) {
+        String op = args.length > 1 ? args[1].toLowerCase(Locale.ROOT) : "";
+        org.bukkit.block.Block b = p.getTargetBlockExact(6);
+        switch (op) {
+            case "set" -> {
+                if (b == null || args.length < 3) {
+                    Msg.send(p, "<red>Schau auf einen Block: /keys kiste set <id> [modus]");
+                    return;
+                }
+                String mode = args.length > 3 ? args[3].toLowerCase(Locale.ROOT) : plugin.modes().modeOf(p.getUniqueId());
+                String err = plugin.crates().set(b, mode, args[2].toLowerCase(Locale.ROOT));
+                Msg.send(p, err == null ? "<green>Kiste " + args[2] + " (" + ModeService.label(mode) + ") gesetzt." : "<red>" + err);
+            }
+            case "remove" -> Msg.send(p, b != null && plugin.crates().remove(b) ? "<green>Kiste entfernt." : "<red>Hier ist keine Kiste.");
+            default -> {
+                Msg.send(p, "<gray>Kisten: <white>/keys kiste set <id> [modus]</white>, <white>remove</white>. Aufgestellt:");
+                plugin.crates().places().forEach((k, v) -> Msg.send(p, "<dark_gray>• <white>" + v + " <gray>" + k));
+            }
+        }
+    }
+
     @Override
     public List<String> onTabComplete(CommandSender sender, Command cmd, String alias, String[] args) {
         List<String> out = new ArrayList<>();
         if (!sender.hasPermission("kuby.admin")) return out;
-        if (args.length == 1) out.addAll(List.of("give", "take"));
-        else if (args.length == 2) for (Player o : Bukkit.getOnlinePlayers()) out.add(o.getName());
-        else if (args.length == 3) out.addAll(plugin.keys().types().keySet());
+        if (args.length == 1) out.addAll(List.of("give", "take", "kiste", "liste"));
+        else if (args[0].equalsIgnoreCase("kiste")) {
+            if (args.length == 2) out.addAll(List.of("set", "remove", "list"));
+            else if (args.length == 3 && sender instanceof Player p)
+                for (var c : plugin.crates().crates(plugin.modes().modeOf(p.getUniqueId()))) out.add(c.id());
+        }
+        else if (args.length == 2 && !args[0].equalsIgnoreCase("kiste")) for (Player o : Bukkit.getOnlinePlayers()) out.add(o.getName());
+        else if (args.length == 3 && !args[0].equalsIgnoreCase("kiste")) out.addAll(plugin.keys().types().keySet());
         else if (args.length == 5) out.addAll(List.of(ModeService.SURVIVAL, ModeService.SMP, ModeService.SKYBLOCK));
         String last = args[args.length - 1].toLowerCase(Locale.ROOT);
         out.removeIf(s -> !s.toLowerCase(Locale.ROOT).startsWith(last));

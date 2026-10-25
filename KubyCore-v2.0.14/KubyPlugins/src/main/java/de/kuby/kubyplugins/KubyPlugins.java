@@ -234,6 +234,9 @@ public final class KubyPlugins extends JavaPlugin {
         modes.registerBusyCheck(p -> poker.isSeated(p.getUniqueId()));
         modes.registerExtras(java.util.List.of(homes, battlepass, cosmetics, kits, tags, daily, investments, shopStorage));
         keys = new KeyService(this);
+        crates = new de.kuby.kubyplugins.service.CrateService(this);
+        crateScreens = new de.kuby.kubyplugins.gui.CrateScreens(this);
+        getServer().getPluginManager().registerEvents(crates, this);
         hats = new de.kuby.kubyplugins.service.HatService(this);
         getServer().getPluginManager().registerEvents(hats, this);
         playtime = new PlaytimeService(this);
@@ -418,6 +421,7 @@ public final class KubyPlugins extends JavaPlugin {
         modes.save();
         playtime.save();
         if (hats != null) hats.removeAll();
+        if (crates != null) crates.removeLabels();
         regions.save();
         casino.save();
         casinoLog.save();
@@ -582,6 +586,10 @@ public final class KubyPlugins extends JavaPlugin {
     public PlaytimeService playtime() { return playtime; }
     private KeyService keys;
     private de.kuby.kubyplugins.service.HatService hats;
+    private de.kuby.kubyplugins.service.CrateService crates;
+    private de.kuby.kubyplugins.gui.CrateScreens crateScreens;
+    public de.kuby.kubyplugins.service.CrateService crates() { return crates; }
+    public de.kuby.kubyplugins.gui.CrateScreens crateScreens() { return crateScreens; }
     public de.kuby.kubyplugins.service.HatService hats() { return hats; }
     public KeyService keys() { return keys; }
     public TpaService tpa() { return tpa; }

@@ -200,6 +200,11 @@ public final class VoteService implements Listener {
         long jewels = plugin.getConfig().getLong("vote.jewels", 2);
         long coins = plugin.getConfig().getLong("vote.coins", 250);
         if (jewels > 0) plugin.jewels().add(id, jewels);
+        int voteKeys = plugin.getConfig().getInt("vote.keys", 1);
+        if (voteKeys > 0) {
+            String mode = plugin.modes().modeOf(id);
+            plugin.keys().give(id, ModeService.HUB.equals(mode) ? ModeService.SURVIVAL : mode, "vote", voteKeys);
+        }
         boolean firstBonus = !plugin.homes().voted(id);
         if (firstBonus) plugin.homes().grantVote(id);
         if (coins > 0) pendingCoins.merge(id, coins, Long::sum);
