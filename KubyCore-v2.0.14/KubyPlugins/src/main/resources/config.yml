@@ -1086,3 +1086,229 @@ friends:
 support:
   helper-min-hours: 50
   max-open: 2
+
+# Guide (SMP-Hilfe, /guide; /hilfe im SMP): bis zu 12 Seiten, links die Liste, rechts der Text (Dialog mit Grafik-Pack,
+# sonst im Chat). Zeilen: "# Überschrift", "> Punkt" ("> /befehl <Arg> - Text": Befehl gelb), "" = Leerzeile, sonst
+# Absatz (bricht um). Im Text: `/befehl` gelb, [Text](seiten-id) Link auf eine Seite, [Text](discord) oder
+# [Text](https://...) Link nach außen, {discord} = Discord-Link ohne https://. icon: nav00 ... nav11 (Buch, Kompass,
+# Gold, Schriftrolle, Smaragd, Haus, Flagge, Sprechblase, Schwert, Stern, Krone, Schild). discord: leer = discord.invite
+# Englisch: name-en und lines-en je Seite (sonst Deutsch).
+guide:
+  discord: ""
+  pages:
+    uebersicht:
+      name: "Übersicht"
+      icon: nav00
+      lines:
+        - "Survival mit Wirtschaft, Teams, Duellen und Kopfgeldern. Griefing und Raiden ist erlaubt."
+        - ""
+        - "# Die wichtigsten Befehle"
+        - "> /rtp - raus in die Kuby-Welt"
+        - "> /sethome <Name> - deine Basis speichern"
+        - "> /shop - Items kaufen"
+        - "> /sell - Items verkaufen"
+        - "> /markt - das Auktionshaus"
+        - "> /team - ein Team gründen"
+        - "> /befehle - alle Befehle im Überblick"
+        - ""
+        - "# Links"
+        - "> [{discord}](discord)"
+        - "> Discord verbinden: `/verify` - lohnt sich!"
+        - ""
+        - "Neu hier? Starte mit [Erste Schritte](erste-schritte)."
+    erste-schritte:
+      name: "Erste Schritte"
+      icon: nav01
+      lines:
+        - "So kommst du in den ersten Minuten gut an."
+        - ""
+        - "# Der Start"
+        - "> /rtp - an einen Zufallsort in der Wildnis"
+        - "> /sethome <Name> - Startpunkt speichern"
+        - "> /kits - Starter-Kit abholen"
+        - "> /daily - jeden Tag Coins abholen"
+        - "> /spielzeit - Belohnungen fürs Spielen"
+        - ""
+        - "# Gut zu wissen"
+        - "> Die ersten 30 Minuten bist du vor PvP geschützt."
+        - "> Am Spawn ist PvP aus, draußen ist alles erlaubt."
+        - "> Versteck deine Basis und versichere Kisten mit `/versichern`."
+        - ""
+        - "Weiter mit [Wirtschaft](wirtschaft)."
+    wirtschaft:
+      name: "Wirtschaft"
+      icon: nav02
+      lines:
+        - "Coins verdienst du mit Farmen, Verkaufen, Orders und Kopfgeldern."
+        - ""
+        - "# Befehle"
+        - "> /balance - dein Kontostand"
+        - "> /pay <Spieler> <Betrag> - Coins senden"
+        - "> /baltop - die reichsten Spieler"
+        - "> /shop - Items kaufen"
+        - "> /sell - Inventar verkaufen"
+        - "> /worth - Preisliste"
+        - "> /sellmulti - Verkaufs-Bonus erhöhen"
+        - "> /investments - Anteile an Shop-Items"
+        - ""
+        - "# Tipp"
+        - "> Preise folgen Angebot und Nachfrage: was viele verkaufen, wird billiger."
+    markt:
+      name: "Markt & Orders"
+      icon: nav03
+      lines:
+        - "Handle mit anderen Spielern, auch wenn sie offline sind."
+        - ""
+        - "# Auktionshaus"
+        - "> /markt - Angebote ansehen"
+        - "> /markt sell <Preis> - Hand-Item anbieten"
+        - ""
+        - "# Orders"
+        - "> /orders - Bestellungen ansehen und liefern"
+        - "> /orders add <Item> <Menge> <Preis> - bestellen"
+        - ""
+        - "# Abholen und Tauschen"
+        - "> /abholbox - Käufe und Lieferungen"
+        - "> /trade <Spieler> - sicher direkt tauschen"
+        - ""
+        - "Auf Verkäufe im Markt fallen 5 % Gebühr an."
+    juwelen:
+      name: "Juwelen & Kisten"
+      icon: nav04
+      lines:
+        - "Juwelen sind die Premium-Währung. Es gibt sie fürs Voten, für Spielzeit, im Battle-Pass und im Store."
+        - ""
+        - "# Befehle"
+        - "> /juwelen - dein Juwelen-Konto"
+        - "> /juwelenshop - Ränge und Schlüssel"
+        - "> /keys - deine Kisten-Schlüssel"
+        - "> /vote - Juwelen und Schlüssel fürs Voten"
+        - ""
+        - "# Kisten"
+        - "> Die Kisten stehen am Spawn: Schlüssel rein, Belohnung raus."
+        - "> Beim Schleichen öffnest du sofort ohne Animation."
+        - ""
+        - "Im Juwelenshop kannst du auch anderen etwas schenken."
+    homes:
+      name: "Homes & Teleport"
+      icon: nav05
+      lines:
+        - "Speichere wichtige Orte und reise schnell zurück."
+        - ""
+        - "# Homes"
+        - "> /sethome <Name> - Home setzen"
+        - "> /home <Name> - hinreisen"
+        - "> /homes - alle Homes als Menü"
+        - "> /delhome <Name> - Home löschen"
+        - "> Mehr Plätze mit Rang, XP und `/verify` (+3)."
+        - ""
+        - "# Teleport"
+        - "> /rtp - Zufalls-Teleport in die Wildnis"
+        - "> /spawn - zurück zum Spawn"
+        - "> /tpa <Spieler> - zu einem Spieler reisen"
+        - "> /tpahere <Spieler> - Spieler zu dir holen"
+        - ""
+        - "Teleports starten nach 3 Sekunden Stillstehen. Im Kampf sind sie 15 Sekunden gesperrt."
+    teams:
+      name: "Teams"
+      icon: nav06
+      lines:
+        - "Zusammen baut, kämpft und raidet es sich besser."
+        - ""
+        - "# Befehle"
+        - "> /team - Team-Menü"
+        - "> /team create <Name> - gründen (1.000 Coins)"
+        - "> /team invite <Spieler> - einladen"
+        - "> /team home - zum Team-Home"
+        - "> /team bank <Betrag> - in die Teamkasse"
+        - "> /team ally <Team> - Bündnis schließen"
+        - "> /tc <Text> - Team-Chat"
+        - ""
+        - "# Team-Level"
+        - "> Aktive Minuten geben Team-XP, mit Kollegen online doppelt."
+        - "> Jedes Level bringt einen Platz mehr, bis Level 10."
+    freunde:
+      name: "Freunde & Chat"
+      icon: nav07
+      lines:
+        - "# Freunde"
+        - "> /friends - Liste mit Ort und Status"
+        - "> /friend add <Spieler> - Anfrage senden"
+        - ""
+        - "# Nachrichten"
+        - "> /msg <Spieler> <Text> - privat schreiben"
+        - "> /r <Text> - antworten"
+        - "> /inbox - verpasste Nachrichten"
+        - ""
+        - "# Einstellungen"
+        - "> /settings - Chat, Anfragen und Mitteilungen"
+        - "> /tags - Titel vor deinem Namen"
+        - ""
+        - "In den Einstellungen kannst du dir Nachrichten auch übersetzen lassen."
+    pvp:
+      name: "PvP & Duelle"
+      icon: nav08
+      lines:
+        - "Außerhalb des Spawns ist PvP erlaubt. Siege bringen Trophäen und XP."
+        - ""
+        - "# Kämpfen"
+        - "> /duell <Spieler> [Einsatz] - herausfordern"
+        - "> /rtpqueue - zu zweit an einen Zufallsort"
+        - "> /turnier - K.O.-Turnier"
+        - ""
+        - "# Kopfgelder"
+        - "> /bounty <Spieler> <Betrag> - Kopfgeld"
+        - "> /bounties - offene Steckbriefe"
+        - ""
+        - "# Fortschritt"
+        - "> /stats - Kills, Tode und Trophäen"
+        - "> /trophaeen - Liga und Trophäen"
+        - "> /ranking - die besten Kämpfer"
+    belohnungen:
+      name: "Belohnungen"
+      icon: nav09
+      lines:
+        - "Jeden Tag gibt es etwas zu holen."
+        - ""
+        - "> /daily - Tageskalender mit 30 Tagen"
+        - "> /battlepass - 100 Stufen, Aufgaben, Premium"
+        - "> /spielzeit - Stufen für deine Spielzeit"
+        - "> /vote - Juwelen und Schlüssel"
+        - "> /erfolge - Erfolge mit Belohnungen"
+        - "> /dailypot - Tagespot: Lose kaufen"
+        - "> /kits - Kits abholen"
+        - "> /xpshop - XP eintauschen"
+        - ""
+        - "# Booster"
+        - "> Abends von 18 bis 24 Uhr gibt es 1,5-fache XP. `/booster`"
+    cosmetics:
+      name: "Cosmetics & Tags"
+      icon: nav10
+      lines:
+        - "Zeig, wer du bist: Hüte, Spuren und Effekte."
+        - ""
+        - "> /cosmetics - Hüte, Spuren und Effekte"
+        - "> /tags - Titel auswählen"
+        - "> /juwelenshop - Ränge mit eigener Farbe"
+        - ""
+        - "# So bekommst du sie"
+        - "> Mit Juwelen, Coins oder XP freischalten"
+        - "> Seltene gibt es nur aus Kisten"
+        - "> Einige gibt es im Battle-Pass"
+    regeln:
+      name: "Regeln & Support"
+      icon: nav11
+      lines:
+        - "Fair spielen, dann haben alle Spaß."
+        - ""
+        - "> /regeln - alle Regeln"
+        - "> /report <Spieler> [Grund] - Spieler melden"
+        - "> /support - Ticket an das Team"
+        - "> /discord - zu unserem Discord"
+        - ""
+        - "# Wichtig"
+        - "> Keine Hacks, kein X-Ray, kein Dupen"
+        - "> Kein Spawn-Camping, keine Beleidigungen"
+        - "> Kein Betrug beim Handeln - nutze `/trade`"
+        - ""
+        - "Bugs melden lohnt sich: es gibt eine Belohnung."

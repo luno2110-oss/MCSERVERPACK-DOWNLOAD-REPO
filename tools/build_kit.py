@@ -135,9 +135,12 @@ import build_jewelshop  # noqa: E402
 
 import build_battlepass  # noqa: E402
 
+import build_guide  # noqa: E402
+
 SLICED_BOXES = build_settings.boxes()
 SLICED_BOXES.update(build_jewelshop.boxes())
 SLICED_BOXES.update(build_battlepass.boxes())
+SLICED_BOXES.update(build_guide.boxes())
 ALL_BOXES = list(BOXES) + list(CASINO_BOXES) + list(SLICED_BOXES)
 # Kästen, die auch schmaler als 48 px gehen (Zahlenfelder im Roulette-Raster, Battle-Pass-Felder und -Knöpfe):
 # schmale Mittelstücke
@@ -239,6 +242,7 @@ BAR_FILLS = {
     "bp_gold": ("FCC965", "DEB159", "A88643"),
 }
 BAR_H = 7
+LINE_W = (32, 16, 8, 4, 2, 1)     # Linien-Stücke (Unterstreichung), größte zuerst
 
 CORNER_BOX = [
     "....KKK",
@@ -645,6 +649,9 @@ def build_pieces():
     caps9.add(("bar2", "r"), flat.crop((CAP + SEG, 0, 2 * CAP + SEG, BAR_H)))
     for w in NARROW:
         (segs9 if w > CAP else caps9).add(("bar2", w), flat.crop((CAP, 0, CAP + w, BAR_H)))
+    # Linien 1 px hoch, weiß (mit der Textfarbe eingefärbt): Unterstreichungen von Links
+    for w in LINE_W:
+        (segs9 if w > CAP else caps9).add(("line", w), Image.new("RGBA", (w, 1), (255, 255, 255, 255)))
     for name in BAR_FILLS:
         for w in (1, 2, 4, 8):
             caps9.add(("fill", name, w), draw_bar_fill(w, name))
@@ -1101,6 +1108,8 @@ def write_java(sheets, widths, icons, icon_chars, icon_adv, small_data=(), title
     L.append("    public static final Piece BAR2_M = %s;" % piece(("bar2", "m")))
     L.append("    public static final Piece BAR2_R = %s;" % piece(("bar2", "r")))
     L.append("    public static final Piece[] BAR2_NARROW = {%s};" % ", ".join(piece(("bar2", w)) for w in NARROW))
+    L.append("    /** Linien 1 px hoch (weiß, eingefärbt): 32, 16, 8, 4, 2, 1 px. */")
+    L.append("    public static final Piece[] LINE = {%s};" % ", ".join(piece(("line", w)) for w in LINE_W))
     L.append("    public static final Piece BACK = %s;" % piece(("back",)))
     L.append("    public static final Piece BACK_HELP = %s;" % piece(("back_help",)))
     L.append("")

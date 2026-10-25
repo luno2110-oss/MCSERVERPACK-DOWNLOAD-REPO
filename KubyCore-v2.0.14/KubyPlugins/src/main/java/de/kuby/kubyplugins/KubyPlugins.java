@@ -248,6 +248,7 @@ public final class KubyPlugins extends JavaPlugin {
         settingsScreen = new de.kuby.kubyplugins.gui.SettingsScreen(this);
         jewelShop = new de.kuby.kubyplugins.gui.JewelShopScreen(this);
         battlepassScreen = new de.kuby.kubyplugins.gui.BattlepassScreen(this);
+        guide = new de.kuby.kubyplugins.gui.GuideScreen(this);
         getServer().getPluginManager().registerEvents(new de.kuby.kubyplugins.listener.ChatSettingsListener(this), this);
         playtime = new PlaytimeService(this);
         getServer().getPluginManager().registerEvents(playtime, this);
@@ -288,20 +289,38 @@ public final class KubyPlugins extends JavaPlugin {
             PluginCommand rc = getCommand(n);
             if (rc != null) rc.setTabCompleter(rules);
         }
-        PluginCommand hilfe = getCommand("hilfe");
-        if (hilfe != null) {
-            hilfe.setExecutor((sender, c, label, args) -> {
+        // /hilfe und /guide: im SMP der Guide (12 Seiten), sonst die Survival-Hilfe
+        for (String name : List.of("hilfe", "guide")) {
+            PluginCommand gc = getCommand(name);
+            if (gc == null) continue;
+            gc.setExecutor((sender, c, label, args) -> {
                 if (!(sender instanceof org.bukkit.entity.Player pl)) return true;
-                if (!de.kuby.kubyplugins.service.SurvivalHelp.open(this, pl, args.length > 0 ? String.join(" ", args) : null)) {
+                String key = args.length > 0 ? String.join(" ", args) : null;
+                if (de.kuby.kubyplugins.service.ModeService.SMP.equals(modes.modeOf(pl.getUniqueId()))) {
+                    if (!guide.open(pl, key)) {
+                        List<String> names = new java.util.ArrayList<>();
+                        for (var pg : guide.pages(false)) names.add(pg.name());
+                        de.kuby.kubyplugins.util.Msg.send(pl, "<red>Diese Seite gibt es nicht. <gray>Seiten: " + String.join(", ", names));
+                    }
+                    return true;
+                }
+                if (!de.kuby.kubyplugins.service.SurvivalHelp.open(this, pl, key)) {
                     de.kuby.kubyplugins.util.Msg.send(pl, "<red>Diese Seite gibt es nicht. <gray>Seiten: "
                             + String.join(", ", de.kuby.kubyplugins.service.SurvivalHelp.pageIds()));
                 }
                 return true;
             });
-            hilfe.setTabCompleter((sender, c, label, args) -> {
+            gc.setTabCompleter((sender, c, label, args) -> {
                 if (args.length != 1) return List.of();
+                List<String> ids = new java.util.ArrayList<>();
+                if (sender instanceof org.bukkit.entity.Player pl
+                        && de.kuby.kubyplugins.service.ModeService.SMP.equals(modes.modeOf(pl.getUniqueId()))) {
+                    for (var pg : guide.pages(false)) ids.add(pg.id());
+                } else {
+                    ids.addAll(de.kuby.kubyplugins.service.SurvivalHelp.pageIds());
+                }
                 List<String> out = new java.util.ArrayList<>();
-                for (String id : de.kuby.kubyplugins.service.SurvivalHelp.pageIds()) if (id.startsWith(args[0].toLowerCase())) out.add(id);
+                for (String id : ids) if (id.startsWith(args[0].toLowerCase())) out.add(id);
                 return out;
             });
         }
@@ -488,6 +507,10 @@ public final class KubyPlugins extends JavaPlugin {
     private de.kuby.kubyplugins.gui.BattlepassScreen battlepassScreen;
 
     public de.kuby.kubyplugins.gui.BattlepassScreen battlepassScreen() { return battlepassScreen; }
+
+    private de.kuby.kubyplugins.gui.GuideScreen guide;
+
+    public de.kuby.kubyplugins.gui.GuideScreen guide() { return guide; }
     public HotbarDisplay hotbar() { return hotbar; }
     public DailyPotService dailyPot() { return dailyPot; }
     public TagService tags() { return tags; }

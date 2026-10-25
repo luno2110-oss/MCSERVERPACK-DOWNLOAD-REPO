@@ -32,7 +32,7 @@ import java.util.function.Consumer;
 public final class Canvas {
 
     /** Ebenen: höher liegt oben. */
-    public static final int Z_BOX = 0, Z_BUTTON = 2, Z_FILL = 3, Z_ICON = 4, Z_TEXT = 5;
+    public static final int Z_BOX = 0, Z_BUTTON = 2, Z_FILL = 3, Z_ICON = 4, Z_TEXT = 5, Z_LINE = 6;
 
     private static final int LINE = 9;
 
@@ -411,6 +411,33 @@ public final class Canvas {
             }
         }
         return this;
+    }
+
+    /** Linie 1 px hoch in Farbe color von x bis x + w - 1 (über Kästen und Knöpfen, unter Icons und Text). */
+    public Canvas line(int x, int y, int w, TextColor color) {
+        return line(x, y, w, color, Z_FILL);
+    }
+
+    private Canvas line(int x, int y, int w, TextColor color, int z) {
+        int p = x, end = x + w;
+        for (KitData.Piece n : KitData.LINE) {
+            while (end - p >= n.width()) {
+                glyphs.add(new Glyph(Kind.BG, p, y, n.width(), 1, n.advance(), z, String.valueOf(n.c()), color, false,
+                        0, KitData.B_MAX, y, y + 1));
+                p += n.width();
+            }
+        }
+        return this;
+    }
+
+    /**
+     * Unterstreichung wie bei Minecraft unter Text bei (x, y) mit Vorschub w: Linie in Zeile y + 8 von x - 1 bis
+     * x + w - 1 über den Schatten der Unterlängen, ihr Schatten (Farbe / 4) eine Zeile tiefer und einen Pixel weiter
+     * rechts unter dem Text der nächsten Zeile.
+     */
+    public Canvas underline(int x, int y, int w, TextColor color) {
+        line(x, y + 9, w + 1, TextColor.color(color.red() / 4, color.green() / 4, color.blue() / 4), Z_FILL);
+        return line(x - 1, y + 8, w + 1, color, Z_LINE);
     }
 
     // =================================================================================================================

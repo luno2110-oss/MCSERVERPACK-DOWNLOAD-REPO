@@ -3,7 +3,7 @@ version: 2.0.14
 main: de.kuby.kubyplugins.KubyPlugins
 api-version: '1.21'
 author: Kuby
-description: All-in-One Plugin für ChaosSMP
+description: All-in-One Plugin für KubySMP
 softdepend: [Votifier, NuVotifier]
 
 commands:
@@ -11,8 +11,12 @@ commands:
     description: "Befehlsübersicht im Chat, mehrere Seiten"
     usage: "/befehle [seite]"
   hilfe:
-    description: "Survival-Hilfe: eine Seite je Feature, blättern mit den Buttons"
+    description: "Hilfe: im SMP der Guide, sonst die Survival-Hilfe (eine Seite je Feature)"
     usage: "/hilfe [seite]"
+  guide:
+    description: "Guide mit 12 Seiten: Start, Wirtschaft, Teams, PvP, Belohnungen und mehr"
+    usage: "/guide [seite]"
+    aliases: [wiki]
   regeln:
     description: "Serverregeln, /regeln <Nummer> für einen Paragraphen"
     usage: "/regeln [Nummer]"

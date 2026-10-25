@@ -692,7 +692,47 @@ public final class KitData {
                 new Piece('\ue2e3', 9, 8, 9),
                 new Piece('\ue2e8', 9, 8, 9),
                 new Piece('\ue51e', 33, 32, 9),
-                new Piece('\ue2e9', 9, 8, 9));
+                new Piece('\ue2e9', 9, 8, 9)),
+        GD_CONTENT(5, null,
+                new Piece('\ue2ee', 9, 8, 9),
+                new Piece('\ue520', 33, 32, 9),
+                new Piece('\ue2ef', 9, 8, 9),
+                new Piece('\ue2f0', 9, 8, 9),
+                new Piece('\ue521', 33, 32, 9),
+                new Piece('\ue2f1', 9, 8, 9),
+                new Piece('\ue2f2', 9, 8, 9),
+                new Piece('\ue522', 33, 32, 9),
+                new Piece('\ue2f3', 9, 8, 9)),
+        GD_HEAD(5, null,
+                new Piece('\ue2f4', 9, 8, 9),
+                new Piece('\ue523', 33, 32, 9),
+                new Piece('\ue2f5', 9, 8, 9),
+                new Piece('\ue2f6', 9, 8, 9),
+                new Piece('\ue524', 33, 32, 9),
+                new Piece('\ue2f7', 9, 8, 9),
+                new Piece('\ue2f8', 9, 8, 9),
+                new Piece('\ue525', 33, 32, 9),
+                new Piece('\ue2f9', 9, 8, 9)),
+        GD_NAV(7, null,
+                new Piece('\ue2fa', 9, 8, 9),
+                new Piece('\ue526', 33, 32, 9),
+                new Piece('\ue2fb', 9, 8, 9),
+                new Piece('\ue2fc', 9, 8, 9),
+                new Piece('\ue527', 33, 32, 9),
+                new Piece('\ue2fd', 9, 8, 9),
+                new Piece('\ue2fe', 9, 8, 9),
+                new Piece('\ue528', 33, 32, 9),
+                new Piece('\ue2ff', 9, 8, 9)),
+        GD_NAV_ON(5, null,
+                new Piece('\ue300', 9, 8, 9),
+                new Piece('\ue529', 33, 32, 9),
+                new Piece('\ue301', 9, 8, 9),
+                new Piece('\ue302', 9, 8, 9),
+                new Piece('\ue52a', 33, 32, 9),
+                new Piece('\ue303', 9, 8, 9),
+                new Piece('\ue304', 9, 8, 9),
+                new Piece('\ue52b', 33, 32, 9),
+                new Piece('\ue305', 9, 8, 9));
 
         /** [Zeile oben/mitte/unten][links/mitte/rechts] */
         public final Piece[][] p;
@@ -806,14 +846,14 @@ public final class KitData {
 
     /** Balken-Füllfarben; Stücke in den Breiten 1, 2, 4, 8, 16, 32. */
     public enum Fill {
-        GOLD(new Piece('\ue2fa', 2, 1, 5), new Piece('\ue2fb', 3, 2, 5), new Piece('\ue2fc', 5, 4, 5), new Piece('\ue2fd', 9, 8, 5), new Piece('\ue524', 17, 16, 5), new Piece('\ue525', 33, 32, 5)),
-        CYAN(new Piece('\ue2fe', 2, 1, 5), new Piece('\ue2ff', 3, 2, 5), new Piece('\ue300', 5, 4, 5), new Piece('\ue301', 9, 8, 5), new Piece('\ue526', 17, 16, 5), new Piece('\ue527', 33, 32, 5)),
-        GREEN(new Piece('\ue302', 2, 1, 5), new Piece('\ue303', 3, 2, 5), new Piece('\ue304', 5, 4, 5), new Piece('\ue305', 9, 8, 5), new Piece('\ue528', 17, 16, 5), new Piece('\ue529', 33, 32, 5)),
-        PURPLE(new Piece('\ue306', 2, 1, 5), new Piece('\ue307', 3, 2, 5), new Piece('\ue308', 5, 4, 5), new Piece('\ue309', 9, 8, 5), new Piece('\ue52a', 17, 16, 5), new Piece('\ue52b', 33, 32, 5)),
-        RED(new Piece('\ue30a', 2, 1, 5), new Piece('\ue30b', 3, 2, 5), new Piece('\ue30c', 5, 4, 5), new Piece('\ue30d', 9, 8, 5), new Piece('\ue52c', 17, 16, 5), new Piece('\ue52d', 33, 32, 5)),
-        BP_VIOLET(new Piece('\ue30e', 2, 1, 5), new Piece('\ue30f', 3, 2, 5), new Piece('\ue310', 5, 4, 5), new Piece('\ue311', 9, 8, 5), new Piece('\ue52e', 17, 16, 5), new Piece('\ue52f', 33, 32, 5)),
-        BP_GREEN(new Piece('\ue312', 2, 1, 5), new Piece('\ue313', 3, 2, 5), new Piece('\ue314', 5, 4, 5), new Piece('\ue315', 9, 8, 5), new Piece('\ue530', 17, 16, 5), new Piece('\ue531', 33, 32, 5)),
-        BP_GOLD(new Piece('\ue316', 2, 1, 5), new Piece('\ue317', 3, 2, 5), new Piece('\ue318', 5, 4, 5), new Piece('\ue319', 9, 8, 5), new Piece('\ue532', 17, 16, 5), new Piece('\ue533', 33, 32, 5));
+        GOLD(new Piece('\ue316', 2, 1, 5), new Piece('\ue317', 3, 2, 5), new Piece('\ue318', 5, 4, 5), new Piece('\ue319', 9, 8, 5), new Piece('\ue532', 17, 16, 5), new Piece('\ue533', 33, 32, 5)),
+        CYAN(new Piece('\ue31a', 2, 1, 5), new Piece('\ue31b', 3, 2, 5), new Piece('\ue31c', 5, 4, 5), new Piece('\ue31d', 9, 8, 5), new Piece('\ue534', 17, 16, 5), new Piece('\ue535', 33, 32, 5)),
+        GREEN(new Piece('\ue31e', 2, 1, 5), new Piece('\ue31f', 3, 2, 5), new Piece('\ue320', 5, 4, 5), new Piece('\ue321', 9, 8, 5), new Piece('\ue536', 17, 16, 5), new Piece('\ue537', 33, 32, 5)),
+        PURPLE(new Piece('\ue322', 2, 1, 5), new Piece('\ue323', 3, 2, 5), new Piece('\ue324', 5, 4, 5), new Piece('\ue325', 9, 8, 5), new Piece('\ue538', 17, 16, 5), new Piece('\ue539', 33, 32, 5)),
+        RED(new Piece('\ue326', 2, 1, 5), new Piece('\ue327', 3, 2, 5), new Piece('\ue328', 5, 4, 5), new Piece('\ue329', 9, 8, 5), new Piece('\ue53a', 17, 16, 5), new Piece('\ue53b', 33, 32, 5)),
+        BP_VIOLET(new Piece('\ue32a', 2, 1, 5), new Piece('\ue32b', 3, 2, 5), new Piece('\ue32c', 5, 4, 5), new Piece('\ue32d', 9, 8, 5), new Piece('\ue53c', 17, 16, 5), new Piece('\ue53d', 33, 32, 5)),
+        BP_GREEN(new Piece('\ue32e', 2, 1, 5), new Piece('\ue32f', 3, 2, 5), new Piece('\ue330', 5, 4, 5), new Piece('\ue331', 9, 8, 5), new Piece('\ue53e', 17, 16, 5), new Piece('\ue53f', 33, 32, 5)),
+        BP_GOLD(new Piece('\ue332', 2, 1, 5), new Piece('\ue333', 3, 2, 5), new Piece('\ue334', 5, 4, 5), new Piece('\ue335', 9, 8, 5), new Piece('\ue540', 17, 16, 5), new Piece('\ue541', 33, 32, 5));
 
         public final Piece[] p;
 
@@ -822,15 +862,17 @@ public final class KitData {
         }
     }
 
-    public static final Piece BAR_L = new Piece('\ue2ee', 9, 8, 7);
-    public static final Piece BAR_M = new Piece('\ue520', 33, 32, 7);
-    public static final Piece BAR_R = new Piece('\ue2ef', 9, 8, 7);
-    public static final Piece[] BAR_NARROW = {new Piece('\ue521', 17, 16, 7), new Piece('\ue2f0', 9, 8, 7), new Piece('\ue2f1', 5, 4, 7), new Piece('\ue2f2', 3, 2, 7), new Piece('\ue2f3', 2, 1, 7)};
+    public static final Piece BAR_L = new Piece('\ue306', 9, 8, 7);
+    public static final Piece BAR_M = new Piece('\ue52c', 33, 32, 7);
+    public static final Piece BAR_R = new Piece('\ue307', 9, 8, 7);
+    public static final Piece[] BAR_NARROW = {new Piece('\ue52d', 17, 16, 7), new Piece('\ue308', 9, 8, 7), new Piece('\ue309', 5, 4, 7), new Piece('\ue30a', 3, 2, 7), new Piece('\ue30b', 2, 1, 7)};
     /** Flacher Balken (Battle-Pass). */
-    public static final Piece BAR2_L = new Piece('\ue2f4', 9, 8, 7);
-    public static final Piece BAR2_M = new Piece('\ue522', 33, 32, 7);
-    public static final Piece BAR2_R = new Piece('\ue2f5', 9, 8, 7);
-    public static final Piece[] BAR2_NARROW = {new Piece('\ue523', 17, 16, 7), new Piece('\ue2f6', 9, 8, 7), new Piece('\ue2f7', 5, 4, 7), new Piece('\ue2f8', 3, 2, 7), new Piece('\ue2f9', 2, 1, 7)};
+    public static final Piece BAR2_L = new Piece('\ue30c', 9, 8, 7);
+    public static final Piece BAR2_M = new Piece('\ue52e', 33, 32, 7);
+    public static final Piece BAR2_R = new Piece('\ue30d', 9, 8, 7);
+    public static final Piece[] BAR2_NARROW = {new Piece('\ue52f', 17, 16, 7), new Piece('\ue30e', 9, 8, 7), new Piece('\ue30f', 5, 4, 7), new Piece('\ue310', 3, 2, 7), new Piece('\ue311', 2, 1, 7)};
+    /** Linien 1 px hoch (weiß, eingefärbt): 32, 16, 8, 4, 2, 1 px. */
+    public static final Piece[] LINE = {new Piece('\ue530', 33, 32, 1), new Piece('\ue531', 17, 16, 1), new Piece('\ue312', 9, 8, 1), new Piece('\ue313', 5, 4, 1), new Piece('\ue314', 3, 2, 1), new Piece('\ue315', 2, 1, 1)};
     public static final Piece BACK = new Piece('\ue780', 21, 20, 20);
     public static final Piece BACK_HELP = new Piece('\ue781', 23, 22, 22);
 
@@ -1224,7 +1266,20 @@ public final class KitData {
         BP_TAB_CROWN(21, 17, 1, "\uf041", "F"),
         BP_TAB_SCROLL(21, 17, 1, "\uf042", "F"),
         BP_TICKET(38, 37, 2, "\uf043\uf044\uf045\u0000", "Q720"),
-        BP_TITLE(110, 15, 4, "\uf046\uf047\uf048\uf049", "QPQ?");
+        BP_TITLE(110, 15, 4, "\uf046\uf047\uf048\uf049", "QPQ?"),
+        GD_BOOK(32, 30, 1, "\uf04a", "Q"),
+        GD_NAV00(7, 8, 1, "\uf04b", "8"),
+        GD_NAV01(8, 8, 1, "\uf04c", "9"),
+        GD_NAV02(6, 7, 1, "\uf04d", "7"),
+        GD_NAV03(6, 8, 1, "\uf04e", "7"),
+        GD_NAV04(6, 7, 1, "\uf04f", "7"),
+        GD_NAV05(7, 8, 1, "\uf050", "8"),
+        GD_NAV06(8, 8, 1, "\uf051", "9"),
+        GD_NAV07(7, 7, 1, "\uf052", "8"),
+        GD_NAV08(8, 8, 1, "\uf053", "9"),
+        GD_NAV09(7, 7, 1, "\uf054", "8"),
+        GD_NAV10(8, 6, 1, "\uf055", "9"),
+        GD_NAV11(6, 8, 1, "\uf056", "7");
 
         public final int width, height, cols;
         public final String chars, advances;

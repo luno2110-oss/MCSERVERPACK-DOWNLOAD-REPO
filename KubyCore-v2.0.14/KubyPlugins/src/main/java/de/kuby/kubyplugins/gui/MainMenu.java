@@ -43,7 +43,7 @@ public final class MainMenu extends GuiMenu {
         list.add(new Entry(Material.CLOCK, "Täglich", "30-Tage-Kalender mit Belohnungen", p -> new DailyMenu(plugin).open(p)));
         list.add(new Entry(Material.WHITE_BANNER, "Team", "Team verwalten, Kasse und Teamhome", p -> new TeamMenu(plugin).open(p)));
         list.add(new Entry(Material.CHEST, "Markt", "Items kaufen und verkaufen", p -> new MarketMenu(plugin).open(p)));
-        list.add(new Entry(Material.ENDER_PEARL, "Wildnis", "Zufalls-Teleport in die Chaos-Welt", p -> {
+        list.add(new Entry(Material.ENDER_PEARL, "Wildnis", "Zufalls-Teleport in die Kuby-Welt", p -> {
             p.closeInventory();
             Teleports.randomTeleport(plugin, p);
         }));
@@ -61,6 +61,7 @@ public final class MainMenu extends GuiMenu {
         // Seite 3: Schutz und Lager
         list.add(new Entry(Material.CLOCK, "Spielzeit", "Stufen nach aktiver Spielzeit", p -> new PlaytimeScreen(plugin).open(p)));
         list.add(new Entry(Material.ENDER_CHEST, "Enderchest", "Dein erweiterbares Lager", p -> p.openInventory(plugin.enderchests().open(p))));
+        list.add(new Entry(Material.KNOWLEDGE_BOOK, "Guide", "Alles Wichtige auf zwölf Seiten", p -> p.performCommand("guide")));
         for (KubyPlugins.MainEntry e : plugin.mainEntries()) {
             list.add(new Entry(e.icon(), e.name(), e.desc(), e.action()));
         }

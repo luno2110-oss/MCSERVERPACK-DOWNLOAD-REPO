@@ -158,6 +158,24 @@ final class SelfTest {
                     12_345, 7, v.levelPrice(), 0, "levels"), ba);
         });
 
+        // Guide (SMP): alle Seiten; jede muss in den Textkasten passen
+        de.kuby.kubyplugins.gui.GuideScreen.Actions ga = new de.kuby.kubyplugins.gui.GuideScreen.Actions() {
+            public Consumer<Player> page(int index) { return NO; }
+            public String url(String target) { return "https://discord.gg/kuby"; }
+        };
+        List<de.kuby.kubyplugins.gui.GuideScreen.Page> guide = plugin.guide().sample();
+        if (guide.isEmpty()) fails.add("Guide: keine Seiten in guide.pages");
+        for (int i = 0; i < guide.size(); i++) {
+            final int k = i;
+            de.kuby.kubyplugins.gui.GuideScreen.Page pg = guide.get(i);
+            int used = de.kuby.kubyplugins.gui.GuideScreen.usedLines(pg, plugin.guide().discordLink());
+            if (used > de.kuby.kubyplugins.gui.GuideScreen.maxLines()) {
+                fails.add("Guide " + pg.id() + ": " + used + " Zeilen, Platz für " + de.kuby.kubyplugins.gui.GuideScreen.maxLines());
+            }
+            canvas.accept("Guide " + pg.id(), () -> de.kuby.kubyplugins.gui.GuideScreen.canvas(guide, k, false,
+                    plugin.guide().discordLink(), ga));
+        }
+
         // Eingabe-Dialoge wie in Support, Freunde, Casino, Heiraten, Köpfe (Bestätigung, CLOSE, Text und mehrzeilig)
         try {
             DialogBase base = DialogBase.builder(Msg.parse("<b>Test"))
