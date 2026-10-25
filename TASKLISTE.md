@@ -105,6 +105,8 @@ Reihenfolge wie das Hilfe-Karussell der Referenz. Jede Seite: Titel, Untertitel,
 - [x] 4.28 Statistik: `/stats [Spieler]` (auch offline) als Dialog mit Kacheln für den aktuellen Modus. Survival: aktive Spielzeit, Coins (auch offline aus dem gespeicherten Stand), Level, Job, abgebaute Blöcke, Tode, besiegte Monster (neue Zähler in KubySurvival, `stats.yml`), Fische, Quests, Tokens, Grundstücke, Votes; SMP: Kills, Tode, K/D, Trophäen, Liga, XP, Coins, Spielzeit, Votes. Kopf mit Online-Status bzw. „zuletzt online vor …“, unten Ranglisten-Knöpfe: `/baltop`, `/level top`, `/quest top`, `/casino stats` (SMP: Trophäen, Casino). Ohne Pack als Chat-Liste
 - [x] 4.29 Info-Leiste (Survival-Leiste oben): `/bossbar` wählt aus, was oben steht (Geld, Job, Ort, Uhrzeit, verfolgte Quest), `/bossbar on|off|reset`
 
+- [x] Abschluss-Prüfung Gruppe 4 (Dupes/Exploits): Möbel können nicht doppelt zurückgegeben werden (zwei Spieler im selben Moment), Support-Weitergabe nur durch den zuständigen Helfer oder das Team, Kisten nehmen den Schlüssel vor dem Gewinn und sperren während der Animation, Kosmetik-Kauf prüft Besitz und Preis, Spielzeit-Stufen je Modus nur einmal, Bank/Ehe-Konto bucht nur mit Deckung, Gräber geben Items nur einmal zurück (geprüft)
+
 ## Ordnergruppe 5 – Scoreboard und Anzeigen (Refs: Video Scoreboard_Money, GELD_XP-Anzeige)
 - [x] 5.1 Sidebar SMP (v1.32)
 - [x] 5.2 Sidebar Survival nach Clip (v1.34). Level, Job, Tokens zeigen noch „—“, die Systeme fehlen

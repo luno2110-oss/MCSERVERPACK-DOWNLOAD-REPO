@@ -345,13 +345,14 @@ public final class FurnitureService implements Listener {
             send(p, "<red>Aufheben darf nur, wer hier bauen darf.");
             return;
         }
-        for (Entity s : seatsOf(f)) s.eject();
-        despawn(f);
         synchronized (this) {
-            placed.remove(f.id);
+            // nur einmal zurückgeben, auch wenn zwei im selben Moment zuschlagen
+            if (placed.remove(f.id) == null) return;
             for (int[] c : cellsOf(f.at, f.yaw, f.def.width())) cells.remove(cellKey(f.at.getWorld(), c));
             save();
         }
+        for (Entity s : seatsOf(f)) s.eject();
+        despawn(f);
         // das Möbel geht an den Besitzer zurück (online direkt, sonst in die Abholbox)
         Player owner = Bukkit.getPlayer(f.owner);
         if (owner != null && survival(owner)) give(owner, f.def);
