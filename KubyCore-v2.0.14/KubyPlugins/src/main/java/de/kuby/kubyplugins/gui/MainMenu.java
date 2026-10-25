@@ -55,7 +55,7 @@ public final class MainMenu extends GuiMenu {
         list.add(new Entry(Material.GOLD_BLOCK, "Tagespot", "Lose kaufen, Ziehung um 19 Uhr", p -> new DailyPotMenu(plugin).open(p)));
         list.add(new Entry(Material.FIRE_CHARGE, "Duo-RTP", "Zu zweit an einen Zufallsort, Kampf!", p -> new RtpQueueMenu(plugin).open(p)));
         list.add(new Entry(Material.NAME_TAG, "Titel", "Wähle deinen Titel neben dem Namen", p -> new TagsMenu(plugin).open(p)));
-        list.add(new Entry(Material.ENCHANTED_BOOK, "Battlepass", "100 Stufen, Quests und Belohnungen", p -> new BattlepassMenu(plugin, 0).open(p)));
+        list.add(new Entry(Material.ENCHANTED_BOOK, "Battlepass", "100 Stufen, Quests und Belohnungen", p -> plugin.battlepassScreen().open(p)));
         list.add(new Entry(Material.IRON_CHESTPLATE, "Kits", "Starter- und Rang-Kits abholen", p -> new KitMenu(plugin).open(p)));
         list.add(new Entry(Material.AMETHYST_SHARD, "Kosmetik", "Hüte, Spuren und Effekte", p -> new CosmeticsScreen(plugin).open(p)));
         // Seite 3: Schutz und Lager

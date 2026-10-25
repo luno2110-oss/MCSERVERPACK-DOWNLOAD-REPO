@@ -301,6 +301,7 @@ public final class CrateService implements Listener {
         }
         Reward win = roll(c);
         give(p, c, win);
+        plugin.battlepass().count(id, "CRATE", 1, c.key().toUpperCase(java.util.Locale.ROOT));
         String k = key(block);
         if (skip || busy.contains(k)) {
             announce(p, c, win);

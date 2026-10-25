@@ -30,11 +30,17 @@ def mode_color(r):
     return np.array(Counter(map(tuple, r.reshape(-1, 3))).most_common(1)[0][0])
 
 
-def nine_auto(a, x, y, w, h, n=7, mirror_bottom=False):
+def nine_auto(a, x, y, w, h, n=7, mirror_bottom=False, mid=None):
     """9-Slice eines Kastens (x, y, w, h): Mittelspalte und -zeile automatisch dort, wo innen nur Füllung ist.
     mirror_bottom: untere Zeilen = obere gespiegelt (wenn innen etwas bis nah an die Unterkante reicht, z. B. die
-    Knöpfe in den Karten der Übersicht)."""
+    Knöpfe in den Karten der Übersicht). mid: (Spalte, Zeile) relativ zum Kasten fest vorgeben (wenn der Kasten
+    innen größtenteils mit anderen Kästen gefüllt ist, z. B. die Reihen mit Feldern im Battle-Pass)."""
     box = a[y:y + h, x:x + w]
+    if mid is not None:
+        mx, my = mid
+        xs = list(range(n)) + [mx] + list(range(w - n, w))
+        ys = list(range(n)) + [my] + list(range(h - n, h))
+        return _slice(box, xs, ys, n, mirror_bottom)
     fill = mode_color(box[n:h - n, n:w - n])
 
     def score_col(c):
@@ -52,6 +58,10 @@ def nine_auto(a, x, y, w, h, n=7, mirror_bottom=False):
     my = max(rows, key=lambda r: (score_row(r), tuple(map(tuple, box[r, :n])) + tuple(map(tuple, box[r, w - n:])) == edge_r))
     xs = list(range(n)) + [mx] + list(range(w - n, w))
     ys = list(range(n)) + [my] + list(range(h - n, h))
+    return _slice(box, xs, ys, n, mirror_bottom)
+
+
+def _slice(box, xs, ys, n, mirror_bottom):
     size = 2 * n + 1
     out = np.zeros((size, size, 4), dtype=np.uint8)
 

@@ -106,7 +106,7 @@ public final class BattlepassEditorMenu extends GuiMenu {
 
     private void store(List<Reward> all) {
         List<String> lines = new ArrayList<>();
-        for (Reward r : all) lines.add(r.level() + ";" + r.track() + ";" + r.type() + ";" + r.value());
+        for (Reward r : all) lines.add(r.line());
         plugin.getConfig().set("battlepass.rewards", lines);
         plugin.saveConfig();
     }

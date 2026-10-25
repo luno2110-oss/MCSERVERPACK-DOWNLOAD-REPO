@@ -133,11 +133,15 @@ import build_settings  # noqa: E402
 
 import build_jewelshop  # noqa: E402
 
+import build_battlepass  # noqa: E402
+
 SLICED_BOXES = build_settings.boxes()
 SLICED_BOXES.update(build_jewelshop.boxes())
+SLICED_BOXES.update(build_battlepass.boxes())
 ALL_BOXES = list(BOXES) + list(CASINO_BOXES) + list(SLICED_BOXES)
-# Kästen, die auch schmaler als 48 px gehen (Zahlenfelder im Roulette-Raster): schmale Mittelstücke
-NARROW_BOXES = ("field_red", "field_green", "field_black", "field_felt")
+# Kästen, die auch schmaler als 48 px gehen (Zahlenfelder im Roulette-Raster, Battle-Pass-Felder und -Knöpfe):
+# schmale Mittelstücke
+NARROW_BOXES = ("field_red", "field_green", "field_black", "field_felt") + tuple(build_battlepass.boxes())
 
 # Knöpfe 22 px: (Rand, Füllung oben hell, Füllung, Schatten 1, Schatten 2) oder Umriss-Knopf (Rand, Füllung)
 BUTTONS = {
@@ -229,6 +233,10 @@ BAR_FILLS = {
     "green": ("A6F5A0", "55D65A", "2E9A36"),
     "purple": ("E0B0FF", "B060F6", "7A3AB0"),
     "red": ("FFA0A8", "F04656", "A82030"),
+    # Battle-Pass (Referenzen2): flacher Balken BAR2, Füllung oben hell, drei Zeilen Mitte, unten dunkel
+    "bp_violet": ("C7B6FC", "AFA0DE", "8479A8"),
+    "bp_green": ("6DE288", "60C878", "48975B"),
+    "bp_gold": ("FCC965", "DEB159", "A88643"),
 }
 BAR_H = 7
 
@@ -441,6 +449,16 @@ def draw_bar_bg(w):
     return img
 
 
+def draw_bar_flat(w):
+    """Balken des Battle-Pass: Rand 0E0D0F ohne Rundung, innen oben 222025, sonst 322F36."""
+    img = Image.new("RGBA", (w, BAR_H), rgb("0E0D0F"))
+    px = img.load()
+    for y in range(1, BAR_H - 1):
+        for x in range(1, w - 1):
+            px[x, y] = rgb("222025") if y == 1 else rgb("322F36")
+    return img
+
+
 def draw_bar_fill(w, name):
     top, mid, bot = (rgb(v) for v in BAR_FILLS[name])
     img = Image.new("RGBA", (w, BAR_H - 2), T)
@@ -579,8 +597,8 @@ class Sheet:
 
 
 def build_pieces():
-    caps9 = Sheet("caps9", CAP, ROW, 0xE400)
-    segs9 = Sheet("segs9", SEG, ROW, 0xE500)
+    caps9 = Sheet("caps9", CAP, ROW, 0xE000)
+    segs9 = Sheet("segs9", SEG, ROW, 0xE400)
     caps22 = Sheet("caps22", CAP, BTN_H, 0xE600)
     segs22 = Sheet("segs22", SEG, BTN_H, 0xE700)
     misc = Sheet("misc", 24, BTN_H, 0xE780)
@@ -621,6 +639,12 @@ def build_pieces():
     caps9.add(("bar", "r"), bg.crop((CAP + SEG, 0, 2 * CAP + SEG, BAR_H)))
     for w in NARROW:
         (segs9 if w > CAP else caps9).add(("bar", w), bg.crop((CAP, 0, CAP + w, BAR_H)))
+    flat = draw_bar_flat(CAP + SEG + CAP)
+    caps9.add(("bar2", "l"), flat.crop((0, 0, CAP, BAR_H)))
+    segs9.add(("bar2", "m"), flat.crop((CAP, 0, CAP + SEG, BAR_H)))
+    caps9.add(("bar2", "r"), flat.crop((CAP + SEG, 0, 2 * CAP + SEG, BAR_H)))
+    for w in NARROW:
+        (segs9 if w > CAP else caps9).add(("bar2", w), flat.crop((CAP, 0, CAP + w, BAR_H)))
     for name in BAR_FILLS:
         for w in (1, 2, 4, 8):
             caps9.add(("fill", name, w), draw_bar_fill(w, name))
@@ -641,7 +665,11 @@ def build_pieces():
     for x, y in arrow:
         hback.putpixel((x, y), rgb("FCFCFC"))
     misc.add(("back_help",), hback)
-    return [caps9, segs9, caps22, segs22, misc, caps16, segs16]
+    sheets = [caps9, segs9, caps22, segs22, misc, caps16, segs16]
+    # alle Bögen liegen in derselben Schrift (b<s>): Zeichenbereiche dürfen sich nicht überschneiden
+    for a, b in zip(sheets, sheets[1:] + [Sheet("icons", 0, 0, 0xE900)]):
+        assert a.first + len(a.cells) <= b.first, "Bogen %s (%d Zellen) läuft in %s" % (a.name, len(a.cells), b.name)
+    return sheets
 
 
 # =====================================================================================================================
@@ -671,6 +699,14 @@ VANILLA_ICONS = {
     # Spielzeit und Kisten
     "trial_key": "item/trial_key.png", "ominous_trial_key": "item/ominous_trial_key.png",
     "tripwire_hook": "block/tripwire_hook.png",
+    # Battle-Pass: Aufgaben und Belohnungen
+    "iron_sword": "item/iron_sword.png", "bell": "item/bell.png", "diamond_sword": "item/diamond_sword.png",
+    "bow": "item/bow.png", "ender_pearl": "item/ender_pearl.png", "netherite_ingot": "item/netherite_ingot.png",
+    "netherite_pickaxe": "item/netherite_pickaxe.png", "golden_apple": "item/golden_apple.png",
+    "elytra": "item/elytra.png", "blaze_rod": "item/blaze_rod.png",
+    "bone": "item/bone.png", "cooked_beef": "item/cooked_beef.png",
+    "oak_sapling": "block/oak_sapling.png", "iron_axe": "item/iron_axe.png", "diamond_axe": "item/diamond_axe.png",
+    "shulker_shell": "item/shulker_shell.png", "dragon_breath": "item/dragon_breath.png",
 }
 
 
@@ -1060,6 +1096,11 @@ def write_java(sheets, widths, icons, icon_chars, icon_adv, small_data=(), title
     L.append("    public static final Piece BAR_M = %s;" % piece(("bar", "m")))
     L.append("    public static final Piece BAR_R = %s;" % piece(("bar", "r")))
     L.append("    public static final Piece[] BAR_NARROW = {%s};" % ", ".join(piece(("bar", w)) for w in NARROW))
+    L.append("    /** Flacher Balken (Battle-Pass). */")
+    L.append("    public static final Piece BAR2_L = %s;" % piece(("bar2", "l")))
+    L.append("    public static final Piece BAR2_M = %s;" % piece(("bar2", "m")))
+    L.append("    public static final Piece BAR2_R = %s;" % piece(("bar2", "r")))
+    L.append("    public static final Piece[] BAR2_NARROW = {%s};" % ", ".join(piece(("bar2", w)) for w in NARROW))
     L.append("    public static final Piece BACK = %s;" % piece(("back",)))
     L.append("    public static final Piece BACK_HELP = %s;" % piece(("back_help",)))
     L.append("")

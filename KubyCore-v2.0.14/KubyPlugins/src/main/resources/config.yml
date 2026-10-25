@@ -213,15 +213,59 @@ meta:
     - "NETHERITE_SCRAP"
     - "OAK_LOG"
 
+# Battle-Pass (/battlepass, Dialog mit Grafik-Pack, sonst Truhen-Menü). 100 Stufen, Punkte aus Aufgaben.
+# Season: first-season beginnt am season-start und dauert season-days Tage, danach automatisch die nächste
+# (alle starten wieder bei Stufe 0 ohne Premium). Premium und Stufen kosten Juwelen.
+# rewards (leer = Standard): STUFE;FREE|PREMIUM;COINS|XP|JEWELS|COMMAND|ITEM;WERT[;ICON[;NAME]]
+#   z. B. "6;PREMIUM;ITEM;DIAMOND_PICKAXE" oder "4;FREE;COMMAND;keys give %player% episch 1;bp_key;Episch-Schlüssel"
+# Aufgaben: ID;Name|English;ICON;TYP[:ZIEL];ANZAHL;PUNKTE[;modi]. Jeden Tag daily-count aus quests-daily, jede Woche
+#   (Montag) weekly-count aus quests-weekly, für alle Spieler gleich. Typen: KILL (Ziel: Mob, MONSTER, ANIMAL, BOSS),
+#   MINE (Block, ORE, LOG), COLLECT (Drop, z. B. REDSTONE), FISH, BREED, TAME, CRATE, LEVELS, TRAVEL (km),
+#   PLAYTIME (Minuten), VOTE, TRADE, DUEL, DAILY, EAT, CRAFT, ENCHANT, PLACE. modi: z. B. smp (sonst überall).
+#   ICON: iron_sword, iron_pickaxe, wheat, bell, rod, bow, clock, experience, emerald, ender_pearl, compass ...
 battlepass:
-  premium-price: 950
+  season-start: "2026-10-01"
+  season-days: 90
+  first-season: 1
+  premium-price: 1000
+  premium-perks: "Ausrüstung, Spawner und Kosmetik"
+  premium-perks-en: "Gear, spawners and cosmetics"
+  level-price: 100
+  level-daily-limit: 999
   key-command: "keys give %player% keyall 1"
-  xp-per-level: 100
-  quests:
-    - "kill;Spieler besiegen;10;30"
-    - "duel;Duelle gewinnen;3;50"
-    - "trade;Handel abschließen;2;40"
-    - "daily;Täglich abholen;1;20"
+  key-name: "Keyall-Schlüssel"
+  xp-per-level: 250
+  daily-count: 4
+  weekly-count: 6
+  rewards: []
+  quests-daily:
+    - "spinnen;Spinnenfänger|Spider Catcher;iron_sword;KILL:SPIDER;20;100"
+    - "redstone;Redstone-Rausch|Redstone Rush;iron_pickaxe;COLLECT:REDSTONE;128;120"
+    - "freund;Bester Freund|Best Friend;wheat;TAME;1;100"
+    - "gluecksritter;Glücksritter|Lucky Knight;bell;CRATE;3;150"
+    - "zombies;Zombiejagd|Zombie Hunt;iron_sword;KILL:ZOMBIE;25;100"
+    - "skelette;Knochenbrecher|Bone Breaker;bow;KILL:SKELETON;20;100"
+    - "angler;Angler|Angler;rod;FISH;15;100"
+    - "holz;Holzfäller|Lumberjack;iron_axe;MINE:LOG;64;100"
+    - "erze;Bergmann|Miner;iron_pickaxe;MINE:ORE;40;120"
+    - "zuechter;Züchter|Breeder;wheat;BREED;10;100"
+    - "koch;Feinschmecker|Gourmet;cooked_beef;EAT;10;80"
+    - "spielzeit;Stammgast|Regular;clock;PLAYTIME;60;120"
+    - "wanderer;Wanderer|Hiker;compass;TRAVEL;3;100"
+    - "vote;Unterstützer|Supporter;paper;VOTE;1;80"
+  quests-weekly:
+    - "endjaeger;Endjäger|End Hunter;iron_sword;KILL:ENDERMAN;100;700"
+    - "xpjaeger;XP-Jäger|XP Hunter;bell;LEVELS;50;700"
+    - "weltenbummler;Weltenbummler|Globetrotter;bell;TRAVEL;15;600"
+    - "bossbezwinger;Bossbezwinger|Boss Slayer;iron_sword;KILL:BOSS;2;1000"
+    - "monster;Monsterschlächter|Monster Slayer;iron_sword;KILL:MONSTER;750;600"
+    - "erzmagnat;Erz-Magnat|Ore Tycoon;iron_pickaxe;MINE:ORE;500;700"
+    - "angelprofi;Angelprofi|Fishing Pro;rod;FISH;100;600"
+    - "kisten;Kistenjäger|Crate Hunter;bell;CRATE;15;600"
+    - "dauerbrenner;Dauerbrenner|Marathon;clock;PLAYTIME;600;800"
+    - "voter;Treuer Voter|Loyal Voter;paper;VOTE;7;700"
+    - "duellant;Duellant|Duelist;diamond_sword;DUEL;5;800;smp"
+    - "haendler;Händler|Trader;emerald;TRADE;3;500"
 
 # Kosmetik (/cosmetics): ID;HAT|TRAIL|KILL|TELEPORT;Partikel oder Hut-Modell;Anzeige;Seltenheit;Währung;Preis;BP-Stufe
 # Währung: MONEY, XP, JEWELS, NONE (gratis bzw. Battlepass-Stufe), CRATE (nur aus Kisten: /cosmetics give <Spieler> <ID>).

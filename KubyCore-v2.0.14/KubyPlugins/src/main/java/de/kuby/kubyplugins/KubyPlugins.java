@@ -247,6 +247,7 @@ public final class KubyPlugins extends JavaPlugin {
         getServer().getPluginManager().registerEvents(translator, this);
         settingsScreen = new de.kuby.kubyplugins.gui.SettingsScreen(this);
         jewelShop = new de.kuby.kubyplugins.gui.JewelShopScreen(this);
+        battlepassScreen = new de.kuby.kubyplugins.gui.BattlepassScreen(this);
         getServer().getPluginManager().registerEvents(new de.kuby.kubyplugins.listener.ChatSettingsListener(this), this);
         playtime = new PlaytimeService(this);
         getServer().getPluginManager().registerEvents(playtime, this);
@@ -365,6 +366,8 @@ public final class KubyPlugins extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new TotenkisteListener(this), this);
         getServer().getPluginManager().registerEvents(new ModeListener(this), this);
         getServer().getPluginManager().registerEvents(new XpSourceListener(this), this);
+        getServer().getPluginManager().registerEvents(new de.kuby.kubyplugins.listener.BattlepassListener(this), this);
+        battlepass.start();
         getServer().getPluginManager().registerEvents(new de.kuby.kubyplugins.listener.ModelListener(this), this);
         getServer().getPluginManager().registerEvents(new WorldBorderListener(this), this);
         getServer().getPluginManager().registerEvents(new EditListener(this), this);
@@ -481,6 +484,10 @@ public final class KubyPlugins extends JavaPlugin {
     private de.kuby.kubyplugins.gui.JewelShopScreen jewelShop;
     /** Juwelenshop-Dialog im SMP. */
     public de.kuby.kubyplugins.gui.JewelShopScreen jewelShop() { return jewelShop; }
+
+    private de.kuby.kubyplugins.gui.BattlepassScreen battlepassScreen;
+
+    public de.kuby.kubyplugins.gui.BattlepassScreen battlepassScreen() { return battlepassScreen; }
     public HotbarDisplay hotbar() { return hotbar; }
     public DailyPotService dailyPot() { return dailyPot; }
     public TagService tags() { return tags; }

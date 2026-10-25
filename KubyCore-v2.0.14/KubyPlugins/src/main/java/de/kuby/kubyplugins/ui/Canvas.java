@@ -384,16 +384,50 @@ public final class Canvas {
         return this;
     }
 
+    /**
+     * Flacher Fortschrittsbalken (Battle-Pass, 7 px hoch, eckig, ab 8 px breit; schmaler als 16 überlappen die Enden),
+     * frac 0..1; begonnener Fortschritt mindestens 2 px.
+     */
+    public Canvas barFlat(int x, int y, int w, double frac, KitData.Fill fill) {
+        w = Math.max(w, KitData.CAP);
+        piece(x, y, KitData.BAR2_L, Z_BUTTON);
+        span(x + KitData.CAP, x + w - KitData.CAP, y, KitData.BAR2_M, KitData.BAR2_NARROW, Z_BUTTON);
+        piece(x + w - KitData.CAP, y, KitData.BAR2_R, Z_BUTTON);
+        int inner = w - 2;
+        int fw = (int) Math.round(Math.max(0, Math.min(1, frac)) * inner);
+        if (frac > 0) fw = Math.min(inner, Math.max(fw, 2));
+        int p = x + 1;
+        int end = x + 1 + fw;
+        KitData.Piece big = fill.p[5];
+        while (end - p >= big.width()) {
+            piece(p, y + 1, big, Z_FILL);
+            p += big.width();
+        }
+        for (int i = 4; i >= 0; i--) {
+            KitData.Piece n = fill.p[i];
+            while (end - p >= n.width()) {
+                piece(p, y + 1, n, Z_FILL);
+                p += n.width();
+            }
+        }
+        return this;
+    }
+
     // =================================================================================================================
     // Icons
     // =================================================================================================================
 
     /** Icon 16 x 16 (big: 32 x 32) mit linker oberer Ecke bei (x, y). */
     public Canvas icon(int x, int y, KitData.Icon icon, boolean big) {
+        return icon(x, y, icon, big, NamedTextColor.WHITE);
+    }
+
+    /** Icon eingefärbt (die Textur wird mit tint multipliziert, z. B. abgedunkelt für gesperrte Felder). */
+    public Canvas icon(int x, int y, KitData.Icon icon, boolean big, TextColor tint) {
         int size = big ? 32 : 16;
         char c = big ? icon.c32 : icon.c16;
         glyphs.add(new Glyph(Kind.ICON, x, y, size, size, big ? icon.adv32 : icon.adv16, Z_ICON, String.valueOf(c),
-                NamedTextColor.WHITE, false, Math.max(KitData.I_MIN, 7 - size), KitData.I_MAX, y, y + size));
+                tint, false, Math.max(KitData.I_MIN, 7 - size), KitData.I_MAX, y, y + size));
         return this;
     }
 

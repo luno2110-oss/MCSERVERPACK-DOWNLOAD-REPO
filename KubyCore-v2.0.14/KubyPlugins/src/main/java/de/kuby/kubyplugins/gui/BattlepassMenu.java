@@ -60,14 +60,15 @@ public final class BattlepassMenu extends GuiMenu {
         for (int i = 27; i < 36; i++) set(i, filler(), null);
 
         int slot = 36;
-        for (BattlepassService.Quest q : bp.quests()) {
+        List<BattlepassService.QuestState> quests = new ArrayList<>(bp.quests(id, BattlepassService.Period.DAILY));
+        quests.addAll(bp.quests(id, BattlepassService.Period.WEEKLY));
+        for (BattlepassService.QuestState q : quests) {
             if (slot > 44) break;
-            int prog = Math.min(bp.progressOf(id, q.id()), q.target());
-            boolean done = bp.isDone(id, q.id());
-            set(slot++, Items.make(done ? Material.LIME_DYE : Material.PAPER, "<gold>" + q.label(), List.of(
-                    "<gray>Fortschritt: <white>" + prog + "<gray>/<white>" + q.target(),
-                    "<gray>Belohnung: <aqua>+" + q.reward() + " BP-XP",
-                    done ? "<green>✔ Abgeschlossen" : "<gray>Wöchentliche Quest")), null);
+            boolean daily = q.quest().period() == BattlepassService.Period.DAILY;
+            set(slot++, Items.make(q.done() ? Material.LIME_DYE : Material.PAPER, "<gold>" + q.quest().label(false), List.of(
+                    "<gray>Fortschritt: <white>" + q.progress() + "<gray>/<white>" + q.quest().target(),
+                    "<gray>Belohnung: <aqua>+" + q.quest().points() + " Punkte",
+                    q.done() ? "<green>✔ Abgeschlossen" : daily ? "<gray>Tagesaufgabe" : "<gray>Wochenaufgabe")), null);
         }
 
         set(45, page > 0
@@ -80,8 +81,8 @@ public final class BattlepassMenu extends GuiMenu {
                 e -> claim(p, BattlepassService.FREE));
 
         set(49, Items.make(Material.BOOK, "<gold>Level " + level + " <gray>/ " + BattlepassService.MAX_LEVEL, List.of(
-                "<gray>BP-XP: <white>" + bp.xp(id),
-                "<gray>Nächste Stufe bei <white>" + ((level + 1) * bp.xpPerLevel()) + " BP-XP")), null);
+                "<gray>Punkte: <white>" + bp.pointsInLevel(id) + "<gray>/<white>" + bp.xpPerLevel(),
+                "<gray>Season " + bp.season())), null);
 
         if (!premium) {
             set(51, Items.make(Material.EMERALD_BLOCK, "<green>Premium-Pass kaufen", List.of(

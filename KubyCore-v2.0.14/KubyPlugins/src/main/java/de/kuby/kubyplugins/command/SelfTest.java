@@ -138,6 +138,26 @@ final class SelfTest {
             canvas.accept("Juwelenshop " + pg, () -> de.kuby.kubyplugins.gui.JewelShopScreen.canvas(plugin.jewelShop().sample(pg), ja));
         }
 
+        // Battle-Pass: alle Reiter mit dem Inhalt aus der config.yml, dazu Belohnungen mit Premium und englisch
+        de.kuby.kubyplugins.gui.BattlepassScreen.Actions ba = new de.kuby.kubyplugins.gui.BattlepassScreen.Actions() {
+            public Consumer<Player> tab(de.kuby.kubyplugins.gui.BattlepassScreen.Tab t) { return NO; }
+            public Consumer<Player> page(int page) { return NO; }
+            public Consumer<Player> claim() { return NO; }
+            public Consumer<Player> premium() { return NO; }
+            public Consumer<Player> amount(int delta) { return NO; }
+            public Consumer<Player> buy() { return NO; }
+        };
+        for (de.kuby.kubyplugins.gui.BattlepassScreen.Tab t : de.kuby.kubyplugins.gui.BattlepassScreen.Tab.values()) {
+            canvas.accept("Battlepass " + t, () -> de.kuby.kubyplugins.gui.BattlepassScreen.canvas(plugin.battlepassScreen().sample(t), ba));
+        }
+        canvas.accept("Battlepass englisch", () -> {
+            de.kuby.kubyplugins.gui.BattlepassScreen.View v = plugin.battlepassScreen().sample(de.kuby.kubyplugins.gui.BattlepassScreen.Tab.PREMIUM);
+            return de.kuby.kubyplugins.gui.BattlepassScreen.canvas(new de.kuby.kubyplugins.gui.BattlepassScreen.View(v.tab(), true,
+                    v.season(), v.seasonLeft(), 100, 0, v.perLevel(), true, 14, v.pages(), List.of(), List.of(), 3, v.daily(),
+                    v.weekly(), v.dailyLeft(), v.weeklyLeft(), v.premiumPrice(), v.freeCount(), v.premCount(), v.perks(),
+                    12_345, 7, v.levelPrice(), 0, "levels"), ba);
+        });
+
         // Eingabe-Dialoge wie in Support, Freunde, Casino, Heiraten, Köpfe (Bestätigung, CLOSE, Text und mehrzeilig)
         try {
             DialogBase base = DialogBase.builder(Msg.parse("<b>Test"))

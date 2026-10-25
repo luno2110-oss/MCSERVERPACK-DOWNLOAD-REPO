@@ -68,10 +68,12 @@ if VANILLA and os.path.isdir(VANILLA):
     small += build_settings.small_icons(VANILLA)
     # Hüte (Modelle kuby:hat/<id>) und ihre Icons (32 px) hinter den Casino-Icons
     hat_big = build_hats.build(OUT)
-    # Juwelenshop (SMP): große Grafiken als Sprites
+    # Juwelenshop (SMP) und Battle-Pass: große Grafiken als Sprites, goldener Schlüssel als eigenes Icon
     import build_jewelshop  # noqa: E402
+    import build_battlepass  # noqa: E402
+    own += build_battlepass.icons()
     build_kit.build(OUT, {**neg, **pos}, VANILLA, own, small, casino_big + hat_big + build_settings.big_icons(),
-                    build_jewelshop.sprites())
+                    build_jewelshop.sprites() + build_battlepass.sprites())
     # Icons für Hologramm-Zeilen (kuby:holo): dieselben Zeichen wie kuby:k/i0, aber nur 9 px hoch wie Text
     with open(os.path.join(OUT, "assets/kuby/font/k/i0.json"), encoding="utf-8") as fh:
         i0 = json.load(fh)

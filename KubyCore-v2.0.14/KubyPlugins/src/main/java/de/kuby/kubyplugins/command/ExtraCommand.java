@@ -8,7 +8,6 @@ import de.kuby.kubyplugins.gui.QuizVoteMenu;
 import de.kuby.kubyplugins.gui.InvestmentsMenu;
 import de.kuby.kubyplugins.gui.KristalTradeMenu;
 import org.bukkit.block.Block;
-import de.kuby.kubyplugins.gui.BattlepassMenu;
 import de.kuby.kubyplugins.gui.XpShopMenu;
 import de.kuby.kubyplugins.gui.MetaMenu;
 import de.kuby.kubyplugins.KubyPlugins;
@@ -48,7 +47,7 @@ public final class ExtraCommand implements CommandExecutor {
             case "meta" -> new MetaMenu(plugin).open(p);
             case "xpshop" -> new XpShopMenu(plugin).open(p);
             case "booster" -> booster(p);
-            case "battlepass" -> new BattlepassMenu(plugin, 0).open(p);
+            case "battlepass" -> plugin.battlepassScreen().open(p);
             case "verify" -> verify(p);
             case "enderchest" -> p.openInventory(plugin.enderchests().open(p));
             case "kristaltrade" -> new KristalTradeMenu(plugin).open(p);

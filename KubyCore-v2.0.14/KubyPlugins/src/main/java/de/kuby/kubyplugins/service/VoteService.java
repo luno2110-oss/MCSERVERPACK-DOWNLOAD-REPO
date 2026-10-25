@@ -209,6 +209,7 @@ public final class VoteService implements Listener {
         if (firstBonus) plugin.homes().grantVote(id);
         if (coins > 0) pendingCoins.merge(id, coins, Long::sum);
         save();
+        plugin.battlepass().count(id, "VOTE", 1);
         for (java.util.function.Consumer<UUID> h : hooks) {
             try {
                 h.accept(id);
