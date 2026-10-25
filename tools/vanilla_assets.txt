@@ -13,3 +13,5 @@ assets/minecraft/models/*
 assets/minecraft/blockstates/*
 assets/minecraft/items/*
 assets/minecraft/textures/entity/*
+assets/minecraft/textures/particle/*
+assets/minecraft/particles/*
