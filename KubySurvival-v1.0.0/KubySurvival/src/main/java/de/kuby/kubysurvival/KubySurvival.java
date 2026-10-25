@@ -22,6 +22,8 @@ import de.kuby.kubysurvival.jobs.JobService;
 import de.kuby.kubysurvival.jobs.LevelCommand;
 import de.kuby.kubysurvival.jobs.TokenShopMenu;
 import de.kuby.kubysurvival.heads.HeadService;
+import de.kuby.kubysurvival.graves.GraveCommand;
+import de.kuby.kubysurvival.graves.GraveService;
 import de.kuby.kubysurvival.marry.BankService;
 import de.kuby.kubysurvival.marry.MarryCommand;
 import de.kuby.kubysurvival.marry.MarryMenus;
@@ -82,6 +84,7 @@ public final class KubySurvival extends JavaPlugin {
     private ChestShopService chestShops;
     private MarryService marry;
     private BankService bank;
+    private GraveService graves;
 
     public KubyPlugins core() { return core; }
     public AngelService angeln() { return angeln; }
@@ -101,6 +104,7 @@ public final class KubySurvival extends JavaPlugin {
     public ChestShopService chestShops() { return chestShops; }
     public MarryService marry() { return marry; }
     public BankService bank() { return bank; }
+    public GraveService graves() { return graves; }
 
     @Override
     public void onEnable() {
@@ -279,6 +283,9 @@ public final class KubySurvival extends JavaPlugin {
             if (p.hasPermission("kuby.admin")) marryCommand.adminBank(p, args);
             else Msg.send(p, "<red>Nur Admins.");
         });
+        graves = new GraveService(this, core);
+        getServer().getPluginManager().registerEvents(graves, this);
+        command("grab", new GraveCommand(core, graves));
         HeadService heads = new HeadService(this, core);
         command("heads", heads);
         PluginCommand headsCmd = getCommand("heads");
@@ -350,6 +357,7 @@ public final class KubySurvival extends JavaPlugin {
             pets.save();
             marry.save();
             bank.save();
+            graves.save();
         }, 6000L, 6000L);
         getServer().getScheduler().runTaskLater(this, () -> {
             for (AngelService.Zone z : angeln.zones()) angelHolo.spawn(z);
@@ -375,6 +383,7 @@ public final class KubySurvival extends JavaPlugin {
         if (intro != null) intro.save();
         if (marry != null) marry.save();
         if (bank != null) bank.save();
+        if (graves != null) graves.save();
     }
 
     private void command(String name, org.bukkit.command.CommandExecutor exec) {

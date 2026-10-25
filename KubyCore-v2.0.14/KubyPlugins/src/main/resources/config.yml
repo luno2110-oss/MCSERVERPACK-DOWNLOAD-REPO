@@ -645,3 +645,9 @@ bank:
 # Kopf-Datenbank /heads (KubySurvival): Preis je Kopf. Köpfe stehen in plugins/KubySurvival/heads.yml.
 heads:
   price: 1000
+# Gräber (KubySurvival): beim Tod in Survival entsteht ein Grabstein mit allen Sachen und XP. So lange kommt nur der
+# Besitzer heran (Farmpass länger), danach zerfällt das Grab und alles fällt heraus. Tod im Void: Abholbox.
+graves:
+  minutes: 30
+  farmpass-minutes: 60
+  xp-percent: 100                 # Anteil der XP, der ins Grab kommt

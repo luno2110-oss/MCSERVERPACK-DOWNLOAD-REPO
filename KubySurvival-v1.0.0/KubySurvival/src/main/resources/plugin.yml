@@ -78,3 +78,7 @@ commands:
     description: "Kopf-Datenbank: Deko-Köpfe und Spielerköpfe kaufen"
     usage: "/heads [Suchbegriff]"
     aliases: [koepfe, kopf]
+  grab:
+    description: "Deine Gräber mit Welt, Koordinaten und Restzeit"
+    usage: "/grab"
+    aliases: [graeber, graves, grave]

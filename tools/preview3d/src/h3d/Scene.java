@@ -165,6 +165,32 @@ public final class Scene {
                     }
                 }
             }
+            case "grave" -> {
+                // Grabstein wie GraveService.spawn (KubySurvival): Sockel, Stein, Kappe, Kreuz, Schild
+                Location at = new Location(w, 0.5, 0, 0.5);
+                float[][] parts = {{-0.42f, 0f, -0.30f, 0.84f, 0.14f, 0.60f}, {-0.30f, 0.14f, 0.02f, 0.60f, 0.70f, 0.16f},
+                        {-0.22f, 0.84f, 0.02f, 0.44f, 0.08f, 0.16f}, {-0.035f, 0.36f, -0.005f, 0.07f, 0.36f, 0.03f},
+                        {-0.11f, 0.56f, -0.005f, 0.22f, 0.07f, 0.03f}};
+                org.bukkit.Material[] mats = {org.bukkit.Material.MOSSY_COBBLESTONE, org.bukkit.Material.POLISHED_ANDESITE,
+                        org.bukkit.Material.POLISHED_ANDESITE, org.bukkit.Material.POLISHED_DEEPSLATE, org.bukkit.Material.POLISHED_DEEPSLATE};
+                for (int k = 0; k < parts.length; k++) {
+                    float[] q = parts[k];
+                    org.bukkit.Material m = mats[k];
+                    w.spawn(at, org.bukkit.entity.BlockDisplay.class, d -> {
+                        d.setBlock(m.createBlockData());
+                        d.setTransformation(new org.bukkit.util.Transformation(new org.joml.Vector3f(q[0], q[1], q[2]), new org.joml.Quaternionf(),
+                                new org.joml.Vector3f(q[3], q[4], q[5]), new org.joml.Quaternionf()));
+                    });
+                }
+                w.spawn(at.clone().add(0, 1.15, 0), org.bukkit.entity.TextDisplay.class, d -> {
+                    d.text(de.kuby.kubyplugins.util.Msg.parse("<#D2D2DA>✝ <b>Luno2110</b>\n<gray>noch <white>27:41</white> · 214 Items"));
+                    d.setBillboard(org.bukkit.entity.Display.Billboard.VERTICAL);
+                    d.setBackgroundColor(org.bukkit.Color.fromARGB(0, 0, 0, 0));
+                    d.setShadowed(true);
+                    d.setTransformation(new org.bukkit.util.Transformation(new org.joml.Vector3f(), new org.joml.Quaternionf(),
+                            new org.joml.Vector3f(0.8f, 0.8f, 0.8f), new org.joml.Quaternionf()));
+                });
+            }
             case "survival_npcs" -> {
                 // Priester und Bankier wie SurvivalNpc (KubySurvival): breite Arme, Schild darüber
                 String[][] npcs = {{"priester", "PRIESTER", "#FF7AC0", "Rechtsklick · Heiraten"},

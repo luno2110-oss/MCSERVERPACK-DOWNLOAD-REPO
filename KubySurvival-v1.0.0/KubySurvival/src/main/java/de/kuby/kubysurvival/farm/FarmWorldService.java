@@ -182,6 +182,8 @@ public final class FarmWorldService implements Listener {
                     if (spawn != null) p.teleport(spawn);
                     Msg.send(p, "<gold>Die Farmwelt wird neu erstellt. <gray>Du bist jetzt am Spawn.");
                 }
+                // Gräber in der Farmwelt: Sachen vorher in die Abholbox der Besitzer
+                if (addon.graves() != null) addon.graves().evacuate(w.getName());
                 if (!Bukkit.unloadWorld(w, false)) {
                     addon.getLogger().warning("Farmwelt ließ sich nicht entladen, Reset verschoben.");
                     return;
