@@ -208,7 +208,23 @@ public final class KitData {
         RED_LINE(new Piece('\ue642', 9, 8, 22), new Piece('\ue716', 33, 32, 22), new Piece('\ue643', 9, 8, 22),
                 new Piece('\ue717', 17, 16, 22), new Piece('\ue644', 9, 8, 22), new Piece('\ue645', 5, 4, 22), new Piece('\ue646', 3, 2, 22), new Piece('\ue647', 2, 1, 22)),
         NAVY_LINE(new Piece('\ue648', 9, 8, 22), new Piece('\ue718', 33, 32, 22), new Piece('\ue649', 9, 8, 22),
-                new Piece('\ue719', 17, 16, 22), new Piece('\ue64a', 9, 8, 22), new Piece('\ue64b', 5, 4, 22), new Piece('\ue64c', 3, 2, 22), new Piece('\ue64d', 2, 1, 22));
+                new Piece('\ue719', 17, 16, 22), new Piece('\ue64a', 9, 8, 22), new Piece('\ue64b', 5, 4, 22), new Piece('\ue64c', 3, 2, 22), new Piece('\ue64d', 2, 1, 22)),
+        H_NAV(new Piece('\ue64e', 9, 8, 22), new Piece('\ue71a', 33, 32, 22), new Piece('\ue64f', 9, 8, 22),
+                new Piece('\ue71b', 17, 16, 22), new Piece('\ue650', 9, 8, 22), new Piece('\ue651', 5, 4, 22), new Piece('\ue652', 3, 2, 22), new Piece('\ue653', 2, 1, 22)),
+        H_GREEN(new Piece('\ue654', 9, 8, 22), new Piece('\ue71c', 33, 32, 22), new Piece('\ue655', 9, 8, 22),
+                new Piece('\ue71d', 17, 16, 22), new Piece('\ue656', 9, 8, 22), new Piece('\ue657', 5, 4, 22), new Piece('\ue658', 3, 2, 22), new Piece('\ue659', 2, 1, 22)),
+        H_BLUE(new Piece('\ue65a', 9, 8, 22), new Piece('\ue71e', 33, 32, 22), new Piece('\ue65b', 9, 8, 22),
+                new Piece('\ue71f', 17, 16, 22), new Piece('\ue65c', 9, 8, 22), new Piece('\ue65d', 5, 4, 22), new Piece('\ue65e', 3, 2, 22), new Piece('\ue65f', 2, 1, 22)),
+        H_GOLD(new Piece('\ue660', 9, 8, 22), new Piece('\ue720', 33, 32, 22), new Piece('\ue661', 9, 8, 22),
+                new Piece('\ue721', 17, 16, 22), new Piece('\ue662', 9, 8, 22), new Piece('\ue663', 5, 4, 22), new Piece('\ue664', 3, 2, 22), new Piece('\ue665', 2, 1, 22)),
+        H_ORANGE(new Piece('\ue666', 9, 8, 22), new Piece('\ue722', 33, 32, 22), new Piece('\ue667', 9, 8, 22),
+                new Piece('\ue723', 17, 16, 22), new Piece('\ue668', 9, 8, 22), new Piece('\ue669', 5, 4, 22), new Piece('\ue66a', 3, 2, 22), new Piece('\ue66b', 2, 1, 22)),
+        H_GRAY(new Piece('\ue66c', 9, 8, 22), new Piece('\ue724', 33, 32, 22), new Piece('\ue66d', 9, 8, 22),
+                new Piece('\ue725', 17, 16, 22), new Piece('\ue66e', 9, 8, 22), new Piece('\ue66f', 5, 4, 22), new Piece('\ue670', 3, 2, 22), new Piece('\ue671', 2, 1, 22)),
+        H_PINK(new Piece('\ue672', 9, 8, 22), new Piece('\ue726', 33, 32, 22), new Piece('\ue673', 9, 8, 22),
+                new Piece('\ue727', 17, 16, 22), new Piece('\ue674', 9, 8, 22), new Piece('\ue675', 5, 4, 22), new Piece('\ue676', 3, 2, 22), new Piece('\ue677', 2, 1, 22)),
+        H_RED(new Piece('\ue678', 9, 8, 22), new Piece('\ue728', 33, 32, 22), new Piece('\ue679', 9, 8, 22),
+                new Piece('\ue729', 17, 16, 22), new Piece('\ue67a', 9, 8, 22), new Piece('\ue67b', 5, 4, 22), new Piece('\ue67c', 3, 2, 22), new Piece('\ue67d', 2, 1, 22));
 
         public final Piece l, m, r;
         /** Schmale Mittelstücke 16, 8, 4, 2, 1 px. */
@@ -266,6 +282,7 @@ public final class KitData {
     public static final Piece BAR_R = new Piece('\ue485', 9, 8, 7);
     public static final Piece[] BAR_NARROW = {new Piece('\ue537', 17, 16, 7), new Piece('\ue486', 9, 8, 7), new Piece('\ue487', 5, 4, 7), new Piece('\ue488', 3, 2, 7), new Piece('\ue489', 2, 1, 7)};
     public static final Piece BACK = new Piece('\ue780', 21, 20, 20);
+    public static final Piece BACK_HELP = new Piece('\ue781', 23, 22, 22);
 
     /** Icons: Zeichen und Vorschub für 16 px und 32 px (Schriften kuby:k/i<s>). */
     public enum Icon {

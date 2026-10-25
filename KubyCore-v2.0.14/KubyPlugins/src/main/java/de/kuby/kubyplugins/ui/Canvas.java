@@ -327,6 +327,12 @@ public final class Canvas {
         return this;
     }
 
+    /** Zurück-Knopf der Survival-Hilfe (22 x 22, Stil der Blätter-Knöpfe). */
+    public Canvas backHelp(int x, int y) {
+        piece(x, y, KitData.BACK_HELP, Z_BUTTON);
+        return this;
+    }
+
     /** Fortschrittsbalken (7 px hoch), frac 0..1. */
     public Canvas bar(int x, int y, int w, double frac, KitData.Fill fill) {
         w = Math.max(w, 2 * KitData.CAP);

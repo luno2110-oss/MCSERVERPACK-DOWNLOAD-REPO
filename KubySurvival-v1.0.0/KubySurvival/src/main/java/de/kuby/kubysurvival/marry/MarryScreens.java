@@ -29,16 +29,16 @@ public final class MarryScreens {
     }
 
     /**
-     * Kopf wie die Hilfe-Seiten der Referenz: 50 hoch, Zurück-Knopf (9, 18), Icon 18 x 18 (43, 18), Titel (74, 15),
+     * Kopf wie die Hilfe-Seiten der Referenz: 51 hoch, Zurück-Knopf (8, 17), Icon 18 x 18 (43, 18), Titel (74, 15),
      * Untertitel (74, 28). Ohne Zurück rücken Icon und Text nach links.
      */
     private static void head(Canvas c, KitData.Box box, KitData.SmallIcon icon, String title, TextColor accent, String sub,
                              Consumer<Player> back, List<Span> right) {
-        c.box(0, 0, W, 50, box);
+        c.box(0, 0, W, 51, box);
         int ix = 13, tx = 41;
         if (back != null) {
-            c.back(9, 18);
-            c.action(9, 18, 20, 20, back, "Zurück");
+            c.backHelp(8, 17);
+            c.action(8, 17, 22, 22, back, "Zurück");
             ix = 43;
             tx = 74;
         }
@@ -137,7 +137,7 @@ public final class MarryScreens {
         Canvas c = new Canvas(W);
         head(c, KitData.Box.PURPLE, KitData.SmallIcon.H_RINGS, "HEIRATEN", PINK, "Antrag, Hochzeit und Ehe-Konto", null,
                 v.married() ? List.of(Span.of("❤ ", PINK), Span.of("verheiratet", LIGHT)) : null);
-        int y = 54;
+        int y = 53;
         if (v.married()) {
             box(c, y, 70, KitData.Box.PURPLE, "Deine Ehe", PINK);
             c.text(12, y + 22, List.of(Span.bold("❤ ", PINK), Span.bold(v.partner(), WHITE)));
@@ -266,7 +266,7 @@ public final class MarryScreens {
     public static Canvas bank(BankView v, BankActions a) {
         Canvas c = new Canvas(W);
         head(c, KitData.Box.GOLD, KitData.SmallIcon.H_COINS, "BANK", GOLD, "Ehe-Konto und Konten mit Freunden", null, wallet(v.wallet()));
-        int y = 54;
+        int y = 53;
         String info = v.atBank() ? "Du bist an der Bank: Ein- und Auszahlen ohne Grenze."
                 : "Unterwegs: bis " + de.kuby.kubyplugins.util.Msg.coins(v.limit()) + " Coins je Buchung. Mehr an der Bank am Spawn.";
         c.text(4, y + 2, info, v.atBank() ? GREEN : GRAY, false);
@@ -349,7 +349,7 @@ public final class MarryScreens {
         head(c, style, acc.marriage() ? KitData.SmallIcon.H_RINGS : KitData.SmallIcon.H_PEOPLE, acc.name().toUpperCase(), accent,
                 acc.marriage() ? "Ehe-Konto" : "Konto mit Freunden · eröffnet von " + acc.owner(), a.back(),
                 List.of(Span.bold(de.kuby.kubyplugins.util.Msg.coins(acc.balance()), WHITE), Span.of(" Coins", GRAY)));
-        int y = 54;
+        int y = 53;
         box(c, y, 78, style, "Buchen", accent);
         c.textRight(378, y + 9, List.of(Span.of("Dein Geld ", GRAY), Span.bold(de.kuby.kubyplugins.util.Msg.coins(d.wallet()), GOLD)));
         amountRow(c, y + 20, "Einzahlen", true, d, a);

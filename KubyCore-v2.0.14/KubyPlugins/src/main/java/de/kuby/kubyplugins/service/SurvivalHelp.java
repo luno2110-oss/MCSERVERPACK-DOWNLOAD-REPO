@@ -14,7 +14,6 @@ import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
-import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -38,9 +37,9 @@ public final class SurvivalHelp {
     private static final TextColor CMD = TextColor.color(0x5FE3C4);
     private static final TextColor LIGHT = TextColor.color(0xE4E4EA);
     private static final TextColor GRAY = TextColor.color(0xA0A0AC);
-    private static final TextColor ON_GOLD = TextColor.color(0x2C1C06);
-    private static final TextColor GOLD = TextColor.color(0xF4D46A);
-    private static final TextColor ON_GREEN = TextColor.color(0x0C2A12);
+    /** Schrift der Knöpfe wie in der Referenz: Aktion dunkelbraun und fett, Blättern hellgrau. */
+    private static final TextColor ON_ACTION = TextColor.color(0x201400);
+    private static final TextColor NAV = TextColor.color(0xC0C4CB);
 
     /** Eine Hilfe-Seite. action: Befehl ohne Slash (null = Casino-Hilfe öffnen). */
     private record Page(String id, String nav, Ui.Theme theme, KitData.SmallIcon icon, String title, String subtitle,
@@ -373,19 +372,49 @@ public final class SurvivalHelp {
 
     private static KitData.Button actionButton(Ui.Theme t) {
         return switch (t) {
-            case CASINO, RED -> KitData.Button.RED;
-            case GREEN -> KitData.Button.GREEN;
-            case GOLD, ORANGE -> KitData.Button.GOLD;
-            case GRAY -> KitData.Button.GOLD_LINE;
-            case BLUE -> KitData.Button.TEAL;
-            case PINK -> KitData.Button.PURPLE;
+            case CASINO, RED -> KitData.Button.H_RED;
+            case GREEN -> KitData.Button.H_GREEN;
+            case GOLD -> KitData.Button.H_GOLD;
+            case ORANGE -> KitData.Button.H_ORANGE;
+            case GRAY -> KitData.Button.H_GRAY;
+            case BLUE -> KitData.Button.H_BLUE;
+            case PINK -> KitData.Button.H_PINK;
         };
     }
 
     /**
-     * Eine Hilfe-Seite, Maße aus der Referenz (GUI-Pixel): Kopf 50 hoch mit Zurück-Knopf (9, 18) zur Übersicht, Icon
+     * Kastenhöhe wie in der Referenz: der Inhalt wird auf ganze 9-px-Textzeilen aufgerundet, dazu 7 px Rand.
+     * Beispiel: 5 Zeilen in 3 Punkten = 24 + 55 + 6 = 85 → 10 Zeilen → 97 px.
+     */
+    private static int rowsHeight(int content) {
+        return 9 * ((content + 8) / 9) + 7;
+    }
+
+    /**
+     * Umbruch wie in der Referenz: geschätzte Breite (Ui.width) höchstens 360 px. Damit brechen alle Zeilen genau an
+     * denselben Stellen um wie in den Referenz-Screenshots.
+     */
+    private static List<String> wrap(String text) {
+        List<String> out = new ArrayList<>();
+        StringBuilder line = new StringBuilder();
+        for (String word : text.split(" ")) {
+            String probe = line.isEmpty() ? word : line + " " + word;
+            if (Ui.width(probe, false) > 360 && !line.isEmpty()) {
+                out.add(line.toString());
+                line = new StringBuilder(word);
+            } else {
+                line = new StringBuilder(probe);
+            }
+        }
+        if (!line.isEmpty()) out.add(line.toString());
+        return out;
+    }
+
+    /**
+     * Eine Hilfe-Seite, Maße aus der Referenz (GUI-Pixel): Kopf 51 hoch mit Zurück-Knopf (8, 17) zur Übersicht, Icon
      * 18 x 18 (43, 18), Titel (74, 15) und Untertitel (74, 28); "SO GEHT'S" mit •-Aufzählung (Zeilen 11, Absätze +3),
-     * "BEFEHLE" mit Beschreibung ab x = 133; unten "‹ vorherige", Aktion in der Themenfarbe (Mitte), "nächste ›".
+     * "BEFEHLE" mit Beschreibung direkt hinter dem längsten Befehl; unten "‹ vorherige", Aktion in der Themenfarbe
+     * (Mitte), "nächste ›".
      */
     public static Canvas screen(int index, Actions a) {
         int size = PAGES.size();
@@ -396,63 +425,61 @@ public final class SurvivalHelp {
         // Casino: roter Kopf, dunkle Kästen wie in der Casino-Hilfe
         KitData.Box body = t == Ui.Theme.CASINO ? KitData.Box.CASINO_DARK : style;
         Canvas c = new Canvas(W);
-        c.box(0, 0, W, 50, style);
-        c.back(9, 18);
-        c.action(9, 18, 20, 20, a.overview(), "Alle Themen der Hilfe");
+        c.box(0, 0, W, 51, style);
+        c.backHelp(8, 17);
+        c.action(8, 17, 22, 22, a.overview(), "Alle Themen der Hilfe");
         c.smallIcon(43, 18, page.icon());
         c.text(74, 15, page.title(), t.title, true);
         c.text(74, 28, Canvas.fit(page.subtitle(), false, W - 86), GRAY, false);
-        int y = 54;
+        int y = 53;
         // So geht's: Zeilen im Abstand 11, zwischen den Punkten 3 mehr
-        int ly = y + 23;
+        int ly = y + 24;
         List<int[]> rows = new ArrayList<>();
         List<String> texts = new ArrayList<>();
         for (int k = 0; k < page.how().size(); k++) {
             if (k > 0) ly += 3;
-            List<String> w = Canvas.wrap(page.how().get(k), W - 29);
+            List<String> w = wrap(page.how().get(k));
             for (int j = 0; j < w.size(); j++) {
                 rows.add(new int[]{ly, j == 0 ? 1 : 0});
                 texts.add(w.get(j));
                 ly += 11;
             }
         }
-        int h = ly - 11 + 7 + 16 - y;
+        int h = rowsHeight(24 + 11 * rows.size() + 3 * (page.how().size() - 1));
         c.box(0, y, W, h, body);
-        c.text(9, y + 9, "SO GEHT'S", t.accent, true);
+        c.text(9, y + 10, "SO GEHT'S", t.accent, true);
         for (int k = 0; k < rows.size(); k++) {
             if (rows.get(k)[1] == 1) c.text(10, rows.get(k)[0], "•", t.accent, false);
             c.text(21, rows.get(k)[0], texts.get(k), LIGHT, false);
         }
-        y += h + 13;
+        y += h + 11;
         if (!page.commands().isEmpty()) {
-            h = 24 + 11 * (page.commands().size() - 1) + 7 + 11;
+            h = rowsHeight(22 + 11 * page.commands().size());
             c.box(0, y, W, h, body);
-            c.text(9, y + 9, "BEFEHLE", t.accent, true);
+            c.text(9, y + 10, "BEFEHLE", t.accent, true);
+            // Beschreibung direkt hinter dem längsten Befehl der Seite (Referenz: 11 px Abstand)
+            int col = 0;
+            for (String[] cmd : page.commands()) col = Math.max(col, Canvas.width(cmd[0], false));
+            col = Math.min(12 + col + 11, 200);
             for (int k = 0; k < page.commands().size(); k++) {
                 String[] cmd = page.commands().get(k);
-                c.text(12, y + 24 + 11 * k, Canvas.fit(cmd[0], false, 118), CMD, false);
-                c.text(133, y + 24 + 11 * k, Canvas.fit(cmd[1], false, W - 145), LIGHT, false);
+                c.text(12, y + 24 + 11 * k, Canvas.fit(cmd[0], false, col - 23), CMD, false);
+                c.text(col, y + 24 + 11 * k, Canvas.fit(cmd[1], false, W - col - 12), LIGHT, false);
             }
-            y += h + 12;
+            y += h + 9;
         }
         Page prev = PAGES.get(Math.floorMod(i - 1, size));
         Page next = PAGES.get(Math.floorMod(i + 1, size));
         String back = "‹ " + prev.nav();
         String fwd = next.nav() + " ›";
-        int bw = c.labelButton(0, y, 9, KitData.Button.DARK, back, LIGHT, false);
+        int bw = c.labelButton(0, y, 9, KitData.Button.H_NAV, back, NAV, false);
         c.action(0, y, bw, KitData.BTN_H, a.page(i - 1), "Zurück: " + prev.nav());
         int fw = Canvas.width(fwd, false) - 1 + 18;
-        c.button(W - fw, y, fw, KitData.Button.DARK, fwd, LIGHT, false);
+        c.button(W - fw, y, fw, KitData.Button.H_NAV, fwd, NAV, false);
         c.action(W - fw, y, fw, KitData.BTN_H, a.page(i + 1), "Weiter: " + next.nav());
         KitData.Button act = actionButton(t);
-        TextColor label = switch (act) {
-            case GOLD -> ON_GOLD;
-            case GREEN -> ON_GREEN;
-            case GOLD_LINE -> GOLD;
-            default -> NamedTextColor.WHITE;
-        };
         int aw = Canvas.width(page.actionLabel(), true) - 1 + 24;
-        c.button((W - aw) / 2, y, aw, act, page.actionLabel(), label, true);
+        c.button((W - aw) / 2, y, aw, act, page.actionLabel(), ON_ACTION, true);
         c.action((W - aw) / 2, y, aw, KitData.BTN_H, a.act(i), page.actionLabel());
         return c;
     }

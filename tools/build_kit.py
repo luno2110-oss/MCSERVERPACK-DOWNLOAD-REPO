@@ -147,7 +147,22 @@ BUTTONS = {
     "green_line": ("line", "3FD55C", "0A2410"),
     "red_line": ("line", "FF4D5E", "2A0A10"),
     "navy_line": ("line", "2DAEF9", "061B28"),
+    # Knöpfe der Survival-Hilfe (Referenz-Screenshots): 20 px hoch, oben/unten je eine Zeile frei.
+    # Aktion: (heller Rand, Füllung), dunkle fette Schrift; Blättern: (Rand, innerer Ring, Füllung)
+    "h_nav": ("hnav", "888D97", "51545A", "151618"),
+    "h_green": ("hfill", "3ED65D", "258137"),
+    "h_blue": ("hfill", "2EB1FB", "1C6B96"),
+    "h_gold": ("hfill", "FBC53C", "977724"),
+    "h_orange": ("hfill", "D68739", "815122"),
+    "h_gray": ("hfill", "888D97", "52555A"),
+    "h_pink": ("hfill", "FB5EB1", "97386A"),
+    "h_red": ("hfill", "FB445E", "972939"),
 }
+# Ecken der Hilfe-Knöpfe (oben links, 20 px hoch), aus den Referenz-Screenshots
+CORNER_HFILL_TOP = ["...KKK", "..KLLL", ".KLLMM", "KLLMMM", "KLMFFF", "KLFFFF"]
+CORNER_HFILL_BOTTOM = ["...KKK", "..KLLL", ".KLLFF", "KLLFFF", "KLFFFF", "KLFFFF"]
+CORNER_HNAV_TOP = ["...KKK", "..KKLL", ".KLLLD", ".KLDDF", "KLLFFF", "KLDFFF"]
+CORNER_HNAV_BOTTOM = ["...KKK", "..KKLL", ".KLLLD", ".KLDDF", "KLLFFF", "KLDFFF"]
 
 # Kleine Knöpfe 16 px (Casino: Reiter, Zähler, "Wählen", "Letzte Einsätze wiederholen"):
 # Rand L, innen D (oben/seitlich), Db (unten), Füllung N, optional top2 = zweite Glanzzeile oben, side = D seitlich
@@ -327,7 +342,57 @@ def button_rows(style, h):
     return border, rows
 
 
+def draw_help_button(w, h, style, bh=20, y0=1):
+    """Hilfe-Knopf: bh (20) px Bild in einem h (22) hohen Feld ab Zeile y0 (oben und unten eine Zeile frei)."""
+    spec = BUTTONS[style]
+    kind = spec[0]
+    img = Image.new("RGBA", (w, h), T)
+    px = img.load()
+    if kind == "hfill":
+        light, fill = rgb(spec[1]), rgb(spec[2])
+        cols = {"K": K, "L": light, "M": mix(fill, light, 0.3), "F": fill, "D": fill}
+        top, bottom = CORNER_HFILL_TOP, CORNER_HFILL_BOTTOM
+        # Kanten ohne Ecke: oben K, L, M, M; unten K, L; seitlich K, L
+        def edge(d_top, d_bottom, d_side):
+            if d_top < 4:
+                return "KLMM"[d_top]
+            if d_bottom < 2:
+                return "KL"[d_bottom]
+            if d_side < 2:
+                return "KL"[d_side]
+            return "F"
+    else:
+        cols = {"K": K, "L": rgb(spec[1]), "D": rgb(spec[2]), "F": rgb(spec[3]), "M": rgb(spec[2])}
+        top, bottom = CORNER_HNAV_TOP, CORNER_HNAV_BOTTOM
+
+        def edge(d_top, d_bottom, d_side):
+            if d_top < 3:
+                return "KLD"[d_top]
+            if d_bottom < 3:
+                return "KLD"[d_bottom]
+            if d_side < 3:
+                return "KLD"[d_side]
+            return "F"
+    n = len(top)
+    for yy in range(bh):
+        for x in range(w):
+            cx = x if x < n else (w - 1 - x if x >= w - n else None)
+            ch = None
+            if cx is not None and yy < n:
+                ch = top[yy][cx]
+            elif cx is not None and yy >= bh - n:
+                ch = bottom[bh - 1 - yy][cx]
+            if ch is None:
+                ch = edge(yy, bh - 1 - yy, min(x, w - 1 - x))
+            if ch == ".":
+                continue
+            px[x, yy + y0] = cols[ch]
+    return img
+
+
 def draw_button(w, h, style):
+    if BUTTONS[style][0] in ("hfill", "hnav"):
+        return draw_help_button(w, h, style)
     border, rows = button_rows(style, h)
     pattern = CORNER_DARK if BUTTONS[style][0] == "dark" else CORNER_BTN
     light = lighten(border, 0.35)
@@ -552,6 +617,14 @@ def build_pieces():
             if c == "X":
                 back.putpixel((8 + x, 6 + y), rgb("E6E6EA"))
     misc.add(("back",), back)
+    # Zurück-Knopf der Survival-Hilfe (Referenz): 22 x 22 im Stil der Blätter-Knöpfe, weißer Pfeil mit Schatten
+    hback = draw_help_button(22, 22, "h_nav", bh=22, y0=0)
+    arrow = [(10, 8), (11, 8), (9, 9), (10, 9), (8, 10), (9, 10), (9, 11), (10, 11), (10, 12), (11, 12)]
+    for x, y in arrow:
+        hback.putpixel((x + 1, y + 1), rgb("3E3E3E"))
+    for x, y in arrow:
+        hback.putpixel((x, y), rgb("FCFCFC"))
+    misc.add(("back_help",), hback)
     return [caps9, segs9, caps22, segs22, misc, caps16, segs16]
 
 
@@ -928,6 +1001,7 @@ def write_java(sheets, widths, icons, icon_chars, icon_adv, small_data=(), title
     L.append("    public static final Piece BAR_R = %s;" % piece(("bar", "r")))
     L.append("    public static final Piece[] BAR_NARROW = {%s};" % ", ".join(piece(("bar", w)) for w in NARROW))
     L.append("    public static final Piece BACK = %s;" % piece(("back",)))
+    L.append("    public static final Piece BACK_HELP = %s;" % piece(("back_help",)))
     L.append("")
     L.append("    /** Icons: Zeichen und Vorschub für 16 px und 32 px (Schriften kuby:k/i<s>). */")
     L.append("    public enum Icon {")
