@@ -24,7 +24,7 @@ public final class TeleportEffectService {
             CosmeticService.Item it = plugin.cosmetics().find(id);
             if (it != null) particle = it.particle();
         }
-        at.getWorld().spawnParticle(particle, at.clone().add(0, 1, 0), 50, 0.4, 0.6, 0.4, 0.2);
+        de.kuby.kubyplugins.util.Fx.particle(plugin, at.clone().add(0, 1, 0), particle, 50, 0.4, 0.6, 0.4, 0.2);
         de.kuby.kubyplugins.util.Sfx.play(plugin, p, de.kuby.kubyplugins.util.Sfx.Kind.TELEPORT);
     }
 

@@ -48,6 +48,11 @@ public final class CoinflipCommand implements CommandExecutor {
         if (ThreadLocalRandom.current().nextBoolean()) {
             plugin.economy().deposit(p.getUniqueId(), bet * 2);
             Msg.send(p, "<green>Gewonnen! <gold>+" + bet + "$"); Sfx.play(plugin, p, Sfx.Kind.WIN);
+            // große Gewinne gehen an alle mit "Coinflip-Mitteilungen"
+            if (bet >= plugin.getConfig().getLong("coinflip.announce-min", 2500)) {
+                plugin.notifications().send("notify.coinflip", Msg.parse("<#FCC965><b>COINFLIP</b> <dark_gray>▶ <white>"
+                        + p.getName() + " <gray>gewinnt <gold>" + Msg.coins(bet * 2) + "$<gray>! <dark_gray>(/coinflip)"), o -> !o.equals(p));
+            }
         } else {
             Msg.send(p, "<red>Verloren. <gray>-" + bet + "$"); Sfx.play(plugin, p, Sfx.Kind.LOSE);
         }

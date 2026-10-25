@@ -251,11 +251,24 @@ public final class FriendService implements org.bukkit.event.Listener {
                     + "<click:run_command:'/friends'><green>[Ansehen]</click>");
             for (UUID id : friendsOf(p.getUniqueId())) {
                 Player f = Bukkit.getPlayer(id);
-                if (f != null && f.canSee(p) && areFriends(id, p.getUniqueId())) {
+                if (f != null && f.canSee(p) && areFriends(id, p.getUniqueId()) && plugin.playerSettings().get(id, "chat.friends")) {
                     Msg.send(f, "<green>● <white>" + p.getName() + " <gray>ist jetzt online.");
                 }
             }
         }, 60L);
+    }
+
+    /** Beim Ausloggen: Freunden Bescheid geben (Schalter "Freunde online/offline"). */
+    @org.bukkit.event.EventHandler
+    public void onQuit(org.bukkit.event.player.PlayerQuitEvent e) {
+        Player p = e.getPlayer();
+        for (UUID id : friendsOf(p.getUniqueId())) {
+            Player f = Bukkit.getPlayer(id);
+            if (f != null && !f.equals(p) && f.canSee(p) && areFriends(id, p.getUniqueId())
+                    && plugin.playerSettings().get(id, "chat.friends")) {
+                Msg.send(f, "<red>● <white>" + p.getName() + " <gray>ist jetzt offline.");
+            }
+        }
     }
 
     public synchronized void save() {

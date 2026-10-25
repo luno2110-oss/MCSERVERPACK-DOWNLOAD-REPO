@@ -42,7 +42,7 @@ public final class CasinoFx {
     public static void jackpot(KubyPlugins plugin, UUID id, Location at, long money) {
         floating(plugin, at, "<gold><b>JACKPOT!</b> <white>" + nameOf(id) + " <yellow>+" + Msg.coins(money) + "$");
         if (at == null || at.getWorld() == null) return;
-        at.getWorld().spawnParticle(Particle.TOTEM_OF_UNDYING, at, 120, 0.6, 1.0, 0.6, 0.35);
+        de.kuby.kubyplugins.util.Fx.particle(plugin, at, Particle.TOTEM_OF_UNDYING, 120, 0.6, 1.0, 0.6, 0.35);
         for (Player near : at.getWorld().getPlayers()) {
             if (near.getLocation().distanceSquared(at) <= JACKPOT_RANGE * JACKPOT_RANGE) {
                 Sfx.play(plugin, near, Sfx.Kind.JACKPOT);

@@ -167,6 +167,9 @@ public final class MarryService implements Listener {
         if (!survival(t)) return t.getName() + " ist gerade nicht in Survival.";
         if (partnerOf(me) != null) return "Du bist schon verheiratet.";
         if (partnerOf(t.getUniqueId()) != null) return t.getName() + " ist schon verheiratet.";
+        if (!core.playerSettings().get(t.getUniqueId(), "marry") && !core.friends().areFriends(me, t.getUniqueId())) {
+            return t.getName() + " nimmt gerade keine Heiratsanträge an.";
+        }
         if (blockedUntil(me) > 0) return "Nach deiner Scheidung darfst du erst ab " + date(blockedUntil(me)) + " wieder heiraten.";
         if (blockedUntil(t.getUniqueId()) > 0) return t.getName() + " darf gerade nicht heiraten (Scheidung ist noch nicht lange her).";
         Proposal mine = outgoingOf(me);
@@ -191,7 +194,7 @@ public final class MarryService implements Listener {
                 + "<click:run_command:'/marry church'><#FF7AC0>[Zur Kirche]</click> <click:run_command:'/marry deny'><red>[Ablehnen]</click>");
         t.playSound(t, Sound.BLOCK_AMETHYST_BLOCK_CHIME, 1f, 1.2f);
         t.playSound(t, Sound.ENTITY_PLAYER_LEVELUP, 0.6f, 1.6f);
-        t.getWorld().spawnParticle(Particle.HEART, t.getLocation().add(0, 2.1, 0), 5, 0.4, 0.2, 0.4);
+        de.kuby.kubyplugins.util.Fx.particle(core, t.getLocation().add(0, 2.1, 0), Particle.HEART, 5, 0.4, 0.2, 0.4, 0);
         p.playSound(p, Sound.BLOCK_AMETHYST_BLOCK_CHIME, 1f, 1.2f);
         return null;
     }
@@ -275,19 +278,19 @@ public final class MarryService implements Listener {
             int k = i;
             addon.getServer().getScheduler().runTaskLater(addon, () -> {
                 top.getWorld().playSound(top, Sound.BLOCK_BELL_USE, 1.2f, 1.0f - 0.1f * k);
-                top.getWorld().spawnParticle(Particle.FIREWORK, top, 40, 0.6, 0.6, 0.6, 0.08);
+                de.kuby.kubyplugins.util.Fx.particle(core, top, Particle.FIREWORK, 40, 0.6, 0.6, 0.6, 0.08);
             }, 10L + 16L * i);
         }
         int[] ticks = {0};
         addon.getServer().getScheduler().runTaskTimer(addon, task -> {
             for (Player p : List.of(a, b)) {
-                if (p.isOnline()) p.getWorld().spawnParticle(Particle.HEART, p.getLocation().add(0, 1.2, 0), 2, 0.5, 0.6, 0.5);
+                if (p.isOnline()) de.kuby.kubyplugins.util.Fx.particle(core, p.getLocation().add(0, 1.2, 0), Particle.HEART, 2, 0.5, 0.6, 0.5, 0);
             }
             if (++ticks[0] >= 16) task.cancel();
         }, 0L, 5L);
         String msg = HEART + "<white>" + a.getName() + " <gray>und <white>" + b.getName()
                 + " <gray>haben sich in der Kirche das Ja-Wort gegeben!";
-        for (Player o : Bukkit.getOnlinePlayers()) if (survival(o)) Msg.send(o, msg);
+        core.notifications().send("notify.wedding", Msg.parse(msg), o -> survival(o) || o.equals(a) || o.equals(b));
     }
 
     // =================================================================================================================

@@ -23,8 +23,9 @@ commands:
   menu:
     description: "Hauptmenü als GUI öffnen"
   settings:
-    description: "Deine Einstellungen: Nachrichten, Anfragen, Sounds, Scoreboard, Info-Leiste"
-    aliases: [einstellungen]
+    description: "Deine Einstellungen: Chat, Anfragen, Mitteilungen, Anzeige, Sonstiges, Sprache"
+    usage: "/settings [chat|anfragen|mitteilungen|anzeige|sonstiges|sprache]"
+    aliases: [einstellungen, options]
   bossbar:
     description: "Inhalt der Info-Leiste oben einstellen"
     usage: "/bossbar [on|off|reset]"
@@ -186,6 +187,9 @@ commands:
   tpa:
     description: "Teleport-Anfrage an einen Spieler"
     usage: "/tpa <Spieler>"
+  tpahere:
+    description: "Einen Spieler zu dir holen (er muss annehmen)"
+    usage: "/tpahere <Spieler>"
   tpaccept:
     description: "Teleport-Anfrage annehmen"
   tpadeny:

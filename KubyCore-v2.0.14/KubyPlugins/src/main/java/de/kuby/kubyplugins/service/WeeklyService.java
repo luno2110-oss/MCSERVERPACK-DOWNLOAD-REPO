@@ -97,7 +97,7 @@ public final class WeeklyService {
             UUID winner = top.get(0).getKey();
             long reward = plugin.getConfig().getLong("weekly.jewel-reward", 1000);
             plugin.jewels().add(winner, reward);
-            plugin.getServer().broadcast(Msg.parse("<aqua>Wochenpreis: <white>" + Msg.escape(name(winner))
+            plugin.notifications().send("notify.broadcast", Msg.parse("<aqua>Wochenpreis: <white>" + Msg.escape(name(winner))
                     + " <gray>erhält <aqua>" + reward + " Juwelen <gray>für Platz 1 im Baltop!"));
         }
 
@@ -115,7 +115,7 @@ public final class WeeklyService {
         save();
 
         if (best != null) {
-            plugin.getServer().broadcast(Msg.parse("<gold>Neues Wochen-Meta: <white>" + best.name().toLowerCase(Locale.ROOT).replace('_', ' ')
+            plugin.notifications().send("notify.broadcast", Msg.parse("<gold>Neues Wochen-Meta: <white>" + best.name().toLowerCase(Locale.ROOT).replace('_', ' ')
                     + " <gray>bringt <green>+25 % Verkaufspreis<gray>!"));
         }
     }

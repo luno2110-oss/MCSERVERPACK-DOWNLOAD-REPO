@@ -214,7 +214,7 @@ public final class CosmeticService implements ModeData {
             Location now = p.getLocation();
             Location prev = last.get(p.getUniqueId());
             if (prev == null || !prev.getWorld().equals(now.getWorld()) || prev.distanceSquared(now) > 0.01) {
-                p.getWorld().spawnParticle(it.particle(), now.clone().add(0, 0.2, 0), 3, 0.2, 0.1, 0.2, 0.0);
+                de.kuby.kubyplugins.util.Fx.particle(plugin, now.clone().add(0, 0.2, 0), it.particle(), 3, 0.2, 0.1, 0.2, 0.0);
                 last.put(p.getUniqueId(), now.clone());
             }
         }
@@ -226,7 +226,7 @@ public final class CosmeticService implements ModeData {
         if (kid == null) return;
         Item it = find(kid);
         if (it == null) return;
-        at.getWorld().spawnParticle(it.particle(), at.clone().add(0, 1, 0), 30, 0.4, 0.6, 0.4, 0.05);
+        de.kuby.kubyplugins.util.Fx.particle(plugin, at.clone().add(0, 1, 0), it.particle(), 30, 0.4, 0.6, 0.4, 0.05);
     }
 
     public synchronized void save() {

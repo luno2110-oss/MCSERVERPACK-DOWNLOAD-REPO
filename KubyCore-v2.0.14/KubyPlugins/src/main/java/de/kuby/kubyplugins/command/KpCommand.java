@@ -106,6 +106,7 @@ public final class KpCommand implements CommandExecutor {
                 }
             }
             case "homebonus" -> homeBonus(p, args);
+            case "deko", "deco" -> deco(p, args);
             default -> {
                 java.util.function.BiConsumer<Player, String[]> handler = plugin.kpSub(args[0].toLowerCase(Locale.ROOT));
                 if (handler != null) handler.accept(p, args);
@@ -179,6 +180,50 @@ public final class KpCommand implements CommandExecutor {
         Msg.send(p, "<gray>/kp marker remove <dark_gray>- <gray>Marker in der Nähe entfernen");
         Msg.send(p, "<gray>/kp xp <give|take|set> <spieler> <betrag> <dark_gray>- <gray>XP verwalten");
         Msg.send(p, "<gray>/kp homebonus <spieler> <vote|verify> <dark_gray>- <gray>Homebonus vergeben");
+        Msg.send(p, "<gray>/kp deko add <skin-spieler> [name] | remove <dark_gray>- <gray>Deko-Figur (Schalter Deko-NPCs)");
+    }
+
+    /** Deko-Figuren: Mannequin mit dem Skin eines Spielers, ohne Funktion. Wer "Deko-NPCs" ausschaltet, sieht sie nicht. */
+    private void deco(Player p, String[] args) {
+        String sub = args.length > 1 ? args[1].toLowerCase(Locale.ROOT) : "";
+        if (sub.equals("remove") || sub.equals("entfernen")) {
+            org.bukkit.entity.Entity e = plugin.displaySettings().nearestDeco(p.getLocation(), 4);
+            if (e == null) {
+                Msg.send(p, "<red>Keine Deko-Figur in der Nähe (4 Blöcke).");
+                return;
+            }
+            e.remove();
+            Msg.send(p, "<green>Deko-Figur entfernt.");
+            return;
+        }
+        if (!sub.equals("add") || args.length < 3) {
+            Msg.send(p, "<red>Nutzung: /kp deko add <skin-spieler> [name] <gray>oder <red>/kp deko remove");
+            return;
+        }
+        String skin = args[2];
+        String name = args.length > 3 ? String.join(" ", java.util.Arrays.copyOfRange(args, 3, args.length)) : null;
+        org.bukkit.Location at = p.getLocation().getBlock().getLocation().add(0.5, 0, 0.5);
+        at.setYaw(Math.round(p.getLocation().getYaw() / 45f) * 45f + 180f);
+        at.setPitch(0);
+        org.bukkit.entity.Mannequin m = at.getWorld().spawn(at, org.bukkit.entity.Mannequin.class, e -> {
+            e.setProfile(io.papermc.paper.datacomponent.item.ResolvableProfile.resolvableProfile().name(skin).build());
+            e.setImmovable(true);
+            e.setDescription(null);
+            e.setAI(false);
+            e.setInvulnerable(true);
+            e.setSilent(true);
+            e.setCollidable(false);
+            e.setPersistent(true);
+            e.setRemoveWhenFarAway(false);
+            if (name != null) {
+                e.customName(Msg.parse(name));
+                e.setCustomNameVisible(true);
+            } else {
+                e.setCustomNameVisible(false);
+            }
+        });
+        plugin.displaySettings().markDeco(m);
+        Msg.send(p, "<green>Deko-Figur mit dem Skin von <white>" + Msg.escape(skin) + " <green>gesetzt. <gray>Entfernen: /kp deko remove");
     }
 
     private void xp(Player p, String[] args) {

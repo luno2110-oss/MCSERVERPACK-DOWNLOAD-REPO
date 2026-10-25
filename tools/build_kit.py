@@ -128,7 +128,11 @@ CASINO_BOXES = {
     "field_felt": dict(corner=CORNER_FIELD, straight=5, edge="KLD",
                        colors={"L": "6C5A2C", "D": "433813", "N": "0E4A26"}, first="135A30", last="0C4420"),
 }
-ALL_BOXES = list(BOXES) + list(CASINO_BOXES)
+# Einstellungen-Menü (Referenzen2): Kästen als 9-Slice aus den Referenzbildern (tools/assets/settings)
+import build_settings  # noqa: E402
+
+SLICED_BOXES = build_settings.boxes()
+ALL_BOXES = list(BOXES) + list(CASINO_BOXES) + list(SLICED_BOXES)
 # Kästen, die auch schmaler als 48 px gehen (Zahlenfelder im Roulette-Raster): schmale Mittelstücke
 NARROW_BOXES = ("field_red", "field_green", "field_black", "field_felt")
 
@@ -173,6 +177,9 @@ BUTTONS16 = {
     "s_gold_gray": dict(L="FAC23E", D="B3842D", Db="A08029", N="232327"),
     "s_green": dict(L="24AC5F", D="158C46", top2="1A8849", Db="0A5E28", N="19733D", side="177033"),
 }
+# Mehrfach-Schalter des Einstellungen-Menüs (9-Slice aus den Referenzbildern), Enum-Namen ohne "s_"
+SLICED_SMALL = {"s_" + k: v for k, v in build_settings.smalls().items()}
+BUTTONS16.update({k: {} for k in SLICED_SMALL})
 SMALL_H = 16
 CORNER_SMALL = [
     "...KK",
@@ -184,6 +191,8 @@ CORNER_SMALL = [
 
 
 def draw_small(w, h, style):
+    if style in SLICED_SMALL:
+        return build_settings.draw_small_sliced(w, h, SLICED_SMALL[style])
     spec = BUTTONS16[style]
     img = Image.new("RGBA", (w, h), T)
     px = img.load()
@@ -258,6 +267,8 @@ def corner_px(pattern, x, y, w, h):
 
 
 def draw_box(w, h, style):
+    if style in SLICED_BOXES:
+        return build_settings.draw_sliced(w, h, SLICED_BOXES[style])
     if style in CASINO_BOXES:
         return draw_casino_box(w, h, CASINO_BOXES[style])
     c, m, f = (rgb(v) for v in BOXES[style])
@@ -307,6 +318,8 @@ def draw_casino_box(w, h, spec):
 
 def box_straight(style):
     """Erste Zeile, ab der die Kasten-Ecke gerade ist (so weit dürfen Mittelzeilen überlappen)."""
+    if style in SLICED_BOXES:
+        return build_settings.straight_row(SLICED_BOXES[style])
     return CASINO_BOXES[style]["straight"] if style in CASINO_BOXES else 5
 
 

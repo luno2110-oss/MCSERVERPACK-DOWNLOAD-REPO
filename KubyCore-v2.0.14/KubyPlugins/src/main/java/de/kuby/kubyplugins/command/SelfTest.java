@@ -103,6 +103,29 @@ final class SelfTest {
                 new StatsScreen.Cell(KitData.Icon.CLOCK, "Spielzeit", "1 Std.", TextColor.color(0xFFFFFF))),
                 List.of(new StatsScreen.Board("Reichste", "baltop"))), c -> NO));
 
+        // Einstellungen: alle Reiter in SMP und Survival, Deutsch und Englisch, und die Sprachseite
+        de.kuby.kubyplugins.gui.SettingsScreen.Actions sa = new de.kuby.kubyplugins.gui.SettingsScreen.Actions() {
+            public Consumer<Player> tab(de.kuby.kubyplugins.service.PlayerSettings.Tab t) { return NO; }
+            public Consumer<Player> click(String key) { return NO; }
+            public Consumer<Player> language() { return NO; }
+            public Consumer<Player> translate() { return NO; }
+        };
+        java.util.UUID nobody = new java.util.UUID(0, 1);
+        for (String mode : List.of(de.kuby.kubyplugins.service.ModeService.SMP, de.kuby.kubyplugins.service.ModeService.SURVIVAL)) {
+            for (de.kuby.kubyplugins.service.PlayerSettings.Tab t : de.kuby.kubyplugins.service.PlayerSettings.Tab.values()) {
+                canvas.accept("Einstellungen " + mode + " " + t, () -> de.kuby.kubyplugins.gui.SettingsScreen.canvas(
+                        plugin.settingsScreen().view(nobody, t, mode), sa));
+            }
+        }
+        canvas.accept("Einstellungen englisch", () -> {
+            de.kuby.kubyplugins.gui.SettingsScreen.View v = plugin.settingsScreen().view(nobody,
+                    de.kuby.kubyplugins.service.PlayerSettings.Tab.DISPLAY, de.kuby.kubyplugins.service.ModeService.SMP);
+            return de.kuby.kubyplugins.gui.SettingsScreen.canvas(new de.kuby.kubyplugins.gui.SettingsScreen.View(v.tab(), v.tiles(),
+                    v.on(), v.total(), true, "English", true, true), sa);
+        });
+        canvas.accept("Sprache", () -> de.kuby.kubyplugins.gui.SettingsScreen.languageCanvas(List.of("Deutsch", "English"), 0, false,
+                i -> NO, NO));
+
         // Eingabe-Dialoge wie in Support, Freunde, Casino, Heiraten, Köpfe (Bestätigung, CLOSE, Text und mehrzeilig)
         try {
             DialogBase base = DialogBase.builder(Msg.parse("<b>Test"))

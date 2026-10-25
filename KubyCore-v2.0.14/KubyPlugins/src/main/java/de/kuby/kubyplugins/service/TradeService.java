@@ -92,6 +92,9 @@ public final class TradeService {
         if (ModeService.HUB.equals(mode)) return "In der Lobby wird nicht gehandelt.";
         if (!mode.equals(plugin.modes().modeOf(to.getUniqueId()))) return to.getName() + " spielt gerade in einem anderen Modus.";
         if (busy(from.getUniqueId()) || busy(to.getUniqueId())) return "Einer der beiden ist gerade beschäftigt.";
+        if (!plugin.playerSettings().get(to.getUniqueId(), "trade") && !plugin.friends().areFriends(from.getUniqueId(), to.getUniqueId())) {
+            return to.getName() + " nimmt gerade keine Handelsanfragen an.";
+        }
         requests.put(to.getUniqueId(), new Request(from.getUniqueId(), System.currentTimeMillis()));
         Msg.send(to, "<gold>" + from.getName() + " <gray>möchte mit dir handeln. Annehmen mit <white>/trade accept");
         Sfx.play(plugin, to, Sfx.Kind.PING);

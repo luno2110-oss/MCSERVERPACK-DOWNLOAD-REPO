@@ -156,7 +156,7 @@ public final class RaidInsuranceService {
         if (breaker != null) {
             Msg.send(breaker, "<gray>Du hast eine versicherte Kiste geraidet. Der Besitzer bekommt eine Auszahlung.");
         }
-        plugin.getServer().broadcast(Msg.parse("<red>Raid-Alarm <gray>bei einer versicherten Kiste ("
+        plugin.notifications().send("notify.broadcast", Msg.parse("<red>Raid-Alarm <gray>bei einer versicherten Kiste ("
                 + Msg.escape(where) + ")"));
     }
 

@@ -100,7 +100,7 @@ public final class DailyPotService {
         if (won != null) Sfx.play(plugin, won, Sfx.Kind.JACKPOT);
         tickets.clear();
         save();
-        plugin.getServer().broadcast(Msg.parse("<gold>Tagespot: <white>" + Msg.escape(name)
+        plugin.notifications().send("notify.dailypot", Msg.parse("<gold>Tagespot: <white>" + Msg.escape(name)
                 + " <gray>gewinnt <gold>" + Msg.coins(payout) + "$<gray>!"));
     }
 

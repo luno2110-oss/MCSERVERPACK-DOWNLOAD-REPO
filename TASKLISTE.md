@@ -109,6 +109,23 @@ Reihenfolge wie das Hilfe-Karussell der Referenz. Jede Seite: Titel, Untertitel,
 
 - [x] Grafik-Prüfung: **Fehler behoben**, durch den Paper 1.21.11 (Build 132) alle Grafik-Menüs ablehnte („Dialogs that pause the game must use after_action …“, z. B. `/angeln`): Menüs pausieren nicht mehr. Geprüft: Pack frisch gebaut = Pack im Repo (Zeichen-Tabelle identisch), alle 192 Modelle/Items/Texturen/Skins vorhanden, alle 962 Sonderzeichen im Code in den richtigen Schriften (Menüs, Scoreboard, Info-Leiste, Hotbar, Chat-Symbole), 68 Menü-Vorschauen mit 27.740 Textabschnitten ohne fehlende Zeichen, Pack-URL öffentlich erreichbar. Neu: CI-Server-Test startet nach jedem Build einen echten Paper-1.21.11-Server mit allen Jars, führt `kp selftest` aus (baut 41 Dialoge mit dem echten Server-Code) und prüft das Log; Log als Release „server-test“
 
+## Ordnergruppe 12 – Referenzen2 (Release „Referenzen2“, 22 Bilder vom Chaos SMP)
+Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelenshop-Dialog nur SMP (Survival bleibt eigenständig), der Rest überall dort, wo das Feature existiert (Survival behält seine Hilfe, Trophäen bleiben PvP/SMP). Sprache: Deutsch + Englisch. Generatoren entfallen vorerst. Branding Chaos → Kuby (Links aus der Config).
+- [x] 12.1 Einstellungen-Dialog `/settings` (alle Modi): Kopf „EINSTELLUNGEN · Ein Klick schaltet sofort um“ mit „Schalter an n/m“, 5 Reiter in eigener Farbe, Schalter-Kacheln mit AN/AUS (Englisch ON/OFF) und Mehrfach-Stellungen, Tooltips mit Erklärung und Stellungen, unten Sprache (eigene Seite) und Auto-Übersetzen. Grafik pixelgenau aus den Referenzen geschnitten (`tools/extract_settings.py`, `tools/build_settings.py`): im Vergleich weichen je Reiter 0–6 von ~97.000 Pixeln ab. Jeder Schalter hat eine echte Funktion:
+  - Chat: öffentlichen Chat ausblenden, Private Nachrichten, Join & Leave, Freunde online/offline (jetzt auch offline), Todesmeldungen (die eigene immer), Chat-Quiz, Chat-Hilfe („Meintest du /…?“ bei vertippten Befehlen), Changelog beim Join (`changelog` in der config.yml, jeder sieht nur Neues)
+  - Anfragen: Freunde, Team, Handel, TPA, **neu /tpahere**, Auto-TPA (Aus / Freunde / Freunde + Team), Duelle (SMP) bzw. Heiratsanträge (Survival); Freunde kommen immer durch
+  - Mitteilungen: alle Rundrufe laufen über die Schalter (Broadcasts & Tipps mit neuen Tipps alle 6 Min., Coinflip ab 2.500 $, Jackpot, DailyPot, Kisten, RTP-Queue und Duelle/Turniere/Kopfgelder in SMP, Angel-Turnier und Hochzeiten in Survival, Votes). Admin-Ansagen kommen immer durch. Generator-Meldungen entfallen (keine Generatoren)
+  - Anzeige: Scoreboard, Actionbar mit 7 Stellungen (Geld + XP, Nur Geld, Nur XP, Alle Währungen, Koordinaten mit Himmelsrichtung, Uhrzeit, Deaktiviert), Sounds, Partikel & Effekte (Hüte, Teleports, Casino, Kisten, Hochzeit), Nachtsicht, Team-Leuchten (Marker über Teammitgliedern, nur fürs eigene Team, durch Wände; SMP), Info-Leiste (Survival), Preise in der Hand (Verkaufswert in der Actionbar), Deko-NPCs (neu: `/kp deko add <Skin> [Name]`)
+  - Sonstiges: Auto-Neuverbindung (aus: Login in der Lobby), Pay-Bestätigung (Rückfrage vor /pay), Monster in der Nähe (Warnung in der Actionbar), Nachspringen, Eigener Hut
+  - Auto-Übersetzen: Übersetzung unter fremdsprachigen Chat-Nachrichten, braucht DeepL- oder LibreTranslate-Zugang (`translate` in der config.yml), sonst grau
+  - Survival-Anpassung: Heiratsanträge statt Duelle, Angel-Turnier und Hochzeiten statt RTP-Queue/Duelle, Info-Leiste statt Team-Leuchten; mit Survival-Leiste zeigt die Actionbar nur Stellungen ohne Geld
+- [ ] 12.2 Juwelenshop-Dialog (SMP): Übersicht mit Ränge, Battlepass, Crates, Vorteilspakete, Als Geschenk, Zum Store; Unterseiten mit „Dir fehlen …“, Kisten-Mengen 1/5/10/25, Pakete in 3 Spalten
+- [ ] 12.3 Battle-Pass-Dialog: Belohnungen (Free/Premium-Reihe, Stufenleiste, Seiten 1–7 …), Aufgaben (Tages-/Wochenaufgaben mit Fortschritt und Punkten, „Neu in …“), Premium (Premium-Pass kaufen, Stufen kaufen −5/−1/+1/+5)
+- [ ] 12.4 Guide (SMP-Hilfe): 12 Seiten mit Liste links und Inhalt rechts, Seite n/12
+- [ ] 12.5 Truhen-Menüs mit Bild-Kacheln und verziertem Tooltip-Rahmen: Orders (Info-Knopf „?“), Random TP (Overworld/Nether/The End als große Bilder), Trophäen (Ligen-Barren, „So funktioniert’s“)
+- [ ] 12.6 Discord-Statue (Wumpus) mit Schild „DISCORD“, Klick: Link und Booster-Hinweis im Chat
+- [ ] 12.7 Sprache Deutsch/Englisch je Spieler (Menüs und Meldungen)
+
 ## Ordnergruppe 5 – Scoreboard und Anzeigen (Refs: Video Scoreboard_Money, GELD_XP-Anzeige)
 - [x] 5.1 Sidebar SMP (v1.32)
 - [x] 5.2 Sidebar Survival nach Clip (v1.34). Level, Job, Tokens zeigen noch „—“, die Systeme fehlen

@@ -212,6 +212,14 @@ public final class ModeService {
             save();
         }
         String mode = modeOf(id);
+        if (!HUB.equals(mode) && spawnOf(HUB) != null && plugin.playerSettings() != null
+                && !plugin.playerSettings().get(id, "reconnect")) {
+            // Auto-Neuverbindung aus: in die Lobby. Der Stand im Modus (so wie er beim Ausloggen war) bleibt gespeichert.
+            capture(p, mode);
+            current.put(id, HUB);
+            mode = HUB;
+            save();
+        }
         apply(p, mode);
         Location loc = spawnOf(mode);
         if (loc != null) p.teleportAsync(loc);

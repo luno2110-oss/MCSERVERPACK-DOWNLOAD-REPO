@@ -210,6 +210,10 @@ public final class TeamService {
         if (target.equals(inviter)) return "Du kannst dich nicht selbst einladen.";
         if (!mode(target.getUniqueId()).equals(t.mode)) return "Dieser Spieler ist gerade in einem anderen Modus.";
         if (of(target.getUniqueId()) != null) return "Dieser Spieler ist schon in einem Team.";
+        if (!plugin.playerSettings().get(target.getUniqueId(), "team.invites")
+                && !plugin.friends().areFriends(inviter.getUniqueId(), target.getUniqueId())) {
+            return target.getName() + " nimmt gerade keine Team-Anfragen an.";
+        }
         if (t.members.size() >= maxMembers(t)) return "Dein Team ist voll.";
         invites.put(mkey(target.getUniqueId()), key(t));
         return null;

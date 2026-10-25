@@ -11,12 +11,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-/** Teleport-Anfragen: /tpa Spieler, dann /tpaccept oder /tpadeny. Der Anfragende springt zum Ziel. */
+/**
+ * Teleport-Anfragen: /tpa Spieler (der Anfragende springt zum Ziel) und /tpahere Spieler (das Ziel springt zum
+ * Anfragenden), dann /tpaccept oder /tpadeny. Ob jemand Anfragen bekommt, steht in /settings (TPA-, TPAhere-Anfragen);
+ * Auto-TPA nimmt Anfragen von Freunden (oder Freunden und Team) sofort an.
+ */
 public final class TpaService {
 
     private static final long TIMEOUT_MS = 60_000L;
 
-    private record Req(UUID from, long at) {}
+    private record Req(UUID from, long at, boolean here) {}
 
     private final KubyPlugins plugin;
     private final Map<UUID, Req> requests = new HashMap<>();
@@ -27,17 +31,39 @@ public final class TpaService {
 
     /** Gibt null bei Erfolg zurück. */
     public synchronized String request(Player from, Player to) {
+        return request(from, to, false);
+    }
+
+    /** here = /tpahere: das Ziel kommt zum Anfragenden. Gibt null bei Erfolg zurück. */
+    public synchronized String request(Player from, Player to, boolean here) {
         if (from.equals(to)) return "Du kannst dich nicht zu dir selbst teleportieren.";
         if (busy(from) || busy(to)) return "Einer der beiden ist gerade beschäftigt.";
-        if (!plugin.playerSettings().get(to.getUniqueId(), "tpa") && !plugin.friends().areFriends(from.getUniqueId(), to.getUniqueId())
-                && !from.hasPermission("kuby.admin")) {
-            return to.getName() + " nimmt gerade keine Teleport-Anfragen an.";
+        boolean friends = plugin.friends().areFriends(from.getUniqueId(), to.getUniqueId());
+        String key = here ? "tpahere" : "tpa";
+        if (!plugin.playerSettings().get(to.getUniqueId(), key) && !friends && !from.hasPermission("kuby.admin")) {
+            return to.getName() + " nimmt gerade keine " + (here ? "TPAhere" : "Teleport") + "-Anfragen an.";
         }
-        requests.put(to.getUniqueId(), new Req(from.getUniqueId(), System.currentTimeMillis()));
-        Msg.send(to, "<gold>" + from.getName() + " <gray>möchte zu dir teleportieren. <white>/tpaccept <gray>oder <white>/tpadeny");
+        requests.put(to.getUniqueId(), new Req(from.getUniqueId(), System.currentTimeMillis(), here));
+        if (autoAccept(from, to, friends)) {
+            Msg.send(from, "<gray>" + to.getName() + " nimmt deine Anfrage automatisch an.");
+            Msg.send(to, "<gray>Auto-TPA: Anfrage von <white>" + from.getName() + " <gray>angenommen.");
+            accept(to);
+            return null;
+        }
+        Msg.send(to, "<gold>" + from.getName() + (here ? " <gray>möchte dich zu sich holen. " : " <gray>möchte zu dir teleportieren. ")
+                + "<click:run_command:'/tpaccept'><green>[Annehmen]</green></click> <click:run_command:'/tpadeny'><red>[Ablehnen]</red></click>");
         Sfx.play(plugin, to, Sfx.Kind.PING);
         Msg.send(from, "<gray>Anfrage an <white>" + to.getName() + " <gray>gesendet.");
         return null;
+    }
+
+    private boolean autoAccept(Player from, Player to, boolean friends) {
+        String mode = plugin.playerSettings().choice(to.getUniqueId(), "autotpa");
+        if (mode.equals("off")) return false;
+        if (friends) return true;
+        if (!mode.equals("team")) return false;
+        TeamService.Team a = plugin.teams().of(from.getUniqueId()), b = plugin.teams().of(to.getUniqueId());
+        return a != null && a == b;
     }
 
     public synchronized String accept(Player to) {
@@ -48,10 +74,10 @@ public final class TpaService {
         if (from == null) return "Der Anfragende ist offline.";
         if (busy(from) || busy(to)) return "Einer der beiden ist gerade beschäftigt.";
         Msg.send(to, "<green>Anfrage angenommen.");
-        Teleports.delayed(plugin, from, to.getLocation(), to.getName());
+        if (r.here()) Teleports.delayed(plugin, to, from.getLocation(), from.getName());
+        else Teleports.delayed(plugin, from, to.getLocation(), to.getName());
         return null;
     }
-
     public synchronized String deny(Player to) {
         Req r = requests.remove(to.getUniqueId());
         if (r == null) return "Keine offene Anfrage.";

@@ -10,7 +10,7 @@ import org.bukkit.entity.Player;
 
 import java.util.List;
 
-/** /settings (allgemein) und /bossbar (Inhalt der Info-Leiste). Klick schaltet an/aus. */
+/** /bossbar (Inhalt der Info-Leiste); früher auch /settings (jetzt SettingsScreen). Klick schaltet an/aus. */
 public final class PlayerSettingsMenu extends GuiMenu {
 
     private static final String[] GENERAL = {"msg", "friends", "tpa", "jump", "sounds", "scoreboard", "infobar"};
@@ -36,8 +36,8 @@ public final class PlayerSettingsMenu extends GuiMenu {
             String key = keys[i];
             PlayerSettings.Option o = PlayerSettings.OPTIONS.get(key);
             boolean on = plugin.playerSettings().get(p.getUniqueId(), key);
-            set(start + i, Items.make(icons[i], (on ? "<green>" : "<red>") + o.name() + ": " + (on ? "an" : "aus"),
-                    List.of("<gray>" + o.desc(), "", "<yellow>Klick zum Umschalten")), e -> {
+            set(start + i, Items.make(icons[i], (on ? "<green>" : "<red>") + o.name(false) + ": " + (on ? "an" : "aus"),
+                    List.of("<gray>" + o.desc(false), "", "<yellow>Klick zum Umschalten")), e -> {
                 plugin.playerSettings().toggle(p.getUniqueId(), key);
                 Sfx.play(plugin, p, Sfx.Kind.CLICK);
                 open(p);
@@ -45,7 +45,7 @@ public final class PlayerSettingsMenu extends GuiMenu {
         }
         if (bar) {
             set(18, Items.make(Material.COMPARATOR, "<white>Allgemeine Einstellungen", List.of("<gray>/settings", "", "<yellow>Klick")),
-                    e -> new PlayerSettingsMenu(plugin, false).open(p));
+                    e -> plugin.settingsScreen().open(p, PlayerSettings.Tab.CHAT));
         } else {
             set(18, Items.make(Material.WHITE_BANNER, "<white>Inhalt der Info-Leiste", List.of("<gray>/bossbar", "", "<yellow>Klick")),
                     e -> new PlayerSettingsMenu(plugin, true).open(p));

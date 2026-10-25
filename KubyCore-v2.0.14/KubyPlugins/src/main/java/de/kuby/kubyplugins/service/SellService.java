@@ -68,6 +68,14 @@ public final class SellService {
         return null;
     }
 
+    /** Verkaufswert eines Stücks (mit Wochen-Meta und Verkaufs-Stufe), 0 = nicht verkaufbar. */
+    public long unitPrice(UUID id, ItemStack item) {
+        Long price = worth().get(item.getType());
+        if (price == null || price <= 0) return 0;
+        long unit = plugin.weekly().isMeta(item.getType()) ? price * 125 / 100 : price;
+        return (long) Math.floor(unit * multiplier(id));
+    }
+
     /** Verkauft alle Items mit Preis aus dem Hauptinventar. Gibt die Auszahlung zurück. */
     public synchronized long sellInventory(Player p) {
         Map<Material, Long> prices = worth();

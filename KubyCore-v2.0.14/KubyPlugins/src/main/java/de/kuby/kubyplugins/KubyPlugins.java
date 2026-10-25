@@ -168,6 +168,7 @@ public final class KubyPlugins extends JavaPlugin {
         stats = new StatsService(this);
         prompts = new PromptService(this);
         playerSettings = new de.kuby.kubyplugins.service.PlayerSettings(this);
+        notifications = new de.kuby.kubyplugins.service.NotifyService(this);
         dailyPot = new DailyPotService(this);
         tags = new TagService(this);
         trades = new TradeService(this);
@@ -239,6 +240,13 @@ public final class KubyPlugins extends JavaPlugin {
         getServer().getPluginManager().registerEvents(crates, this);
         hats = new de.kuby.kubyplugins.service.HatService(this);
         getServer().getPluginManager().registerEvents(hats, this);
+        // Einstellungen: was die Schalter in /settings im Spiel tun
+        displaySettings = new de.kuby.kubyplugins.service.DisplaySettings(this);
+        getServer().getPluginManager().registerEvents(displaySettings, this);
+        translator = new de.kuby.kubyplugins.service.TranslateService(this);
+        getServer().getPluginManager().registerEvents(translator, this);
+        settingsScreen = new de.kuby.kubyplugins.gui.SettingsScreen(this);
+        getServer().getPluginManager().registerEvents(new de.kuby.kubyplugins.listener.ChatSettingsListener(this), this);
         playtime = new PlaytimeService(this);
         getServer().getPluginManager().registerEvents(playtime, this);
         tpa = new TpaService(this);
@@ -313,8 +321,10 @@ public final class KubyPlugins extends JavaPlugin {
                 playerSettings.reset(p.getUniqueId(), "bar.");
                 playerSettings.set(p.getUniqueId(), "infobar", true);
                 de.kuby.kubyplugins.util.Msg.send(p, "<green>Info-Leiste zurückgesetzt.");
+            } else if (bar) {
+                new de.kuby.kubyplugins.gui.PlayerSettingsMenu(this, true).open(p);
             } else {
-                new de.kuby.kubyplugins.gui.PlayerSettingsMenu(this, bar).open(p);
+                settingsCommand(p, sub);
             }
             return true;
         }, "settings", "bossbar");
@@ -341,7 +351,7 @@ public final class KubyPlugins extends JavaPlugin {
         setAll(crash, "cashout");
         setAll(new AdminCommand(this), "kadmin");
         setAll(new HelpCommand(this), "befehle", "menu");
-        setAll(new ExtraCommand(this), "dailypot", "trade", "tags", "rtpqueue", "meta", "booster", "xpshop", "battlepass", "turnier", "verify", "versichern", "enderchest", "kristaltrade", "investments", "quizvote", "totenkiste", "kits", "hub", "tpa", "tpaccept", "tpadeny", "spielzeit", "playtime");
+        setAll(new ExtraCommand(this), "dailypot", "trade", "tags", "rtpqueue", "meta", "booster", "xpshop", "battlepass", "turnier", "verify", "versichern", "enderchest", "kristaltrade", "investments", "quizvote", "totenkiste", "kits", "hub", "tpa", "tpahere", "tpaccept", "tpadeny", "spielzeit", "playtime");
         setAll(new KpCommand(this), "kp");
         getServer().getPluginManager().registerEvents(new TradeListener(this), this);
         getServer().getPluginManager().registerEvents(new QuizListener(this), this);
@@ -394,6 +404,7 @@ public final class KubyPlugins extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (displaySettings != null) displaySettings.shutdown();
         blackjack.shutdown();
         roulette.shutdown();
         slots.shutdown();
@@ -457,6 +468,16 @@ public final class KubyPlugins extends JavaPlugin {
     public PromptService prompts() { return prompts; }
     private de.kuby.kubyplugins.service.PlayerSettings playerSettings;
     public de.kuby.kubyplugins.service.PlayerSettings playerSettings() { return playerSettings; }
+    private de.kuby.kubyplugins.service.NotifyService notifications;
+    private de.kuby.kubyplugins.service.DisplaySettings displaySettings;
+    private de.kuby.kubyplugins.service.TranslateService translator;
+    private de.kuby.kubyplugins.gui.SettingsScreen settingsScreen;
+    /** Mitteilungen nur an Spieler, die sie in /settings eingeschaltet haben. */
+    public de.kuby.kubyplugins.service.NotifyService notifications() { return notifications; }
+    public de.kuby.kubyplugins.service.DisplaySettings displaySettings() { return displaySettings; }
+    public de.kuby.kubyplugins.service.TranslateService translator() { return translator; }
+    public de.kuby.kubyplugins.gui.SettingsScreen settingsScreen() { return settingsScreen; }
+    public HotbarDisplay hotbar() { return hotbar; }
     public DailyPotService dailyPot() { return dailyPot; }
     public TagService tags() { return tags; }
     public TradeService trades() { return trades; }
@@ -516,6 +537,30 @@ public final class KubyPlugins extends JavaPlugin {
         String suffix = nameSuffix(p.getUniqueId());
         p.playerListName(prefix.isEmpty() && suffix.isEmpty() ? null : de.kuby.kubyplugins.util.Msg.parse(prefix)
                 .append(net.kyori.adventure.text.Component.text(p.getName())).append(de.kuby.kubyplugins.util.Msg.parse(suffix)));
+    }
+
+    /** /settings [reiter|schalter]: öffnet den Reiter oder schaltet einen Schalter um (für die Chat-Ansicht ohne Pack). */
+    private void settingsCommand(org.bukkit.entity.Player p, String sub) {
+        de.kuby.kubyplugins.service.PlayerSettings.Tab tab = switch (sub) {
+            case "anfragen", "requests" -> de.kuby.kubyplugins.service.PlayerSettings.Tab.REQUESTS;
+            case "mitteilungen", "notify", "alerts" -> de.kuby.kubyplugins.service.PlayerSettings.Tab.NOTIFY;
+            case "anzeige", "display" -> de.kuby.kubyplugins.service.PlayerSettings.Tab.DISPLAY;
+            case "sonstiges", "other" -> de.kuby.kubyplugins.service.PlayerSettings.Tab.OTHER;
+            case "sprache", "language" -> null;
+            default -> de.kuby.kubyplugins.service.PlayerSettings.Tab.CHAT;
+        };
+        if (sub.equals("sprache") || sub.equals("language")) {
+            settingsScreen.openLanguage(p, de.kuby.kubyplugins.service.PlayerSettings.Tab.CHAT);
+            return;
+        }
+        de.kuby.kubyplugins.service.PlayerSettings.Option o = de.kuby.kubyplugins.service.PlayerSettings.OPTIONS.get(sub);
+        if (o != null && o.shownIn(modes.modeOf(p.getUniqueId()))) {
+            if (o.multi()) playerSettings.cycle(p.getUniqueId(), o.key());
+            else playerSettings.toggle(p.getUniqueId(), o.key());
+            de.kuby.kubyplugins.util.Sfx.play(this, p, de.kuby.kubyplugins.util.Sfx.Kind.CLICK);
+            tab = o.tab();
+        }
+        settingsScreen.open(p, tab);
     }
 
     /** Texte von Addons für Anzeigen (z. B. der aktuelle Job). Leer, wenn kein Addon den Wert liefert. */

@@ -55,7 +55,8 @@ public final class ExtraCommand implements CommandExecutor {
             case "investments" -> new InvestmentsMenu(plugin).open(p);
             case "quizvote" -> new QuizVoteMenu(plugin).open(p);
             case "kits" -> new KitMenu(plugin).open(p);
-            case "tpa" -> tpa(p, args);
+            case "tpa" -> tpa(p, args, false);
+            case "tpahere" -> tpa(p, args, true);
             case "tpaccept" -> {
                 String err = plugin.tpa().accept(p);
                 if (err != null) Msg.send(p, "<red>" + err);
@@ -190,9 +191,9 @@ public final class ExtraCommand implements CommandExecutor {
     }
 
 
-    private void tpa(Player p, String[] args) {
+    private void tpa(Player p, String[] args, boolean here) {
         if (args.length == 0) {
-            Msg.send(p, "<red>Nutzung: /tpa <Spieler>");
+            Msg.send(p, "<red>Nutzung: /" + (here ? "tpahere" : "tpa") + " <Spieler>");
             return;
         }
         Player target = Bukkit.getPlayerExact(args[0]);
@@ -200,7 +201,7 @@ public final class ExtraCommand implements CommandExecutor {
             Msg.send(p, "<red>Spieler nicht online.");
             return;
         }
-        String err = plugin.tpa().request(p, target);
+        String err = plugin.tpa().request(p, target, here);
         if (err != null) Msg.send(p, "<red>" + err);
     }
 }

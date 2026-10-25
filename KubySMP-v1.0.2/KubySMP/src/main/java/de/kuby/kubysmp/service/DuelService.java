@@ -68,6 +68,9 @@ public final class DuelService {
         }
         if (from.equals(to)) return "Du kannst dich nicht selbst herausfordern.";
         if (bet < 0) return "Ungültiger Einsatz.";
+        if (!plugin.playerSettings().get(to.getUniqueId(), "duel") && !plugin.friends().areFriends(from.getUniqueId(), to.getUniqueId())) {
+            return to.getName() + " nimmt gerade keine Duell-Anfragen an.";
+        }
         if (isDueling(from.getUniqueId()) || isDueling(to.getUniqueId())) return "Einer der beiden ist gerade im Duell.";
         if (KubySMP.get().combat().inCombat(from.getUniqueId()) || KubySMP.get().combat().inCombat(to.getUniqueId())) {
             return "Einer der beiden ist gerade im Kampf.";
@@ -232,6 +235,12 @@ public final class DuelService {
         if (loser != null && loser.isOnline()) {
             Msg.send(loser, "<red>Du hast das Duell verloren.");
             Sfx.play(plugin, loser, Sfx.Kind.LOSE);
+        }
+        String wn = Bukkit.getOfflinePlayer(winnerId).getName(), ln = Bukkit.getOfflinePlayer(loserId).getName();
+        if (wn != null && ln != null && !KubySMP.get().tournaments().isMatchPair(winnerId, loserId)) {
+            plugin.notifications().send("notify.duel", Msg.parse("<#FCD45D><b>DUELL</b> <dark_gray>▶ <white>" + wn
+                    + " <gray>besiegt <white>" + ln + (pot > 0 ? " <gray>und gewinnt <gold>" + Msg.coins(pot - tax) + "$" : "")),
+                    o -> !o.getUniqueId().equals(winnerId) && !o.getUniqueId().equals(loserId));
         }
         // Verzögert, damit Inventar und Position beider Spieler zuerst zurückgesetzt sind
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> KubySMP.get().tournaments().onDuelEnd(winnerId, loserId), 60L);

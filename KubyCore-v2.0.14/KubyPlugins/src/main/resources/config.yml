@@ -156,6 +156,7 @@ casino:
 
 coinflip:
   max-bet: 5000
+  announce-min: 2500   # ab diesem Einsatz geht ein Gewinn an alle mit "Coinflip-Mitteilungen"
 
 quiz:
   interval-minutes: 20
@@ -330,6 +331,41 @@ daily-shop:
 
 display:
   hotbar: true
+
+# Tipps im Chat (Schalter "Broadcasts & Tipps" in /settings). messages-en: dieselben Tipps auf Englisch.
+tips:
+  enabled: true
+  interval-minutes: 6
+  prefix: "<#FCD45D><b>TIPP</b> <dark_gray>▶ "
+  messages:
+    - "In <white>/settings</white> schaltest du Chat, Anfragen, Mitteilungen und Anzeigen mit einem Klick um."
+    - "Mit <white>/tpahere Name</white> holst du jemanden zu dir. Auto-TPA in /settings nimmt Anfragen von Freunden sofort an."
+    - "Die Actionbar zeigt auf Wunsch Koordinaten oder die Uhrzeit: <white>/settings</white> → Anzeige."
+    - "Freunde siehst du mit <white>/friends</white>. Freunde dürfen dir auch dann schreiben, wenn Nachrichten aus sind."
+    - "Täglich abstimmen bringt Juwelen und Schlüssel: <white>/vote</white>"
+    - "Kisten öffnest du mit virtuellen Schlüsseln: <white>/keys</white>"
+    - "Probleme oder Fragen? <white>/support</white> erstellt ein Ticket."
+  messages-en:
+    - "In <white>/settings</white> you switch chat, requests, alerts and displays with one click."
+    - "Use <white>/tpahere name</white> to pull someone to you. Auto TPA in /settings accepts friends at once."
+    - "The action bar can show coordinates or the time: <white>/settings</white> → Display."
+    - "See your friends with <white>/friends</white>. Friends can message you even when messages are off."
+    - "Vote daily for jewels and keys: <white>/vote</white>"
+    - "Open crates with virtual keys: <white>/keys</white>"
+    - "Problems or questions? <white>/support</white> opens a ticket."
+
+# Neuerungen, die Spieler beim Betreten sehen (Schalter "Changelog beim Join"). Format "JJJJ-MM-TT: Text",
+# jeder sieht nur, was er noch nicht gesehen hat (neue Spieler höchstens die letzten drei).
+changelog:
+  - "2026-10-25: Neue Einstellungen mit fünf Reitern: <white>/settings</white>"
+
+# Auto-Übersetzen im Chat (Schalter unten in /settings). provider: none, deepl oder libre.
+# deepl: key = API-Schlüssel von deepl.com (kostenlos bis 500.000 Zeichen im Monat). libre: url = LibreTranslate-Server,
+# key nur, wenn der Server einen verlangt. Ohne Dienst lässt sich der Schalter nicht einschalten.
+translate:
+  provider: none
+  url: ""
+  key: ""
 
 # Survival: Leiste oben (Platz der Bossbar) mit Geld, Juwelen, Angel-Level und Ort. Ersetzt dort die Anzeige
 # über der Hotbar. Braucht das Pack KubyUI (macht weiße Bossbars unsichtbar, die Leiste nutzt nur den Titel).

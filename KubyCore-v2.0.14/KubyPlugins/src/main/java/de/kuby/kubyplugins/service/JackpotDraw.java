@@ -141,7 +141,7 @@ public final class JackpotDraw {
 
     private void draw() {
         if (participants.isEmpty()) {
-            Bukkit.broadcast(Msg.parse("<gold>Casino: <gray>Keine Teilnehmer bei der Jackpot-Ziehung. Der Jackpot wächst weiter auf <yellow>"
+            plugin.notifications().send("notify.jackpot", Msg.parse("<gold>Casino: <gray>Keine Teilnehmer bei der Jackpot-Ziehung. Der Jackpot wächst weiter auf <yellow>"
                     + Msg.coins(plugin.casino().jackpot()) + "$"));
             return;
         }
@@ -154,7 +154,7 @@ public final class JackpotDraw {
         String name = Bukkit.getOfflinePlayer(winner).getName();
         lastWinner = name == null ? "Jemand" : name;
         lastAmount = money;
-        Bukkit.broadcast(Msg.parse("<#F2B829><b>JACKPOT</b></#F2B829> <dark_gray>▶</dark_gray> <white>" + lastWinner
+        plugin.notifications().send("notify.jackpot", Msg.parse("<#F2B829><b>JACKPOT</b></#F2B829> <dark_gray>▶</dark_gray> <white>" + lastWinner
                 + " <gray>knackt den Tresor: <yellow>" + Msg.coins(money) + " Chips <gray>(" + list.size() + " Teilnehmer)"));
         Player online = Bukkit.getPlayer(winner);
         if (online != null) Sfx.play(plugin, online, Sfx.Kind.JACKPOT);

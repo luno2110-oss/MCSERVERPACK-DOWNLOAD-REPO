@@ -286,8 +286,8 @@ public final class SlotsService implements Listener {
         plugin.casinoLog().record("Slots", p.getUniqueId(), bet, pay);
         Location fx = s.machine.effectLocation();
         if (pay > 0) {
-            fx.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, fx, 14 + (int) Math.min(30, pay / bet * 2), 0.5, 0.3, 0.2, 0);
-            fx.getWorld().spawnParticle(Particle.FIREWORK, fx, pay >= bet * 10 ? 30 : 6, 0.4, 0.3, 0.2, 0.05);
+            de.kuby.kubyplugins.util.Fx.particle(plugin, fx, Particle.HAPPY_VILLAGER, 14 + (int) Math.min(30, pay / bet * 2), 0.5, 0.3, 0.2, 0);
+            de.kuby.kubyplugins.util.Fx.particle(plugin, fx, Particle.FIREWORK, pay >= bet * 10 ? 30 : 6, 0.4, 0.3, 0.2, 0.05);
             p.playSound(fx, pay >= bet * 10 ? Sound.UI_TOAST_CHALLENGE_COMPLETE : Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.7f, 1.2f);
             p.sendActionBar(Msg.parse("<green>+" + CasinoText.chips(pay) + " <gray>· <white>" + what));
         } else {
@@ -298,7 +298,7 @@ public final class SlotsService implements Listener {
             p.showTitle(Title.title(Msg.parse("<b><gradient:#FFE070:#F2A21C>JACKPOT!</gradient></b>"),
                     Msg.parse("<yellow>+" + CasinoText.chips(pay)), Title.Times.times(Duration.ofMillis(200), Duration.ofSeconds(3), Duration.ofMillis(600))));
             CasinoFx.jackpot(plugin, p.getUniqueId(), fx, pay);
-            Bukkit.broadcast(Msg.parse(CasinoText.PREFIX + "<yellow><b>" + Msg.escape(p.getName()) + "</b> knackt den Slots-Jackpot: <gold>"
+            plugin.notifications().send("notify.jackpot", Msg.parse(CasinoText.PREFIX + "<yellow><b>" + Msg.escape(p.getName()) + "</b> knackt den Slots-Jackpot: <gold>"
                     + CasinoText.chips(pay) + "</gold>!"));
         } else if (pay >= bet * 20) {
             CasinoFx.show(plugin, p.getUniqueId(), fx, CasinoFx.Result.BIG_WIN, pay - bet);

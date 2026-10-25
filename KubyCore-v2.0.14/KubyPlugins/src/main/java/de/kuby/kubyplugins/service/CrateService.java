@@ -359,7 +359,7 @@ public final class CrateService implements Listener {
         Msg.send(p, "<#F0A050><b>KISTE</b> <dark_gray>▶ <gray>" + Msg.escape(c.name()) + ": <" + col + "><b>" + Msg.escape(r.name())
                 + "</b></" + col + "> <dark_gray>(" + String.format(Locale.GERMANY, "%.1f", ch) + " %)");
         if (ch < 1.5) {
-            Bukkit.broadcast(Msg.parse("<#F0A050><b>KISTE</b> <dark_gray>▶ <white>" + p.getName() + " <gray>hat <" + col + ">"
+            plugin.notifications().send("notify.crate", Msg.parse("<#F0A050><b>KISTE</b> <dark_gray>▶ <white>" + p.getName() + " <gray>hat <" + col + ">"
                     + Msg.escape(r.name()) + "</" + col + "> <gray>aus der " + Msg.escape(c.name()) + " gezogen!"));
         }
         Sfx.play(plugin, p, ch < 5 ? Sfx.Kind.SUCCESS_BIG : Sfx.Kind.SUCCESS);
@@ -424,7 +424,7 @@ public final class CrateService implements Listener {
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             double ch = c.chance(win);
             Location at = d.isValid() ? d.getLocation() : top;
-            at.getWorld().spawnParticle(ch < 1.5 ? Particle.TOTEM_OF_UNDYING : Particle.HAPPY_VILLAGER, at, ch < 1.5 ? 60 : 20,
+            de.kuby.kubyplugins.util.Fx.particle(plugin, at, ch < 1.5 ? Particle.TOTEM_OF_UNDYING : Particle.HAPPY_VILLAGER, ch < 1.5 ? 60 : 20,
                     0.3, 0.3, 0.3, 0.2);
             at.getWorld().playSound(at, ch < 5 ? Sound.UI_TOAST_CHALLENGE_COMPLETE : Sound.ENTITY_PLAYER_LEVELUP, 0.7f, 1.2f);
             TextDisplay name = at.getWorld().spawn(at.clone().add(0, 0.55, 0), TextDisplay.class, e -> {

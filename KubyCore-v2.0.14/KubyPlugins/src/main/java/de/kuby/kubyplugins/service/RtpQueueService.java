@@ -50,6 +50,12 @@ public final class RtpQueueService {
 
         enqueue(id);
         Msg.send(p, "<gray>In der Warteschlange für ein Duo <white>(" + queue.size() + " wartend)");
+        if (queue.size() == 1) {
+            String mode = plugin.modes().modeOf(id);
+            plugin.notifications().send("notify.rtpqueue", Msg.parse("<#7BC4FC><b>RTP-QUEUE</b> <dark_gray>▶ <white>" + p.getName()
+                    + " <gray>wartet auf einen Gegner. <click:run_command:'/rtpqueue'><green>[Beitreten]</green></click>"),
+                    o -> !o.equals(p) && mode.equals(plugin.modes().modeOf(o.getUniqueId())));
+        }
         if (queue.size() >= 2) {
             UUID a = queue.poll();
             UUID b = queue.poll();

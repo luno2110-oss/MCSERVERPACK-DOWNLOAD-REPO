@@ -442,7 +442,7 @@ public final class CrashGame implements Listener, CommandExecutor {
         Location fx = fxAt();
         if (fx != null) {
             fx.getWorld().playSound(fx, Sound.ENTITY_GENERIC_EXPLODE, 0.7f, 1.2f);
-            fx.getWorld().spawnParticle(org.bukkit.Particle.SMOKE, fx, 30, 1.2, 0.6, 0.1, 0.02);
+            de.kuby.kubyplugins.util.Fx.particle(plugin, fx, org.bukkit.Particle.SMOKE, 30, 1.2, 0.6, 0.1, 0.02);
         }
         endRound();
     }

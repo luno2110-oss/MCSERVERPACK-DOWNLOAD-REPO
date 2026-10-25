@@ -82,7 +82,52 @@ public final class KubyCommand implements CommandExecutor, TabCompleter {
             Msg.send(p, "<red>Ungültiger Betrag.");
             return;
         }
-        if (amount <= 0 || !plugin.economy().withdraw(p.getUniqueId(), amount)) {
+        if (amount <= 0 || plugin.economy().balance(p.getUniqueId()) < amount) {
+            Msg.send(p, "<red>Nicht genug$ oder ungültiger Betrag.");
+            return;
+        }
+        if (plugin.playerSettings().get(p.getUniqueId(), "pay.confirm")) {
+            confirmPay(p, target, amount);
+            return;
+        }
+        transfer(p, target, amount);
+    }
+
+    /** Pay-Bestätigung (Schalter in /settings): erst nach "Senden" wird überwiesen. */
+    private void confirmPay(Player p, Player target, long amount) {
+        boolean en = plugin.playerSettings().english(p.getUniqueId());
+        String name = target.getName();
+        io.papermc.paper.registry.data.dialog.DialogBase base = io.papermc.paper.registry.data.dialog.DialogBase
+                .builder(Msg.parse("<gold><b>" + (en ? "Send money?" : "Geld senden?")))
+                .canCloseWithEscape(true)
+                .afterAction(io.papermc.paper.registry.data.dialog.DialogBase.DialogAfterAction.CLOSE)
+                .body(java.util.List.of(io.papermc.paper.registry.data.dialog.body.DialogBody.plainMessage(Msg.parse(
+                        "<gray>" + (en ? "Send " : "") + "<gold>" + Msg.coins(amount) + "$</gold> " + (en ? "to " : "an ")
+                                + "<white>" + name + "</white>" + (en ? "?" : " senden?")
+                                + "\n<dark_gray>" + (en ? "Turn off in /settings: Pay confirmation" : "Abschalten in /settings: Pay-Bestätigung")), 260)))
+                .build();
+        net.kyori.adventure.text.event.ClickCallback.Options once = net.kyori.adventure.text.event.ClickCallback.Options.builder()
+                .uses(1).lifetime(java.time.Duration.ofMinutes(2)).build();
+        io.papermc.paper.registry.data.dialog.ActionButton yes = io.papermc.paper.registry.data.dialog.ActionButton.create(
+                Msg.parse("<green><b>" + (en ? "Send" : "Senden") + "</b>"), null, 110,
+                io.papermc.paper.registry.data.dialog.action.DialogAction.customClick((response, audience) -> {
+                    if (!(audience instanceof Player pl)) return;
+                    Player t = Bukkit.getPlayer(target.getUniqueId());
+                    if (t == null) {
+                        Msg.send(pl, "<red>" + name + (en ? " is offline now." : " ist jetzt offline."));
+                        return;
+                    }
+                    transfer(pl, t, amount);
+                }, once));
+        io.papermc.paper.registry.data.dialog.ActionButton no = io.papermc.paper.registry.data.dialog.ActionButton.create(
+                Msg.parse("<gray>" + (en ? "Cancel" : "Abbrechen")), null, 100,
+                io.papermc.paper.registry.data.dialog.action.DialogAction.customClick((response, audience) -> { }, once));
+        p.showDialog(io.papermc.paper.dialog.Dialog.create(b -> b.empty().base(base)
+                .type(io.papermc.paper.registry.data.dialog.type.DialogType.confirmation(yes, no))));
+    }
+
+    private void transfer(Player p, Player target, long amount) {
+        if (!plugin.economy().withdraw(p.getUniqueId(), amount)) {
             Msg.send(p, "<red>Nicht genug$ oder ungültiger Betrag.");
             return;
         }
