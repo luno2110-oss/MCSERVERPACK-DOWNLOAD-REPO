@@ -86,7 +86,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         working-directory: server
         run: |
-          touch problems.txt
+          [ -s problems.txt ] || echo "keine Probleme" > problems.txt
           gh release view server-test -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
             gh release create server-test -R "$GITHUB_REPOSITORY" --title "Server-Test" --notes "Log des letzten Server-Tests" --prerelease
           gh release upload server-test server.log problems.txt -R "$GITHUB_REPOSITORY" --clobber
