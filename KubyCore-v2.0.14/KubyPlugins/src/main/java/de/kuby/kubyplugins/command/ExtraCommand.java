@@ -147,18 +147,37 @@ public final class ExtraCommand implements CommandExecutor {
 
 
 
+    /** /verify: zeigt den Weg zur Verlinkung oder schaltet nach dem Verlinken Haken und Home frei. */
     private void verify(Player p) {
+        String link = plugin.getConfig().getString("discord.invite", "https://discord.gg/");
         if (!plugin.discord().available()) {
-            Msg.send(p, "<red>DiscordSRV ist auf diesem Server nicht installiert.");
+            Msg.send(p, "<red>Verlinken ist auf diesem Server gerade nicht möglich (DiscordSRV fehlt).");
             return;
         }
-        if (plugin.discord().discordIdOf(p.getUniqueId()) != null) {
-            Msg.send(p, "<green>Dein Discord-Account ist verknüpft.");
-            plugin.homes().grantVerify(p.getUniqueId());
-            Msg.send(p, "<green>+3 Homeplätze freigeschaltet.");
-        } else {
-            Msg.send(p, "<gray>Nicht verknüpft. Schreibe <white>/linkaccount <gray>im Discord.");
+        if (plugin.discord().discordIdOf(p.getUniqueId()) == null) {
+            Msg.send(p, "<#5865F2><b>DISCORD</b> <dark_gray>▶ <gray>So verlinkst du deinen Account:");
+            Msg.send(p, "<gray>1. Tritt unserem Discord bei: <click:open_url:'" + link + "'><#5865F2><u>" + Msg.escape(link) + "</u></click>");
+            Msg.send(p, "<gray>2. Geh in den Kanal <white>„verify“</white> und klick auf <white>„Verifizieren“</white>.");
+            Msg.send(p, "<gray>3. Danach hier noch einmal <white>/verify</white>.");
+            Msg.send(p, "<gray>Dafür bekommst du einen <#5865F2>✔</#5865F2> hinter deinem Namen und ein Home mehr. Spielzeit-Belohnungen "
+                    + "und Helfer im Support gibt es nur mit Verlinkung.");
+            return;
         }
+        if (plugin.homes().verified(p.getUniqueId())) {
+            Msg.send(p, "<green>Dein Discord-Account ist verlinkt. <#5865F2>✔");
+            return;
+        }
+        plugin.homes().grantVerify(p.getUniqueId());
+        refreshTabName(p);
+        int homes = ModeService.SURVIVAL.equals(plugin.modes().modeOf(p.getUniqueId()))
+                ? plugin.getConfig().getInt("homes.survival.discord-bonus", 1) : 3;
+        Msg.send(p, "<green>Discord verlinkt! <#5865F2>✔</#5865F2> <green>steht jetzt hinter deinem Namen, dazu <white>+" + homes
+                + (homes == 1 ? " Home" : " Homes") + "<green>.");
+        Sfx.play(plugin, p, Sfx.Kind.SUCCESS_BIG);
+    }
+
+    private void refreshTabName(Player p) {
+        plugin.refreshTabName(p);
     }
 
 

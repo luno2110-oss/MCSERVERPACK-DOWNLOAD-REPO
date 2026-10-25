@@ -248,6 +248,7 @@ tournament:
   trophies-champion: 200
 
 discord:
+  invite: "https://discord.gg/"     # Link für /discord
   require-for-daily: false
   require-for-duels: false
   require-for-meta: false
@@ -654,3 +655,8 @@ graves:
 # Möbel (KubySurvival): Kauf im Juwelenshop (Kategorie Möbel, Preis nach Größe), höchstens so viele je Spieler.
 furniture:
   max: 50
+# Support-Tickets (/support): Helfer werden kann, wer so viele Stunden gespielt hat (und Discord verlinkt, wenn
+# DiscordSRV da ist). Team = Permission kuby.support.team. Höchstens max-open offene Tickets je Spieler.
+support:
+  helper-min-hours: 50
+  max-open: 2

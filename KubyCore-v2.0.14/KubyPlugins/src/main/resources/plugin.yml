@@ -155,6 +155,13 @@ commands:
     description: "Spuren und Kill-Effekte auswählen"
   verify:
     description: "Zeigt, ob dein Account mit Discord verknüpft ist"
+  support:
+    description: "Support: Tickets schreiben, Helfer antworten, Sterne vergeben"
+    usage: "/support [new|top|helper|ticket <Nummer>]"
+    aliases: [ticket, tickets, hilfeticket]
+  discord:
+    description: "Link zu unserem Discord"
+    usage: "/discord"
   enderchest:
     description: "Deine Enderchest öffnen"
     aliases: [ec]
@@ -187,6 +194,9 @@ commands:
 permissions:
   kuby.report.see:
     description: Sieht Meldungen von /report
+    default: op
+  kuby.support.team:
+    description: "Support-Team: weitergegebene Tickets bearbeiten und schließen, Helfer entfernen"
     default: op
   kuby.admin:
     description: "Zugriff auf das Admin-Panel"

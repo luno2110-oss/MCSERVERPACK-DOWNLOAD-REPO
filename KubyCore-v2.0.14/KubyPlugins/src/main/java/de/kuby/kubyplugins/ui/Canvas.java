@@ -169,17 +169,28 @@ public final class Canvas {
     /** Bricht Text an Leerzeichen um, sodass jede Zeile höchstens max Pixel breit ist. */
     public static List<String> wrap(String text, int max) {
         List<String> out = new ArrayList<>();
-        StringBuilder line = new StringBuilder();
-        for (String word : text.split(" ")) {
-            String probe = line.isEmpty() ? word : line + " " + word;
-            if (width(probe, false) > max && !line.isEmpty()) {
-                out.add(line.toString());
-                line = new StringBuilder(word);
-            } else {
-                line = new StringBuilder(probe);
+        for (String para : text.split("\\R", -1)) {
+            StringBuilder line = new StringBuilder();
+            for (String word : para.split(" ")) {
+                // Wörter, die allein nicht in die Zeile passen (Links, Spam), hart trennen
+                while (width(word, false) > max) {
+                    int cut = word.length() - 1;
+                    while (cut > 1 && width(word.substring(0, cut), false) > max) cut--;
+                    if (!line.isEmpty()) out.add(line.toString());
+                    line = new StringBuilder();
+                    out.add(word.substring(0, cut));
+                    word = word.substring(cut);
+                }
+                String probe = line.isEmpty() ? word : line + " " + word;
+                if (width(probe, false) > max && !line.isEmpty()) {
+                    out.add(line.toString());
+                    line = new StringBuilder(word);
+                } else {
+                    line = new StringBuilder(probe);
+                }
             }
+            if (!line.isEmpty()) out.add(line.toString());
         }
-        if (!line.isEmpty()) out.add(line.toString());
         return out;
     }
 

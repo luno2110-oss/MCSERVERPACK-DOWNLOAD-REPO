@@ -14,12 +14,33 @@ import java.util.UUID;
  * Läuft per Reflection, damit das Plugin auch ohne DiscordSRV startet.
  * Verknüpfen macht der Spieler im Discord mit /linkaccount.
  */
-public final class DiscordLink {
+public final class DiscordLink implements org.bukkit.event.Listener {
 
     private final KubyPlugins plugin;
 
     public DiscordLink(KubyPlugins plugin) {
         this.plugin = plugin;
+    }
+
+    /** Beim Einloggen: frisch verlinkt? Dann Haken und Home sofort freischalten (Abfrage außerhalb des Haupt-Threads). */
+    @org.bukkit.event.EventHandler
+    public void onJoin(org.bukkit.event.player.PlayerJoinEvent e) {
+        Player p = e.getPlayer();
+        if (!available() || plugin.homes().verified(p.getUniqueId())) {
+            plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                if (p.isOnline()) plugin.refreshTabName(p);
+            }, 20L);
+            return;
+        }
+        plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, () -> {
+            if (discordIdOf(p.getUniqueId()) == null) return;
+            plugin.getServer().getScheduler().runTask(plugin, () -> {
+                if (!p.isOnline() || plugin.homes().verified(p.getUniqueId())) return;
+                plugin.homes().grantVerify(p.getUniqueId());
+                plugin.refreshTabName(p);
+                Msg.send(p, "<green>Dein Discord ist verlinkt! <#5865F2>✔</#5865F2> <green>steht jetzt hinter deinem Namen, dazu gibt es ein Home mehr.");
+            });
+        }, 40L);
     }
 
     public boolean available() {

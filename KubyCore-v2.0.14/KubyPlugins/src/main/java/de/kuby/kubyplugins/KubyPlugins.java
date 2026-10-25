@@ -253,6 +253,11 @@ public final class KubyPlugins extends JavaPlugin {
         setAll(new SocialCommand(this), "friend", "friends", "msg", "r", "inbox", "bounty", "bounties",
                 "stats", "trophaeen", "ranking");
         setAll(new JewelCommand(this), "juwelen", "juwelenshop");
+        support = new de.kuby.kubyplugins.support.SupportService(this);
+        de.kuby.kubyplugins.support.SupportMenus supportMenus = new de.kuby.kubyplugins.support.SupportMenus(this, support);
+        setAll(supportMenus, "support", "discord");
+        getServer().getPluginManager().registerEvents(supportMenus, this);
+        getServer().getPluginManager().registerEvents(discord, this);
         setAll(new CoinflipCommand(this), "coinflip");
         setAll(new CasinoCommand(this), "casino");
         setAll(new PokerCommand(this), "poker");
@@ -487,10 +492,17 @@ public final class KubyPlugins extends JavaPlugin {
         return sb.toString();
     }
 
-    /** Tab-Namen mit Präfix aktualisieren. */
+    /** Zeichen hinter dem Namen in Chat und Tab (MiniMessage): der Haken für einen verlinkten Discord-Account. */
+    public String nameSuffix(java.util.UUID id) {
+        return homes().verified(id) ? " <#5865F2>✔</#5865F2>" : "";
+    }
+
+    /** Tab-Namen mit Präfix und Haken aktualisieren. */
     public void refreshTabName(org.bukkit.entity.Player p) {
         String prefix = namePrefix(p.getUniqueId());
-        p.playerListName(prefix.isEmpty() ? null : de.kuby.kubyplugins.util.Msg.parse(prefix).append(net.kyori.adventure.text.Component.text(p.getName())));
+        String suffix = nameSuffix(p.getUniqueId());
+        p.playerListName(prefix.isEmpty() && suffix.isEmpty() ? null : de.kuby.kubyplugins.util.Msg.parse(prefix)
+                .append(net.kyori.adventure.text.Component.text(p.getName())).append(de.kuby.kubyplugins.util.Msg.parse(suffix)));
     }
 
     /** Texte von Addons für Anzeigen (z. B. der aktuelle Job). Leer, wenn kein Addon den Wert liefert. */
@@ -576,6 +588,8 @@ public final class KubyPlugins extends JavaPlugin {
     public RegionService regions() { return regions; }
     public HubSettingsService hubSettings() { return hubSettings; }
     public JewelStoreService jewelStore() { return jewelStore; }
+    private de.kuby.kubyplugins.support.SupportService support;
+    public de.kuby.kubyplugins.support.SupportService support() { return support; }
     public TeleportEffectService teleportFx() { return teleportFx; }
     public VisibilityService visibility() { return visibility; }
     public QuizService quiz() { return quiz; }
