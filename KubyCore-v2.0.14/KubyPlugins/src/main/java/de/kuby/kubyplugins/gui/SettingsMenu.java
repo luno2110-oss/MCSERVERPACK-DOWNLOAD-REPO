@@ -123,7 +123,12 @@ public final class SettingsMenu extends GuiMenu {
                     i("economy.min-price.unique", "Untergrenze: Einzigartig", 1, 1000, 1, "$"))),
             new Category("Battlepass", Material.ENCHANTED_BOOK, List.of(
                     i("battlepass.premium-price", "Premium-Pass: Preis", 0, 100000, 50, "Juwelen"),
-                    i("battlepass.xp-per-level", "Stufe: BP-XP", 10, 10000, 10, "XP pro Stufe"))),
+                    i("battlepass.xp-per-level", "Stufe: Punkte", 10, 10000, 10, "Punkte pro Stufe"),
+                    i("battlepass.level-price", "Stufe kaufen: Preis", 0, 100000, 10, "Juwelen pro Stufe"),
+                    i("battlepass.level-daily-limit", "Stufe kaufen: Tageslimit", 0, 999, 1, "Stufen pro Tag"),
+                    i("battlepass.season-days", "Season: Dauer", 7, 365, 1, "Tage"),
+                    i("battlepass.daily-count", "Tagesaufgaben", 0, 10, 1, "Aufgaben pro Tag"),
+                    i("battlepass.weekly-count", "Wochenaufgaben", 0, 12, 1, "Aufgaben pro Woche"))),
             new Category("Totenkiste", Material.CHEST, List.of(
                     i("totenkiste.slot-xp", "Platz: XP-Preis", 0, 1000000, 50, "XP pro Platz"),
                     i("totenkiste.level2-jewels", "Stufe 2: Preis", 0, 1000000, 10, "Juwelen"),
