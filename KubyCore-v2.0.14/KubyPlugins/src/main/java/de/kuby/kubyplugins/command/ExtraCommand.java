@@ -172,6 +172,7 @@ public final class ExtraCommand implements CommandExecutor {
                     + "und Helfer im Support gibt es nur mit Verlinkung.");
             return;
         }
+        plugin.discord().syncBooster(p);
         if (plugin.homes().verified(p.getUniqueId())) {
             Msg.send(p, "<green>Dein Discord-Account ist verlinkt. <#5865F2>✔");
             return;

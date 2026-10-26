@@ -180,12 +180,22 @@ public final class KpCommand implements CommandExecutor {
         Msg.send(p, "<gray>/kp marker remove <dark_gray>- <gray>Marker in der Nähe entfernen");
         Msg.send(p, "<gray>/kp xp <give|take|set> <spieler> <betrag> <dark_gray>- <gray>XP verwalten");
         Msg.send(p, "<gray>/kp homebonus <spieler> <vote|verify> <dark_gray>- <gray>Homebonus vergeben");
-        Msg.send(p, "<gray>/kp deko add <skin-spieler> [name] | remove <dark_gray>- <gray>Deko-Figur (Schalter Deko-NPCs)");
+        Msg.send(p, "<gray>/kp deko add <skin-spieler> [name] | discord | remove <dark_gray>- <gray>Deko-Figur oder Discord-Statue (Schalter Deko-NPCs)");
     }
 
     /** Deko-Figuren: Mannequin mit dem Skin eines Spielers, ohne Funktion. Wer "Deko-NPCs" ausschaltet, sieht sie nicht. */
     private void deco(Player p, String[] args) {
         String sub = args.length > 1 ? args[1].toLowerCase(Locale.ROOT) : "";
+        if (sub.equals("discord")) {
+            float yaw = Math.round(p.getLocation().getYaw() / 45f) * 45f + 180f;
+            plugin.discordStatue().spawn(p.getLocation(), yaw);
+            Msg.send(p, "<green>Discord-Statue gesetzt. <gray>Klick zeigt Link und Booster-Hinweis. Entfernen: /kp deko remove");
+            return;
+        }
+        if ((sub.equals("remove") || sub.equals("entfernen")) && plugin.discordStatue().remove(p.getLocation(), 4)) {
+            Msg.send(p, "<green>Discord-Statue entfernt.");
+            return;
+        }
         if (sub.equals("remove") || sub.equals("entfernen")) {
             org.bukkit.entity.Entity e = plugin.displaySettings().nearestDeco(p.getLocation(), 4);
             if (e == null) {
@@ -197,7 +207,7 @@ public final class KpCommand implements CommandExecutor {
             return;
         }
         if (!sub.equals("add") || args.length < 3) {
-            Msg.send(p, "<red>Nutzung: /kp deko add <skin-spieler> [name] <gray>oder <red>/kp deko remove");
+            Msg.send(p, "<red>Nutzung: /kp deko add <skin-spieler> [name]<gray>, <red>/kp deko discord <gray>oder <red>/kp deko remove");
             return;
         }
         String skin = args[2];

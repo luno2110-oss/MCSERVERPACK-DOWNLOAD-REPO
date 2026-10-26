@@ -366,9 +366,7 @@ public final class SupportMenus implements CommandExecutor, Listener {
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (!(sender instanceof Player p)) return true;
         if (cmd.getName().equalsIgnoreCase("discord")) {
-            String link = plugin.getConfig().getString("discord.invite", "https://discord.gg/");
-            SupportService.send(p, "Unser Discord: <click:open_url:'" + link + "'><#5865F2><u>" + Msg.escape(link) + "</u></click>");
-            Msg.send(p, "<gray>Dort gibt es Neuigkeiten und Tickets für Meldungen an das Team. Verlinken: <white>/verify");
+            plugin.discordStatue().sendInfo(p);
             return true;
         }
         String sub = args.length == 0 ? "" : args[0].toLowerCase(Locale.ROOT);

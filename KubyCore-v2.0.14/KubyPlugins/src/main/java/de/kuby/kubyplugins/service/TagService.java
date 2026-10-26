@@ -85,6 +85,17 @@ public final class TagService implements ModeData {
         return null;
     }
 
+    /** Nimmt einen Titel weg (z. B. BOOSTER, wenn nicht mehr geboostet wird); aktiv getragen wird er abgelegt. */
+    public synchronized void revoke(UUID id, String tagId) {
+        Set<String> set = unlocked.get(id);
+        boolean changed = set != null && set.remove(tagId);
+        if (tagId.equals(active.get(id))) {
+            active.remove(id);
+            changed = true;
+        }
+        if (changed) save();
+    }
+
     public synchronized void grant(UUID id, String tagId) {
         unlocked.computeIfAbsent(id, k -> new HashSet<>()).add(tagId);
         save();

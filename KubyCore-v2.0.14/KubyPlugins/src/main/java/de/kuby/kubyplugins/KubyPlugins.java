@@ -178,6 +178,7 @@ public final class KubyPlugins extends JavaPlugin {
         battlepass = new BattlepassService(this);
         cosmetics = new CosmeticService(this);
         discord = new DiscordLink(this);
+        discordStatue = new de.kuby.kubyplugins.service.DiscordStatue(this);
         shop = new ShopService(this);
         shopStorage = new ShopStorageService(this);
         enderchests = new EnderChestService(this);
@@ -279,6 +280,7 @@ public final class KubyPlugins extends JavaPlugin {
         setAll(supportMenus, "support", "discord");
         getServer().getPluginManager().registerEvents(supportMenus, this);
         getServer().getPluginManager().registerEvents(discord, this);
+        getServer().getPluginManager().registerEvents(discordStatue, this);
         getServer().getPluginManager().registerEvents(friends, this);
         setAll(new CoinflipCommand(this), "coinflip");
         setAll(new CasinoCommand(this), "casino");
@@ -521,6 +523,10 @@ public final class KubyPlugins extends JavaPlugin {
     public BattlepassService battlepass() { return battlepass; }
     public CosmeticService cosmetics() { return cosmetics; }
     public DiscordLink discord() { return discord; }
+
+    private de.kuby.kubyplugins.service.DiscordStatue discordStatue;
+
+    public de.kuby.kubyplugins.service.DiscordStatue discordStatue() { return discordStatue; }
     public ShopService shop() { return shop; }
     public ShopStorageService shopStorage() { return shopStorage; }
     public EnderChestService enderchests() { return enderchests; }

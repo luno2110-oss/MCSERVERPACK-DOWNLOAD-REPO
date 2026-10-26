@@ -68,6 +68,9 @@ if VANILLA and os.path.isdir(VANILLA):
     small += build_settings.small_icons(VANILLA)
     # Hüte (Modelle kuby:hat/<id>) und ihre Icons (32 px) hinter den Casino-Icons
     hat_big = build_hats.build(OUT)
+    # Discord-Statue: Wumpus als Item-Modell (kuby:deco/wumpus)
+    import build_wumpus  # noqa: E402
+    build_wumpus.write(OUT)
     # Juwelenshop (SMP), Battle-Pass und Guide: große Grafiken als Sprites, goldener Schlüssel als eigenes Icon
     import build_jewelshop  # noqa: E402
     import build_battlepass  # noqa: E402

@@ -189,6 +189,7 @@ tags:
   - "arbeitslos;<dark_gray>Arbeitslos"
   - "hobbylos;<yellow>Hobbylos"
   - "sweater;<aqua>Sweater"
+  - "booster;<#FF6BD6><b>ʙᴏᴏꜱᴛᴇʀ</b>"   # automatisch für Discord-Server-Booster (DiscordSRV, nach /verify und beim Einloggen)
 
 # Soundeffekte an/aus
 sfx:

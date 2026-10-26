@@ -253,6 +253,7 @@ public final class DisplaySettings implements Listener {
         plugin.hotbar().forget(e.getPlayer().getUniqueId());
         if (plugin.jewelShop() != null) plugin.jewelShop().forget(e.getPlayer().getUniqueId());
         if (plugin.battlepassScreen() != null) plugin.battlepassScreen().forget(e.getPlayer().getUniqueId());
+        if (plugin.discordStatue() != null) plugin.discordStatue().forget(e.getPlayer().getUniqueId());
         TextDisplay m = markers.remove(e.getPlayer().getUniqueId());
         if (m != null) m.remove();
     }

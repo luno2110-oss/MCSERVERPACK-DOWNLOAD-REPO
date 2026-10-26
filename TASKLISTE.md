@@ -131,8 +131,10 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Seiten: Übersicht, Erste Schritte, Wirtschaft, Markt & Orders, Juwelen & Kisten, Homes & Teleport, Teams, Freunde & Chat, PvP & Duelle, Belohnungen, Cosmetics & Tags, Regeln & Support – mit unseren echten Befehlen und Werten (Marktgebühr, Teleport-Wartezeit, Kampfsperre, Booster-Zeiten, /verify +3 Homes …)
   - Inhalt in `guide.pages` (config.yml) mit einfacher Auszeichnung: `# Überschrift`, `> /befehl - Text`, `` `/befehl` ``, `[Text](seite)` (Link auf eine Seite), `[Text](discord)`, `{discord}`; Englisch über `name-en`/`lines-en`. Befehle zeigen beim Draufzeigen einen Hinweis (Minecraft kann aus Dialogen nichts ins Chatfeld schreiben), Seiten-Links und Discord-Link sind klickbar. Ohne Grafik-Pack kommt die Seite in den Chat (dort mit Klick-Befehlen). Selbsttest prüft, dass jede Seite in den Kasten passt
   - Hauptmenü hat einen Eintrag „Guide“; übrig gebliebenes „Chaos“ (Hauptmenü, plugin.yml) heißt jetzt Kuby
-- [ ] 12.5 Truhen-Menüs mit Bild-Kacheln und verziertem Tooltip-Rahmen: Orders (Info-Knopf „?“), Random TP (Overworld/Nether/The End als große Bilder), Trophäen (Ligen-Barren, „So funktioniert’s“)
-- [ ] 12.6 Discord-Statue (Wumpus) mit Schild „DISCORD“, Klick: Link und Booster-Hinweis im Chat
+- ~~12.5 Truhen-Menüs mit Bild-Kacheln und verziertem Tooltip-Rahmen~~ (gestrichen; später: eigene Grafik für das „?“-Info-Symbol)
+- [x] 12.6 Discord-Statue wie in der Referenz: Wumpus als eigenes 3D-Modell (`tools/build_wumpus.py`, kuby:deco/wumpus: großer Kopf mit Ohren, leicht geneigt, Augen, Schnauze, heller Bauch, ausgestreckter und hängender Arm), darüber „DISCORD“ (fett, blau, mit Schatten). Klick (rechts oder links) schreibt wie im Original „DISCORD ▸ Klicke hier: <Link>“ und „DISCORD ▸ ♥ Server-Booster tragen im Spiel den Tag [ʙᴏᴏꜱᴛᴇʀ] — verlinken mit /verify.“; `/discord` zeigt dieselben Zeilen
+  - Aufstellen: auf den Sockel stellen (z. B. blühendes Azaleenlaub), Blick zur Wand, `/kp deko discord`; entfernen mit `/kp deko remove`. Der Schalter „Deko-NPCs“ blendet sie aus
+  - Neuer Titel „ʙᴏᴏꜱᴛᴇʀ“: Discord-Server-Booster bekommen ihn automatisch (DiscordSRV, beim Einloggen und bei `/verify`), wer nicht mehr boostet, verliert ihn
 - [ ] 12.7 Sprache Deutsch/Englisch je Spieler (Menüs und Meldungen)
 
 ## Ordnergruppe 5 – Scoreboard und Anzeigen (Refs: Video Scoreboard_Money, GELD_XP-Anzeige)

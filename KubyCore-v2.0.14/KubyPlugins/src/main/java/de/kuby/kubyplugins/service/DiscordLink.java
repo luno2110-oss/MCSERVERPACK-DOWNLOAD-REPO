@@ -26,6 +26,7 @@ public final class DiscordLink implements org.bukkit.event.Listener {
     @org.bukkit.event.EventHandler
     public void onJoin(org.bukkit.event.player.PlayerJoinEvent e) {
         Player p = e.getPlayer();
+        syncBooster(p);
         if (!available() || plugin.homes().verified(p.getUniqueId())) {
             plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
                 if (p.isOnline()) plugin.refreshTabName(p);
@@ -60,6 +61,47 @@ public final class DiscordLink implements org.bukkit.event.Listener {
             plugin.getLogger().warning("DiscordSRV-Abfrage fehlgeschlagen: " + ex.getMessage());
             return null;
         }
+    }
+
+    /**
+     * Boostet der verknüpfte Discord-Account den Server? null, wenn das nicht feststellbar ist (kein DiscordSRV, nicht
+     * verknüpft, Mitglied nicht im Cache). Über DiscordSRV und JDA (Guild.getMemberById, Member.getTimeBoosted).
+     */
+    public Boolean boosting(UUID id) {
+        String discordId = discordIdOf(id);
+        if (discordId == null) return null;
+        try {
+            Plugin dsrv = plugin.getServer().getPluginManager().getPlugin("DiscordSRV");
+            Object guild = dsrv == null ? null : call(dsrv, "getMainGuild");
+            Object member = guild == null ? null : call(guild, "getMemberById", discordId);
+            if (member == null) return null;
+            return call(member, "getTimeBoosted") != null;
+        } catch (ReflectiveOperationException | RuntimeException ex) {
+            plugin.getLogger().warning("DiscordSRV-Booster-Abfrage fehlgeschlagen: " + ex.getMessage());
+            return null;
+        }
+    }
+
+    /** Gleicht den Titel BOOSTER mit Discord ab (Abfrage außerhalb des Haupt-Threads). */
+    public void syncBooster(Player p) {
+        if (!available()) return;
+        UUID id = p.getUniqueId();
+        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+            Boolean boost = boosting(id);
+            if (boost == null) return;
+            plugin.getServer().getScheduler().runTask(plugin, () -> {
+                boolean had = plugin.tags().has(id, "booster");
+                if (boost && !had) {
+                    plugin.tags().grant(id, "booster");
+                    if (p.isOnline()) {
+                        Msg.send(p, "<" + DiscordStatue.PINK + ">♥ <gray>Danke fürs Boosten! Dein Titel <gray>[</gray><"
+                                + DiscordStatue.PINK + "><b>" + DiscordStatue.BOOSTER + "</b></" + DiscordStatue.PINK + "><gray>] ist freigeschaltet: <white>/tags");
+                    }
+                } else if (!boost && had) {
+                    plugin.tags().revoke(id, "booster");
+                }
+            });
+        });
     }
 
     /** True, wenn die Regel in der config aus ist oder der Spieler verknüpft ist. */
