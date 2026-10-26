@@ -131,7 +131,12 @@ public final class CrateService implements Listener {
                     amount = Long.parseLong(value);
                     value = "";
                 }
-                case "key", "item" -> amount = p.length > 2 ? Long.parseLong(p[2]) : 1;
+                case "key" -> amount = p.length > 2 ? Long.parseLong(p[2]) : 1;
+                case "item" -> {
+                    amount = p.length > 2 ? Long.parseLong(p[2]) : 1;
+                    // item:MATERIAL:N:sharpness=4,unbreaking=3 (Verzauberungen hinter "|" im Wert)
+                    if (p.length > 3) value = value + "|" + p[3];
+                }
                 case "cmd" -> value = s.substring(4);
                 case "cosmetic", "pet", "furniture" -> {
                 }
@@ -144,6 +149,29 @@ public final class CrateService implements Listener {
         }
         Reward r = new Reward(weight, kind, value, amount, null);
         return new Reward(weight, kind, value, amount, name != null && !name.isEmpty() ? name : autoName(r));
+    }
+
+    /** Material eines item-Gewinns (ohne Verzauberungen). */
+    public static String material(Reward r) {
+        int i = r.value().indexOf('|');
+        return i < 0 ? r.value() : r.value().substring(0, i);
+    }
+
+    /** Verzauberungen eines item-Gewinns (sharpness=4,unbreaking=3) auf das Item. */
+    static void enchant(ItemStack it, Reward r) {
+        int i = r.value().indexOf('|');
+        if (i < 0) return;
+        for (String part : r.value().substring(i + 1).split(",")) {
+            String[] kv = part.split("=");
+            if (kv.length != 2) continue;
+            org.bukkit.enchantments.Enchantment e = io.papermc.paper.registry.RegistryAccess.registryAccess()
+                    .getRegistry(io.papermc.paper.registry.RegistryKey.ENCHANTMENT)
+                    .get(NamespacedKey.minecraft(kv[0].trim().toLowerCase(Locale.ROOT)));
+            try {
+                if (e != null) it.addUnsafeEnchantment(e, Integer.parseInt(kv[1].trim()));
+            } catch (NumberFormatException ignored) {
+            }
+        }
     }
 
     private String autoName(Reward r) {
@@ -159,7 +187,7 @@ public final class CrateService implements Listener {
                 CosmeticService.Item it = plugin.cosmetics().find(r.value());
                 yield it == null ? r.value() : it.label();
             }
-            case "item" -> r.amount() + "× " + r.value().toLowerCase(Locale.ROOT).replace('_', ' ');
+            case "item" -> r.amount() + "× " + material(r).toLowerCase(Locale.ROOT).replace('_', ' ');
             default -> r.value();
         };
     }
@@ -342,9 +370,10 @@ public final class CrateService implements Listener {
             case "pet" -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "pet give " + p.getName() + " " + r.value());
             case "furniture" -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "moebel give " + p.getName() + " " + r.value());
             case "item" -> {
-                Material m = Material.matchMaterial(r.value());
+                Material m = Material.matchMaterial(material(r));
                 if (m != null) {
                     ItemStack it = new ItemStack(m, (int) Math.min(r.amount(), m.getMaxStackSize()));
+                    enchant(it, r);
                     for (ItemStack left : p.getInventory().addItem(it).values()) p.getWorld().dropItemNaturally(p.getLocation(), left);
                 }
             }
@@ -376,13 +405,14 @@ public final class CrateService implements Listener {
             case "pet" -> Material.LEAD;
             case "furniture" -> Material.OAK_STAIRS;
             case "item" -> {
-                Material x = Material.matchMaterial(r.value());
+                Material x = Material.matchMaterial(material(r));
                 yield x == null || !x.isItem() ? Material.CHEST : x;
             }
             case "cosmetic" -> Material.PAPER;
             default -> Material.CHEST;
         };
         ItemStack it = new ItemStack(m);
+        if (r.kind().equals("item")) enchant(it, r);
         if (r.kind().equals("cosmetic")) {
             CosmeticService.Item ci = plugin.cosmetics().find(r.value());
             ItemMeta meta = it.getItemMeta();

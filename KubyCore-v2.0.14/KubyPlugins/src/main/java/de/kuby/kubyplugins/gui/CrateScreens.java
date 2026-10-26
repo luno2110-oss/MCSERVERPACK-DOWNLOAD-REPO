@@ -67,7 +67,7 @@ public final class CrateScreens {
             }
             case "item" -> {
                 try {
-                    yield KitData.Icon.valueOf(r.value().toUpperCase(Locale.ROOT));
+                    yield KitData.Icon.valueOf(CrateService.material(r).toUpperCase(Locale.ROOT));
                 } catch (IllegalArgumentException e) {
                     yield KitData.Icon.BUNDLE;
                 }

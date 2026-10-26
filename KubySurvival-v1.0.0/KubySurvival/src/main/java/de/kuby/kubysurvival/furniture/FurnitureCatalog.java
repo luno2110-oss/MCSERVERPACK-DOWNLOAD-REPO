@@ -1,15 +1,21 @@
 package de.kuby.kubysurvival.furniture;
 
 import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Möbel aus Block-Anzeigen. Ursprung = Mitte unten im Block, vorne = +Z (zum Spieler gedreht, der es aufstellt),
- * große Stücke reichen einen Block nach +X. Preis nach Größe: klein, mittel, groß (Juwelen).
+ * Möbel. Ursprung = Mitte unten im Block, vorne = +Z (zum Spieler gedreht, der es aufstellt).
+ *
+ * <p>Zwei Arten: die alten aus Block-Anzeigen (hier im Code, Preis nach Größe; breite Stücke reichen nach +X) und die
+ * Modell-Möbel aus dem Juwelenshop (moebel.yml, generiert von tools/build_furniture.py): ein ItemDisplay mit dem Modell
+ * kuby:furniture/&lt;id&gt; aus dem Pack, Felder, Sitze und Licht aus dem Katalog, in Reitern wie im Shop.
  */
 public final class FurnitureCatalog {
 
@@ -29,17 +35,31 @@ public final class FurnitureCatalog {
     public record Part(Material m, float x, float y, float z, float sx, float sy, float sz, boolean glow) {}
 
     /**
-     * Ein Möbelstück. width = Blöcke nach +X (1 oder 2), seats = Sitzpunkte (x, z) mit Sitzhöhe seatY,
-     * light = Höhe (in Blöcken über dem Ursprung) eines Lichtblocks oder -1.
+     * Ein Möbelstück. cells = belegte Blöcke (x, z) ab dem Ursprungsblock, seats = Sitzpunkte (x, z) mit Sitzhöhe
+     * seatY, light = Höhe (in Blöcken über dem Ursprung) eines Lichtblocks oder -1, lightLevel = seine Stärke.
+     * Modell-Möbel: model = Item-Modell im Pack, tab = Reiter im Shop, height = Höhe der Klickfläche; parts leer.
      */
-    public record Def(String id, String name, Size size, Material icon, int width, float seatY, List<float[]> seats,
-                      int light, List<Part> parts) {
+    public record Def(String id, String name, Size size, Material icon, List<int[]> cells, float seatY, List<float[]> seats,
+                      int light, int lightLevel, List<Part> parts, String tab, String model, float height, long price) {
         public boolean seat() {
             return !seats.isEmpty();
         }
+
+        public boolean model3d() {
+            return model != null;
+        }
+
+        /** Mehr als ein Block: nur in 90-Grad-Schritten drehbar. */
+        public boolean large() {
+            return cells.size() > 1;
+        }
     }
 
+    /** Reiter im Shop. */
+    public record Tab(String id, String name, String sub) {}
+
     private static final Map<String, Def> DEFS = new LinkedHashMap<>();
+    private static final List<Tab> TABS = new ArrayList<>();
 
     private FurnitureCatalog() {
     }
@@ -48,8 +68,64 @@ public final class FurnitureCatalog {
         return new ArrayList<>(DEFS.values());
     }
 
+    /** Die alten Block-Möbel (gehen ohne Pack; Truhen-Shop ohne KubyUI). */
+    public static List<Def> blocks() {
+        List<Def> out = new ArrayList<>();
+        for (Def d : DEFS.values()) if (!d.model3d()) out.add(d);
+        return out;
+    }
+
     public static Def get(String id) {
         return id == null ? null : DEFS.get(id);
+    }
+
+    public static synchronized List<Tab> tabs() {
+        return new ArrayList<>(TABS);
+    }
+
+    /** Modell-Möbel eines Reiters in der Reihenfolge des Katalogs. */
+    public static List<Def> inTab(String tab) {
+        List<Def> out = new ArrayList<>();
+        for (Def d : DEFS.values()) if (tab.equals(d.tab())) out.add(d);
+        return out;
+    }
+
+    /** Lädt die Modell-Möbel aus moebel.yml (im Plugin-Jar). */
+    public static synchronized int load(Reader in) {
+        YamlConfiguration y = YamlConfiguration.loadConfiguration(in);
+        TABS.clear();
+        DEFS.values().removeIf(Def::model3d);
+        for (String raw : y.getStringList("reiter")) {
+            String[] p = raw.split(";", 3);
+            if (p.length == 3) TABS.add(new Tab(p[0].trim(), p[1].trim(), p[2].trim()));
+        }
+        ConfigurationSection s = y.getConfigurationSection("moebel");
+        if (s == null) return 0;
+        int n = 0;
+        for (String id : s.getKeys(false)) {
+            ConfigurationSection c = s.getConfigurationSection(id);
+            if (c == null) continue;
+            List<int[]> cells = new ArrayList<>();
+            for (Object o : c.getList("felder", List.of())) {
+                if (o instanceof List<?> l && l.size() == 2) {
+                    cells.add(new int[]{((Number) l.get(0)).intValue(), ((Number) l.get(1)).intValue()});
+                }
+            }
+            if (cells.isEmpty()) cells.add(new int[]{0, 0});
+            List<float[]> seats = new ArrayList<>();
+            for (Object o : c.getList("sitze", List.of())) {
+                if (o instanceof List<?> l && l.size() == 2) {
+                    seats.add(new float[]{((Number) l.get(0)).floatValue(), ((Number) l.get(1)).floatValue()});
+                }
+            }
+            float height = (float) c.getDouble("hoehe", 1);
+            int level = c.getInt("licht", -1);
+            DEFS.put(id, new Def(id, c.getString("name", id), Size.MITTEL, Material.PAPER, cells, (float) c.getDouble("sitzhoehe"),
+                    seats, level > 0 ? (height > 1.2f ? 1 : 0) : -1, Math.max(0, level), List.of(), c.getString("reiter", ""),
+                    "kuby:furniture/" + id, height, c.getLong("preis", 100)));
+            n++;
+        }
+        return n;
     }
 
     // ---------- Bauhilfen ----------
@@ -79,7 +155,12 @@ public final class FurnitureCatalog {
 
     private static void add(String id, String name, Size size, Material icon, int width, float seatY, List<float[]> seats,
                             int light, B b) {
-        DEFS.put(id, new Def(id, name, size, icon, width, seatY, seats, light, List.copyOf(b.parts)));
+        List<int[]> cells = new ArrayList<>();
+        for (int i = 0; i < width; i++) cells.add(new int[]{i, 0});
+        float height = 0.5f;
+        for (Part p : b.parts) height = Math.max(height, p.y() + p.sy());
+        DEFS.put(id, new Def(id, name, size, icon, cells, seatY, seats, light, 13, List.copyOf(b.parts), null, null,
+                Math.min(height, 1.9f), size.price));
     }
 
     private static List<float[]> seat(float... xz) {

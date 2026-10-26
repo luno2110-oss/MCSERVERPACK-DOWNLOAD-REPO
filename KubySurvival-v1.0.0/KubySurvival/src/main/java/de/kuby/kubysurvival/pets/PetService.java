@@ -13,13 +13,16 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.Ageable;
 import org.bukkit.entity.Animals;
+import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Sittable;
 import org.bukkit.entity.Tameable;
+import org.bukkit.entity.TextDisplay;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -33,7 +36,11 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.entity.PlayerLeashEntityEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.util.Transformation;
+import org.joml.AxisAngle4f;
+import org.joml.Vector3f;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,8 +63,12 @@ public final class PetService implements Listener {
 
     private static final Pattern NAME = Pattern.compile("[\\p{L}0-9 _\\-]{1,16}");
 
-    /** Ein Haustier aus pets.yml. */
-    public record Kind(String id, String name, EntityType type, boolean baby, boolean rideable, long price, String source) {}
+    /**
+     * Ein Haustier aus pets.yml oder pets-shop.yml. Shop-Pets: rarity (common … mythic), jewels = Preis im
+     * Juwelenshop, model = Bild aus dem Pack (ItemDisplay auf unsichtbarem Träger type), size = Größe in Blöcken.
+     */
+    public record Kind(String id, String name, EntityType type, boolean baby, boolean rideable, long price, String source,
+                       String rarity, long jewels, String model, float size) {}
 
     static final class Data {
         final Set<String> owned = new HashSet<>();
@@ -98,7 +109,16 @@ public final class PetService implements Listener {
 
     public synchronized void loadDefs() {
         kinds.clear();
-        YamlConfiguration yml = YamlConfiguration.loadConfiguration(defFile);
+        load(YamlConfiguration.loadConfiguration(defFile));
+        // Shop-Pets immer aus dem Jar (gehören zum Pack und zum Shop, nicht zur bearbeitbaren pets.yml)
+        try (java.io.InputStream in = addon.getResource("pets-shop.yml")) {
+            if (in != null) load(YamlConfiguration.loadConfiguration(new java.io.InputStreamReader(in, java.nio.charset.StandardCharsets.UTF_8)));
+        } catch (IOException e) {
+            addon.getLogger().warning("pets-shop.yml: " + e.getMessage());
+        }
+    }
+
+    private void load(YamlConfiguration yml) {
         ConfigurationSection s = yml.getConfigurationSection("pets");
         if (s == null) return;
         for (String id : s.getKeys(false)) {
@@ -111,8 +131,16 @@ public final class PetService implements Listener {
             }
             if (!t.isSpawnable() || !LivingEntity.class.isAssignableFrom(t.getEntityClass())) continue;
             kinds.put(id, new Kind(id, s.getString(id + ".name", id), t, s.getBoolean(id + ".baby"), s.getBoolean(id + ".reitbar"),
-                    s.getLong(id + ".preis"), s.getString(id + ".quelle", "")));
+                    s.getLong(id + ".preis"), s.getString(id + ".quelle", ""), s.getString(id + ".seltenheit", ""),
+                    s.getLong(id + ".juwelen"), s.getString(id + ".modell"), (float) s.getDouble(id + ".groesse", 0.8)));
         }
+    }
+
+    /** Pets im Juwelenshop (mit Preis in Juwelen), in der Reihenfolge aus pets-shop.yml. */
+    public synchronized List<Kind> shopKinds() {
+        List<Kind> out = new ArrayList<>();
+        for (Kind k : kinds.values()) if (k.jewels() > 0) out.add(k);
+        return out;
     }
 
     public synchronized List<Kind> kinds() {
@@ -219,12 +247,18 @@ public final class PetService implements Listener {
         @SuppressWarnings("unchecked")
         Class<? extends Entity> cls = (Class<? extends Entity>) k.type().getEntityClass();
         if (cls == null) return "Dieses Haustier gibt es gerade nicht.";
+        boolean model = k.model() != null && !k.model().isBlank();
         LivingEntity e = (LivingEntity) l.getWorld().spawn(l, cls, ent -> {
             ent.getPersistentDataContainer().set(tag, PersistentDataType.STRING, p.getUniqueId().toString());
             ent.setPersistent(false);
             ent.setInvulnerable(true);
             ent.customName(Msg.parse("<gold>" + Msg.escape(name)));
-            ent.setCustomNameVisible(true);
+            ent.setCustomNameVisible(!model);
+            if (model) {
+                // Träger unsichtbar und still, man sieht nur das Bild darüber
+                ent.setSilent(true);
+                if (ent instanceof LivingEntity le) le.setInvisible(true);
+            }
             if (ent instanceof LivingEntity le) {
                 le.setRemoveWhenFarAway(false);
                 le.setCanPickupItems(false);
@@ -249,12 +283,48 @@ public final class PetService implements Listener {
                 if (k.rideable() && h.getInventory().getSaddle() == null) h.getInventory().setSaddle(new ItemStack(Material.SADDLE));
             }
         });
+        if (model) mountModel(e, p, k, name);
         synchronized (this) {
             active.put(p.getUniqueId(), e);
             activeKind.put(p.getUniqueId(), k.id());
         }
         p.playSound(l, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.6f, 1.5f);
         return null;
+    }
+
+    /**
+     * Shop-Pet: das Bild als ItemDisplay (immer zum Betrachter gedreht, unten auf dem Boden) und der Name als
+     * TextDisplay darüber, beide als Mitfahrer des unsichtbaren Trägers.
+     */
+    private void mountModel(LivingEntity carrier, Player owner, Kind k, String name) {
+        float s = Math.max(0.3f, k.size());
+        float mount = (float) carrier.getHeight();
+        ItemStack shown = new ItemStack(Material.PAPER);
+        ItemMeta meta = shown.getItemMeta();
+        meta.setItemModel(NamespacedKey.fromString(k.model()));
+        shown.setItemMeta(meta);
+        Location at = carrier.getLocation();
+        ItemDisplay img = at.getWorld().spawn(at, ItemDisplay.class, d -> {
+            d.setItemStack(shown);
+            d.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
+            d.setBillboard(Display.Billboard.VERTICAL);
+            // Mitte des Bildes s/2 über dem Boden; der Mitfahrer sitzt oben auf dem Träger
+            d.setTransformation(new Transformation(new Vector3f(0, s / 2 - mount, 0), new AxisAngle4f(),
+                    new Vector3f(s, s, s), new AxisAngle4f()));
+            d.setPersistent(false);
+            d.getPersistentDataContainer().set(tag, PersistentDataType.STRING, owner.getUniqueId().toString());
+        });
+        TextDisplay label = at.getWorld().spawn(at, TextDisplay.class, d -> {
+            d.text(Msg.parse("<gold>" + Msg.escape(name)));
+            d.setBillboard(Display.Billboard.CENTER);
+            d.setBackgroundColor(org.bukkit.Color.fromARGB(0x40000000));
+            d.setTransformation(new Transformation(new Vector3f(0, s + 0.2f - mount, 0), new AxisAngle4f(),
+                    new Vector3f(1, 1, 1), new AxisAngle4f()));
+            d.setPersistent(false);
+            d.getPersistentDataContainer().set(tag, PersistentDataType.STRING, owner.getUniqueId().toString());
+        });
+        carrier.addPassenger(img);
+        carrier.addPassenger(label);
     }
 
     public boolean dismiss(UUID owner) {
@@ -264,6 +334,9 @@ public final class PetService implements Listener {
             activeKind.remove(owner);
         }
         if (e == null) return false;
+        for (Entity pas : new ArrayList<>(e.getPassengers())) {
+            if (isPet(pas)) pas.remove();
+        }
         e.eject();
         e.remove();
         return true;

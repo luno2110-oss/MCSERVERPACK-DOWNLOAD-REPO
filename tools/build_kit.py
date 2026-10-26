@@ -142,9 +142,10 @@ SLICED_BOXES.update(build_jewelshop.boxes())
 SLICED_BOXES.update(build_battlepass.boxes())
 SLICED_BOXES.update(build_guide.boxes())
 ALL_BOXES = list(BOXES) + list(CASINO_BOXES) + list(SLICED_BOXES)
-# Kästen, die auch schmaler als 48 px gehen (Zahlenfelder im Roulette-Raster, Battle-Pass-Felder und -Knöpfe):
-# schmale Mittelstücke
-NARROW_BOXES = ("field_red", "field_green", "field_black", "field_felt") + tuple(build_battlepass.boxes())
+# Kästen, die auch schmaler als 48 px gehen (Zahlenfelder im Roulette-Raster, Battle-Pass-Felder und -Knöpfe,
+# Reiter im Survival-Juwelenshop): schmale Mittelstücke
+NARROW_BOXES = (("field_red", "field_green", "field_black", "field_felt") + tuple(build_battlepass.boxes())
+                + ("jss_tab_brown", "jss_tab_off", "jss_tab_pink"))
 
 # Knöpfe 22 px: (Rand, Füllung oben hell, Füllung, Schatten 1, Schatten 2) oder Umriss-Knopf (Rand, Füllung)
 BUTTONS = {
@@ -601,13 +602,15 @@ class Sheet:
 
 
 def build_pieces():
+    # Bereiche in den Schriften b<s>: E000-EDFF und F000-F7FF (EE00-EFFF: Leerzeichen der Titelschrift, ab F801:
+    # Abstände). Die Kästen brauchen am meisten Platz (je Stil 6 + 3 Zeichen, schmale Stile mehr).
     caps9 = Sheet("caps9", CAP, ROW, 0xE000)
-    segs9 = Sheet("segs9", SEG, ROW, 0xE400)
-    caps22 = Sheet("caps22", CAP, BTN_H, 0xE600)
-    segs22 = Sheet("segs22", SEG, BTN_H, 0xE700)
-    misc = Sheet("misc", 24, BTN_H, 0xE780)
-    caps16 = Sheet("caps16", CAP, SMALL_H, 0xE800)
-    segs16 = Sheet("segs16", SEG, SMALL_H, 0xE880)
+    segs9 = Sheet("segs9", SEG, ROW, 0xE800)
+    caps22 = Sheet("caps22", CAP, BTN_H, 0xEC00)
+    segs22 = Sheet("segs22", SEG, BTN_H, 0xED00)
+    misc = Sheet("misc", 24, BTN_H, 0xED80)
+    caps16 = Sheet("caps16", CAP, SMALL_H, 0xF000)
+    segs16 = Sheet("segs16", SEG, SMALL_H, 0xF080)
 
     # Kästen: Zeilen oben/mitte/unten aus einem Beispielkasten 48 x 27
     for style in ALL_BOXES:
@@ -674,8 +677,9 @@ def build_pieces():
     misc.add(("back_help",), hback)
     sheets = [caps9, segs9, caps22, segs22, misc, caps16, segs16]
     # alle Bögen liegen in derselben Schrift (b<s>): Zeichenbereiche dürfen sich nicht überschneiden
-    for a, b in zip(sheets, sheets[1:] + [Sheet("icons", 0, 0, 0xE900)]):
-        assert a.first + len(a.cells) <= b.first, "Bogen %s (%d Zellen) läuft in %s" % (a.name, len(a.cells), b.name)
+    ends = [0xE800, 0xEC00, 0xED00, 0xED80, 0xEE00, 0xF080, 0xF100]
+    for sh, end in zip(sheets, ends):
+        assert sh.first + len(sh.cells) <= end, "Bogen %s (%d Zellen) läuft über %04X" % (sh.name, len(sh.cells), end)
     return sheets
 
 

@@ -12,7 +12,10 @@ import org.bukkit.entity.Player;
 
 import java.util.Locale;
 
-/** /juwelen und /juwelenshop [gift &lt;Spieler&gt;]. /juwelen give ist für Admins. */
+/**
+ * /juwelen und /juwelenshop [gift &lt;Spieler&gt;|&lt;Seite&gt;]. /juwelen give ist für Admins. SMP: Dialog des Kerns,
+ * andere Modi: Dialog eines Addons (registerJewelShop), sonst der Truhen-Shop.
+ */
 public final class JewelCommand implements CommandExecutor {
 
     private final KubyPlugins plugin;
@@ -28,7 +31,9 @@ public final class JewelCommand implements CommandExecutor {
             return true;
         }
         if (command.getName().equalsIgnoreCase("juwelenshop")) {
-            boolean smp = ModeService.SMP.equals(plugin.modes().modeOf(p.getUniqueId()));
+            String mode = plugin.modes().modeOf(p.getUniqueId());
+            boolean smp = ModeService.SMP.equals(mode);
+            KubyPlugins.JewelShopHook hook = plugin.jewelShopHook(mode);
             if (args.length > 0 && (args[0].equalsIgnoreCase("gift") || args[0].equalsIgnoreCase("schenken"))) {
                 Player target = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : null;
                 if (args.length < 2) {
@@ -39,7 +44,7 @@ public final class JewelCommand implements CommandExecutor {
                     Msg.send(p, "<red>An dich selbst kannst du nichts verschenken. Kauf es einfach im /juwelenshop.");
                 } else if (smp) {
                     plugin.jewelShop().openGift(p, target);
-                } else {
+                } else if (hook == null || !hook.gift(p, target)) {
                     new de.kuby.kubyplugins.gui.JewelStoreMenu(plugin, plugin.modes().modeOf(p.getUniqueId()), 0, target).open(p);
                 }
                 return true;
@@ -57,7 +62,9 @@ public final class JewelCommand implements CommandExecutor {
                 plugin.jewelShop().open(p, page);
                 return true;
             }
-            new de.kuby.kubyplugins.gui.JewelStoreMenu(plugin, plugin.modes().modeOf(p.getUniqueId()), 0).open(p);
+            // Addon (Survival: Dialog mit Möbeln, Pets, Tokens), sonst der Truhen-Shop
+            if (hook != null && hook.open(p, args.length > 0 ? args[0] : "")) return true;
+            new de.kuby.kubyplugins.gui.JewelStoreMenu(plugin, mode, 0).open(p);
             return true;
         }
         if (args.length == 3 && args[0].equalsIgnoreCase("give")) {

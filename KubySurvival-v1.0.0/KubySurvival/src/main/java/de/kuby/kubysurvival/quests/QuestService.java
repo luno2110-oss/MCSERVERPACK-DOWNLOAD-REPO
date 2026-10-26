@@ -115,6 +115,8 @@ public final class QuestService {
     private final List<Mile> milestones = new ArrayList<>();
     private final Map<Integer, Long> streakRewards = new HashMap<>();
     private int dailyCount = 3;
+    /** Zusätzliche Tages-Quests mit Farmpass. */
+    private int farmpassDaily = 1;
     private int weeklyCount = 3;
     private long streakBonus = 25;
     private final Map<UUID, Data> players = new HashMap<>();
@@ -142,6 +144,7 @@ public final class QuestService {
         streakRewards.clear();
         YamlConfiguration yml = YamlConfiguration.loadConfiguration(defFile);
         dailyCount = Math.max(1, yml.getInt("daily-count", 3));
+        farmpassDaily = Math.max(0, Math.min(4, yml.getInt("farmpass-extra-daily", 1)));
         weeklyCount = Math.max(1, yml.getInt("weekly-count", 3));
         streakBonus = yml.getLong("streak.bonus-coins-per-day", 25);
         for (String raw : yml.getStringList("streak.rewards")) {
@@ -190,6 +193,14 @@ public final class QuestService {
         return milestones;
     }
 
+    public synchronized int dailyCount() {
+        return dailyCount;
+    }
+
+    public synchronized int farmpassExtraDaily() {
+        return farmpassDaily;
+    }
+
     // ---------- Zeit ----------
 
     static String today() {
@@ -210,6 +221,15 @@ public final class QuestService {
             payLeftovers(id, d, "d:");
             d.day = today;
             d.daily = pick(daily, dailyCount, id.hashCode() * 31L + today.hashCode());
+        }
+        // Farmpass: weitere Tages-Quests (gleicher Zufall, die ersten bleiben dieselben; auch wenn der Pass mitten am
+        // Tag dazukommt)
+        int want = dailyCount + (addon.farmpass() != null && addon.farmpass().active(id) ? farmpassDaily : 0);
+        if (d.daily.size() < want) {
+            for (String q : pick(daily, want, id.hashCode() * 31L + today.hashCode())) {
+                if (d.daily.size() >= want) break;
+                if (!d.daily.contains(q)) d.daily.add(q);
+            }
         }
         String week = week();
         if (!week.equals(d.week)) {

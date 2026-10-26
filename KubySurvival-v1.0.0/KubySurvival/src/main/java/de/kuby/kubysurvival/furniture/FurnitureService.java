@@ -20,6 +20,7 @@ import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Interaction;
+import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Pose;
 import org.bukkit.event.EventHandler;
@@ -124,16 +125,21 @@ public final class FurnitureService implements Listener {
     // Items
     // =================================================================================================================
 
-    /** Möbel-Item zum Aufstellen (nicht als Block setzbar: Papier mit dem Aussehen des Icons). */
+    /** Möbel-Item zum Aufstellen (nicht als Block setzbar: Papier mit dem Aussehen des Icons bzw. des Modells). */
     public ItemStack item(FurnitureCatalog.Def d) {
         ItemStack item = new ItemStack(Material.PAPER);
         ItemMeta meta = item.getItemMeta();
         meta.displayName(Msg.item("<#F0A050>" + d.name()));
-        meta.lore(List.of(Msg.item("<gray>Möbel · " + d.size().label + (d.seat() ? " · Sitzplatz" : "")
-                        + (d.width() > 1 ? " · 2 Blöcke breit" : "")),
+        String kind = d.size().label;
+        if (d.model3d()) {
+            kind = d.tab();
+            for (FurnitureCatalog.Tab t : FurnitureCatalog.tabs()) if (t.id().equals(d.tab())) kind = t.name();
+        }
+        meta.lore(List.of(Msg.item("<gray>Möbel · " + kind + (d.seat() ? " · Sitzplatz" : "")
+                        + (d.large() ? " · " + d.cells().size() + " Blöcke" : "")),
                 Msg.item(""), Msg.item("<yellow>Rechtsklick auf einen Block: aufstellen"),
                 Msg.item("<gray>(in deinem Grundstück oder wo du bauen darfst)")));
-        meta.setItemModel(d.icon().getKey());
+        meta.setItemModel(d.model3d() ? NamespacedKey.fromString(d.model()) : d.icon().getKey());
         meta.getPersistentDataContainer().set(itemKey, PersistentDataType.STRING, d.id());
         item.setItemMeta(meta);
         return item;
@@ -156,11 +162,13 @@ public final class FurnitureService implements Listener {
         return f.at.clone().add(wx, y, wz);
     }
 
-    private static List<int[]> cellsOf(Location at, float yaw, int width) {
+    /** Belegte Blöcke: die Felder des Möbels (x, z ab dem Ursprungsblock), gedreht um yaw. */
+    private static List<int[]> cellsOf(Location at, float yaw, List<int[]> cells) {
         List<int[]> out = new ArrayList<>();
         double r = Math.toRadians(yaw);
-        for (int i = 0; i < width; i++) {
-            double wx = i * Math.cos(r), wz = i * Math.sin(r);
+        double cos = Math.cos(r), sin = Math.sin(r);
+        for (int[] c : cells) {
+            double wx = c[0] * cos - c[1] * sin, wz = c[0] * sin + c[1] * cos;
             out.add(new int[]{(int) Math.floor(at.getX() + wx), at.getBlockY(), (int) Math.floor(at.getZ() + wz)});
         }
         return out;
@@ -198,18 +206,18 @@ public final class FurnitureService implements Listener {
         if (!survival(p)) return "Möbel gibt es nur in Survival.";
         if (addon.claims().at(target.getLocation()) == null) return "Möbel stellst du in deinem Grundstück auf (oder wo du bauen darfst).";
         if (countOf(p.getUniqueId()) >= max()) return "Du hast schon " + max() + " Möbel aufgestellt. Heb eins auf (Schleichen + Linksklick).";
-        // zum Spieler gedreht, in 45°-Schritten (breite Möbel: 90°)
-        float step = d.width() > 1 ? 90f : 45f;
+        // zum Spieler gedreht, in 45°-Schritten (große Möbel: 90°)
+        float step = d.large() ? 90f : 45f;
         float yaw = Math.round((p.getLocation().getYaw() + 180f) / step) * step;
         yaw = ((yaw % 360) + 360) % 360;
         Location at = target.getLocation().add(0.5, 0, 0.5);
-        String err = checkCells(p, at, yaw, d.width(), null);
+        String err = checkCells(p, at, yaw, d.cells(), null);
         if (err != null) return err;
         Placed f;
         synchronized (this) {
             f = new Placed("m" + (nextId++), p.getUniqueId(), d, at, yaw);
             placed.put(f.id, f);
-            for (int[] c : cellsOf(at, yaw, d.width())) cells.put(cellKey(at.getWorld(), c), f.id);
+            for (int[] c : cellsOf(at, yaw, d.cells())) cells.put(cellKey(at.getWorld(), c), f.id);
             save();
         }
         spawn(f);
@@ -218,8 +226,8 @@ public final class FurnitureService implements Listener {
     }
 
     /** Alle Blöcke des Möbels müssen frei sein und im Bau-Recht des Spielers liegen. */
-    private String checkCells(Player p, Location at, float yaw, int width, String self) {
-        for (int[] c : cellsOf(at, yaw, width)) {
+    private String checkCells(Player p, Location at, float yaw, List<int[]> fields, String self) {
+        for (int[] c : cellsOf(at, yaw, fields)) {
             Block b = at.getWorld().getBlockAt(c[0], c[1], c[2]);
             if (!b.isPassable() || b.isLiquid()) return "Hier ist kein Platz.";
             if (!addon.claims().canBuild(p, b.getLocation())) return "Hier darfst du nicht bauen.";
@@ -234,6 +242,19 @@ public final class FurnitureService implements Listener {
         Location base = f.at.clone();
         base.setYaw(f.yaw);
         base.setPitch(0);
+        if (f.def.model3d()) {
+            // Modell aus dem Pack: Mitte des Modells (8, 8, 8) einen halben Block über dem Boden
+            ItemStack shown = new ItemStack(Material.PAPER);
+            ItemMeta meta = shown.getItemMeta();
+            meta.setItemModel(NamespacedKey.fromString(f.def.model()));
+            shown.setItemMeta(meta);
+            f.at.getWorld().spawn(base.clone().add(0, 0.5, 0), ItemDisplay.class, d -> {
+                d.setItemStack(shown);
+                d.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
+                d.setPersistent(true);
+                d.getPersistentDataContainer().set(partKey, PersistentDataType.STRING, f.id);
+            });
+        }
         for (FurnitureCatalog.Part part : f.def.parts()) {
             f.at.getWorld().spawn(base, BlockDisplay.class, d -> {
                 d.setBlock(part.m().createBlockData());
@@ -244,11 +265,9 @@ public final class FurnitureService implements Listener {
                 d.getPersistentDataContainer().set(partKey, PersistentDataType.STRING, f.id);
             });
         }
-        float height = 0.5f;
-        for (FurnitureCatalog.Part part : f.def.parts()) height = Math.max(height, part.y() + part.sy());
-        float h = Math.min(height, 1.9f);
-        for (int i = 0; i < f.def.width(); i++) {
-            Location c = world(f, i, 0, 0);
+        float h = Math.max(0.3f, Math.min(f.def.height(), 2.5f));
+        for (int[] cell : f.def.cells()) {
+            Location c = world(f, cell[0], 0, cell[1]);
             f.at.getWorld().spawn(c, Interaction.class, it -> {
                 it.setInteractionWidth(0.95f);
                 it.setInteractionHeight(h);
@@ -262,7 +281,7 @@ public final class FurnitureService implements Listener {
             if (b.getType().isAir()) {
                 b.setType(Material.LIGHT, false);
                 if (b.getBlockData() instanceof Levelled l) {
-                    l.setLevel(13);
+                    l.setLevel(Math.max(1, Math.min(15, f.def.lightLevel())));
                     b.setBlockData(l, false);
                 }
             }
@@ -311,10 +330,10 @@ public final class FurnitureService implements Listener {
             send(p, "<red>Drehen darf nur, wer hier bauen darf.");
             return;
         }
-        float step = f.def.width() > 1 ? 90f : 45f;
+        float step = f.def.large() ? 90f : 45f;
         float next = (f.yaw + step) % 360;
-        if (f.def.width() > 1) {
-            String err = checkCells(p, f.at, next, f.def.width(), f.id);
+        if (f.def.large()) {
+            String err = checkCells(p, f.at, next, f.def.cells(), f.id);
             if (err != null) {
                 send(p, "<red>Zum Drehen ist kein Platz.");
                 return;
@@ -322,9 +341,9 @@ public final class FurnitureService implements Listener {
         }
         despawn(f);
         synchronized (this) {
-            for (int[] c : cellsOf(f.at, f.yaw, f.def.width())) cells.remove(cellKey(f.at.getWorld(), c));
+            for (int[] c : cellsOf(f.at, f.yaw, f.def.cells())) cells.remove(cellKey(f.at.getWorld(), c));
             f.yaw = next;
-            for (int[] c : cellsOf(f.at, f.yaw, f.def.width())) cells.put(cellKey(f.at.getWorld(), c), f.id);
+            for (int[] c : cellsOf(f.at, f.yaw, f.def.cells())) cells.put(cellKey(f.at.getWorld(), c), f.id);
             save();
         }
         spawn(f);
@@ -348,7 +367,7 @@ public final class FurnitureService implements Listener {
         synchronized (this) {
             // nur einmal zurückgeben, auch wenn zwei im selben Moment zuschlagen
             if (placed.remove(f.id) == null) return;
-            for (int[] c : cellsOf(f.at, f.yaw, f.def.width())) cells.remove(cellKey(f.at.getWorld(), c));
+            for (int[] c : cellsOf(f.at, f.yaw, f.def.cells())) cells.remove(cellKey(f.at.getWorld(), c));
             save();
         }
         for (Entity s : seatsOf(f)) s.eject();
@@ -547,7 +566,7 @@ public final class FurnitureService implements Listener {
                 Placed f = new Placed(id, UUID.fromString(c.getString("besitzer", "")), d,
                         new Location(w, c.getDouble("x"), c.getDouble("y"), c.getDouble("z")), (float) c.getDouble("yaw"));
                 placed.put(id, f);
-                for (int[] cell : cellsOf(f.at, f.yaw, d.width())) cells.put(cellKey(w, cell), id);
+                for (int[] cell : cellsOf(f.at, f.yaw, d.cells())) cells.put(cellKey(w, cell), id);
             } catch (IllegalArgumentException ignored) {
             }
         }

@@ -53,6 +53,7 @@ import de.kuby.kubysurvival.quests.QuestMenu;
 import de.kuby.kubysurvival.quests.QuestService;
 import de.kuby.kubysurvival.quests.SideQuestCommand;
 import de.kuby.kubysurvival.quests.SideQuestService;
+import de.kuby.kubysurvival.shop.SurvivalShop;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.command.PluginCommand;
@@ -61,6 +62,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -111,6 +113,60 @@ public final class KubySurvival extends JavaPlugin {
     public BankService bank() { return bank; }
     public GraveService graves() { return graves; }
     public FurnitureService furniture() { return furniture; }
+
+    /** /kp selftest: alle Seiten des Survival-Juwelenshops bauen, Kataloge und Bilder prüfen. */
+    private void selfTests() {
+        for (de.kuby.kubysurvival.shop.ShopCanvas.Page pg : de.kuby.kubysurvival.shop.ShopCanvas.Page.values()) {
+            core.registerSelfTestCanvas("Survival-Juwelenshop " + pg,
+                    () -> de.kuby.kubysurvival.shop.ShopCanvas.canvas(shop.sample(pg), null));
+        }
+        core.registerSelfTestCheck("Möbel-Katalog", () -> {
+            int n = 0;
+            for (FurnitureCatalog.Tab t : FurnitureCatalog.tabs()) {
+                int k = FurnitureCatalog.inTab(t.id()).size();
+                if (k == 0) return "Reiter " + t.id() + " leer";
+                n += k;
+            }
+            return FurnitureCatalog.tabs().size() == 7 && n == 168 ? null
+                    : FurnitureCatalog.tabs().size() + " Reiter, " + n + " Möbel (erwartet 7 und 168)";
+        });
+        core.registerSelfTestCheck("Shop-Pets", () -> {
+            List<PetService.Kind> list = pets.shopKinds();
+            if (list.size() != 49) return list.size() + " Pets (erwartet 49)";
+            for (PetService.Kind k : list) if (k.model() == null || k.rarity().isBlank()) return k.id() + " ohne Bild oder Seltenheit";
+            return null;
+        });
+        core.registerSelfTestCheck("Shop-Bilder", () -> {
+            for (FurnitureCatalog.Tab t : FurnitureCatalog.tabs()) {
+                for (FurnitureCatalog.Def d : FurnitureCatalog.inTab(t.id())) {
+                    try {
+                        de.kuby.kubyplugins.ui.KitData.Sprite.valueOf("JSS_F_" + d.id().toUpperCase(java.util.Locale.ROOT));
+                    } catch (IllegalArgumentException e) {
+                        return "kein Bild für Möbel " + d.id();
+                    }
+                }
+            }
+            for (PetService.Kind k : pets.shopKinds()) {
+                try {
+                    de.kuby.kubyplugins.ui.KitData.Sprite.valueOf("JSS_P_" + k.id().toUpperCase(java.util.Locale.ROOT));
+                } catch (IllegalArgumentException e) {
+                    return "kein Bild für Pet " + k.id();
+                }
+            }
+            return null;
+        });
+        core.registerSelfTestCheck("Survival-Shop Schlüssel", () -> {
+            for (String key : List.of("episch", "farm")) if (core.keys().type(key) == null) return "Schlüssel-Art " + key + " fehlt in keys.types";
+            return shop.sample(de.kuby.kubysurvival.shop.ShopCanvas.Page.CRATES).rows().size() == 3 ? null : "Kisten fehlen in jewelshop-survival.crates";
+        });
+        core.registerSelfTestCheck("Farmpass-Seite", () -> {
+            List<String[]> perks = shop.farmpassPerks();
+            if (quests.farmpassExtraDaily() > 0 && !perks.get(0)[0].endsWith("Daily-Quests")) return "Daily-Quests fehlen";
+            return perks.size() >= 2 ? null : "zu wenige Vorteile";
+        });
+    }
+    private SurvivalShop shop;
+    public SurvivalShop shop() { return shop; }
 
     @Override
     public void onEnable() {
@@ -243,6 +299,7 @@ public final class KubySurvival extends JavaPlugin {
         FarmpassCommand farmpassCommand = new FarmpassCommand(this);
         command("farmpass", farmpassCommand);
         command("werkbank", farmpassCommand);
+        command("endertruhe", farmpassCommand);
         PluginCommand fpCmd = getCommand("farmpass");
         if (fpCmd != null) fpCmd.setTabCompleter(farmpassCommand);
         LevelCommand levelCommand = new LevelCommand(this);
@@ -337,6 +394,15 @@ public final class KubySurvival extends JavaPlugin {
         graves = new GraveService(this, core);
         getServer().getPluginManager().registerEvents(graves, this);
         command("grab", new GraveCommand(core, graves));
+        // Modell-Möbel aus dem Juwelenshop (moebel.yml, generiert von tools/build_furniture.py)
+        try (java.io.InputStream in = getResource("moebel.yml")) {
+            if (in != null) {
+                int n = FurnitureCatalog.load(new java.io.InputStreamReader(in, java.nio.charset.StandardCharsets.UTF_8));
+                getLogger().info("Möbel-Katalog: " + n + " Modelle in " + FurnitureCatalog.tabs().size() + " Reitern");
+            }
+        } catch (java.io.IOException e) {
+            getLogger().warning("moebel.yml konnte nicht gelesen werden: " + e.getMessage());
+        }
         furniture = new FurnitureService(this, core);
         getServer().getPluginManager().registerEvents(furniture, this);
         FurnitureCommand furnitureCommand = new FurnitureCommand(furniture);
@@ -345,16 +411,29 @@ public final class KubySurvival extends JavaPlugin {
             PluginCommand pc = getCommand(name);
             if (pc != null) pc.setTabCompleter(furnitureCommand);
         }
-        // Möbel im Juwelenshop (Survival): Preis nach Größe, Kauf gibt das Möbel-Item
+        // Möbel im Truhen-Juwelenshop (ohne Pack): nur die Block-Möbel, Preis nach Größe, Kauf gibt das Möbel-Item
         core.jewelStore().registerCategory(de.kuby.kubyplugins.service.ModeService.SURVIVAL,
                 new de.kuby.kubyplugins.service.JewelStoreService.Cat("moebel", "Möbel", Material.OAK_STAIRS, "ITEMS", true), () -> {
                     java.util.List<de.kuby.kubyplugins.service.JewelStoreService.Item> list = new java.util.ArrayList<>();
-                    for (FurnitureCatalog.Def d : FurnitureCatalog.all()) {
+                    for (FurnitureCatalog.Def d : FurnitureCatalog.blocks()) {
                         list.add(new de.kuby.kubyplugins.service.JewelStoreService.Item(d.id(), d.name(), d.icon(), d.size().price,
                                 "moebel give %player% " + d.id(), "Möbel · " + d.size().label + (d.seat() ? " · Sitzplatz" : "")));
                     }
                     return list;
                 });
+        // Juwelenshop in Survival (Dialog wie in der Referenz, mit Pack KubyUI)
+        shop = new SurvivalShop(this);
+        getServer().getPluginManager().registerEvents(shop, this);
+        core.registerJewelShop(de.kuby.kubyplugins.service.ModeService.SURVIVAL, new KubyPlugins.JewelShopHook() {
+            public boolean open(Player p, String sub) {
+                return shop.open(p, sub);
+            }
+
+            public boolean gift(Player p, Player target) {
+                return shop.openGift(p, target);
+            }
+        });
+        selfTests();
         HeadService heads = new HeadService(this, core);
         command("heads", heads);
         PluginCommand headsCmd = getCommand("heads");

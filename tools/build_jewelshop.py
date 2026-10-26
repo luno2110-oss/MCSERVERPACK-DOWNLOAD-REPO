@@ -12,30 +12,39 @@ from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ASSETS = os.path.join(HERE, "assets", "jewelshop")
+# Survival-Juwelenshop (Release „Referenz2“, extract_jewelshop_survival.py): Präfix jss_, dazu Möbel (f_) und Pets (p_)
+ASSETS_SURVIVAL = os.path.join(HERE, "assets", "jewelshop_survival")
+SETS = ((ASSETS, "js_"), (ASSETS_SURVIVAL, "jss_"))
 
 
 def available():
     return os.path.isdir(ASSETS)
 
 
-def _files(prefix):
-    return sorted(f for f in os.listdir(ASSETS) if f.startswith(prefix) and f.endswith(".png"))
+def _files(folder, prefix):
+    if not os.path.isdir(folder):
+        return []
+    return sorted(f for f in os.listdir(folder) if f.startswith(prefix) and f.endswith(".png"))
 
 
 def boxes():
-    """Stil js_<name> -> 15 x 15-Vorlage."""
-    if not available():
-        return {}
-    return {"js_" + f[4:-4]: Image.open(os.path.join(ASSETS, f)).convert("RGBA") for f in _files("box_")}
+    """Stil js_<name> bzw. jss_<name> -> 15 x 15-Vorlage."""
+    out = {}
+    for folder, pre in SETS:
+        for f in _files(folder, "box_"):
+            out[pre + f[4:-4]] = Image.open(os.path.join(folder, f)).convert("RGBA")
+    return out
 
 
 def sprites():
-    """[(js_<name>, Bild)] Grafiken und Mengen-Knöpfe (Reihenfolge fest: alphabetisch)."""
-    if not available():
-        return []
+    """[(js_<name>, Bild)] Grafiken und Mengen-Knöpfe, danach jss_… mit Möbeln und Pets (Reihenfolge fest)."""
     out = []
-    for f in _files("art_"):
-        out.append(("js_" + f[4:-4], Image.open(os.path.join(ASSETS, f)).convert("RGBA")))
-    for f in _files("pill_"):
-        out.append(("js_" + f[:-4], Image.open(os.path.join(ASSETS, f)).convert("RGBA")))
+    for folder, pre in SETS:
+        for f in _files(folder, "art_"):
+            out.append((pre + f[4:-4], Image.open(os.path.join(folder, f)).convert("RGBA")))
+        for f in _files(folder, "pill_"):
+            out.append((pre + f[:-4], Image.open(os.path.join(folder, f)).convert("RGBA")))
+        for kind in ("f_", "p_"):
+            for f in _files(folder, kind):
+                out.append((pre + f[:-4], Image.open(os.path.join(folder, f)).convert("RGBA")))
     return out

@@ -213,6 +213,20 @@ final class SelfTest {
             fails.add("Eingabe-Dialog: " + t);
         }
 
+        // Prüfungen aus den Addons (z. B. Survival-Juwelenshop, Möbel- und Pet-Katalog)
+        for (java.util.Map.Entry<String, Supplier<Canvas>> en : plugin.selfTestCanvases().entrySet()) {
+            canvas.accept(en.getKey(), en.getValue());
+        }
+        for (java.util.Map.Entry<String, Supplier<String>> en : plugin.selfTestChecks().entrySet()) {
+            try {
+                String err = en.getValue().get();
+                if (err != null) fails.add(en.getKey() + ": " + err);
+                else ok[0]++;
+            } catch (Throwable t) {
+                fails.add(en.getKey() + ": " + t);
+            }
+        }
+
         out.sendMessage("SELFTEST " + ok[0] + " Dialoge gebaut, " + fails.size() + " Fehler");
         for (String f : fails) out.sendMessage("SELFTEST FEHLER " + f);
         plugin.getLogger().info("SELFTEST " + (fails.isEmpty() ? "OK" : "FEHLER (" + fails.size() + ")"));

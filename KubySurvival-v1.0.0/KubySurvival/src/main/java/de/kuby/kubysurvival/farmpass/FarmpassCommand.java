@@ -16,7 +16,7 @@ import java.util.List;
 
 /**
  * /farmpass [pet|fly|kiste], für Store/Admins: /farmpass give <Spieler> [Tage] und /farmpass take <Spieler>.
- * /werkbank öffnet mit Pass überall eine Werkbank.
+ * /werkbank öffnet mit Pass überall eine Werkbank, /endertruhe die eigene Endertruhe.
  */
 public final class FarmpassCommand implements CommandExecutor, TabCompleter {
 
@@ -29,14 +29,17 @@ public final class FarmpassCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         FarmpassService fp = addon.farmpass();
-        if (command.getName().equalsIgnoreCase("werkbank")) {
+        boolean bench = command.getName().equalsIgnoreCase("werkbank");
+        if (bench || command.getName().equalsIgnoreCase("endertruhe")) {
             if (!(sender instanceof Player p)) return true;
             if (!fp.active(p.getUniqueId())) {
-                Msg.send(p, "<gray>/werkbank gibt es mit dem <green>Farmpass<gray>: <white>/farmpass");
+                Msg.send(p, "<gray>/" + (bench ? "werkbank" : "endertruhe") + " gibt es mit dem <green>Farmpass<gray>: <white>/farmpass");
             } else if (!ModeService.SURVIVAL.equals(addon.core().modes().modeOf(p.getUniqueId()))) {
                 Msg.send(p, "<red>Nur in Survival.");
-            } else {
+            } else if (bench) {
                 p.openWorkbench(null, true);
+            } else {
+                p.openInventory(p.getEnderChest());
             }
             return true;
         }

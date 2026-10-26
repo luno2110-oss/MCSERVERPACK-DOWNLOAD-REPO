@@ -71,6 +71,15 @@ if VANILLA and os.path.isdir(VANILLA):
     # Discord-Statue: Wumpus als Item-Modell (kuby:deco/wumpus)
     import build_wumpus  # noqa: E402
     build_wumpus.write(OUT)
+    # Survival-Juwelenshop: Möbel als Modelle (kuby:furniture/<id>, mit Katalog moebel.yml) und Pets (kuby:pet/<id>)
+    import build_furniture  # noqa: E402
+    import build_pets  # noqa: E402
+    furniture = build_furniture.all_models()  # meldet dabei auch die eigenen Texturen an
+    build_furniture.write_textures(OUT)
+    build_furniture.write(furniture, OUT)
+    build_furniture.catalog(furniture)
+    build_pets.write(OUT)
+    build_pets.catalog()
     # Juwelenshop (SMP), Battle-Pass und Guide: große Grafiken als Sprites, goldener Schlüssel als eigenes Icon
     import build_jewelshop  # noqa: E402
     import build_battlepass  # noqa: E402

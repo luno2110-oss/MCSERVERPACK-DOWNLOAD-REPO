@@ -42,19 +42,24 @@ public final class FarmpassMenu extends GuiMenu {
             Msg.send(p, "<green>Farmpass im Store: <click:open_url:'" + url + "'><u><aqua>" + url + "</aqua></u></click>");
         });
 
+        int daily = addon.quests() == null ? 3 : addon.quests().dailyCount();
+        int extraDaily = addon.quests() == null ? 0 : addon.quests().farmpassExtraDaily();
         String[][] perks = {
                 {"FEATHER", "Fliegen", "Am Spawn, im Casino und auf deinen", "und den Grundstücken deiner Freunde"},
                 {"IRON_HOE", "Nebenjob", "Ein zweiter Job, der mitzahlt", "/job nebenjob <Beruf>"},
                 {"GOLD_NUGGET", "Keine Gebühren", "Keine Steuer im Markt", "und keine Casino-Steuer"},
                 {"RED_BED", "+" + cfg.getInt("farmpass.extra-homes", 2) + " Homes", "Mehr Plätze für Homes", ""},
                 {"CHEST", "Mehr Markt-Plätze", cfg.getInt("farmpass.market-listings", 15) + " Angebote gleichzeitig", ""},
-                {"CRAFTING_TABLE", "/werkbank überall", "Werkbank immer dabei", ""},
+                {"CRAFTING_TABLE", "Werkbank & Endertruhe", "Überall: /werkbank", "und /endertruhe"},
                 {"ENDER_CHEST", "Wochenkiste", "Jede Woche Coins, Tokens", "und nützliche Items"},
                 {"LEAD", "Haustiere", "4 Haustiere nur für den Pass,", "dazu eins pro Monat für immer"},
                 {"GRASS_BLOCK", "+" + cfg.getLong("farmpass.claim-blocks-per-month", 250) + " Claim-Blöcke", "pro bezahltem Monat,", "bleiben für immer"},
-                {"LILY_PAD", "Grünes Blatt", "☘ vor deinem Namen", "in Tab und Chat"}};
-        int[] slots = {10, 11, 12, 13, 14, 15, 16, 19, 20, 21};
+                {"LILY_PAD", "Grünes Blatt", "☘ vor deinem Namen", "in Tab und Chat"},
+                {"WRITABLE_BOOK", "+" + extraDaily + " Tages-Quest" + (extraDaily == 1 ? "" : "s"), "Jeden Tag " + (daily + extraDaily)
+                        + " statt " + daily, "Tages-Quests (/quest)"}};
+        int[] slots = {10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22};
         for (int i = 0; i < perks.length; i++) {
+            if (i == perks.length - 1 && extraDaily == 0) continue;
             String[] k = perks[i];
             List<String> lore = new ArrayList<>();
             lore.add("<gray>" + k[2]);

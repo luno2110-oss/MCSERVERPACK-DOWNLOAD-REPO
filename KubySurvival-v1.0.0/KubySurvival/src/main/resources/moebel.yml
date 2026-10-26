@@ -1,0 +1,182 @@
+# Möbel im Survival-Juwelenshop. Generiert von tools/build_furniture.py, nicht von Hand ändern.
+# reiter: id;Name;Untertitel. moebel: Reiter, Name, Preis (Juwelen), Felder (Blöcke [x, z] ab dem Block, auf
+# den man klickt), Höhe (Blöcke, Klickfläche), Sitze ([x, z] in Blöcken ab der Mitte dieses Blocks),
+# Sitzhöhe (Blöcke), Licht (Stärke, -1 = keins). Alles im Möbel-Rahmen: +z = vorne (zum Spieler, der es
+# aufstellt); das ItemDisplay dreht das Modell um 180 Grad, Modell-x und -z zählen also umgekehrt.
+reiter:
+  - "sitzen;Sitzen;Stühle, Bänke, Hocker"
+  - "tische;Tische;Tische, Kommoden, Tafeln"
+  - "pflanzen;Pflanzen;Töpfe, Ranken, Pilze"
+  - "lager;Lager;Kisten, Körbe, Schränke"
+  - "deko;Deko;Banner, Schilder, Vorhänge"
+  - "markt;Markt;Marktstände und Karren"
+  - "bank;Bank;Bank und Casino"
+moebel:
+  holzstuhl: {reiter: sitzen, name: "Holzstuhl", preis: 100, felder: [[0, 0]], hoehe: 1.38, sitze: [[0.0, 0.062]], sitzhoehe: 0.562, licht: -1}
+  stuhl_blau: {reiter: sitzen, name: "Stuhl Blau", preis: 100, felder: [[0, 0]], hoehe: 1.38, sitze: [[0.0, 0.062]], sitzhoehe: 0.625, licht: -1}
+  stuhl_weiss: {reiter: sitzen, name: "Stuhl Weiß", preis: 100, felder: [[0, 0]], hoehe: 1.38, sitze: [[0.0, 0.062]], sitzhoehe: 0.625, licht: -1}
+  lehnstuhl: {reiter: sitzen, name: "Lehnstuhl", preis: 100, felder: [[0, 0]], hoehe: 1.56, sitze: [[0.0, 0.062]], sitzhoehe: 0.562, licht: -1}
+  holzbank: {reiter: sitzen, name: "Holzbank", preis: 100, felder: [[0, 0], [-1, 0]], hoehe: 0.5, sitze: [[0.0, 0.062], [-1.0, 0.062]], sitzhoehe: 0.5, licht: -1}
+  bank_gruen: {reiter: sitzen, name: "Bank Grün", preis: 100, felder: [[0, 0], [-1, 0]], hoehe: 0.56, sitze: [[0.0, 0.062], [-1.0, 0.062]], sitzhoehe: 0.562, licht: -1}
+  bank_weiss: {reiter: sitzen, name: "Bank Weiß", preis: 100, felder: [[0, 0], [-1, 0]], hoehe: 0.56, sitze: [[0.0, 0.062], [-1.0, 0.062]], sitzhoehe: 0.562, licht: -1}
+  lehnbank: {reiter: sitzen, name: "Lehnbank", preis: 150, felder: [[0, 0], [-1, 0]], hoehe: 1.31, sitze: [[0.0, 0.062], [-1.0, 0.062]], sitzhoehe: 0.5, licht: -1}
+  buerostuhl: {reiter: sitzen, name: "Bürostuhl", preis: 100, felder: [[0, 0]], hoehe: 1.38, sitze: [[0.0, 0.062]], sitzhoehe: 0.656, licht: -1}
+  klapphocker: {reiter: sitzen, name: "Klapphocker", preis: 50, felder: [[0, 0]], hoehe: 0.62, sitze: [[0.0, 0.0]], sitzhoehe: 0.625, licht: -1}
+  barhocker: {reiter: sitzen, name: "Barhocker", preis: 150, felder: [[0, 0]], hoehe: 0.81, sitze: [[0.0, 0.0]], sitzhoehe: 0.812, licht: -1}
+  casino_hocker: {reiter: sitzen, name: "Casino-Hocker", preis: 50, felder: [[0, 0]], hoehe: 1.12, sitze: [[0.0, 0.0]], sitzhoehe: 1.125, licht: -1}
+  holztisch: {reiter: tische, name: "Holztisch", preis: 100, felder: [[0, 0]], hoehe: 0.94, sitze: [], sitzhoehe: 0.0, licht: -1}
+  tisch_gruen: {reiter: tische, name: "Tisch Grün", preis: 100, felder: [[0, 0]], hoehe: 0.97, sitze: [], sitzhoehe: 0.0, licht: -1}
+  tisch_weiss: {reiter: tische, name: "Tisch Weiß", preis: 100, felder: [[0, 0]], hoehe: 0.97, sitze: [], sitzhoehe: 0.0, licht: -1}
+  holztafel: {reiter: tische, name: "Holztafel", preis: 150, felder: [[0, 0], [-1, 0]], hoehe: 0.94, sitze: [], sitzhoehe: 0.0, licht: -1}
+  tafel_gruen: {reiter: tische, name: "Tafel Grün", preis: 150, felder: [[0, 0], [-1, 0]], hoehe: 0.97, sitze: [], sitzhoehe: 0.0, licht: -1}
+  tafel_weiss: {reiter: tische, name: "Tafel Weiß", preis: 150, felder: [[0, 0], [-1, 0]], hoehe: 0.97, sitze: [], sitzhoehe: 0.0, licht: -1}
+  esstisch: {reiter: tische, name: "Esstisch", preis: 100, felder: [[0, 0], [-1, 0]], hoehe: 0.94, sitze: [], sitzhoehe: 0.0, licht: -1}
+  bauerntisch: {reiter: tische, name: "Bauerntisch", preis: 50, felder: [[0, 0]], hoehe: 1.0, sitze: [], sitzhoehe: 0.0, licht: -1}
+  beistelltisch: {reiter: tische, name: "Beistelltisch", preis: 100, felder: [[0, 0]], hoehe: 0.81, sitze: [], sitzhoehe: 0.0, licht: -1}
+  tischchen: {reiter: tische, name: "Tischchen", preis: 100, felder: [[0, 0]], hoehe: 0.81, sitze: [], sitzhoehe: 0.0, licht: -1}
+  kommode: {reiter: tische, name: "Kommode", preis: 100, felder: [[0, 0], [-1, 0]], hoehe: 0.91, sitze: [], sitzhoehe: 0.0, licht: -1}
+  anrichte: {reiter: tische, name: "Anrichte", preis: 150, felder: [[0, 0], [-1, 0]], hoehe: 0.91, sitze: [], sitzhoehe: 0.0, licht: -1}
+  schreibtisch: {reiter: tische, name: "Schreibtisch", preis: 100, felder: [[0, 0], [-1, 0]], hoehe: 1.0, sitze: [], sitzhoehe: 0.0, licht: -1}
+  blumenhocker_1: {reiter: tische, name: "Blumenhocker 1", preis: 100, felder: [[0, 0]], hoehe: 1.12, sitze: [], sitzhoehe: 0.0, licht: -1}
+  blumenhocker_2: {reiter: tische, name: "Blumenhocker 2", preis: 100, felder: [[0, 0]], hoehe: 1.12, sitze: [], sitzhoehe: 0.0, licht: -1}
+  pflanzkasten: {reiter: pflanzen, name: "Pflanzkasten", preis: 50, felder: [[0, 0]], hoehe: 0.78, sitze: [], sitzhoehe: 0.0, licht: -1}
+  topfpflanze_1: {reiter: pflanzen, name: "Topfpflanze 1", preis: 100, felder: [[0, 0]], hoehe: 1.22, sitze: [], sitzhoehe: 0.0, licht: -1}
+  topfpflanze_2: {reiter: pflanzen, name: "Topfpflanze 2", preis: 100, felder: [[0, 0]], hoehe: 1.47, sitze: [], sitzhoehe: 0.0, licht: -1}
+  topfpflanze_3: {reiter: pflanzen, name: "Topfpflanze 3", preis: 100, felder: [[0, 0]], hoehe: 1.22, sitze: [], sitzhoehe: 0.0, licht: -1}
+  topfpflanze_4: {reiter: pflanzen, name: "Topfpflanze 4", preis: 100, felder: [[0, 0]], hoehe: 0.97, sitze: [], sitzhoehe: 0.0, licht: -1}
+  topfpflanze_5: {reiter: pflanzen, name: "Topfpflanze 5", preis: 100, felder: [[0, 0]], hoehe: 1.34, sitze: [], sitzhoehe: 0.0, licht: -1}
+  topfpflanze_6: {reiter: pflanzen, name: "Topfpflanze 6", preis: 100, felder: [[0, 0]], hoehe: 1.28, sitze: [], sitzhoehe: 0.0, licht: -1}
+  topfpflanze_7: {reiter: pflanzen, name: "Topfpflanze 7", preis: 150, felder: [[0, 0]], hoehe: 1.16, sitze: [], sitzhoehe: 0.0, licht: -1}
+  topfpflanze_8: {reiter: pflanzen, name: "Topfpflanze 8", preis: 100, felder: [[0, 0]], hoehe: 1.22, sitze: [], sitzhoehe: 0.0, licht: -1}
+  topfpflanze_9: {reiter: pflanzen, name: "Topfpflanze 9", preis: 100, felder: [[0, 0]], hoehe: 1.28, sitze: [], sitzhoehe: 0.0, licht: -1}
+  topfpflanze_10: {reiter: pflanzen, name: "Topfpflanze 10", preis: 100, felder: [[0, 0]], hoehe: 1.34, sitze: [], sitzhoehe: 0.0, licht: -1}
+  topfpflanze_11: {reiter: pflanzen, name: "Topfpflanze 11", preis: 100, felder: [[0, 0]], hoehe: 1.41, sitze: [], sitzhoehe: 0.0, licht: -1}
+  topfpflanze_12: {reiter: pflanzen, name: "Topfpflanze 12", preis: 100, felder: [[0, 0]], hoehe: 1.16, sitze: [], sitzhoehe: 0.0, licht: -1}
+  topfpflanze_13: {reiter: pflanzen, name: "Topfpflanze 13", preis: 150, felder: [[0, 0]], hoehe: 1.47, sitze: [], sitzhoehe: 0.0, licht: -1}
+  topfpflanze_14: {reiter: pflanzen, name: "Topfpflanze 14", preis: 150, felder: [[0, 0]], hoehe: 1.34, sitze: [], sitzhoehe: 0.0, licht: -1}
+  topfpflanze_15: {reiter: pflanzen, name: "Topfpflanze 15", preis: 150, felder: [[0, 0]], hoehe: 1.16, sitze: [], sitzhoehe: 0.0, licht: -1}
+  topfpflanze_16: {reiter: pflanzen, name: "Topfpflanze 16", preis: 150, felder: [[0, 0]], hoehe: 1.03, sitze: [], sitzhoehe: 0.0, licht: -1}
+  topfpflanze_17: {reiter: pflanzen, name: "Topfpflanze 17", preis: 150, felder: [[0, 0]], hoehe: 1.22, sitze: [], sitzhoehe: 0.0, licht: -1}
+  topfpflanze_18: {reiter: pflanzen, name: "Topfpflanze 18", preis: 150, felder: [[0, 0]], hoehe: 1.34, sitze: [], sitzhoehe: 0.0, licht: -1}
+  topfpflanze_19: {reiter: pflanzen, name: "Topfpflanze 19", preis: 100, felder: [[0, 0]], hoehe: 1.47, sitze: [], sitzhoehe: 0.0, licht: -1}
+  topfpflanze_20: {reiter: pflanzen, name: "Topfpflanze 20", preis: 100, felder: [[0, 0]], hoehe: 1.16, sitze: [], sitzhoehe: 0.0, licht: -1}
+  haengepflanze_1: {reiter: pflanzen, name: "Hängepflanze 1", preis: 100, felder: [[0, 0]], hoehe: 1.0, sitze: [], sitzhoehe: 0.0, licht: -1}
+  haengepflanze_2: {reiter: pflanzen, name: "Hängepflanze 2", preis: 100, felder: [[0, 0]], hoehe: 1.16, sitze: [], sitzhoehe: 0.0, licht: -1}
+  haengepflanze_3: {reiter: pflanzen, name: "Hängepflanze 3", preis: 100, felder: [[0, 0]], hoehe: 1.16, sitze: [], sitzhoehe: 0.0, licht: -1}
+  haengepflanze_4: {reiter: pflanzen, name: "Hängepflanze 4", preis: 100, felder: [[0, 0]], hoehe: 1.03, sitze: [], sitzhoehe: 0.0, licht: -1}
+  haengepflanze_5: {reiter: pflanzen, name: "Hängepflanze 5", preis: 100, felder: [[0, 0]], hoehe: 1.03, sitze: [], sitzhoehe: 0.0, licht: -1}
+  haengepflanze_6: {reiter: pflanzen, name: "Hängepflanze 6", preis: 100, felder: [[0, 0]], hoehe: 1.09, sitze: [], sitzhoehe: 0.0, licht: -1}
+  haengepflanze_7: {reiter: pflanzen, name: "Hängepflanze 7", preis: 100, felder: [[0, 0]], hoehe: 1.22, sitze: [], sitzhoehe: 0.0, licht: -1}
+  haengepflanze_8: {reiter: pflanzen, name: "Hängepflanze 8", preis: 100, felder: [[0, 0]], hoehe: 1.0, sitze: [], sitzhoehe: 0.0, licht: -1}
+  haengepflanze_9: {reiter: pflanzen, name: "Hängepflanze 9", preis: 150, felder: [[0, 0]], hoehe: 1.0, sitze: [], sitzhoehe: 0.0, licht: -1}
+  ranke_1: {reiter: pflanzen, name: "Ranke 1", preis: 100, felder: [[0, 0]], hoehe: 1.0, sitze: [], sitzhoehe: 0.0, licht: -1}
+  ranke_2: {reiter: pflanzen, name: "Ranke 2", preis: 100, felder: [[0, 0]], hoehe: 1.0, sitze: [], sitzhoehe: 0.0, licht: -1}
+  ranke_3: {reiter: pflanzen, name: "Ranke 3", preis: 150, felder: [[0, 0]], hoehe: 1.0, sitze: [], sitzhoehe: 0.0, licht: -1}
+  ranke_4: {reiter: pflanzen, name: "Ranke 4", preis: 100, felder: [[0, 0]], hoehe: 1.0, sitze: [], sitzhoehe: 0.0, licht: -1}
+  ranke_5: {reiter: pflanzen, name: "Ranke 5", preis: 100, felder: [[0, 0]], hoehe: 1.0, sitze: [], sitzhoehe: 0.0, licht: -1}
+  ranke_6: {reiter: pflanzen, name: "Ranke 6", preis: 150, felder: [[0, 0]], hoehe: 1.0, sitze: [], sitzhoehe: 0.0, licht: -1}
+  ranke_7: {reiter: pflanzen, name: "Ranke 7", preis: 100, felder: [[0, 0]], hoehe: 1.0, sitze: [], sitzhoehe: 0.0, licht: -1}
+  ranke_8: {reiter: pflanzen, name: "Ranke 8", preis: 100, felder: [[0, 0]], hoehe: 1.0, sitze: [], sitzhoehe: 0.0, licht: -1}
+  ranke_9: {reiter: pflanzen, name: "Ranke 9", preis: 150, felder: [[0, 0]], hoehe: 1.0, sitze: [], sitzhoehe: 0.0, licht: -1}
+  pflanzbrett: {reiter: pflanzen, name: "Pflanzbrett", preis: 100, felder: [[0, 0]], hoehe: 0.59, sitze: [], sitzhoehe: 0.0, licht: -1}
+  kaktus: {reiter: pflanzen, name: "Kaktus", preis: 50, felder: [[0, 0]], hoehe: 0.94, sitze: [], sitzhoehe: 0.0, licht: -1}
+  fliegenpilz: {reiter: pflanzen, name: "Fliegenpilz", preis: 100, felder: [[0, 0]], hoehe: 0.75, sitze: [], sitzhoehe: 0.0, licht: -1}
+  pilzchen_rot: {reiter: pflanzen, name: "Pilzchen Rot", preis: 50, felder: [[0, 0]], hoehe: 0.56, sitze: [], sitzhoehe: 0.0, licht: -1}
+  pilzgruppe_rot: {reiter: pflanzen, name: "Pilzgruppe Rot", preis: 100, felder: [[0, 0]], hoehe: 0.88, sitze: [], sitzhoehe: 0.0, licht: -1}
+  steinpilz: {reiter: pflanzen, name: "Steinpilz", preis: 100, felder: [[0, 0]], hoehe: 0.62, sitze: [], sitzhoehe: 0.0, licht: -1}
+  pilzchen_braun: {reiter: pflanzen, name: "Pilzchen Braun", preis: 50, felder: [[0, 0]], hoehe: 0.56, sitze: [], sitzhoehe: 0.0, licht: -1}
+  pilzgruppe_braun: {reiter: pflanzen, name: "Pilzgruppe Braun", preis: 100, felder: [[0, 0]], hoehe: 0.88, sitze: [], sitzhoehe: 0.0, licht: -1}
+  vorratskiste_1: {reiter: lager, name: "Vorratskiste 1", preis: 100, felder: [[0, 0]], hoehe: 0.84, sitze: [], sitzhoehe: 0.0, licht: -1}
+  vorratskiste_2: {reiter: lager, name: "Vorratskiste 2", preis: 100, felder: [[0, 0]], hoehe: 0.84, sitze: [], sitzhoehe: 0.0, licht: -1}
+  vorratskiste_3: {reiter: lager, name: "Vorratskiste 3", preis: 100, felder: [[0, 0]], hoehe: 0.84, sitze: [], sitzhoehe: 0.0, licht: -1}
+  vorratskiste_4: {reiter: lager, name: "Vorratskiste 4", preis: 100, felder: [[0, 0]], hoehe: 0.84, sitze: [], sitzhoehe: 0.0, licht: -1}
+  vorratskiste_5: {reiter: lager, name: "Vorratskiste 5", preis: 100, felder: [[0, 0]], hoehe: 0.84, sitze: [], sitzhoehe: 0.0, licht: -1}
+  vorratskiste_6: {reiter: lager, name: "Vorratskiste 6", preis: 100, felder: [[0, 0]], hoehe: 1.09, sitze: [], sitzhoehe: 0.0, licht: -1}
+  vorratskiste_7: {reiter: lager, name: "Vorratskiste 7", preis: 100, felder: [[0, 0]], hoehe: 0.84, sitze: [], sitzhoehe: 0.0, licht: -1}
+  vorratskiste_8: {reiter: lager, name: "Vorratskiste 8", preis: 100, felder: [[0, 0]], hoehe: 0.84, sitze: [], sitzhoehe: 0.0, licht: -1}
+  vorratskiste_9: {reiter: lager, name: "Vorratskiste 9", preis: 100, felder: [[0, 0]], hoehe: 0.84, sitze: [], sitzhoehe: 0.0, licht: -1}
+  vorratskiste_10: {reiter: lager, name: "Vorratskiste 10", preis: 100, felder: [[0, 0]], hoehe: 1.09, sitze: [], sitzhoehe: 0.0, licht: -1}
+  vorratskiste_11: {reiter: lager, name: "Vorratskiste 11", preis: 150, felder: [[0, 0]], hoehe: 0.84, sitze: [], sitzhoehe: 0.0, licht: -1}
+  vorratskiste_12: {reiter: lager, name: "Vorratskiste 12", preis: 100, felder: [[0, 0]], hoehe: 0.84, sitze: [], sitzhoehe: 0.0, licht: -1}
+  vorratskiste_13: {reiter: lager, name: "Vorratskiste 13", preis: 100, felder: [[0, 0]], hoehe: 0.84, sitze: [], sitzhoehe: 0.0, licht: -1}
+  vorratskiste_14: {reiter: lager, name: "Vorratskiste 14", preis: 100, felder: [[0, 0]], hoehe: 0.84, sitze: [], sitzhoehe: 0.0, licht: -1}
+  vorratskiste_15: {reiter: lager, name: "Vorratskiste 15", preis: 100, felder: [[0, 0]], hoehe: 0.84, sitze: [], sitzhoehe: 0.0, licht: -1}
+  vorratskiste_16: {reiter: lager, name: "Vorratskiste 16", preis: 100, felder: [[0, 0]], hoehe: 0.84, sitze: [], sitzhoehe: 0.0, licht: -1}
+  vorratskiste_17: {reiter: lager, name: "Vorratskiste 17", preis: 100, felder: [[0, 0]], hoehe: 0.84, sitze: [], sitzhoehe: 0.0, licht: -1}
+  vorratskiste_18: {reiter: lager, name: "Vorratskiste 18", preis: 100, felder: [[0, 0]], hoehe: 0.44, sitze: [], sitzhoehe: 0.0, licht: -1}
+  vorratskiste_19: {reiter: lager, name: "Vorratskiste 19", preis: 100, felder: [[0, 0]], hoehe: 0.59, sitze: [], sitzhoehe: 0.0, licht: -1}
+  vorratskiste_20: {reiter: lager, name: "Vorratskiste 20", preis: 100, felder: [[0, 0]], hoehe: 0.59, sitze: [], sitzhoehe: 0.0, licht: -1}
+  vorratskiste_21: {reiter: lager, name: "Vorratskiste 21", preis: 100, felder: [[0, 0]], hoehe: 0.59, sitze: [], sitzhoehe: 0.0, licht: -1}
+  vorratskiste_22: {reiter: lager, name: "Vorratskiste 22", preis: 100, felder: [[0, 0]], hoehe: 0.59, sitze: [], sitzhoehe: 0.0, licht: -1}
+  vorratskiste_23: {reiter: lager, name: "Vorratskiste 23", preis: 100, felder: [[0, 0]], hoehe: 0.59, sitze: [], sitzhoehe: 0.0, licht: -1}
+  vorratskiste_24: {reiter: lager, name: "Vorratskiste 24", preis: 100, felder: [[0, 0]], hoehe: 0.59, sitze: [], sitzhoehe: 0.0, licht: -1}
+  vorratskiste_25: {reiter: lager, name: "Vorratskiste 25", preis: 100, felder: [[0, 0]], hoehe: 0.84, sitze: [], sitzhoehe: 0.0, licht: -1}
+  vorratskiste_26: {reiter: lager, name: "Vorratskiste 26", preis: 100, felder: [[0, 0]], hoehe: 0.84, sitze: [], sitzhoehe: 0.0, licht: -1}
+  obstkorb: {reiter: lager, name: "Obstkorb", preis: 150, felder: [[0, 0]], hoehe: 0.94, sitze: [], sitzhoehe: 0.0, licht: -1}
+  kleiderschrank: {reiter: lager, name: "Kleiderschrank", preis: 250, felder: [[0, 0]], hoehe: 1.62, sitze: [], sitzhoehe: 0.0, licht: -1}
+  schliessfach: {reiter: lager, name: "Schließfach", preis: 100, felder: [[0, 0]], hoehe: 1.12, sitze: [], sitzhoehe: 0.0, licht: -1}
+  offenes_fach: {reiter: lager, name: "Offenes Fach", preis: 100, felder: [[0, 0]], hoehe: 1.12, sitze: [], sitzhoehe: 0.0, licht: -1}
+  banner_1: {reiter: deko, name: "Banner 1", preis: 150, felder: [[0, 0]], hoehe: 1.88, sitze: [], sitzhoehe: 0.0, licht: -1}
+  banner_2: {reiter: deko, name: "Banner 2", preis: 150, felder: [[0, 0]], hoehe: 1.88, sitze: [], sitzhoehe: 0.0, licht: -1}
+  banner_3: {reiter: deko, name: "Banner 3", preis: 250, felder: [[0, 0]], hoehe: 1.88, sitze: [], sitzhoehe: 0.0, licht: -1}
+  banner_4: {reiter: deko, name: "Banner 4", preis: 250, felder: [[0, 0]], hoehe: 1.88, sitze: [], sitzhoehe: 0.0, licht: -1}
+  banner_5: {reiter: deko, name: "Banner 5", preis: 250, felder: [[0, 0]], hoehe: 1.88, sitze: [], sitzhoehe: 0.0, licht: -1}
+  banner_6: {reiter: deko, name: "Banner 6", preis: 250, felder: [[0, 0]], hoehe: 1.88, sitze: [], sitzhoehe: 0.0, licht: -1}
+  banner_7: {reiter: deko, name: "Banner 7", preis: 250, felder: [[0, 0]], hoehe: 1.94, sitze: [], sitzhoehe: 0.0, licht: -1}
+  banner_8: {reiter: deko, name: "Banner 8", preis: 250, felder: [[0, 0]], hoehe: 1.94, sitze: [], sitzhoehe: 0.0, licht: -1}
+  banner_9: {reiter: deko, name: "Banner 9", preis: 250, felder: [[0, 0]], hoehe: 1.94, sitze: [], sitzhoehe: 0.0, licht: -1}
+  wegweiser_1: {reiter: deko, name: "Wegweiser 1", preis: 150, felder: [[0, 0]], hoehe: 1.38, sitze: [], sitzhoehe: 0.0, licht: -1}
+  wegweiser_2: {reiter: deko, name: "Wegweiser 2", preis: 150, felder: [[0, 0]], hoehe: 1.38, sitze: [], sitzhoehe: 0.0, licht: -1}
+  wegweiser_3: {reiter: deko, name: "Wegweiser 3", preis: 100, felder: [[0, 0]], hoehe: 1.5, sitze: [], sitzhoehe: 0.0, licht: -1}
+  wegweiser_4: {reiter: deko, name: "Wegweiser 4", preis: 150, felder: [[0, 0]], hoehe: 1.38, sitze: [], sitzhoehe: 0.0, licht: -1}
+  wegweiser_5: {reiter: deko, name: "Wegweiser 5", preis: 150, felder: [[0, 0]], hoehe: 1.38, sitze: [], sitzhoehe: 0.0, licht: -1}
+  wegweiser_6: {reiter: deko, name: "Wegweiser 6", preis: 100, felder: [[0, 0]], hoehe: 1.5, sitze: [], sitzhoehe: 0.0, licht: -1}
+  vorhang_1: {reiter: deko, name: "Vorhang 1", preis: 150, felder: [[0, 0]], hoehe: 1.8, sitze: [], sitzhoehe: 0.0, licht: -1}
+  vorhang_2: {reiter: deko, name: "Vorhang 2", preis: 150, felder: [[0, 0]], hoehe: 1.8, sitze: [], sitzhoehe: 0.0, licht: -1}
+  vorhang_3: {reiter: deko, name: "Vorhang 3", preis: 100, felder: [[0, 0]], hoehe: 1.8, sitze: [], sitzhoehe: 0.0, licht: -1}
+  vorhang_4: {reiter: deko, name: "Vorhang 4", preis: 150, felder: [[0, 0]], hoehe: 1.8, sitze: [], sitzhoehe: 0.0, licht: -1}
+  vorhang_5: {reiter: deko, name: "Vorhang 5", preis: 150, felder: [[0, 0]], hoehe: 1.8, sitze: [], sitzhoehe: 0.0, licht: -1}
+  vorhang_6: {reiter: deko, name: "Vorhang 6", preis: 100, felder: [[0, 0]], hoehe: 1.8, sitze: [], sitzhoehe: 0.0, licht: -1}
+  pinnwand: {reiter: deko, name: "Pinnwand", preis: 250, felder: [[0, 0], [-1, 0]], hoehe: 1.44, sitze: [], sitzhoehe: 0.0, licht: -1}
+  holzwand: {reiter: deko, name: "Holzwand", preis: 250, felder: [[0, 0], [-1, 0]], hoehe: 1.44, sitze: [], sitzhoehe: 0.0, licht: -1}
+  spiegel: {reiter: deko, name: "Spiegel", preis: 150, felder: [[0, 0]], hoehe: 1.75, sitze: [], sitzhoehe: 0.0, licht: -1}
+  ladenschild: {reiter: deko, name: "Ladenschild", preis: 250, felder: [[0, 0], [-1, 0]], hoehe: 1.12, sitze: [], sitzhoehe: 0.0, licht: -1}
+  kleiderpuppe_1: {reiter: deko, name: "Kleiderpuppe 1", preis: 150, felder: [[0, 0]], hoehe: 1.56, sitze: [], sitzhoehe: 0.0, licht: -1}
+  kleiderpuppe_2: {reiter: deko, name: "Kleiderpuppe 2", preis: 100, felder: [[0, 0]], hoehe: 1.56, sitze: [], sitzhoehe: 0.0, licht: -1}
+  kleiderpuppe_3: {reiter: deko, name: "Kleiderpuppe 3", preis: 150, felder: [[0, 0]], hoehe: 1.69, sitze: [], sitzhoehe: 0.0, licht: -1}
+  kleiderpuppe_4: {reiter: deko, name: "Kleiderpuppe 4", preis: 100, felder: [[0, 0]], hoehe: 1.56, sitze: [], sitzhoehe: 0.0, licht: -1}
+  puppenkopf: {reiter: deko, name: "Puppenkopf", preis: 50, felder: [[0, 0]], hoehe: 0.94, sitze: [], sitzhoehe: 0.0, licht: -1}
+  kleiderstange_1: {reiter: deko, name: "Kleiderstange 1", preis: 100, felder: [[0, 0], [-1, 0]], hoehe: 1.12, sitze: [], sitzhoehe: 0.0, licht: -1}
+  kleiderstange_2: {reiter: deko, name: "Kleiderstange 2", preis: 100, felder: [[0, 0]], hoehe: 1.12, sitze: [], sitzhoehe: 0.0, licht: -1}
+  bunte_stoffe: {reiter: deko, name: "Bunte Stoffe", preis: 50, felder: [[0, 0]], hoehe: 0.25, sitze: [], sitzhoehe: 0.0, licht: -1}
+  kissenstapel: {reiter: deko, name: "Kissenstapel", preis: 50, felder: [[0, 0]], hoehe: 0.5, sitze: [], sitzhoehe: 0.0, licht: -1}
+  stoffstapel_1: {reiter: deko, name: "Stoffstapel 1", preis: 50, felder: [[0, 0]], hoehe: 0.25, sitze: [], sitzhoehe: 0.0, licht: -1}
+  stoffstapel_2: {reiter: deko, name: "Stoffstapel 2", preis: 50, felder: [[0, 0]], hoehe: 0.62, sitze: [], sitzhoehe: 0.0, licht: -1}
+  felsen_1: {reiter: deko, name: "Felsen 1", preis: 250, felder: [[0, 0]], hoehe: 0.94, sitze: [], sitzhoehe: 0.0, licht: -1}
+  felsen_2: {reiter: deko, name: "Felsen 2", preis: 250, felder: [[0, 0]], hoehe: 0.94, sitze: [], sitzhoehe: 0.0, licht: -1}
+  marktstand_1: {reiter: markt, name: "Marktstand 1", preis: 250, felder: [[0, 0], [0, -1], [-1, 0], [-1, -1]], hoehe: 1.78, sitze: [], sitzhoehe: 0.0, licht: -1}
+  marktstand_2: {reiter: markt, name: "Marktstand 2", preis: 250, felder: [[0, 0], [0, -1], [-1, 0], [-1, -1]], hoehe: 1.78, sitze: [], sitzhoehe: 0.0, licht: -1}
+  marktstand_3: {reiter: markt, name: "Marktstand 3", preis: 250, felder: [[0, 0], [0, -1], [-1, 0], [-1, -1]], hoehe: 1.78, sitze: [], sitzhoehe: 0.0, licht: -1}
+  marktstand_4: {reiter: markt, name: "Marktstand 4", preis: 250, felder: [[0, 0], [0, -1], [-1, 0], [-1, -1]], hoehe: 1.78, sitze: [], sitzhoehe: 0.0, licht: -1}
+  handkarren_1: {reiter: markt, name: "Handkarren 1", preis: 250, felder: [[0, 0], [-1, 0]], hoehe: 0.69, sitze: [], sitzhoehe: 0.0, licht: -1}
+  handkarren_2: {reiter: markt, name: "Handkarren 2", preis: 250, felder: [[0, 0], [-1, 0]], hoehe: 0.69, sitze: [], sitzhoehe: 0.0, licht: -1}
+  stoffbahn_1: {reiter: markt, name: "Stoffbahn 1", preis: 250, felder: [[0, 0], [-1, 0]], hoehe: 1.47, sitze: [], sitzhoehe: 0.0, licht: -1}
+  stoffbahn_2: {reiter: markt, name: "Stoffbahn 2", preis: 250, felder: [[0, 0], [-1, 0]], hoehe: 1.47, sitze: [], sitzhoehe: 0.0, licht: -1}
+  geldautomat: {reiter: bank, name: "Geldautomat", preis: 100, felder: [[0, 0]], hoehe: 1.44, sitze: [], sitzhoehe: 0.0, licht: -1}
+  tresortuer: {reiter: bank, name: "Tresortür", preis: 150, felder: [[0, 0]], hoehe: 1.12, sitze: [], sitzhoehe: 0.0, licht: -1}
+  bankschild: {reiter: bank, name: "Bankschild", preis: 150, felder: [[0, 0], [-1, 0]], hoehe: 0.88, sitze: [], sitzhoehe: 0.0, licht: -1}
+  waage: {reiter: bank, name: "Waage", preis: 100, felder: [[0, 0]], hoehe: 1.38, sitze: [], sitzhoehe: 0.0, licht: -1}
+  computer: {reiter: bank, name: "Computer", preis: 100, felder: [[0, 0]], hoehe: 1.0, sitze: [], sitzhoehe: 0.0, licht: -1}
+  kamera: {reiter: bank, name: "Kamera", preis: 50, felder: [[0, 0]], hoehe: 1.0, sitze: [], sitzhoehe: 0.0, licht: -1}
+  schranke: {reiter: bank, name: "Schranke", preis: 100, felder: [[0, 0], [-1, 0]], hoehe: 1.25, sitze: [], sitzhoehe: 0.0, licht: -1}
+  vitrine: {reiter: bank, name: "Vitrine", preis: 50, felder: [[0, 0], [-1, 0]], hoehe: 1.12, sitze: [], sitzhoehe: 0.0, licht: -1}
+  aktenkoffer: {reiter: bank, name: "Aktenkoffer", preis: 50, felder: [[0, 0]], hoehe: 0.34, sitze: [], sitzhoehe: 0.0, licht: -1}
+  papierstapel: {reiter: bank, name: "Papierstapel", preis: 50, felder: [[0, 0]], hoehe: 0.69, sitze: [], sitzhoehe: 0.0, licht: -1}
+  geldbuendel: {reiter: bank, name: "Geldbündel", preis: 50, felder: [[0, 0]], hoehe: 0.25, sitze: [], sitzhoehe: 0.0, licht: -1}
+  geldstapel: {reiter: bank, name: "Geldstapel", preis: 100, felder: [[0, 0]], hoehe: 1.25, sitze: [], sitzhoehe: 0.0, licht: -1}
+  geldkoffer: {reiter: bank, name: "Geldkoffer", preis: 100, felder: [[0, 0]], hoehe: 0.88, sitze: [], sitzhoehe: 0.0, licht: -1}
+  chip_vitrine: {reiter: bank, name: "Chip-Vitrine", preis: 150, felder: [[0, 0]], hoehe: 0.75, sitze: [], sitzhoehe: 0.0, licht: -1}
+  chipstapel: {reiter: bank, name: "Chipstapel", preis: 50, felder: [[0, 0]], hoehe: 0.38, sitze: [], sitzhoehe: 0.0, licht: -1}
+  stehlampe: {reiter: bank, name: "Stehlampe", preis: 150, felder: [[0, 0]], hoehe: 1.75, sitze: [], sitzhoehe: 0.0, licht: 13}
+  anzeigetafel: {reiter: bank, name: "Anzeigetafel", preis: 250, felder: [[0, 0], [-1, 0]], hoehe: 1.44, sitze: [], sitzhoehe: 0.0, licht: -1}
+  servierwagen: {reiter: bank, name: "Servierwagen", preis: 100, felder: [[0, 0]], hoehe: 1.12, sitze: [], sitzhoehe: 0.0, licht: -1}

@@ -9,7 +9,8 @@
 #   stat:<Schlüssel>                               Wert erreichen (claims, player_level, job_level, fish_caught, playtime, ...)
 # XP sind Spieler-XP (Level).
 
-daily-count: 3
+daily-count: 4
+farmpass-extra-daily: 1         # mit Farmpass so viele Tages-Quests mehr
 weekly-count: 3
 
 # Serie: wer an aufeinanderfolgenden Tagen mindestens eine Tages-Quest abholt, baut eine Serie auf.

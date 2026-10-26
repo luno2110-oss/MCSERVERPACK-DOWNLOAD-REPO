@@ -617,7 +617,8 @@ playtime:
 # Kisten am Spawn (/keys, Aufstellen: /keys kiste set <id> [modus] mit Blick auf einen Block).
 # Je Modus und Kiste: name, key (Schlüsselart aus keys.types), rewards "Gewicht;Belohnung;Anzeige (optional)".
 # Belohnungen: coins:N, tokens:N (Survival), jewels:N, key:<Art>:N, cosmetic:<ID>, pet:<ID> (/pet give),
-# furniture:<ID> (/moebel give), item:MATERIAL:N, cmd:<Befehl mit %player%>. Chance = Gewicht / Summe der Gewichte.
+# furniture:<ID> (/moebel give), item:MATERIAL:N[:verzauberung=stufe,...], cmd:<Befehl mit %player%>.
+# Chance = Gewicht / Summe der Gewichte.
 # Doppelte Kosmetik wird durch duplicate-jewels Juwelen ersetzt.
 crates:
   duplicate-jewels: 10
@@ -649,21 +650,46 @@ crates:
         - "5;furniture:sessel;Möbel: Sessel"
         - "4;key:episch:1"
         - "3;cosmetic:s_kirsch"
+    # Epic-Keys aus dem Juwelenshop: verzauberte Diamant-Rüstung und Waffen
     episch:
       name: "Epische Kiste"
       key: episch
       rewards:
-        - "22;coins:8000"
-        - "16;tokens:6"
-        - "12;jewels:12"
-        - "10;item:NETHERITE_SCRAP:2;2 Netheritplatten"
-        - "9;cosmetic:hut_zylinder"
-        - "8;cosmetic:s_sterne"
-        - "7;cosmetic:s_seele"
-        - "6;furniture:sofa;Möbel: Sofa"
-        - "5;cosmetic:hut_teufelshoerner"
-        - "3;pet:sniffer;Haustier: Schnüffler"
-        - "2;key:legendaer:1"
+        - "12;item:DIAMOND_HELMET:1:protection=3,unbreaking=3;Diamanthelm (Schutz III, Haltbarkeit III)"
+        - "10;item:DIAMOND_CHESTPLATE:1:protection=3,unbreaking=3;Diamantharnisch (Schutz III, Haltbarkeit III)"
+        - "10;item:DIAMOND_LEGGINGS:1:protection=3,unbreaking=3;Diamanthose (Schutz III, Haltbarkeit III)"
+        - "12;item:DIAMOND_BOOTS:1:protection=3,feather_falling=3;Diamantstiefel (Schutz III, Federfall III)"
+        - "12;item:DIAMOND_SWORD:1:sharpness=4,unbreaking=3;Diamantschwert (Schärfe IV, Haltbarkeit III)"
+        - "9;item:DIAMOND_AXE:1:sharpness=3,efficiency=4;Diamantaxt (Schärfe III, Effizienz IV)"
+        - "9;item:DIAMOND_PICKAXE:1:efficiency=4,unbreaking=3,fortune=2;Diamantspitzhacke (Effizienz IV, Haltbarkeit III, Glück II)"
+        - "6;item:DIAMOND_SHOVEL:1:efficiency=4,unbreaking=3;Diamantschaufel (Effizienz IV, Haltbarkeit III)"
+        - "3;item:DIAMOND_SWORD:1:sharpness=5,unbreaking=3,looting=3,mending=1;Diamantschwert (Schärfe V, Plünderung III, Reparatur)"
+        - "3;item:DIAMOND_CHESTPLATE:1:protection=4,unbreaking=3,mending=1;Diamantharnisch (Schutz IV, Reparatur)"
+        - "3;cosmetic:hut_zylinder"
+        - "2;furniture:sofa;Möbel: Sofa"
+        - "1;key:legendaer:1"
+    # Farm-Keys aus dem Juwelenshop: Saatgut, Holz, Stein und Werkzeug
+    farm:
+      name: "Farm-Kiste"
+      key: farm
+      rewards:
+        - "12;item:WHEAT_SEEDS:32;32 Weizenkörner"
+        - "8;item:CARROT:16;16 Karotten"
+        - "8;item:POTATO:16;16 Kartoffeln"
+        - "6;item:BEETROOT_SEEDS:16;16 Rote-Bete-Samen"
+        - "5;item:PUMPKIN_SEEDS:8;8 Kürbiskerne"
+        - "5;item:MELON_SEEDS:8;8 Melonenkerne"
+        - "4;item:SUGAR_CANE:8;8 Zuckerrohr"
+        - "10;item:OAK_LOG:32;32 Eichenstämme"
+        - "6;item:SPRUCE_LOG:32;32 Fichtenstämme"
+        - "6;item:BIRCH_LOG:32;32 Birkenstämme"
+        - "10;item:STONE:64;64 Stein"
+        - "6;item:COBBLESTONE:64;64 Bruchstein"
+        - "4;item:IRON_HOE:1:efficiency=2,unbreaking=2;Eisenhacke (Effizienz II, Haltbarkeit II)"
+        - "4;item:IRON_AXE:1:efficiency=2,unbreaking=2;Eisenaxt (Effizienz II, Haltbarkeit II)"
+        - "4;item:IRON_PICKAXE:1:efficiency=2,unbreaking=2;Eisenspitzhacke (Effizienz II, Haltbarkeit II)"
+        - "3;item:IRON_SHOVEL:1:efficiency=2,unbreaking=2;Eisenschaufel (Effizienz II, Haltbarkeit II)"
+        - "3;item:BONE_MEAL:32;32 Knochenmehl"
     legendaer:
       name: "Legendäre Kiste"
       key: legendaer
@@ -758,6 +784,7 @@ keys:
     - "selten;Selten;#64C0FF"
     - "episch;Episch;#C77DFF"
     - "legendaer;Legendär;#FFB02E"
+    - "farm;Farm;#54FC54"
 
 xp-sources:
   # Keine XP für selbst gesetzte Erze (auch nach Neustart und Kolben) und für Mobs aus Spawnern/Spawn-Eiern.
@@ -967,6 +994,138 @@ jewelshop-smp:
       color: "#FC7986"
       price: 5000
       contents: ["legendaer;5", "episch;3", "selten;2", "keyall;2"]
+
+# Juwelenshop in Survival (/juwelenshop mit dem Pack KubyUI, Dialog wie in der Referenz; ohne Pack jewelshop.survival).
+# style/icon: Kasten und Bild aus dem Survival-Satz (r_epic, r_farm, key_epic, key_farm, t_blue, t_violet, t_gold,
+# tok_25, tok_75, tok_250, rank_platin, rank_diamant, rank_smaragd, rank_netherit) oder mit js_ davor aus dem SMP-Satz
+# (js_gray, js_platin, js_green, js_violet, js_gold, js_blue, js_red, js_pack_starter, js_pack_profi, js_pack_ultimate).
+# Ränge: von niedrig nach hoch, erkannt über LuckPerms group.<id> oder kuby.rank.<id> (wie homes.survival.ranks); beim
+# Aufstieg zahlt man nur den Unterschied. commands: Befehle beim Kauf (%player% = Käufer bzw. Beschenkter).
+# Kisten: price je Kauf von count Schlüsseln, amounts = wählbare Anzahl Käufe, key = Schlüssel-Art aus keys.types.
+# Pakete: contents "Schlüssel-Art;Anzahl;Name;Farbe". Tokens: price je Paket, instead = Preis ohne Rabatt (0 = keiner),
+# best = „Bester Wert“. Möbel und Pets kommen aus ihren Katalogen (moebel.yml und pets-shop.yml in KubySurvival).
+jewelshop-survival:
+  store-text: ""                # Text unter "Zum Store"; leer = jewels.store-url ohne https://
+  abo-url: ""                   # Link „Abo verwalten“ auf der Farmpass-Seite; leer = jewels.store-url
+  farmpass-price: "9,99 € im Monat"
+  crates-sub: "Epic-Keys für Diamant-Ausrüstung"
+  ranks:
+    platin:
+      name: "Platin Rang"
+      style: js_gray
+      icon: rank_platin
+      color: "#D1D2D5"
+      lines:
+        - "+1 Home · 30 Freundesplätze"
+        - "Pet Ozelot"
+      price: 1000
+      commands: ["lp user %player% parent add platin", "pet give %player% ozelot"]
+    diamant:
+      name: "Diamant Rang"
+      style: js_platin
+      icon: rank_diamant
+      color: "#54FCFC"
+      lines:
+        - "+2 Homes · 40 Freundesplätze"
+        - "Pet Eisbär · alle Platin-Vorteile"
+      price: 2500
+      commands: ["lp user %player% parent add diamant", "pet give %player% ozelot", "pet give %player% eisbaer"]
+    smaragd:
+      name: "Smaragd Rang"
+      style: r_farm
+      icon: rank_smaragd
+      color: "#54FC54"
+      lines:
+        - "+3 Homes · 50 Freundesplätze"
+        - "Pet Laubdrache · alle Diamant-Vorteile"
+      price: 5000
+      commands: ["lp user %player% parent add smaragd", "pet give %player% ozelot", "pet give %player% eisbaer",
+                 "pet give %player% laubdrache"]
+    netherit:
+      name: "Netherit Rang"
+      style: js_violet
+      icon: rank_netherit
+      color: "#CD89FC"
+      lines:
+        - "+4 Homes · 75 Freundesplätze"
+        - "Pet Magmadrache · alle Smaragd-Vorteile"
+      price: 10000
+      commands: ["lp user %player% parent add netherit", "pet give %player% ozelot", "pet give %player% eisbaer",
+                 "pet give %player% laubdrache", "pet give %player% magmadrache"]
+  crates:
+    epic1:
+      name: "Epic Crate-Key"
+      style: r_epic
+      icon: key_epic
+      color: "#B25BFC"
+      line: "Verzauberte Diamant-Rüstung und Waffen"
+      price: 400
+      key: episch
+      count: 1
+      amounts: [1, 5, 10, 25]
+    epic5:
+      name: "Epic Crate-Key"
+      style: r_epic
+      icon: key_epic
+      color: "#B25BFC"
+      line: "5 Schlüssel, 10 % günstiger"
+      price: 1800
+      key: episch
+      count: 5
+      amounts: [1, 5, 10]
+    farm5:
+      name: "Farm Crate-Key"
+      style: r_farm
+      icon: key_farm
+      color: "#54FC54"
+      line: "Saatgut, Holz, Stein und Werkzeug"
+      price: 250
+      key: farm
+      count: 5
+      amounts: [1, 5, 10]
+  packages:
+    starter:
+      name: "Starter"
+      style: js_gold
+      icon: js_pack_starter
+      color: "#FCD45D"
+      price: 900
+      contents: ["episch;2;Epic Crate-Key;#B25BFC", "farm;5;Farm Crate-Key;#54FC54"]
+    profi:
+      name: "Profi"
+      style: js_blue
+      icon: js_pack_profi
+      color: "#62CAFC"
+      price: 2000
+      contents: ["episch;5;Epic Crate-Key;#B25BFC", "farm;10;Farm Crate-Key;#54FC54"]
+    ultimate:
+      name: "Ultimate"
+      style: js_red
+      icon: js_pack_ultimate
+      color: "#FC7986"
+      price: 4500
+      contents: ["episch;12;Epic Crate-Key;#B25BFC", "farm;25;Farm Crate-Key;#54FC54"]
+  tokens:
+    t25:
+      tokens: 25
+      price: 500
+      style: t_blue
+      icon: tok_25
+      color: "#62CAFC"
+    t75:
+      tokens: 75
+      price: 1500
+      style: t_violet
+      icon: tok_75
+      color: "#CD89FC"
+    t250:
+      tokens: 250
+      price: 2500
+      instead: 5000
+      best: true
+      style: t_gold
+      icon: tok_250
+      color: "#FCD45D"
 
 # Custom Items (ohne externes Plugin). Format: id;Name;MATERIAL;namespace:modell;Lore1|Lore2
 custom-items: []

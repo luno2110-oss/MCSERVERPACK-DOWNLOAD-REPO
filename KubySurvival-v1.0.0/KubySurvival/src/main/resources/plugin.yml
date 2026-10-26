@@ -46,6 +46,9 @@ commands:
   werkbank:
     description: "Werkbank überall (Farmpass)"
     aliases: [wb, craft]
+  endertruhe:
+    description: "Endertruhe überall (Farmpass)"
+    aliases: [et]
   level:
     description: "Dein Level, das eines anderen oder die Rangliste"
     usage: "/level [Spieler|top]"

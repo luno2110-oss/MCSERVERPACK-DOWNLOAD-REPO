@@ -660,6 +660,36 @@ public final class KubyPlugins extends JavaPlugin {
     public void setTrustCheck(java.util.function.BiPredicate<String, java.util.UUID> check) { trustCheck = check; }
     public boolean isTrusted(String owner, java.util.UUID who) { return trustCheck.test(owner, who); }
 
+    /**
+     * Juwelenshop eines Modus aus einem Addon (Survival: Dialog mit Möbeln, Pets, Tokens). open(Spieler, Unterseite)
+     * und gift(Spieler, Empfänger) geben false zurück, wenn das Addon nicht übernimmt (z. B. ohne Pack); dann der
+     * Truhen-Shop des Kerns.
+     */
+    public interface JewelShopHook {
+        boolean open(org.bukkit.entity.Player p, String sub);
+
+        boolean gift(org.bukkit.entity.Player p, org.bukkit.entity.Player target);
+    }
+
+    private final java.util.Map<String, JewelShopHook> jewelShopHooks = new java.util.concurrent.ConcurrentHashMap<>();
+
+    public void registerJewelShop(String mode, JewelShopHook hook) { jewelShopHooks.put(mode, hook); }
+
+    public JewelShopHook jewelShopHook(String mode) { return mode == null ? null : jewelShopHooks.get(mode); }
+
+    /** Selbsttest (/kp selftest) aus Addons: Grafik-Menüs zum Bauen und Prüfungen (Fehlertext oder null). */
+    private final java.util.Map<String, java.util.function.Supplier<de.kuby.kubyplugins.ui.Canvas>> selfTestCanvases =
+            new java.util.LinkedHashMap<>();
+    private final java.util.Map<String, java.util.function.Supplier<String>> selfTestChecks = new java.util.LinkedHashMap<>();
+
+    public void registerSelfTestCanvas(String name, java.util.function.Supplier<de.kuby.kubyplugins.ui.Canvas> c) { selfTestCanvases.put(name, c); }
+
+    public void registerSelfTestCheck(String name, java.util.function.Supplier<String> check) { selfTestChecks.put(name, check); }
+
+    public java.util.Map<String, java.util.function.Supplier<de.kuby.kubyplugins.ui.Canvas>> selfTestCanvases() { return selfTestCanvases; }
+
+    public java.util.Map<String, java.util.function.Supplier<String>> selfTestChecks() { return selfTestChecks; }
+
     /** Unterbefehle für /kp, die ein Addon bereitstellt. */
     private final java.util.Map<String, java.util.function.BiConsumer<org.bukkit.entity.Player, String[]>> kpSubs = new java.util.HashMap<>();
     public void registerKpSub(String name, java.util.function.BiConsumer<org.bukkit.entity.Player, String[]> handler) { kpSubs.put(name, handler); }

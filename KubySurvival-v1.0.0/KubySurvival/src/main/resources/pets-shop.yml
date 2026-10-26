@@ -1,0 +1,53 @@
+# Pets aus dem Survival-Juwelenshop. Generiert von tools/build_pets.py, nicht von Hand ändern.
+# Wie pets.yml, dazu seltenheit, juwelen (Preis im Shop), modell (Bild aus dem Pack), groesse (Blöcke).
+# tier = unsichtbarer Träger, der dem Besitzer folgt (Katze; Flieger: Allay).
+pets:
+  baby_creeper: {name: "Baby-Creeper", tier: CAT, baby: true, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: common, juwelen: 500, modell: "kuby:pet/baby_creeper", groesse: 0.75}
+  baby_zombie: {name: "Baby-Zombie", tier: CAT, baby: true, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: common, juwelen: 500, modell: "kuby:pet/baby_zombie", groesse: 0.75}
+  endsteinchen: {name: "Endsteinchen", tier: CAT, baby: true, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: common, juwelen: 500, modell: "kuby:pet/endsteinchen", groesse: 0.75}
+  netherknirps: {name: "Netherknirps", tier: CAT, baby: true, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: common, juwelen: 500, modell: "kuby:pet/netherknirps", groesse: 0.75}
+  schwarzsteinchen: {name: "Schwarzsteinchen", tier: CAT, baby: true, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: common, juwelen: 500, modell: "kuby:pet/schwarzsteinchen", groesse: 0.75}
+  wunschbaer: {name: "Wunschbär", tier: CAT, baby: true, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: common, juwelen: 500, modell: "kuby:pet/wunschbaer", groesse: 0.75}
+  baby_enderman: {name: "Baby-Enderman", tier: CAT, baby: true, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: rare, juwelen: 900, modell: "kuby:pet/baby_enderman", groesse: 0.85}
+  basaltling: {name: "Basaltling", tier: CAT, baby: true, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: rare, juwelen: 900, modell: "kuby:pet/basaltling", groesse: 0.85}
+  chorusling: {name: "Chorusling", tier: CAT, baby: true, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: rare, juwelen: 900, modell: "kuby:pet/chorusling", groesse: 0.85}
+  goldhamster: {name: "Goldhamster", tier: CAT, baby: true, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: rare, juwelen: 900, modell: "kuby:pet/goldhamster", groesse: 0.85}
+  hexlein: {name: "Hexlein", tier: CAT, baby: true, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: rare, juwelen: 900, modell: "kuby:pet/hexlein", groesse: 0.85}
+  karmesinpilz: {name: "Karmesinpilz", tier: CAT, baby: true, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: rare, juwelen: 900, modell: "kuby:pet/karmesinpilz", groesse: 0.85}
+  knochenmagier: {name: "Knochenmagier", tier: CAT, baby: true, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: rare, juwelen: 900, modell: "kuby:pet/knochenmagier", groesse: 0.85}
+  laubdrache: {name: "Laubdrache", tier: ALLAY, baby: false, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: rare, juwelen: 900, modell: "kuby:pet/laubdrache", groesse: 0.85}
+  magmara: {name: "Magmara", tier: CAT, baby: true, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: rare, juwelen: 900, modell: "kuby:pet/magmara", groesse: 0.85}
+  perlchen: {name: "Perlchen", tier: ALLAY, baby: false, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: rare, juwelen: 900, modell: "kuby:pet/perlchen", groesse: 0.85}
+  roboflitz: {name: "Roboflitz", tier: CAT, baby: true, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: rare, juwelen: 150, modell: "kuby:pet/roboflitz", groesse: 0.85}
+  steindrache: {name: "Steindrache", tier: ALLAY, baby: false, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: rare, juwelen: 900, modell: "kuby:pet/steindrache", groesse: 0.85}
+  waldwaechter: {name: "Waldwächter", tier: CAT, baby: true, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: rare, juwelen: 900, modell: "kuby:pet/waldwaechter", groesse: 0.85}
+  winddrache: {name: "Winddrache", tier: ALLAY, baby: false, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: rare, juwelen: 900, modell: "kuby:pet/winddrache", groesse: 0.85}
+  wirrpilz: {name: "Wirrpilz", tier: CAT, baby: true, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: rare, juwelen: 900, modell: "kuby:pet/wirrpilz", groesse: 0.85}
+  anzuki: {name: "Anzuki", tier: ALLAY, baby: false, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: epic, juwelen: 1500, modell: "kuby:pet/anzuki", groesse: 0.95}
+  baby_phoenix: {name: "Baby-Phönix", tier: ALLAY, baby: false, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: epic, juwelen: 1500, modell: "kuby:pet/baby_phoenix", groesse: 0.95}
+  baby_warden: {name: "Baby-Warden", tier: CAT, baby: true, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: epic, juwelen: 1500, modell: "kuby:pet/baby_warden", groesse: 0.95}
+  frostmagierin: {name: "Frostmagierin", tier: CAT, baby: true, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: epic, juwelen: 1500, modell: "kuby:pet/frostmagierin", groesse: 0.95}
+  hexenkatze: {name: "Hexenkatze", tier: CAT, baby: true, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: epic, juwelen: 1500, modell: "kuby:pet/hexenkatze", groesse: 0.95}
+  knarzi: {name: "Knarzi", tier: CAT, baby: true, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: epic, juwelen: 1500, modell: "kuby:pet/knarzi", groesse: 0.95}
+  kristallini: {name: "Kristallini", tier: CAT, baby: true, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: epic, juwelen: 1500, modell: "kuby:pet/kristallini", groesse: 0.95}
+  magmadrache: {name: "Magmadrache", tier: ALLAY, baby: false, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: epic, juwelen: 1500, modell: "kuby:pet/magmadrache", groesse: 0.95}
+  portalchen: {name: "Portalchen", tier: ALLAY, baby: false, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: epic, juwelen: 1500, modell: "kuby:pet/portalchen", groesse: 0.95}
+  seelenfunke: {name: "Seelenfunke", tier: ALLAY, baby: false, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: epic, juwelen: 1500, modell: "kuby:pet/seelenfunke", groesse: 0.95}
+  shulki: {name: "Shulki", tier: CAT, baby: true, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: epic, juwelen: 1500, modell: "kuby:pet/shulki", groesse: 0.95}
+  sumpfhexe: {name: "Sumpfhexe", tier: CAT, baby: true, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: epic, juwelen: 1500, modell: "kuby:pet/sumpfhexe", groesse: 0.95}
+  truhling: {name: "Truhling", tier: CAT, baby: true, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: epic, juwelen: 1500, modell: "kuby:pet/truhling", groesse: 0.95}
+  wasserdrache: {name: "Wasserdrache", tier: ALLAY, baby: false, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: epic, juwelen: 1500, modell: "kuby:pet/wasserdrache", groesse: 0.95}
+  baby_wither: {name: "Baby-Wither", tier: ALLAY, baby: false, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: legendary, juwelen: 2500, modell: "kuby:pet/baby_wither", groesse: 1.05}
+  donnerzahn: {name: "Donnerzahn", tier: CAT, baby: true, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: legendary, juwelen: 2500, modell: "kuby:pet/donnerzahn", groesse: 1.05}
+  dunkelzahn: {name: "Dunkelzahn", tier: CAT, baby: true, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: legendary, juwelen: 2500, modell: "kuby:pet/dunkelzahn", groesse: 1.05}
+  eiszahn: {name: "Eiszahn", tier: CAT, baby: true, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: legendary, juwelen: 2500, modell: "kuby:pet/eiszahn", groesse: 1.05}
+  endfunke: {name: "Endfunke", tier: ALLAY, baby: false, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: legendary, juwelen: 2500, modell: "kuby:pet/endfunke", groesse: 1.05}
+  endportalchen: {name: "Endportalchen", tier: ALLAY, baby: false, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: legendary, juwelen: 2500, modell: "kuby:pet/endportalchen", groesse: 1.05}
+  kampftiger: {name: "Kampftiger", tier: CAT, baby: true, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: legendary, juwelen: 2500, modell: "kuby:pet/kampftiger", groesse: 1.05}
+  miauberer: {name: "Miauberer", tier: CAT, baby: true, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: legendary, juwelen: 2500, modell: "kuby:pet/miauberer", groesse: 1.05}
+  mondzahn: {name: "Mondzahn", tier: CAT, baby: true, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: legendary, juwelen: 2500, modell: "kuby:pet/mondzahn", groesse: 1.05}
+  nachtdrache: {name: "Nachtdrache", tier: ALLAY, baby: false, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: legendary, juwelen: 2500, modell: "kuby:pet/nachtdrache", groesse: 1.05}
+  nebelzahn: {name: "Nebelzahn", tier: CAT, baby: true, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: legendary, juwelen: 2500, modell: "kuby:pet/nebelzahn", groesse: 1.05}
+  sonnendrache: {name: "Sonnendrache", tier: ALLAY, baby: false, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: legendary, juwelen: 2500, modell: "kuby:pet/sonnendrache", groesse: 1.05}
+  zauberspinne: {name: "Zauberspinne", tier: CAT, baby: true, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: legendary, juwelen: 2500, modell: "kuby:pet/zauberspinne", groesse: 1.05}
+  rabenkoenig: {name: "Rabenkönig", tier: ALLAY, baby: false, reitbar: false, preis: 0, quelle: "Juwelenshop", seltenheit: mythic, juwelen: 4000, modell: "kuby:pet/rabenkoenig", groesse: 1.2}
