@@ -12,6 +12,7 @@ import de.kuby.kubyplugins.service.SurvivalHelp;
 import de.kuby.kubyplugins.ui.Canvas;
 import de.kuby.kubyplugins.ui.KitData;
 import de.kuby.kubyplugins.ui.UiDialog;
+import de.kuby.kubyplugins.util.I18n;
 import de.kuby.kubyplugins.util.Msg;
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.registry.data.dialog.ActionButton;
@@ -163,17 +164,34 @@ final class SelfTest {
             public Consumer<Player> page(int index) { return NO; }
             public String url(String target) { return "https://discord.gg/kuby"; }
         };
-        List<de.kuby.kubyplugins.gui.GuideScreen.Page> guide = plugin.guide().sample();
-        if (guide.isEmpty()) fails.add("Guide: keine Seiten in guide.pages");
-        for (int i = 0; i < guide.size(); i++) {
-            final int k = i;
-            de.kuby.kubyplugins.gui.GuideScreen.Page pg = guide.get(i);
-            int used = de.kuby.kubyplugins.gui.GuideScreen.usedLines(pg, plugin.guide().discordLink());
-            if (used > de.kuby.kubyplugins.gui.GuideScreen.maxLines()) {
-                fails.add("Guide " + pg.id() + ": " + used + " Zeilen, Platz für " + de.kuby.kubyplugins.gui.GuideScreen.maxLines());
+        for (boolean en : new boolean[]{false, true}) {
+            List<de.kuby.kubyplugins.gui.GuideScreen.Page> guide = plugin.guide().pages(en);
+            if (guide.isEmpty()) fails.add("Guide: keine Seiten in guide.pages");
+            String lang = en ? " (englisch)" : "";
+            for (int i = 0; i < guide.size(); i++) {
+                final int k = i;
+                de.kuby.kubyplugins.gui.GuideScreen.Page pg = guide.get(i);
+                int used = de.kuby.kubyplugins.gui.GuideScreen.usedLines(pg, plugin.guide().discordLink());
+                if (used > de.kuby.kubyplugins.gui.GuideScreen.maxLines()) {
+                    fails.add("Guide " + pg.id() + lang + ": " + used + " Zeilen, Platz für "
+                            + de.kuby.kubyplugins.gui.GuideScreen.maxLines());
+                }
+                canvas.accept("Guide " + pg.id() + lang, () -> de.kuby.kubyplugins.gui.GuideScreen.canvas(guide, k, en,
+                        plugin.guide().discordLink(), ga));
             }
-            canvas.accept("Guide " + pg.id(), () -> de.kuby.kubyplugins.gui.GuideScreen.canvas(guide, k, false,
-                    plugin.guide().discordLink(), ga));
+        }
+
+        // Sprache (12.7): Vorlagen geladen, Stichproben (Werte, Großschrift, Klick-Befehle bleiben unverändert)
+        if (I18n.size() < 4000) fails.add("Sprache: nur " + I18n.size() + " englische Vorlagen");
+        String[][] probes = {
+                {"<green>Tag 5 abgeholt: <gold>+500$", "<green>Day 5 claimed: <gold>+500$"},
+                {"Tagesaufgaben", "Daily quests"},
+                {"SPIELZEIT", "PLAYTIME"},
+                {"<click:run_command:'/job waehlen Verzauberer'><yellow>[Verzauberer werden]</click>",
+                        "<click:run_command:'/job waehlen Verzauberer'><yellow>[Become Enchanter]</click>"}};
+        for (String[] pr : probes) {
+            String got = I18n.tr(pr[0]);
+            if (!got.equals(pr[1])) fails.add("Sprache: \"" + pr[0] + "\" -> \"" + got + "\"");
         }
 
         // Eingabe-Dialoge wie in Support, Freunde, Casino, Heiraten, Köpfe (Bestätigung, CLOSE, Text und mehrzeilig)

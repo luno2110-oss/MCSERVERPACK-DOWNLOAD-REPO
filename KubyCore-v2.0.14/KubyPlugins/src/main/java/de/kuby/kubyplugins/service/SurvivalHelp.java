@@ -5,6 +5,7 @@ import de.kuby.kubyplugins.ui.Canvas;
 import de.kuby.kubyplugins.ui.KitData;
 import de.kuby.kubyplugins.ui.Ui;
 import de.kuby.kubyplugins.ui.UiDialog;
+import de.kuby.kubyplugins.util.I18n;
 import de.kuby.kubyplugins.util.Msg;
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.registry.data.dialog.ActionButton;
@@ -395,6 +396,7 @@ public final class SurvivalHelp {
      * denselben Stellen um wie in den Referenz-Screenshots.
      */
     private static List<String> wrap(String text) {
+        text = I18n.ctx(text);   // erst übersetzen, dann umbrechen (sonst passen die Zeilen nicht zu den Vorlagen)
         List<String> out = new ArrayList<>();
         StringBuilder line = new StringBuilder();
         for (String word : text.split(" ")) {

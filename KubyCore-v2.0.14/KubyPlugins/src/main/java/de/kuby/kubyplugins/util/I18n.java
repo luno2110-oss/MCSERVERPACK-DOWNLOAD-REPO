@@ -37,11 +37,16 @@ public final class I18n {
     private I18n() {
     }
 
-    private record Tpl(String de, Pattern pattern, List<String> en, int[] order, int weight, String key) {}
+    private record Tpl(String de, Pattern pattern, List<String> en, int[] order, int weight, String key, boolean word) {}
+
+    private static final Pattern WORD = Pattern.compile("[\\p{L}\\p{N}_]{3,16}");
 
     private static volatile List<Tpl> templates = List.of();
     private static volatile Aho index = new Aho(List.of());
+    /** Großgeschriebene Überschriften („SPIELZEIT“ aus „Spielzeit“): ganze Texte ohne Werte, in Großbuchstaben. */
+    private static volatile Map<String, String> upper = Map.of();
     private static volatile Predicate<UUID> english = id -> false;
+    private static volatile Predicate<String> names = s -> false;
     private static final ThreadLocal<Boolean> CONTEXT = new ThreadLocal<>();
     private static final int CACHE = 20_000;
     private static final Map<String, String> cache = Collections.synchronizedMap(new LinkedHashMap<>(256, 0.75f, true) {
@@ -58,6 +63,12 @@ public final class I18n {
     /** Wer Englisch eingestellt hat (aus den Spieler-Einstellungen). */
     public static void resolver(Predicate<UUID> isEnglish) {
         english = isEnglish;
+    }
+
+    /** Spielernamen: ein einzelnes Wort, das so heißt wie ein Spieler („Hecht“, „Stern“), bleibt unübersetzt. */
+    public static void names(Predicate<String> isName) {
+        names = isName;
+        cache.clear();
     }
 
     /** Lädt die Vorlagen (Datei aus dem Plugin, danach Ergänzungen/Korrekturen aus dem Datenordner). Gibt die Anzahl zurück. */
@@ -87,6 +98,14 @@ public final class I18n {
             list.add(t);
         }
         list.sort((a, b) -> Integer.compare(b.weight(), a.weight()));
+        Map<String, String> up = new HashMap<>();
+        for (Map.Entry<String, String> e : map.entrySet()) {
+            String de = e.getKey();
+            if (de.contains("{}") || de.contains("<") || de.equals(de.toUpperCase(java.util.Locale.ROOT))) continue;
+            up.putIfAbsent(de.strip().toUpperCase(java.util.Locale.ROOT), e.getValue().strip().toUpperCase(java.util.Locale.ROOT));
+        }
+        for (String de : map.keySet()) up.remove(de);   // eigene Vorlagen in Großbuchstaben gehen vor
+        upper = up;
         templates = list;
         List<String> keys = new ArrayList<>();
         for (Tpl t : list) keys.add(t.key());
@@ -141,7 +160,8 @@ public final class I18n {
         }
         if (key.isEmpty()) return null;
         int[] ord = order.stream().mapToInt(Integer::intValue).toArray();
-        return new Tpl(de, Pattern.compile(rx.toString(), Pattern.DOTALL), parts, ord, weight, key);
+        boolean word = holes == 0 && WORD.matcher(de).matches();
+        return new Tpl(de, Pattern.compile(rx.toString(), Pattern.DOTALL), parts, ord, weight, key, word);
     }
 
     private static int letters(String s) {
@@ -219,6 +239,7 @@ public final class I18n {
         String hit = cache.get(text);
         if (hit != null) return hit;
         String out = translate(text, 0);
+        if (out.equals(text) && caps(text)) out = upper.getOrDefault(text, text);
         cache.put(text, out);
         return out;
     }
@@ -227,23 +248,29 @@ public final class I18n {
         if (depth > 4 || text.isEmpty()) return text;
         List<Tpl> cands = index.candidates(text, templates);
         if (cands.isEmpty()) return text;
+        List<int[]> cmds = commands(text);
         // Treffer sammeln (längere Vorlagen zuerst), ohne Überlappung
         List<int[]> spans = new ArrayList<>();
         List<String> repl = new ArrayList<>();
         for (Tpl t : cands) {
+            if (t.word() && names.test(t.de())) continue;
             Matcher m = t.pattern().matcher(text);
             int from = 0;
             while (from <= text.length() && m.find(from)) {
                 int s = m.start(), e = m.end();
                 if (e == s) break;
-                if (!free(spans, s, e) || !boundary(text, s, e)) {
+                if (!free(spans, s, e) || !boundary(text, s, e) || inside(cmds, s) || (t.word() && compound(text, s, e))) {
                     from = s + 1;
                     continue;
                 }
                 StringBuilder b = new StringBuilder();
                 for (int i = 0; i < t.en().size(); i++) {
                     b.append(t.en().get(i));
-                    if (i < t.order().length) b.append(translate(m.group(t.order()[i] + 1), depth + 1));
+                    if (i < t.order().length) {
+                        int g = t.order()[i] + 1;
+                        // Werte in Klick-Befehlen (/job waehlen Verzauberer) bleiben, wie sie sind
+                        b.append(inside(cmds, m.start(g)) ? m.group(g) : translate(m.group(g), depth + 1));
+                    }
                 }
                 spans.add(new int[]{s, e});
                 repl.add(b.toString());
@@ -265,9 +292,58 @@ public final class I18n {
         return out.toString();
     }
 
+    private static boolean caps(String s) {
+        int up = 0;
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (Character.isLowerCase(c)) return false;
+            if (Character.isUpperCase(c)) up++;
+        }
+        return up >= 2;
+    }
+
     private static boolean free(List<int[]> spans, int s, int e) {
         for (int[] sp : spans) if (s < sp[1] && sp[0] < e) return false;
         return true;
+    }
+
+    /** Einzelwort als Teil eines zusammengesetzten Namens („Farm-Kasse“, „Kasse_2“): bleibt, wie es ist. */
+    private static boolean compound(String text, int s, int e) {
+        return (s > 0 && (text.charAt(s - 1) == '-' || text.charAt(s - 1) == '_'))
+                || (e < text.length() && (text.charAt(e) == '-' || text.charAt(e) == '_'));
+    }
+
+    /** Bereiche von Klick- und Einfüge-Tags (<click:run_command:'…'>): deren Inhalt ist ein Befehl, kein Text. */
+    private static List<int[]> commands(String text) {
+        List<int[]> res = null;
+        int i = 0;
+        while (true) {
+            int c = text.indexOf("<click:", i), n = text.indexOf("<insert:", i);
+            int s = c < 0 ? n : n < 0 ? c : Math.min(c, n);
+            if (s < 0) return res;
+            char quote = 0;
+            int e = s + 1;
+            for (; e < text.length(); e++) {
+                char ch = text.charAt(e);
+                if (quote != 0) {
+                    if (ch == '\\') e++;
+                    else if (ch == quote) quote = 0;
+                } else if (ch == '\'' || ch == '"') {
+                    quote = ch;
+                } else if (ch == '>') {
+                    break;
+                }
+            }
+            if (res == null) res = new ArrayList<>();
+            res.add(new int[]{s, e});
+            i = e + 1;
+        }
+    }
+
+    private static boolean inside(List<int[]> ranges, int pos) {
+        if (ranges == null) return false;
+        for (int[] r : ranges) if (pos > r[0] && pos < r[1]) return true;
+        return false;
     }
 
     /** Ganze Wörter: vor dem Anfang und nach dem Ende kein Buchstabe, wenn die Vorlage dort mit einem beginnt/endet. */

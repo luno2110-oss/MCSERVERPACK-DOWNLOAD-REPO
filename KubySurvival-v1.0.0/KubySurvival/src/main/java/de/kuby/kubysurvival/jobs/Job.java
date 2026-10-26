@@ -52,12 +52,19 @@ public enum Job {
         }
     }
 
-    /** Sucht einen Job nach Namen, egal ob mit Umlauten, ohne oder in welcher Schreibweise. */
+    /** Sucht einen Job nach Namen, egal ob mit Umlauten, ohne, auf Englisch oder in welcher Schreibweise. */
     public static Job find(String name) {
         if (name == null) return null;
         for (Job j : values()) {
             if (j.name().equalsIgnoreCase(name) || j.ascii.equalsIgnoreCase(name) || j.display.equalsIgnoreCase(name)) return j;
         }
-        return null;
+        return switch (name.toLowerCase(java.util.Locale.ROOT)) {
+            case "lumberjack" -> HOLZFAELLER;
+            case "digger" -> GRAEBER;
+            case "hunter" -> JAEGER;
+            case "breeder" -> ZUECHTER;
+            case "enchanter" -> VERZAUBERER;
+            default -> null;
+        };
     }
 }

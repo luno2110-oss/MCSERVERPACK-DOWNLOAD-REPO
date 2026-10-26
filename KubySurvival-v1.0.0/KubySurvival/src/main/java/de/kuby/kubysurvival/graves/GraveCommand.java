@@ -5,6 +5,7 @@ import de.kuby.kubyplugins.service.ModeService;
 import de.kuby.kubyplugins.ui.Canvas;
 import de.kuby.kubyplugins.ui.KitData;
 import de.kuby.kubyplugins.ui.UiDialog;
+import de.kuby.kubyplugins.util.I18n;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -51,7 +52,8 @@ public final class GraveCommand implements CommandExecutor {
         c.smallIcon(13, 16, KitData.SmallIcon.H_GRAVE);
         c.text(41, 15, "DEINE GRÄBER", TITLE, true);
         c.text(41, 28, "Welt, Koordinaten und Restzeit", GRAY, false);
-        c.textRight(378, 21, list.size() == 1 ? "1 Grab" : list.size() + " Gräber", GRAY, false);
+        // „Gräber“ ist auch der Job: die Mehrzahl hier direkt auf Englisch
+        c.textRight(378, 21, list.size() == 1 ? "1 Grab" : list.size() + (I18n.context() ? " graves" : " Gräber"), GRAY, false);
         int y = 53;
         if (list.isEmpty()) {
             c.box(0, y, W, 43, KitData.Box.GRAY);

@@ -3,6 +3,7 @@ package de.kuby.kubysurvival.marry;
 import de.kuby.kubyplugins.ui.Canvas;
 import de.kuby.kubyplugins.ui.Canvas.Span;
 import de.kuby.kubyplugins.ui.KitData;
+import de.kuby.kubyplugins.util.I18n;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.entity.Player;
 
@@ -156,7 +157,8 @@ public final class MarryScreens {
                     Btn.of("Zum Partner", KitData.Button.PURPLE, v.partnerOnline() ? a.tp() : null,
                             v.partnerOnline() ? "Zu " + v.partner() + " teleportieren" : null),
                     Btn.of("Zur Kirche", KitData.Button.DARK, a.church(), "Zur Kirche teleportieren"),
-                    Btn.of("Ehe-Konto", KitData.Button.GOLD, a.bank(), "Bank öffnen"),
+                    // englisch kürzer: „Marriage account“ passt nicht auf den Knopf
+                    Btn.of(I18n.context() ? "Account" : "Ehe-Konto", KitData.Button.GOLD, a.bank(), "Bank öffnen"),
                     Btn.of(sure ? "Wirklich?" : "Scheidung", sure ? KitData.Button.RED : KitData.Button.RED_LINE, a.divorce(),
                             sure ? "Nochmal klicken: Scheidung, das Ehe-Konto wird geteilt" : "Scheiden lassen (zweimal klicken)")));
             y += 25;

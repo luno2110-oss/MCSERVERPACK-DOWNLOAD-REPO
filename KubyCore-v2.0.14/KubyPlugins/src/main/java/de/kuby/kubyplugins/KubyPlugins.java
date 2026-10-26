@@ -428,6 +428,8 @@ public final class KubyPlugins extends JavaPlugin {
      */
     public void loadLanguage() {
         de.kuby.kubyplugins.util.I18n.resolver(id -> playerSettings != null && playerSettings.english(id));
+        de.kuby.kubyplugins.util.I18n.names(n -> org.bukkit.Bukkit.getPlayerExact(n) != null
+                || org.bukkit.Bukkit.getOfflinePlayerIfCached(n) != null);
         java.util.List<java.io.InputStream> in = new java.util.ArrayList<>();
         in.add(getResource("lang/en.tsv"));
         java.io.File own = new java.io.File(getDataFolder(), "lang/en.tsv");
@@ -436,7 +438,8 @@ public final class KubyPlugins extends JavaPlugin {
         } catch (java.io.FileNotFoundException ignored) {
             // nicht da
         }
-        de.kuby.kubyplugins.util.I18n.load(in, getLogger());
+        int n = de.kuby.kubyplugins.util.I18n.load(in, getLogger());
+        getLogger().info("Sprache: " + n + " englische Vorlagen geladen");
     }
 
     private void setAll(CommandExecutor executor, String... names) {
