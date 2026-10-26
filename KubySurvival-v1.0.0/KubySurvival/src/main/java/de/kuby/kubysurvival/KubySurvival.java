@@ -250,6 +250,47 @@ public final class KubySurvival extends JavaPlugin {
         PluginCommand levelCmd = getCommand("level");
         if (levelCmd != null) levelCmd.setTabCompleter(levelCommand);
         command("tokens", (sender, cmd, label, args) -> {
+            // Admin: /tokens give|take|set <Spieler> <Anzahl> (auch aus der Konsole), /tokens <Spieler> zeigt den Stand
+            if (args.length >= 1 && sender.hasPermission("kuby.admin")) {
+                String sub = args[0].toLowerCase(java.util.Locale.ROOT);
+                if (java.util.List.of("give", "take", "set").contains(sub)) {
+                    if (args.length < 3) {
+                        sender.sendMessage(Msg.parse("<red>/tokens " + sub + " <Spieler> <Anzahl>"));
+                        return true;
+                    }
+                    org.bukkit.OfflinePlayer t = getServer().getOfflinePlayerIfCached(args[1]);
+                    if (t == null) {
+                        sender.sendMessage(Msg.parse("<red>Spieler " + Msg.escape(args[1]) + " unbekannt."));
+                        return true;
+                    }
+                    long n;
+                    try {
+                        n = Long.parseLong(args[2]);
+                    } catch (NumberFormatException e) {
+                        n = -1;
+                    }
+                    if (n < 0) {
+                        sender.sendMessage(Msg.parse("<red>Anzahl muss eine Zahl ab 0 sein."));
+                        return true;
+                    }
+                    UUID tid = t.getUniqueId();
+                    long before = tokens.balance(tid);
+                    switch (sub) {
+                        case "give" -> tokens.give(tid, n, "vom Team");
+                        case "take" -> jobs.addTokens(tid, -Math.min(n, before));
+                        default -> jobs.addTokens(tid, n - before);
+                    }
+                    jobs.save();
+                    sender.sendMessage(Msg.parse("<green>" + t.getName() + ": <light_purple>" + before + " → "
+                            + tokens.balance(tid) + " Tokens"));
+                    return true;
+                }
+                org.bukkit.OfflinePlayer t = getServer().getOfflinePlayerIfCached(args[0]);
+                if (t != null) {
+                    sender.sendMessage(Msg.parse("<gray>" + t.getName() + ": <light_purple>" + tokens.balance(t.getUniqueId()) + " Tokens"));
+                    return true;
+                }
+            }
             if (!(sender instanceof Player p)) return true;
             UUID id = p.getUniqueId();
             Msg.send(p, "<light_purple><b>Tokens: " + jobs.worker(id).tokens + "</b>");

@@ -51,8 +51,8 @@ commands:
     usage: "/level [Spieler|top]"
     aliases: [lvl]
   tokens:
-    description: "Deine Tokens und wie du mehr bekommst"
-    usage: "/tokens"
+    description: "Deine Tokens; Admins: /tokens give|take|set <Spieler> <Anzahl>"
+    usage: "/tokens [give|take|set <Spieler> <Anzahl>]"
   backpack:
     description: "Rucksack öffnen (/backpack item: Rucksack-Item)"
     usage: "/backpack [item]"
