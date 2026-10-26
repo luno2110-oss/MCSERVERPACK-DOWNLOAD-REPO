@@ -1,0 +1,134 @@
+# Serverregeln (/regeln): Übersicht mit einem Knopf je Paragraph, dazu je Paragraph eine Seite.
+# Diese Datei liegt nach dem ersten Start in plugins/KubyPlugins/regeln.yml und kann dort geändert werden
+# (danach /kp reload). Fehlt sie, kommt sie wieder aus dem Plugin.
+#
+# Je Paragraph:
+#   titel    Name des Paragraphen
+#   farbe    gruen, rot, gold, braun, grau, lila, blau oder tuerkis
+#   symbol   Bild 1 bis 12 aus dem Grafik-Pack (Steak, TNT, Hacke, Erde, Redstone, Schwert, Sperre, Feder, Smaragd,
+#            Glocke, Gitter, Keks)
+#   punkte   die Regeln; sie bekommen Nummern (2.1, 2.2, ...). "---" beginnt einen neuen Kasten.
+#   aufzaehlung: true  Punkte statt Nummern; Zeilen mit "– " am Anfang stehen als Unterpunkt unter dem Punkt davor.
+untertitel: "Friendly Survival · gilt für alle"
+einleitung:
+  titel: "So spielen wir"
+  text: "Damit sich auf Survival alle wohlfühlen, gelten diese Regeln für jeden Spieler. Klick auf einen Paragraphen, um ihn zu lesen."
+  hinweis: "Mit /regeln und einer Zahl springst du direkt hin, zum Beispiel /regeln 3."
+paragraphen:
+  - titel: "Allgemeines Verhalten"
+    farbe: gruen
+    symbol: 1
+    punkte:
+      - "Behandle andere Spieler respektvoll. Beleidigungen, Mobbing, Diskriminierung und Drohungen sind verboten."
+      - "Streitigkeiten sind friedlich zu klären. Wenn keine Einigung möglich ist, kann das Serverteam kontaktiert werden."
+      - "Andere Spieler dürfen nicht absichtlich belästigt, provoziert oder beim Spielen gestört werden."
+      - "Die Regeln gelten für alle Spieler, unabhängig von Rang oder Spielzeit."
+  - titel: "Griefing und Diebstahl"
+    farbe: rot
+    symbol: 2
+    punkte:
+      - "Griefing ist verboten. Das absichtliche Zerstören, Beschädigen oder Verändern fremder Bauwerke ist nicht erlaubt."
+      - "Das Stehlen von Items aus fremden Kisten, Fässern, Shulkerboxen und anderen Lagern ist verboten."
+      - "Fremde Farmen, Redstone-Anlagen, Tiere und Dorfbewohner dürfen ohne Erlaubnis nicht beschädigt, entfernt oder getötet werden."
+      - "TNT, Lava, Feuer, Creeper und andere Spielmechaniken dürfen nicht zur Zerstörung fremder Bauwerke eingesetzt werden."
+      - "Auch kleinere Beschädigungen und absichtliche Veränderungen an fremden Bauwerken gelten als Griefing."
+      - "---"
+      - "Versehentliche Schäden sind dem Eigentümer oder dem Serverteam zu melden."
+  - titel: "Claims"
+    farbe: gold
+    symbol: 3
+    punkte:
+      - "Fremde Claims sind zu respektieren. Baue oder verändere dort nichts ohne Erlaubnis."
+      - "Das Umgehen des Claim-Schutzes, um Blöcke abzubauen, Items zu stehlen oder fremde Bauwerke zu beschädigen, ist verboten."
+      - "Griefing ist auch außerhalb von Claims verboten."
+      - "Setze Claims nicht absichtlich so, dass fremde Bauprojekte, öffentliche Wege oder Gemeinschaftsbereiche blockiert werden."
+      - "Vergib Baurechte nur an Spieler, denen du vertraust. Missbrauch von Claim-Berechtigungen bleibt verboten."
+      - "---"
+      - "Bei Streitigkeiten über Claims entscheidet das Serverteam nach Prüfung des Falls."
+      - "Für inaktive Claims können gesonderte Regelungen gelten. Diese werden vom Serverteam bekannt gegeben."
+  - titel: "Bauwelt"
+    farbe: braun
+    symbol: 4
+    punkte:
+      - "Die Bauwelt darf nicht absichtlich verwüstet werden."
+      - "Großflächige Explosionen, unnötige Krater und die gezielte Zerstörung der Landschaft sind verboten."
+      - "TNT-Duper, TNT-Kanonen und vergleichbare Maschinen dürfen nicht zur Zerstörung oder Verwüstung der Bauwelt eingesetzt werden."
+      - "Fremde Bauwerke, Claims, Farmen und öffentliche Bereiche dürfen nicht mit TNT oder anderen technischen Konstruktionen beschädigt werden."
+      - "---"
+      - "Feuer und Lava dürfen nicht zur großflächigen Zerstörung der Landschaft eingesetzt werden."
+      - "Beim Ressourcenabbau ist darauf zu achten, dass keine unnötig großen und störenden Abbauflächen in der Nähe von Bauprojekten oder öffentlichen Bereichen entstehen."
+      - "Spawn, öffentliche Wege und Gemeinschaftsprojekte dürfen nicht ohne Erlaubnis verändert oder beschädigt werden."
+  - titel: "Farmen und Redstone"
+    farbe: rot
+    symbol: 5
+    punkte:
+      - "Farmen und Redstone-Anlagen sind erlaubt, solange sie keine anderen Regeln verletzen."
+      - "Lag-Maschinen und Konstruktionen, die den Server absichtlich überlasten, sind verboten."
+      - "Bei erheblichen Leistungsproblemen kann das Serverteam verlangen, dass Farmen oder Maschinen angepasst oder abgeschaltet werden."
+      - "Fremde Farmen und Redstone-Anlagen dürfen ohne Erlaubnis nicht verändert oder abgeschaltet werden."
+      - "---"
+      - "Zusätzliche technische Einschränkungen des Servers sind einzuhalten."
+  - titel: "PvP"
+    farbe: grau
+    symbol: 6
+    punkte:
+      - "PvP ist nur mit Zustimmung aller Beteiligten erlaubt."
+      - "Spieler dürfen nicht absichtlich getötet werden, um ihre Items zu stehlen."
+      - "Fallen, die andere Spieler ohne deren Zustimmung töten oder ihre Items gefährden, sind verboten."
+      - "Harmlose Streiche sind erlaubt, solange dabei keine Bauwerke beschädigt, Items gestohlen oder Spieler dauerhaft belästigt werden."
+  - titel: "Cheats und Exploits"
+    farbe: lila
+    symbol: 7
+    punkte:
+      - "Cheats und Hacks, die einen unfairen Vorteil verschaffen, sind verboten. Dazu gehört beispielsweise X-Ray."
+      - "Das Ausnutzen von Bugs und Exploits zur Beschaffung von Items, Geld oder anderen Vorteilen ist verboten."
+      - "Entdeckte Bugs, die den Server oder andere Spieler beeinträchtigen können, sind dem Serverteam zu melden."
+      - "Unerlaubte Bots, Makros und Automatisierungen sind verboten, wenn sie gegen die Serverregeln verstoßen oder unfaire Vorteile verschaffen."
+      - "Das Umgehen eines Banns mit anderen Accounts ist verboten."
+  - titel: "Chat"
+    farbe: blau
+    symbol: 8
+    punkte:
+      - "Spam, übermäßiger Capslock und das wiederholte Stören des Chats sind zu vermeiden."
+      - "Beleidigungen, Drohungen und diskriminierende Äußerungen sind verboten."
+      - "Werbung für andere Server oder externe Projekte ist ohne Erlaubnis des Teams nicht gestattet."
+      - "Private Daten anderer Personen dürfen nicht ohne deren Zustimmung veröffentlicht werden."
+      - "Streitigkeiten sind nicht durch wiederholte Provokationen oder Spam im öffentlichen Chat auszutragen."
+  - titel: "Handel"
+    farbe: gruen
+    symbol: 9
+    punkte:
+      - "Vereinbarte Handelsgeschäfte sind einzuhalten."
+      - "Betrug und absichtliche Täuschung beim Handel sind verboten."
+      - "Das Erzeugen oder Vermehren von Items durch unerlaubte Duplikationsmethoden ist verboten."
+      - "Gemeinschaftslager und gemeinsame Ressourcen dürfen nur entsprechend den vereinbarten Regeln genutzt werden."
+  - titel: "Serverteam"
+    farbe: tuerkis
+    symbol: 10
+    punkte:
+      - "Das Serverteam kann bei Regelverstößen eingreifen und geeignete Maßnahmen ergreifen."
+      - "Beschwerden über Entscheidungen können sachlich beim Team eingereicht werden."
+      - "Falsche Anschuldigungen und der Missbrauch des Meldesystems können sanktioniert werden."
+      - "Kein Spieler erhält aufgrund seines Ranges oder seiner Spielzeit das Recht, die Regeln zu missachten."
+  - titel: "Strafen"
+    farbe: rot
+    symbol: 11
+    aufzaehlung: true
+    punkte:
+      - "Je nach Schwere und Häufigkeit des Verstoßes können folgende Maßnahmen erfolgen:"
+      - "– Verwarnung"
+      - "– Temporärer Chat-Mute"
+      - "– Rückgängigmachung von Schäden, soweit möglich"
+      - "– Temporärer Bann"
+      - "– Permanenter Bann"
+      - "Bei schweren Verstößen, insbesondere massivem Griefing, absichtlicher Zerstörung der Bauwelt oder wiederholten Regelverstößen, kann direkt ein längerer oder permanenter Bann ausgesprochen werden."
+      - "---"
+      - "Das Serverteam berücksichtigt den jeweiligen Einzelfall und entscheidet über die angemessene Maßnahme."
+  - titel: "Schlussbestimmungen"
+    farbe: gold
+    symbol: 12
+    punkte:
+      - "Jeder Spieler ist selbst dafür verantwortlich, die geltenden Regeln einzuhalten."
+      - "Für bestimmte Welten, Events oder Spielmodi können zusätzliche Regeln gelten."
+      - "Das Serverteam kann das Regelwerk bei Bedarf ergänzen oder ändern."
+      - "Bei nicht ausdrücklich geregelten Situationen entscheidet das Serverteam unter Berücksichtigung der geltenden Regeln und des jeweiligen Sachverhalts."

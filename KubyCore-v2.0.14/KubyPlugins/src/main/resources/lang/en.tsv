@@ -2191,6 +2191,7 @@ Alles verkaufen	Sell all
 Alles zurück in deinem Inventar ({} Items). Das Grab ist verschwunden.	Everything is back in your inventory ({} items). The grave has disappeared.
 Alles über Survival · klick auf ein Thema	Everything about Survival · click a topic
 Allgemein	General
+Allgemeines Verhalten	General conduct
 Als Besitzer löst du das Konto an der Bank auf.	As the owner you close the account at the bank.
 Als Geschenk	As a gift
 Am Haken hing ein Schatz: 	A treasure was on the hook: 
@@ -2208,6 +2209,7 @@ An der Losbude gibt es Rubbellose für Chips: aufdecken, drei gleiche Symbole ge
 An diesem Automaten sitzt schon jemand.	Someone is already sitting at this machine.
 An dieser Kiste hängt schon ein Laden.	There's already a shop on this chest.
 An oder aus	On or off
+Andere Spieler dürfen nicht absichtlich belästigt, provoziert oder beim Spielen gestört werden.	Other players must not be deliberately harassed, provoked or disturbed while playing.
 Andere dürfen dich in ihr Team einladen.	Others may invite you to their team.
 Andere dürfen dich mit /tpahere zu sich holen.	Others may bring you to them with /tpahere.
 Andere dürfen dich zum Duell herausfordern.	Others may challenge you to a duel.
@@ -2286,6 +2288,7 @@ Arena für <white>{}</white> ist jetzt <white>{}</white>.	Arena for <white>{}</w
 Arena-Name für den NPC:	Arena name for the NPC:
 Arenen	Arenas
 Artikel eingeben (id;Name;ICON;Preis;Befehl;Lore):	Enter item (id;Name;ICON;Price;Command;Lore):
+Auch kleinere Beschädigungen und absichtliche Veränderungen an fremden Bauwerken gelten als Griefing.	Even minor damage and deliberate changes to other players' builds count as griefing.
 Auf Stühle, Bänke und Hocker setzt du dich mit Rechtsklick, überall auf Survival. Aufstehen mit Shift.	You sit on chairs, benches and stools with right-click, anywhere in Survival. Stand up with shift.
 Auf Survival gelten zwölf Paragraphen, zum Beispiel zu Griefing, Claims, PvP und Chat. Mit /regeln liest du sie alle.	Twelve paragraphs apply in Survival, for example about griefing, claims, PvP and chat. Read them all with /regeln.
 Auf dem Konto ist nichts.	There's nothing in the account.
@@ -2378,9 +2381,14 @@ Begleiter rufen, reiten, umbenennen	Call, ride and rename companions
 Begleiter, die dir folgen	Companions that follow you
 Begrüßungstext eingeben (MiniMessage erlaubt):	Enter the welcome text (MiniMessage allowed):
 Behandle alle freundlich. Beleidigungen, Hetze, Drohungen und Belästigung sind verboten, auch per Privatnachricht.	Treat everyone kindly. Insults, hate speech, threats and harassment are forbidden, also in private messages.
+Behandle andere Spieler respektvoll. Beleidigungen, Mobbing, Diskriminierung und Drohungen sind verboten.	Treat other players with respect. Insults, bullying, discrimination and threats are forbidden.
 Bei 5.000 Einsatz der ganze Topf, sonst anteilig (mind. 100x)	With a 5,000 bet the whole pot, otherwise a share (min. 100x)
+Bei Streitigkeiten über Claims entscheidet das Serverteam nach Prüfung des Falls.	In disputes about claims, the server team decides after reviewing the case.
 Bei einer Scheidung wird das Ehe-Konto halbiert, jeder bekommt seinen Teil. Danach dürft ihr eine Zeit lang nicht neu heiraten.	In a divorce the marriage account is split in half, each gets their part. After that you can't marry again for a while.
+Bei erheblichen Leistungsproblemen kann das Serverteam verlangen, dass Farmen oder Maschinen angepasst oder abgeschaltet werden.	If there are serious performance problems, the server team may require farms or machines to be changed or switched off.
 Bei jedem Sieg	On every win
+Bei nicht ausdrücklich geregelten Situationen entscheidet das Serverteam unter Berücksichtigung der geltenden Regeln und des jeweiligen Sachverhalts.	In situations the rules do not cover, the server team decides based on the current rules and the facts of the case.
+Bei schweren Verstößen, insbesondere massivem Griefing, absichtlicher Zerstörung der Bauwelt oder wiederholten Regelverstößen, kann direkt ein längerer oder permanenter Bann ausgesprochen werden.	For serious violations, especially massive griefing, deliberate destruction of the build world or repeated rule breaking, a longer or permanent ban can be given right away.
 Bei vertippten Befehlen den passenden vorschlagen.	Suggest the right command when you mistype one.
 Bei {}x wird automatisch ausgezahlt.	At {}x it cashes out automatically.
 Beide Ecken müssen in der Skyblock-Welt liegen.	Both corners must be in the Skyblock world.
@@ -2389,8 +2397,10 @@ Beide Spieler brauchen einen verknüpften Discord-Account.	Both players need a l
 Beim Einloggen zurück in den letzten Modus. Aus: in die Lobby.	Return to the last mode when you log in. Off: to the lobby.
 Beim Priester sagt <white>{}</white> Ja. Wartet zusammen hier.	<white>{}</white> says yes at the priest. Wait here together.
 Beim Priester sagt {} Ja. Wartet zusammen hier.	{} says yes at the priest. Wait here together.
+Beim Ressourcenabbau ist darauf zu achten, dass keine unnötig großen und störenden Abbauflächen in der Nähe von Bauprojekten oder öffentlichen Bereichen entstehen.	When mining resources, avoid leaving unnecessarily large and unsightly holes near other players' projects or public areas.
 Beistelltisch	Side Table
 Beißt nachts doppelt so oft	Bites twice as often at night
+Beleidigungen, Drohungen und diskriminierende Äußerungen sind verboten.	Insults, threats and discriminatory remarks are forbidden.
 Belohnung	Reward
 Belohnung eingeben (STUFE SPUR ART WERT):	Enter reward (LEVEL TRACK TYPE VALUE):
 Belohnung für <white>{}</white> abgeholt!	Reward for <white>{}</white> claimed!
@@ -2409,6 +2419,7 @@ Berta vom Hof hat mir letztens Brot geschenkt. Sag ihr bitte danke von mir!	Bert
 Beruf wählen	Choose a job
 Beschreib deine Frage etwas genauer (mindestens 10 Zeichen).	Describe your question a bit more precisely (at least 10 characters).
 Beschreibung ändern	Change description
+Beschwerden über Entscheidungen können sachlich beim Team eingereicht werden.	Complaints about decisions can be brought to the team in a factual way.
 Besiege 10 Spieler (SMP)	Defeat 10 players (SMP)
 Besiege 10 Zombies	Defeat 10 zombies
 Besiege 100 Monster	Defeat 100 monsters
@@ -2434,6 +2445,7 @@ Betrag	Amount
 Betrag eingeben	Enter amount
 Betrag eintippen, in Chips tauschen	Type the amount, exchange for chips
 Betrug beim Handeln ist verboten. Nutze /trade oder den Markt, dann seid ihr beide sicher.	Scamming in trades is forbidden. Use /trade or the market, then you're both safe.
+Betrug und absichtliche Täuschung beim Handel sind verboten.	Fraud and deliberate deception in trades are forbidden.
 Bewahrer	Keeper
 Bewertung: 	Rating: 
 Biene	Bee
@@ -2502,6 +2514,8 @@ Chat-Hilfe	Chat help
 Chat-Nachrichten anderer Spieler sehen.	See chat messages of other players.
 Chat-Präfix	Chat prefix
 Chat-Quiz	Chat quiz
+Cheats und Exploits	Cheats and exploits
+Cheats und Hacks, die einen unfairen Vorteil verschaffen, sind verboten. Dazu gehört beispielsweise X-Ray.	Cheats and hacks that give an unfair advantage are forbidden. This includes X-ray, for example.
 Check (Zeit)	Check (time)
 Checkpoint <yellow>#{}</yellow> gesetzt.	Checkpoint <yellow>#{}</yellow> set.
 Checkpoint <yellow>#{}</yellow> gesetzt: <white>{}</white>	Checkpoint <yellow>#{}</yellow> set: <white>{}</white>
@@ -2522,6 +2536,7 @@ Chronist	Chronicler
 Claim-Axt holen	Get the claim axe
 Claim-Blöcke	Claim blocks
 Claim-Blöcke und mehr.	claim blocks and more.
+Claims	Claims
 Claims gibt es nur in der Survival-Welt.	Claims only exist in the Survival world.
 Claims nur so groß wie nötig. Kein Claimen direkt an fremden Grundstücken, um sie einzuschränken.	Claims only as big as needed. No claiming right next to other plots to restrict them.
 Clownfisch	Clownfish
@@ -2565,11 +2580,14 @@ Daily: Grundbelohnung	Daily: base reward
 Daily: Steigerung	Daily: increase
 Daily: Zyklus-Bonus	Daily: cycle bonus
 DailyPot-Mitteilungen	DailyPot messages
+Damit sich auf Survival alle wohlfühlen, gelten diese Regeln für jeden Spieler. Klick auf einen Paragraphen, um ihn zu lesen.	So that everyone feels at home on Survival, these rules apply to every player. Click a section to read it.
 Danach zerfällt das Grab und alles fällt heraus. Dann kann es jeder aufheben. Mit dem Farmpass hält dein Grab länger.	After that the grave falls apart and everything drops out. Then anyone can pick it up. With the farm pass your grave lasts longer.
 Danke! Dein Ticket ist als gelöst markiert.	Thanks! Your ticket is marked as solved.
+Das Ausnutzen von Bugs und Exploits zur Beschaffung von Items, Geld oder anderen Vorteilen ist verboten.	Using bugs and exploits to get items, money or other advantages is forbidden.
 Das Casino gibt es nur in Survival.	The casino only exists in Survival.
 Das Casino ist gerade geschlossen.	The casino is closed right now.
 Das Ehe-Konto wurde bei der Scheidung geteilt	The marriage account was split in the divorce
+Das Erzeugen oder Vermehren von Items durch unerlaubte Duplikationsmethoden ist verboten.	Creating or multiplying items with unauthorised duplication methods is forbidden.
 Das Grab von <white>{}</white>. Noch <white>{}</white> kommt nur {} heran, danach zerfällt es.	The grave of <white>{}</white>. For <white>{}</white> only {} can reach it, after that it falls apart.
 Das Ja-Wort gebt ihr euch beim Priester in der Kirche, beide müssen dort stehen. Die Hochzeit bezahlt, wer den Antrag gemacht hat.	You say "I do" at the priest in the church, both of you must stand there. Whoever proposed pays for the wedding.
 Das Ja-Wort gebt ihr euch beim Priester in der Kirche, beide müssen dort stehen. Rechtsklick auf den Priester.	You say "I do" at the priest in the church, both of you must stand there. Right-click the priest.
@@ -2578,8 +2596,14 @@ Das Korn steht reif und mein Rücken macht nicht mehr mit. Hilfst du mir bei der
 Das Meisterstück	The masterpiece
 Das Möbel ragt aus dem Grundstück heraus.	The furniture sticks out of the plot.
 Das Schild muss an einer Kiste oder einem Fass hängen (oder obendrauf stehen).	The sign must hang on a chest or a barrel (or stand on top).
+Das Serverteam berücksichtigt den jeweiligen Einzelfall und entscheidet über die angemessene Maßnahme.	The server team looks at each case individually and decides on the appropriate action.
+Das Serverteam kann bei Regelverstößen eingreifen und geeignete Maßnahmen ergreifen.	The server team can step in when rules are broken and take suitable action.
+Das Serverteam kann das Regelwerk bei Bedarf ergänzen oder ändern.	The server team can add to or change the rules when needed.
+Das Stehlen von Items aus fremden Kisten, Fässern, Shulkerboxen und anderen Lagern ist verboten.	Stealing items from other players' chests, barrels, shulker boxes and other storage is forbidden.
 Das Team ist inzwischen voll.	The team is full by now.
 Das Turnier ist voll.	The tournament is full.
+Das Umgehen des Claim-Schutzes, um Blöcke abzubauen, Items zu stehlen oder fremde Bauwerke zu beschädigen, ist verboten.	Bypassing claim protection to break blocks, steal items or damage other players' builds is forbidden.
+Das Umgehen eines Banns mit anderen Accounts ist verboten.	Getting around a ban with other accounts is forbidden.
 Das geht nur in Survival.	That only works in Survival.
 Das gibt es nur aus Kisten.	This is only available from crates.
 Das gibt es nur in Survival.	That only exists in Survival.
@@ -2720,6 +2744,7 @@ Die Anzeige rechts am Bildschirm.	The display on the right side of the screen.
 Die Bank gibt es nur in Survival.	The bank only exists in Survival.
 Die Bank ist noch nicht eingerichtet.	The bank isn't set up yet.
 Die Bank zieht	The dealer draws
+Die Bauwelt darf nicht absichtlich verwüstet werden.	The build world must not be deliberately devastated.
 Die Belohnung hast du schon abgeholt.	You already claimed the reward.
 Die Duellarena ist nicht konfiguriert.	The duel arena isn't configured.
 Die Enderchest ist schon maximal ausgebaut.	The ender chest is already fully upgraded.
@@ -2740,6 +2765,7 @@ Die Kugel rollt – gleich geht's weiter.	The ball is rolling – next round com
 Die Leiste oben am Bildschirm. Inhalt: /bossbar	The bar at the top of the screen. Contents: /bossbar
 Die Nachricht ist leer.	The message is empty.
 Die Prämie kostet {}$.	The premium costs {}$.
+Die Regeln gelten für alle Spieler, unabhängig von Rang oder Spielzeit.	The rules apply to all players, regardless of rank or playtime.
 Die Regeln gelten für jeden Spieler, egal welcher Rang und wie lange schon dabei.	The rules apply to every player, no matter the rank or how long they've been here.
 Die Runde hat noch nicht angefangen.	The round hasn't started yet.
 Die Runde läuft schon.	The round is already running.
@@ -3070,6 +3096,7 @@ Endgänger	End Walker
 Endportalchen	Little End Portal
 Endsteinchen	End Pebble
 Entdecker	Explorer
+Entdeckte Bugs, die den Server oder andere Spieler beeinträchtigen können, sind dem Serverteam zu melden.	Report bugs that could harm the server or other players to the server team.
 Entfernen	Remove
 Enthalten	Included
 Epic-Key	Epic Key
@@ -3134,6 +3161,8 @@ Faden	String
 Fahr drüber für Details	Hover for details
 Fair spielen, gemeinsam bauen	Play fair, build together
 Fall-Reset	Fall reset
+Fallen, die andere Spieler ohne deren Zustimmung töten oder ihre Items gefährden, sind verboten.	Traps that kill other players without their consent or put their items at risk are forbidden.
+Falsche Anschuldigungen und der Missbrauch des Meldesystems können sanktioniert werden.	False accusations and abuse of the report system can be punished.
 Fang 10 Fische	Catch 10 fish
 Fang 100 Fische	Catch 100 fish
 Fang 500 Fische	Catch 500 fish
@@ -3156,6 +3185,8 @@ Farbe setzen	Bet on a color
 Farm-Baumeister	Farm Builder
 Farmen	Farms
 Farmen dürfen den Server nicht belasten. Große Mob- und Redstone-Farmen nur mit Abschaltung, keine Lag-Maschinen.	Farms must not strain the server. Big mob and redstone farms only with a switch-off, no lag machines.
+Farmen und Redstone	Farms and redstone
+Farmen und Redstone-Anlagen sind erlaubt, solange sie keine anderen Regeln verletzen.	Farms and redstone builds are allowed as long as they don't break any other rules.
 Farmpass	Farm pass
 Farmpass im Store	Farm pass in the store
 Farmpass-Menü	Farm pass menu
@@ -3174,6 +3205,7 @@ Felsen {}	Rocks {}
 Fertige Quests holst du im Menü ab. Wer jeden Tag Quests macht, baut eine Serie auf und bekommt Extra-Belohnungen.	You claim finished quests in the menu. If you do quests every day, you build a streak and get extra rewards.
 Fertige Stufen holst du in /playtime ab. Mit „Alle abholen“ geht alles auf einmal.	You claim finished levels in /playtime. “Claim all” does everything at once.
 Festungsstürmer	Fortress Raider
+Feuer und Lava dürfen nicht zur großflächigen Zerstörung der Landschaft eingesetzt werden.	Fire and lava must not be used to destroy large parts of the landscape.
 Feuerfisch	Lionfish
 Figuren	Figures
 Figuren und Statuen zur Deko sehen (Händler und Croupiers bleiben).	See figures and statues for decoration (traders and croupiers stay).
@@ -3216,6 +3248,10 @@ Freie Blöcke und wer hier wohnt	Free blocks and who lives here
 Freier Platz	Free seat
 Freirubbeln	Scratch
 Freitag	Friday
+Fremde Bauwerke, Claims, Farmen und öffentliche Bereiche dürfen nicht mit TNT oder anderen technischen Konstruktionen beschädigt werden.	Other players' builds, claims, farms and public areas must not be damaged with TNT or other technical contraptions.
+Fremde Claims sind zu respektieren. Baue oder verändere dort nichts ohne Erlaubnis.	Respect other players' claims. Don't build or change anything there without permission.
+Fremde Farmen und Redstone-Anlagen dürfen ohne Erlaubnis nicht verändert oder abgeschaltet werden.	Other players' farms and redstone builds must not be changed or switched off without permission.
+Fremde Farmen, Redstone-Anlagen, Tiere und Dorfbewohner dürfen ohne Erlaubnis nicht beschädigt, entfernt oder getötet werden.	Other players' farms, redstone builds, animals and villagers must not be damaged, removed or killed without permission.
 Freund austragen	Remove friend
 Freund eintragen	Add a friend
 Freund entfernen	Remove a friend
@@ -3231,6 +3267,7 @@ Freundesanfragen	Friend requests
 Freundesliste	Friends list
 Freundesliste öffnen	Open your friends list
 Freundschaftsanfrage senden	Send friend request
+Friendly Survival · gilt für alle	Friendly Survival · applies to everyone
 Frischer Fang	Fresh catch
 Frosch	Frog
 Frostmagierin	Frost Mage
@@ -3244,9 +3281,11 @@ Fänge	Catches
 Für Baltop-Platz 1	For baltop place 1
 Für Juwelen · sofort da	For jewels · instant
 Für alle Einsätze der letzten Runde fehlen dir Chips.	You don't have enough chips for all bets of the last round.
+Für bestimmte Welten, Events oder Spielmodi können zusätzliche Regeln gelten.	Additional rules may apply to certain worlds, events or game modes.
 Für die Abstimmung brauchst du einen verknüpften Discord-Account.	You need a linked Discord account to vote.
 Für die Hochzeit fehlen dir Coins ({}).	You are missing coins for the wedding ({}).
 Für einen Laden setzt du ein Schild an eine Kiste und schreibst [Shop] in die erste Zeile. Das geht in jedem Grundstück, in dem du bauen darfst.	For a shop you put a sign on a chest and write [Shop] in the first line. That works on every plot where you may build.
+Für inaktive Claims können gesonderte Regelungen gelten. Diese werden vom Serverteam bekannt gegeben.	Separate rules may apply to inactive claims. The server team announces them.
 Für jeden bezahlten Monat darfst du dir ein Haustier aussuchen und bekommst 250 Claim-Blöcke. Beides bleibt für immer.	For every paid month you may choose a pet and get 250 claim blocks. Both stay forever.
 Für jeden bezahlten Monat gibt es ein Haustier. Gerade hast du keine Auswahl offen.	There is a pet for every paid month. You have no choice open right now.
 Für jeden bezahlten Monat suchst du dir ein Haustier aus, es bleibt für immer.	For every paid month you pick a pet to keep forever.
@@ -3278,6 +3317,7 @@ Geldstapel	Money Stacks
 Gelöst	Solved
 Gemeinsam stark	Strong together
 Gemeinsames Konto für euch beide, kostenlos	Shared account for both of you, free
+Gemeinschaftslager und gemeinsame Ressourcen dürfen nur entsprechend den vereinbarten Regeln genutzt werden.	Shared storage and shared resources may only be used according to the agreed rules.
 Gerade	Even
 Gerade nichts bereit	Nothing ready right now
 Gerade offline	Offline right now
@@ -3336,11 +3376,15 @@ Grabe 96 Blöcke Erde, Sand oder Kies	Dig 96 blocks of dirt, sand or gravel
 Graeber	Digger
 Grenzen anzeigen	Show borders
 Grenzen hier anzeigen	Show borders here
+Griefing ist auch außerhalb von Claims verboten.	Griefing is also forbidden outside of claims.
+Griefing ist verboten. Das absichtliche Zerstören, Beschädigen oder Verändern fremder Bauwerke ist nicht erlaubt.	Griefing is forbidden. Deliberately destroying, damaging or changing other players' builds is not allowed.
+Griefing und Diebstahl	Griefing and theft
 Grottenolm	Olm
 Großartig, genau so! Hier, das hast du dir verdient.	Great, just like that! Here, you've earned this.
 Großbauer	Big farmer
 Große Gewinne beim Coinflip.	Big wins at coinflip.
 Großfang-Rolle	Big catch reel
+Großflächige Explosionen, unnötige Krater und die gezielte Zerstörung der Landschaft sind verboten.	Large-scale explosions, unnecessary craters and deliberately destroying the landscape are forbidden.
 Großmeister	Grandmaster
 Großsammler	Big collector
 Grubenmeister	Mine Master
@@ -3379,6 +3423,7 @@ Handle 40-mal mit Dorfbewohnern	Trade with villagers 40 times
 Handle 5-mal mit Dorfbewohnern	Trade with villagers 5 times
 Handwerk	Craft
 Handwerker	Craftsman
+Harmlose Streiche sind erlaubt, solange dabei keine Bauwerke beschädigt, Items gestohlen oder Spieler dauerhaft belästigt werden.	Harmless pranks are allowed as long as no builds are damaged, no items are stolen and no player is harassed over time.
 Hase	Rabbit
 Hast du schon	Already owned
 Hauptbereich	Main section
@@ -3567,6 +3612,7 @@ Jaeger	Hunter
 Je besser die Rute, desto fetter der Fang 	The better the rod, the bigger the catch 
 Je länger du auf Survival spielst, desto mehr Stufen schaltest du frei.	The longer you play in Survival, the more levels you unlock.
 Je mehr ihr zusammen spielt, desto höher steigt euer Team-Level. Das bringt mehr Plätze.	The more you play together, the higher your team level rises. That brings more slots.
+Je nach Schwere und Häufigkeit des Verstoßes können folgende Maßnahmen erfolgen:	Depending on how serious and how frequent the violation is, the following can happen:
 Jede Stufe bringt Coins und Tokens, viele auch Kisten-Schlüssel oder Juwelen.	Every level brings coins and tokens, many also crate keys or jewels.
 Jede Stufe eine Belohnung, {} statt 	A reward on every level, {} instead of 
 Jede Woche Coins, Tokens	Every week coins, tokens
@@ -3583,6 +3629,7 @@ Jeder Fang bringt Angel-Punkte für dein Level.	Every catch brings fishing point
 Jeder Fang bringt Angel-Punkte fürs Level. Schwere Fische haben mehr Sterne und bringen mehr Geld.	Every catch brings fishing points for your level. Heavy fish have more stars and bring more money.
 Jeder Klick setzt 	Each click bets
 Jeder Klick setzt <yellow>{} Chips	Each click bets <yellow>{} chips
+Jeder Spieler ist selbst dafür verantwortlich, die geltenden Regeln einzuhalten.	Every player is responsible for following the current rules.
 Jeder Wert der config.yml	Every value of the config.yml
 Jeder hat ein Home. Ab Platin kommt mit jedem Rang eins dazu, eins mehr gibt es fürs Verlinken mit Discord.	Everyone has one home. From Platin every rank adds one, and you get one more for linking Discord.
 Jeder, der diese Woche gespielt hat, ist dabei	Everyone who played this week is in
@@ -3646,6 +3693,7 @@ Kein Köder aktiv	No bait active
 Kein Name.	No name.
 Kein Schlüssel	No key
 Kein Spam, keine Werbung für andere Server, keine Caps-Flut und keine verbotenen Inhalte.	No spam, no advertising for other servers, no caps flood and no forbidden content.
+Kein Spieler erhält aufgrund seines Ranges oder seiner Spielzeit das Recht, die Regeln zu missachten.	No player gets the right to ignore the rules because of their rank or playtime.
 Kein Team	No team
 Kein Turnier aktiv.	No tournament active.
 Keine Anfrage von diesem Spieler.	No request from this player.
@@ -3787,6 +3835,7 @@ LETZTER GEWINN	LAST WIN
 LINKS:	LEFT:
 Lachs	Salmon
 Ladenschild	Shop Sign
+Lag-Maschinen und Konstruktionen, die den Server absichtlich überlasten, sind verboten.	Lag machines and contraptions that deliberately overload the server are forbidden.
 Lager	Storage
 Lager & Shop	Storage & shop
 Landclaims (Survival)	Land claims (Survival)
@@ -3935,6 +3984,7 @@ Mit /bossbar off blendest du die Leiste ganz aus, mit /bossbar on kommt sie zur�
 Mit /bossbar suchst du aus, was dort stehen soll. Auch die Uhrzeit kannst du dazuschalten.	With /bossbar you choose what it should show. You can add the time too.
 Mit /friend add schickst du einem Spieler eine Freundschaftsanfrage. Nimmt er sie an, seid ihr Freunde.	With /friend add you send a player a friend request. If they accept it, you are friends.
 Mit /grab siehst du alle deine Gräber mit Welt, Koordinaten und Restzeit.	With /grab you see all your graves with world, coordinates and time left.
+Mit /regeln und einer Zahl springst du direkt hin, zum Beispiel /regeln 3.	Use /regeln and a number to jump there, e.g. /regeln 3.
 Mit /sit setzt du dich auf den Boden, mit /lay legst du dich hin. Wer liegt, zählt beim Überspringen der Nacht mit.	With /sit you sit on the ground, with /lay you lie down. Whoever lies down counts for skipping the night.
 Mit /stats siehst du unter anderem deine Spielzeit, wie viel du abgebaut hast und wie oft du gestorben bist.	With /stats you see, among other things, your playtime, how much you mined and how often you died.
 Mit <white>/bank</white> eröffnet ihr ein Ehe-Konto, mit <white>/marry tp</white> springst du zu deinem Schatz.	With <white>/bank</white> you open a marriage account, with <white>/marry tp</white> you jump to your sweetheart.
@@ -4114,6 +4164,7 @@ Nächste Seite	Next page
 Nächste Seite »	Next page »
 Nächste Stufe: 	Next level: 
 Nächste Stufen	Next levels
+Nächster Paragraph	Next section
 Nächster Song	Next song
 Näher an 21 als der Dealer	Closer to 21 than the dealer
 OK: {} für 	OK: {} for
@@ -4136,11 +4187,13 @@ Paar	Pair
 Papagei	Parrot
 Papageifisch	Parrotfish
 Papierstapel	Paper Stack
+Paragraph {} von {}	Section {} of {}
 Partikel & Effekte	Particles & effects
 Partikel von Hüten, Teleports, Casino und Kisten.	Particles of hats, teleports, casino and crates.
 Partyhut	Party hat
 Pay-Bestätigung	Pay confirmation
 Perlchen	Pearlie
+Permanenter Bann	Permanent ban
 Pet Ozelot	Pet ocelot
 Pet {} · alle Diamant-Vorteile	Pet {} · all Diamond perks
 Pet {} · alle Platin-Vorteile	Pet {} · all Platinum perks
@@ -4192,6 +4245,7 @@ Premium-Pass	Premium pass
 Premium-Pass: Preis	Premium pass: price
 Priester	Priest
 Priester steht. Wer gefragt wurde, sagt mit Rechtsklick auf ihn Ja (beide in {} Blöcken).	Priest placed. Whoever was asked says yes with a right-click on him (both within {} blocks).
+Private Daten anderer Personen dürfen nicht ohne deren Zustimmung veröffentlicht werden.	Other people's private data must not be published without their consent.
 Private Nachricht senden	Send a private message
 Private Nachrichten	Private messages
 Pro Person ein Account zum Farmen von Belohnungen. Accounts teilen und verkaufen ist verboten.	One account per person for farming rewards. Sharing and selling accounts is forbidden.
@@ -4205,6 +4259,7 @@ Prämie	Bounty
 Punkte pro Stufe	Points per level
 Puppenkopf	Mannequin Head
 PvP ist nicht verfügbar (KubySMP fehlt).	PvP isn't available (KubySMP is missing).
+PvP ist nur mit Zustimmung aller Beteiligten erlaubt.	PvP is only allowed if everyone involved agrees.
 PvP, Kopfgelder, Turniere	PvP, bounties, tournaments
 PvP: Neulingsschutz	PvP: newcomer protection
 PvP: Spawn-Schutz	PvP: spawn protection
@@ -4306,6 +4361,7 @@ Ränge, Battle Pass, Schlüssel und Pakete für einen anderen Spieler kaufen, be
 Ränge, Keys und Pakete kannst du auch an andere Spieler verschenken. Bezahlt wird mit deinen Juwelen.	You can also gift ranks, keys and packages to other players. They are paid with your jewels.
 Ränge, Keys, Möbel und mehr	Ranks, keys, furniture and more
 Ränge, Keys, Pakete, Möbel, Pets und Tokens für einen anderen Spieler kaufen, bezahlt mit deinen Juwelen.	Buy ranks, keys, bundles, furniture, pets and tokens for another player, paid with your jewels.
+Rückgängigmachung von Schäden, soweit möglich	Undoing damage where possible
 Rückkehr-Punkt	Return point
 Rückkehr-Punkt gesetzt.	Return point set.
 Rückkehr-Punkt gesetzt. Nach dem Ziel landest du hier.	Return point set. After the finish you land here.
@@ -4356,6 +4412,7 @@ Schleim	Slime
 Schließen	Close
 Schließen kann nur, wer das Ticket geschrieben hat, oder das Team.	Only whoever wrote the ticket, or the team, can close it.
 Schließfach	Locker
+Schlussbestimmungen	Final provisions
 Schlüssel	Keys
 Schlüssel durch Voten	Keys by voting
 Schlüssel einlösen und gewinnen	Redeem keys and win
@@ -4411,10 +4468,13 @@ Senden	Send
 Server-Booster tragen im Spiel den Tag 	Server boosters wear the tag 
 Server-Meldungen und Tipps im Chat. Wichtige Ansagen kommen immer durch.	Server messages and tips in chat. Important announcements always get through.
 Server-Rekord	Server record
+Serverregeln	Server rules
+Serverteam	Server team
 Servierwagen	Serving Cart
 Sessel	Armchair
 Sesshaft	Settled
 Setz deine 	Place your
+Setze Claims nicht absichtlich so, dass fremde Bauprojekte, öffentliche Wege oder Gemeinschaftsbereiche blockiert werden.	Don't place claims on purpose so that they block other players' projects, public paths or community areas.
 Setze erst beide Ecken mit der Blaze Rod im Bearbeitungsmodus.	First set both corners with the blaze rod in edit mode.
 Setze erst beide Ecken: /kp angel pos1 und /kp angel pos2.	Set both corners first: /kp angel pos1 and /kp angel pos2.
 Setzen	Place bet
@@ -4454,6 +4514,7 @@ So funktioniert das Spiel	How the game works
 So funktioniert's	How it works
 So geht's	How it works
 So heißt schon eins deiner Konten.	One of your accounts already has that name.
+So spielen wir	How we play
 So startest du auf Survival	How to start in Survival
 So verlinkst du dich	How to link
 So viel ist nicht auf dem Konto.	There isn't that much in the account.
@@ -4471,8 +4532,10 @@ Sound-Key eingeben (z. B. minecraft:music.game) oder 'aus':	Enter a sound key (e
 Soundeffekte	Sound effects
 Souverän	Sovereign
 Sozial & Extras	Social & extras
+Spam, übermäßiger Capslock und das wiederholte Stören des Chats sind zu vermeiden.	Avoid spam, excessive caps lock and repeatedly disrupting the chat.
 Spawn, Casino, Claim	spawn, casino, claim
 Spawn, Grundstück, Wildnis, Farmwelt	Spawn, plot, wilderness, farm world
+Spawn, öffentliche Wege und Gemeinschaftsprojekte dürfen nicht ohne Erlaubnis verändert oder beschädigt werden.	Spawn, public paths and community projects must not be changed or damaged without permission.
 Speichern, Quiz, Ankündigungen	Saving, quiz, announcements
 Spiegel	Mirror
 Spiel 1 Stunde auf dem Server	Play 1 hour on the server
@@ -4485,6 +4548,7 @@ Spiele 6 Stunden in Survival	Play 6 hours in Survival
 Spiele wieder freigeben	Release games again
 Spieler	Players
 Spieler 	Player
+Spieler dürfen nicht absichtlich getötet werden, um ihre Items zu stehlen.	Players must not be killed on purpose to steal their items.
 Spieler einladen	Invite a player
 Spieler einladen (nur Teamchef)	Invite a player (team leader only)
 Spieler melden	Report a player
@@ -4552,7 +4616,10 @@ Stimme jeden Tag auf den Vote-Seiten für den Server ab. Für jede Stimme gibt e
 Stirbst du, entsteht an der Stelle ein Grabstein. Darin liegen alle deine Sachen und deine XP.	When you die, a gravestone appears at that spot. It holds all your things and your XP.
 Stoffbahn {}	Fabric Drape {}
 Stoffstapel {}	Fabric Stack {}
+Strafen	Penalties
 Straße	Straight
+Streitigkeiten sind friedlich zu klären. Wenn keine Einigung möglich ist, kann das Serverteam kontaktiert werden.	Settle disputes peacefully. If no agreement is possible, you can contact the server team.
+Streitigkeiten sind nicht durch wiederholte Provokationen oder Spam im öffentlichen Chat auszutragen.	Don't carry out disputes in public chat with repeated provocation or spam.
 Strohhut	Straw hat
 Stufe	Level
 Stufe 	Level 
@@ -4592,6 +4659,8 @@ Süd	South
 Südost	Southeast
 Südwest	Southwest
 TNT rot	Red TNT
+TNT, Lava, Feuer, Creeper und andere Spielmechaniken dürfen nicht zur Zerstörung fremder Bauwerke eingesetzt werden.	TNT, lava, fire, creepers and other game mechanics must not be used to destroy other players' builds.
+TNT-Duper, TNT-Kanonen und vergleichbare Maschinen dürfen nicht zur Zerstörung oder Verwüstung der Bauwelt eingesetzt werden.	TNT dupers, TNT cannons and similar machines must not be used to destroy or devastate the build world.
 TOD & GRÄBER	DEATH & GRAVES
 TODE	DEATHS
 TPA- und TPAhere-Anfragen sind aus.	TPA and TPAhere requests are off.
@@ -4647,6 +4716,8 @@ Teleport-Anfrage senden	Send a teleport request
 Teleport-Anfragen von diesen Spielern sofort annehmen.	Accept teleport requests from these players at once.
 Teleport-Wartezeit	Teleport waiting time
 Teleportieren	Teleport
+Temporärer Bann	Temporary ban
+Temporärer Chat-Mute	Temporary chat mute
 Teufelshörner	Devil horns
 Text für den Marker eingeben:	Enter the text for the marker:
 Text gespeichert.	Text saved.
@@ -4739,6 +4810,7 @@ Unbekannter Befehl. 	Unknown command.
 Unbekannter Meilenstein.	Unknown milestone.
 Unbekanntes Modell. Siehe /kp item list	Unknown model. See /kp item list
 Unentschieden	Push
+Unerlaubte Bots, Makros und Automatisierungen sind verboten, wenn sie gegen die Serverregeln verstoßen oder unfaire Vorteile verschaffen.	Unauthorised bots, macros and automation are forbidden if they break the server rules or give unfair advantages.
 Unermüdlicher	Tireless One
 Ungerade	Odd
 Ungewöhnlich	Uncommon
@@ -4767,7 +4839,9 @@ Urgestein	Old-Timer
 VIP Rang	VIP rank
 Verbessere deine Angel dauerhaft	Improve your rod permanently
 Verdient	Earned
+Vereinbarte Handelsgeschäfte sind einzuhalten.	Keep to the trades you agree on.
 Verfolgte Quest mit Fortschritt	Tracked quest with progress
+Vergib Baurechte nur an Spieler, denen du vertraust. Missbrauch von Claim-Berechtigungen bleibt verboten.	Only give build rights to players you trust. Abusing claim permissions remains forbidden.
 Verheiratet seit 	Married since 
 Verheiratet steht ein Herz vor deinem Namen im Chat.	When you're married, a heart shows before your name in chat.
 Verheiratet steht ein Herz vor eurem Namen im Chat und in der Tab-Liste.	When you're married, a heart shows before your names in chat and in the tab list.
@@ -4796,7 +4870,9 @@ Verloren	Lost
 Verlust	Loss
 Verpasste Nachrichten lesen	Read missed messages
 Verschenken geht nur an Spieler, die gerade online sind.	Gifts only work for players who are online right now.
+Versehentliche Schäden sind dem Eigentümer oder dem Serverteam zu melden.	Report accidental damage to the owner or the server team.
 Versicherung	Insurance
+Verwarnung	Warning
 Verzaubere 15 Gegenstände	Enchant 15 items
 Verzaubere 5 Gegenstände	Enchant 5 items
 Verzauberer	Enchanter
@@ -4813,6 +4889,7 @@ Vor jeder Überweisung mit /pay nachfragen.	Ask before every transfer with /pay.
 Vorhang {}	Curtain {}
 Vorherige Stufen	Previous levels
 Vorige Seite	Previous page
+Voriger Paragraph	Previous section
 Vorratskiste {}	Storage Crate {}
 Vorteile ansehen	View perks
 Vorteile und Store-Link	Perks and store link
@@ -4869,6 +4946,7 @@ Wer gegen die Regeln verstößt, kann verwarnt, gemutet oder gebannt werden. Sie
 Wer online ist, wo, und nachspringen	Who is online, where, and jump to them
 Wer schon lange spielt und seinen Discord verlinkt hat, kann selbst Helfer werden.	If you have played for a long time and linked your Discord, you can become a helper yourself.
 Wer viele Tage hintereinander votet, baut eine Serie auf: ab 10 Tagen gibt es je Vote-Tag 250 Coins extra, ab 25 Tagen 500 und ab 50 Tagen 1.000. Die besten Voter des Monats bekommen extra Preise.	If you vote many days in a row, you build a streak: from 10 days you get 250 extra coins per vote day, from 25 days 500 and from 50 days 1,000. The best voters of the month get extra prizes.
+Werbung für andere Server oder externe Projekte ist ohne Erlaubnis des Teams nicht gestattet.	Advertising other servers or outside projects is not allowed without the team's permission.
 Werkbank & Endertruhe	Workbench & ender chest
 Werkbank immer dabei	Crafting table always with you
 Wert ab dem Items gesichert sind	Value from which items are protected
@@ -4993,6 +5071,7 @@ Zur Bauwelt	To the build world
 Zur Kirche	To church
 Zur Kirche teleportieren	Teleport to the church
 Zur Lobby wechseln	Switch to the lobby
+Zur Übersicht	To the overview
 Zurück	Back
 Zurück zu den Einstellungen	Back to the settings
 Zurück zum Fischbuch	Back to the fish book
@@ -5004,6 +5083,7 @@ Zurückziehen	Withdraw
 Zusammen spielen	Play together
 Zuschlag je Liga Unterschied	Bonus per league difference
 Zuschlag pro Stufe	Bonus per level
+Zusätzliche technische Einschränkungen des Servers sind einzuhalten.	Follow the server's additional technical limits.
 Zwei Kirschen!	Two cherries!
 Zwei Paare	Two pair
 Zweimal klicken zum Kaufen	Click twice to buy
@@ -5125,6 +5205,7 @@ zweiter Beruf	second job
 {} hat {} schon.	{} already has {}.
 {} € im Monat	€{} per month
 {}, Abo, jederzeit kündbar.	{}, subscription, cancel anytime.
+§{} {} lesen	Read §{} {}
 « Vorige Seite	« Previous page
 Öffentlicher Chat	Public chat
 Öffnen	Open

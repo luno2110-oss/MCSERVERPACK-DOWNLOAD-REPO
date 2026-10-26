@@ -759,6 +759,9 @@ public final class KubyPlugins extends JavaPlugin {
     public JewelStoreService jewelStore() { return jewelStore; }
     private de.kuby.kubyplugins.support.SupportService support;
     public de.kuby.kubyplugins.support.SupportService support() { return support; }
+    private final de.kuby.kubyplugins.service.RulesBook rulesBook = new de.kuby.kubyplugins.service.RulesBook(this);
+    /** Serverregeln aus regeln.yml (/regeln). */
+    public de.kuby.kubyplugins.service.RulesBook rules() { return rulesBook; }
     public TeleportEffectService teleportFx() { return teleportFx; }
     public VisibilityService visibility() { return visibility; }
     public QuizService quiz() { return quiz; }

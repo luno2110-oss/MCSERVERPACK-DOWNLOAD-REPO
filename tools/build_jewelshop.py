@@ -16,7 +16,9 @@ ASSETS = os.path.join(HERE, "assets", "jewelshop")
 ASSETS_SURVIVAL = os.path.join(HERE, "assets", "jewelshop_survival")
 # Spielzeit (Release „Neue-referenzen“, extract_playtime.py): Präfix pt_, dazu Balken-Verläufe (strip_)
 ASSETS_PLAYTIME = os.path.join(HERE, "assets", "playtime")
-SETS = ((ASSETS, "js_"), (ASSETS_SURVIVAL, "jss_"), (ASSETS_PLAYTIME, "pt_"))
+# Regeln (Release „Neue-referenzen“, extract_rules.py): Präfix rg_
+ASSETS_RULES = os.path.join(HERE, "assets", "rules")
+SETS = ((ASSETS, "js_"), (ASSETS_SURVIVAL, "jss_"), (ASSETS_PLAYTIME, "pt_"), (ASSETS_RULES, "rg_"))
 
 
 def available():

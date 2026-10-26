@@ -234,6 +234,19 @@ final class SelfTest {
             else fails.add("Spielzeit " + mode + ": Schlüssel ohne Art oder Kiste " + bad);
         }
 
+        // Regeln: Übersicht und alle Paragraphen aus regeln.yml
+        de.kuby.kubyplugins.service.RulesBook.Book book = plugin.rules().book();
+        de.kuby.kubyplugins.gui.RulesScreen.Actions ra = new de.kuby.kubyplugins.gui.RulesScreen.Actions() {
+            public Consumer<Player> paragraph(int i) { return NO; }
+            public Consumer<Player> overview() { return NO; }
+        };
+        if (book.paragraphs().isEmpty()) fails.add("Regeln: regeln.yml ohne Paragraphen");
+        canvas.accept("Regeln", () -> de.kuby.kubyplugins.gui.RulesScreen.overview(book, ra));
+        for (int i = 0; i < book.paragraphs().size(); i++) {
+            int k = i;
+            canvas.accept("Regeln §" + (i + 1), () -> de.kuby.kubyplugins.gui.RulesScreen.paragraph(book, k, ra));
+        }
+
         // Prüfungen aus den Addons (z. B. Survival-Juwelenshop, Möbel- und Pet-Katalog)
         for (java.util.Map.Entry<String, Supplier<Canvas>> en : plugin.selfTestCanvases().entrySet()) {
             canvas.accept(en.getKey(), en.getValue());

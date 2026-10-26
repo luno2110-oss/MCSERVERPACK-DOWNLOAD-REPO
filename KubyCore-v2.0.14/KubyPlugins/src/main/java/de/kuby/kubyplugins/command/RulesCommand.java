@@ -1,6 +1,8 @@
 package de.kuby.kubyplugins.command;
 
 import de.kuby.kubyplugins.KubyPlugins;
+import de.kuby.kubyplugins.gui.RulesScreen;
+import de.kuby.kubyplugins.service.RulesBook;
 import de.kuby.kubyplugins.util.Msg;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -23,7 +25,8 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * /regeln [Nummer]: Paragraphen aus der Config (rules.list, Format "Titel;Text").
+ * /regeln [Nummer]: die Serverregeln aus regeln.yml (RulesBook) als Dialog (Übersicht oder ein Paragraph); ohne Grafik-Pack
+ * und in der Konsole als Text im Chat.
  * /report <Spieler> [Grund]: Meldung an alle mit kuby.report.see, dazu ein Eintrag in reports.log. Sperre zwischen Meldungen.
  */
 public final class RulesCommand implements CommandExecutor, TabCompleter {
@@ -35,11 +38,23 @@ public final class RulesCommand implements CommandExecutor, TabCompleter {
         this.plugin = plugin;
     }
 
+    /** [Titel, ganzer Text] je Paragraph (für den Chat). */
     private List<String[]> rules() {
         List<String[]> out = new ArrayList<>();
-        for (String line : plugin.getConfig().getStringList("rules.list")) {
-            int i = line.indexOf(';');
-            out.add(i < 0 ? new String[]{line, ""} : new String[]{line.substring(0, i).trim(), line.substring(i + 1).trim()});
+        int n = 0;
+        for (RulesBook.Paragraph p : plugin.rules().book().paragraphs()) {
+            n++;
+            List<String> parts = new ArrayList<>();
+            int k = 0;
+            for (List<RulesBook.Point> box : p.boxes()) {
+                for (RulesBook.Point pt : box) {
+                    StringBuilder sb = new StringBuilder(p.bullets() ? "• " : n + "." + (++k) + " ");
+                    sb.append(pt.text());
+                    for (String sub : pt.subs()) sb.append(" – ").append(sub);
+                    parts.add(sb.toString());
+                }
+            }
+            out.add(new String[]{p.title(), String.join("\n", parts)});
         }
         return out;
     }
@@ -50,6 +65,18 @@ public final class RulesCommand implements CommandExecutor, TabCompleter {
         List<String[]> rules = rules();
         if (rules.isEmpty()) {
             Msg.send(sender, "<gray>Es sind noch keine Regeln eingetragen.");
+            return true;
+        }
+        if (sender instanceof Player pl && plugin.uiPack().active(pl)) {
+            int n = 0;
+            if (args.length > 0) {
+                try {
+                    n = Integer.parseInt(args[0].replace("§", ""));
+                } catch (NumberFormatException ignored) {
+                    n = 0;
+                }
+            }
+            new RulesScreen(plugin).show(pl, n >= 1 && n <= rules.size() ? n - 1 : -1);
             return true;
         }
         if (args.length > 0) {
