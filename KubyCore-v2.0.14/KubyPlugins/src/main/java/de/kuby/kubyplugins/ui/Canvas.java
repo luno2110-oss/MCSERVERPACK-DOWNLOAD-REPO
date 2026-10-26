@@ -1,5 +1,7 @@
 package de.kuby.kubyplugins.ui;
 
+import de.kuby.kubyplugins.util.I18n;
+
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
@@ -110,7 +112,7 @@ public final class Canvas {
      * "Einstellungen" grau oder "Juwelenshop" grün wie in der Referenz.
      */
     public Canvas heading(String text, TextColor color) {
-        heading = Component.text(text, color);
+        heading = Component.text(I18n.ctx(text), color);
         return this;
     }
 
@@ -122,8 +124,12 @@ public final class Canvas {
     // Text
     // =================================================================================================================
 
-    /** Vorschub eines Textes in der Vanilla-Schrift (fett: +1 je Zeichen, auch Leerzeichen). */
+    /**
+     * Vorschub eines Textes in der Vanilla-Schrift (fett: +1 je Zeichen, auch Leerzeichen). Wie alle Text-Methoden hier
+     * im Sprach-Kontext übersetzt (I18n), damit Breiten zum angezeigten Text passen.
+     */
     public static int width(String text, boolean bold) {
+        text = I18n.ctx(text);
         int w = 0;
         for (int i = 0; i < text.length(); i++) {
             w += advance(text.charAt(i)) + (bold ? 1 : 0);
@@ -156,6 +162,7 @@ public final class Canvas {
 
     /** Ersetzt Zeichen, die die Kit-Schrift nicht kennt, durch '?'. */
     public static String clean(String text) {
+        text = I18n.ctx(text);
         StringBuilder sb = new StringBuilder(text.length());
         for (int i = 0; i < text.length(); i++) {
             char c = text.charAt(i);
@@ -166,6 +173,7 @@ public final class Canvas {
 
     /** Kürzt Text mit "..." auf höchstens max Pixel. */
     public static String fit(String text, boolean bold, int max) {
+        text = I18n.ctx(text);
         if (width(text, bold) <= max) return text;
         String dots = "...";
         int budget = max - width(dots, bold);
@@ -182,6 +190,7 @@ public final class Canvas {
 
     /** Bricht Text an Leerzeichen um, sodass jede Zeile höchstens max Pixel breit ist. */
     public static List<String> wrap(String text, int max) {
+        text = I18n.ctx(text);
         List<String> out = new ArrayList<>();
         for (String para : text.split("\\R", -1)) {
             StringBuilder line = new StringBuilder();
@@ -496,6 +505,7 @@ public final class Canvas {
     }
 
     private static String titleText(String text) {
+        text = I18n.ctx(text);
         StringBuilder sb = new StringBuilder(text.length());
         for (char c : text.toUpperCase(java.util.Locale.ROOT).toCharArray()) {
             sb.append(KitData.TITLE_CHARS.indexOf(c) < 0 ? '?' : c);
@@ -533,6 +543,7 @@ public final class Canvas {
 
     /** Small Caps für die Kit-Schriften (ᴀʙᴄ ..., mit eigenen Umlauten ᴀ̈ ᴏ̈ ᴜ̈). */
     public static String caps(String text) {
+        text = I18n.ctx(text);
         StringBuilder sb = new StringBuilder(text.length());
         for (char c : text.toLowerCase(java.util.Locale.ROOT).toCharArray()) {
             switch (c) {
@@ -554,13 +565,13 @@ public final class Canvas {
 
     /** Macht ein Rechteck klickbar; alle Zeichen, deren Mitte darin liegt, bekommen Klick und Tooltip. */
     public Canvas action(int x, int y, int w, int h, Consumer<Player> onClick, Component hover) {
-        regions.add(new Region(x, y, w, h, onClick, hover, null));
+        regions.add(new Region(x, y, w, h, onClick, I18n.ctx(hover), null));
         return this;
     }
 
     /** Macht ein Rechteck zu einem Link (Minecraft fragt vor dem Öffnen im Browser nach). */
     public Canvas actionUrl(int x, int y, int w, int h, String url, Component hover) {
-        regions.add(new Region(x, y, w, h, null, hover, url));
+        regions.add(new Region(x, y, w, h, null, I18n.ctx(hover), url));
         return this;
     }
 

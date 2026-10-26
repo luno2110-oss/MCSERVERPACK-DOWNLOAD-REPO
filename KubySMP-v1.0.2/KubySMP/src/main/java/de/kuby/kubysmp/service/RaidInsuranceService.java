@@ -156,8 +156,8 @@ public final class RaidInsuranceService {
         if (breaker != null) {
             Msg.send(breaker, "<gray>Du hast eine versicherte Kiste geraidet. Der Besitzer bekommt eine Auszahlung.");
         }
-        plugin.notifications().send("notify.broadcast", Msg.parse("<red>Raid-Alarm <gray>bei einer versicherten Kiste ("
-                + Msg.escape(where) + ")"));
+        plugin.notifications().send("notify.broadcast", "<red>Raid-Alarm <gray>bei einer versicherten Kiste ("
+                + Msg.escape(where) + ")");
     }
 
     /** Partikelrahmen um jede versicherte Kiste, sichtbar für Spieler in der Nähe. */

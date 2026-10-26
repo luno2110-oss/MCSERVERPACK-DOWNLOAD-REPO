@@ -290,7 +290,7 @@ public final class MarryService implements Listener {
         }, 0L, 5L);
         String msg = HEART + "<white>" + a.getName() + " <gray>und <white>" + b.getName()
                 + " <gray>haben sich in der Kirche das Ja-Wort gegeben!";
-        core.notifications().send("notify.wedding", Msg.parse(msg), o -> survival(o) || o.equals(a) || o.equals(b));
+        core.notifications().send("notify.wedding", msg, o -> survival(o) || o.equals(a) || o.equals(b));
     }
 
     // =================================================================================================================

@@ -298,8 +298,8 @@ public final class SlotsService implements Listener {
             p.showTitle(Title.title(Msg.parse("<b><gradient:#FFE070:#F2A21C>JACKPOT!</gradient></b>"),
                     Msg.parse("<yellow>+" + CasinoText.chips(pay)), Title.Times.times(Duration.ofMillis(200), Duration.ofSeconds(3), Duration.ofMillis(600))));
             CasinoFx.jackpot(plugin, p.getUniqueId(), fx, pay);
-            plugin.notifications().send("notify.jackpot", Msg.parse(CasinoText.PREFIX + "<yellow><b>" + Msg.escape(p.getName()) + "</b> knackt den Slots-Jackpot: <gold>"
-                    + CasinoText.chips(pay) + "</gold>!"));
+            plugin.notifications().send("notify.jackpot", CasinoText.PREFIX + "<yellow><b>" + Msg.escape(p.getName()) + "</b> knackt den Slots-Jackpot: <gold>"
+                    + CasinoText.chips(pay) + "</gold>!");
         } else if (pay >= bet * 20) {
             CasinoFx.show(plugin, p.getUniqueId(), fx, CasinoFx.Result.BIG_WIN, pay - bet);
         }

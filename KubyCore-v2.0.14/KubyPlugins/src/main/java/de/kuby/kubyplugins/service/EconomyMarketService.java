@@ -204,9 +204,9 @@ public final class EconomyMarketService implements ModeData {
                 if (isActive(id) && effective < minPrice(r)) {
                     active.put(id, false);
                     pool.put(id, pool.getOrDefault(id, 0.0) * 0.5);
-                    plugin.notifications().send("notify.broadcast", Msg.parse("<gray>Der Markt hat <white>"
+                    plugin.notifications().send("notify.broadcast", "<gray>Der Markt hat <white>"
                             + it.material().name().toLowerCase(java.util.Locale.ROOT).replace('_', ' ')
-                            + " <gray>aus dem Shop genommen. Anteilseigner haben Verluste."));
+                            + " <gray>aus dem Shop genommen. Anteilseigner haben Verluste.");
                 }
             }
         }

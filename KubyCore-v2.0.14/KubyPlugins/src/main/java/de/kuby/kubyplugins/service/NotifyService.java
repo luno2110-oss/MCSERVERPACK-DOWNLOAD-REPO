@@ -32,15 +32,23 @@ public final class NotifyService {
         send(key, msg, p -> true);
     }
 
+    /** Text (MiniMessage) an alle mit eingeschaltetem Schalter key, je Empfänger in seiner Sprache. */
     public void send(String key, String mini) {
-        send(key, Msg.parse(mini));
+        send(key, mini, p -> true);
+    }
+
+    public void send(String key, String mini, Predicate<Player> filter) {
+        Bukkit.getConsoleSender().sendMessage(Msg.parse(mini));
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            if (filter.test(p) && wants(p, key)) Msg.raw(p, mini);
+        }
     }
 
     /** Nur an Spieler, die zusätzlich filter erfüllen (z. B. nur im Survival). */
     public void send(String key, Component msg, Predicate<Player> filter) {
         Bukkit.getConsoleSender().sendMessage(msg);
         for (Player p : Bukkit.getOnlinePlayers()) {
-            if (filter.test(p) && wants(p, key)) p.sendMessage(msg);
+            if (filter.test(p) && wants(p, key)) Msg.send(p, msg);
         }
     }
 

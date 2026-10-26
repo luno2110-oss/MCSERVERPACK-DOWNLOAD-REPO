@@ -91,7 +91,7 @@ public final class UiClicks implements Listener {
     private static void run(Player player, Consumer<Player> action) {
         if (!player.isOnline()) return;
         try {
-            action.accept(player);
+            de.kuby.kubyplugins.util.I18n.as(player, () -> action.accept(player));
         } catch (RuntimeException e) {
             plugin.getLogger().warning("Fehler bei Menü-Klick von " + player.getName() + ": " + e);
             e.printStackTrace();

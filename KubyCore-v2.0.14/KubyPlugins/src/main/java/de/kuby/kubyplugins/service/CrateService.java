@@ -360,8 +360,8 @@ public final class CrateService implements Listener {
         Msg.send(p, "<#F0A050><b>KISTE</b> <dark_gray>▶ <gray>" + Msg.escape(c.name()) + ": <" + col + "><b>" + Msg.escape(r.name())
                 + "</b></" + col + "> <dark_gray>(" + String.format(Locale.GERMANY, "%.1f", ch) + " %)");
         if (ch < 1.5) {
-            plugin.notifications().send("notify.crate", Msg.parse("<#F0A050><b>KISTE</b> <dark_gray>▶ <white>" + p.getName() + " <gray>hat <" + col + ">"
-                    + Msg.escape(r.name()) + "</" + col + "> <gray>aus der " + Msg.escape(c.name()) + " gezogen!"));
+            plugin.notifications().send("notify.crate", "<#F0A050><b>KISTE</b> <dark_gray>▶ <white>" + p.getName() + " <gray>hat <" + col + ">"
+                    + Msg.escape(r.name()) + "</" + col + "> <gray>aus der " + Msg.escape(c.name()) + " gezogen!");
         }
         Sfx.play(plugin, p, ch < 5 ? Sfx.Kind.SUCCESS_BIG : Sfx.Kind.SUCCESS);
     }

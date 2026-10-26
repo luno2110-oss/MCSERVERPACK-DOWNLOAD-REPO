@@ -28,7 +28,7 @@ public abstract class GuiMenu implements InventoryHolder {
 
     protected GuiMenu(KubyPlugins plugin, Component title, int rows) {
         this.plugin = plugin;
-        this.inventory = Bukkit.createInventory(this, rows * 9, title);
+        this.inventory = Bukkit.createInventory(this, rows * 9, de.kuby.kubyplugins.util.I18n.ctx(title));
     }
 
     @Override
@@ -39,7 +39,7 @@ public abstract class GuiMenu implements InventoryHolder {
     public void open(Player player) {
         inventory.clear();
         actions.clear();
-        build(player);
+        de.kuby.kubyplugins.util.I18n.as(player, () -> build(player));
         if (fillEmpty()) {
             for (int i = 0; i < inventory.getSize(); i++) {
                 if (inventory.getItem(i) == null) inventory.setItem(i, Items.filler());
@@ -60,7 +60,7 @@ public abstract class GuiMenu implements InventoryHolder {
     public void refresh(Player player) {
         inventory.clear();
         actions.clear();
-        build(player);
+        de.kuby.kubyplugins.util.I18n.as(player, () -> build(player));
         if (fillEmpty()) {
             for (int i = 0; i < inventory.getSize(); i++) {
                 if (inventory.getItem(i) == null) inventory.setItem(i, Items.filler());

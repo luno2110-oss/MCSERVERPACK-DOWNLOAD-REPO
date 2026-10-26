@@ -168,6 +168,7 @@ public final class KubyPlugins extends JavaPlugin {
         stats = new StatsService(this);
         prompts = new PromptService(this);
         playerSettings = new de.kuby.kubyplugins.service.PlayerSettings(this);
+        loadLanguage();
         notifications = new de.kuby.kubyplugins.service.NotifyService(this);
         dailyPot = new DailyPotService(this);
         tags = new TagService(this);
@@ -388,6 +389,7 @@ public final class KubyPlugins extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ModeListener(this), this);
         getServer().getPluginManager().registerEvents(new XpSourceListener(this), this);
         getServer().getPluginManager().registerEvents(new de.kuby.kubyplugins.listener.BattlepassListener(this), this);
+        getServer().getPluginManager().registerEvents(new de.kuby.kubyplugins.listener.LanguageListener(this), this);
         battlepass.start();
         getServer().getPluginManager().registerEvents(new de.kuby.kubyplugins.listener.ModelListener(this), this);
         getServer().getPluginManager().registerEvents(new WorldBorderListener(this), this);
@@ -418,6 +420,23 @@ public final class KubyPlugins extends JavaPlugin {
 
         // Autosave alle 5 Minuten, synchron, damit die Maps nicht parallel verändert werden
         getServer().getScheduler().runTaskTimer(this, this::saveAll, 6000L, 6000L);
+    }
+
+    /**
+     * Englische Vorlagen laden (12.7): lang/en.tsv aus dem Plugin, danach plugins/KubyPlugins/lang/en.tsv
+     * (eigene Ergänzungen und Korrekturen, gleiche Form: deutsch TAB englisch).
+     */
+    public void loadLanguage() {
+        de.kuby.kubyplugins.util.I18n.resolver(id -> playerSettings != null && playerSettings.english(id));
+        java.util.List<java.io.InputStream> in = new java.util.ArrayList<>();
+        in.add(getResource("lang/en.tsv"));
+        java.io.File own = new java.io.File(getDataFolder(), "lang/en.tsv");
+        try {
+            if (own.isFile()) in.add(new java.io.FileInputStream(own));
+        } catch (java.io.FileNotFoundException ignored) {
+            // nicht da
+        }
+        de.kuby.kubyplugins.util.I18n.load(in, getLogger());
     }
 
     private void setAll(CommandExecutor executor, String... names) {

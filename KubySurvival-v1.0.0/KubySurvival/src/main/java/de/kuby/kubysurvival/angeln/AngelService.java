@@ -887,8 +887,8 @@ public final class AngelService {
         tournament.clear();
         tournamentEnds = System.currentTimeMillis() + minutes * 60_000L;
         save();
-        core.notifications().send("notify.angel", Msg.parse("<aqua><b>ANGEL-TURNIER</b> <dark_gray>▶ <white>Startet jetzt für " + minutes
-                + " Minuten! <gray>Das größte Gesamtgewicht gewinnt. /angeln"));
+        core.notifications().send("notify.angel", "<aqua><b>ANGEL-TURNIER</b> <dark_gray>▶ <white>Startet jetzt für " + minutes
+                + " Minuten! <gray>Das größte Gesamtgewicht gewinnt. /angeln");
         return null;
     }
 
@@ -909,14 +909,14 @@ public final class AngelService {
         List<Map.Entry<UUID, Double>> top = tournamentTop(10);
         List<Long> rewards = core.getConfig().getLongList("angeln.tournament.rewards");
         if (rewards.isEmpty()) rewards = List.of(5000L, 2500L, 1000L);
-        core.notifications().send("notify.angel", Msg.parse("<aqua><b>ANGEL-TURNIER</b> <dark_gray>▶ <white>Das Turnier ist vorbei!"));
-        if (top.isEmpty()) core.notifications().send("notify.angel", Msg.parse("<gray>Niemand hat etwas gefangen."));
+        core.notifications().send("notify.angel", "<aqua><b>ANGEL-TURNIER</b> <dark_gray>▶ <white>Das Turnier ist vorbei!");
+        if (top.isEmpty()) core.notifications().send("notify.angel", "<gray>Niemand hat etwas gefangen.");
         for (int i = 0; i < Math.min(rewards.size(), top.size()); i++) {
             UUID id = top.get(i).getKey();
             long money = rewards.get(i);
             pendingMoney.merge(id, money, Long::sum);
-            core.notifications().send("notify.angel", Msg.parse("<gold>" + (i + 1) + ". <white>" + nameOf(id) + " <gray>"
-                    + AngelText.kg(top.get(i).getValue()) + " <gold>+" + AngelText.money(money)));
+            core.notifications().send("notify.angel", "<gold>" + (i + 1) + ". <white>" + nameOf(id) + " <gray>"
+                    + AngelText.kg(top.get(i).getValue()) + " <gold>+" + AngelText.money(money));
         }
         tournament.clear();
         save();

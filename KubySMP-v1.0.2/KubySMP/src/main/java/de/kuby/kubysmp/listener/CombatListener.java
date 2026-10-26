@@ -71,9 +71,9 @@ public final class CombatListener implements Listener {
         if (bounty > 0) {
             plugin.economy().deposit(killer.getUniqueId(), bounty);
             Sfx.play(plugin, killer, Sfx.Kind.BOUNTY);
-            plugin.notifications().send("notify.duel", Msg.parse("<gold>Kopfgeld! <white>" + killer.getName()
+            plugin.notifications().send("notify.duel", "<gold>Kopfgeld! <white>" + killer.getName()
                     + " <gray>hat <white>" + victim.getName() + " <gray>erledigt und <gold>"
-                    + Msg.coins(bounty) + "$ <gray>kassiert."));
+                    + Msg.coins(bounty) + "$ <gray>kassiert.");
         }
         Sfx.play(plugin, killer, Sfx.Kind.KILL);
         Msg.send(killer, "<green>+" + res.gained()
@@ -95,7 +95,7 @@ public final class CombatListener implements Listener {
                 }
             }
             p.getInventory().clear();
-            plugin.notifications().send("notify.broadcast", Msg.parse("<red>" + p.getName() + " <gray>hat sich im Kampf ausgeloggt."));
+            plugin.notifications().send("notify.broadcast", "<red>" + p.getName() + " <gray>hat sich im Kampf ausgeloggt.");
         }
         KubySMP.get().combat().clear(p.getUniqueId());
     }

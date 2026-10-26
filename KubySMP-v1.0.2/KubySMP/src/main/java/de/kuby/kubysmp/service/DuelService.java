@@ -238,8 +238,8 @@ public final class DuelService {
         }
         String wn = Bukkit.getOfflinePlayer(winnerId).getName(), ln = Bukkit.getOfflinePlayer(loserId).getName();
         if (wn != null && ln != null && !KubySMP.get().tournaments().isMatchPair(winnerId, loserId)) {
-            plugin.notifications().send("notify.duel", Msg.parse("<#FCD45D><b>DUELL</b> <dark_gray>▶ <white>" + wn
-                    + " <gray>besiegt <white>" + ln + (pot > 0 ? " <gray>und gewinnt <gold>" + Msg.coins(pot - tax) + "$" : "")),
+            plugin.notifications().send("notify.duel", "<#FCD45D><b>DUELL</b> <dark_gray>▶ <white>" + wn
+                    + " <gray>besiegt <white>" + ln + (pot > 0 ? " <gray>und gewinnt <gold>" + Msg.coins(pot - tax) + "$" : ""),
                     o -> !o.getUniqueId().equals(winnerId) && !o.getUniqueId().equals(loserId));
         }
         // Verzögert, damit Inventar und Position beider Spieler zuerst zurückgesetzt sind

@@ -122,9 +122,9 @@ public final class VoteService implements Listener {
                 UUID id = top.get(place - 1).getKey();
                 plugin.jewels().add(id, jewels);
                 OfflinePlayer op = Bukkit.getOfflinePlayer(id);
-                plugin.notifications().send("notify.vote", Msg.parse("<green>Voter des Monats " + month + ", Platz " + place + ": <white>"
+                plugin.notifications().send("notify.vote", "<green>Voter des Monats " + month + ", Platz " + place + ": <white>"
                         + (op.getName() == null ? "?" : op.getName()) + " <gray>(" + top.get(place - 1).getValue()
-                        + " Votes) <light_purple>+" + jewels + " Juwelen"));
+                        + " Votes) <light_purple>+" + jewels + " Juwelen");
             } catch (RuntimeException ignored) {
             }
         }
@@ -218,8 +218,8 @@ public final class VoteService implements Listener {
             }
         }
         String shown = op.getName() == null ? name : op.getName();
-        plugin.notifications().send("notify.vote", Msg.parse("<green>" + shown + " <gray>hat bei <white>" + Msg.escape(site)
-                + " <gray>gevotet und bekommt eine Belohnung. <green>/vote"));
+        plugin.notifications().send("notify.vote", "<green>" + shown + " <gray>hat bei <white>" + Msg.escape(site)
+                + " <gray>gevotet und bekommt eine Belohnung. <green>/vote");
         Player p = op.getPlayer();
         if (p != null) {
             Msg.send(p, "<green>Danke fürs Voten! <gray>(" + count + ". Vote, Serie " + streak + " Tage) <light_purple>+" + jewels + " Juwelen"

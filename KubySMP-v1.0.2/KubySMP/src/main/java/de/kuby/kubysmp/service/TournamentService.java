@@ -211,6 +211,6 @@ public final class TournamentService {
     }
 
     public void announce(String mini) {
-        plugin.notifications().send("notify.duel", Msg.parse(mini));
+        plugin.notifications().send("notify.duel", mini);
     }
 }

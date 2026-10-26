@@ -54,9 +54,9 @@ public final class BountyCommand implements CommandExecutor {
         }
         String err = KubySMP.get().bounties().place(p.getUniqueId(), target, amount);
         if (err != null) { Msg.send(p, "<red>" + err); return; }
-        plugin.notifications().send("notify.duel", Msg.parse("<red>Kopfgeld! <gray>Auf <white>" + args[0] + " <gray>wurden "
+        plugin.notifications().send("notify.duel", "<red>Kopfgeld! <gray>Auf <white>" + args[0] + " <gray>wurden "
                 + "<gold>" + Msg.coins(amount) + "$ <gray>ausgesetzt (gesamt <gold>"
-                + Msg.coins(KubySMP.get().bounties().of(target)) + "<gray>)."));
+                + Msg.coins(KubySMP.get().bounties().of(target)) + "<gray>).");
     }
 
     private static UUID resolve(String name) {

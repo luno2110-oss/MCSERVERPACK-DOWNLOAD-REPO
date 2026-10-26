@@ -14,6 +14,7 @@ public final class SmallCaps {
     private SmallCaps() {}
 
     public static String of(String text) {
+        text = I18n.ctx(text);
         StringBuilder sb = new StringBuilder(text.length());
         for (char c : text.toLowerCase(Locale.ROOT).toCharArray()) {
             int idx = FROM.indexOf(c);

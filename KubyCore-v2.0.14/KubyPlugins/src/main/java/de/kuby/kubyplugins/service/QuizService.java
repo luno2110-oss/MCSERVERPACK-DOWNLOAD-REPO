@@ -145,8 +145,8 @@ public final class QuizService {
         votes.clear();
         resetKey = key;
         saveState();
-        plugin.notifications().send("chat.quiz", Msg.parse("<aqua>Quiz-Kategorie dieser Woche: <white>"
-                + (winner == null ? "alle Kategorien" : winner)));
+        plugin.notifications().send("chat.quiz", "<aqua>Quiz-Kategorie dieser Woche: <white>"
+                + (winner == null ? "alle Kategorien" : winner));
     }
 
     /** Stellt eine Frage. Wird auch vom Admin-Panel aufgerufen. */
@@ -163,16 +163,16 @@ public final class QuizService {
         }
         Question q = pool.get(ThreadLocalRandom.current().nextInt(pool.size()));
         current = q;
-        plugin.notifications().send("chat.quiz", Msg.parse("<aqua>Chat-Quiz <gray>[" + q.category() + "]: <white>"
-                + Msg.escape(q.text()) + " <gray>Erste richtige Antwort gewinnt <gold>" + Msg.coins(q.reward()) + "$<gray>!"));
+        plugin.notifications().send("chat.quiz", "<aqua>Chat-Quiz <gray>[" + q.category() + "]: <white>"
+                + Msg.escape(q.text()) + " <gray>Erste richtige Antwort gewinnt <gold>" + Msg.coins(q.reward()) + "$<gray>!");
         for (Player pl : plugin.getServer().getOnlinePlayers()) {
             if (plugin.notifications().wants(pl, "chat.quiz")) Sfx.play(plugin, pl, Sfx.Kind.QUIZ);
         }
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             if (current == q) {
                 current = null;
-                plugin.notifications().send("chat.quiz", Msg.parse("<gray>Quiz beendet, niemand hat geantwortet. Antwort: <white>"
-                        + Msg.escape(q.answers().get(0))));
+                plugin.notifications().send("chat.quiz", "<gray>Quiz beendet, niemand hat geantwortet. Antwort: <white>"
+                        + Msg.escape(q.answers().get(0)));
             }
         }, ANSWER_WINDOW_TICKS);
     }
@@ -187,8 +187,8 @@ public final class QuizService {
                 current = null;
                 plugin.economy().deposit(p.getUniqueId(), q.reward());
                 Sfx.play(plugin, p, Sfx.Kind.COIN);
-                plugin.notifications().send("chat.quiz", Msg.parse("<gold>" + Msg.escape(p.getName())
-                        + " <gray>hat das Quiz gelöst und <gold>" + Msg.coins(q.reward()) + "$ <gray>gewonnen!"));
+                plugin.notifications().send("chat.quiz", "<gold>" + Msg.escape(p.getName())
+                        + " <gray>hat das Quiz gelöst und <gold>" + Msg.coins(q.reward()) + "$ <gray>gewonnen!");
                 return;
             }
         }

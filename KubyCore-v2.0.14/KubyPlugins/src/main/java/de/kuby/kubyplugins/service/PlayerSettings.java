@@ -285,6 +285,7 @@ public final class PlayerSettings {
         Map<String, Object> m = values.computeIfAbsent(id, k -> new HashMap<>());
         if (o != null && o.multi() && o.choices().get(0).id().equals(value)) m.remove(key);
         else m.put(key, value);
+        if ("lang".equals(key)) m.put("langchosen", Boolean.TRUE);
         save();
         changed(id, key);
     }
@@ -312,6 +313,21 @@ public final class PlayerSettings {
         if (value == null || value.isEmpty()) m.remove(key);
         else m.put(key, value);
         save();
+    }
+
+    /**
+     * Sprache nach der Client-Sprache (beim ersten Einloggen und wenn sie sich ändert), solange der Spieler sie nicht
+     * selbst in den Einstellungen gewählt hat.
+     */
+    public synchronized void autoLanguage(UUID id, boolean en) {
+        Map<String, Object> m = values.computeIfAbsent(id, k -> new HashMap<>());
+        if (Boolean.TRUE.equals(m.get("langchosen"))) return;
+        boolean now = "en".equals(m.get("lang"));
+        if (now == en) return;
+        if (en) m.put("lang", "en");
+        else m.remove("lang");
+        save();
+        changed(id, "lang");
     }
 
     public boolean english(UUID id) {
