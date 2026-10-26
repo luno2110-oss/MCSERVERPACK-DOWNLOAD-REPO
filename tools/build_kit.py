@@ -755,6 +755,8 @@ TITLE_GOLD, TITLE_WHITE = 0xEE00, 0xEF00
 SMALL_FIRST, SMALL_CELL = 0xED00, 20
 BIG_FIRST = 0xED80          # eigene 32-px-Icons: ED80 + i (32 px), EDC0 + i (16 px)
 SPRITE_FIRST = 0xF000       # Kacheln (32 x 32) großer Grafiken: F000 + i
+STRIP_FIRST = 0xE000        # Balken mit Farbverlauf: je Länge 1..w ein Zeichen, je Verlauf 256 Zeichen ab E000
+STRIP_COLS = 8
 
 
 def sprite_tiles(sprites):
@@ -782,7 +784,29 @@ def sprite_tiles(sprites):
     return tiles, data
 
 
-def build(out, spaces, vroot, own_icons=(), small_icons=(), big_icons=(), sprites=()):
+def strip_sheets(strips):
+    """Balken mit Farbverlauf: Bild = volle Füllung (w Spalten) und rechts die Endspalte. Zeichen first + n - 1 zeigt
+    die ersten n Spalten und dahinter die Endspalte (bei n = w ohne). Gibt [(name, Bogen, Zeilen, w, h, first)]."""
+    out = []
+    for k, (name, img) in enumerate(strips):
+        w, h = img.width - 1, img.height
+        assert w <= 256 and h <= 32, name
+        first = STRIP_FIRST + 256 * k
+        rows = (w + STRIP_COLS - 1) // STRIP_COLS
+        sheet = Image.new("RGBA", (STRIP_COLS * (w + 1), rows * h), T)
+        for n in range(1, w + 1):
+            cell = Image.new("RGBA", (w + 1, h), T)
+            cell.paste(img.crop((0, 0, n, h)), (0, 0))
+            if n < w:
+                cell.paste(img.crop((w, 0, w + 1, h)), (n, 0))
+            sheet.paste(cell, (((n - 1) % STRIP_COLS) * (w + 1), ((n - 1) // STRIP_COLS) * h))
+        chars = ["".join(chr(first + r * STRIP_COLS + c) if r * STRIP_COLS + c < w else "\u0000"
+                         for c in range(STRIP_COLS)) for r in range(rows)]
+        out.append((name, sheet, chars, w, h, first))
+    return out
+
+
+def build(out, spaces, vroot, own_icons=(), small_icons=(), big_icons=(), sprites=(), strips=()):
     """own_icons: [(name, Bild 16 x 16)] aus build_fish.py, build_angel_icons.py und build_casino.py.
     small_icons: [(name, Bild bis 20 x 20)] in Originalgröße (Chips, Sterne, Noten).
     big_icons: [(name, Bild 32 x 32)] in Originalgröße (Roulette-Rad, Jukebox, Schallplatte)."""
@@ -887,6 +911,10 @@ def build(out, spaces, vroot, own_icons=(), small_icons=(), big_icons=(), sprite
         spimg.save(os.path.join(tex, "sprites.png"))
         sprite_rows = ["".join(stiles[r * scols + c][0] if r * scols + c < len(stiles) else "\u0000"
                                for c in range(scols)) for r in range(srows)]
+    # Balken mit Farbverlauf: ein Bogen je Verlauf
+    strip_data = strip_sheets(strips)
+    for name, sheet, _chars, _w, _h, _first in strip_data:
+        sheet.save(os.path.join(tex, "strip_%s.png" % name))
     # Titelschrift
     gimg, title_adv, tcols, trows = build_title.sheet(build_title.GOLD)
     wimg, _, _, _ = build_title.sheet(build_title.WHITE)
@@ -923,6 +951,10 @@ def build(out, spaces, vroot, own_icons=(), small_icons=(), big_icons=(), sprite
         if sprite_rows and asc <= 32:
             providers.append({"type": "bitmap", "file": "kuby:k/sprites.png", "height": 32, "ascent": asc,
                               "chars": sprite_rows})
+        for name, _sheet, chars, _w, h, _first in strip_data:
+            if asc <= h:
+                providers.append({"type": "bitmap", "file": "kuby:k/strip_%s.png" % name, "height": h, "ascent": asc,
+                                  "chars": chars})
         if asc <= build_title.CELL_H:
             providers.append({"type": "bitmap", "file": "kuby:k/title_gold.png", "height": build_title.CELL_H,
                               "ascent": asc, "chars": title_gold_chars})
@@ -949,7 +981,8 @@ def build(out, spaces, vroot, own_icons=(), small_icons=(), big_icons=(), sprite
         json.dump(title_font, f, ensure_ascii=True, separators=(",", ":"))
 
     widths = text_widths(vroot)
-    write_java(sheets, widths, icons, icon_chars, icon_adv, small_data, title_adv, sprite_data)
+    write_java(sheets, widths, icons, icon_chars, icon_adv, small_data, title_adv, sprite_data,
+               [(name, w, h, first) for name, _s, _c, w, h, first in strip_data])
     n_fonts = len(T_SHIFTS) + len(B_SHIFTS) + len(I_SHIFTS)
     print("ok kit: %d Schriften, %d Stücke, %d Icons, %d Textzeichen" % (
         n_fonts, sum(len(s.cells) for s in sheets), len(icons), len(widths)))
@@ -977,7 +1010,7 @@ def jstr(s):
     return '"' + "".join(out) + '"'
 
 
-def write_java(sheets, widths, icons, icon_chars, icon_adv, small_data=(), title_adv=(), sprite_data=()):
+def write_java(sheets, widths, icons, icon_chars, icon_adv, small_data=(), title_adv=(), sprite_data=(), strip_data=()):
     by = {}
     for sh in sheets:
         for i, (key, img) in enumerate(sh.cells):
@@ -1173,6 +1206,21 @@ def write_java(sheets, widths, icons, icon_chars, icon_adv, small_data=(), title
     L.append("            this.cols = cols;")
     L.append("            this.chars = chars;")
     L.append("            this.advances = advances;")
+    L.append("        }")
+    L.append("    }")
+    L.append("")
+    L.append("    /** Balken mit Farbverlauf: Zeichen first + n - 1 = die ersten n Spalten und die Endspalte (n < width). */")
+    L.append("    public enum Strip {")
+    rows = ["        %s(%s, %d, %d)" % (name.upper(), jchar(chr(first)), w, h) for name, w, h, first in strip_data]
+    L.append(",\n".join(rows) + ";" if rows else "        ;")
+    L.append("")
+    L.append("        public final char first;")
+    L.append("        public final int width, height;")
+    L.append("")
+    L.append("        Strip(char first, int width, int height) {")
+    L.append("            this.first = first;")
+    L.append("            this.width = width;")
+    L.append("            this.height = height;")
     L.append("        }")
     L.append("    }")
     L.append("")

@@ -86,7 +86,8 @@ if VANILLA and os.path.isdir(VANILLA):
     import build_guide  # noqa: E402
     own += build_battlepass.icons()
     build_kit.build(OUT, {**neg, **pos}, VANILLA, own, small, casino_big + hat_big + build_settings.big_icons(),
-                    build_jewelshop.sprites() + build_battlepass.sprites() + build_guide.sprites())
+                    build_jewelshop.sprites() + build_battlepass.sprites() + build_guide.sprites(),
+                    build_jewelshop.strips())
     # Icons für Hologramm-Zeilen (kuby:holo): dieselben Zeichen wie kuby:k/i0, aber nur 9 px hoch wie Text
     with open(os.path.join(OUT, "assets/kuby/font/k/i0.json"), encoding="utf-8") as fh:
         i0 = json.load(fh)

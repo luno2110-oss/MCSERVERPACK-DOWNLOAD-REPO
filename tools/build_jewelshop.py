@@ -14,7 +14,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ASSETS = os.path.join(HERE, "assets", "jewelshop")
 # Survival-Juwelenshop (Release „Referenz2“, extract_jewelshop_survival.py): Präfix jss_, dazu Möbel (f_) und Pets (p_)
 ASSETS_SURVIVAL = os.path.join(HERE, "assets", "jewelshop_survival")
-SETS = ((ASSETS, "js_"), (ASSETS_SURVIVAL, "jss_"))
+# Spielzeit (Release „Neue-referenzen“, extract_playtime.py): Präfix pt_, dazu Balken-Verläufe (strip_)
+ASSETS_PLAYTIME = os.path.join(HERE, "assets", "playtime")
+SETS = ((ASSETS, "js_"), (ASSETS_SURVIVAL, "jss_"), (ASSETS_PLAYTIME, "pt_"))
 
 
 def available():
@@ -47,4 +49,13 @@ def sprites():
         for kind in ("f_", "p_"):
             for f in _files(folder, kind):
                 out.append((pre + f[:-4], Image.open(os.path.join(folder, f)).convert("RGBA")))
+    return out
+
+
+def strips():
+    """[(pt_<name>, Bild)] Balken-Füllungen mit Farbverlauf: volle Füllung, rechts daneben die Endspalte."""
+    out = []
+    for folder, pre in SETS:
+        for f in _files(folder, "strip_"):
+            out.append((pre + f[6:-4], Image.open(os.path.join(folder, f)).convert("RGBA")))
     return out

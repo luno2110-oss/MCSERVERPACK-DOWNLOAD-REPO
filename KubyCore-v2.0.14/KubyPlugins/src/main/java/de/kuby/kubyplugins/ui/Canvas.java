@@ -477,6 +477,16 @@ public final class Canvas {
 
     /** Große Grafik in Originalgröße (aus 32-px-Kacheln) mit linker oberer Ecke bei (x, y). Gibt die Breite zurück. */
     public int sprite(int x, int y, KitData.Sprite s) {
+        return sprite(x, y, s, Z_ICON);
+    }
+
+    /** Große Grafik auf Ebene z (z. B. Z_BUTTON für den leeren Balken unter einer Füllung). */
+    public int sprite(int x, int y, KitData.Sprite s, int z) {
+        return sprite(x, y, s, z, NamedTextColor.WHITE);
+    }
+
+    /** Große Grafik eingefärbt (die Textur wird mit tint multipliziert, z. B. abgedunkelt für „nichts bereit“). */
+    public int sprite(int x, int y, KitData.Sprite s, int z, TextColor tint) {
         for (int i = 0; i < s.chars.length(); i++) {
             char c = s.chars.charAt(i);
             if (c == 0) continue;
@@ -484,10 +494,23 @@ public final class Canvas {
             int tx = x + 32 * col, ty = y + 32 * row;
             int adv = s.advances.charAt(i) - '0';
             int th = Math.min(32, s.height - 32 * row);
-            glyphs.add(new Glyph(Kind.ICON, tx, ty, adv - 1, th, adv, Z_ICON, String.valueOf(c), NamedTextColor.WHITE,
+            glyphs.add(new Glyph(Kind.ICON, tx, ty, adv - 1, th, adv, z, String.valueOf(c), tint,
                     false, Math.max(KitData.I_MIN, 7 - 32), KitData.I_MAX, ty, ty + th));
         }
         return s.width;
+    }
+
+    /**
+     * Füllung mit Farbverlauf (ein Zeichen): die ersten n Spalten des Verlaufs ab (x, y), dahinter die dunkle Endspalte
+     * (nicht bei voller Länge). Liegt über Kästen und Balken (Z_FILL).
+     */
+    public Canvas strip(int x, int y, KitData.Strip s, int n) {
+        n = Math.min(n, s.width);
+        if (n <= 0) return this;
+        int w = n < s.width ? n + 1 : n;
+        glyphs.add(new Glyph(Kind.ICON, x, y, w, s.height, w + 1, Z_FILL, String.valueOf((char) (s.first + n - 1)),
+                NamedTextColor.WHITE, false, Math.max(KitData.I_MIN, 7 - s.height), KitData.I_MAX, y, y + s.height));
+        return this;
     }
 
     // =================================================================================================================

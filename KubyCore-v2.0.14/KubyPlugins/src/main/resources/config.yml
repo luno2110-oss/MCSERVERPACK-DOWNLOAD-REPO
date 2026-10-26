@@ -581,29 +581,72 @@ modes:
     world: survival
 
 # Spielzeit (/playtime): Stufen nach aktiver Zeit im jeweiligen Modus (wer sich idle-minutes lang nicht bewegt,
-# zählt nicht). Format: "Stunden;Belohnung,Belohnung,..." mit coins:N, tokens:N (Survival), jewels:N, xp:N,
-# key:<Art>:N (Arten unter keys.types), tag:<Titel-ID>, cmd:<Befehl mit %player%>.
+# zählt nicht). Format: "Stunden;Name;Farbe;Belohnung,Belohnung,..." mit coins:N, tokens:N (Survival), jewels:N,
+# xp:N, key:<Art>:N (Arten unter keys.types), tag:<Titel-ID>, cmd:<Befehl mit %player%>. Name und Farbe dürfen fehlen
+# ("Stunden;Belohnungen"). Farben: grau, tuerkis, gold, orange, bernstein, blau, pink, lila, rot (ohne: je 8 Stufen eine).
 # Abholen nur mit verlinktem Discord (require-discord; gilt nur, wenn DiscordSRV installiert ist).
 playtime:
   require-discord: true
   idle-minutes: 5
   stages:
     survival:
-      - "1;coins:500,tokens:1"
-      - "3;coins:1000,tokens:1,key:vote:1"
-      - "6;coins:1500,tokens:2"
-      - "10;coins:2000,tokens:2,jewels:2"
-      - "15;coins:2500,tokens:2,key:selten:1"
-      - "24;coins:3000,tokens:3"
-      - "36;coins:4000,tokens:3,jewels:3"
-      - "50;coins:5000,tokens:4,key:selten:1"
-      - "75;coins:6000,tokens:4,jewels:5"
-      - "100;coins:8000,tokens:5,key:episch:1"
-      - "150;coins:10000,tokens:5,jewels:5"
-      - "200;coins:12500,tokens:6,key:episch:1"
-      - "300;coins:15000,tokens:8,jewels:10"
-      - "400;coins:20000,tokens:10,key:legendaer:1"
-      - "500;coins:25000,tokens:12,key:legendaer:1,jewels:15"
+      - "1;Neuling;grau;coins:100,tokens:1,key:vote:1"
+      - "2;Ankömmling;grau;coins:200,tokens:1,key:vote:1"
+      - "3;Siedler;grau;coins:300,tokens:1,key:vote:1"
+      - "5;Einsteiger;grau;coins:400,tokens:1,key:vote:1"
+      - "9;Entdecker;grau;coins:500,tokens:1,key:vote:1"
+      - "13;Wanderer;grau;coins:600,tokens:2,key:vote:1"
+      - "18;Pionier;grau;coins:700,tokens:2,key:vote:1"
+      - "25;Handwerker;grau;coins:800,tokens:10,key:vote:3"
+      - "33;Stammspieler;tuerkis;coins:900,tokens:2,key:vote:2"
+      - "41;Gefährte;tuerkis;coins:1000,tokens:3,key:vote:2"
+      - "50;Baumeister;tuerkis;coins:1100,tokens:3,key:vote:2"
+      - "61;Sammler;tuerkis;coins:1200,tokens:3,key:vote:2"
+      - "72;Abenteurer;tuerkis;coins:1300,tokens:3,key:vote:2"
+      - "85;Kundschafter;tuerkis;coins:1400,tokens:4,key:vote:2"
+      - "98;Veteran;tuerkis;coins:1500,tokens:4,key:vote:2"
+      - "112;Schmied;tuerkis;coins:1600,tokens:14,key:vote:4"
+      - "128;Chaos-Novize;gold;coins:1700,tokens:4,key:vote:2"
+      - "144;Grubenmeister;gold;coins:1800,tokens:5,key:vote:2"
+      - "162;Tiefengänger;gold;coins:1900,tokens:5,key:vote:2"
+      - "180;Netherreisender;gold;coins:2000,tokens:5,key:vote:2"
+      - "199;Festungsstürmer;gold;coins:2200,tokens:6,key:vote:2"
+      - "220;Drachenjäger;gold;coins:2400,tokens:6,key:vote:2"
+      - "241;Endgänger;gold;coins:2600,tokens:7,key:vote:2"
+      - "263;Sternenwanderer;gold;coins:2800,tokens:20,key:vote:4"
+      - "286;Chaos-Kenner;orange;coins:3000,tokens:8,key:vote:3"
+      - "311;Meisterhandwerker;orange;coins:3200,tokens:8,key:vote:3"
+      - "336;Schatzsucher;orange;coins:3400,tokens:9,key:vote:3"
+      - "362;Weltenbummler;orange;coins:3600,tokens:9,key:vote:3"
+      - "390;Ausdauernder;orange;coins:3900,tokens:10,key:vote:3"
+      - "418;Unermüdlicher;orange;coins:4200,tokens:11,key:vote:3"
+      - "447;Chronist;orange;coins:4500,tokens:11,key:vote:3"
+      - "477;Zeitloser;orange;coins:4800,tokens:22,key:vote:3,key:episch:1"
+      - "500;Farm-Baumeister;bernstein;coins:5000,tokens:23,key:episch:1,key:vote:5"
+      - "508;Auserwählter;blau;coins:5100,tokens:13,key:vote:4"
+      - "541;Wächter;blau;coins:5400,tokens:14,key:vote:4"
+      - "574;Bewahrer;blau;coins:5700,tokens:14,key:vote:4"
+      - "608;Hüter des Chaos;blau;coins:6000,tokens:15,key:vote:4"
+      - "643;Elite;blau;coins:6300,tokens:16,key:vote:4"
+      - "679;Champion;blau;coins:6600,tokens:17,key:vote:4"
+      - "716;Großmeister;blau;coins:6900,tokens:17,key:vote:4"
+      - "755;Titan;blau;coins:7200,tokens:33,key:vote:4,key:episch:1"
+      - "794;Koloss;pink;coins:7600,tokens:19,key:kosmetik:1"
+      - "835;Unsterblicher;pink;coins:8000,tokens:20,key:kosmetik:1"
+      - "876;Legendär;pink;coins:8400,tokens:21,key:kosmetik:1"
+      - "918;Mythisch;pink;coins:8800,tokens:22,key:kosmetik:1"
+      - "961;Erhabener;pink;coins:9200,tokens:23,key:kosmetik:1"
+      - "1005;Herrscher;pink;coins:9600,tokens:24,key:kosmetik:1"
+      - "1050;Souverän;pink;coins:10000,tokens:25,key:kosmetik:1"
+      - "1096;Imperator;pink;coins:10500,tokens:46,key:kosmetik:1,key:episch:1"
+      - "1143;Ewiger;lila;coins:11000,tokens:33,key:vote:5"
+      - "1191;Urgestein;lila;coins:11500,tokens:34,key:vote:5"
+      - "1240;Monument;lila;coins:12000,tokens:35,key:vote:5"
+      - "1290;Säule des Chaos;lila;coins:12500,tokens:36,key:vote:5"
+      - "1342;Ikone;lila;coins:13000,tokens:38,key:vote:5"
+      - "1394;Mythos;lila;coins:13500,tokens:39,key:vote:5"
+      - "1448;Unvergessen;lila;coins:14000,tokens:40,key:vote:5"
+      - "1500;Legende der Spielzeit;rot;coins:15000,tokens:98,key:episch:2,key:kosmetik:1"
     smp:
       - "1;xp:500"
       - "2;coins:3000"
@@ -690,6 +733,28 @@ crates:
         - "4;item:IRON_PICKAXE:1:efficiency=2,unbreaking=2;Eisenspitzhacke (Effizienz II, Haltbarkeit II)"
         - "3;item:IRON_SHOVEL:1:efficiency=2,unbreaking=2;Eisenschaufel (Effizienz II, Haltbarkeit II)"
         - "3;item:BONE_MEAL:32;32 Knochenmehl"
+    # Kosmetik-Keys aus der Spielzeit (Stufen 42 bis 49 und 57): nur Hüte, Spuren und Teleport-Effekte
+    kosmetik:
+      name: "Kosmetik-Kiste"
+      key: kosmetik
+      rewards:
+        - "10;cosmetic:hut_bommelmuetze"
+        - "10;cosmetic:hut_strohhut"
+        - "10;cosmetic:hut_kochmuetze"
+        - "8;cosmetic:hut_partyhut"
+        - "8;cosmetic:s_herz"
+        - "8;cosmetic:s_funken"
+        - "6;cosmetic:hut_cowboyhut"
+        - "6;cosmetic:hut_katzenohren"
+        - "6;cosmetic:s_schnee"
+        - "6;cosmetic:s_flamme"
+        - "5;cosmetic:s_tp_portal"
+        - "4;cosmetic:hut_piratenhut"
+        - "4;cosmetic:hut_wikinger"
+        - "4;cosmetic:s_sterne"
+        - "3;cosmetic:hut_teufelshoerner"
+        - "2;cosmetic:s_seele"
+        - "1;cosmetic:hut_krone"
     legendaer:
       name: "Legendäre Kiste"
       key: legendaer
@@ -782,9 +847,10 @@ keys:
     - "keyall;Keyall;#F8D35A"
     - "vote;Vote;#6CE86E"
     - "selten;Selten;#64C0FF"
-    - "episch;Episch;#C77DFF"
+    - "episch;Episch;#C77DFF;Epic-Key"
     - "legendaer;Legendär;#FFB02E"
     - "farm;Farm;#54FC54"
+    - "kosmetik;Kosmetik;#FC99DA"
 
 xp-sources:
   # Keine XP für selbst gesetzte Erze (auch nach Neustart und Kolben) und für Mobs aus Spawnern/Spawn-Eiern.

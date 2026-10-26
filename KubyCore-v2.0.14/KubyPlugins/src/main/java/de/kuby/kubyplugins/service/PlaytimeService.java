@@ -26,7 +26,8 @@ import java.util.UUID;
 /**
  * Spielzeit: die gesamte Online-Zeit (für Statistik und Support) und die aktive Zeit je Modus. Wer sich
  * playtime.idle-minutes lang nicht bewegt, zählt nicht. Mit der aktiven Zeit schaltet man Stufen frei
- * (playtime.stages.&lt;modus&gt;: "Stunden;coins:1000,tokens:1,key:vote:1,jewels:2,xp:500,tag:id,cmd:Befehl").
+ * (playtime.stages.&lt;modus&gt;: "Stunden;Name;Farbe;coins:1000,tokens:1,key:vote:1,jewels:2,xp:500,tag:id,cmd:Befehl",
+ * Name und Farbe dürfen fehlen: "Stunden;Belohnungen" oder "Stunden;Name;Belohnungen").
  * Abholen nur mit verlinktem Discord (playtime.require-discord, gilt nur, wenn DiscordSRV läuft).
  */
 public final class PlaytimeService implements Listener {
@@ -34,10 +35,19 @@ public final class PlaytimeService implements Listener {
     /** Eine Belohnung: coins, tokens, jewels, xp, key (value = Schlüsselart), tag (value = Titel), cmd (value = Befehl). */
     public record Prize(String kind, String value, long amount) {}
 
-    /** Eine Stufe: Nummer (ab 1), nötige aktive Minuten, Belohnungen. */
-    public record Stage(int number, long minutes, List<Prize> prizes) {
+    /** Farben der Stufen im Dialog (Config-Namen); ohne Angabe je 8 Stufen eine Farbe. */
+    public static final List<String> STYLES = List.of("grau", "tuerkis", "gold", "orange", "blau", "pink", "lila", "rot",
+            "bernstein");
+
+    /** Eine Stufe: Nummer (ab 1), nötige aktive Minuten, Name (leer: "Stufe N"), Farbe (STYLES), Belohnungen. */
+    public record Stage(int number, long minutes, String name, String style, List<Prize> prizes) {
         public long hours() {
             return minutes / 60;
+        }
+
+        /** Name zum Anzeigen. */
+        public String title() {
+            return name.isEmpty() ? "Stufe " + number : name;
         }
     }
 
@@ -51,11 +61,62 @@ public final class PlaytimeService implements Listener {
     private final Map<UUID, Location> lastPos = new HashMap<>();
     private final Map<UUID, Integer> idle = new HashMap<>();
 
+    /** Die Survival-Stufen bis Version 12.8 (15 Stufen ohne Namen): werden beim Start durch die neuen ersetzt. */
+    private static final List<String> OLD_SURVIVAL = List.of("1;coins:500,tokens:1", "3;coins:1000,tokens:1,key:vote:1",
+            "6;coins:1500,tokens:2", "10;coins:2000,tokens:2,jewels:2", "15;coins:2500,tokens:2,key:selten:1",
+            "24;coins:3000,tokens:3", "36;coins:4000,tokens:3,jewels:3", "50;coins:5000,tokens:4,key:selten:1",
+            "75;coins:6000,tokens:4,jewels:5", "100;coins:8000,tokens:5,key:episch:1", "150;coins:10000,tokens:5,jewels:5",
+            "200;coins:12500,tokens:6,key:episch:1", "300;coins:15000,tokens:8,jewels:10",
+            "400;coins:20000,tokens:10,key:legendaer:1", "500;coins:25000,tokens:12,key:legendaer:1,jewels:15");
+
     public PlaytimeService(KubyPlugins plugin) {
         this.plugin = plugin;
         this.file = new File(plugin.getDataFolder(), "playtime.yml");
+        upgradeConfig();
         load();
         plugin.getServer().getScheduler().runTaskTimer(plugin, this::tick, 1200L, 1200L);
+    }
+
+    /**
+     * Ältere config.yml: die unveränderten alten Survival-Stufen durch die 57 benannten ersetzen, den Kosmetik-Schlüssel
+     * (Art, Kiste) und den Kurznamen „Epic-Key“ ergänzen. Eigene Stufen und Kisten bleiben, wie sie sind.
+     */
+    private void upgradeConfig() {
+        org.bukkit.configuration.file.FileConfiguration cfg = plugin.getConfig();
+        java.io.InputStream in = plugin.getResource("config.yml");
+        if (in == null) return;
+        YamlConfiguration def = YamlConfiguration.loadConfiguration(new java.io.InputStreamReader(in, java.nio.charset.StandardCharsets.UTF_8));
+        boolean changed = false;
+        if (cfg.getStringList("playtime.stages.survival").equals(OLD_SURVIVAL)) {
+            cfg.set("playtime.stages.survival", def.getStringList("playtime.stages.survival"));
+            changed = true;
+        }
+        if (cfg.isList("keys.types")) {
+            List<String> types = new ArrayList<>(cfg.getStringList("keys.types"));
+            int epic = types.indexOf("episch;Episch;#C77DFF");
+            boolean typesChanged = epic >= 0;
+            if (epic >= 0) types.set(epic, "episch;Episch;#C77DFF;Epic-Key");
+            if (types.stream().noneMatch(t -> t.toLowerCase(Locale.ROOT).startsWith("kosmetik;"))) {
+                types.add("kosmetik;Kosmetik;#FC99DA");
+                typesChanged = true;
+            }
+            if (typesChanged) {
+                cfg.set("keys.types", types);
+                changed = true;
+            }
+        }
+        if (cfg.isConfigurationSection("crates.survival") && !cfg.isConfigurationSection("crates.survival.kosmetik")
+                && def.isConfigurationSection("crates.survival.kosmetik")) {
+            ConfigurationSection src = def.getConfigurationSection("crates.survival.kosmetik");
+            for (String key : src.getKeys(true)) {
+                if (!src.isConfigurationSection(key)) cfg.set("crates.survival.kosmetik." + key, src.get(key));
+            }
+            changed = true;
+        }
+        if (changed) {
+            plugin.saveConfig();
+            plugin.getLogger().info("Spielzeit: config.yml auf die neuen Stufen und den Kosmetik-Schlüssel gebracht.");
+        }
     }
 
     private static String k(String mode, UUID id) {
@@ -80,7 +141,8 @@ public final class PlaytimeService implements Listener {
             }
             for (Stage s : stages(mode)) {
                 if (s.minutes() == reached) {
-                    Msg.send(p, "<#F2C84A><b>SPIELZEIT</b> <dark_gray>▶ <gray>Stufe <white>" + s.number() + "</white> erreicht ("
+                    Msg.send(p, "<#F2C84A><b>SPIELZEIT</b> <dark_gray>▶ <gray>Stufe <white>" + s.number()
+                            + (s.name().isEmpty() ? "" : " „" + s.name() + "“") + "</white> erreicht ("
                             + s.hours() + (s.hours() == 1 ? " Stunde" : " Stunden") + "). "
                             + "<click:run_command:'/playtime'><#F2C84A>[Abholen]</click>");
                     Sfx.play(plugin, p, Sfx.Kind.SUCCESS);
@@ -110,23 +172,29 @@ public final class PlaytimeService implements Listener {
     public List<Stage> stages(String mode) {
         List<Stage> list = new ArrayList<>();
         for (String raw : plugin.getConfig().getStringList("playtime.stages." + mode)) {
-            String[] p = raw.split(";", 2);
+            String[] p = raw.split(";", 4);
             if (p.length < 2) continue;
             try {
                 double hours = Double.parseDouble(p[0].trim().replace(',', '.'));
+                String name = p.length > 2 ? p[1].trim() : "";
+                String style = p.length > 3 ? p[2].trim().toLowerCase(Locale.ROOT) : "";
                 List<Prize> prizes = new ArrayList<>();
-                for (String part : p[1].split(",")) {
+                for (String part : p[p.length - 1].split(",")) {
                     Prize pr = parse(part.trim());
                     if (pr != null) prizes.add(pr);
                 }
-                list.add(new Stage(0, Math.round(hours * 60), prizes));
+                list.add(new Stage(0, Math.round(hours * 60), name, style, prizes));
             } catch (NumberFormatException e) {
                 plugin.getLogger().warning("Ungültige Spielzeit-Stufe: " + raw);
             }
         }
         list.sort((a, b) -> Long.compare(a.minutes(), b.minutes()));
         List<Stage> out = new ArrayList<>();
-        for (int i = 0; i < list.size(); i++) out.add(new Stage(i + 1, list.get(i).minutes(), list.get(i).prizes()));
+        for (int i = 0; i < list.size(); i++) {
+            Stage s = list.get(i);
+            String style = STYLES.contains(s.style()) ? s.style() : STYLES.get(Math.min(i / 8, 7));
+            out.add(new Stage(i + 1, s.minutes(), s.name(), style, s.prizes()));
+        }
         return out;
     }
 

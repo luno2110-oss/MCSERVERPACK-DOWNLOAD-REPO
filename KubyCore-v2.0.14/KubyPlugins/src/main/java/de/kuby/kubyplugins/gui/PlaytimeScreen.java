@@ -2,17 +2,17 @@ package de.kuby.kubyplugins.gui;
 
 import de.kuby.kubyplugins.KubyPlugins;
 import de.kuby.kubyplugins.service.KeyService;
-import de.kuby.kubyplugins.service.ModeService;
 import de.kuby.kubyplugins.service.PlaytimeService;
 import de.kuby.kubyplugins.service.PlaytimeService.Prize;
 import de.kuby.kubyplugins.service.PlaytimeService.Stage;
 import de.kuby.kubyplugins.ui.Canvas;
 import de.kuby.kubyplugins.ui.Canvas.Span;
 import de.kuby.kubyplugins.ui.KitData;
-import de.kuby.kubyplugins.ui.Ui;
 import de.kuby.kubyplugins.ui.UiDialog;
+import de.kuby.kubyplugins.util.I18n;
 import de.kuby.kubyplugins.util.Msg;
 import de.kuby.kubyplugins.util.Sfx;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.entity.Player;
 
@@ -22,27 +22,30 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 /**
- * /playtime auf dem Dialog-Kit (Kopf wie die Hilfe-Seiten): aktive Zeit im Modus, Fortschritt zur nächsten Stufe,
- * alle Stufen mit ihren Belohnungen (Icons), Abholen je Stufe und „Alle abholen“. Ohne Discord-Verlinkung ein Hinweis
- * statt der Abholen-Knöpfe. Ohne Pack gibt es die Truhe (PlaytimeMenu).
+ * /playtime nach der Referenz „Neue-referenzen“: Kopf mit Geschenk, abgeholten Stufen und aktiver Spielzeit; darunter
+ * „Alle abholen“ und die Seiten (4 Stufen je Seite, die letzte Seite zeigt die letzten 4). Jede Stufe ist ein Kasten in
+ * der Farbe ihrer Gruppe (bereit: grün) mit Name, Belohnungen und Balken; der Tooltip zeigt alles noch einmal. Ohne
+ * Discord-Verlinkung führt der linke Knopf zu /verify. Ohne Pack gibt es die Truhe (PlaytimeMenu).
  */
 public final class PlaytimeScreen {
 
-    private static final int W = 390, HEIGHT = 330, ROW = 20;
-    private static final TextColor ACCENT = Ui.Theme.GOLD.accent, GRAY = TextColor.color(0xA0A0AC),
-            LIGHT = TextColor.color(0xE4E4EA), WHITE = TextColor.color(0xF4F4F4), GOLD = TextColor.color(0xF8D35A),
-            GREEN = TextColor.color(0x6CE86E), PURPLE = TextColor.color(0xD08CFF), JEWEL = TextColor.color(0x5FE3A0),
-            DIM = TextColor.color(0x70707A), ON = TextColor.color(0x201400), NAV = TextColor.color(0xC0C4CB),
-            RED = TextColor.color(0xFF8A8A);
+    private static final int W = 390, HEIGHT = 357, PER_PAGE = 4, ROW_Y = 81, ROW_H = 60, ROW_DY = 72;
+    private static final int BAR_X = 30, BAR_W = 200;
+    private static final TextColor GRAY = TextColor.color(0x9FA1A7), LIGHT = TextColor.color(0xC0C4CB),
+            GOLD = TextColor.color(0xFCD45D), VIOLET = TextColor.color(0xB7A6FC), TEAL = TextColor.color(0x7AE5D7),
+            GREEN = TextColor.color(0x6DE288), JEWEL = TextColor.color(0x5FE3A0), WHITE = TextColor.color(0xFCFCFC),
+            DOT = TextColor.color(0x797D84), ON_GREEN = TextColor.color(0x1C122D), RED = TextColor.color(0xFF8A8A),
+            IDLE = TextColor.color(0xD1D2D5), IDLE_GIFT = TextColor.color(0xC2C6CE);
 
     public enum State { CLAIMED, READY, LOCKED }
 
-    /** Eine Belohnung zum Anzeigen: Icon und Text in seiner Farbe. */
-    public record Chip(KitData.Icon icon, String text, TextColor color) {}
+    /** Eine Belohnung: Text in der Zeile ("2× Vote-Key"), im Tooltip ("+2× Vote-Schlüssel"), Farben dafür. */
+    public record Reward(String text, TextColor color, String tip, String tipColor) {}
 
-    public record Row(int number, long minutes, List<Chip> chips, State state) {}
+    public record Row(int number, String name, String style, long minutes, List<Reward> rewards, State state) {}
 
-    public record View(String modeLabel, long activeMinutes, List<Row> stages, String blocked, int page) {}
+    /** blocked: warum gerade nichts abgeholt werden darf (Discord), sonst null. page -1: Seite der nächsten Stufe. */
+    public record View(long activeMinutes, List<Row> stages, String blocked, int page) {}
 
     public interface Actions {
         Consumer<Player> claim(int number);
@@ -52,6 +55,23 @@ public final class PlaytimeScreen {
         Consumer<Player> verify();
 
         Consumer<Player> page(int page);
+    }
+
+    /** Kasten und Schriftfarbe je Farbe (PlaytimeService.STYLES). */
+    private record Look(KitData.Box box, TextColor color) {}
+
+    private static Look look(String style) {
+        return switch (style) {
+            case "tuerkis" -> new Look(KitData.Box.PT_TEAL, TEAL);
+            case "gold" -> new Look(KitData.Box.PT_GOLD, GOLD);
+            case "orange" -> new Look(KitData.Box.PT_ORANGE, TextColor.color(0xFCB079));
+            case "bernstein" -> new Look(KitData.Box.PT_AMBER, TextColor.color(0xFCC965));
+            case "blau" -> new Look(KitData.Box.PT_BLUE, TextColor.color(0x7BC4FC));
+            case "pink" -> new Look(KitData.Box.PT_PINK, TextColor.color(0xFC99DA));
+            case "lila" -> new Look(KitData.Box.PT_PURPLE, VIOLET);
+            case "rot" -> new Look(KitData.Box.PT_RED, TextColor.color(0xFC7986));
+            default -> new Look(KitData.Box.PT_GRAY, LIGHT);
+        };
     }
 
     private final KubyPlugins plugin;
@@ -69,27 +89,59 @@ public final class PlaytimeScreen {
     public static String duration(long min) {
         long h = min / 60, m = min % 60;
         if (h == 0) return m + " Min.";
-        return h + " Std." + (m == 0 ? "" : " " + m + " Min.");
+        return Msg.coins(h) + " Std." + (m == 0 ? "" : " " + m + " Min.");
     }
 
-    private Chip chip(Prize pr) {
+    /** Restzeit wie in der Referenz: ab 100 Stunden ohne Minuten ("noch 107 Std."). */
+    public static String left(long min) {
+        return min >= 100 * 60 ? Msg.coins(min / 60) + " Std." : duration(min);
+    }
+
+    private Reward reward(Prize pr) {
+        long n = pr.amount();
         return switch (pr.kind()) {
-            case "coins" -> new Chip(KitData.Icon.GOLD_NUGGET, Msg.coins(pr.amount()), GOLD);
-            case "tokens" -> new Chip(KitData.Icon.AMETHYST, String.valueOf(pr.amount()), PURPLE);
-            case "jewels" -> new Chip(KitData.Icon.EMERALD, String.valueOf(pr.amount()), JEWEL);
-            case "xp" -> new Chip(KitData.Icon.EXPERIENCE, Msg.coins(pr.amount()), GREEN);
+            case "coins" -> new Reward(Msg.coins(n) + " Coins", GOLD, "+" + Msg.coins(n) + " Coins", "gold");
+            case "tokens" -> new Reward(n + (n == 1 ? " Token" : " Tokens"), VIOLET, "+" + n + (n == 1 ? " Token" : " Tokens"),
+                    "light_purple");
+            case "jewels" -> new Reward(n + (n == 1 ? " Juwel" : " Juwelen"), JEWEL, "+" + n + (n == 1 ? " Juwel" : " Juwelen"),
+                    "green");
+            case "xp" -> new Reward(Msg.coins(n) + " XP", GREEN, "+" + Msg.coins(n) + " XP", "green");
             case "key" -> {
                 KeyService.KeyType t = plugin.keys().type(pr.value());
-                String name = t == null ? pr.value() : t.name();
-                TextColor c = t == null ? GOLD : TextColor.fromHexString(t.color()) == null ? GOLD : TextColor.fromHexString(t.color());
-                yield new Chip(KitData.Icon.TRIAL_KEY, (pr.amount() > 1 ? pr.amount() + "× " : "") + name, c);
+                String label = t == null ? pr.value() + "-Key" : t.label();
+                String full = t == null ? pr.value() + "-Schlüssel" : t.full();
+                yield new Reward(n + "× " + label, TEAL, "+" + n + "× " + full, "aqua");
             }
-            case "tag" -> new Chip(KitData.Icon.NAME_TAG, "Titel", LIGHT);
-            default -> new Chip(KitData.Icon.BUNDLE, "Extra", LIGHT);
+            default -> {
+                String d = plugin.playtime().describe(pr);
+                yield new Reward(d, LIGHT, "+" + d, "white");
+            }
         };
     }
 
-    /** page -1: die Seite mit der ersten fertigen oder der nächsten Stufe. */
+    /** Für den Selbsttest: eine Seite mit den echten Stufen eines Modus, aktive Zeit act, ohne Klicks. */
+    public Canvas preview(String mode, long act, int page) {
+        List<Row> rows = new ArrayList<>();
+        for (Stage s : plugin.playtime().stages(mode)) {
+            List<Reward> rewards = new ArrayList<>();
+            for (Prize pr : s.prizes()) rewards.add(reward(pr));
+            rows.add(new Row(s.number(), s.title(), s.style(), s.minutes(), rewards, act >= s.minutes() ? State.READY : State.LOCKED));
+        }
+        Consumer<Player> no = pl -> { };
+        return canvas(new View(act, rows, null, page), new Actions() {
+            public Consumer<Player> claim(int number) { return no; }
+            public Consumer<Player> claimAll() { return no; }
+            public Consumer<Player> verify() { return no; }
+            public Consumer<Player> page(int n) { return no; }
+        });
+    }
+
+    /** Seiten der Stufen eines Modus. */
+    public int pageCount(String mode) {
+        return pages(plugin.playtime().stages(mode).size());
+    }
+
+    /** page -1: die Seite mit der ersten noch nicht abgeholten Stufe. */
     public void show(Player p, int page) {
         UUID id = p.getUniqueId();
         String mode = plugin.modes().modeOf(id);
@@ -97,12 +149,12 @@ public final class PlaytimeScreen {
         long act = pt.activeMinutes(id, mode);
         List<Row> rows = new ArrayList<>();
         for (Stage s : pt.stages(mode)) {
-            List<Chip> chips = new ArrayList<>();
-            for (Prize pr : s.prizes()) chips.add(chip(pr));
+            List<Reward> rewards = new ArrayList<>();
+            for (Prize pr : s.prizes()) rewards.add(reward(pr));
             State st = pt.isClaimed(id, mode, s) ? State.CLAIMED : act >= s.minutes() ? State.READY : State.LOCKED;
-            rows.add(new Row(s.number(), s.minutes(), chips, st));
+            rows.add(new Row(s.number(), s.title(), s.style(), s.minutes(), rewards, st));
         }
-        View v = new View(ModeService.label(mode), act, rows, pt.blocked(p), page);
+        View v = new View(act, rows, pt.blocked(p), page);
         UiDialog.show(p, canvas(v, new Actions() {
             public Consumer<Player> claim(int number) {
                 return pl -> {
@@ -119,7 +171,7 @@ public final class PlaytimeScreen {
                                 + String.join(", ", what));
                         Sfx.play(plugin, pl, Sfx.Kind.LEVEL_UP);
                     }
-                    show(pl, -1);
+                    show(pl, pageOf(number - 1, pt.stages(m).size()));
                 };
             }
 
@@ -149,56 +201,85 @@ public final class PlaytimeScreen {
         }), HEIGHT);
     }
 
-    private static int perPage(View v) {
-        int top = 53 + 39 + (v.blocked() != null ? 37 : 0);
-        return Math.max(3, (HEIGHT - top - 22 - 4 - KitData.BTN_H - 4) / ROW);
+    private static int pages(int count) {
+        return Math.max(1, (count + PER_PAGE - 1) / PER_PAGE);
+    }
+
+    /** Erste Stufe (Index) einer Seite; die letzte Seite zeigt die letzten PER_PAGE Stufen. */
+    private static int first(int page, int count) {
+        return Math.max(0, Math.min(page * PER_PAGE, count - PER_PAGE));
+    }
+
+    private static int pageOf(int index, int count) {
+        return Math.min(index / PER_PAGE, pages(count) - 1);
+    }
+
+    private static Component tooltip(Row r, long act) {
+        List<String> lines = new ArrayList<>();
+        lines.add("<white><b>" + r.name());
+        lines.add("<gray>Ab <yellow>" + Msg.coins(r.minutes() / 60) + " Std.</yellow> Spielzeit");
+        lines.add("");
+        lines.add("<gray>Belohnung:");
+        for (Reward w : r.rewards()) lines.add(" <" + w.tipColor() + ">" + w.tip());
+        lines.add("");
+        switch (r.state()) {
+            case CLAIMED -> lines.add("<green>✔ Abgeholt");
+            case READY -> lines.add("<green>Bereit zum Abholen!");
+            case LOCKED -> {
+                lines.add("<gray>Fortschritt: <yellow>" + percent(act, r.minutes()) + "%");
+                lines.add("<gray>Noch <yellow>" + left(r.minutes() - act));
+            }
+        }
+        // Zeilen als Ganzes übersetzen (zerlegt in Komponenten passen die Vorlagen nicht mehr)
+        lines.replaceAll(I18n::ctx);
+        return Msg.parse(String.join("<reset>\n", lines));
+    }
+
+    private static int percent(long act, long need) {
+        return need <= 0 ? 100 : (int) Math.min(100, act * 100 / need);
     }
 
     /** Nur Darstellung (auch für Vorschauen ohne Server). */
     public static Canvas canvas(View v, Actions a) {
-        Canvas c = new Canvas(W).heading("Spielzeit", net.kyori.adventure.text.format.TextColor.color(0xF8D35A));
-        c.box(0, 0, W, 51, KitData.Box.GOLD);
-        c.smallIcon(13, 16, KitData.SmallIcon.H_HOURGLASS);
-        c.text(41, 15, "SPIELZEIT", Ui.Theme.GOLD.title, true);
-        c.text(41, 28, "Aktive Zeit in " + v.modeLabel() + ", ohne AFK", GRAY, false);
-        c.textRight(378, 21, List.of(Span.bold(duration(v.activeMinutes()), GOLD)));
-        int y = 53;
         List<Row> rows = v.stages();
+        int claimed = 0, ready = 0;
+        for (Row r : rows) {
+            if (r.state() == State.CLAIMED) claimed++;
+            if (r.state() == State.READY) ready++;
+        }
+        Canvas c = new Canvas(W).heading("Spielzeit", GOLD);
 
-        // Fortschritt zur nächsten Stufe
-        Row next = rows.stream().filter(r -> r.state() == State.LOCKED).findFirst().orElse(null);
-        long prevMin = 0;
-        for (Row r : rows) if (r.state() != State.LOCKED) prevMin = Math.max(prevMin, r.minutes());
-        c.box(0, y, W, 36, KitData.Box.GOLD);
-        c.text(9, y + 9, "FORTSCHRITT", ACCENT, true);
-        if (rows.isEmpty()) {
-            c.textRight(378, y + 9, "In diesem Modus gibt es keine Stufen", GRAY, false);
-            c.bar(12, y + 22, W - 24, 0, KitData.Fill.GOLD);
-        } else if (next == null) {
-            c.textRight(378, y + 9, List.of(Span.bold("Alle " + rows.size() + " Stufen erreicht", GREEN)));
-            c.bar(12, y + 22, W - 24, 1, KitData.Fill.GOLD);
+        // Kopf
+        c.box(0, 0, W, 51, KitData.Box.PT_HEAD);
+        c.sprite(11, 9, KitData.Sprite.PT_GIFT_BIG);
+        c.text(50, 16, "SPIELZEIT", GOLD, true);
+        c.text(50, 29, claimed + " von " + rows.size() + " Stufen abgeholt", GRAY, false);
+        c.sprite(234, 18, KitData.Sprite.PT_HOURGLASS);
+        c.text(254, 17, "Deine", GRAY, false);
+        c.text(254, 27, "Spielzeit", GRAY, false);
+        c.textRight(380, 22, duration(v.activeMinutes()), GOLD, true);
+
+        // Alle abholen / Discord / nichts bereit
+        if (v.blocked() != null && ready > 0) {
+            c.box(0, 54, 187, 24, KitData.Box.PT_IDLE);
+            c.sprite(7, 58, KitData.Sprite.PT_GIFT);
+            c.text(30, 62, Canvas.fit("Erst Discord verlinken", false, 136), RED, false);
+            c.text(172, 62, "›", RED, true);
+            c.action(0, 54, 187, 24, a.verify(), "Zum Abholen muss dein Discord verlinkt sein (/verify)");
+        } else if (ready > 0) {
+            c.box(0, 54, 187, 24, KitData.Box.PT_CLAIM);
+            c.sprite(7, 58, KitData.Sprite.PT_GIFT);
+            c.text(30, 62, "Alle abholen (" + ready + ")", GREEN, true);
+            c.text(172, 62, "›", GREEN, true);
+            c.action(0, 54, 187, 24, a.claimAll(), "Alle fertigen Stufen abholen");
         } else {
-            long span = Math.max(1, next.minutes() - prevMin);
-            double frac = (double) (v.activeMinutes() - prevMin) / span;
-            c.textRight(378, y + 9, List.of(Span.of("noch ", GRAY), Span.bold(duration(next.minutes() - v.activeMinutes()), WHITE),
-                    Span.of(" bis Stufe " + next.number(), GRAY)));
-            c.bar(12, y + 22, W - 24, frac, KitData.Fill.GOLD);
-        }
-        y += 39;
-
-        // Ohne Discord: Hinweis statt Abholen
-        if (v.blocked() != null) {
-            c.box(0, y, W, 34, KitData.Box.RED);
-            c.smallIcon(9, y + 8, KitData.SmallIcon.H_DISCORD);
-            c.text(35, y + 7, "Zum Abholen muss dein Discord verlinkt sein.", WHITE, true);
-            c.text(35, y + 19, "Klick hier: so verlinkst du deinen Account (/verify).", LIGHT, false);
-            c.action(0, y, W, 34, a.verify(), "Anleitung zum Verlinken");
-            y += 37;
+            c.box(0, 54, 187, 24, KitData.Box.PT_IDLE);
+            c.sprite(7, 58, KitData.Sprite.PT_GIFT, Canvas.Z_ICON, IDLE_GIFT);
+            c.text(30, 62, "Gerade nichts bereit", IDLE, false);
         }
 
-        // Stufen mit Seiten
-        int per = perPage(v);
-        int pages = Math.max(1, (rows.size() + per - 1) / per);
+        // Seiten
+        int pages = pages(rows.size());
         int pg = v.page();
         if (pg < 0) {
             int focus = 0;
@@ -208,72 +289,80 @@ public final class PlaytimeScreen {
                     break;
                 }
             }
-            pg = focus / per;
+            pg = pageOf(focus, rows.size());
         }
         pg = Math.max(0, Math.min(pg, pages - 1));
-        int from = pg * per, to = Math.min(rows.size(), from + per);
-        int h = 22 + ROW * Math.max(1, to - from) + 2;
-        c.box(0, y, W, h, KitData.Box.GOLD);
-        c.text(9, y + 9, "STUFEN", ACCENT, true);
-        if (pages > 1) c.textRight(378, y + 9, "Seite " + (pg + 1) + " / " + pages, GRAY, false);
-        if (rows.isEmpty()) c.text(12, y + 23, "Spielzeit-Stufen gibt es in Survival.", LIGHT, false);
-        int ready = 0;
-        for (Row r : rows) if (r.state() == State.READY) ready++;
+        int from = first(pg, rows.size()), to = Math.min(rows.size(), from + PER_PAGE);
+        c.box(203, 54, 187, 24, KitData.Box.PT_PAGER);
+        c.sprite(209, 59, pg > 0 ? KitData.Sprite.PT_NAV_L_ON : KitData.Sprite.PT_NAV_L_OFF);
+        c.sprite(360, 59, pg + 1 < pages ? KitData.Sprite.PT_NAV_R_ON : KitData.Sprite.PT_NAV_R_OFF);
+        if (pg > 0) c.action(209, 59, 24, 14, a.page(pg - 1), "Vorige Seite");
+        if (pg + 1 < pages) c.action(360, 59, 24, 14, a.page(pg + 1), "Nächste Seite");
+        if (!rows.isEmpty()) {
+            c.textCenter(296, 57, "Stufen " + rows.get(from).number() + " bis " + rows.get(to - 1).number(), WHITE, true);
+            c.textCenter(296, 66, Msg.coins(rows.get(from).minutes() / 60) + " bis "
+                    + Msg.coins(rows.get(to - 1).minutes() / 60) + " Std.", GRAY, false);
+        } else {
+            c.textCenter(296, 62, "Keine Stufen", GRAY, false);
+        }
+
+        // Stufen
+        if (rows.isEmpty()) {
+            c.box(0, ROW_Y, W, ROW_H, KitData.Box.PT_GRAY);
+            c.sprite(10, ROW_Y + 9, KitData.Sprite.PT_HOURGLASS);
+            c.text(30, ROW_Y + 12, "In diesem Modus gibt es keine Spielzeit-Stufen", LIGHT, true);
+            c.text(30, ROW_Y + 23, "Sie gibt es in Survival.", GRAY, false);
+        }
         for (int i = from; i < to; i++) {
             Row r = rows.get(i);
-            int ty = y + 19 + ROW * (i - from);
-            TextColor nameColor = switch (r.state()) {
-                case CLAIMED -> GRAY;
-                case READY -> WHITE;
-                case LOCKED -> LIGHT;
-            };
-            c.text(12, ty + 4, "Stufe " + r.number(), nameColor, true);
-            c.text(62, ty + 4, r.minutes() / 60 + " Std.", r.state() == State.CLAIMED ? DIM : GRAY, false);
-            // rechts: Status
-            int right;
-            if (r.state() == State.CLAIMED) {
-                right = 378 - Canvas.width("✔ abgeholt", false);
-                c.text(right, ty + 4, "✔ abgeholt", GREEN, false);
-            } else if (r.state() == State.READY && v.blocked() == null) {
-                int w = Canvas.width("Abholen", true) + 14;
-                right = 380 - w;
-                c.smallButton(right, ty, w, KitData.Small.GOLD, "Abholen", GOLD, true);
-                c.action(right, ty, w, KitData.SMALL_H, a.claim(r.number()), "Stufe " + r.number() + " abholen");
-            } else if (r.state() == State.READY) {
-                right = 378 - Canvas.width("fertig", true);
-                c.text(right, ty + 4, "fertig", GOLD, true);
-            } else {
-                String left = "noch " + duration(r.minutes() - v.activeMinutes());
-                right = 378 - Canvas.width(left, false);
-                c.text(right, ty + 4, left, DIM, false);
+            int y = ROW_Y + ROW_DY * (i - from);
+            Look lk = look(r.style());
+            c.box(0, y, W, ROW_H, r.state() == State.READY ? KitData.Box.PT_READY : lk.box());
+            if (r.state() == State.LOCKED) c.sprite(10, y + 9, KitData.Sprite.PT_HOURGLASS);
+            else c.sprite(8, y + 9, KitData.Sprite.PT_GIFT);
+            String ab = "ab " + Msg.coins(r.minutes() / 60) + " Std.";
+            int abX = 380 - Canvas.width(ab, false);
+            c.text(30, y + 12, Canvas.fit(r.name(), true, abX - 36), lk.color(), true);
+            c.text(abX, y + 12, ab, GRAY, false);
+            // Belohnungen: „100 Coins · 1 Token · 1× Vote-Key“
+            List<Span> line = new ArrayList<>();
+            int lw = 0;
+            for (Reward w : r.rewards()) {
+                String sep = line.isEmpty() ? "" : " · ";
+                int add = Canvas.width(sep, false) + Canvas.width(w.text(), false);
+                if (lw + add > 350) break;
+                if (!sep.isEmpty()) line.add(Span.of(sep, DOT));
+                line.add(Span.of(w.text(), w.color()));
+                lw += add;
             }
-            // Mitte: Belohnungen
-            int px = 104;
-            for (Chip ch : r.chips()) {
-                int tw = Canvas.width(ch.text(), true);
-                if (px + 18 + tw > right - 6) break;
-                c.icon(px, ty, ch.icon(), false);
-                c.text(px + 18, ty + 4, ch.text(), r.state() == State.CLAIMED ? DIM : ch.color(), true);
-                px += 18 + tw + 7;
+            c.text(30, y + 23, line);
+            // Balken und Stand
+            int by = y + 35;
+            switch (r.state()) {
+                case READY, CLAIMED -> {
+                    c.sprite(BAR_X, by, KitData.Sprite.PT_BAR_READY, Canvas.Z_BUTTON);
+                    if (r.state() == State.READY) {
+                        c.text(238, y + 38, "Bereit!", GREEN, true);
+                        c.box(316, y + 34, 64, 14, KitData.Box.PT_BTN, Canvas.Z_BUTTON);
+                        c.textCenter(347, y + 37, "Abholen", ON_GREEN, false);
+                    } else {
+                        c.text(238, y + 38, "✔ Abgeholt", GREEN, true);
+                    }
+                }
+                case LOCKED -> {
+                    long need = Math.max(1, r.minutes());
+                    int fill = Math.max(3, (int) Math.round(BAR_W * (double) v.activeMinutes() / need) - 1);
+                    c.sprite(BAR_X, by, KitData.Sprite.PT_BAR_EMPTY, Canvas.Z_BUTTON);
+                    c.strip(BAR_X + 1, by + 1, KitData.Strip.PT_GOLD, Math.min(fill, BAR_W - 3));
+                    String pct = percent(v.activeMinutes(), r.minutes()) + "%";
+                    c.text(238, y + 38, pct, lk.color(), true);
+                    c.text(238 + Canvas.width(pct, true) + 8, y + 38, "noch " + left(r.minutes() - v.activeMinutes()), GRAY, false);
+                }
             }
-        }
-        y += h + 3;
-
-        // Knöpfe
-        boolean can = ready > 0 && v.blocked() == null;
-        String label = can ? "Alle abholen (" + ready + ")" : "Alle abholen";
-        int w = Canvas.width(label, can) - 1 + (can ? 24 : 18);
-        c.button(0, y, w, can ? KitData.Button.H_GOLD : KitData.Button.H_NAV, label, can ? ON : DIM, can);
-        if (can) c.action(0, y, w, KitData.BTN_H, a.claimAll(), "Alle fertigen Stufen abholen");
-        if (pages > 1) {
-            int nw = Canvas.width("›", false) + 18;
-            if (pg + 1 < pages) {
-                c.button(W - nw, y, nw, KitData.Button.H_NAV, "›", NAV, false);
-                c.action(W - nw, y, nw, KitData.BTN_H, a.page(pg + 1), "Nächste Seite");
-            }
-            if (pg > 0) {
-                c.button(W - 2 * nw - 4, y, nw, KitData.Button.H_NAV, "‹", NAV, false);
-                c.action(W - 2 * nw - 4, y, nw, KitData.BTN_H, a.page(pg - 1), "Vorige Seite");
+            // Tooltip über der ganzen Zeile, der Knopf darin klickbar (spätere Bereiche gehen vor)
+            c.action(0, y, W, ROW_H, null, tooltip(r, v.activeMinutes()));
+            if (r.state() == State.READY) {
+                c.action(316, y + 34, 64, 14, v.blocked() != null ? a.verify() : a.claim(r.number()), tooltip(r, v.activeMinutes()));
             }
         }
         return c;

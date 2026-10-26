@@ -80,9 +80,11 @@ final class SelfTest {
                     public Consumer<Player> toggleJump() { return NO; }
                     public Consumer<Player> page(int p) { return NO; }
                 }));
-        canvas.accept("Spielzeit", () -> PlaytimeScreen.canvas(new PlaytimeScreen.View("Survival", 90, List.of(
-                new PlaytimeScreen.Row(1, 60, List.of(new PlaytimeScreen.Chip(KitData.Icon.GOLD_NUGGET, "500", TextColor.color(0xFFFFFF))),
-                        PlaytimeScreen.State.READY)), "Discord fehlt", -1), new PlaytimeScreen.Actions() {
+        canvas.accept("Spielzeit", () -> PlaytimeScreen.canvas(new PlaytimeScreen.View(90, List.of(
+                new PlaytimeScreen.Row(1, "Neuling", "grau", 60, List.of(new PlaytimeScreen.Reward("100 Coins",
+                        TextColor.color(0xFCD45D), "+100 Coins", "gold")), PlaytimeScreen.State.READY),
+                new PlaytimeScreen.Row(2, "Legende der Spielzeit", "rot", 90000, List.of(), PlaytimeScreen.State.LOCKED)),
+                "Discord fehlt", -1), new PlaytimeScreen.Actions() {
                             public Consumer<Player> claim(int n) { return NO; }
                             public Consumer<Player> claimAll() { return NO; }
                             public Consumer<Player> verify() { return NO; }
@@ -211,6 +213,25 @@ final class SelfTest {
             ok[0]++;
         } catch (Throwable t) {
             fails.add("Eingabe-Dialog: " + t);
+        }
+
+        // Spielzeit: alle Seiten mit den echten Stufen; jede Schlüssel-Belohnung braucht ihre Art und eine Kiste im Modus
+        PlaytimeScreen pts = new PlaytimeScreen(plugin);
+        for (String mode : List.of("survival", "smp")) {
+            for (int pg = 0; pg < pts.pageCount(mode); pg++) {
+                int page = pg;
+                canvas.accept("Spielzeit " + mode + " Seite " + (pg + 1), () -> pts.preview(mode, 300, page));
+            }
+            List<String> bad = new ArrayList<>();
+            for (de.kuby.kubyplugins.service.PlaytimeService.Stage st : plugin.playtime().stages(mode)) {
+                for (de.kuby.kubyplugins.service.PlaytimeService.Prize pr : st.prizes()) {
+                    if (!pr.kind().equals("key")) continue;
+                    boolean crate = plugin.crates().crates(mode).stream().anyMatch(c -> c.key().equalsIgnoreCase(pr.value()));
+                    if (plugin.keys().type(pr.value()) == null || !crate) bad.add(st.number() + ":" + pr.value());
+                }
+            }
+            if (bad.isEmpty()) ok[0]++;
+            else fails.add("Spielzeit " + mode + ": Schlüssel ohne Art oder Kiste " + bad);
         }
 
         // Prüfungen aus den Addons (z. B. Survival-Juwelenshop, Möbel- und Pet-Katalog)

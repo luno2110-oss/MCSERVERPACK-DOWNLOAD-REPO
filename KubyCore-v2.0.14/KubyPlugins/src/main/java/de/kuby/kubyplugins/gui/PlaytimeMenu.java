@@ -16,10 +16,12 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Spielzeit-Stufen als Truhe (ohne UI-Pack): jede Stufe ein Item, Klick holt ab, unten „Alle abholen“. */
+/** Spielzeit-Stufen als Truhe (ohne UI-Pack): jede Stufe ein Item, Klick holt ab, unten „Alle abholen“ und Seiten. */
 public final class PlaytimeMenu extends GuiMenu {
 
     private static final int[] SLOTS = {10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34};
+
+    private int page;
 
     public PlaytimeMenu(KubyPlugins plugin) {
         super(plugin, Msg.parse("<dark_gray>" + SmallCaps.of("spielzeit")), 5);
@@ -39,8 +41,11 @@ public final class PlaytimeMenu extends GuiMenu {
         set(4, Items.make(Material.CLOCK, "<#F2C84A>Deine Spielzeit", head), null);
 
         List<Stage> stages = pt.stages(mode);
-        for (int i = 0; i < stages.size() && i < SLOTS.length; i++) {
-            Stage s = stages.get(i);
+        int pages = Math.max(1, (stages.size() + SLOTS.length - 1) / SLOTS.length);
+        page = Math.max(0, Math.min(page, pages - 1));
+        int from = page * SLOTS.length;
+        for (int i = 0; from + i < stages.size() && i < SLOTS.length; i++) {
+            Stage s = stages.get(from + i);
             boolean done = pt.isClaimed(p.getUniqueId(), mode, s);
             boolean ready = !done && act >= s.minutes();
             List<String> lore = new ArrayList<>();
@@ -51,7 +56,7 @@ public final class PlaytimeMenu extends GuiMenu {
             else if (ready) lore.add(blocked == null ? "<yellow>Klick: abholen" : "<red>Erst Discord verlinken (/verify)");
             else lore.add("<red>Noch " + PlaytimeScreen.duration(s.minutes() - act));
             ItemStack item = Items.make(done ? Material.MINECART : ready ? Material.CHEST_MINECART : Material.CHEST,
-                    (done ? "<gray>" : "<#F2C84A>") + "Stufe " + s.number(), lore);
+                    (done ? "<gray>" : "<#F2C84A>") + s.number() + ". " + s.title(), lore);
             if (ready) {
                 ItemMeta meta = item.getItemMeta();
                 meta.setEnchantmentGlintOverride(true);
@@ -79,5 +84,13 @@ public final class PlaytimeMenu extends GuiMenu {
             open(p);
         });
         set(36, Items.make(Material.ARROW, "<gray>Zurück zum Menü", List.of()), e -> new MainMenu(plugin).open(p));
+        if (page > 0) set(39, Items.make(Material.SPECTRAL_ARROW, "<gray>Vorige Seite", List.of()), e -> {
+            page--;
+            open(p);
+        });
+        if (page + 1 < pages) set(41, Items.make(Material.SPECTRAL_ARROW, "<gray>Nächste Seite", List.of()), e -> {
+            page++;
+            open(p);
+        });
     }
 }

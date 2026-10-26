@@ -18,13 +18,13 @@ import java.util.UUID;
 
 /**
  * Virtuelle Kisten-Schlüssel: sie liegen nicht im Inventar, sondern auf einem Konto je Modus (Survival-Schlüssel
- * öffnen nur Survival-Kisten). Arten stehen in keys.types ("id;Name;#Farbe"). Vergabe per /keys give (Konsole,
+ * öffnen nur Survival-Kisten). Arten stehen in keys.types ("id;Name;#Farbe[;Kurzname]"). Vergabe per /keys give (Konsole,
  * Juwelenshop, Votes) oder direkt (Spielzeit, Keyall). Gespeichert in keys.yml.
  */
 public final class KeyService {
 
-    /** Eine Schlüsselart: id, kurzer Name (wie die Kiste, z. B. "Episch"), Farbe. */
-    public record KeyType(String id, String name, String color) {
+    /** Eine Schlüsselart: id, kurzer Name (wie die Kiste, z. B. "Episch"), Farbe, Kurzname in Listen (z. B. "Epic-Key"). */
+    public record KeyType(String id, String name, String color, String label) {
         /** Voller Name, z. B. "Episch-Schlüssel". */
         public String full() {
             return name + "-Schlüssel";
@@ -61,7 +61,9 @@ public final class KeyService {
             String[] p = raw.split(";");
             if (p.length < 2) continue;
             String id = p[0].trim().toLowerCase(Locale.ROOT);
-            out.put(id, new KeyType(id, p[1].trim(), p.length > 2 ? p[2].trim() : "#F8D35A"));
+            String name = p[1].trim();
+            out.put(id, new KeyType(id, name, p.length > 2 ? p[2].trim() : "#F8D35A",
+                    p.length > 3 && !p[3].isBlank() ? p[3].trim() : name + "-Key"));
         }
         return out;
     }
