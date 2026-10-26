@@ -165,11 +165,14 @@ class Model:
         return round(max(0.25, float(self.bounds()[1][1]) / 16), 2)
 
     def json(self):
-        lo, hi = self.bounds()
-        size = max(hi - lo)
-        s = self.gui_scale or round(min(0.625, 0.625 * 16 / max(16.0, size) * 1.15), 3)
-        # Mitte des Modells in die Mitte des Feldes
-        c = (lo + hi) / 2 - 8
+        # Inventar: gedrehte Eckpunkte messen, das Bild füllt 14 von 16 Pixeln, seine Mitte liegt in der Feldmitte
+        m = rot_matrix(*GUI_ROT)
+        pts = np.array([[x, y, z] for el in self.elements for x in (el["from"][0], el["to"][0])
+                        for y in (el["from"][1], el["to"][1]) for z in (el["from"][2], el["to"][2])], dtype=float) - 8
+        q = (m @ pts.T).T
+        span = max(q[:, 0].max() - q[:, 0].min(), q[:, 1].max() - q[:, 1].min())
+        s = self.gui_scale or round(min(1.0, 14.0 / span), 3)
+        mid = np.array([(q[:, 0].max() + q[:, 0].min()) / 2, (q[:, 1].max() + q[:, 1].min()) / 2])
         disp = {
             "gui": {"rotation": GUI_ROT, "translation": [0, 0, 0], "scale": [s, s, s]},
             "ground": {"rotation": [0, 0, 0], "translation": [0, 2, 0], "scale": [0.25, 0.25, 0.25]},
@@ -178,8 +181,7 @@ class Model:
             "firstperson_righthand": {"rotation": [0, 45, 0], "translation": [0, 0, 0], "scale": [0.3, 0.3, 0.3]},
             "head": {"rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [0.6, 0.6, 0.6]},
         }
-        # verschiebt das Modell in der Inventar-Ansicht so, dass seine Mitte im Feld liegt (vor dem Drehen)
-        disp["gui"]["translation"] = gui_shift(c, s)
+        disp["gui"]["translation"] = [round(float(-mid[0] * s), 2), round(float(-mid[1] * s), 2), 0]
         tx = dict(self.textures)
         tx["particle"] = tx.get("0", "minecraft:block/oak_planks")
         return {"textures": tx, "elements": self.elements, "display": disp}
@@ -199,13 +201,6 @@ def rot_matrix(rx_deg, ry_deg, rz_deg=0):
     ry = np.array([[math.cos(b), 0, math.sin(b)], [0, 1, 0], [-math.sin(b), 0, math.cos(b)]])
     rz = np.array([[math.cos(c), -math.sin(c), 0], [math.sin(c), math.cos(c), 0], [0, 0, 1]])
     return rx @ ry @ rz
-
-
-def gui_shift(center_px, s):
-    """Verschiebung (in Pixeln) für display.gui, damit die Modellmitte in die Feldmitte fällt."""
-    m = rot_matrix(*GUI_ROT)
-    v = m @ (np.array(center_px, dtype=float) * s)
-    return [round(float(-v[0]), 2), round(float(-v[1]), 2), 0]
 
 
 # =====================================================================================================================
