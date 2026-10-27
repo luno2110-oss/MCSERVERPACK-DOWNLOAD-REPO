@@ -67,19 +67,24 @@ final class SelfTest {
         }
         canvas.accept("Casino-Gewinntabelle", () -> CasinoScreens.slotsPaytable(100000, 100));
         canvas.accept("Roulette-Verlauf", () -> CasinoScreens.rouletteHistory(List.of(0, 17, 32), NO));
-        canvas.accept("Freunde", () -> FriendsScreen.canvas(new FriendsScreen.View(List.of(
-                new FriendsScreen.Row("Test", true, true, "Wildnis")), List.of(new FriendsScreen.Req("Test2", true)), 20, true,
-                true, 0, null), new FriendsScreen.Actions() {
-                    public Consumer<Player> accept(String n) { return NO; }
-                    public Consumer<Player> deny(String n) { return NO; }
-                    public Consumer<Player> jump(String n) { return NO; }
-                    public Consumer<Player> write(String n) { return NO; }
-                    public Consumer<Player> remove(String n) { return NO; }
-                    public Consumer<Player> add() { return NO; }
-                    public Consumer<Player> toggleRequests() { return NO; }
-                    public Consumer<Player> toggleJump() { return NO; }
-                    public Consumer<Player> page(int p) { return NO; }
-                }));
+        FriendsScreen.Actions fa = new FriendsScreen.Actions() {
+            public Consumer<Player> tab(FriendsScreen.Tab t, boolean sent) { return NO; }
+            public Consumer<Player> accept(String n) { return NO; }
+            public Consumer<Player> deny(String n) { return NO; }
+            public Consumer<Player> jump(String n) { return NO; }
+            public Consumer<Player> write(String n) { return NO; }
+            public Consumer<Player> remove(String n) { return NO; }
+            public Consumer<Player> request(String n) { return NO; }
+            public Consumer<Player> page(int p) { return NO; }
+        };
+        for (FriendsScreen.Tab t : FriendsScreen.Tab.values()) {
+            for (boolean full : new boolean[]{false, true}) {
+                canvas.accept("Freunde " + t + (full ? " voll" : " leer"), () -> FriendsScreen.canvas(new FriendsScreen.View(t, full,
+                        "Survival", full ? List.of(new FriendsScreen.Row("Test", true, true, "Spawn")) : List.of(),
+                        full ? List.of(new FriendsScreen.Req("Test2", true), new FriendsScreen.Req("Test3", false)) : List.of(),
+                        full ? List.of(new FriendsScreen.Near("Test4", 12)) : List.of(), 25, 0, null), fa));
+            }
+        }
         canvas.accept("Spielzeit", () -> PlaytimeScreen.canvas(new PlaytimeScreen.View(90, List.of(
                 new PlaytimeScreen.Row(1, "Neuling", "grau", 60, List.of(new PlaytimeScreen.Reward("100 Coins",
                         TextColor.color(0xFCD45D), "+100 Coins", "gold")), PlaytimeScreen.State.READY),

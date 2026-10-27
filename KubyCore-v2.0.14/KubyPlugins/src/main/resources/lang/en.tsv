@@ -35,6 +35,7 @@
  Aufgabe	 task
  Aufgaben	 tasks
  Bankier entfernt.	 banker removed.
+ Blöcke	 blocks
  Blöcke <gray>(frei: {})	 blocks <gray>(free: {})
  Blöcke entfernt	 blocks removed
  Claim-Blöcke	 claim blocks
@@ -181,6 +182,7 @@ $ zum Gründen	$ to found
 -10 % Wartezeit	-10 % waiting time
 -Anzeige	 display
 -Paket	 bundle
+-Schlüssel	 key
 . Dutzend	. dozen
 . Dutzend · Quote <white>2:1	. dozen · payout <white>2:1
 . Kolonne	. column
@@ -254,6 +256,8 @@ $ zum Gründen	$ to found
 <#5FE07A><b>Nachricht an 	<#5FE07A><b>Message to 
 <#6CE086><b>Fischhändler</b>	<#6CE086><b>Fish trader</b>
 <#6DE288><b>Als Geschenk	<#6DE288><b>As a gift
+<#7AE5D7><b>FREUNDE</b> <dark_gray>▶ <gray>{} online, {} / {} Plätze	<#7AE5D7><b>FRIENDS</b> <dark_gray>▶ <gray>{} online, {} / {} slots
+<#7AE5D7><b>Nachricht an 	<#7AE5D7><b>Message to 
 <#7BC4FC><b>RTP-QUEUE</b> <dark_gray>▶ <white>{} <gray>wartet auf einen Gegner. <click:run_command:'/rtpqueue'><green>[Beitreten]</green></click>	<#7BC4FC><b>RTP QUEUE</b> <dark_gray>▶ <white>{} <gray>is waiting for an opponent. <click:run_command:'/rtpqueue'><green>[Join]</green></click>
 <#A8ADB8><b>GRAB</b> <dark_gray>▶ <gray>	<#A8ADB8><b>GRAVE</b> <dark_gray>▶ <gray>
 <#B47CF2><b>Kopf suchen	<#B47CF2><b>Search head
@@ -2221,10 +2225,13 @@ Andere dürfen dir mit /trade einen Handel anbieten.	Others may offer you a trad
 Andere dürfen mit /tpa zu dir. Freunde dürfen es immer.	Others may /tpa to you. Friends always can.
 Anfrage ablehnen	Deny request
 Anfrage an einen Spieler schicken	Send a request to a player
+Anfrage an {} senden	Send a request to {}
 Anfrage annehmen	Accept request
 Anfrage schicken	Send request
+Anfrage senden	Send request
 Anfrage zurückziehen	Withdraw request
 Anfragen	Requests
+Anfragen ({})	Requests ({})
 Anfragen: 	Requests: 
 Anfragen: an	Requests: on
 Anfragen: aus	Requests: off
@@ -2989,6 +2996,8 @@ Du sitzt an keinem Blackjack-Tisch.	You are not sitting at a blackjack table.
 Du sitzt nicht am Tisch.	You aren't sitting at the table.
 Du sitzt nicht am Tisch. Hinsetzen mit /poker sitzen <Chips>.	You aren't sitting at the table. Sit down with /poker sitzen <chips>.
 Du sitzt schon am Tisch.	You are already sitting at the table.
+Du spielst auf {} · {} von {} Plätzen	You are playing on {} · {} of {} slots
+Du wartest gerade auf keine Antwort.	You're not waiting for any answer right now.
 Du: Platz 	You: place 
 Duell-Anfragen	Duel requests
 Duell-Menü öffnen	Open the duel menu
@@ -3115,6 +3124,7 @@ Erfolge mit Fortschritt	Achievements with progress
 Ergebnis: {} 	Result: {} 
 Ergebnisse von Duellen und Turnieren, Kopfgelder.	Results of duels and tournaments, bounties.
 Erhabener	Exalted One
+Erhalten 	Received 
 Erhalten ✓	Received ✓
 Erhöhe die Stufe Schritt für Schritt.	Raise the level step by step.
 Erhöhen geht nur über {}. Mitgehen mit /poker call.	You can only raise above {}. Call with /poker call.
@@ -3319,6 +3329,7 @@ Gemeinsam stark	Strong together
 Gemeinsames Konto für euch beide, kostenlos	Shared account for both of you, free
 Gemeinschaftslager und gemeinsame Ressourcen dürfen nur entsprechend den vereinbarten Regeln genutzt werden.	Shared storage and shared resources may only be used according to the agreed rules.
 Gerade	Even
+Gerade ist niemand in deiner Nähe	Nobody is near you right now
 Gerade nichts bereit	Nothing ready right now
 Gerade offline	Offline right now
 Gerade online in 	Online right now in 
@@ -3331,6 +3342,7 @@ Geschenk grün	Green present
 Geschenk rot	Red present
 Geschlossen von 	Closed by 
 Geschützte Items: Mindestwert	Protected items: minimum value
+Gesendet 	Sent 
 Gestorben	Died
 Gewicht	Weight
 Gewinn	Profit
@@ -3490,6 +3502,7 @@ Hilfe	Help
 Hinlegen	Lie down
 Hinreisen	Travel there
 Hinsetzen	Sit down
+Hinzufügen	Add
 Hobby-Angler	Hobby angler
 Hobbylos	Hobbyless
 Hochsee	High seas
@@ -3561,6 +3574,7 @@ Im Casino bleibt es ruhig.	The casino stays quiet.
 Im Casino kannst du kein Home setzen.	You can't set a home in the casino.
 Im Casino läuft Musik. Bei DJ Mia oder mit /music suchst du dir Songs aus oder schaltest sie aus.	Music plays in the casino. At DJ Mia or with /music you choose songs or turn them off.
 Im Casino spielst du mit Chips an Slots, Roulette, Blackjack und Crash. In der VIP-Lounge gibt es Poker.	In the casino you play with chips at slots, roulette, blackjack and crash. The VIP lounge has poker.
+Im Chat bekommst du dazu auch eine Nachricht.	You'll also get a message in chat.
 Im Chat eingeben	Type it in the chat
 Im Dorf hungern sie. Backst du zehn Brote für mich?	The village is hungry. Will you bake ten breads for me?
 Im Juwelenshop gibt es dafür Ränge, Crate-Keys, Vorteilspakete, Möbel und Haustiere.	The jewel shop has ranks, crate keys, bundles, furniture and pets for that.
@@ -3696,6 +3710,7 @@ Kein Spam, keine Werbung für andere Server, keine Caps-Flut und keine verbotene
 Kein Spieler erhält aufgrund seines Ranges oder seiner Spielzeit das Recht, die Regeln zu missachten.	No player gets the right to ignore the rules because of their rank or playtime.
 Kein Team	No team
 Kein Turnier aktiv.	No tournament active.
+Keine Anfrage unterwegs	No request pending
 Keine Anfrage von diesem Spieler.	No request from this player.
 Keine Angebote	No offers
 Keine Anmeldung offen.	No sign-up open.
@@ -3711,6 +3726,7 @@ Keine neuen Runden, Verkaufen geht weiter	No new rounds, selling still works
 Keine offene Anfrage.	No open request.
 Keine offene Einladung.	No open invitation.
 Keine offene Herausforderung.	No open challenge.
+Keine offenen Anfragen	No open requests
 Keine offenen Anträge.	No open proposals.
 Keine passenden Fische im Inventar.	No matching fish in your inventory.
 Keyall-Kiste	Keyall crate
@@ -4083,6 +4099,7 @@ Neu in 	New in
 Neue Arena	New arena
 Neue Aufträge in 	New orders in 
 Neue Bäume	New trees
+Neue Freunde findest du unter „Hinzufügen“.	Find new friends under “Add”.
 Neue Menge:	New amount:
 Neue Nachricht in Ticket <white>#{}</white> von {} <click:run_command:'/support ticket {}'><#FF6478>[Öffnen]</click>	New message in ticket <white>#{}</white> from {} <click:run_command:'/support ticket {}'><#FF6478>[Open]</click>
 Neue Trophäenzahl:	New trophy count:
@@ -4121,6 +4138,7 @@ Noch hat niemand gespielt.	Nobody has played yet.
 Noch kein Konto. Verheiratet: Ehe-Konto. Mit Freunden: an der Bank am Spawn.	No account yet. Married: marriage account. With friends: at the bank at spawn.
 Noch keine Buchungen.	No transactions yet.
 Noch keine Einträge.	No entries yet.
+Noch keine Freunde	No friends yet
 Noch keine Freunde. Schick eine Anfrage mit „Freund hinzufügen“.	No friends yet. Send a request with “Add friend”.
 Noch keine Runde gespielt.	No round played yet.
 Noch keine letzte Runde	No last round yet
@@ -4402,6 +4420,8 @@ Schaufelarbeit	Shovel work
 Scheiden lassen (zweimal klicken)	Divorce (click twice)
 Scheidung	Divorce
 Schere 10 Schafe	Shear 10 sheep
+Schick jemandem eine Anfrage. Sobald er annimmt, siehst du hier, wann und wo er spielt.	Send someone a request. Once they accept, you'll see here when and where they play.
+Schickt dir jemand eine Anfrage, landet sie hier.	If someone sends you a request, it shows up here.
 Schildkröte	Turtle
 Schlammpeitzger	Weatherfish
 Schleichen + Linksklick hebt das Möbel auf, Schleichen + Rechtsklick dreht es.	Sneak + left-click picks the furniture up, sneak + right-click turns it.
@@ -4551,6 +4571,7 @@ Spieler 	Player
 Spieler dürfen nicht absichtlich getötet werden, um ihre Items zu stehlen.	Players must not be killed on purpose to steal their items.
 Spieler einladen	Invite a player
 Spieler einladen (nur Teamchef)	Invite a player (team leader only)
+Spieler in deiner Nähe	Players near you
 Spieler melden	Report a player
 Spieler oder Schlüsselart unbekannt: {} {} (Arten: {})	Unknown player or key type: {} {} (types: {})
 Spieler offline oder Kosmetik unbekannt: {} 	Player offline or cosmetic unknown: {}
@@ -4558,6 +4579,7 @@ Spieler offline oder unbekanntes Möbel: {} 	Player offline or unknown furniture
 Spieler online	Players online
 Spieler-Warps	Player warps
 Spieler-Warps bringen andere zu deinem Laden oder Bauwerk. Mit /sw siehst du alle und reist mit einem Klick hin.	Player warps bring others to your shop or building. With /sw you see all of them and travel there with one click.
+Spielername	Player name
 Spielername eingeben:	Enter player name:
 Spielzeit	Playtime
 Spielzeit-Stufen	Playtime levels
@@ -4737,6 +4759,7 @@ Tiere füttern, scheren, anleinen	Feed, shear and leash animals
 Tiere züchten	Breed animals
 Tiere züchten und scheren	Breed and shear animals
 Tintenfisch	Squid
+Tipp unten einen Namen ein, auch wenn er offline ist.	Type a name below, even if they're offline.
 Tipp: /hilfe <Thema> öffnet ein Thema direkt	Tip: /hilfe <topic> opens a topic directly
 Tisch	Table
 Tisch Grün	Green Table
@@ -5040,6 +5063,7 @@ Zu einem Home reisen	Travel to a home
 Zu klein geworden? Mit der Claim-Axt kannst du dein Grundstück erweitern.	Grown too small? You can expand your plot with the claim axe.
 Zu zweit an einen Zufallsort, Kampf!	Two of you to a random place, fight!
 Zu {} teleportieren	Teleport to {}
+Zu „Hinzufügen“	To “Add”
 Zuechter	Breeder
 Zufalls-Teleport in die Kuby-Welt	Random teleport into the Kuby world
 Zufalls-Teleport in die Wildnis (3 s Wartezeit)	Random teleport into the wild (3 s delay)
@@ -5164,6 +5188,7 @@ noch {} Std.	{} h left
 noch {} Std. {} Min.	{} h {} min. left
 nur aus Kisten	crates only
 nächster Warp: {} Coins	next warp: {} coins
+oder unten einen Namen eintippen	or type a name below
 pro bezahltem Monat,	per paid month,
 ränge	ranks
 s warten	s waiting

@@ -145,7 +145,7 @@ ALL_BOXES = list(BOXES) + list(CASINO_BOXES) + list(SLICED_BOXES)
 # Kästen, die auch schmaler als 48 px gehen (Zahlenfelder im Roulette-Raster, Battle-Pass-Felder und -Knöpfe,
 # Reiter im Survival-Juwelenshop): schmale Mittelstücke
 NARROW_BOXES = (("field_red", "field_green", "field_black", "field_felt") + tuple(build_battlepass.boxes())
-                + ("jss_tab_brown", "jss_tab_off", "jss_tab_pink", "rg_nav"))
+                + ("jss_tab_brown", "jss_tab_off", "jss_tab_pink", "rg_nav", "fr_btn", "fr_sub_on", "fr_sub_off"))
 
 # Knöpfe 22 px: (Rand, Füllung oben hell, Füllung, Schatten 1, Schatten 2) oder Umriss-Knopf (Rand, Füllung)
 BUTTONS = {

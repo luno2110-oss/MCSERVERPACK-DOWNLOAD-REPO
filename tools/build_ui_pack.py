@@ -117,6 +117,12 @@ for name, state in (("warning_button", "normal"), ("warning_button_disabled", "d
     build_logo.logo(state).save(os.path.join(WARN, name + ".png"))
 
 
+# Minecraft-Knöpfe golden wie in den Referenzen (auch unter den Eingabefeldern der Dialoge und in der Link-Abfrage)
+import build_buttons  # noqa: E402
+
+build_buttons.write(OUT)
+
+
 # ---------- Prüfung: Fehler in einer Schrift-Datei lassen Minecraft die ganze Schrift verwerfen ----------
 import check_fonts  # noqa: E402
 
