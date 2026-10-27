@@ -97,6 +97,8 @@ public final class Canvas {
     private Component heading = Component.empty();
     private final List<Glyph> glyphs = new ArrayList<>();
     private final List<Region> regions = new ArrayList<>();
+    /** Texte ohne Schatten (textFlat), z. B. auf den Schaltern „Woche / Gesamt“. */
+    private final java.util.Set<Glyph> flat = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
     private int topMargin;
 
     public Canvas(int width) {
@@ -113,6 +115,12 @@ public final class Canvas {
      */
     public Canvas heading(String text, TextColor color) {
         heading = Component.text(I18n.ctx(text), color);
+        return this;
+    }
+
+    /** Titel aus mehreren Teilen, z. B. „Support › ʙᴇꜱᴛᴇɴʟɪꜱᴛᴇ“ (übersetzt je Textstück). */
+    public Canvas heading(Component title) {
+        heading = I18n.ctx(title);
         return this;
     }
 
@@ -228,6 +236,14 @@ public final class Canvas {
 
     public int text(int x, int y, String text, TextColor color) {
         return text(x, y, text, color, false);
+    }
+
+    /** Text ohne Schatten (helle Schrift auf Knöpfen wie im Original; dunkle Schrift hat nie Schatten). */
+    public int textFlat(int x, int y, String text, TextColor color, boolean bold) {
+        int n = glyphs.size();
+        int w = text(x, y, text, color, bold);
+        if (glyphs.size() > n) flat.add(glyphs.get(glyphs.size() - 1));
+        return w;
     }
 
     /** Text, der bei right endet. */
@@ -688,7 +704,7 @@ public final class Canvas {
                     texts.add(new StringBuilder(Ui.spaceChars(gap)));
                 }
             }
-            Style st = new Style(font, g.color, g.bold, g.kind != Kind.TEXT || dark(g.color), g.region);
+            Style st = new Style(font, g.color, g.bold, g.kind != Kind.TEXT || dark(g.color) || flat.contains(g), g.region);
             Style last = styles.isEmpty() ? null : styles.get(styles.size() - 1);
             if (last != null && last.equals(st)) {
                 texts.get(texts.size() - 1).append(g.chars);

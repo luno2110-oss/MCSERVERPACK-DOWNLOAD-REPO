@@ -9,6 +9,7 @@ import de.kuby.kubyplugins.gui.PlaytimeScreen;
 import de.kuby.kubyplugins.gui.StatsScreen;
 import de.kuby.kubyplugins.service.CosmeticService;
 import de.kuby.kubyplugins.service.SurvivalHelp;
+import de.kuby.kubyplugins.support.SupportScreen;
 import de.kuby.kubyplugins.ui.Canvas;
 import de.kuby.kubyplugins.ui.KitData;
 import de.kuby.kubyplugins.ui.UiDialog;
@@ -250,6 +251,49 @@ final class SelfTest {
         for (int i = 0; i < book.paragraphs().size(); i++) {
             int k = i;
             canvas.accept("Regeln §" + (i + 1), () -> de.kuby.kubyplugins.gui.RulesScreen.paragraph(book, k, ra));
+        }
+
+        // Support: alle Seiten leer und voll, Neues Ticket mit Feldern und zwei Knöpfen (Fläche hinter der Beschriftung)
+        SupportScreen.Actions su = (SupportScreen.Actions) java.lang.reflect.Proxy.newProxyInstance(
+                SupportScreen.Actions.class.getClassLoader(), new Class<?>[]{SupportScreen.Actions.class}, (o, m, args) -> NO);
+        TextColor blue = TextColor.color(0x7BC4FC);
+        List<SupportScreen.Item> items = List.of(new SupportScreen.Item(14, "Testfrage mit einem langen Titel bis vierzig",
+                "neue Antwort", blue, "27.10. 14:03 · Helfer: Test · 3 Nachrichten", true),
+                new SupportScreen.Item(9, "Kurz", "offen", blue, "26.10. 20:11 · noch kein Helfer · 1 Nachricht", false));
+        for (boolean full : new boolean[]{false, true}) {
+            String n = full ? " voll" : " leer";
+            List<SupportScreen.Item> its = full ? items : List.of();
+            canvas.accept("Support" + n, () -> SupportScreen.home(new SupportScreen.Home(full ? 2 : 0, 3, its, its.size(), full ? 1 : 0,
+                    full, full ? 4 : 0, 50, "https://discord.gg/"), su));
+            canvas.accept("Support Meine Tickets" + n, () -> SupportScreen.mine(full ? 2 : 0, 3, its, su));
+            canvas.accept("Support Helfen" + n, () -> SupportScreen.queue(new SupportScreen.Queue(full ? "team" : "offen", full,
+                    new int[]{2, 0, 1}, its), su));
+            canvas.accept("Support Bestenliste" + n, () -> SupportScreen.board(new SupportScreen.Board(full, full
+                    ? List.of(new SupportScreen.Place("Test", 12), new SupportScreen.Place("Test2", 1)) : List.of(),
+                    "Du bist kein Ingame-Helfer."), su));
+            canvas.accept("Support Helfer werden" + n, () -> SupportScreen.become(new SupportScreen.Become(full ? 4000 : 699, 50,
+                    full, false), su));
+        }
+        canvas.accept("Support Helfer", () -> SupportScreen.become(new SupportScreen.Become(4000, 50, true, true), su));
+        canvas.accept("Support Ticket", () -> SupportScreen.ticket(new SupportScreen.Detail(14, "Testfrage", "Test", "27.10. 14:03",
+                "in Arbeit", blue, true, List.of(new SupportScreen.Line("Test", "spieler", "27.10. 14:03", "Wie geht das? ".repeat(30)),
+                new SupportScreen.Line("Test2 kümmert sich um dein Ticket.", "system", "27.10. 14:05", ""),
+                new SupportScreen.Line("Test2", "helfer", "27.10. 14:06", "So geht das.")), 0, true, true, true, true, true), su));
+        canvas.accept("Support Bewerten", () -> SupportScreen.rate(14, "Test2", su));
+        try {
+            ActionButton send = ActionButton.create(UiDialog.plate(KitData.Sprite.SU_PLATE_PURPLE, KitData.Sprite.SU_PENCIL,
+                    "Abschicken", SupportScreen.ON), null, 199, DialogAction.customClick((r, a) -> { },
+                    net.kyori.adventure.text.event.ClickCallback.Options.builder().uses(1).build()));
+            ActionButton back = ActionButton.create(UiDialog.plate(KitData.Sprite.SU_PLATE_GRAY, null, "‹ Zurück",
+                    SupportScreen.ON), null, 199, DialogAction.customClick((r, a) -> { },
+                    net.kyori.adventure.text.event.ClickCallback.Options.builder().uses(1).build()));
+            UiDialog.dialog(null, SupportScreen.ask(su), List.of(
+                    DialogInput.text("titel", Msg.parse("Titel")).width(400).maxLength(40).initial("").build(),
+                    DialogInput.text("frage", Msg.parse("Frage")).width(400).maxLength(200).initial("")
+                            .multiline(TextDialogInput.MultilineOptions.create(5, 52)).build()), List.of(send, back), 2);
+            ok[0]++;
+        } catch (Throwable t) {
+            fails.add("Support Neues Ticket: " + t);
         }
 
         // Prüfungen aus den Addons (z. B. Survival-Juwelenshop, Möbel- und Pet-Katalog)

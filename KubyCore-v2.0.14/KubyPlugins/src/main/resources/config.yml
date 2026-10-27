@@ -1296,9 +1296,11 @@ friends:
 
 # Support-Tickets (/support): Helfer werden kann, wer so viele Stunden gespielt hat (und Discord verlinkt, wenn
 # DiscordSRV da ist). Team = Permission kuby.support.team. Höchstens max-open offene Tickets je Spieler.
+# discord-ticket: Link der Zeile „Discord-Ticket“ (Reports, Strafen, Entbannung); leer = discord.invite.
 support:
   helper-min-hours: 50
-  max-open: 2
+  max-open: 3
+  discord-ticket: ""
 
 # Guide (SMP-Hilfe, /guide; /hilfe im SMP): bis zu 12 Seiten, links die Liste, rechts der Text (Dialog mit Grafik-Pack,
 # sonst im Chat). Zeilen: "# Überschrift", "> Punkt" ("> /befehl <Arg> - Text": Befehl gelb), "" = Leerzeile, sonst

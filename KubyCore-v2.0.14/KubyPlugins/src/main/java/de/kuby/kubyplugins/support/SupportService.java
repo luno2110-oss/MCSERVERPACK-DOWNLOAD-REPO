@@ -23,7 +23,8 @@ import java.util.UUID;
  * Support-Tickets: Spieler schreiben mit /support new ein Ticket (Titel und Frage). Helfer (erfahrene Spieler mit
  * verlinktem Discord) übernehmen und antworten, der Spieler bekommt jede Antwort im Chat. Kommt ein Helfer nicht
  * weiter, gibt er das Ticket an das Team (Permission kuby.support.team). Ist die Frage gelöst, bestätigt der Spieler
- * und vergibt 1 bis 5 Sterne. /support top zeigt die besten Helfer. Gespeichert in support.yml.
+ * und vergibt 1 bis 5 Sterne; der Helfer bekommt 1 Punkt plus die Sterne. /support top zeigt die Bestenliste (Woche ab
+ * Montag 06:00 oder alle Punkte seit dem Start). Gespeichert in support.yml.
  */
 public final class SupportService {
 
@@ -64,12 +65,10 @@ public final class SupportService {
         }
     }
 
-    /** Statistik eines Helfers. */
-    public record HelperStat(UUID id, int solved, int ratings, int starSum) {
-        public double average() {
-            return ratings == 0 ? 0 : (double) starSum / ratings;
-        }
-    }
+    /** Platz in der Bestenliste: Helfer und Punkte. */
+    public record Score(UUID id, int points) {}
+
+    private static final java.time.ZoneId ZONE = java.time.ZoneId.of("Europe/Berlin");
 
     private static final String PREFIX = "<#FF6478><b>SUPPORT</b> <dark_gray>▶ <gray>";
 
@@ -78,6 +77,8 @@ public final class SupportService {
     private final Map<Integer, Ticket> tickets = new LinkedHashMap<>();
     private final Set<UUID> helpers = new HashSet<>();
     private final Map<UUID, Long> lastTicket = new HashMap<>();
+    /** Punkte seit dem Start (bleiben, auch wenn alte Tickets nach 60 Tagen vergessen werden). */
+    private final Map<UUID, Integer> points = new HashMap<>();
     private int nextId = 1;
 
     public SupportService(KubyPlugins plugin) {
@@ -112,8 +113,17 @@ public final class SupportService {
         return isTeam(p) || isHelper(p.getUniqueId());
     }
 
-    private long helperHours() {
+    public long helperHours() {
         return plugin.getConfig().getLong("support.helper-min-hours", 50);
+    }
+
+    /** Discord verlinkt (ohne DiscordSRV gilt das als erfüllt). */
+    public boolean discordOk(UUID id) {
+        return !plugin.discord().available() || plugin.discord().discordIdOf(id) != null;
+    }
+
+    public int maxOpen() {
+        return plugin.getConfig().getInt("support.max-open", 3);
     }
 
     /** Helfer werden: lange genug gespielt und Discord verlinkt. Null bei Erfolg, sonst warum nicht. */
@@ -122,7 +132,7 @@ public final class SupportService {
         if (helpers.contains(id)) return "Du bist schon Helfer.";
         long hours = plugin.playtime().minutesOf(id) / 60;
         if (hours < helperHours()) return "Helfer kann werden, wer mindestens " + helperHours() + " Stunden gespielt hat (du: " + hours + ").";
-        if (plugin.discord().available() && plugin.discord().discordIdOf(id) == null) {
+        if (!discordOk(id)) {
             return "Verlinke zuerst deinen Discord-Account (/verify zeigt dir den Weg).";
         }
         helpers.add(id);
@@ -182,8 +192,8 @@ public final class SupportService {
         String q = text == null ? "" : text.trim();
         if (t.length() < 3) return "Der Titel braucht mindestens 3 Zeichen.";
         if (q.length() < 10) return "Beschreib deine Frage etwas genauer (mindestens 10 Zeichen).";
-        if (openCount(p.getUniqueId()) >= plugin.getConfig().getInt("support.max-open", 2)) {
-            return "Du hast schon " + plugin.getConfig().getInt("support.max-open", 2) + " offene Tickets. Warte auf eine Antwort.";
+        if (openCount(p.getUniqueId()) >= maxOpen()) {
+            return "Du hast schon " + maxOpen() + " offene Tickets. Warte auf eine Antwort.";
         }
         Long last = lastTicket.get(p.getUniqueId());
         if (last != null && System.currentTimeMillis() - last < 120_000) return "Warte kurz, bevor du das nächste Ticket schreibst.";
@@ -262,6 +272,7 @@ public final class SupportService {
         t.stars = t.helper == null ? 0 : stars;
         t.unread = false;
         t.messages.add(new Message(System.currentTimeMillis(), p.getUniqueId(), "system", "Gelöst" + (t.helper == null ? "" : " · " + stars + " Sterne")));
+        if (t.helper != null) points.merge(t.helper, 1 + t.stars, Integer::sum);
         save();
         Player h = t.helper == null ? null : Bukkit.getPlayer(t.helper);
         if (h != null) send(h, "Ticket <white>#" + t.id + "</white> ist gelöst. " + p.getName() + " gibt dir <gold>" + "★".repeat(stars) + "</gold>.");
@@ -301,27 +312,44 @@ public final class SupportService {
         if (a != null) send(a, Msg.escape(text) + " <click:run_command:'/support ticket " + t.id + "'><#FF6478>[Öffnen]</click>");
     }
 
-    /** Beste Helfer: Durchschnitt der Sterne (ab 3 Bewertungen), dann Anzahl gelöster Tickets. */
-    public synchronized List<HelperStat> top(int n) {
-        Map<UUID, int[]> stats = new HashMap<>();
+    /** Beginn der laufenden Support-Woche: Montag 06:00 (Berlin). */
+    public static long weekStart(long now) {
+        java.time.ZonedDateTime t = java.time.Instant.ofEpochMilli(now).atZone(ZONE);
+        java.time.ZonedDateTime start = t.with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY))
+                .toLocalDate().atTime(6, 0).atZone(ZONE);
+        if (start.isAfter(t)) start = start.minusWeeks(1);
+        return start.toInstant().toEpochMilli();
+    }
+
+    /** Wann ein gelöstes Ticket gelöst wurde (letzte Nachricht, „Gelöst“ vom System). */
+    private static long solvedAt(Ticket t) {
+        return t.messages.isEmpty() ? t.created : t.messages.get(t.messages.size() - 1).time();
+    }
+
+    /** Punkte der laufenden Woche: je gelöstem Ticket 1 plus die Sterne. */
+    private Map<UUID, Integer> weekPoints() {
+        long from = weekStart(System.currentTimeMillis());
+        Map<UUID, Integer> out = new HashMap<>();
         for (Ticket t : tickets.values()) {
-            if (t.helper == null || t.status != Status.GELOEST) continue;
-            int[] s = stats.computeIfAbsent(t.helper, k -> new int[3]);
-            s[0]++;
-            if (t.stars > 0) {
-                s[1]++;
-                s[2] += t.stars;
-            }
+            if (t.helper != null && t.status == Status.GELOEST && solvedAt(t) >= from) out.merge(t.helper, 1 + t.stars, Integer::sum);
         }
-        List<HelperStat> out = new ArrayList<>();
-        for (Map.Entry<UUID, int[]> e : stats.entrySet()) out.add(new HelperStat(e.getKey(), e.getValue()[0], e.getValue()[1], e.getValue()[2]));
-        out.sort((a, b) -> {
-            boolean ra = a.ratings() >= 3, rb = b.ratings() >= 3;
-            if (ra != rb) return ra ? -1 : 1;
-            int c = Double.compare(b.average(), a.average());
-            return c != 0 ? c : Integer.compare(b.solved(), a.solved());
-        });
+        return out;
+    }
+
+    /** Bestenliste: die n Helfer mit den meisten Punkten (Woche oder seit dem Start). */
+    public synchronized List<Score> ranking(boolean week, int n) {
+        List<Score> out = new ArrayList<>();
+        for (Map.Entry<UUID, Integer> e : (week ? weekPoints() : points).entrySet()) {
+            if (e.getValue() > 0) out.add(new Score(e.getKey(), e.getValue()));
+        }
+        out.sort((a, b) -> b.points() != a.points() ? Integer.compare(b.points(), a.points())
+                : nameOf(a.id()).compareToIgnoreCase(nameOf(b.id())));
         return out.size() > n ? out.subList(0, n) : out;
+    }
+
+    /** Punkte eines Spielers (Woche oder seit dem Start). */
+    public synchronized int pointsOf(UUID id, boolean week) {
+        return (week ? weekPoints() : points).getOrDefault(id, 0);
     }
 
     // =================================================================================================================
@@ -335,6 +363,15 @@ public final class SupportService {
             try {
                 helpers.add(UUID.fromString(h));
             } catch (IllegalArgumentException ignored) {
+            }
+        }
+        ConfigurationSection ps = y.getConfigurationSection("punkte");
+        if (ps != null) {
+            for (String k : ps.getKeys(false)) {
+                try {
+                    points.put(UUID.fromString(k), ps.getInt(k));
+                } catch (IllegalArgumentException ignored) {
+                }
             }
         }
         ConfigurationSection s = y.getConfigurationSection("tickets");
@@ -353,12 +390,18 @@ public final class SupportService {
                     String[] p = m.split(";", 4);
                     if (p.length == 4) t.messages.add(new Message(Long.parseLong(p[0]), UUID.fromString(p[1]), p[2], p[3]));
                 }
-                // Erledigte Tickets nach 60 Tagen vergessen (die Helfer-Rangliste zählt die letzten 60 Tage)
+                // Erledigte Tickets nach 60 Tagen vergessen (die Punkte bleiben unter „punkte“)
                 long last = t.messages.isEmpty() ? t.created : t.messages.get(t.messages.size() - 1).time();
                 if (!t.status.open() && System.currentTimeMillis() - last > 60L * 24 * 3600 * 1000) continue;
                 tickets.put(t.id, t);
             } catch (IllegalArgumentException ex) {
                 plugin.getLogger().warning("support.yml: Ticket " + key + " übersprungen (" + ex.getMessage() + ")");
+            }
+        }
+        // Ältere support.yml ohne Punkte: aus den gelösten Tickets zusammenzählen
+        if (ps == null) {
+            for (Ticket t : tickets.values()) {
+                if (t.helper != null && t.status == Status.GELOEST) points.merge(t.helper, 1 + t.stars, Integer::sum);
             }
         }
     }
@@ -369,6 +412,7 @@ public final class SupportService {
         List<String> h = new ArrayList<>();
         for (UUID u : helpers) h.add(u.toString());
         y.set("helfer", h);
+        for (Map.Entry<UUID, Integer> e : points.entrySet()) y.set("punkte." + e.getKey(), e.getValue());
         for (Ticket t : tickets.values()) {
             String k = "tickets." + t.id + ".";
             y.set(k + "autor", t.author.toString());

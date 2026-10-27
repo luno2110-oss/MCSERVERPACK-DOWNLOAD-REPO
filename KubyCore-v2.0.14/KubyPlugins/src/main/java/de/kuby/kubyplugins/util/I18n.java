@@ -55,6 +55,17 @@ public final class I18n {
             return size() > CACHE;
         }
     });
+    /**
+     * Schon übersetzte Texte (Ergebnisse von tr): werden nicht noch einmal übersetzt, wenn ein Menü einen Text erst
+     * kürzt (Canvas.fit übersetzt) und dann zeichnet (übersetzt wieder) – sonst würde z. B. „an“ in „not an in-game
+     * helper“ als deutsches „an“ gelesen.
+     */
+    private static final Map<String, Boolean> done = Collections.synchronizedMap(new LinkedHashMap<>(256, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, Boolean> e) {
+            return size() > CACHE;
+        }
+    });
 
     // =================================================================================================================
     // Laden
@@ -69,6 +80,7 @@ public final class I18n {
     public static void names(Predicate<String> isName) {
         names = isName;
         cache.clear();
+        done.clear();
     }
 
     /** Lädt die Vorlagen (Datei aus dem Plugin, danach Ergänzungen/Korrekturen aus dem Datenordner). Gibt die Anzahl zurück. */
@@ -111,6 +123,7 @@ public final class I18n {
         for (Tpl t : list) keys.add(t.key());
         index = new Aho(keys);
         cache.clear();
+        done.clear();
         return list.size();
     }
 
@@ -238,9 +251,11 @@ public final class I18n {
         if (text == null || text.isEmpty() || templates.isEmpty()) return text;
         String hit = cache.get(text);
         if (hit != null) return hit;
+        if (done.containsKey(text)) return text;
         String out = translate(text, 0);
         if (out.equals(text) && caps(text)) out = upper.getOrDefault(text, text);
         cache.put(text, out);
+        if (!out.equals(text)) done.put(out, Boolean.TRUE);
         return out;
     }
 

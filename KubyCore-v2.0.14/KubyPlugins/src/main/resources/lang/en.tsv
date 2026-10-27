@@ -9,6 +9,8 @@
  (vorher {})	 (before {})
  <click:run_command:'/friend jump {}'><green>[Nachspringen]</click>	 <click:run_command:'/friend jump {}'><green>[Jump to them]</click>
  <click:run_command:'/poker raise {}'><hover:show_text:'Mindesterhöhung'><yellow>[Raise auf {}]</yellow></hover></click> <click:suggest_command:'/poker raise '><hover:show_text:'Betrag selbst eingeben'><yellow>[Raise …]</yellow></hover></click>	 <click:run_command:'/poker raise {}'><hover:show_text:'Minimum raise'><yellow>[Raise to {}]</yellow></hover></click> <click:suggest_command:'/poker raise '><hover:show_text:'Enter the amount yourself'><yellow>[Raise …]</yellow></hover></click>
+ <click:run_command:'/support helfen'><green>[Helfen]</click>	 <click:run_command:'/support helfen'><green>[Help]</click>
+ <click:run_command:'/support helfer'><green>[Helfer werden]</click>	 <click:run_command:'/support helfer'><green>[Become a helper]</click>
  <click:run_command:'/support ticket {}'><#FF6478>[Öffnen]</click>	 <click:run_command:'/support ticket {}'><#FF6478>[Open]</click>
  <dark_gray>(Steuer {})	 <dark_gray>(tax {})
  <dark_gray>(auf dein {}-Konto).	 <dark_gray>(to your {} account).
@@ -88,6 +90,7 @@
  Tagen <gold>+	 days <gold>+
  Tausche deine 	 Exchange your
  Themen	 topics
+ Ticket{} auf einen Helfer. <click:run_command:'/support helfen'><#FF6478>[Ansehen]</click>	 ticket{} waiting for a helper. <click:run_command:'/support helfen'><#FF6478>[View]</click>
  Ticket{} auf einen Helfer. <click:run_command:'/support'><#FF6478>[Ansehen]</click>	 ticket{} waiting for a helper. <click:run_command:'/support'><#FF6478>[View]</click>
  Tokens	 tokens
  V {} <dark_gray>· <gray>Lager <white>{} <dark_gray>· <gray>Kasse <gold>{} <dark_gray>({}, {}, {})	 S {} <dark_gray>· <gray>Stock <white>{} <dark_gray>· <gray>Till <gold>{} <dark_gray>({}, {}, {})
@@ -118,6 +121,7 @@
  kümmert sich um dein Ticket #{}.	 is taking care of your ticket #{}.
  kümmert sich um dein Ticket.	 is taking care of your ticket.
  neue Antwort	 new answer
+ neue Antworten	 new answers
  online	 online
  senden?	 send?
  statt 	 instead of 
@@ -137,8 +141,10 @@
  · Dutzend 	 · dozen 
  · Einsatz 	 · Bet 
  · Grün 	 · Green
+ · Helfer	 · helper
  · Helfer: 	 · helper: 
  · Hologramm	 · Hologram
+ · Platz 	 · rank 
  · Quote <white>1:1	 · payout <white>1:1
  · Rest 	 · rest 
  · Sitzplatz	 · seat
@@ -157,6 +163,7 @@
  · {} Punkte	 · {} points
  · {} Sterne	 · {} stars
  · {} · {} Nachrichten	 · {} · {} messages
+ — Discord öffnen	 — open Discord
  — alle ausgezahlt	 — all cashed out
 $ am 1. Tag	$ on day 1
 $ an einen Spieler senden	Send $ to a player
@@ -261,6 +268,8 @@ $ zum Gründen	$ to found
 <#7BC4FC><b>RTP-QUEUE</b> <dark_gray>▶ <white>{} <gray>wartet auf einen Gegner. <click:run_command:'/rtpqueue'><green>[Beitreten]</green></click>	<#7BC4FC><b>RTP QUEUE</b> <dark_gray>▶ <white>{} <gray>is waiting for an opponent. <click:run_command:'/rtpqueue'><green>[Join]</green></click>
 <#A8ADB8><b>GRAB</b> <dark_gray>▶ <gray>	<#A8ADB8><b>GRAVE</b> <dark_gray>▶ <gray>
 <#B47CF2><b>Kopf suchen	<#B47CF2><b>Search head
+<#B7A6FC><b>Antworten · #	<#B7A6FC><b>Reply · #
+<#B7A6FC><b>Neues Ticket	<#B7A6FC><b>New ticket
 <#D2D2DA>✝ <b>{}</b>\n<gray>noch <white>{}</white> · {} Items	<#D2D2DA>✝ <b>{}</b>\n<gray><white>{}</white> left · {} items
 <#F0A050><b>KISTE</b> <dark_gray>▶ <gray>{}: <{}><b>{}</b></{}> <dark_gray>({} %)	<#F0A050><b>CRATE</b> <dark_gray>▶ <gray>{}: <{}><b>{}</b></{}> <dark_gray>({} %)
 <#F0A050><b>KISTE</b> <dark_gray>▶ <white>{} <gray>hat <{}>{}</{}> <gray>aus der {} gezogen!	<#F0A050><b>CRATE</b> <dark_gray>▶ <white>{} <gray>pulled <{}>{}</{}> <gray>from the {}!
@@ -361,6 +370,8 @@ $ zum Gründen	$ to found
 <click:run_command:'/quest abholen'><gold>[Abholen]</click>	<click:run_command:'/quest abholen'><gold>[Claim]</click>
 <click:run_command:'/quest abholen'><gold>[Belohnung abholen]</click> <gray>oder im Menü <white>/quest	<click:run_command:'/quest abholen'><gold>[Claim reward]</click> <gray>or in the menu <white>/quest
 <click:run_command:'/sidequests annehmen {}'><green>[Annehmen]</click>  <gray>oder einfach weitergehen	<click:run_command:'/sidequests annehmen {}'><green>[Accept]</click>  <gray>or just walk on
+<click:run_command:'/support antwort {}'><#B7A6FC>[Antworten]</click>	<click:run_command:'/support antwort {}'><#B7A6FC>[Reply]</click>
+<click:run_command:'/support new'><#B7A6FC>[Neues Ticket]</click> <click:run_command:'/support top'><gold>[Bestenliste]</click>	<click:run_command:'/support new'><#B7A6FC>[New ticket]</click> <click:run_command:'/support top'><gold>[Leaderboard]</click>
 <click:run_command:'/tokenshop'><light_purple>[Token-Shop öffnen]</click>	<click:run_command:'/tokenshop'><light_purple>[Open token shop]</click>
 <click:run_command:'/tutorial weiter'><green>[{}]</click>  <click:run_command:'/tutorial stop'><gray>[Beenden]</click>	<click:run_command:'/tutorial weiter'><green>[{}]</click>  <click:run_command:'/tutorial stop'><gray>[End]</click>
 <dark_blue><b>Deine Läden</b> <gray>({})	<dark_blue><b>Your shops</b> <gray>({})
@@ -590,6 +601,8 @@ $ zum Gründen	$ to found
 <gold>▪ <white>Blackjack-Tisch 	<gold>▪ <white>Blackjack table
 <gold>▪ <white>{}x{} <gray>bei <white>	<gold>▪ <white>{}x{} <gray>at <white>
 <gold>★ Turniersieger: <white>{} <gray>gewinnt <gold>{}$ <gray>und <gold>{} Trophäen<gray>!	<gold>★ Tournament winner: <white>{} <gray>wins <gold>{}$ <gray>and <gold>{} trophies<gray>!
+<gray>#{} <white>{} <dark_gray>· <gray>{} <click:run_command:'/support ticket {}'><#B7A6FC>[Öffnen]</click>	<gray>#{} <white>{} <dark_gray>· <gray>{} <click:run_command:'/support ticket {}'><#B7A6FC>[Open]</click>
+<gray>#{} <white>{} <gold>{} Punkte	<gray>#{} <white>{} <gold>{} points
 <gray>$ für den Sieger	<gray>$ for the winner
 <gray>'aus' schaltet ab	<gray>'aus' turns it off
 <gray>(in deinem Grundstück oder wo du bauen darfst)	<gray>(on your plot or where you may build)
@@ -816,6 +829,7 @@ $ zum Gründen	$ to found
 <gray>Effizienz VI, Haltbarkeit IV,	<gray>Efficiency VI, Unbreaking IV,
 <gray>Ein Grundstück kostet so viele	<gray>A plot costs as many
 <gray>Ein kurzer Titel und deine Frage. Ein Helfer antwortet dir,\n<gray>die Antwort kommt im Chat. Spieler melden oder Strafen: <white>/discord	<gray>A short title and your question. A helper answers you,\n<gray>the answer comes in chat. Reporting players or punishments: <white>/discord
+<gray>Ein kurzer Titel und deine Frage. Spieler melden oder Strafen: <white>/discord	<gray>A short title and your question. Reporting players or punishments: <white>/discord
 <gray>Eine Stufe über dem Maximum:	<gray>One level above the maximum:
 <gray>Einen Nebenjob gibt es mit dem <green>Farmpass<gray>: <white>/farmpass	<gray>A side job comes with the <green>farm pass<gray>: <white>/farmpass
 <gray>Eingesetzt: <white>{}$	<gray>Invested: <white>{}$
@@ -1044,6 +1058,7 @@ $ zum Gründen	$ to found
 <gray>Nimm das Werkzeug, die Waffe oder	<gray>Take the tool, the weapon or
 <gray>Noch <yellow>	<gray>Left: <yellow>
 <gray>Noch hat niemand XP gesammelt.	<gray>Nobody has collected XP yet.
+<gray>Noch hat niemand ein Ticket gelöst.	<gray>Nobody has solved a ticket yet.
 <gray>Noch hat niemand eine Quest geschafft.	<gray>Nobody has finished a quest yet.
 <gray>Noch im Turnier: <white>	<gray>Still in the tournament: <white>
 <gray>Noch kein Grundstück	<gray>No plot yet
@@ -2121,6 +2136,7 @@ Ab Rang 	From rank
 Ab Selten aufwärts	From rare upwards
 Ab Stufe 	From level 
 Ab in den Stein	Into the stone
+Ab {} h Spielzeit	From {} h playtime
 Abbrechen	Cancel
 Abenteurer	Adventurer
 Abgebaut	Mined
@@ -2139,7 +2155,9 @@ Abnehmen	Remove
 Abo verwalten	Manage subscription
 Abo, jederzeit kündbar	Subscription, cancel anytime
 Abschalten in /settings: Pay-Bestätigung	Turn off in /settings: pay confirmation
+Abschicken	Submit
 Abschließen	Finish
+Absenden	Send
 Admin-Befehle	Admin commands
 Admin-Panel (nur Admins)	Admin panel (admins only)
 Ah, ein neues Gesicht! Meine Hände zittern, ich krieg keinen Fisch mehr an den Haken. Fängst du mir ein paar?	Ah, a new face! My hands are shaking, I can't get a fish on the hook anymore. Will you catch me a few?
@@ -2165,6 +2183,7 @@ Alle Member-Vorteile · 10 Homes	All member perks · 10 homes
 Alle Nebenquests	All side quests
 Alle Plätze sind besetzt.	All seats are taken.
 Alle Plätze sind schon frei.	All slots are already free.
+Alle Punkte seit dem Start	All points since the start
 Alle Regeln	All rules
 Alle Seiten sind schon freigeschaltet.	All pages are already unlocked.
 Alle Seltenheiten	All rarities
@@ -2207,6 +2226,7 @@ Am Tisch oder beim Croupier öffnest du mit /roulette das Menü. Chip wählen, d
 Am Zaubertisch verzaubern: je mehr Stufen, desto mehr Lohn	Enchant at the enchanting table: the more levels, the more pay
 Am meisten Plus	Most profit
 Am meisten abgeschlossen	Most completed
+An Team	To team
 An Team geben	Pass to the team
 An der Bank: Beträge ohne Grenze.	At the bank: amounts without limit.
 An der Losbude gibt es Rubbellose für Chips: aufdecken, drei gleiche Symbole gewinnen.	The lottery booth has scratch cards for chips: reveal them, three of the same symbol win.
@@ -2262,6 +2282,7 @@ Anleitung zeigen	Show the guide
 Anleitung zum Verlinken	How to link
 Annehmen	Accept
 Anrichte	Sideboard
+Ansehen	View
 Ansehen oder kündigen	View or cancel
 Ansonsten ist der Einsatz weg.	Otherwise the bet is lost.
 Anteil am Wert in %	Share of the value in %
@@ -2275,6 +2296,7 @@ Antrag von <white>{}</white> abgelehnt.	Proposal from <white>{}</white> declined
 Antrag zurückziehen	Withdraw proposal
 Antrag, Hochzeit und Ehe-Konto	Proposal, wedding and marriage account
 Anträge	Proposals
+Antwort auf #	Reply to #
 Antwort auf dein Ticket #{} von {}: 	Answer to your ticket #{} from {}: 
 Antworten	Reply
 Anzahl Angebote im Daily Shop (1-12):	Number of offers in the daily shop (1-12):
@@ -2405,6 +2427,7 @@ Beim Einloggen zurück in den letzten Modus. Aus: in die Lobby.	Return to the la
 Beim Priester sagt <white>{}</white> Ja. Wartet zusammen hier.	<white>{}</white> says yes at the priest. Wait here together.
 Beim Priester sagt {} Ja. Wartet zusammen hier.	{} says yes at the priest. Wait here together.
 Beim Ressourcenabbau ist darauf zu achten, dass keine unnötig großen und störenden Abbauflächen in der Nähe von Bauprojekten oder öffentlichen Bereichen entstehen.	When mining resources, avoid leaving unnecessarily large and unsightly holes near other players' projects or public areas.
+Beim Team liegt nichts.	Nothing is waiting for the team.
 Beistelltisch	Side Table
 Beißt nachts doppelt so oft	Bites twice as often at night
 Beleidigungen, Drohungen und diskriminierende Äußerungen sind verboten.	Insults, threats and discriminatory remarks are forbidden.
@@ -2447,6 +2470,9 @@ Beste Helfer	Best helpers
 Beste Serie	Best streak
 Beste Zeit	Best time
 Bestenliste	Leaderboard
+Bestenliste ansehen	View leaderboard
+Bestenliste dieser Woche:	This week's leaderboard:
+Bestenliste seit dem Start:	Leaderboard since the start:
 Bestenliste: Zeilen	Leaderboard: rows
 Betrag	Amount
 Betrag eingeben	Enter amount
@@ -2454,6 +2480,7 @@ Betrag eintippen, in Chips tauschen	Type the amount, exchange for chips
 Betrug beim Handeln ist verboten. Nutze /trade oder den Markt, dann seid ihr beide sicher.	Scamming in trades is forbidden. Use /trade or the market, then you're both safe.
 Betrug und absichtliche Täuschung beim Handel sind verboten.	Fraud and deliberate deception in trades are forbidden.
 Bewahrer	Keeper
+Bewerten	Rate
 Bewertung: 	Rating: 
 Biene	Bee
 Bildkarten zählen 10, Asse 1 oder 11. Bist du dran, klickst du Karte, Halten, Doppeln oder Teilen. Der Dealer zieht bis 17.	Face cards count 10, aces 1 or 11. On your turn you click Hit, Stand, Double or Split. The dealer draws to 17.
@@ -2675,6 +2702,8 @@ Deine Ehe	Your marriage
 Deine Einstellungen	Your settings
 Deine Einsätze	Your bets
 Deine Fische: 	Your fish: 
+Deine Frage · so genau wie möglich (bis 200 Zeichen)	Your question · as precise as possible (up to 200 characters)
+Deine Fragen · neueste zuerst	Your questions · newest first
 Deine Freundesliste ist voll. Entferne zuerst jemanden.	Your friends list is full. Remove someone first.
 Deine Freundesliste ist voll. Mit einem höheren Rang passen mehr Freunde hinein.	Your friends list is full. A higher rank fits more friends.
 Deine Gewinne tauschst du jederzeit zurück	Exchange your winnings back at any time
@@ -2693,6 +2722,8 @@ Deine Schlüssel liegen nicht im Inventar. Wie viele du hast, siehst du mit /key
 Deine Serie	Your streak
 Deine Statistik	Your stats
 Deine Stufen	Your levels
+Deine Tickets ansehen	View your tickets
+Deine Tickets:	Your tickets:
 Deine Trophäen	Your trophies
 Deine Wahl	Your choice
 Deine Warps	Your warps
@@ -2715,6 +2746,7 @@ Der Bearbeitungsmodus ist nur in der Hub-Welt verfügbar.	Edit mode is only avai
 Der Betrag muss größer als 0 sein.	The amount must be greater than 0.
 Der Einsatz muss größer als 0 sein.	The bet must be greater than 0.
 Der Farmpass gibt dir Vorteile, solange er läuft: Fliegen am Spawn, im Casino und auf deinen und den Grundstücken deiner Freunde, ein Nebenjob, keine Gebühren im Auktionshaus und im Grundstücks-Markt und keine Casino-Steuer.	The farm pass gives you perks while it runs: flying at spawn, in the casino and on your and your friends' plots, a side job, no fees in the auction house and the plot market and no casino tax.
+Der Helfer bekommt 1 Punkt plus die Sterne.	The helper gets 1 point plus the stars.
 Der Herausforderer hat nicht mehr genug$.	The challenger doesn't have enough $ anymore.
 Der Herausforderer ist offline.	The challenger is offline.
 Der Hocker ist besetzt.	The stool is taken.
@@ -2781,6 +2813,7 @@ Die Schlüssel landen sofort bei dir.	The keys go to you right away.
 Die Schlüssel landen sofort bei dir. Öffnen am Spawn.	The keys go to you right away. Open them at spawn.
 Die Seltenen behältst du · 	You keep the rare ones · 
 Die Skyblock-Welt ist nicht eingerichtet.	The Skyblock world isn't set up.
+Die Top 10 Helfer	The top 10 helpers
 Die VIP-Lounge ist nur für Legend-Ränge und die Top {} der Casino-Rangliste.	The VIP lounge is only for Legend ranks and the top {} of the casino ranking.
 Die Vorlage ist zu groß (max. 200.000 Blöcke).	The template is too big (max. 200,000 blocks).
 Die Welt konnte nicht erstellt werden.	The world couldn't be created.
@@ -2822,6 +2855,7 @@ Diese Team-Quest ist vorbei.	This team quest is over.
 Diese Versicherung existiert nicht mehr.	This insurance no longer exists.
 Diese Woche	This week
 Diese Woche hast du sie schon geholt. Nächsten Montag gibt es eine neue.	You already got it this week. There is a new one next Monday.
+Diese Woche: 	This week: 
 Diesen Köder an die Angel	Put this bait on the rod
 Diesen Meilenstein gibt es nicht mehr.	This milestone no longer exists.
 Diesen Schlüssel gibt es nicht.	This key does not exist.
@@ -2872,8 +2906,12 @@ Dir fehlen {} Juwelen.	You are missing {} jewels.
 Dir fehlen {} XP.	You are missing {} XP.
 Dir fehlt: 	You are missing: 
 Dir fehlt: {}.	You are missing: {}.
+Discord nicht verifiziert	Discord not verified
+Discord verifiziert	Discord verified
 Discord verknüpfen (+3 Homeplätze)	Link Discord (+3 home slots)
+Discord verlinken (/verify)	Link Discord (/verify)
 Discord-Link	Discord link
+Discord-Ticket	Discord ticket
 Doktorfisch	Surgeonfish
 Donnerstag	Thursday
 Donnerzahn	Thunderfang
@@ -2899,8 +2937,11 @@ Drei gleiche zahlen 8- bis 80-fach, Kirschen schon einzeln. Den Gewinnplan zeigt
 Drei neue Aufträge jeden Tag	Three new orders every day
 Drilling	Three of a kind
 Du angelst gerade...	You are fishing right now...
+Du beantwortest Fragen anderer Spieler und sammelst Punkte.	You answer other players' questions and collect points.
 Du bekommst <#F2C94C>	You get <#F2C94C>
 Du bekommst sie mit dem Farmpass, aus Kisten, mit einem Rang oder kaufst sie im Haustier-Menü.	You get them with the farm pass, from crates, with a rank or buy them in the pet menu.
+Du betreust gerade kein Ticket.	You are not handling a ticket right now.
+Du bist Helfer	You are a helper
 Du bist an der Bank: Ein- und Auszahlen ohne Grenze.	You are at the bank: deposit and withdraw without limit.
 Du bist aufgestanden.	You stood up.
 Du bist aufgestanden. Die Runde wird fertig abgerechnet.	You stood up. The round will still be settled.
@@ -2912,8 +2953,10 @@ Du bist gerade im Kampf.	You are in a fight right now.
 Du bist gerade nicht dran.	It's not your turn right now.
 Du bist in dieser Runde nicht dabei.	You are not in this round.
 Du bist ins Leere gefallen. Deine Sachen liegen in der <white>/abholbox</white>, deine XP bekommst du zurück.	You fell into the void. Your things are in the <white>/abholbox</white>, you get your XP back.
+Du bist jetzt <white>Helfer</white>. Neue Tickets siehst du unter „Helfen“, du bekommst eine Nachricht bei jedem neuen Ticket.	You are now a <white>helper</white>. You see new tickets under “Help”, and you get a message for every new ticket.
 Du bist jetzt <white>Helfer</white>. Neue Tickets siehst du unter „Offen“, du bekommst eine Nachricht bei jedem neuen Ticket.	You are now a <white>helper</white>. You see new tickets under “Open”, and you get a message for every new ticket.
 Du bist kein Helfer mehr.	You are no longer a helper.
+Du bist kein Ingame-Helfer.	You are not an in-game helper.
 Du bist nicht angemeldet.	You aren't signed up.
 Du bist nicht in der Warteschlange.	You are not in the queue.
 Du bist nicht in diesem Konto.	You aren't in this account.
@@ -2964,6 +3007,7 @@ Du hast nicht genug davon.	You don't have enough of that.
 Du hast nicht genug$ für den Einsatz.	You don't have enough $ for the bet.
 Du hast nicht genug$ für diesen Einsatz.	You don't have enough $ for this bet.
 Du hast noch kein Konto. Öffne /bank.	You don't have an account yet. Open /bank.
+Du hast noch kein Ticket.	You don't have a ticket yet.
 Du hast noch nicht gespielt.	You haven't played yet.
 Du hast schon die höchste Stufe.	You already have the highest level.
 Du hast schon eine Totenkiste.	You already have a death chest.
@@ -2975,6 +3019,7 @@ Du hast schon {} Möbel aufgestellt. Heb eins auf (Schleichen + Linksklick).	You
 Du hast schon {} Warps, mehr gehen nicht.	You already have {} warps, no more are possible.
 Du hast schon {} offene Tickets. Warte auf eine Antwort.	You already have {} open tickets. Wait for an answer.
 Du hast schon {} versicherte Kisten.	You already have {} insured chests.
+Du hast {} neue Antwort{} im Support. <click:run_command:'/support meine'><#FF6478>[Öffnen]</click>	You have {} new answer{} in support. <click:run_command:'/support meine'><#FF6478>[Open]</click>
 Du hast {} neue Antwort{} im Support. <click:run_command:'/support'><#FF6478>[Öffnen]</click>	You have {} new answer{} in support. <click:run_command:'/support'><#FF6478>[Open]</click>
 Du hast {} schon gefragt.	You already asked {}.
 Du hilfst gerade schon {}. Komm danach wieder!	You are already helping {}. Come back afterwards!
@@ -3039,6 +3084,7 @@ Ein Claim darf höchstens {} Blöcke lang sein.	A claim may be at most {} blocks
 Ein Claim muss mindestens {}x{} Blöcke groß sein.	A claim must be at least {}x{} blocks big.
 Ein Ehe-Konto könnt ihr erst nach der Hochzeit eröffnen.	You can only open a marriage account after the wedding.
 Ein Grundstück kostet Claim-Blöcke, so viele wie Boden drin liegt. Ein 10×10 kostet 100. Fürs Spielen bekommst du immer neue dazu.	A plot costs claim blocks, as many as there is ground in it. A 10×10 costs 100. You keep getting new ones for playing.
+Ein Helfer antwortet	A helper answers
 Ein Home ist ein Ort, zu dem du dich jederzeit zurück teleportierst.	A home is a place you can teleport back to at any time.
 Ein Job bezahlt dich fürs Abbauen, Ernten, Holzhacken, Angeln, Jagen und mehr. Es gibt acht Berufe.	A job pays you for mining, harvesting, chopping wood, fishing, hunting and more. There are eight jobs.
 Ein Klick schaltet sofort um	One click switches right away
@@ -3121,6 +3167,7 @@ Erde, Sand und Kies graben	Dig dirt, sand and gravel
 Erfahrene Spieler helfen dort als Helfer. Sie antworten im Ticket, und du bekommst eine Nachricht im Chat.	Experienced players help there as helpers. They answer in the ticket, and you get a message in chat.
 Erfolge	Achievements
 Erfolge mit Fortschritt	Achievements with progress
+Erfüllt	Done
 Ergebnis: {} 	Result: {} 
 Ergebnisse von Duellen und Turnieren, Kopfgelder.	Results of duels and tournaments, bounties.
 Erhabener	Exalted One
@@ -3139,6 +3186,7 @@ Erntezeit	Harvest time
 Erreiche Angel-Level 10	Reach fishing level 10
 Erreiche Level 10	Reach level 10
 Erst Discord verlinken	Link Discord first
+Erst beide Bedingungen erfüllen	Meet both requirements first
 Erst einen Chip wählen	Choose a chip first
 Erste Mahlzeit	First meal
 Erste Stimme	First vote
@@ -3252,8 +3300,11 @@ Fortschritt	Progress
 Fortschritt und Belohnungen	Progress and rewards
 Frage gelöst, Sterne vergeben	Question solved, stars given
 Frage stellen	Ask a question
+Fragen anderer Spieler beantworten	Answer other players' questions
+Fragen beantworten	Answer questions
 Fragen stellen, Hilfe bekommen	Ask questions, get help
 Fragezeichen	Question mark
+Frei	Free
 Freie Blöcke und wer hier wohnt	Free blocks and who lives here
 Freier Platz	Free seat
 Freirubbeln	Scratch
@@ -3290,6 +3341,7 @@ Fällt zusammen 1.500 Baumstämme	Chop 1,500 logs together
 Fänge	Catches
 Für Baltop-Platz 1	For baltop place 1
 Für Juwelen · sofort da	For jewels · instant
+Für Reports und Strafen: Discord-Ticket.	For reports and punishments: Discord ticket.
 Für alle Einsätze der letzten Runde fehlen dir Chips.	You don't have enough chips for all bets of the last round.
 Für bestimmte Welten, Events oder Spielmodi können zusätzliche Regeln gelten.	Additional rules may apply to certain worlds, events or game modes.
 Für die Abstimmung brauchst du einen verknüpften Discord-Account.	You need a linked Discord account to vote.
@@ -3331,9 +3383,12 @@ Gemeinschaftslager und gemeinsame Ressourcen dürfen nur entsprechend den verein
 Gerade	Even
 Gerade ist niemand in deiner Nähe	Nobody is near you right now
 Gerade nichts bereit	Nothing ready right now
+Gerade nichts offen	Nothing open right now
 Gerade offline	Offline right now
 Gerade online in 	Online right now in 
 Gerade wartet hier kein Ticket.	No ticket is waiting here right now.
+Gerade wartet keine Frage.	No question is waiting right now.
+Gesamt	Total
 Geschenk an 	Gift to 
 Geschenk beenden	Stop gift mode
 Geschenk für 	Gift for 
@@ -3362,6 +3417,7 @@ Gewöhnlich · 9x · bis 0,43 kg	Common · 9x · up to 0.43 kg
 Gewöhnlich · 9x · bis 0,81 kg	Common · 9x · up to 0.81 kg
 Gib zuerst einen eigenen Betrag ein.	Enter a custom amount first.
 Gibt dir alle Einsätze dieser Runde zurück	Gives you back all bets of this round
+Ging so	So-so
 Glitzerköder	Glitter bait
 Glocke	Bell
 Glocken	Bells
@@ -3419,6 +3475,7 @@ Gründe ein Team mit deinen Freunden. Ihr bekommt einen eigenen Chat, Team-Homes
 Gründen kostet {}$.	Founding costs {}$.
 Grünes Blatt	Green leaf
 Gut gegessen	Well fed
+Gut geholfen	Helped well
 Gute Items und Coins für den Start	Good items and coins for the start
 Gürteltier	Armadillo
 HOCH	HIGH
@@ -3438,6 +3495,7 @@ Handwerker	Craftsman
 Harmlose Streiche sind erlaubt, solange dabei keine Bauwerke beschädigt, Items gestohlen oder Spieler dauerhaft belästigt werden.	Harmless pranks are allowed as long as no builds are damaged, no items are stolen and no player is harassed over time.
 Hase	Rabbit
 Hast du schon	Already owned
+Hat gepasst	It was okay
 Hauptbereich	Main section
 Hauptgewinn: <#F6E23A>	Top prize: <#F6E23A>
 Hauptmenü	Main menu
@@ -3463,9 +3521,11 @@ Heiraten gibt es nur in Survival.	Marriage only exists in Survival.
 Heiratsanträge	Marriage proposals
 Heiße Zahlen	Hot numbers
 Heißes Eisen	Hot iron
+Helfen	Help
 Helfer	Helper
 Helfer kann werden, wer mindestens {} Stunden gespielt hat (du: {}).	Anyone who has played at least {} hours can become a helper (you: {}).
 Helfer werden	Become a helper
+Helfer werden: {} Stunden Spielzeit (du: {}) und Discord verlinkt. <click:run_command:'/support helfer'><#B7A6FC>[Jetzt Helfer werden]</click>	Become a helper: {} hours of playtime (you: {}) and Discord linked. <click:run_command:'/support helfer'><#B7A6FC>[Become a helper now]</click>
 Helfer: 	Helper: 
 Herausforderung, optional mit Einsatz	Challenge, optionally with a bet
 Hering	Herring
@@ -3561,6 +3621,7 @@ IM STORE	IN THE STORE
 INFO-LEISTE	INFO BAR
 INHALT	CONTENTS
 Ich brauche Eisen für neue Schwerter. Sechzehn Barren, bitte.	I need iron for new swords. Sixteen ingots, please.
+Ich komme nicht weiter	I'm stuck
 Ich kümmere mich	I'll take care of it
 Icon aus der Hand	Icon from your hand
 Ihr habt schon ein Ehe-Konto.	You already have a marriage account.
@@ -3648,6 +3709,7 @@ Jeder Wert der config.yml	Every value of the config.yml
 Jeder hat ein Home. Ab Platin kommt mit jedem Rang eins dazu, eins mehr gibt es fürs Verlinken mit Discord.	Everyone has one home. From Platin every rank adds one, and you get one more for linking Discord.
 Jeder, der diese Woche gespielt hat, ist dabei	Everyone who played this week is in
 Jemand	Someone
+Jetzt Helfer werden	Become a helper now
 Jetzt aussteigen	Cash out now
 Jetzt bei <green>	Now at <green>
 Jetzt einholen!	Reel it in now!
@@ -3699,6 +3761,7 @@ Kaufen	Buy
 Kaufen · 	Buy · 
 Kaufen · {} Tokens	Buy · {} tokens
 Kaufen?	Buy?
+Kaum geholfen	Barely helped
 Kein Angler-Job: mit dem Angler-Job mehr Glück und Preis	No angler job: the angler job gives more luck and price
 Kein Freund ist gerade in Survival. Sonst: /marry propose <Spieler>	No friend is in Survival right now. Otherwise: /marry propose <player>
 Kein Job	No job
@@ -3759,8 +3822,10 @@ Kleiderpuppe {}	Mannequin {}
 Kleiderschrank	Wardrobe
 Kleiderstange {}	Clothes Rack {}
 Kleine Geschichten bei Figuren	Little stories at figures
+Klick	Click
 Klick hier: so verlinkst du deinen Account (/verify).	Click here: how to link your account (/verify).
 Klick oder Schlag	Click or hit
+Klick zum Freischalten	Click to unlock
 Klick zum Wählen	Click to choose
 Klick-, Erfolgs- und Hinweis-Sounds.	Click, success and hint sounds.
 Klick: Link öffnen	Click: open link
@@ -3885,6 +3950,7 @@ Leiste: Quest	Bar: quest
 Leiste: Uhrzeit	Bar: time
 Letzte Einsätze wiederholen	Repeat last bets
 Letzte Runden	Last rounds
+Letzte Tickets	Latest tickets
 Letzten Checkpoint entfernen	Remove last checkpoint
 Letzter Checkpoint entfernt.	Last checkpoint removed.
 Letzter Einsatz	Last bet
@@ -3958,6 +4024,7 @@ Mehr zu diesem Fisch	More about this fish
 Mehr$ pro Tag	More $ per day
 Mehrere Sorten, mehrere Preisklassen	Several kinds, several price classes
 Mein Erzlager ist leer. Geh in die Tiefe und bau mir Erz ab!	My ore storage is empty. Go into the depths and mine ore for me!
+Meine	Mine
 Meine Fälle ({})	My cases ({})
 Meine Ställe sind so leer. Ein paar Jungtiere wären schön.	My stables are so empty. A few young animals would be nice.
 Meine Tickets	My tickets
@@ -4070,6 +4137,7 @@ Nach deiner Scheidung darfst du erst ab {} wieder heiraten.	After your divorce y
 Nach {} Sekunden steigt der Multiplikator, die Kurve wächst.	After {} seconds the multiplier rises, the curve grows.
 Nachricht an 	Message to 
 Nachricht schreiben	Write a message
+Nachricht · bis 200 Zeichen	Message · up to 200 characters
 Nachspringen	Jump to them
 Nachspringen: 	Jump to them: 
 Nachspringen: an	Jump to me: on
@@ -4102,7 +4170,9 @@ Neue Bäume	New trees
 Neue Freunde findest du unter „Hinzufügen“.	Find new friends under “Add”.
 Neue Menge:	New amount:
 Neue Nachricht in Ticket <white>#{}</white> von {} <click:run_command:'/support ticket {}'><#FF6478>[Öffnen]</click>	New message in ticket <white>#{}</white> from {} <click:run_command:'/support ticket {}'><#FF6478>[Open]</click>
+Neue Tickets meldet dir der Chat.	New tickets are announced in chat.
 Neue Trophäenzahl:	New trophy count:
+Neue Woche ab Montag 06:00	New week from Monday 06:00
 Neuer Eintrag:	New entry:
 Neuer Kontostand:	New balance:
 Neuer Name (MiniMessage, '-' für keinen):	New name (MiniMessage, '-' for none):
@@ -4119,6 +4189,7 @@ Neues Leben	New life
 Neues Möbel: <white>{}</white>. Rechtsklick auf einen Block in deinem Grundstück stellt es auf.	New furniture: <white>{}</white>. Right-clicking a block on your plot places it.
 Neues Ticket	New ticket
 Neues Ticket <white>#{}</white> von <white>{}</white>: {} <click:run_command:'/support ticket {}'><#FF6478>[Ansehen]</click>	New ticket <white>#{}</white> from <white>{}</white>: {} <click:run_command:'/support ticket {}'><#FF6478>[View]</click>
+Neues Ticket schreiben	Write a new ticket
 Neueste zuerst · 	Newest first · 
 Neuling	Newbie
 Neustart	Restart
@@ -4136,11 +4207,14 @@ Noch ein 	Another
 Noch hat niemand ein Ticket gelöst.	Nobody has solved a ticket yet.
 Noch hat niemand gespielt.	Nobody has played yet.
 Noch kein Konto. Verheiratet: Ehe-Konto. Mit Freunden: an der Bank am Spawn.	No account yet. Married: marriage account. With friends: at the bank at spawn.
+Noch kein Ticket.	No ticket yet.
+Noch kein Ticket. Stell deine erste Frage.	No ticket yet. Ask your first question.
 Noch keine Buchungen.	No transactions yet.
 Noch keine Einträge.	No entries yet.
 Noch keine Freunde	No friends yet
 Noch keine Freunde. Schick eine Anfrage mit „Freund hinzufügen“.	No friends yet. Send a request with “Add friend”.
 Noch keine Runde gespielt.	No round played yet.
+Noch keine Tickets	No tickets yet
 Noch keine letzte Runde	No last round yet
 Noch keine letzte Runde.	No last round yet.
 Noch nie online	Never online
@@ -4189,7 +4263,10 @@ OK: {} für 	OK: {} for
 Oben am Bildschirm zeigt dir die Info-Leiste deine Coins, Juwelen, deinen Job, wo du gerade bist und deine Quest.	At the top of the screen the info bar shows your coins, jewels, your job, where you are right now and your quest.
 Oberwelt	Overworld
 Obstkorb	Fruit Basket
+Offen	Open
 Offen ({})	Open ({})
+Offene	Open
+Offene Fragen findest du unter „Offen“.	You find open questions under “Open”.
 Offene Orders ansehen	View open orders
 Offenes Fach	Open Drawers
 Oh, eine Nachricht von {}? Vielen Dank, dass du extra gekommen bist!	Oh, a message from {}? Thank you so much for coming all the way!
@@ -4274,6 +4351,7 @@ Profi	Pro
 Profi an der Rute	Pro at the rod
 Profi-Angler	Pro angler
 Prämie	Bounty
+Prüfen	Check
 Punkte pro Stufe	Points per level
 Puppenkopf	Mannequin Head
 PvP ist nicht verfügbar (KubySMP fehlt).	PvP isn't available (KubySMP is missing).
@@ -4336,6 +4414,7 @@ Reifen Weizen, Karotten, Kartoffeln, Rote Bete, Netherwarzen, Kakao ernten	Harve
 Reihe 4 und 5 gibt es nur als Stufe.	Rows 4 and 5 only come as a level.
 Reitbar	Rideable
 Rekorde	Records
+Reports, Strafen, Entbannung	Reports, punishments, unbans
 Respekt	Respect
 Richtwert: Einzigartig	Guide value: unique
 Richtwert: Gewöhnlich	Guide value: common
@@ -4389,6 +4468,7 @@ SCHATZ	TREASURE
 SCHLÜSSEL	KEYS
 SELFTEST FEHLER 	SELFTEST ERROR 
 SELTEN!	RARE!
+SMP und Survival zählen zusammen. Verifizieren auf unserem Discord. Gelöste Tickets bringen 1 Punkt plus die Sterne der Bewertung.	SMP and Survival count together. Verify on our Discord. Solved tickets bring 1 point plus the stars of the rating.
 SO GEHT'S	HOW IT WORKS
 SPAWN VERLASSEN?	LEAVE SPAWN?
 SPIELER ONLINE	PLAYERS ONLINE
@@ -4465,6 +4545,7 @@ Seelen-Wirbel	Soul swirl
 Seelenfeuer	Soul fire
 Seelenfunke	Soul Spark
 Seesaibling	Arctic Char
+Seit dem Start: 	Since the start: 
 Seite 	Page 
 Seite komplett ✓	Page complete ✓
 Seite {} / 	Page {} / 
@@ -4582,6 +4663,7 @@ Spieler-Warps bringen andere zu deinem Laden oder Bauwerk. Mit /sw siehst du all
 Spielername	Player name
 Spielername eingeben:	Enter player name:
 Spielzeit	Playtime
+Spielzeit 	Playtime 
 Spielzeit-Stufen	Playtime levels
 Spielzeit-Stufen gibt es in Survival.	Playtime levels are available in Survival.
 Spinne	Spider
@@ -4619,6 +4701,7 @@ Steinbeißer	Spined Loach
 Steindrache	Stone Dragon
 Steine aus Generatoren zählen nicht	Stones from generators don't count
 Steinpilz	Porcini
+Stell deine erste Frage über „Frage stellen“.	Ask your first question with “Ask a question”.
 Stell den Server nach deinem Geschmack ein	Set up the server the way you like it
 Stelle 16 Brote her	Make 16 bread
 Stellt einen Barkeeper an deine Position	Places a bartender at your position
@@ -4674,6 +4757,7 @@ Such dir einen Platz und sichere ihn mit der Claim-Axt. Dann kann dort niemand e
 Suche	Search
 Sumpf & Höhlen	Swamp & caves
 Sumpfhexe	Swamp Witch
+Super, alles geklärt	Great, all sorted
 Support-Menü	Support menu
 Sägewerk	Sawmill
 Säule des Chaos	Pillar of Chaos
@@ -4772,6 +4856,7 @@ Tischlampe	Table lamp
 Titel	Titles
 Titel 	Title 
 Titel auswählen	Choose a title
+Titel · kurz, worum es geht (bis 40 Zeichen)	Title · in short, what it is about (up to 40 characters)
 Tod	Death
 Tod & Gräber	Death & graves
 Tode	Deaths
@@ -4888,6 +4973,7 @@ Verknüpfung nötig	Linking required
 Verlauf	History
 Verlinke deinen Account: Geh im Discord in den Kanal „verify“ und klick auf „Verifizieren“. /verify zeigt dir den Weg.	Link your account: in Discord go to the “verify” channel and click “Verifizieren”. /verify shows you the way.
 Verlinke zuerst deinen Discord-Account (/verify zeigt dir den Weg).	Link your Discord account first (/verify shows you the way).
+Verlinken	Link
 Verlinken und Vorteile sichern	Link and secure perks
 Verloren	Lost
 Verlust	Loss
@@ -4909,6 +4995,8 @@ Viele Teile kaufst du dort mit Juwelen. Manche gibt es nur aus Kisten.	You buy m
 Vierling	Four of a kind
 Vitrine	Display Case
 Vor jeder Überweisung mit /pay nachfragen.	Ask before every transfer with /pay.
+Voraussetzungen	Requirements
+Voraussetzungen ansehen	View requirements
 Vorhang {}	Curtain {}
 Vorherige Stufen	Previous levels
 Vorige Seite	Previous page
@@ -4975,6 +5063,7 @@ Werkbank immer dabei	Crafting table always with you
 Wert ab dem Items gesichert sind	Value from which items are protected
 Wert:	Value:
 Werte in die config.yml schreiben	Write values into the config.yml
+Wie gut wurde dir geholfen?	How well were you helped?
 Wie läuft's? {}.	How's it going? {}.
 Wie viel XP geben?	How much XP to give?
 Wie viel XP nehmen?	How much XP to take?
@@ -5059,6 +5148,7 @@ Zombie-Plage	Zombie plague
 Zu deinem Partner	To partner
 Zu den Einstellungen	To the settings
 Zu den Kisten	To the crates
+Zu den offenen Fragen	To the open questions
 Zu einem Home reisen	Travel to a home
 Zu klein geworden? Mit der Claim-Axt kannst du dein Grundstück erweitern.	Grown too small? You can expand your plot with the claim axe.
 Zu zweit an einen Zufallsort, Kampf!	Two of you to a random place, fight!
@@ -5152,6 +5242,7 @@ für andere Spieler	for other players
 gelöst	solved
 gerade in 	right now in 
 geschenk für 	gift for 
+geschlossen	closed
 groß	large
 grün	green
 grün im Tab & Chat	green in tab & chat
@@ -5189,6 +5280,7 @@ noch {} Std. {} Min.	{} h {} min. left
 nur aus Kisten	crates only
 nächster Warp: {} Coins	next warp: {} coins
 oder unten einen Namen eintippen	or type a name below
+offen	open
 pro bezahltem Monat,	per paid month,
 ränge	ranks
 s warten	s waiting
@@ -5221,17 +5313,27 @@ zurück 	back
 zurück zur losbude	back to the lottery booth
 zweiter Beruf	second job
 {} Daily-Quests	{} daily quests
+{} Frage wartet	{} question waiting
+{} Fragen warten	{} questions waiting
 {} Freundesplätze	{} friend slots
 {} Haustiere	{} pets
 {} Juwelen je Token	{} jewels per token
 {} Juwelen je Token, sofort auf dein Konto.	{} jewels per token, straight to your account.
 {} Möbel	{} pieces
+{} Nachricht	{} message
+{} Nachrichten	{} messages
+{} Punkt	{} point
+{} Ticket	{} ticket
+{} Ticket(s):	{} ticket(s):
+{} Tickets	{} tickets
 {} bis {} Std.	{} to {} h
 {} hat {} schon.	{} already has {}.
+{} offen	{} open
 {} € im Monat	€{} per month
 {}, Abo, jederzeit kündbar.	{}, subscription, cancel anytime.
 §{} {} lesen	Read §{} {}
 « Vorige Seite	« Previous page
+Älteste Fragen zuerst	Oldest questions first
 Öffentlicher Chat	Public chat
 Öffnen	Open
 Öffnen ›	Open ›

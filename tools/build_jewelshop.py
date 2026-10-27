@@ -20,8 +20,10 @@ ASSETS_PLAYTIME = os.path.join(HERE, "assets", "playtime")
 ASSETS_RULES = os.path.join(HERE, "assets", "rules")
 # Freunde (Release „Neue-referenzen“, extract_friends.py): Präfix fr_
 ASSETS_FRIENDS = os.path.join(HERE, "assets", "friends")
+# Support (Release „Neue-referenzen“, extract_support.py): Präfix su_
+ASSETS_SUPPORT = os.path.join(HERE, "assets", "support")
 SETS = ((ASSETS, "js_"), (ASSETS_SURVIVAL, "jss_"), (ASSETS_PLAYTIME, "pt_"), (ASSETS_RULES, "rg_"),
-        (ASSETS_FRIENDS, "fr_"))
+        (ASSETS_FRIENDS, "fr_"), (ASSETS_SUPPORT, "su_"))
 
 
 def available():

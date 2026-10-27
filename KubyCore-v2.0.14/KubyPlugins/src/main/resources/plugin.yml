@@ -164,7 +164,7 @@ commands:
     description: "Zeigt, ob dein Account mit Discord verknüpft ist"
   support:
     description: "Support: Tickets schreiben, Helfer antworten, Sterne vergeben"
-    usage: "/support [new|top|helper|ticket <Nummer>]"
+    usage: "/support [new|top|meine|helfen|helfer|ticket <Nummer>]"
     aliases: [ticket, tickets, hilfeticket]
   discord:
     description: "Link zu unserem Discord"

@@ -69,6 +69,21 @@ public final class UiDialog {
     }
 
     /**
+     * Canvas-Körper, darunter Eingabefelder und mehrere Minecraft-Knöpfe nebeneinander (columns je Zeile, 2 px Abstand),
+     * z. B. „Abschicken“ und „Zurück“ unter „Neues Ticket“.
+     */
+    public static Dialog dialog(Player player, Canvas canvas, List<DialogInput> inputs, List<ActionButton> buttons, int columns) {
+        DialogBase base = DialogBase.builder(canvas.heading())
+                .canCloseWithEscape(true)
+                .pause(false)
+                .afterAction(DialogBase.DialogAfterAction.NONE)
+                .body(List.of(DialogBody.plainMessage(canvas.build(player), Math.min(1024, canvas.width() + 64))))
+                .inputs(inputs)
+                .build();
+        return Dialog.create(b -> b.empty().base(base).type(DialogType.multiAction(buttons, null, columns)));
+    }
+
+    /**
      * Beschriftung für einen Minecraft-Knopf: Grafik aus dem Kit (eine Kachel, bis 16 px hoch) vor dem Text, senkrecht
      * zur Schrift mittig.
      */
@@ -81,6 +96,43 @@ public final class UiDialog {
                 .append(Component.text(" " + de.kuby.kubyplugins.util.I18n.ctx(text), color)
                         .decoration(net.kyori.adventure.text.format.TextDecoration.BOLD, true))
                 .build();
+    }
+
+    /**
+     * Beschriftung mit farbiger Fläche dahinter wie „Abschicken“ (lila) und „Zurück“ (grau) unter „Neues Ticket“: die
+     * Fläche (eine Kachelreihe aus dem Kit, bis 16 px hoch) liegt hinter Grafik und Text, beides mittig darauf, der Text
+     * fett und ohne Schatten. Der Knopf muss plate.width + 4 breit sein: dann füllt die Fläche ihn bis auf den Rand, und
+     * Minecraft lässt die Beschriftung nicht laufen. icon darf null sein.
+     */
+    public static Component plate(KitData.Sprite plate, KitData.Sprite icon, String text,
+                                  net.kyori.adventure.text.format.TextColor color) {
+        TextComponent.Builder b = Component.text();
+        int x = 0;
+        for (int i = 0; i < plate.cols; i++) {
+            int adv = plate.advances.charAt(i) - '0';
+            b.append(tile(plate.chars.charAt(i), plate.height));
+            x += adv;
+            if (i + 1 < plate.cols) {
+                b.append(Ui.space(32 - adv));
+                x += 32 - adv;
+            }
+        }
+        String t = (icon == null ? "" : " ") + de.kuby.kubyplugins.util.I18n.ctx(text);
+        int content = (icon == null ? 0 : icon.width + 1) + Canvas.width(t, true);
+        int left = (plate.width - content + 1) / 2;
+        b.append(Ui.space(left - x));
+        if (icon != null) b.append(tile(icon.chars.charAt(0), icon.height));
+        b.append(Component.text(t, color).decoration(net.kyori.adventure.text.format.TextDecoration.BOLD, true)
+                .shadowColor(net.kyori.adventure.text.format.ShadowColor.none()));
+        b.append(Ui.space(plate.width - left - content));
+        return b.build();
+    }
+
+    /** Eine Kachel aus dem Kit, senkrecht mittig zur Schrift (wie die Grafik in label). */
+    private static Component tile(char c, int height) {
+        return Component.text(String.valueOf(c))
+                .font(net.kyori.adventure.key.Key.key("kuby", "k/i" + -Math.max(0, (height - 7) / 2)))
+                .shadowColor(net.kyori.adventure.text.format.ShadowColor.none());
     }
 
     private static int countLines(Component c) {

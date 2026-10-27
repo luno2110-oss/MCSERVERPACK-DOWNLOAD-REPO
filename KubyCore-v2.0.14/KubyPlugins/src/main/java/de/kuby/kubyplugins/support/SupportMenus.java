@@ -1,10 +1,9 @@
 package de.kuby.kubyplugins.support;
 
 import de.kuby.kubyplugins.KubyPlugins;
+import de.kuby.kubyplugins.support.SupportScreen.Item;
 import de.kuby.kubyplugins.support.SupportService.Status;
 import de.kuby.kubyplugins.support.SupportService.Ticket;
-import de.kuby.kubyplugins.ui.Canvas;
-import de.kuby.kubyplugins.ui.Canvas.Span;
 import de.kuby.kubyplugins.ui.KitData;
 import de.kuby.kubyplugins.ui.UiDialog;
 import de.kuby.kubyplugins.util.Msg;
@@ -18,7 +17,6 @@ import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.input.TextDialogInput;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import net.kyori.adventure.text.event.ClickCallback;
-import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -33,23 +31,93 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 /**
- * /support als Dialog-Menüs im Stil der Hilfe-Seiten: deine Tickets, für Helfer offene und eigene Fälle, fürs Team die
- * weitergegebenen. Ticket-Ansicht mit Verlauf, Antworten, Übernehmen, An Team geben, Gelöst mit Sternen, Schließen.
+ * /support mit Grafik-Pack als Dialoge nach der Referenz (SupportScreen): Übersicht, Neues Ticket, Meine Tickets,
+ * Bestenliste, Helfer werden; für Helfer die Ticket-Liste, dazu Ticket mit Verlauf, Antworten, Übernehmen, An Team
+ * geben, Gelöst mit Sternen, Schließen. Ohne Pack: Text im Chat und einfache Eingabe-Dialoge.
  */
 public final class SupportMenus implements CommandExecutor, Listener {
 
-    private static final int W = 390, HEIGHT = 330;
-    private static final TextColor ACCENT = TextColor.color(0xFF6478), GRAY = TextColor.color(0xA0A0AC),
-            LIGHT = TextColor.color(0xE4E4EA), WHITE = TextColor.color(0xF4F4F4), GOLD = TextColor.color(0xF8D35A),
-            GREEN = TextColor.color(0x6CE86E), CYAN = TextColor.color(0x5FE3C4), ON = TextColor.color(0x201400),
-            NAV = TextColor.color(0xC0C4CB);
     private static final DateTimeFormatter WHEN = DateTimeFormatter.ofPattern("dd.MM. HH:mm").withZone(ZoneId.of("Europe/Berlin"));
 
     private final KubyPlugins plugin;
     private final SupportService support;
+    private final SupportScreen.Actions actions = new SupportScreen.Actions() {
+        public Consumer<Player> home() {
+            return SupportMenus.this::main;
+        }
+
+        public Consumer<Player> ask() {
+            return SupportMenus.this::askNew;
+        }
+
+        public Consumer<Player> mine() {
+            return SupportMenus.this::mine;
+        }
+
+        public Consumer<Player> board(boolean week) {
+            return pl -> top(pl, week);
+        }
+
+        public Consumer<Player> become() {
+            return SupportMenus.this::become;
+        }
+
+        public Consumer<Player> join() {
+            return SupportMenus.this::becomeHelper;
+        }
+
+        public Consumer<Player> verify() {
+            return pl -> {
+                pl.closeDialog();
+                pl.performCommand("verify");
+            };
+        }
+
+        public Consumer<Player> queue(String tab) {
+            return pl -> SupportMenus.this.queue(pl, tab);
+        }
+
+        public Consumer<Player> ticket(int id) {
+            return pl -> SupportMenus.this.ticket(pl, id);
+        }
+
+        public Consumer<Player> reply(int id) {
+            return pl -> askReply(pl, id);
+        }
+
+        public Consumer<Player> claim(int id) {
+            return pl -> act(pl, id, t -> support.claim(pl, t));
+        }
+
+        public Consumer<Player> escalate(int id) {
+            return pl -> act(pl, id, t -> support.escalate(pl, t));
+        }
+
+        public Consumer<Player> rate(int id) {
+            return pl -> SupportMenus.this.rate(pl, id);
+        }
+
+        public Consumer<Player> solve(int id, int stars) {
+            return pl -> {
+                Ticket t = support.get(id);
+                String e = t == null ? "Dieses Ticket gibt es nicht mehr." : support.solve(pl, t, stars);
+                if (e != null) err(pl, e);
+                else {
+                    Sfx.play(plugin, pl, Sfx.Kind.SUCCESS);
+                    SupportService.send(pl, "Danke! Dein Ticket ist als gelöst markiert.");
+                }
+                SupportMenus.this.ticket(pl, id);
+            };
+        }
+
+        public Consumer<Player> close(int id) {
+            return pl -> act(pl, id, t -> support.close(pl, t));
+        }
+    };
 
     public SupportMenus(KubyPlugins plugin, SupportService support) {
         this.plugin = plugin;
@@ -61,112 +129,127 @@ public final class SupportMenus implements CommandExecutor, Listener {
         Sfx.play(plugin, p, Sfx.Kind.ERROR);
     }
 
-    private static void head(Canvas c, String title, String sub, Consumer<Player> back, List<Span> right) {
-        c.box(0, 0, W, 51, KitData.Box.RED);
-        int ix = 13, tx = 41;
-        if (back != null) {
-            c.backHelp(8, 17);
-            c.action(8, 17, 22, 22, back, "Zurück");
-            ix = 43;
-            tx = 74;
+    private boolean pack(Player p) {
+        return plugin.uiPack().active(p);
+    }
+
+    /** Führt eine Ticket-Aktion aus (Fehler in den Chat) und zeigt das Ticket wieder. */
+    private void act(Player p, int id, java.util.function.Function<Ticket, String> action) {
+        Ticket t = support.get(id);
+        String e = t == null ? "Dieses Ticket gibt es nicht mehr." : action.apply(t);
+        if (e != null) err(p, e);
+        ticket(p, id);
+    }
+
+    private Item item(Ticket t, boolean forAuthor) {
+        int n = t.messages.size();
+        String who = forAuthor ? (t.helper == null ? "noch kein Helfer" : "Helfer: " + SupportService.nameOf(t.helper))
+                : "von " + SupportService.nameOf(t.author);
+        String info = WHEN.format(Instant.ofEpochMilli(t.created)) + " · " + who + " · " + n + (n == 1 ? " Nachricht" : " Nachrichten");
+        boolean fresh = forAuthor && t.unread;
+        return new Item(t.id, t.title, fresh ? "neue Antwort" : t.status.label, SupportScreen.stateColor(t.status), info, fresh);
+    }
+
+    private String discordUrl() {
+        String url = plugin.getConfig().getString("support.discord-ticket", "");
+        return url == null || url.isBlank() ? plugin.getConfig().getString("discord.invite", "") : url;
+    }
+
+    // =================================================================================================================
+    // Seiten
+    // =================================================================================================================
+
+    public void main(Player p) {
+        if (!pack(p)) {
+            chat(p);
+            return;
         }
-        c.smallIcon(ix, back != null ? 18 : 16, KitData.SmallIcon.H_LIFEBUOY);
-        int room = W - tx - 12 - (right == null ? 0 : Canvas.width(right) + 8);
-        c.text(tx, 15, Canvas.fit(title, true, room), ACCENT, true);
-        c.text(tx, 28, Canvas.fit(sub, false, room), GRAY, false);
-        if (right != null) c.textRight(378, 21, right);
+        UUID me = p.getUniqueId();
+        List<Ticket> own = support.of(me);
+        List<Item> latest = new ArrayList<>();
+        for (int i = 0; i < own.size() && i < 3; i++) latest.add(item(own.get(i), true));
+        SupportScreen.Home h = new SupportScreen.Home(support.openCount(me), support.maxOpen(), latest, own.size(),
+                support.unreadOf(me), support.canHelp(p), support.queue(p, "offen").size(), support.helperHours(), discordUrl());
+        UiDialog.show(p, SupportScreen.home(h, actions), SupportScreen.HEIGHT);
     }
 
-    private static int button(Canvas c, int x, int y, String label, boolean action, Consumer<Player> click, String hover) {
-        int w = Canvas.width(label, action) - 1 + (action ? 24 : 18);
-        c.button(x, y, w, action ? KitData.Button.H_RED : KitData.Button.H_NAV, label, action ? ON : NAV, action);
-        if (click != null) c.action(x, y, w, KitData.BTN_H, click, hover);
-        return w;
+    public void mine(Player p) {
+        if (!pack(p)) {
+            chat(p);
+            return;
+        }
+        List<Item> items = new ArrayList<>();
+        for (Ticket t : support.of(p.getUniqueId())) items.add(item(t, true));
+        UiDialog.show(p, SupportScreen.mine(support.openCount(p.getUniqueId()), support.maxOpen(), items, actions), SupportScreen.HEIGHT);
     }
 
-    private static TextColor statusColor(Status s) {
-        return switch (s) {
-            case OFFEN -> GOLD;
-            case IN_ARBEIT -> CYAN;
-            case TEAM -> ACCENT;
-            case GELOEST -> GREEN;
-            case GESCHLOSSEN -> GRAY;
-        };
-    }
-
-    // =================================================================================================================
-    // Übersicht
-    // =================================================================================================================
-
-    public void main(Player p, String tab) {
-        boolean helper = support.canHelp(p);
+    public void queue(Player p, String tab) {
+        if (!support.canHelp(p)) {
+            become(p);
+            return;
+        }
         boolean team = support.isTeam(p);
-        Canvas c = new Canvas(W).heading("Support", net.kyori.adventure.text.format.TextColor.color(0x7BC4FC));
-        int unread = support.unreadOf(p.getUniqueId());
-        head(c, "SUPPORT", "Fragen stellen, Hilfe bekommen", null,
-                unread > 0 ? List.of(Span.bold(unread + " neue Antwort" + (unread == 1 ? "" : "en"), GOLD)) : null);
-        int y = 53;
-        // Reiter
-        List<String[]> tabs = new ArrayList<>();
-        tabs.add(new String[]{"mine", "Meine Tickets"});
-        if (helper) {
-            tabs.add(new String[]{"offen", "Offen (" + support.queue(p, "offen").size() + ")"});
-            tabs.add(new String[]{"meine", "Meine Fälle (" + support.queue(p, "meine").size() + ")"});
+        if (tab.equals("team") && !team) tab = "offen";
+        List<Item> items = new ArrayList<>();
+        for (Ticket t : support.queue(p, tab)) items.add(item(t, false));
+        int[] counts = {support.queue(p, "offen").size(), support.queue(p, "meine").size(), team ? support.queue(p, "team").size() : 0};
+        if (!pack(p)) {
+            SupportService.send(p, items.isEmpty() ? "Gerade wartet hier kein Ticket." : items.size() + " Ticket(s):");
+            for (Item it : items) Msg.send(p, "<gray>#" + it.id() + " <white>" + Msg.escape(it.title()) + " <dark_gray>· <gray>"
+                    + Msg.escape(it.info()) + " <click:run_command:'/support ticket " + it.id() + "'><#B7A6FC>[Öffnen]</click>");
+            return;
         }
-        if (team) tabs.add(new String[]{"team", "Team (" + support.queue(p, "team").size() + ")"});
-        int x = 0;
-        if (tabs.size() > 1) {
-            for (String[] t : tabs) {
-                boolean on = t[0].equals(tab);
-                int w = Canvas.width(t[1], true) + 12;
-                c.smallButton(x, y, w, on ? KitData.Small.GREEN : KitData.Small.DARK, t[1], on ? WHITE : LIGHT, true);
-                if (!on) c.action(x, y, w, 16, pl -> main(pl, t[0]), t[1]);
-                x += w + 3;
+        UiDialog.show(p, SupportScreen.queue(new SupportScreen.Queue(tab, team, counts, items), actions), SupportScreen.HEIGHT);
+    }
+
+    public void become(Player p) {
+        UUID id = p.getUniqueId();
+        SupportScreen.Become b = new SupportScreen.Become(plugin.playtime().minutesOf(id), support.helperHours(),
+                support.discordOk(id), support.isHelper(id));
+        if (!pack(p)) {
+            SupportService.send(p, "Helfer werden: " + support.helperHours() + " Stunden Spielzeit (du: " + b.minutes() / 60
+                    + ") und Discord verlinkt. <click:run_command:'/support helfer'><#B7A6FC>[Jetzt Helfer werden]</click>");
+            return;
+        }
+        UiDialog.show(p, SupportScreen.become(b, actions), SupportScreen.HEIGHT);
+    }
+
+    public void top(Player p, boolean week) {
+        List<SupportService.Score> scores = support.ranking(week, 10);
+        List<SupportScreen.Place> places = new ArrayList<>();
+        for (SupportService.Score s : scores) places.add(new SupportScreen.Place(SupportService.nameOf(s.id()), s.points()));
+        UUID me = p.getUniqueId();
+        String footer;
+        if (!support.canHelp(p)) footer = "Du bist kein Ingame-Helfer.";
+        else {
+            int pts = support.pointsOf(me, week);
+            int rank = 0;
+            for (int i = 0; i < scores.size(); i++) if (scores.get(i).id().equals(me)) rank = i + 1;
+            footer = (week ? "Diese Woche: " : "Seit dem Start: ") + pts + (pts == 1 ? " Punkt" : " Punkte")
+                    + (rank > 0 ? " · Platz " + rank : "");
+        }
+        if (!pack(p)) {
+            SupportService.send(p, week ? "Bestenliste dieser Woche:" : "Bestenliste seit dem Start:");
+            for (int i = 0; i < places.size(); i++) {
+                Msg.send(p, "<gray>#" + (i + 1) + " <white>" + places.get(i).name() + " <gold>" + places.get(i).points() + " Punkte");
             }
-            y += 20;
+            if (places.isEmpty()) Msg.send(p, "<gray>Noch hat niemand ein Ticket gelöst.");
+            return;
         }
-        List<Ticket> list = tab.equals("mine") ? support.of(p.getUniqueId()) : support.queue(p, tab);
-        if (list.isEmpty()) {
-            c.box(0, y, W, 43, KitData.Box.RED);
-            c.text(9, y + 10, tab.equals("mine") ? "KEINE TICKETS" : "NICHTS ZU TUN", ACCENT, true);
-            c.text(12, y + 24, tab.equals("mine") ? "Du hast eine Frage? Schreib ein neues Ticket." : "Gerade wartet hier kein Ticket.",
-                    LIGHT, false);
-            y += 46;
-        }
-        for (int i = 0; i < list.size() && i < 6; i++) {
-            Ticket t = list.get(i);
-            c.box(0, y, W, 34, KitData.Box.RED);
-            String who = tab.equals("mine") ? (t.helper == null ? "noch kein Helfer" : "Helfer: " + SupportService.nameOf(t.helper))
-                    : "von " + SupportService.nameOf(t.author);
-            c.text(10, y + 7, List.of(Span.bold("#" + t.id + " ", GRAY), Span.bold(Canvas.fit(t.title, true, 230), WHITE)));
-            c.text(10, y + 20, WHEN.format(Instant.ofEpochMilli(t.created)) + " · " + who + " · " + t.messages.size() + " Nachrichten", GRAY, false);
-            c.textRight(380, y + 7, t.unread && tab.equals("mine") ? "neue Antwort" : t.status.label,
-                    t.unread && tab.equals("mine") ? GOLD : statusColor(t.status), true);
-            c.textRight(380, y + 20, "Öffnen ›", LIGHT, false);
-            c.action(0, y, W, 34, pl -> ticket(pl, t.id), "Ticket öffnen");
-            y += 37;
-        }
-        y += 2;
-        int bx = button(c, 0, y, "Neues Ticket", true, this::askNew, "Frage stellen");
-        bx += 4;
-        bx += button(c, bx, y, "Beste Helfer", false, this::top, "Rangliste der Helfer") + 4;
-        if (!support.isHelper(p.getUniqueId())) button(c, bx, y, "Helfer werden", false, pl -> becomeHelper(pl), "Selbst helfen");
-        UiDialog.show(p, c, HEIGHT);
+        UiDialog.show(p, SupportScreen.board(new SupportScreen.Board(week, places, footer), actions), SupportScreen.HEIGHT);
     }
 
     private void becomeHelper(Player p) {
         String e = support.becomeHelper(p);
-        if (e != null) err(p, e);
-        else {
-            Sfx.play(plugin, p, Sfx.Kind.SUCCESS_BIG);
-            SupportService.send(p, "Du bist jetzt <white>Helfer</white>. Neue Tickets siehst du unter „Offen“, du bekommst eine Nachricht bei jedem neuen Ticket.");
+        if (e != null) {
+            err(p, e);
+            become(p);
+            return;
         }
-        main(p, support.canHelp(p) ? "offen" : "mine");
+        Sfx.play(plugin, p, Sfx.Kind.SUCCESS_BIG);
+        SupportService.send(p, "Du bist jetzt <white>Helfer</white>. Neue Tickets siehst du unter „Helfen“, du bekommst eine Nachricht bei jedem neuen Ticket.");
+        queue(p, "offen");
     }
-
-    // =================================================================================================================
-    // Ticket
-    // =================================================================================================================
 
     public void ticket(Player p, int id) {
         Ticket t = support.get(id);
@@ -178,184 +261,133 @@ public final class SupportMenus implements CommandExecutor, Listener {
         if (author) support.markRead(t);
         boolean mine = p.getUniqueId().equals(t.helper);
         boolean team = support.isTeam(p);
-        Canvas c = new Canvas(W).heading("Support", net.kyori.adventure.text.format.TextColor.color(0x7BC4FC));
-        head(c, "#" + t.id + " " + t.title.toUpperCase(Locale.ROOT), "von " + SupportService.nameOf(t.author) + " · "
-                + WHEN.format(Instant.ofEpochMilli(t.created)), pl -> main(pl, author ? "mine" : "offen"),
-                List.of(Span.bold(t.status.label, statusColor(t.status))));
-        int y = 53;
-        // Verlauf: die letzten Nachrichten, die passen
-        List<String[]> lines = new ArrayList<>();
+        List<SupportScreen.Line> lines = new ArrayList<>();
         for (SupportService.Message m : t.messages) {
-            String name = m.role().equals("system") ? "" : SupportService.nameOf(m.author());
-            String role = switch (m.role()) {
-                case "helfer" -> "Helfer";
-                case "team" -> "Team";
-                case "spieler" -> "";
-                default -> "";
-            };
-            lines.add(new String[]{"H", name, role, WHEN.format(Instant.ofEpochMilli(m.time())), m.role()});
-            for (String w : Canvas.wrap(m.text(), W - 30)) lines.add(new String[]{"T", w, m.role()});
+            String name = m.role().equals("system") ? m.text() : SupportService.nameOf(m.author());
+            lines.add(new SupportScreen.Line(name, m.role(), WHEN.format(Instant.ofEpochMilli(m.time())), m.text()));
         }
-        int max = 16;
-        if (lines.size() > max) lines = lines.subList(lines.size() - max, lines.size());
-        int h = 24 + 11 * lines.size() + 4;
-        c.box(0, y, W, h, KitData.Box.RED);
-        c.text(9, y + 10, "VERLAUF", ACCENT, true);
-        int ly = y + 24;
-        for (String[] l : lines) {
-            if (l[0].equals("H")) {
-                if (l[4].equals("system")) {
-                    c.text(12, ly, "• " + l[3], GRAY, false);
-                } else {
-                    List<Span> s = new ArrayList<>();
-                    s.add(Span.bold(l[1], l[4].equals("spieler") ? WHITE : CYAN));
-                    if (!l[2].isEmpty()) s.add(Span.of(" · " + l[2], l[4].equals("team") ? ACCENT : CYAN));
-                    s.add(Span.of("  " + l[3], GRAY));
-                    c.text(12, ly, s);
-                }
-            } else {
-                c.text(l[2].equals("system") ? 22 : 18, ly, l[1], l[2].equals("system") ? GRAY : LIGHT, false);
+        boolean open = t.status.open();
+        SupportScreen.Detail d = new SupportScreen.Detail(t.id, t.title, SupportService.nameOf(t.author),
+                WHEN.format(Instant.ofEpochMilli(t.created)), t.status.label, SupportScreen.stateColor(t.status), author, lines,
+                t.stars,
+                open && (author || mine || team),
+                open && !author && support.canHelp(p) && (t.status == Status.OFFEN || (t.status == Status.TEAM && team)),
+                open && !author && (mine || team) && t.status != Status.TEAM,
+                open && author,
+                open && (author || team));
+        if (!pack(p)) {
+            SupportService.send(p, "Ticket <white>#" + t.id + " " + Msg.escape(t.title) + "</white> · " + t.status.label);
+            for (SupportScreen.Line l : lines) {
+                Msg.send(p, l.role().equals("system") ? "<dark_gray>• " + Msg.escape(l.text())
+                        : "<white>" + l.name() + "<gray>: " + Msg.escape(l.text()));
             }
-            ly += 11;
+            if (d.reply()) Msg.send(p, "<click:run_command:'/support antwort " + t.id + "'><#B7A6FC>[Antworten]</click>");
+            return;
         }
-        y += h + 3;
-        int bx = 0;
-        if (t.status.open()) {
-            if (author || mine || team) bx += button(c, bx, y, "Antworten", true, pl -> askReply(pl, id), "Nachricht schreiben") + 4;
-            if (!author && support.canHelp(p) && (t.status == Status.OFFEN || (t.status == Status.TEAM && team))) {
-                bx += button(c, bx, y, "Übernehmen", !(author || mine || team), pl -> {
-                    String e = support.claim(pl, support.get(id));
-                    if (e != null) err(pl, e);
-                    ticket(pl, id);
-                }, "Ich kümmere mich") + 4;
-            }
-            if (!author && (mine || team) && t.status != Status.TEAM) {
-                bx += button(c, bx, y, "An Team geben", false, pl -> {
-                    String e = support.escalate(pl, support.get(id));
-                    if (e != null) err(pl, e);
-                    ticket(pl, id);
-                }, "Komme nicht weiter") + 4;
-            }
-            if (author) bx += button(c, bx, y, "Gelöst", false, pl -> stars(pl, id), "Frage gelöst, Sterne vergeben") + 4;
-            if (author || team) button(c, bx, y, "Schließen", false, pl -> {
-                String e = support.close(pl, support.get(id));
-                if (e != null) err(pl, e);
-                ticket(pl, id);
-            }, author ? "Ticket zurückziehen" : "Ticket schließen");
-        } else if (t.stars > 0) {
-            c.text(4, y + 6, List.of(Span.of("Bewertung: ", GRAY), Span.bold("★".repeat(t.stars), GOLD), Span.of("☆".repeat(5 - t.stars), GRAY)));
-        }
-        UiDialog.show(p, c, HEIGHT);
+        UiDialog.show(p, SupportScreen.ticket(d, actions), SupportScreen.HEIGHT);
     }
 
-    private void stars(Player p, int id) {
+    private void rate(Player p, int id) {
         Ticket t = support.get(id);
         if (t == null) return;
-        Canvas c = new Canvas(W).heading("Support", net.kyori.adventure.text.format.TextColor.color(0x7BC4FC));
-        head(c, "WIE GUT WURDE DIR GEHOLFEN?", "Ticket #" + id + (t.helper == null ? "" : " · Helfer: " + SupportService.nameOf(t.helper)),
-                pl -> ticket(pl, id), null);
-        int y = 53;
-        c.box(0, y, W, 60, KitData.Box.RED);
-        c.text(9, y + 10, "STERNE VERGEBEN", ACCENT, true);
-        int x = 12;
-        for (int s = 1; s <= 5; s++) {
-            int stars = s;
-            String label = "★".repeat(s);
-            int w = Canvas.width(label, true) + 16;
-            c.button(x, y + 28, w, s >= 4 ? KitData.Button.H_GOLD : KitData.Button.H_NAV, label, s >= 4 ? ON : GOLD, true);
-            c.action(x, y + 28, w, KitData.BTN_H, pl -> {
-                String e = support.solve(pl, support.get(id), stars);
-                if (e != null) err(pl, e);
-                else {
-                    Sfx.play(plugin, pl, Sfx.Kind.SUCCESS);
-                    SupportService.send(pl, "Danke! Dein Ticket ist als gelöst markiert.");
-                }
-                ticket(pl, id);
-            }, stars + (stars == 1 ? " Stern" : " Sterne"));
-            x += w + 4;
-        }
-        UiDialog.show(p, c, 160);
+        UiDialog.show(p, SupportScreen.rate(id, t.helper == null ? null : SupportService.nameOf(t.helper), actions), SupportScreen.HEIGHT);
     }
 
-    // =================================================================================================================
-    // Beste Helfer
-    // =================================================================================================================
-
-    public void top(Player p) {
-        Canvas c = new Canvas(W).heading("Support", net.kyori.adventure.text.format.TextColor.color(0x7BC4FC));
-        head(c, "BESTE HELFER", "Durchschnitt der Sterne, dann gelöste Tickets", pl -> main(pl, "mine"), null);
-        int y = 53;
-        List<SupportService.HelperStat> top = support.top(10);
-        int h = 24 + 11 * Math.max(1, top.size()) + 4;
-        c.box(0, y, W, h, KitData.Box.RED);
-        c.text(9, y + 10, "RANGLISTE", ACCENT, true);
-        if (top.isEmpty()) c.text(12, y + 24, "Noch hat niemand ein Ticket gelöst.", GRAY, false);
-        TextColor[] medal = {TextColor.color(0xFFC83A), TextColor.color(0xC8CCD8), TextColor.color(0xE0884A)};
-        for (int i = 0; i < top.size(); i++) {
-            SupportService.HelperStat s = top.get(i);
-            int ly = y + 24 + 11 * i;
-            c.text(12, ly, "#" + (i + 1), i < 3 ? medal[i] : GRAY, true);
-            c.text(40, ly, SupportService.nameOf(s.id()), WHITE, false);
-            String avg = s.ratings() == 0 ? "-" : String.format(Locale.GERMANY, "%.1f", s.average());
-            c.textRight(378, ly, List.of(Span.bold(avg + " ★", GOLD), Span.of("  " + s.solved() + " gelöst", GRAY)));
+    /** Ohne Pack: deine Tickets im Chat mit Klicks. */
+    private void chat(Player p) {
+        List<Ticket> own = support.of(p.getUniqueId());
+        SupportService.send(p, own.isEmpty() ? "Du hast noch kein Ticket." : "Deine Tickets:");
+        for (int i = 0; i < own.size() && i < 6; i++) {
+            Ticket t = own.get(i);
+            Msg.send(p, "<gray>#" + t.id + " <white>" + Msg.escape(t.title) + " <dark_gray>· <gray>" + (t.unread ? "<gold>neue Antwort" : t.status.label)
+                    + " <click:run_command:'/support ticket " + t.id + "'><#B7A6FC>[Öffnen]</click>");
         }
-        UiDialog.show(p, c, HEIGHT);
+        Msg.send(p, "<click:run_command:'/support new'><#B7A6FC>[Neues Ticket]</click> <click:run_command:'/support top'><gold>[Bestenliste]</click>"
+                + (support.canHelp(p) ? " <click:run_command:'/support helfen'><green>[Helfen]</click>" : " <click:run_command:'/support helfer'><green>[Helfer werden]</click>"));
     }
 
     // =================================================================================================================
     // Eingaben
     // =================================================================================================================
 
+    private static final ClickCallback.Options ONCE = ClickCallback.Options.builder().uses(1).build();
+
     private void askNew(Player p) {
-        DialogBase base = DialogBase.builder(Msg.parse("<#FF6478><b>Neues Ticket"))
-                .canCloseWithEscape(true)
-                .afterAction(DialogBase.DialogAfterAction.CLOSE)
-                .body(List.of(DialogBody.plainMessage(Msg.parse("<gray>Ein kurzer Titel und deine Frage. Ein Helfer antwortet dir,\n"
-                        + "<gray>die Antwort kommt im Chat. Spieler melden oder Strafen: <white>/discord"), 300)))
-                .inputs(List.of(DialogInput.text("titel", Msg.parse("<gray>Titel")).width(300).maxLength(40).initial("").build(),
-                        DialogInput.text("frage", Msg.parse("<gray>Deine Frage")).width(300).maxLength(500).initial("")
-                                .multiline(TextDialogInput.MultilineOptions.create(6, 90)).build()))
-                .build();
-        ClickCallback.Options once = ClickCallback.Options.builder().uses(1).build();
-        ActionButton yes = ActionButton.create(Msg.parse("<green><b>Absenden</b>"), null, 100,
-                DialogAction.customClick((response, audience) -> {
-                    if (!(audience instanceof Player pl)) return;
-                    String e = support.create(pl, response.getText("titel"), response.getText("frage"));
-                    if (e != null) err(pl, e);
-                    else {
-                        Sfx.play(plugin, pl, Sfx.Kind.SUCCESS);
-                        SupportService.send(pl, "Ticket geschrieben. Sobald ein Helfer antwortet, bekommst du eine Nachricht.");
-                    }
-                    main(pl, "mine");
-                }, once));
-        ActionButton no = ActionButton.create(Msg.parse("<gray>Abbrechen"), null, 100,
-                DialogAction.customClick((response, audience) -> {
-                    if (audience instanceof Player pl) main(pl, "mine");
-                }, once));
-        p.showDialog(Dialog.create(b -> b.empty().base(base).type(DialogType.confirmation(yes, no))));
+        String title = "Titel · kurz, worum es geht (bis 40 Zeichen)", question = "Deine Frage · so genau wie möglich (bis 200 Zeichen)";
+        DialogAction submit = DialogAction.customClick((response, audience) -> {
+            if (!(audience instanceof Player pl)) return;
+            String e = support.create(pl, response.getText("titel"), response.getText("frage"));
+            if (e != null) err(pl, e);
+            else {
+                Sfx.play(plugin, pl, Sfx.Kind.SUCCESS);
+                SupportService.send(pl, "Ticket geschrieben. Sobald ein Helfer antwortet, bekommst du eine Nachricht.");
+            }
+            mine(pl);
+        }, ONCE);
+        if (!pack(p)) {
+            plain(p, "<#B7A6FC><b>Neues Ticket", "<gray>Ein kurzer Titel und deine Frage. Spieler melden oder Strafen: <white>/discord",
+                    List.of(field("titel", title, 300, 40, false), field("frage", question, 300, 200, true)), "Absenden", submit,
+                    SupportMenus.this::main);
+            return;
+        }
+        List<DialogInput> inputs = List.of(field("titel", title, 400, 40, false), field("frage", question, 400, 200, true));
+        ActionButton send = ActionButton.create(UiDialog.plate(KitData.Sprite.SU_PLATE_PURPLE, KitData.Sprite.SU_PENCIL,
+                "Abschicken", SupportScreen.ON), null, 199, submit);
+        ActionButton back = ActionButton.create(UiDialog.plate(KitData.Sprite.SU_PLATE_GRAY, null, "‹ Zurück", SupportScreen.ON),
+                null, 199, DialogAction.customClick((response, audience) -> {
+                    if (audience instanceof Player pl) main(pl);
+                }, ONCE));
+        p.showDialog(UiDialog.dialog(p, SupportScreen.ask(actions), inputs, List.of(send, back), 2));
     }
 
     private void askReply(Player p, int id) {
-        DialogBase base = DialogBase.builder(Msg.parse("<#FF6478><b>Antworten · #" + id))
+        Ticket t = support.get(id);
+        if (t == null) return;
+        DialogAction submit = DialogAction.customClick((response, audience) -> {
+            if (!(audience instanceof Player pl)) return;
+            Ticket tk = support.get(id);
+            String e = tk == null ? "Dieses Ticket gibt es nicht mehr." : support.reply(pl, tk, response.getText("text"));
+            if (e != null) err(pl, e);
+            ticket(pl, id);
+        }, ONCE);
+        String label = "Nachricht · bis 200 Zeichen";
+        if (!pack(p)) {
+            plain(p, "<#B7A6FC><b>Antworten · #" + id, null, List.of(field("text", label, 300, 200, true)), "Senden", submit,
+                    pl -> ticket(pl, id));
+            return;
+        }
+        ActionButton send = ActionButton.create(UiDialog.plate(KitData.Sprite.SU_PLATE_PURPLE, KitData.Sprite.SU_PENCIL,
+                "Senden", SupportScreen.ON), null, 199, submit);
+        ActionButton back = ActionButton.create(UiDialog.plate(KitData.Sprite.SU_PLATE_GRAY, null, "‹ Zurück", SupportScreen.ON),
+                null, 199, DialogAction.customClick((response, audience) -> {
+                    if (audience instanceof Player pl) ticket(pl, id);
+                }, ONCE));
+        p.showDialog(UiDialog.dialog(p, SupportScreen.reply(id, t.title, t.author.equals(p.getUniqueId()), actions),
+                List.of(field("text", label, 400, 200, true)), List.of(send, back), 2));
+    }
+
+    /** Eingabefeld mit grauer Beschriftung; mehrzeilig 52 px hoch wie im Original. */
+    private static DialogInput field(String key, String label, int width, int max, boolean multi) {
+        TextDialogInput.Builder b = DialogInput.text(key, Msg.parse("<#9FA1A7>" + Msg.escape(de.kuby.kubyplugins.util.I18n.ctx(label))))
+                .width(width).maxLength(max).initial("");
+        if (multi) b.multiline(TextDialogInput.MultilineOptions.create(5, 52));
+        return b.build();
+    }
+
+    /** Ohne Pack: einfacher Bestätigungs-Dialog mit Feldern. */
+    private void plain(Player p, String title, String text, List<DialogInput> inputs, String yes, DialogAction submit, Consumer<Player> cancel) {
+        DialogBase.Builder base = DialogBase.builder(Msg.parse(title))
                 .canCloseWithEscape(true)
                 .afterAction(DialogBase.DialogAfterAction.CLOSE)
-                .inputs(List.of(DialogInput.text("text", Msg.parse("<gray>Nachricht")).width(300).maxLength(500).initial("")
-                        .multiline(TextDialogInput.MultilineOptions.create(6, 90)).build()))
-                .build();
-        ClickCallback.Options once = ClickCallback.Options.builder().uses(1).build();
-        ActionButton yes = ActionButton.create(Msg.parse("<green><b>Senden</b>"), null, 100,
-                DialogAction.customClick((response, audience) -> {
-                    if (!(audience instanceof Player pl)) return;
-                    Ticket t = support.get(id);
-                    String e = t == null ? "Dieses Ticket gibt es nicht mehr." : support.reply(pl, t, response.getText("text"));
-                    if (e != null) err(pl, e);
-                    ticket(pl, id);
-                }, once));
+                .inputs(inputs);
+        if (text != null) base.body(List.of(DialogBody.plainMessage(Msg.parse(text), 300)));
+        ActionButton ok = ActionButton.create(Msg.parse("<green><b>" + yes + "</b>"), null, 100, submit);
         ActionButton no = ActionButton.create(Msg.parse("<gray>Abbrechen"), null, 100,
                 DialogAction.customClick((response, audience) -> {
-                    if (audience instanceof Player pl) ticket(pl, id);
-                }, once));
-        p.showDialog(Dialog.create(b -> b.empty().base(base).type(DialogType.confirmation(yes, no))));
+                    if (audience instanceof Player pl) cancel.accept(pl);
+                }, ONCE));
+        DialogBase built = base.build();
+        p.showDialog(Dialog.create(b -> b.empty().base(built).type(DialogType.confirmation(ok, no))));
     }
 
     // =================================================================================================================
@@ -372,7 +404,9 @@ public final class SupportMenus implements CommandExecutor, Listener {
         String sub = args.length == 0 ? "" : args[0].toLowerCase(Locale.ROOT);
         switch (sub) {
             case "new", "neu" -> askNew(p);
-            case "top" -> top(p);
+            case "top" -> top(p, true);
+            case "meine", "mine" -> mine(p);
+            case "helfen", "queue" -> queue(p, "offen");
             case "helper", "helfer" -> {
                 if (args.length >= 3 && args[1].equalsIgnoreCase("remove") && support.isTeam(p)) {
                     var op = org.bukkit.Bukkit.getOfflinePlayerIfCached(args[2]);
@@ -384,19 +418,22 @@ public final class SupportMenus implements CommandExecutor, Listener {
                 } else if (support.isHelper(p.getUniqueId()) && args.length >= 2 && args[1].equalsIgnoreCase("aufhoeren")) {
                     support.leaveHelper(p.getUniqueId());
                     SupportService.send(p, "Du bist kein Helfer mehr.");
+                } else if (pack(p) && args.length == 1) {
+                    become(p);
                 } else {
                     becomeHelper(p);
                 }
             }
-            case "ticket" -> {
+            case "ticket", "antwort" -> {
                 try {
-                    ticket(p, Integer.parseInt(args.length > 1 ? args[1] : ""));
+                    int id = Integer.parseInt(args.length > 1 ? args[1] : "");
+                    if (sub.equals("antwort")) askReply(p, id);
+                    else ticket(p, id);
                 } catch (NumberFormatException e) {
                     err(p, "/support ticket <Nummer>");
                 }
             }
-            default -> main(p, support.canHelp(p) && support.queue(p, "meine").size() + support.queue(p, "offen").size() > 0
-                    && support.of(p.getUniqueId()).isEmpty() ? "offen" : "mine");
+            default -> main(p);
         }
         return true;
     }
@@ -408,11 +445,11 @@ public final class SupportMenus implements CommandExecutor, Listener {
             if (!p.isOnline()) return;
             int unread = support.unreadOf(p.getUniqueId());
             if (unread > 0) SupportService.send(p, "Du hast " + unread + " neue Antwort" + (unread == 1 ? "" : "en")
-                    + " im Support. <click:run_command:'/support'><#FF6478>[Öffnen]</click>");
+                    + " im Support. <click:run_command:'/support meine'><#FF6478>[Öffnen]</click>");
             if (support.canHelp(p)) {
                 int open = support.queue(p, "offen").size();
                 if (open > 0) SupportService.send(p, open + " Ticket" + (open == 1 ? " wartet" : "s warten") + " auf einen Helfer. "
-                        + "<click:run_command:'/support'><#FF6478>[Ansehen]</click>");
+                        + "<click:run_command:'/support helfen'><#FF6478>[Ansehen]</click>");
             }
         }, 60L);
     }
