@@ -77,7 +77,7 @@ public final class MainScreen {
         List<Quick> quick = List.of(
                 new Quick("Spawn", KitData.Icon.COMPASS, KitData.Button.TEAL, go(pl -> Teleports.spawn(plugin, pl))),
                 new Quick("Wildnis", KitData.Icon.ENDER_PEARL, KitData.Button.GREEN, go(pl -> Teleports.randomTeleport(plugin, pl))),
-                new Quick("Homes", KitData.Icon.RED_BED, KitData.Button.PURPLE, go(pl -> new HomesMenu(plugin).open(pl))),
+                new Quick("Homes", KitData.Icon.RED_BED, KitData.Button.PURPLE, go(pl -> new HomesScreen(plugin).open(pl))),
                 new Quick("Enderchest", KitData.Icon.ENDER_CHEST, KitData.Button.DARK,
                         go(pl -> pl.openInventory(plugin.enderchests().open(pl)))));
 

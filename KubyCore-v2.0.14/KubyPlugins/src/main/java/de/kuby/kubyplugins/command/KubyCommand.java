@@ -45,7 +45,7 @@ public final class KubyCommand implements CommandExecutor, TabCompleter {
             case "sethome" -> setHome(player, args.length > 0 ? args[0] : "base");
             case "home" -> home(player, args);
             case "delhome" -> delHome(player, args);
-            case "homes" -> new HomesMenu(plugin).open(player);
+            case "homes" -> new de.kuby.kubyplugins.gui.HomesScreen(plugin).open(player);
             case "daily" -> new DailyMenu(plugin).open(player);
             case "rtp" -> Teleports.randomTeleport(plugin, player);
             case "spawn" -> Teleports.spawn(plugin, player);
@@ -155,7 +155,7 @@ public final class KubyCommand implements CommandExecutor, TabCompleter {
 
     private void home(Player p, String[] args) {
         if (args.length == 0) {
-            new HomesMenu(plugin).open(p);
+            new de.kuby.kubyplugins.gui.HomesScreen(plugin).open(p);
             return;
         }
         Location loc = plugin.homes().get(p.getUniqueId(), args[0]);

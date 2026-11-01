@@ -33,7 +33,7 @@ public final class ClaimCommand implements CommandExecutor {
         ClaimService claims = addon.claims();
         String sub = args.length == 0 ? "menu" : args[0].toLowerCase();
         switch (sub) {
-            case "menu", "menü" -> new ClaimMenu(addon).open(p);
+            case "menu", "menü" -> new ClaimScreen(addon).open(p);
             case "info" -> info(p, claims);
             case "axt", "schaufel", "tool" -> {
                 for (org.bukkit.inventory.ItemStack it : p.getInventory().getContents()) {

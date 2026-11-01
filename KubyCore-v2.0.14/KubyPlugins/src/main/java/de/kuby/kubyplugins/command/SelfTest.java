@@ -333,6 +333,19 @@ final class SelfTest {
                     "_WWWWWWWWWWWWWWW", "Skyblock", 999_999_999_999L, 999_999_999L, qs, secs, qs)));
         }
 
+        // Homes: volle Liste mit langen Namen, Kauf-Knopf; leer ohne Platz
+        {
+            List<de.kuby.kubyplugins.gui.HomesScreen.Home> hs = new ArrayList<>();
+            for (int i = 0; i < 30; i++) {
+                hs.add(new de.kuby.kubyplugins.gui.HomesScreen.Home("WWWWWWWWWWWWWWWW", "WWWWWWWWWWWW", -29_999_999, 320, 29_999_999,
+                        i == 1, NO, NO));
+            }
+            canvas.accept("Homes voll", () -> de.kuby.kubyplugins.gui.HomesScreen.canvas(new de.kuby.kubyplugins.gui.HomesScreen.View(
+                    hs, 30, NO, "Platz kaufen · 999.999.999 XP", NO, List.of("W".repeat(100), "W".repeat(100)))));
+            canvas.accept("Homes leer", () -> de.kuby.kubyplugins.gui.HomesScreen.canvas(new de.kuby.kubyplugins.gui.HomesScreen.View(
+                    List.of(), 0, NO, null, null, List.of())));
+        }
+
         // Prüfungen aus den Addons (z. B. Survival-Juwelenshop, Möbel- und Pet-Katalog)
         for (java.util.Map.Entry<String, Supplier<Canvas>> en : plugin.selfTestCanvases().entrySet()) {
             canvas.accept(en.getKey(), en.getValue());

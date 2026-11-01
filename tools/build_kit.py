@@ -79,6 +79,12 @@ BOXES = {
     "red": ("FF4D5E", "9A1F2C", "2A0A10"),       # Warnung
     # Menü-Dialoge (12.10): je Menü eine eigene Farbwelt
     "hub": ("E8C060", "7A5A20", "121A2E"),       # Hauptmenü: Goldrand auf Nachtblau
+    "wood": ("E0A050", "7A4A1E", "1E1208"),      # Jobs: Werkstatt, Kopf
+    "wood_card": ("A87444", "553519", "160D06"), # Jobs: Karten
+    "meadow": ("8BD650", "4B7A27", "13200A"),    # Grundstücke: Wiese, Kopf
+    "moss": ("5E9A48", "2F5424", "0D170A"),      # Grundstücke: Zeilen und Schalter
+    "brick": ("E07A5F", "8A3A2A", "24100C"),     # Homes: Ziegel, Kopf
+    "brick_card": ("B0604A", "5E2A20", "1A0A08"),  # Homes: Karten
 }
 
 # Casino-Kästen (Roulette- und Musik-Dialog im Clip): eigene Ecken, Rand von außen nach innen ("edge"), Füllung N.
@@ -1111,10 +1117,25 @@ def write_java(sheets, widths, icons, icon_chars, icon_adv, small_data=(), title
     L.append("    /** Ein Hintergrund-Stück: Zeichen, Vorschub (Breite + 1), sichtbare Breite und Höhe. */")
     L.append("    public record Piece(char c, int advance, int width, int height) {}")
     L.append("")
+    L.append("    /** Stücke aus einem Text mit je vier Zeichen (Zeichen, Vorschub, Breite, Höhe je + 256); hält den Code der Enums klein. */")
+    L.append("    static Piece[] pieces(String s) {")
+    L.append("        if (s == null) return null;")
+    L.append("        Piece[] out = new Piece[s.length() / 4];")
+    L.append("        for (int i = 0; i < out.length; i++) {")
+    L.append("            out[i] = new Piece(s.charAt(4 * i), s.charAt(4 * i + 1) - 256, s.charAt(4 * i + 2) - 256, s.charAt(4 * i + 3) - 256);")
+    L.append("        }")
+    L.append("        return out;")
+    L.append("    }")
+    L.append("")
 
     def piece(key):
         c, adv, w, h = by[key]
         return "new Piece(%s, %d, %d, %d)" % (jchar(c), adv, w, h)
+
+    def pstr(key):
+        c, adv, w, h = by[key]
+        # Zahlen + 256: so entstehen keine Zeichen wie \\u000a oder \\u0022, die Java schon vor dem Lesen umsetzt
+        return "\\u%04x" % ord(c) + "".join("\\u%04x" % (v + 256) for v in (adv, w, h))
 
     L.append("    /** Kasten-Stile (Rahmen aus Zeilen zu 9 px). */")
     L.append("    public enum Box {")
@@ -1123,14 +1144,12 @@ def write_java(sheets, widths, icons, icon_chars, icon_adv, small_data=(), title
         parts = []
         for row in ("top", "mid", "bot"):
             for side, kind in (("l", "l"), ("m", "m"), ("r", "r")):
-                parts.append(piece(("box", style, row, side)))
+                parts.append(pstr(("box", style, row, side)))
         if style in NARROW_BOXES:
-            narrow = "new Piece[]{" + ", ".join(piece(("box", style, row, w)) for row in ("top", "mid", "bot")
-                                                 for w in NARROW) + "}"
+            narrow = '"' + "".join(pstr(("box", style, row, w)) for row in ("top", "mid", "bot") for w in NARROW) + '"'
         else:
             narrow = "null"
-        rows.append("        %s(%d, %s,\n                %s)" % (style.upper(), box_straight(style), narrow,
-                                                         ",\n                ".join(parts)))
+        rows.append('        %s(%d, %s,\n                "%s")' % (style.upper(), box_straight(style), narrow, "".join(parts)))
     L.append(",\n".join(rows) + ";")
     L.append("")
     L.append("        /** [Zeile oben/mitte/unten][links/mitte/rechts] */")
@@ -1141,7 +1160,8 @@ def write_java(sheets, widths, icons, icon_chars, icon_adv, small_data=(), title
     L.append("        /** Schmale Mittelstücke je Zeile (oben, mitte, unten) in 16, 8, 4, 2, 1 px, sonst null. */")
     L.append("        public final Piece[][] narrow;")
     L.append("")
-    L.append("        Box(int straight, Piece[] narrow, Piece... all) {")
+    L.append("        Box(int straight, String narrowText, String allText) {")
+    L.append("            Piece[] narrow = pieces(narrowText), all = pieces(allText);")
     L.append("            this.straight = straight;")
     L.append("            this.narrow = narrow == null ? null : new Piece[][]{")
     L.append("                    java.util.Arrays.copyOfRange(narrow, 0, 5), java.util.Arrays.copyOfRange(narrow, 5, 10),")

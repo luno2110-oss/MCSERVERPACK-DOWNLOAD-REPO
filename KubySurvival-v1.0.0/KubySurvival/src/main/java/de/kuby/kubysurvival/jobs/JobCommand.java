@@ -30,7 +30,8 @@ public final class JobCommand implements CommandExecutor, TabCompleter {
         JobService.Worker w = jobs.worker(p.getUniqueId());
         String sub = args.length == 0 ? "" : args[0].toLowerCase();
         switch (sub) {
-            case "" -> new JobMenu(addon, addon.core()).open(p);
+            case "" -> new JobScreen(addon).open(p);
+            case "shop", "tokens", "tokenshop" -> new JobScreen(addon).open(p, JobScreen.Tab.SHOP);
             case "info" -> {
                 Job j = args.length > 1 ? Job.find(args[1]) : w.job;
                 if (j == null) {

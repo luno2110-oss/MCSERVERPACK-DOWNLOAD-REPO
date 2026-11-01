@@ -7,6 +7,7 @@
  (Stundenbudget voll)	 (hourly budget full)
  (neuer Wert):	 (new value):
  (vorher {})	 (before {})
+ / {} Grundstücke	 / {} claims
  <click:run_command:'/friend jump {}'><green>[Nachspringen]</click>	 <click:run_command:'/friend jump {}'><green>[Jump to them]</click>
  <click:run_command:'/poker raise {}'><hover:show_text:'Mindesterhöhung'><yellow>[Raise auf {}]</yellow></hover></click> <click:suggest_command:'/poker raise '><hover:show_text:'Betrag selbst eingeben'><yellow>[Raise …]</yellow></hover></click>	 <click:run_command:'/poker raise {}'><hover:show_text:'Minimum raise'><yellow>[Raise to {}]</yellow></hover></click> <click:suggest_command:'/poker raise '><hover:show_text:'Enter the amount yourself'><yellow>[Raise …]</yellow></hover></click>
  <click:run_command:'/support helfen'><green>[Helfen]</click>	 <click:run_command:'/support helfen'><green>[Help]</click>
@@ -106,6 +107,7 @@
  ausgezahlt · <green>+{}</green>	 cashed out · <green>+{}</green>
  bis 	 to 
  bis Stufe 	 until level 
+ das Vertrauen entziehen	 – remove trust
  diese Woche · {} gesamt	 this week · {} total
  entfernen (zweimal klicken)	 remove (click twice)
  erreicht! <gray>Belohnungen: <white>/battlepass	 reached! <gray>Rewards: <white>/battlepass
@@ -191,13 +193,16 @@ $ zum Gründen	$ to found
 +3 % Schatzchance, +5 % Glück	+3 % treasure chance, +5 % luck
 +50 % Preis	+50 % price
 +{} % Glück	+{} % luck
++{} % Job-XP, Coins und Limit	+{} % job XP, coins and limit
 +{} % Schatzchance	+{} % treasure chance
 +{} Claim-Blöcke	+{} claim blocks
 +{} Homes	+{} homes
 +{} Tages-Quest	+{} daily quest
 +{} Tages-Quests	+{} daily quests
++{} je Stunde Spielzeit	+{} per hour played
 +{} pro Monat	+{} per month
 +{} weitere	+{} more
++{} weitere freie Plätze	+{} more free slots
 -10 % Wartezeit	-10 % waiting time
 -Anzeige	 display
 -Paket	 bundle
@@ -1421,6 +1426,7 @@ $ zum Gründen	$ to found
 <green>Dein Discord ist verlinkt! <#5865F2>✔</#5865F2> <green>steht jetzt hinter deinem Namen, dazu gibt es ein Home mehr.	<green>Your Discord is linked! <#5865F2>✔</#5865F2> <green>now shows after your name, plus one more home.
 <green>Dein Discord-Account ist verlinkt. <#5865F2>✔	<green>Your Discord account is linked. <#5865F2>✔
 <green>Dein Haustier heißt jetzt <gold>	<green>Your pet is now called <gold>
+<green>Dein Nebenjob: {}<green>.	<green>Your side job: {}<green>.
 <green>Dein Nebenjob: {}<green>. Er zahlt wie der Hauptjob (gleiches Stundenlimit).	<green>Your side job: {}<green>. It pays like the main job (same hourly limit).
 <green>Dein aktueller Job	<green>Your current job
 <green>Deine Juwelen: <white>	<green>Your jewels: <white>
@@ -1488,6 +1494,7 @@ $ zum Gründen	$ to found
 <green>Hologramm von {} an deiner Position aufgestellt.	<green>Hologram of {} placed at your position.
 <green>Hologramm „{}“ aufgestellt. Entfernen: /casino holo {} entfernen	<green>Hologram “{}” placed. Remove: /casino holo {} entfernen
 <green>Home <white>{} <green>gesetzt.	<green>Home <white>{} <green>set.
+<green>Home <white>{} <green>gesetzt. <gray>Eigener Name: <white>/sethome <Name>	<green>Home <white>{} <green>set. <gray>Own name: <white>/sethome <name>
 <green>Homebonus {} für {} vergeben.	<green>Home bonus {} given to {}.
 <green>Hub-Spawn gesetzt.	<green>Hub spawn set.
 <green>Höchste Stufe erreicht	<green>Highest level reached
@@ -1540,6 +1547,7 @@ $ zum Gründen	$ to found
 <green>Region {} erstellt.	<green>Region {} created.
 <green>Roulette-Tisch aufgebaut ({} x {} Blöcke). Croupier: /casino npc croupier	<green>Roulette table built ({} x {} blocks). Croupier: /casino npc croupier
 <green>Rucksack-Item erhalten. <gray>Rechtsklick öffnet ihn.	<green>Received the backpack item. <gray>Right-click opens it.
+<green>Rucksack-Item ist in deinem Inventar.	<green>The backpack item is in your inventory.
 <green>Schild ist kein Crash-Schild mehr.	<green>This sign is no longer a crash sign.
 <green>Seite freigeschaltet!	<green>Page unlocked!
 <green>Slot-Automat aufgebaut (Breite {}, Pult {} Block tief), Hocker an deiner Position. Entfernen: /casino slots entfernen	<green>Slot machine built (width {}, desk {} blocks deep), stool at your position. Remove: /casino slots entfernen
@@ -2356,6 +2364,7 @@ Arenen	Arenas
 Arten	Types
 Artikel eingeben (id;Name;ICON;Preis;Befehl;Lore):	Enter item (id;Name;ICON;Price;Command;Lore):
 Auch kleinere Beschädigungen und absichtliche Veränderungen an fremden Bauwerken gelten als Griefing.	Even minor damage and deliberate changes to other players' builds count as griefing.
+Auch mit /backpack	Also with /backpack
 Auf Stühle, Bänke und Hocker setzt du dich mit Rechtsklick, überall auf Survival. Aufstehen mit Shift.	You sit on chairs, benches and stools with right-click, anywhere in Survival. Stand up with shift.
 Auf Survival gelten zwölf Paragraphen, zum Beispiel zu Griefing, Claims, PvP und Chat. Mit /regeln liest du sie alle.	Twelve paragraphs apply in Survival, for example about griefing, claims, PvP and chat. Read them all with /regeln.
 Auf dem Konto ist nichts.	There's nothing in the account.
@@ -2554,6 +2563,7 @@ Bonus am 30. Tag	Bonus on day 30
 Bonus für alle drei	Bonus for all three
 Bonus für den Sieger	Bonus for the winner
 Booster & Wochen	Booster & weeks
+Booster im Token-Shop	Booster in the token shop
 Booster-Status (18-24 Uhr: 1,5x XP)	Booster status (6 pm to midnight: 1.5x XP)
 Booster: Ende	Booster: end
 Booster: Faktor	Booster: factor
@@ -2594,6 +2604,7 @@ Casino-Musik: <#F2DA90>{}</#F2DA90> läuft in Dauerschleife	Casino music: <#F2DA
 Casino-Musik: <white>alle Songs</white> im Wechsel	Casino music: <white>all songs</white> taking turns
 Casino-Rangliste	Casino ranking
 Chance auf zwei Fische auf einmal	Chance of two fish at once
+Chance auf zwei Fische: {} %	Chance of two fish: {} %
 Changelog beim Join	Changelog on join
 Chaos-Kenner	Chaos Expert
 Chaos-Novize	Chaos Novice
@@ -2634,6 +2645,7 @@ Coins und Juwelen	Coins and jewels
 Coins und Tokens. Team-Aufgaben zahlen in die Team-Kasse.	Coins and tokens. Team tasks pay into the team bank.
 Coins verdienen, kaufen, verkaufen	Earn, buy and sell coins
 Coins verdienst du mit Jobs, Quests, beim Voten und wenn du Sachen an andere Spieler verkaufst.	You earn coins with jobs, quests, voting and when you sell things to other players.
+Coins · neu in {} Min.	Coins · new in {} min.
 Coins, Juwelen, Stats, Teleport	Coins, jewels, stats, teleport
 Config neu geladen.	Config reloaded.
 Config neu laden	Reload config
@@ -2694,6 +2706,7 @@ Das Team ist inzwischen voll.	The team is full by now.
 Das Turnier ist voll.	The tournament is full.
 Das Umgehen des Claim-Schutzes, um Blöcke abzubauen, Items zu stehlen oder fremde Bauwerke zu beschädigen, ist verboten.	Bypassing claim protection to break blocks, steal items or damage other players' builds is forbidden.
 Das Umgehen eines Banns mit anderen Accounts ist verboten.	Getting around a ban with other accounts is forbidden.
+Das dürfen Fremde bei dir	What strangers may do on your land
 Das geht nur in Survival.	That only works in Survival.
 Das gibt es nur aus Kisten.	This is only available from crates.
 Das gibt es nur in Survival.	That only exists in Survival.
@@ -2785,6 +2798,7 @@ Deine Tickets:	Your tickets:
 Deine Trophäen	Your trophies
 Deine Wahl	Your choice
 Deine Warps	Your warps
+Deine Werte und Ranglisten	Your stats and rankings
 Deine XP	Your XP
 Deine Zahlen und Ranglisten	Your numbers and rankings
 Deinen Fang verkaufst du direkt gegen 	You sell your catch directly for 
@@ -2880,6 +2894,7 @@ Die Seltenen behältst du · 	You keep the rare ones ·
 Die Skyblock-Welt ist nicht eingerichtet.	The Skyblock world isn't set up.
 Die Top 10 Helfer	The top 10 helpers
 Die VIP-Lounge ist nur für Legend-Ränge und die Top {} der Casino-Rangliste.	The VIP lounge is only for Legend ranks and the top {} of the casino ranking.
+Die Verzauberung muss schon auf der höchsten Stufe sein.	The enchantment must already be at its highest level.
 Die Vorlage ist zu groß (max. 200.000 Blöcke).	The template is too big (max. 200,000 blocks).
 Die Welt konnte nicht erstellt werden.	The world couldn't be created.
 Die Welt {} ist schon geladen.	The world {} is already loaded.
@@ -2984,6 +2999,7 @@ Discord-Ticket	Discord ticket
 Doktorfisch	Surgeonfish
 Donnerstag	Thursday
 Donnerzahn	Thunderfang
+Doppelfang 	Double catch 
 Doppelfang Stufe 	Double catch level 
 Doppelfang im Token-Shop	Double catch in the token shop
 Doppelfang ist schon auf der höchsten Stufe.	Double catch is already at the highest level.
@@ -3059,6 +3075,7 @@ Du hast diesem Spieler schon eine Anfrage geschickt.	You already sent this playe
 Du hast eine Frage? Mit /support schreibst du ein Ticket: einen kurzen Titel und deine Frage.	Got a question? With /support you write a ticket: a short title and your question.
 Du hast eine Frage? Schreib ein neues Ticket.	Got a question? Write a new ticket.
 Du hast gerade kein Grab. Stirbst du, entsteht dort ein Grabstein mit deinen Sachen.	You don't have a grave right now. When you die, a gravestone with your things appears there.
+Du hast gerade keinen Platz für ein Home.	You have no free home slot right now.
 Du hast in dieser Runde nichts gesetzt.	You didn't bet anything this round.
 Du hast kein Team.	You don't have a team.
 Du hast keine Anteile an diesem Item.	You have no shares in this item.
@@ -3152,6 +3169,7 @@ Eigener Betrag	Custom amount
 Eigener Einsatz	Custom bet
 Eigener Hut	Own hat
 Eigener Laden, eigener Warp	Your own shop, your own warp
+Eigenes Lager zum Mitnehmen	Your own storage to carry
 Ein Claim darf höchstens {} Blöcke lang sein.	A claim may be at most {} blocks long.
 Ein Claim muss mindestens {}x{} Blöcke groß sein.	A claim must be at least {}x{} blocks big.
 Ein Ehe-Konto könnt ihr erst nach der Hochzeit eröffnen.	You can only open a marriage account after the wedding.
@@ -3405,6 +3423,7 @@ Freunde dürfen zu dir springen	Friends may jump to you
 Freunde finden und verwalten	Find and manage friends
 Freunde online/offline	Friends online/offline
 Freunde trägst du mit /claim trust ein. Was Fremde bei dir dürfen, stellst du im Menü ein.	You add friends with /claim trust. What strangers may do on your land, you set in the menu.
+Freunde, Anfragen und Nachspringen	Friends, requests and jumping to them
 Freundesanfragen	Friend requests
 Freundesliste	Friends list
 Freundesliste öffnen	Open your friends list
@@ -3464,8 +3483,10 @@ Gemeinsam stark	Strong together
 Gemeinsames Konto für euch beide, kostenlos	Shared account for both of you, free
 Gemeinschaftslager und gemeinsame Ressourcen dürfen nur entsprechend den vereinbarten Regeln genutzt werden.	Shared storage and shared resources may only be used according to the agreed rules.
 Gerade	Even
+Gerade gibt es nichts zu kaufen.	Nothing to buy right now.
 Gerade ist niemand in deiner Nähe	Nobody is near you right now
 Gerade kein Event	No event right now
+Gerade keine Wartezeit	No waiting time right now
 Gerade läuft kein Event. Schau später wieder vorbei.	No event is running right now. Check back later.
 Gerade nichts bereit	Nothing ready right now
 Gerade nichts offen	Nothing open right now
@@ -3474,6 +3495,7 @@ Gerade online in 	Online right now in
 Gerade wartet hier kein Ticket.	No ticket is waiting here right now.
 Gerade wartet keine Frage.	No question is waiting right now.
 Gerissen	Broken
+Gerüst	Scaffolding
 Gesamt	Total
 Geschenk an 	Gift to 
 Geschenk beenden	Stop gift mode
@@ -3505,6 +3527,7 @@ Gewöhnlich · 9x · bis 0,81 kg	Common · 9x · up to 0.81 kg
 Gib zuerst einen eigenen Betrag ein.	Enter a custom amount first.
 Gibt dir alle Einsätze dieser Runde zurück	Gives you back all bets of this round
 Ging so	So-so
+Glas	Glass
 Glitzerköder	Glitter bait
 Glocke	Bell
 Glocken	Bells
@@ -3549,9 +3572,11 @@ Großsammler	Big collector
 Grubenmeister	Mine Master
 Grundbesitzer	Landowner
 Grundbetrag pro Kill	Base amount per kill
+Grundplätze: {} · Voten: +1 · /verify mit Discord: +3	Base slots: {} · Voting: +1 · /verify with Discord: +3
 Grundstueck	Plot
 Grundstueck 	Plot 
 Grundstück	Plot
+Grundstück 	Claim 
 Grundstück von 	Plot of 
 Grundstück, in dem du stehst, löschen	Delete the plot you are standing in
 Grundstücke	Plots
@@ -3560,6 +3585,7 @@ Gräber	Digger
 Grönlandhai	Greenland Shark
 Größe	Size
 Größe von <white>{}</white>: <white>{}</white>.	Size of <white>{}</white>: <white>{}</white>.
+Größer geht der Rucksack nicht.	The backpack cannot get bigger.
 Grün	Green
 Grün · 0	Green · 0
 Gründe ein Team mit deinen Freunden. Ihr bekommt einen eigenen Chat, Team-Homes, ein Lager und eine Kasse.	Found a team with your friends. You get your own chat, team homes, a storage and a bank.
@@ -3655,6 +3681,7 @@ Hier wird nichts angekauft.	Nothing is bought here.
 Hier wird nichts verkauft.	Nothing is sold here.
 Hierher verschieben	Move here
 Hilfe	Help
+Hilfe zu Grundstücken	Help on claims
 Hinlegen	Lie down
 Hinreisen	Travel there
 Hinsetzen	Sit down
@@ -3665,6 +3692,7 @@ Hochsee	High seas
 Hochzeiten	Weddings
 Hocker	Stool
 Hol dir Tokens mit Quests, dann stehst du hier.	Earn tokens with quests to show up here.
+Hol dir die Claim-Axt und stecke dein Land ab: 10×10 = 100 Blöcke.	Get the claim axe and mark your land: 10×10 = 100 blocks.
 Hologramm 	Hologram 
 Hologramm <white>{}</white> erstellt, Arena <white>{}</white>.	Hologram <white>{}</white> created, arena <white>{}</white>.
 Hologramm <white>{}</white> erstellt.	Hologram <white>{}</white> created.
@@ -3751,6 +3779,7 @@ In deinem Rang enthalten	Included in your rank
 In der Angel-Zone zusätzlich +10 % Glück und -10 % Wartezeit	In the fishing zone an extra +10 % luck and -10 % waiting time
 In der Angel-Zone: +10 % Glück, Mythen-Fische und Schätze. Köder und Upgrades verbessern die Angel.	In the fishing zone: +10 % luck, myth fish and treasures. Bait and upgrades improve the rod.
 In der Farmwelt kannst du kein Home setzen. Sie wird jede Woche neu erstellt.	You can't set a home in the farm world. It's recreated every week.
+In der Hand: 	In hand: 
 In der Kasse sind {}$.	The bank holds {}$.
 In der Ladenkasse ist nicht genug Geld.	There isn't enough money in the shop till.
 In der Lobby wird nicht gehandelt.	There is no trading in the lobby.
@@ -3814,8 +3843,10 @@ Jeder Klick setzt <yellow>{} Chips	Each click bets <yellow>{} chips
 Jeder Spieler ist selbst dafür verantwortlich, die geltenden Regeln einzuhalten.	Every player is responsible for following the current rules.
 Jeder Wert der config.yml	Every value of the config.yml
 Jeder hat ein Home. Ab Platin kommt mit jedem Rang eins dazu, eins mehr gibt es fürs Verlinken mit Discord.	Everyone has one home. From Platin every rank adds one, and you get one more for linking Discord.
+Jeder hat {} Home, ab Rang {} +1 je Rang.	Everyone has {} home, from rank {} +1 per rank.
 Jeder, der diese Woche gespielt hat, ist dabei	Everyone who played this week is in
 Jemand	Someone
+Jetzt 	Now 
 Jetzt Helfer werden	Become a helper now
 Jetzt aussteigen	Cash out now
 Jetzt bei <green>	Now at <green>
@@ -3827,6 +3858,7 @@ Job wählen, Level, Tokens und Token-Shop	Choose a job, level, tokens and token 
 Job, Level, Fortschritt, Limit	Job, level, progress, limit
 Job-Booster für {} Minuten	Job booster for {} minutes
 Job-Menü	Job menu
+Jobwechsel sofort	Switch job now
 Juwelen	Jewels
 Juwelen & Shop	Jewels & shop
 Juwelen bekommst du im Store. Ein paar gibt es auch für besondere Quests.	You get jewels in the store. There are also a few for special quests.
@@ -3920,6 +3952,7 @@ Kirschen	Cherries
 Kissenstapel	Pillow Stack
 Kiste mit einem Schlüssel öffnen (Schleichen: ohne Animation)	Open a crate with a key (sneak: without animation)
 Kisten	Crates
+Kisten und Öfen	Chests and furnaces
 Kisten, Fässer, Öfen	Chests, barrels, furnaces
 Kisten, Körbe, Schränke	Crates, baskets, cabinets
 Kistenöffner	Crate opener
@@ -3936,6 +3969,7 @@ Kleiderschrank	Wardrobe
 Kleiderstange {}	Clothes Rack {}
 Kleine Geschichten bei Figuren	Little stories at figures
 Klick	Click
+Klick auf ein Home bringt dich hin	Click a home to go there
 Klick hier: so verlinkst du deinen Account (/verify).	Click here: how to link your account (/verify).
 Klick oder Schlag	Click or hit
 Klick zum Freischalten	Click to unlock
@@ -3952,6 +3986,7 @@ Klick: im Juwelenshop ansehen	Click: view in the jewel shop
 Klick: kaufen (danach bestätigen)	Click: buy (then confirm)
 Klick: nächste Stellung	Click: next position
 Klick: umschalten	Click: toggle
+Klick: verzaubern	Click: enchant
 Klick: wieder für dich	Click: for yourself again
 Klick: wählen	Click: choose
 Klick: öffnen	Click: open
@@ -3961,6 +3996,7 @@ Knarzi	Creaky
 Knochenjagd	Bone hunt
 Knochenmagier	Bone Mage
 Knochenmehl	Bone meal
+Knöpfe und Hebel	Buttons and levers
 Knöpfe, Hebel, Druckplatten	Buttons, levers, pressure plates
 Kochmütze	Chef's hat
 Kokosnuss braun	Brown coconut
@@ -3970,6 +4006,7 @@ Koloss	Colossus
 Komme nicht weiter	I'm stuck
 Kommode	Dresser
 Kommt ein Helfer nicht weiter, gibt er dein Ticket an das Team. Ist deine Frage gelöst, bestätigst du das und vergibst 1 bis 5 Sterne.	If a helper gets stuck, they pass your ticket to the team. When your question is solved, you confirm it and give 1 to 5 stars.
+Kommt in dein Inventar	Goes into your inventory
 Kompass auf dieses Grab ausrichten	Point the compass to this grave
 Kompass ausrichten ›	Point compass ›
 Konten löst du an der Bank am Spawn auf.	You close accounts at the bank at spawn.
@@ -4085,6 +4122,7 @@ Leuchtturm	Lighthouse
 Level eines anderen	Someone else's level
 Level von 	Level of 
 Level-Rangliste	Level ranking
+Licht-Block	Light block
 Liga	League
 Lila	Purple
 Links und Belohnungen	Links and rewards
@@ -4105,6 +4143,7 @@ Läden gibt es nur in der Survival-Welt.	Shops only exist in the Survival world.
 Läden und Bauwerke anderer besuchen	Visit other players' shops and buildings
 Läuft	Running
 Läuft gerade	Now playing
+Läuft noch {} Min., wird verlängert	Running {} more min., will be extended
 Löschen	Delete
 Löschen (Shift)	Delete (shift)
 MODUS WÄHLEN:	CHOOSE MODE:
@@ -4141,7 +4180,9 @@ Maximale Teamgröße	Maximum team size
 Maximaler Einsatz	Maximum bet
 Maximaler Einsatz: 	Maximum bet:
 Maximalstufe	Maximum level
+Mehr Homes	More homes
 Mehr Markt-Plätze	More market slots
+Mehr Platz für Grundstücke	More room for claims
 Mehr Plätze	More slots
 Mehr Plätze für Homes	More slots for homes
 Mehr Statistiken: 	More stats:
@@ -4174,6 +4215,7 @@ Menge 	Amount
 Menge +1	Amount +1
 Menge -1	Amount -1
 Menge eingeben	Enter amount
+Menü	Menu
 Menü als Kiste, /quest wieder als Fenster	Menu as chest, /quest as window again
 Menü öffnen	Open the menu
 Menü: Grundstücke, Freunde, Rechte	Menu: plots, friends, permissions
@@ -4297,7 +4339,9 @@ Namen	Names
 Namen von Spielern, Teams, Warps und Haustieren dürfen nicht beleidigend oder anstößig sein.	Names of players, teams, warps and pets must not be insulting or offensive.
 Namensschild	Name tag
 Nebelzahn	Mistfang
+Neben	Side
 Nebenjob	Side job
+Nebenjob (Farmpass)	Side job (Farmpass)
 Nebenquest	Side quest
 Nebenquests	Side quests
 Nebenquests bekommst du bei Figuren in der Welt. Jede Figur hat mehrere Aufgaben, die nacheinander kommen.	You get side quests from figures in the world. Each figure has several tasks that come one after another.
@@ -4323,9 +4367,11 @@ Neuer Prefix (MiniMessage erlaubt):	New prefix (MiniMessage allowed):
 Neuer Preis für {} (0 = entfernen):	New price for {} (0 = remove):
 Neuer Preis in$:	New price in $:
 Neuer XP-Stand:	New XP amount:
+Neuer am Montag	New one on Monday
 Neuer persönlicher Rekord! 	New personal record! 
 Neuerungen beim Betreten des Servers zeigen.	Show what's new when you join the server.
 Neues Hologramm hier	New hologram here
+Neues Home hier	New home here
 Neues Konto mit Freunden	New account with friends
 Neues Leben	New life
 Neues Möbel: <white>{}</white>. Rechtsklick auf einen Block in deinem Grundstück stellt es auf.	New furniture: <white>{}</white>. Right-clicking a block on your plot places it.
@@ -4336,6 +4382,7 @@ Neueste zuerst	Newest first
 Neueste zuerst · 	Newest first · 
 Neuling	Newbie
 Neustart	Restart
+Nicht am Spawn, im Casino und in der Farmwelt.	Not at spawn, in the casino or in the farm world.
 Nicht genug $ ({}$).	Not enough $ ({}$).
 Nicht genug $.	Not enough $.
 Nicht genug Juwelen	Not enough jewels
@@ -4348,9 +4395,11 @@ Niemand	Nobody
 Niemand kann dir gerade Anfragen schicken	Nobody can send you requests right now
 Niemand kann gerade zu dir springen	Nobody can jump to you right now
 Niemand online	Nobody online
+Nimm ein Werkzeug, eine Waffe oder Rüstung in die Hand.	Hold a tool, weapon or armour in your hand.
 Noch ein 	Another
 Noch hat niemand ein Ticket gelöst.	Nobody has solved a ticket yet.
 Noch hat niemand gespielt.	Nobody has played yet.
+Noch kein Grundstück.	No claim yet.
 Noch kein Konto. Verheiratet: Ehe-Konto. Mit Freunden: an der Bank am Spawn.	No account yet. Married: marriage account. With friends: at the bank at spawn.
 Noch kein Ticket.	No ticket yet.
 Noch kein Ticket. Stell deine erste Frage.	No ticket yet. Ask your first question.
@@ -4363,6 +4412,7 @@ Noch keine Tickets	No tickets yet
 Noch keine letzte Runde	No last round yet
 Noch keine letzte Runde.	No last round yet.
 Noch nie online	Never online
+Noch niemand. Mit /claim trust <Spieler> darf jemand auf allen deinen Grundstücken bauen.	Nobody yet. With /claim trust <player> someone may build on all your claims.
 Noch {} Punkte bis Level 	{} more points to level 
 Noch {} Tokens bis Platz 10	{} more tokens to place 10
 Noch {} Tokens bis zum nächsten Rang	{} more tokens to the next rank
@@ -4373,6 +4423,7 @@ Nochmal klicken: Scheidung, das Ehe-Konto wird geteilt	Click again: divorce, the
 Nochmal klicken: das Geld bleibt im Konto	Click again: the money stays in the account
 Nochmal klicken: jetzt kaufen	Click again: buy now
 Nochmal klicken: kaufen	Click again: buy
+Nochmal klicken: wirklich löschen	Click again: really delete
 Nochmal klicken: {} entfernen	Click again: remove {}
 Nord	North
 Nordost	Northeast
@@ -4472,12 +4523,14 @@ Pionier	Pioneer
 Piratenhut	Pirate hat
 Platin	Platinum
 Platin Rang	Platinum Rank
+Platz kaufen · {} XP	Buy slot · {} XP
 Platz {} in der Top 10	Rank {} in the top 10
 Platz {} · frei	Slot {} · free
 Platz {} · gesperrt	Slot {} · locked
 Platz {} · {} Coins · genau hier, wo du stehst	Slot {} · {} coins · exactly where you stand
 Platz: XP-Preis	Slot: XP price
 Platzhalter: <white>{time} {index} {total} {arena}</white> · abbrechen mit <white>abbrechen</white>	Placeholders: <white>{time} {index} {total} {arena}</white> · cancel with <white>abbrechen</white>
+Plätze belegt	Slots used
 Plünderung	Looting
 Poker gibt es nur in Survival.	Poker only exists in Survival.
 Poker in der VIP-Lounge	Poker in the VIP lounge
@@ -4542,6 +4595,8 @@ Radius um den Spawn	Radius around spawn
 Radius um die Mitte	Radius around the center
 Raid-Versicherung	Raid insurance
 Raid-Versicherung für Kisten	Raid insurance for chests
+Rand 10 Sekunden anzeigen	Show border for 10 seconds
+Rand zeigen	Show border
 Rang	Rank
 Rangliste	Ranking
 Rangliste Monat	Monthly ranking
@@ -4557,6 +4612,7 @@ Rechtsklick auf den Hebel dreht die Walzen. Auf dem Hocker davor sitzt du bequem
 Rechtsklick auf die Figur an der Losbude. Bronze-Los 100, Silber-Los 1.000, Gold-Los 10.000 Chips.	Right-click the figure at the lottery booth. Bronze ticket 100, silver ticket 1,000, gold ticket 10,000 chips.
 Rechtsklick auf einem Grundstück, auf dem du bauen darfst, stellt ein Möbel auf. Shift + Rechtsklick dreht es, Shift + Linksklick hebt es wieder auf. Bis zu 50 Möbel gehen gleichzeitig.	Right-click on a plot where you may build places a piece of furniture. Shift + right-click turns it, shift + left-click picks it up again. Up to 50 pieces at the same time.
 Rechtsklick auf einen Hocker oder den Dealer: hinsetzen. Klick Chips aus dem Rack vor dir auf dein Feld ({} bis {} Chips), der erste Einsatz startet die Runde.	Right-click a stool or the dealer: sit down. Click chips from the rack in front of you onto your spot ({} to {} chips), the first bet starts the round.
+Rechtsklick damit öffnet ihn	Right-click it to open
 Rechtsklick setzt den /hub-Spawn	Right-click sets the /hub spawn
 Rechtsklick und dein Glück versuchen	Right-click and try your luck
 Rechtsklick zum Hinsetzen	Right-click to sit down
@@ -4599,7 +4655,9 @@ Roulette-Menü am Tisch	Roulette menu at the table
 Roulette-Tisch	Roulette table
 Roulette-Wartezeit (Sekunden)	Roulette waiting time (seconds)
 Rubbellose für Chips	Scratch cards for chips
+Rucksack freischalten	Unlock backpack
 Rucksack mit {} (/backpack)	Backpack with {} (/backpack)
+Rucksack vergrößern	Enlarge backpack
 Rucksack öffnen	Open backpack
 Rucksack-Item holen	Get the backpack item
 Ruf zuerst ein Haustier: /pet	Call a pet first: /pet
@@ -4623,6 +4681,7 @@ Ränge, Battle Pass, Schlüssel und Pakete für einen anderen Spieler kaufen, be
 Ränge, Keys und Pakete kannst du auch an andere Spieler verschenken. Bezahlt wird mit deinen Juwelen.	You can also gift ranks, keys and packages to other players. They are paid with your jewels.
 Ränge, Keys, Möbel und mehr	Ranks, keys, furniture and more
 Ränge, Keys, Pakete, Möbel, Pets und Tokens für einen anderen Spieler kaufen, bezahlt mit deinen Juwelen.	Buy ranks, keys, bundles, furniture, pets and tokens for another player, paid with your jewels.
+Ränge: bis 30 Plätze · gekauft: {} / 	Ranks: up to 30 slots · bought: {} / 
 Rückgängigmachung von Schäden, soweit möglich	Undoing damage where possible
 Rückkehr-Punkt	Return point
 Rückkehr-Punkt gesetzt.	Return point set.
@@ -4709,6 +4768,7 @@ Schärfe	Sharpness
 Schätze	Treasures
 Season: Dauer	Season: duration
 Seebär	Old salt
+Seelaterne	Sea lantern
 Seelen-Wirbel	Soul swirl
 Seelenfeuer	Soul fire
 Seelenfunke	Soul Spark
@@ -4812,6 +4872,7 @@ Spawn, Grundstück, Wildnis, Farmwelt	Spawn, plot, wilderness, farm world
 Spawn, öffentliche Wege und Gemeinschaftsprojekte dürfen nicht ohne Erlaubnis verändert oder beschädigt werden.	Spawn, public paths and community projects must not be changed or damaged without permission.
 Speichern	Save
 Speichern, Quiz, Ankündigungen	Saving, quiz, announcements
+Speichert deine Position als neues Home	Saves your position as a new home
 Spiegel	Mirror
 Spiel 1 Stunde auf dem Server	Play 1 hour on the server
 Spiel 10 Stunden auf dem Server	Play 10 hours on the server
@@ -4928,6 +4989,7 @@ Stuhl Weiß	White Chair
 Stunde (24 = Mitternacht)	Hour (24 = midnight)
 Stunde (Berliner Zeit)	Hour (Berlin time)
 Stundenbudget voll: Fische bringen gerade weniger	Hourly budget full: fish bring less right now
+Stundenlimit	Hourly limit
 Stärke	Power
 Stör	Sturgeon
 Stück pro Woche	Pieces per week
@@ -5023,6 +5085,7 @@ Ticket zurückziehen	Withdraw ticket
 Ticket öffnen	Open ticket
 Tiefbau	Deep mining
 Tiefengänger	Deep Delver
+Tiere	Animals
 Tiere & Monster	Animals & monsters
 Tiere füttern, scheren, anleinen	Feed, shear and leash animals
 Tiere züchten	Breed animals
@@ -5092,6 +5155,7 @@ Turnier: Trophäen pro Sieg	Tournament: trophies per win
 Täglich	Daily
 Töpfe, Ranken, Pilze	Pots, vines, mushrooms
 Töten ist erlaubt, aber kein Spawn-Camping, kein Fallen-Stellen an Spawn und Portalen und kein Ausnutzen von Grundstücken.	Killing is allowed, but no spawn camping, no traps at spawn and portals and no abuse of plots.
+Türen und Tore	Doors and gates
 Türen, Falltüren, Zauntore	Doors, trapdoors, fence gates
 Türkis	Turquoise
 UNGEWÖHNLICH!	UNCOMMON!
@@ -5177,6 +5241,7 @@ Verschenken geht nur an Spieler, die gerade online sind.	Gifts only work for pla
 Versehentliche Schäden sind dem Eigentümer oder dem Serverteam zu melden.	Report accidental damage to the owner or the server team.
 Versicherung	Insurance
 Versteckt am Spawn. Wer sie findet, sieht sie im Menü.	Hidden at spawn. Whoever finds them sees them in the menu.
+Vertraute Spieler	Trusted players
 Verwarnung	Warning
 Verzaubere 15 Gegenstände	Enchant 15 items
 Verzaubere 5 Gegenstände	Enchant 5 items
@@ -5184,6 +5249,7 @@ Verzauberer	Enchanter
 Verzauberte Diamant-Rüstung und Waffen	Enchanted diamond armor and weapons
 Verzauberter Goldapfel	Enchanted golden apple
 Verzauberung	Enchantment
+Verzauberungen	Enchantments
 Veteran	Veteran
 Viel Spaß und viel Glück	Have fun and good luck
 Viele Keys zum Sparpreis	Lots of keys at a low price
@@ -5238,6 +5304,7 @@ Warte kurz, bevor du das nächste Ticket schreibst.	Wait a moment before you wri
 Warte noch {} Sekunden.	Wait another {} seconds.
 Wartezeit	Waiting time
 Wartezeit 	Waiting time 
+Wartezeit noch {} Min.	Waiting time {} more min.
 Was diese Stunde noch geht	What's still possible this hour
 Was du einmal hast, behältst du und kannst es jederzeit an- und ablegen.	What you have once, you keep and can put on and take off any time.
 Was du gekauft hast oder was nicht verkauft wurde, wartet in deiner Abholbox.	What you bought or what wasn't sold waits in your pickup box.
@@ -5303,6 +5370,7 @@ Wochen-Meta ansehen und abstimmen	View and vote on the weekly meta
 Wochen-Meta nur mit Discord	Weekly meta only with Discord
 Wochen-Quests	Weekly quests
 Wochenaufgaben	Weekly quests
+Wochenauftrag	Weekly order
 Wochenaufträge	Weekly orders
 Wochenaufträge und Team	Weekly orders and team
 Wochenaufträge: kein Bonus	Weekly orders: no bonus
@@ -5317,6 +5385,7 @@ Wächst mit jedem Einsatz im Casino	Grows with every bet in the casino
 Wächter	Guardian
 Wächterin Wanda	Guard Wanda
 Wähle deinen Titel neben dem Namen	Choose your title next to your name
+Wähle einen Beruf	Choose a job
 Wähle einen Job (/job)	Choose a job (/job)
 Wähle einen Job, hol Rohstoffe aus der Farmwelt und erledige Quests. So kommen Coins und Belohnungen fast von allein.	Choose a job, get resources from the farm world and do quests. That way coins and rewards come almost by themselves.
 Wähle einen NPC und nimm seine Quest an.	Pick an NPC and accept their quest.
@@ -5450,14 +5519,17 @@ andere Welt	other world
 angelegt · Klick: ablegen	equipped · Click: take off
 beim Team	with the team
 bleiben für immer	stay forever
+braucht {} 	needs {} 
 dazu eins pro Monat für immer	plus one per month forever
 du hast schon alle Warps	you already have all warps
 eigenes Grundstück	own plot
 eine Stunde gespielt	played one hour
 einem Freund	a friend
 eingezahlt	deposited
+erlaubt	allowed
 exklusive Items	exclusive items
 fertig	ready
+freie Claim-Blöcke	free claim blocks
 für Freunde	for friends
 für Juwelen	for jewels
 für andere Spieler	for other players
@@ -5471,6 +5543,7 @@ grün im Tab & Chat	green in tab & chat
 hält {} statt {} Minuten	lasts {} instead of {} minutes
 im Besitz	owned
 im Besitz · Klick: anlegen	owned · Click: put on
+im Token-Shop	in the token shop
 in Arbeit	in progress
 in Tab und Chat	in tab and chat
 jede Woche Loot	loot every week
@@ -5491,6 +5564,7 @@ modus wählen	choose mode
 möchte dein Freund sein	wants to be your friend
 neue Antwort	new answer
 noch 	still 
+noch kein Beruf	no job yet
 noch kein Helfer	no helper yet
 noch keine	none yet
 noch keiner	nobody yet
@@ -5519,6 +5593,7 @@ und /endertruhe	and /endertruhe
 und den Grundstücken deiner Freunde	and your friends' plots
 und keine Casino-Steuer	and no casino tax
 und nützliche Items	and useful items
+verboten	forbidden
 vergrößern	enlarge
 verheiratet	married
 verlinken mit 	link with 
@@ -5563,6 +5638,7 @@ zweiter Beruf	second job
 Öffentlicher Chat	Public chat
 Öffnen	Open
 Öffnen ›	Open ›
+×{} · {} Blöcke	×{} · {} blocks
 Überall: /werkbank	Anywhere: /werkbank
 Überkauft	Bust
 Übernehmen	Take over
@@ -5574,6 +5650,7 @@ zweiter Beruf	second job
 über 21	over 21
 überall	anywhere
 „Letzte Runden“	“Last rounds”
+„Neues Home hier“ oder /sethome	“New home here” or /sethome
 „{}“ wirklich löschen? Die Coins gibt es nicht zurück.	Really delete “{}”? You won't get the coins back.
 ‹ Zurück	‹ Back
 → Geschenk für 	→ Gift for 
@@ -5588,7 +5665,10 @@ zweiter Beruf	second job
 ✓ Erledigt	✓ Done
 ✓ Premium aktiv	✓ Premium active
 ✔ Abgeholt	✔ Claimed
+✔ Dein Job	✔ Your job
 ✔ abgeholt	✔ claimed
 ✔ angelegt	✔ equipped
+✔ erledigt	✔ done
+✔ hat dein Item	✔ your item has it
 ✦ Wer zu lange wartet, verliert alles ✦	✦ Whoever waits too long loses everything ✦
 ❤ Antrag	❤ Propose

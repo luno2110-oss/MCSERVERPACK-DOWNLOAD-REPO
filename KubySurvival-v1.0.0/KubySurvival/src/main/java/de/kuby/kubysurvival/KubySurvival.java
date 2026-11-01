@@ -170,6 +170,8 @@ public final class KubySurvival extends JavaPlugin {
                 "WWWWWWWWWWWWWWWW", "„WWWWWWWWWWWWWWWW“ wirklich löschen? Die Coins gibt es nicht zurück."));
         // Quests: alle Seiten mit Grenzwerten
         de.kuby.kubysurvival.quests.QuestSamples.register(core::registerSelfTestCanvas);
+        de.kuby.kubysurvival.jobs.JobScreen.samples(core::registerSelfTestCanvas);
+        de.kuby.kubysurvival.claim.ClaimScreen.samples(core::registerSelfTestCanvas);
         core.registerSelfTestCheck("Möbel-Katalog", () -> {
             int n = 0;
             for (FurnitureCatalog.Tab t : FurnitureCatalog.tabs()) {
@@ -425,7 +427,7 @@ public final class KubySurvival extends JavaPlugin {
             return true;
         });
         command("tokenshop", (sender, cmd, label, args) -> {
-            if (sender instanceof Player p) new TokenShopMenu(this, core).open(p);
+            if (sender instanceof Player p) new de.kuby.kubysurvival.jobs.JobScreen(this).open(p, de.kuby.kubysurvival.jobs.JobScreen.Tab.SHOP);
             return true;
         });
 
@@ -526,7 +528,7 @@ public final class KubySurvival extends JavaPlugin {
         core.registerMainEntry(new KubyPlugins.MainEntry(Material.FISHING_ROD, "Angeln", "Fischbuch, Rute, Köder, Händler, Bestenliste",
                 p -> angelMenus.open(p)));
         core.registerMainEntry(new KubyPlugins.MainEntry(Material.IRON_PICKAXE, "Jobs", "Job wählen, Level, Tokens und Token-Shop",
-                p -> new JobMenu(this, core).open(p)));
+                p -> new de.kuby.kubysurvival.jobs.JobScreen(this).open(p)));
         core.registerMainEntry(new KubyPlugins.MainEntry(Material.WRITABLE_BOOK, "Quests", "Tages-, Wochen- und Team-Quests, Geschichte",
                 p -> { if (!questDialogs.open(p)) new QuestMenu(this).open(p); }));
         core.registerMainEntry(new KubyPlugins.MainEntry(Material.LEAD, "Haustiere", "Begleiter rufen, reiten, umbenennen",

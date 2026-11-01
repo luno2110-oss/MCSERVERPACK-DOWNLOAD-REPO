@@ -279,8 +279,7 @@ public final class AngelMenus implements AngelScreens.Nav {
     @Override
     public Consumer<Player> tokenShop() {
         return nav(p -> {
-            p.closeDialog();
-            new TokenShopMenu(addon, core).open(p);
+            new de.kuby.kubysurvival.jobs.JobScreen(addon).open(p, de.kuby.kubysurvival.jobs.JobScreen.Tab.SHOP);
         });
     }
 

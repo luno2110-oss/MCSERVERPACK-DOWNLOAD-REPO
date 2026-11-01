@@ -20,9 +20,9 @@ import java.util.List;
  */
 public final class TokenEnchantMenu extends GuiMenu {
 
-    private record Upgrade(Enchantment ench, String name, Material icon, long price) {}
+    public record Upgrade(Enchantment ench, String name, Material icon, long price) {}
 
-    private static final List<Upgrade> UPGRADES = List.of(
+    public static final List<Upgrade> UPGRADES = List.of(
             new Upgrade(Enchantment.EFFICIENCY, "Effizienz", Material.DIAMOND_PICKAXE, 10),
             new Upgrade(Enchantment.UNBREAKING, "Haltbarkeit", Material.ANVIL, 10),
             new Upgrade(Enchantment.FORTUNE, "Glück", Material.DIAMOND, 15),
@@ -40,9 +40,30 @@ public final class TokenEnchantMenu extends GuiMenu {
         this.addon = addon;
     }
 
-    private static String roman(int n) {
+    public static String roman(int n) {
         String[] r = {"", "I", "II", "III", "IV", "V", "VI", "VII"};
         return n >= 0 && n < r.length ? r[n] : String.valueOf(n);
+    }
+
+    /** Hebt die Verzauberung des Items in der Hand eine Stufe über das Maximum (mit Meldung). true = geklappt. */
+    public static boolean apply(KubySurvival addon, Player p, Upgrade u) {
+        int max = u.ench().getMaxLevel();
+        ItemStack now = p.getInventory().getItemInMainHand();
+        if (now.getType().isAir() || now.getEnchantmentLevel(u.ench()) != max) {
+            Msg.send(p, "<red>Dein Item in der Hand braucht " + u.name() + " " + roman(max) + ".");
+            return false;
+        }
+        if (!addon.jobs().takeTokens(p.getUniqueId(), u.price())) {
+            Msg.send(p, "<red>Dafür brauchst du " + u.price() + " Tokens.");
+            return false;
+        }
+        ItemMeta meta = now.getItemMeta();
+        meta.addEnchant(u.ench(), max + 1, true);
+        now.setItemMeta(meta);
+        p.getInventory().setItemInMainHand(now);
+        Msg.send(p, "<green>Verzaubert: <light_purple>" + u.name() + " " + roman(max + 1));
+        p.playSound(p.getLocation(), Sound.BLOCK_ENCHANTMENT_TABLE_USE, 0.8f, 1.2f);
+        return true;
     }
 
     @Override
@@ -61,21 +82,7 @@ public final class TokenEnchantMenu extends GuiMenu {
                     : "<red>Item braucht erst " + u.name() + " " + roman(max);
             set(i < 7 ? 19 + i : 21 + i, Items.make(u.icon(), "<light_purple>" + u.name() + " " + roman(max + 1), List.of(
                     "<gray>Preis: <light_purple>" + u.price() + " Tokens", "", state)), e -> {
-                ItemStack now = p.getInventory().getItemInMainHand();
-                if (now.getType().isAir() || now.getEnchantmentLevel(u.ench()) != max) {
-                    Msg.send(p, "<red>Dein Item in der Hand braucht " + u.name() + " " + roman(max) + ".");
-                    return;
-                }
-                if (!addon.jobs().takeTokens(p.getUniqueId(), u.price())) {
-                    Msg.send(p, "<red>Dafür brauchst du " + u.price() + " Tokens.");
-                    return;
-                }
-                ItemMeta meta = now.getItemMeta();
-                meta.addEnchant(u.ench(), max + 1, true);
-                now.setItemMeta(meta);
-                p.getInventory().setItemInMainHand(now);
-                Msg.send(p, "<green>Verzaubert: <light_purple>" + u.name() + " " + roman(max + 1));
-                p.playSound(p.getLocation(), Sound.BLOCK_ENCHANTMENT_TABLE_USE, 0.8f, 1.2f);
+                apply(addon, p, u);
                 open(p);
             });
         }
