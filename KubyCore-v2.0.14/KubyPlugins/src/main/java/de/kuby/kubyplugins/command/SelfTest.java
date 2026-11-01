@@ -346,6 +346,41 @@ final class SelfTest {
                     List.of(), 0, NO, null, null, List.of())));
         }
 
+        // Tageskalender, Tagespot, Bestenlisten, Erfolge, Titel, Kits: Grenzwerte und leer
+        {
+            long[] rw = new long[30];
+            java.util.Arrays.fill(rw, 999_999_999L);
+            canvas.accept("Tageskalender", () -> de.kuby.kubyplugins.gui.DailyScreens.calendar(
+                    new de.kuby.kubyplugins.gui.DailyScreens.Calendar(29, true, rw, NO)));
+            canvas.accept("Tageskalender fertig", () -> de.kuby.kubyplugins.gui.DailyScreens.calendar(
+                    new de.kuby.kubyplugins.gui.DailyScreens.Calendar(30, false, rw, NO)));
+            canvas.accept("Tagespot", () -> de.kuby.kubyplugins.gui.DailyScreens.pot(new de.kuby.kubyplugins.gui.DailyScreens.Pot(
+                    999_999_999_999L, 50, 9_999_999L, 999_999L, 50, 23, 1439, n -> NO)));
+            List<de.kuby.kubyplugins.gui.TopListScreen.Entry> top = new ArrayList<>();
+            for (int i = 1; i <= 10; i++) top.add(new de.kuby.kubyplugins.gui.TopListScreen.Entry(i, "_WWWWWWWWWWWWWWW", "999.999.999.999$", "WWWWWWWWWWWW · 99999/99999"));
+            canvas.accept("Bestenliste", () -> de.kuby.kubyplugins.gui.TopListScreen.canvas(new de.kuby.kubyplugins.gui.TopListScreen.View(
+                    "WWWWWWWWWWWW", "W".repeat(60), de.kuby.kubyplugins.ui.KitData.Icon.STAR, net.kyori.adventure.text.format.TextColor.color(0xF8D35A),
+                    top, "W".repeat(80))));
+            canvas.accept("Bestenliste leer", () -> de.kuby.kubyplugins.gui.TopListScreen.canvas(new de.kuby.kubyplugins.gui.TopListScreen.View(
+                    "Vermögen", "", de.kuby.kubyplugins.ui.KitData.Icon.GOLD_INGOT, net.kyori.adventure.text.format.TextColor.color(0xF8D35A),
+                    List.of(), null)));
+            List<de.kuby.kubyplugins.gui.ProgressScreens.Ach> ach = new ArrayList<>();
+            for (int i = 0; i < 10; i++) ach.add(new de.kuby.kubyplugins.gui.ProgressScreens.Ach("W".repeat(30), "W".repeat(60),
+                    de.kuby.kubyplugins.ui.KitData.Icon.STAR, 999_999_999L, 999_999_999L, 999_999L, i % 2 == 0));
+            canvas.accept("Erfolge", () -> de.kuby.kubyplugins.gui.ProgressScreens.achievements(
+                    new de.kuby.kubyplugins.gui.ProgressScreens.Achievements(9999, 9999, ach, 98, 99, n -> NO)));
+            List<de.kuby.kubyplugins.gui.ProgressScreens.Tag> tg = new ArrayList<>();
+            for (int i = 0; i < 30; i++) tg.add(new de.kuby.kubyplugins.gui.ProgressScreens.Tag("W".repeat(30),
+                    net.kyori.adventure.text.format.TextColor.color(0xFF55FF), i % 3 != 0, i == 1, i % 3 != 0 ? NO : null));
+            canvas.accept("Titel", () -> de.kuby.kubyplugins.gui.ProgressScreens.tags(new de.kuby.kubyplugins.gui.ProgressScreens.Tags("W".repeat(40), tg, NO)));
+            canvas.accept("Titel leer", () -> de.kuby.kubyplugins.gui.ProgressScreens.tags(new de.kuby.kubyplugins.gui.ProgressScreens.Tags(null, List.of(), NO)));
+            List<de.kuby.kubyplugins.gui.ProgressScreens.KitRow> kr = new ArrayList<>();
+            for (int i = 0; i < 8; i++) kr.add(new de.kuby.kubyplugins.gui.ProgressScreens.KitRow("W".repeat(30), de.kuby.kubyplugins.ui.KitData.Icon.IRON_CHESTPLATE,
+                    "W".repeat(80), "9999 Std.", "WWWWWWWWWWWW", i % 2 == 0, "W".repeat(40), i % 2 == 0, NO, NO));
+            canvas.accept("Kits", () -> de.kuby.kubyplugins.gui.ProgressScreens.kits(kr));
+            canvas.accept("Kits leer", () -> de.kuby.kubyplugins.gui.ProgressScreens.kits(List.of()));
+        }
+
         // Prüfungen aus den Addons (z. B. Survival-Juwelenshop, Möbel- und Pet-Katalog)
         for (java.util.Map.Entry<String, Supplier<Canvas>> en : plugin.selfTestCanvases().entrySet()) {
             canvas.accept(en.getKey(), en.getValue());

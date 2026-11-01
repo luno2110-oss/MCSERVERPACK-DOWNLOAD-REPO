@@ -216,7 +216,7 @@ public final class KubyPlugins extends JavaPlugin {
         registerStat("kills", id -> (long) stats().get(id).kills);
         registerStat("casino_plus", id -> Math.max(0L, casinoLog.netOf(id)));
         registerMainEntry(new MainEntry(org.bukkit.Material.NETHER_STAR, "Erfolge", "Fortschritt und Belohnungen",
-                p -> new de.kuby.kubyplugins.gui.AchievementMenu(this, 0).open(p)));
+                p -> new de.kuby.kubyplugins.gui.ProgressScreens(this).achievements(p, 0)));
         blackjack = new de.kuby.kubyplugins.casino.BlackjackService(this);
         roulette = new de.kuby.kubyplugins.casino.RouletteGame(this);
         slots = new de.kuby.kubyplugins.casino.SlotsService(this);
@@ -356,7 +356,7 @@ public final class KubyPlugins extends JavaPlugin {
             return true;
         }, "settings", "bossbar");
         setAll((sender, command, label, args) -> {
-            if (sender instanceof org.bukkit.entity.Player p) new de.kuby.kubyplugins.gui.AchievementMenu(this, 0).open(p);
+            if (sender instanceof org.bukkit.entity.Player p) new de.kuby.kubyplugins.gui.ProgressScreens(this).achievements(p, 0);
             return true;
         }, "erfolge");
         registerKpSub("vote", (p, args) -> {

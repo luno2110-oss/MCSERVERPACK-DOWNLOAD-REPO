@@ -40,7 +40,7 @@ public final class ExtraCommand implements CommandExecutor {
             return true;
         }
         switch (command.getName().toLowerCase(Locale.ROOT)) {
-            case "dailypot" -> new DailyPotMenu(plugin).open(p);
+            case "dailypot" -> new de.kuby.kubyplugins.gui.DailyScreens(plugin).pot(p);
             case "trade" -> trade(p, args);
             case "tags" -> tags(p, args);
             case "rtpqueue" -> rtp(p, args);
@@ -53,7 +53,7 @@ public final class ExtraCommand implements CommandExecutor {
             case "kristaltrade" -> new KristalTradeMenu(plugin).open(p);
             case "investments" -> new InvestmentsMenu(plugin).open(p);
             case "quizvote" -> new QuizVoteMenu(plugin).open(p);
-            case "kits" -> new KitMenu(plugin).open(p);
+            case "kits" -> new de.kuby.kubyplugins.gui.ProgressScreens(plugin).kits(p);
             case "tpa" -> tpa(p, args, false);
             case "tpahere" -> tpa(p, args, true);
             case "tpaccept" -> {
@@ -113,7 +113,7 @@ public final class ExtraCommand implements CommandExecutor {
 
     private void tags(Player p, String[] args) {
         if (args.length == 0) {
-            new TagsMenu(plugin).open(p);
+            new de.kuby.kubyplugins.gui.ProgressScreens(plugin).tags(p);
             return;
         }
         if (args[0].equalsIgnoreCase("grant") && args.length == 3 && p.hasPermission("kuby.admin")) {

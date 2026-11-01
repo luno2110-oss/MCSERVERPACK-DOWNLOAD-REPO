@@ -63,6 +63,12 @@ public final class DailyMenu extends GuiMenu {
     }
 
     private void claim(Player p) {
+        doClaim(plugin, p);
+        open(p);
+    }
+
+    /** Tag abholen (Coins, Meilenstein-Juwelen, Glücksbonus) mit Meldungen; auch für den Dialog. */
+    static void doClaim(KubyPlugins plugin, Player p) {
         if (!plugin.discord().allow(p, "require-for-daily")) return;
         int day = plugin.daily().claim(p.getUniqueId());
         if (day == 0) {
@@ -79,6 +85,5 @@ public final class DailyMenu extends GuiMenu {
             }
             Msg.send(p, "<green>Tag " + day + " abgeholt: <gold>+" + Msg.coins(reward) + "$"); Sfx.play(plugin, p, Sfx.Kind.COIN); plugin.battlepass().progress(p.getUniqueId(), "daily", 1);
         }
-        open(p);
     }
 }

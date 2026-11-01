@@ -43,6 +43,6 @@ public final class KitPreviewMenu extends GuiMenu {
             set(slot++, it.clone(), null);
         }
         set(22, Items.make(Material.ARROW, "<gray>Zurück zu den Kits", List.of()),
-                e -> new KitMenu(plugin).open(p));
+                e -> { p.closeInventory(); new ProgressScreens(plugin).kits(p); });
     }
 }

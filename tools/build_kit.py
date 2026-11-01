@@ -85,6 +85,17 @@ BOXES = {
     "moss": ("5E9A48", "2F5424", "0D170A"),      # Grundstücke: Zeilen und Schalter
     "brick": ("E07A5F", "8A3A2A", "24100C"),     # Homes: Ziegel, Kopf
     "brick_card": ("B0604A", "5E2A20", "1A0A08"),  # Homes: Karten
+    "sky": ("7AD0FF", "2C6E9E", "0B1C2A"),       # Tageskalender: Himmel
+    "paper": ("FFFBEA", "C9B48A", "EBDDBA"),     # Tageskalender: Kalenderblätter (helle Fläche, dunkle Schrift)
+    "clover": ("74E07E", "2E8A3C", "0B2210"),    # Tagespot: Kleeblatt
+    "royal": ("D7B0FF", "6E44A8", "1A0E2C"),     # Bestenlisten: Königs-Violett
+    "royal_row": ("9A78C8", "4A2E78", "140A22"),  # Bestenlisten: zweite Zeilenfarbe
+    "bronze": ("E8B060", "7A5226", "1E1408"),    # Erfolge: Trophäenschrank
+    "bronze_card": ("A87A48", "553A1E", "170F07"),
+    "plum": ("F07AC8", "8A2E6E", "24081C"),      # Titel: Namensschilder
+    "plum_card": ("B0588E", "5A2248", "1A0614"),
+    "steel": ("B8C4D0", "5A6470", "15191E"),     # Kits: Waffenkammer
+    "steel_card": ("7E8894", "3E464E", "101317"),
 }
 
 # Casino-Kästen (Roulette- und Musik-Dialog im Clip): eigene Ecken, Rand von außen nach innen ("edge"), Füllung N.

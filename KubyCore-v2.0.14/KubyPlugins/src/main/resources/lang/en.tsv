@@ -64,6 +64,7 @@
  Juwelen, gilt für Season 	 jewels, valid for season
  Juwelen.	 jewels.
  LOSBUDE 	 LOTTERY BOOTH 
+ Lose für {}$ kaufen	 tickets for {}$
  Min.	 min.
  Minute	 minute
  Minuten	 minutes
@@ -197,6 +198,7 @@ $ zum Gründen	$ to found
 +{} % Schatzchance	+{} % treasure chance
 +{} Claim-Blöcke	+{} claim blocks
 +{} Homes	+{} homes
++{} Juwelen	+{} jewels
 +{} Tages-Quest	+{} daily quest
 +{} Tages-Quests	+{} daily quests
 +{} je Stunde Spielzeit	+{} per hour played
@@ -1619,6 +1621,7 @@ $ zum Gründen	$ to found
 <green>{} gekauft und angelegt!	<green>{} bought and equipped!
 <green>{} gekauft.	<green>{} bought.
 <green>{} gekauft. <gray>Jetzt Stufe {}.	<green>{} bought. <gray>Now level {}.
+<green>{} gekauft. Viel Glück!	<green>{} bought. Good luck!
 <green>{} hat deine Freundesanfrage angenommen!	<green>{} accepted your friend request!
 <green>{} hat jetzt das Haustier {}.	<green>{} now has the pet {}.
 <green>{} steht jetzt hier.	<green>{} stands here now.
@@ -2182,6 +2185,7 @@ Abholbox: Seite 2	Pickup box: page 2
 Abholbox: Seite 3	Pickup box: page 3
 Abholen	Claim
 Abholen · 	Claim · 
+Ablegen	Remove
 Ablehnen	Deny
 Abnehmen	Remove
 Abo verwalten	Manage subscription
@@ -2198,6 +2202,7 @@ Aktenkoffer	Briefcase
 Aktiv	Active
 Aktiv bis {}, verlängern im Store	Active until {}, renew in the store
 Aktiv ✓	Active ✓
+Aktiv:	Active:
 Aktive Nebenquest	Active side quest
 Aktive Zeit in {}, ohne AFK	Active time in {}, without AFK
 Aktualisiert alle zwei Minuten	Updates every two minutes
@@ -2225,6 +2230,7 @@ Alle Seltenheiten	All rarities
 Alle Songs	All songs
 Alle Spieler-Warps	All player warps
 Alle Stufen erreicht	All levels reached
+Alle Tage geschafft!	All days done!
 Alle Tagesaufträge: {} Coins und {} Tokens	All daily orders: {} coins and {} tokens
 Alle Themen der Hilfe	All help topics
 Alle Ultimate-Vorteile · 20 Homes	All Ultimate perks · 20 homes
@@ -2395,6 +2401,7 @@ Ausdauernder	Persistent One
 Auserwählter	Chosen One
 Ausgestiegen bei 	Cashed out at
 Ausrufezeichen	Exclamation mark
+Ausrüstung abholen · Vorschau zeigt den Inhalt	Claim gear · preview shows the contents
 Ausrüstung, Spawner und Kosmetik	Gear, spawners and cosmetics
 Aussehen der Info-Leiste.	Look of the info bar.
 Ausverkauft.	Sold out.
@@ -2491,6 +2498,7 @@ Belohnungen abholen	Claim rewards
 Belohnungen ansehen	View rewards
 Belohnungen für Free und Premium	Rewards for Free and Premium
 Belohnungen fürs Dabeisein	Rewards for being there
+Belohnungen gibt es automatisch	Rewards are given automatically
 Belohnungen und Abholbox abholen	Claim rewards and pickup box
 Belohnungs-NPC für Arena <white>{}</white> erstellt.	Reward NPC for arena <white>{}</white> created.
 Benutzen	Use
@@ -2603,6 +2611,7 @@ Casino-Musik aussuchen	Choose casino music
 Casino-Musik: <#F2DA90>{}</#F2DA90> läuft in Dauerschleife	Casino music: <#F2DA90>{}</#F2DA90> plays on repeat
 Casino-Musik: <white>alle Songs</white> im Wechsel	Casino music: <white>all songs</white> taking turns
 Casino-Rangliste	Casino ranking
+Chance	Chance
 Chance auf zwei Fische auf einmal	Chance of two fish at once
 Chance auf zwei Fische: {} %	Chance of two fish: {} %
 Changelog beim Join	Changelog on join
@@ -2756,6 +2765,7 @@ Dein Stand <#F2C94C>{}</#F2C94C> <dark_gray>·</dark_gray> Kasse am Wechsel-NPC	
 Dein Team ist voll.	Your team is full.
 Dein Ticket #{} liegt jetzt beim Team.	Your ticket #{} is now with the team.
 Dein Ticket #{} wurde vom Team geschlossen.	Your ticket #{} was closed by the team.
+Dein Vermögen: {}$	Your balance: {}$
 Dein Wochenauftrag	Your weekly order
 Dein eigenes Ticket kannst du nicht übernehmen.	You can't take over your own ticket.
 Dein erster Einsatz startet die Runde	Your first bet starts the round
@@ -2784,6 +2794,7 @@ Deine Homes	Your homes
 Deine Juwelen	Your jewels
 Deine Kills, Tode und Trophäen	Your kills, deaths and trophies
 Deine Kisten-Schlüssel in 	Your crate keys in 
+Deine Lose	Your tickets
 Deine Läden	Your shops
 Deine Orte zum Hinspringen	Your places to jump to
 Deine Quests	Your quests
@@ -2917,6 +2928,7 @@ Die meisten Quests laufen von selbst mit. Du musst dafür nichts starten.	Most q
 Die meisten zahlen sofort, der Rest im Menü oder am NPC.	Most pay out at once, the rest in the menu or at the NPC.
 Die schwersten Fänge (seltene zuerst)	The heaviest catches (rare first)
 Die wichtigsten Werte, übersichtlich	The most important values at a glance
+Die zehn reichsten Spieler	The ten richest players
 Die {} Songs wechseln sich ab.	The {} songs take turns.
 Dienstag	Tuesday
 Diese Figur gibt es nicht.	This figure doesn't exist.
@@ -3132,6 +3144,7 @@ Du spielst auf {} · {} von {} Plätzen	You are playing on {} · {} of {} slots
 Du verfolgst gerade keine Quest.	You are not tracking a quest.
 Du wartest gerade auf keine Antwort.	You're not waiting for any answer right now.
 Du: Platz 	You: place 
+Du: {} Trophäen · 	You: {} trophies · 
 Duell-Anfragen	Duel requests
 Duell-Menü öffnen	Open the duel menu
 Duell-Mitteilungen	Duel messages
@@ -3210,6 +3223,7 @@ Einfach	Simple
 Einfach spielen. Items gibst du im Menü oder am NPC ab.	Just play. Hand in items in the menu or at the NPC.
 Eingezahlt: <gold>	Deposited: <gold>
 Einladung annehmen	Accept invitation
+Einmal am Tag abholen · jeder 10. Tag mit Juwelen	Claim once a day · every 10th day with jewels
 Einmalige	One-time
 Einrichten und hinsetzen	Set up and sit down
 Einsatz	Bet
@@ -3483,6 +3497,7 @@ Gemeinsam stark	Strong together
 Gemeinsames Konto für euch beide, kostenlos	Shared account for both of you, free
 Gemeinschaftslager und gemeinsame Ressourcen dürfen nur entsprechend den vereinbarten Regeln genutzt werden.	Shared storage and shared resources may only be used according to the agreed rules.
 Gerade	Even
+Gerade gibt es keine Kits.	No kits right now.
 Gerade gibt es nichts zu kaufen.	Nothing to buy right now.
 Gerade ist niemand in deiner Nähe	Nobody is near you right now
 Gerade kein Event	No event right now
@@ -3658,8 +3673,10 @@ Herzregen	Heart rain
 Heute	Today
 Heute Nacht greifen sie alle an. Halte durch, Held!	Tonight they all attack. Hold on, hero!
 Heute abholen	Claim today
+Heute abholen: Tag {} · {}$	Claim today: day {} · {}$
 Heute kannst du noch {} Stufen kaufen.	You can buy {} more levels today.
 Heute noch {} · Gekaufte Stufen geben keine XP	{} left today · Bought levels give no XP
+Heute schon abgeholt · morgen wieder	Already claimed today · back tomorrow
 Heute sind keine Stufen mehr kaufbar.	No more levels can be bought today.
 Hexenhut	Witch hat
 Hexenkatze	Witch Cat
@@ -3731,6 +3748,7 @@ Höchste Stufe	Highest level
 Höchste Stufe erreicht	Highest level reached
 Höchsteinsatz {} Chips.	Maximum bet {} chips.
 Höchstens {} Chips pro Runde.	At most {} chips per round.
+Höchstens {} Lose je Tag. Jedes Los kostet {}$.	At most {} tickets per day. Each ticket costs {}$.
 Höchstens {} je Runde.	At most {} per round.
 Höchster Rang	Highest rank
 Höchster Rang erreicht	Highest rank reached
@@ -3770,6 +3788,7 @@ Im Markt bietest du Items zum Festpreis an: Item in die Hand nehmen und /markt s
 Im Menü rufst du dein Haustier, gibst ihm einen eigenen Namen und markierst Lieblinge.	In the menu you call your pet, give it its own name and mark favorites.
 Im Store holen	Get it in the store
 Im Token-Shop gibt es dafür Claim-Blöcke, einen Rucksack, besondere Verzauberungen, Booster und Bauhelfer.	The token shop has claim blocks, a backpack, special enchantments, boosters and building helpers for that.
+Im Topf	In the pot
 Im Topf 	In the pot
 In /cosmetics findest du Hüte, Trails und Haustiere. Ein Trail ist eine Spur aus Partikeln, die dir beim Laufen folgt.	In /cosmetics you find hats, trails and pets. A trail is a track of particles that follows you while walking.
 In /friends siehst du, wer gerade online ist und auf welchem Server. Von dort schreibst du Freunden oder springst ihnen nach.	In /friends you see who is online right now and on which server. From there you message friends or jump to them.
@@ -3797,6 +3816,7 @@ Info-Leiste aus	Info bar off
 Info-Leiste einrichten	Set up the info bar
 Infos zur Farmwelt	Info about the farm world
 Inhalt	Contents
+Inhalt ansehen	View contents
 Inhalt ›	Contents ›
 Ins Casino	To the casino
 Insel, Loot, One-Block	Island, loot, one-block
@@ -3960,6 +3980,7 @@ Kit Legend · 75 Freunde · Casino-VIP	Kit Legend · 75 friends · casino VIP
 Kit Ultimate · 40 Freundesplätze	Kit Ultimate · 40 friend slots
 Kit VIP · 30 Freundesplätze	Kit VIP · 30 friend slots
 Kit Warrior · 50 Freundesplätze	Kit Warrior · 50 friend slots
+Kit abholen	Claim kit
 Kits abholen	Claim kits
 Klapphocker	Folding Stool
 Kleeblatt	Clover
@@ -3985,6 +4006,7 @@ Klick: einfügen	Click: insert
 Klick: im Juwelenshop ansehen	Click: view in the jewel shop
 Klick: kaufen (danach bestätigen)	Click: buy (then confirm)
 Klick: nächste Stellung	Click: next position
+Klick: tragen	Click: wear
 Klick: umschalten	Click: toggle
 Klick: verzaubern	Click: enchant
 Klick: wieder für dich	Click: for yourself again
@@ -4124,13 +4146,17 @@ Level von 	Level of
 Level-Rangliste	Level ranking
 Licht-Block	Light block
 Liga	League
+Liga · Kills/Tode	League · kills/deaths
 Lila	Purple
+Limit erreicht	Limit reached
 Links und Belohnungen	Links and rewards
 Linksklick Ecke 1, Rechtsklick Ecke 2	Left-click corner 1, right-click corner 2
 Lodde	Capelin
 Lohn	Rewards
 Losbude	Lottery booth
+Lose gesamt	Tickets total
 Lose kaufen, Ziehung um 19 Uhr	Buy tickets, drawing at 7 pm
+Lose kaufen, um {}:00 Uhr gewinnt ein Los den ganzen Topf	Buy tickets, at {}:00 one ticket wins the whole pot
 Lose kaufst du mit 	You buy tickets with
 Lose kaufst du mit <#F6E23A>Chips	You buy tickets with <#F6E23A>chips
 Lose pro Spieler am Tag	Tickets per player per day
@@ -4409,6 +4435,7 @@ Noch keine Freunde	No friends yet
 Noch keine Freunde. Schick eine Anfrage mit „Freund hinzufügen“.	No friends yet. Send a request with “Add friend”.
 Noch keine Runde gespielt.	No round played yet.
 Noch keine Tickets	No tickets yet
+Noch keine Titel. Titel gibt es für Ligen, Erfolge und Events.	No titles yet. Titles come from leagues, achievements and events.
 Noch keine letzte Runde	No last round yet
 Noch keine letzte Runde.	No last round yet.
 Noch nie online	Never online
@@ -4598,6 +4625,7 @@ Raid-Versicherung für Kisten	Raid insurance for chests
 Rand 10 Sekunden anzeigen	Show border for 10 seconds
 Rand zeigen	Show border
 Rang	Rank
+Rang fehlt	Rank missing
 Rangliste	Ranking
 Rangliste Monat	Monthly ranking
 Rangliste Trophäen	Trophy ranking
@@ -4932,6 +4960,7 @@ Steckbriefe	Wanted posters
 Steckbriefe ansehen	View wanted posters
 Steh erst auf (Schleichen).	Stand up first (sneak).
 Stehlampe	Floor Lamp
+Steht neben deinem Namen im Chat und in der Tab-Liste	Shown next to your name in chat and the tab list
 Steig aus mit Schleichen + Klick, Klick oder Schlag aufs Schild, dem Chat-Knopf oder /cashout: Einsatz mal Multiplikator. Wer beim Crash noch drin ist, verliert den Einsatz.	Cash out with sneak + click, click or hit on the sign, the chat button or /cashout: bet times multiplier. Whoever is still in at the crash loses the bet.
 Steig aus, und du bekommst Einsatz mal Multiplikator	Cash out and you get bet times multiplier
 Stein und Erze abbauen	Mine stone and ores
@@ -5019,6 +5048,7 @@ Tafel Grün	Green Long Table
 Tafel Weiß	White Long Table
 Tag	Day
 Tag und Nacht	Day and night
+Tag {} abholen	Claim day {}
 Tage	Days
 Tagen	days
 Tages-, Wochen- und Team-Quests, Geschichte	Daily, weekly and team quests, story
@@ -5103,8 +5133,10 @@ Tische, Limits, Auszahlung, Protokoll	Tables, limits, payout, log
 Tischlampe	Table lamp
 Titel	Titles
 Titel 	Title 
+Titel ablegen	Remove title
 Titel auswählen	Choose a title
 Titel nur mit verifiziertem Account (/verify).	Titles only with a verified account (/verify).
+Titel tragen	Wear title
 Titel · kurz, worum es geht (bis 40 Zeichen)	Title · in short, what it is about (up to 40 characters)
 Tod	Death
 Tod & Gräber	Death & graves
@@ -5236,6 +5268,7 @@ Verlinken	Link
 Verlinken und Vorteile sichern	Link and secure perks
 Verloren	Lost
 Verlust	Loss
+Vermögen	Wealth
 Verpasste Nachrichten lesen	Read missed messages
 Verschenken geht nur an Spieler, die gerade online sind.	Gifts only work for players who are online right now.
 Versehentliche Schäden sind dem Eigentümer oder dem Serverteam zu melden.	Report accidental damage to the owner or the server team.
@@ -5265,6 +5298,7 @@ Vorherige Stufen	Previous levels
 Vorige Seite	Previous page
 Voriger Paragraph	Previous section
 Vorratskiste {}	Storage Crate {}
+Vorschau	Preview
 Vorteile ansehen	View perks
 Vorteile und Store-Link	Perks and store link
 Vorteils-Paket	Perk bundle
@@ -5421,6 +5455,7 @@ Zeitloser	Timeless One
 Zerstören, Verändern oder Ausräumen fremder Bauten ist verboten, auch wenn sie nicht geclaimt sind.	Destroying, changing or emptying other players' buildings is forbidden, even if they aren't claimed.
 Zicklein	Goat kid
 Zieht sofort unter den aktuellen Teilnehmern	Draws right away among the current participants
+Ziehung in 	Draw in 
 Ziehung: 	Drawing: 
 Ziel	Finish
 Ziel gesetzt.	Finish set.
@@ -5509,6 +5544,7 @@ alle Kategorien	all categories
 alle Tagesaufträge	all daily orders
 alle dürfen ein- und auszahlen	everyone may deposit and withdraw
 alle rechtzeitig ausgestiegen	everyone cashed out in time
+alle {} · 	every {} · 
 alles auszahlen	cash out all
 alles tauschen	exchange all
 als Liebling markieren	mark as favorite
@@ -5527,6 +5563,7 @@ eine Stunde gespielt	played one hour
 einem Freund	a friend
 eingezahlt	deposited
 erlaubt	allowed
+erreicht	reached
 exklusive Items	exclusive items
 fertig	ready
 freie Claim-Blöcke	free claim blocks
@@ -5537,6 +5574,7 @@ gelöst	solved
 gerade in 	right now in 
 geschenk für 	gift for 
 geschlossen	closed
+gesperrt	locked
 groß	large
 grün	green
 grün im Tab & Chat	green in tab & chat
@@ -5553,6 +5591,7 @@ jeden Tag um 00:00 Uhr	every day at 00:00
 jemand anderem	someone else
 kein Grund angegeben	no reason given
 kein Liebling mehr	no longer a favorite
+kein Titel	no title
 keiner	none
 klein	small
 köpfe	heads
@@ -5604,6 +5643,7 @@ von {} · 	from {} ·
 vor 	ago 
 vor {} Min.	{} min. ago
 wartet auf Antwort	waiting for an answer
+wieder in 	again in 
 x Grundpreis	x base price
 x basteln	x craft
 x gefangen	x caught
@@ -5667,7 +5707,9 @@ zweiter Beruf	second job
 ✔ Abgeholt	✔ Claimed
 ✔ Dein Job	✔ Your job
 ✔ abgeholt	✔ claimed
+✔ aktiv	✔ active
 ✔ angelegt	✔ equipped
+✔ bereit	✔ ready
 ✔ erledigt	✔ done
 ✔ hat dein Item	✔ your item has it
 ✦ Wer zu lange wartet, verliert alles ✦	✦ Whoever waits too long loses everything ✦

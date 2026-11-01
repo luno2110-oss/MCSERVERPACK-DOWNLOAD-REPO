@@ -84,17 +84,17 @@ public final class MainScreen {
         List<Tile> daily = new ArrayList<>(List.of(
                 new Tile("Shop", "Sektionen, Wochenende und Daily Shop", KitData.Icon.EMERALD, go(pl -> new ShopMenu(plugin).open(pl))),
                 new Tile("Markt", "Items kaufen und verkaufen", KitData.Icon.CHEST_BLOCK, go(pl -> new MarketMenu(plugin).open(pl))),
-                new Tile("Wirtschaft", "Rangliste der reichsten Spieler", KitData.Icon.GOLD_INGOT, go(pl -> new LeaderboardMenu(plugin).open(pl))),
-                new Tile("Täglich", "30-Tage-Kalender mit Belohnungen", KitData.Icon.CLOCK, go(pl -> new DailyMenu(plugin).open(pl))),
+                new Tile("Wirtschaft", "Rangliste der reichsten Spieler", KitData.Icon.GOLD_INGOT, go(pl -> new TopListScreen(plugin).money(pl))),
+                new Tile("Täglich", "30-Tage-Kalender mit Belohnungen", KitData.Icon.CLOCK, go(pl -> new DailyScreens(plugin).calendar(pl))),
                 new Tile("Team", "Team verwalten, Kasse und Teamhome", KitData.Icon.WHITE_BANNER, go(pl -> new TeamMenu(plugin).open(pl))),
-                new Tile("Tagespot", "Lose kaufen, Ziehung um 19 Uhr", KitData.Icon.GOLD_BLOCK, go(pl -> new DailyPotMenu(plugin).open(pl))),
+                new Tile("Tagespot", "Lose kaufen, Ziehung um 19 Uhr", KitData.Icon.GOLD_BLOCK, go(pl -> new DailyScreens(plugin).pot(pl))),
                 new Tile("Duo-RTP", "Zu zweit an einen Zufallsort, Kampf!", KitData.Icon.FIRE_CHARGE, go(pl -> new RtpQueueMenu(plugin).open(pl))),
                 new Tile("Freunde", "Freunde, Anfragen und Nachspringen", KitData.Icon.COOKIE, cmd("friends"))));
         List<Tile> progress = new ArrayList<>(List.of(
                 new Tile("Battlepass", "100 Stufen, Quests und Belohnungen", KitData.Icon.BOOK, go(pl -> plugin.battlepassScreen().open(pl))),
                 new Tile("Spielzeit", "Stufen nach aktiver Spielzeit", KitData.Icon.EXPERIENCE, go(pl -> new PlaytimeScreen(plugin).open(pl))),
-                new Tile("Titel", "Wähle deinen Titel neben dem Namen", KitData.Icon.NAME_TAG, go(pl -> new TagsMenu(plugin).open(pl))),
-                new Tile("Kits", "Starter- und Rang-Kits abholen", KitData.Icon.IRON_CHESTPLATE, go(pl -> new KitMenu(plugin).open(pl))),
+                new Tile("Titel", "Wähle deinen Titel neben dem Namen", KitData.Icon.NAME_TAG, go(pl -> new ProgressScreens(plugin).tags(pl))),
+                new Tile("Kits", "Starter- und Rang-Kits abholen", KitData.Icon.IRON_CHESTPLATE, go(pl -> new ProgressScreens(plugin).kits(pl))),
                 new Tile("Kosmetik", "Hüte, Spuren und Effekte", KitData.Icon.AMETHYST, go(pl -> new CosmeticsScreen(plugin).open(pl))),
                 new Tile("Statistik", "Deine Werte und Ranglisten", KitData.Icon.SPYGLASS, cmd("stats"))));
         List<Tile> mine = new ArrayList<>();

@@ -193,6 +193,11 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
     - [x] Grundstücke (`/claim`) in Wiesen-Optik: freie Claim-Blöcke, Knöpfe Claim-Axt und Befehle, eigene Grundstücke als Zeilen mit kleiner Grundriss-Skizze, Größe, Welt, Mitte und „Rand zeigen“; vertraute Spieler als Namens-Chips (Klick entzieht das Vertrauen); vier Schalter „Das dürfen Fremde bei dir“
     - [x] Homes (`/homes`, Schnellknopf im Hauptmenü) in Ziegel-Optik: belegte Plätze mit Punkten, „Neues Home hier“, außer in Survival „Platz kaufen“ (XP); Homes als Karten mit Welt und Position, Klick teleportiert, „×“ löscht nach Nachfrage; freie Plätze als leere Karten; „Mehr Homes“ je Modus
     - [x] Technik: Kasten-Daten im generierten `KitData` als kompakte Texte (die Enum-Initialisierung war an der 64-KB-Grenze von Java); Karten mit Knöpfen liegen eine Ebene tiefer, damit die Knöpfe ganz sichtbar sind; SelfTest baut alle neuen Seiten mit Grenzwerten; englische Texte
+  - [ ] 12.10c Übrige Menüs als Dialoge (Kern, SMP, Skyblock)
+    - [x] Tageskalender (`/daily`) als Abreißkalender: 30 Papier-Felder (abgeholt mit Haken, heute golden, jeder 10. Tag mit Juwel), großer Abhol-Knopf
+    - [x] Tagespot (`/dailypot`) als Lotterie in Kleeblatt-Grün: Topf in großer Goldschrift, Countdown bis zur Ziehung, eigene Lose, Gewinnchance, Lose gesamt, Kaufen (1, 5, 20) mit Limit
+    - [x] Bestenlisten (`/baltop`, `/ranking`) als Ruhmeshalle in Königs-Violett: Podest für Platz 1 bis 3, Plätze 4 bis 10, eigener Wert
+    - [x] Erfolge (`/erfolge`) als Trophäenschrank in Bronze (Karten mit Balken, erreichte golden, Juwelen-Belohnung, Seiten), Titel (`/tags`) als Namensschilder in Pflaume (in ihrer Farbe, aktiv golden, gesperrte grau, „Ablegen“), Kits (`/kits`) als Waffenkammer in Stahl (Inhalt, Abklingzeit, Rang, Abholen und Vorschau)
 
 ## Ordnergruppe 5 – Scoreboard und Anzeigen (Refs: Video Scoreboard_Money, GELD_XP-Anzeige)
 - [x] 5.1 Sidebar SMP (v1.32)

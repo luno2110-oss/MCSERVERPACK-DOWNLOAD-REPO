@@ -50,7 +50,7 @@ public final class SocialCommand implements CommandExecutor {
                 }
                 new de.kuby.kubyplugins.gui.StatsScreen(plugin).open(p, target);
             }
-            case "ranking" -> new RankingMenu(plugin).open(p);
+            case "ranking" -> new de.kuby.kubyplugins.gui.TopListScreen(plugin).trophies(p);
             default -> { return false; }
         }
         return true;
