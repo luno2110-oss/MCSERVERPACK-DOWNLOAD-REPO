@@ -37,7 +37,7 @@ public final class ChecklistMenu extends de.kuby.kubyplugins.gui.GuiMenu {
         for (int i = 45; i < 54; i++) set(i, Items.make(Material.GRAY_STAINED_GLASS_PANE, " ", List.of()), null);
         set(45, Items.make(Material.ARROW, "<gray>Vorherige Seite", List.of()),
                 e -> { if (page > 0) new ChecklistMenu(plugin, page - 1).open(p); });
-        set(48, Items.make(Material.ARROW, "<gray>Zurück", List.of()), e -> new SkyblockMenu(plugin).open(p));
+        set(48, Items.make(Material.ARROW, "<gray>Zurück", List.of()), e -> { p.closeInventory(); new SkyScreen(plugin).open(p); });
         set(49, Items.make(Material.BOOK, "<gold>Seite " + (page + 1) + "/" + pages, List.of(
                 "<gray>Gesammelt: <white>" + got.size() + "<dark_gray>/<white>" + all.size(),
                 "<gray>Fortschritt: <white>" + prog.percent(p.getUniqueId()) + "%")), null);

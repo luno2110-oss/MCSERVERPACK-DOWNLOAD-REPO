@@ -33,7 +33,7 @@ public final class TurnierCommand implements CommandExecutor {
 
     private void turnier(Player p, String[] args) {
         if (args.length == 0) {
-            new TournamentMenu(plugin).open(p);
+            new de.kuby.kubysmp.gui.SmpScreens(plugin).tournament(p);
             return;
         }
         String sub = args[0].toLowerCase(Locale.ROOT);

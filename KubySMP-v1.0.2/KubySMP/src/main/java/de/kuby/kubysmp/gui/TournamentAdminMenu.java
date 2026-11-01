@@ -109,7 +109,7 @@ public final class TournamentAdminMenu extends GuiMenu {
                 e -> askNumber(p, "Max. Teilnehmer (2-64):", "tournament.max-players", 2, 64));
 
         set(40, Items.make(Material.ARROW, "<gray>Zurück", List.of()),
-                e -> new TournamentMenu(plugin).open(p));
+                e -> { p.closeInventory(); new SmpScreens(plugin).tournament(p); });
     }
 
     private String nameOf(UUID id) {

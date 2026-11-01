@@ -31,7 +31,7 @@ public final class BountyCommand implements CommandExecutor {
             return true;
         }
         if (command.getName().equalsIgnoreCase("bounties")) {
-            new de.kuby.kubysmp.gui.BountiesMenu(plugin).open(p);
+            new de.kuby.kubysmp.gui.SmpScreens(plugin).bounties(p);
         } else {
             bounty(p, args);
         }

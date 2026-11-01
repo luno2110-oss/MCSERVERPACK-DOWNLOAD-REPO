@@ -8,6 +8,7 @@
  (neuer Wert):	 (new value):
  (vorher {})	 (before {})
  ({} frei)	 ({} free)
+ + {} Juwelen	 + {} jewels
  / {} Grundstücke	 / {} claims
  <click:run_command:'/friend jump {}'><green>[Nachspringen]</click>	 <click:run_command:'/friend jump {}'><green>[Jump to them]</click>
  <click:run_command:'/poker raise {}'><hover:show_text:'Mindesterhöhung'><yellow>[Raise auf {}]</yellow></hover></click> <click:suggest_command:'/poker raise '><hover:show_text:'Betrag selbst eingeben'><yellow>[Raise …]</yellow></hover></click>	 <click:run_command:'/poker raise {}'><hover:show_text:'Minimum raise'><yellow>[Raise to {}]</yellow></hover></click> <click:suggest_command:'/poker raise '><hover:show_text:'Enter the amount yourself'><yellow>[Raise …]</yellow></hover></click>
@@ -146,6 +147,7 @@
  und 1 Token	 and 1 token
  verkauft für 	 sold for 
  von {} Blöcken genutzt	 of {} blocks used
+ von {} Items gesammelt	 of {} items collected
  von {} Plätzen belegt	 of {} slots used
  von {} Stufen abgeholt	 of {} levels claimed
  vor dem Start	 before the start
@@ -175,6 +177,7 @@
  · bei 	 · at
  · bis 	 · up to 
  · klein	 · small
+ · läuft ab in {} Std.	 · expires in {} h
  · noch 	 · still 
  · noch offen	 · still open
  · verkauft +	 · sold +
@@ -206,6 +209,7 @@ $ zum Gründen	$ to found
 +{} Juwelen	+{} jewels
 +{} Tages-Quest	+{} daily quest
 +{} Tages-Quests	+{} daily quests
++{} Trophäen	+{} trophies
 +{} je Stunde Spielzeit	+{} per hour played
 +{} pro Monat	+{} per month
 +{} weitere	+{} more
@@ -2193,8 +2197,10 @@ Abholbox: Seite 2	Pickup box: page 2
 Abholbox: Seite 3	Pickup box: page 3
 Abholen	Claim
 Abholen · 	Claim · 
+Abholen!	Claim!
 Ablegen	Remove
 Ablehnen	Deny
+Abmelden	Withdraw
 Abnehmen	Remove
 Abo verwalten	Manage subscription
 Abo, jederzeit kündbar	Subscription, cancel anytime
@@ -2228,6 +2234,7 @@ Alle Fische im Inventar	All fish in your inventory
 Alle Hauptquests geschafft	All main quests done
 Alle Homes	All homes
 Alle Homes als Menü	All homes as a menu
+Alle Items der Checkliste	All items on the checklist
 Alle Member-Vorteile · 10 Homes	All member perks · 10 homes
 Alle Nebenquests	All side quests
 Alle Plätze sind besetzt.	All seats are taken.
@@ -2340,6 +2347,7 @@ Ankündigung an alle:	Announcement to everyone:
 Ankündigung eingeben:	Enter announcement:
 Anleitung zeigen	Show the guide
 Anleitung zum Verlinken	How to link
+Anmeldung offen	Sign-up open
 Annehmen	Accept
 Annehmen & verfolgen	Accept & track
 Anpinnen	Pin
@@ -2504,6 +2512,7 @@ Beißt nachts doppelt so oft	Bites twice as often at night
 Beleidigungen, Drohungen und diskriminierende Äußerungen sind verboten.	Insults, threats and discriminatory remarks are forbidden.
 Beliebt zuerst	Popular first
 Belohnung	Reward
+Belohnung abholen	Claim reward
 Belohnung eingeben (STUFE SPUR ART WERT):	Enter reward (LEVEL TRACK TYPE VALUE):
 Belohnung für <white>{}</white> abgeholt!	Reward for <white>{}</white> claimed!
 Belohnung fürs Spielen	Reward for playing
@@ -2639,6 +2648,7 @@ Chat-Quiz	Chat quiz
 Cheats und Exploits	Cheats and exploits
 Cheats und Hacks, die einen unfairen Vorteil verschaffen, sind verboten. Dazu gehört beispielsweise X-Ray.	Cheats and hacks that give an unfair advantage are forbidden. This includes X-ray, for example.
 Check (Zeit)	Check (time)
+Checkliste · 	Checklist · 
 Checkpoint <yellow>#{}</yellow> gesetzt.	Checkpoint <yellow>#{}</yellow> set.
 Checkpoint <yellow>#{}</yellow> gesetzt: <white>{}</white>	Checkpoint <yellow>#{}</yellow> set: <white>{}</white>
 Checkpoint <yellow>{index}/{total}</yellow> erreicht · <white>{time}</white>	Checkpoint <yellow>{index}/{total}</yellow> reached · <white>{time}</white>
@@ -2806,12 +2816,14 @@ Deine Gewinne tauschst du jederzeit zurück	Exchange your winnings back at any t
 Deine Grundstücke	Your plots
 Deine Gräber	Your graves
 Deine Homes	Your homes
+Deine Insel, deine Sammlung	Your island, your collection
 Deine Juwelen	Your jewels
 Deine Kills, Tode und Trophäen	Your kills, deaths and trophies
 Deine Kisten-Schlüssel in 	Your crate keys in 
 Deine Lose	Your tickets
 Deine Läden	Your shops
 Deine Orte zum Hinspringen	Your places to jump to
+Deine Policen	Your policies
 Deine Quests	Your quests
 Deine Sachen nach dem Tod	Your things after death
 Deine Schlüssel	Your keys
@@ -3163,6 +3175,7 @@ Du wartest gerade auf keine Antwort.	You're not waiting for any answer right now
 Du wartest. Sobald jemand beitritt, geht es los.	You are waiting. As soon as someone joins, it starts.
 Du: Platz 	You: place 
 Du: {} Trophäen · 	You: {} trophies · 
+Duell annehmen	Accept duel
 Duell-Anfragen	Duel requests
 Duell-Menü öffnen	Open the duel menu
 Duell-Mitteilungen	Duel messages
@@ -3246,6 +3259,7 @@ Einladung annehmen	Accept invitation
 Einmal am Tag abholen · jeder 10. Tag mit Juwelen	Claim once a day · every 10th day with jewels
 Einmalige	One-time
 Einrichten und hinsetzen	Set up and sit down
+Eins gegen eins · mit Einsatz: /duell <Spieler> <Betrag>	One on one · with a stake: /duell <player> <amount>
 Einsatz	Bet
 Einsatz 	Bet
 Einsatz beim Crash-Creeper oder an den Schildern unter dem Bildschirm setzen ({} bis {} Chips).	Place your bet at the crash creeper or at the signs below the screen ({} to {} chips).
@@ -3495,6 +3509,7 @@ Für wen? (Spieler online)	For whom? (player online)
 Für {}	For {}
 Für {} stimmen	Vote for {}
 GELD & MARKT	MONEY & MARKET
+GESUCHT	WANTED
 GEWÖHNLICH!	COMMON!
 GRUNDSTÜCKE	PLOTS
 Gefährte	Companion
@@ -3528,6 +3543,7 @@ Gerade gibt es keine Kits.	No kits right now.
 Gerade gibt es keine Waren mit Anteilen.	No goods with shares right now.
 Gerade gibt es nichts zu kaufen.	Nothing to buy right now.
 Gerade ist niemand in deiner Nähe	Nobody is near you right now
+Gerade ist niemand sonst online.	Nobody else is online right now.
 Gerade kein Event	No event right now
 Gerade keine Wartezeit	No waiting time right now
 Gerade läuft kein Event. Schau später wieder vorbei.	No event is running right now. Check back later.
@@ -3552,6 +3568,7 @@ Geschützte Items: Mindestwert	Protected items: minimum value
 Gesendet 	Sent 
 Gesperrt	Locked
 Gestorben	Died
+Gesucht	Wanted
 Gewicht	Weight
 Gewinn	Profit
 Gewinn: 1:1. Blackjack: 3:2. Gleichstand: Einsatz zurück.	Win: 1:1. Blackjack: 3:2. Tie: bet back.
@@ -3776,6 +3793,7 @@ Hängepflanze {}	Hanging Plant {}
 Höchstanzahl Homes	Maximum number of homes
 Höchstbetrag	Maximum amount
 Höchste Karte	High card
+Höchste Liga erreicht!	Highest league reached!
 Höchste Stufe	Highest level
 Höchste Stufe erreicht	Highest level reached
 Höchsteinsatz {} Chips.	Maximum bet {} chips.
@@ -3904,6 +3922,7 @@ Jeder, der diese Woche gespielt hat, ist dabei	Everyone who played this week is 
 Jemand	Someone
 Jetzt 	Now 
 Jetzt Helfer werden	Become a helper now
+Jetzt anmelden	Sign up now
 Jetzt aussteigen	Cash out now
 Jetzt bei <green>	Now at <green>
 Jetzt einholen!	Reel it in now!
@@ -3926,6 +3945,7 @@ Juwelen-Pakete ansehen	View jewel packages
 Juwelenshop	Jewel shop
 Juwelenshop öffnen	Open the jewel shop
 Jäger	Hunter
+K.-o.-Turnier · wer verliert, ist raus	Knockout tournament · whoever loses is out
 K.O.-Turnier anmelden	Sign up for the knockout tournament
 KEIN GRAB	NO GRAVE
 KEINE TICKETS	NO TICKETS
@@ -3974,6 +3994,7 @@ Kein Schlüssel	No key
 Kein Spam, keine Werbung für andere Server, keine Caps-Flut und keine verbotenen Inhalte.	No spam, no advertising for other servers, no caps flood and no forbidden content.
 Kein Spieler erhält aufgrund seines Ranges oder seiner Spielzeit das Recht, die Regeln zu missachten.	No player gets the right to ignore the rules because of their rank or playtime.
 Kein Team	No team
+Kein Turnier	No tournament
 Kein Turnier aktiv.	No tournament active.
 Kein Warp passt zu deiner Suche.	No warp matches your search.
 Keine Anfrage unterwegs	No request pending
@@ -3987,6 +4008,7 @@ Keine Items. Belohnungen, die nicht ins Inventar passen, landen hier.	No items. 
 Keine Lust auf Anfragen? In /settings schaltest du sie ab.	Don't want requests? Turn them off in /settings.
 Keine Orders	No orders
 Keine Steckbriefe	No wanted posters
+Keine Steckbriefe. Gerade wird niemand gesucht.	No wanted posters. Nobody is wanted right now.
 Keine Steuer im Markt	No tax on the market
 Keine Stufen	No levels
 Keine neuen Runden, Verkaufen geht weiter	No new rounds, selling still works
@@ -3996,6 +4018,7 @@ Keine offene Herausforderung.	No open challenge.
 Keine offenen Anfragen	No open requests
 Keine offenen Anträge.	No open proposals.
 Keine passenden Fische im Inventar.	No matching fish in your inventory.
+Keine versicherten Kisten.	No insured chests.
 Keyall-Kiste	Keyall crate
 Keyall-Schlüssel	Keyall key
 Keys	Keys
@@ -4009,6 +4032,7 @@ Kirsche	Cherry
 Kirsche 1-fach, Zitrone 2-fach, Glocke 5-fach, Stern 10-fach, Sieben 50-fach des Lospreises. Etwa jedes dritte Los gewinnt.	Cherry 1x, lemon 2x, bell 5x, star 10x, seven 50x the ticket price. About every third ticket wins.
 Kirschen	Cherries
 Kissenstapel	Pillow Stack
+Kiste 	Chest 
 Kiste mit einem Schlüssel öffnen (Schleichen: ohne Animation)	Open a crate with a key (sneak: without animation)
 Kisten	Crates
 Kisten und Öfen	Chests and furnaces
@@ -4042,6 +4066,7 @@ Klick: Spieler wählen	Click: choose a player
 Klick: abholen	Click: claim
 Klick: beenden	Click: stop
 Klick: einfügen	Click: insert
+Klick: herausfordern	Click: challenge
 Klick: im Juwelenshop ansehen	Click: view in the jewel shop
 Klick: kaufen (danach bestätigen)	Click: buy (then confirm)
 Klick: nächste Stellung	Click: next position
@@ -4088,6 +4113,7 @@ Kopf suchen	Search head
 Kopf von 	Head of 
 Kopf-Datenbank	Head database
 Kopfgeld auf einen Spieler setzen	Put a bounty on a player
+Kopfgeld aussetzen: /bounty <Spieler> <Betrag>	Set a bounty: /bounty <player> <amount>
 Kopfgelder und laufende Duelle	Bounties and running duels
 Kosmetik	Cosmetics
 Kosmetik auswählen	Choose cosmetics
@@ -4122,6 +4148,8 @@ Köder abnehmen	Remove bait
 Köder kaufen, basteln und wechseln	Buy, craft and switch bait
 Köder, Angel-Zone und der Angler-Job erhöhen es.	Bait, the fishing zone and the angler job raise it.
 Köpfe gibt es nur in Survival.	Heads only exist in Survival.
+Kündigen	Cancel
+Kündigen (ohne Erstattung)	Cancel (no refund)
 Kürbis	Pumpkin
 Kürbiskuchen	Pumpkin pie
 LEGENDÄR!	LEGENDARY!
@@ -4189,6 +4217,7 @@ Level-Rangliste	Level ranking
 Licht-Block	Light block
 Liga	League
 Liga · Kills/Tode	League · kills/deaths
+Ligen	Leagues
 Lila	Purple
 Limit erreicht	Limit reached
 Links und Belohnungen	Links and rewards
@@ -4212,6 +4241,7 @@ Läden und Bauwerke anderer besuchen	Visit other players' shops and buildings
 Läuft	Running
 Läuft gerade	Now playing
 Läuft noch {} Min., wird verlängert	Running {} more min., will be extended
+Läuft · Runde 	Running · round 
 Löschen	Delete
 Löschen (Shift)	Delete (shift)
 MODUS WÄHLEN:	CHOOSE MODE:
@@ -4475,6 +4505,7 @@ Noch kein Ticket.	No ticket yet.
 Noch kein Ticket. Stell deine erste Frage.	No ticket yet. Ask your first question.
 Noch keine Buchungen.	No transactions yet.
 Noch keine Einträge.	No entries yet.
+Noch keine Erfolge eingerichtet.	No achievements set up yet.
 Noch keine Freunde	No friends yet
 Noch keine Freunde. Schick eine Anfrage mit „Freund hinzufügen“.	No friends yet. Send a request with “Add friend”.
 Noch keine Runde gespielt.	No round played yet.
@@ -4483,6 +4514,7 @@ Noch keine Titel. Titel gibt es für Ligen, Erfolge und Events.	No titles yet. T
 Noch keine letzte Runde	No last round yet
 Noch keine letzte Runde.	No last round yet.
 Noch nie online	Never online
+Noch niemand angemeldet.	Nobody signed up yet.
 Noch niemand. Mit /claim trust <Spieler> darf jemand auf allen deinen Grundstücken bauen.	Nobody yet. With /claim trust <player> someone may build on all your claims.
 Noch {} Punkte bis Level 	{} more points to level 
 Noch {} Tokens bis Platz 10	{} more tokens to place 10
@@ -4546,6 +4578,7 @@ Offene Fragen findest du unter „Offen“.	You find open questions under “Ope
 Offene Orders ansehen	View open orders
 Offenes Fach	Open Drawers
 Oh, eine Nachricht von {}? Vielen Dank, dass du extra gekommen bist!	Oh, a message from {}? Thank you so much for coming all the way!
+Ohne Einsatz herausfordern	Challenge without a stake
 Ohne Verlinkung kannst du keine Spielzeit-Belohnungen abholen und kein Helfer im Support werden.	Without linking you can't claim playtime rewards and can't become a support helper.
 Online in Survival	Online in Survival
 Online, aber nicht in Survival	Online, but not in Survival
@@ -4615,6 +4648,7 @@ Polsterstuhl	Upholstered chair
 Portalchen	Little Portal
 Preis beim Händler	Price at the trader
 Preis eingeben	Enter price
+Preis für den Sieger	Prize for the winner
 Preis: <#F2C94C>	Price: <#F2C94C>
 Preise heute	Prices today
 Preise heute · Goldene Stunde +50 %	Prices today · Golden hour +50 %
@@ -4796,6 +4830,7 @@ Schatzchance	Treasure chance
 Schatzsinn	Treasure sense
 Schatzsucher	Treasure Hunter
 Schau auf den Block und klick	Look at the block and click
+Schau auf eine Kiste und tippe /versichern	Look at a chest and type /versichern
 Schau auf einen Block, neben dem die Totenkiste stehen soll.	Look at a block next to which the death chest should stand.
 Schau auf einen Block.	Look at a block.
 Schaufelarbeit	Shovel work
@@ -5144,6 +5179,7 @@ Teammitglieder durch Wände markiert sehen.	See team members marked through wall
 Teamname: mindestens 3 Zeichen (Buchstaben, Zahlen, _).	Team name: at least 3 characters (letters, numbers, _).
 Teams ansehen und auflösen	View and disband teams
 Teilen	Split
+Teilnehmer	Participants
 Teilnehmer können nur während der Anmeldung entfernt werden.	Participants can only be removed during sign-up.
 Teleport-Anfrage ablehnen	Deny a teleport request
 Teleport-Anfrage annehmen	Accept a teleport request
@@ -5231,6 +5267,7 @@ Truhling	Chestling
 Tulpentopf	Tulip pot
 Turnier	Tournament
 Turnier steuern	Control the tournament
+Turnier verwalten	Manage tournament
 Turnier-Anmeldung	Tournament sign-up
 Turnier: Preis	Tournament: prize
 Turnier: Teilnehmer	Tournament: participants
@@ -5329,6 +5366,7 @@ Versehentliche Schäden sind dem Eigentümer oder dem Serverteam zu melden.	Repo
 Versicherung	Insurance
 Versteckt am Spawn. Wer sie findet, sieht sie im Menü.	Hidden at spawn. Whoever finds them sees them in the menu.
 Vertraute Spieler	Trusted players
+Verwaltung (Admin)	Management (admin)
 Verwarnung	Warning
 Verzaubere 15 Gegenstände	Enchant 15 items
 Verzaubere 5 Gegenstände	Enchant 5 items
@@ -5606,7 +5644,9 @@ Züchter	Breeder
 \n<gray>Noch keine Runden gespielt.	\n<gray>No rounds played yet.
 ab Montag	from Monday
 ab {} Std.	from {} h
+ab {} Trophäen	from {} trophies
 abgehoben	withdrew
+abgeholt	claimed
 aktiv	active
 alle Felder aufdecken	reveal all fields
 alle Kategorien	all categories
@@ -5626,16 +5666,20 @@ aufgelöst.	disbanded the team.
 beim Team	with the team
 bleiben für immer	stay forever
 braucht {} 	needs {} 
+danach neu versichern	then insure again
 dazu eins pro Monat für immer	plus one per month forever
+des Kistenwerts	of the chest value
 du hast schon alle Warps	you already have all warps
 eigenes Grundstück	own plot
 eine Stunde gespielt	played one hour
 einem Freund	a friend
 eingezahlt	deposited
+einmal beim Abschluss	once when taking out
 erlaubt	allowed
 erreicht	reached
 exklusive Items	exclusive items
 fertig	ready
+fordert dich heraus!	challenges you!
 freie Claim-Blöcke	free claim blocks
 freigeschaltet	unlocked
 für Freunde	for friends
@@ -5653,9 +5697,11 @@ grün im Tab & Chat	green in tab & chat
 hält {} statt {} Minuten	lasts {} instead of {} minutes
 im Besitz	owned
 im Besitz · Klick: anlegen	owned · Click: put on
+im Duell	in a duel
 im Token-Shop	in the token shop
 in Arbeit	in progress
 in Tab und Chat	in tab and chat
+je Sieg	per win
 jede Woche Loot	loot every week
 jeden Monat eins	one every month
 jeden Montag um 00:00 Uhr	every Monday at 00:00
@@ -5786,10 +5832,12 @@ zweiter Beruf	second job
 ✔ aktiv	✔ active
 ✔ angelegt	✔ equipped
 ✔ bereit	✔ ready
+✔ deine Liga	✔ your league
 ✔ du	✔ you
 ✔ erledigt	✔ done
 ✔ gehört dir	✔ yours
 ✔ gerufen · Klick: weg	✔ summoned · click: send away
 ✔ hat dein Item	✔ your item has it
+✘ noch nicht	✘ not yet
 ✦ Wer zu lange wartet, verliert alles ✦	✦ Whoever waits too long loses everything ✦
 ❤ Antrag	❤ Propose

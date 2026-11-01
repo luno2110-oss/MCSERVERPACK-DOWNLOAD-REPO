@@ -203,7 +203,10 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
     - [x] Technik: Überlauf-Bogen für Kasten-Mittelstücke (`segs9b`, F400-F7FF), Platz für weitere Farbwelten
     - [x] Haustiere (`/pet`) in Blütenrosa: gerufenes Haustier oben (Aufsteigen, Wegschicken), alle Haustiere als Kacheln mit Bild (Shop-Pets aus dem Pack, sonst Spawn-Ei), eigene zuerst, ★ Liebling und ✎ Umbenennen als kleine Knöpfe, gesperrte mit Preis (Kaufen nach Nachfrage) oder Juwelen (öffnet den Juwelenshop) oder Quelle; 16 je Seite. Neu: 24 Spawn-Ei-Icons
     - [x] Farmpass (`/farmpass`, Juwelenshop → Farmpass) in Feld-Limette mit Reitern Vorteile und Haustiere: Status, Store-Link ohne Pass, Schalter Fliegen, Wochenkiste, Werkbank, alle Vorteile als Karten; Pass-Haustiere und Monats-Haustiere zum Wählen
-    - Bleiben Truhen (zeigen echte Items, die ein Dialog nicht zeichnen kann, oder man legt Items hinein): Köpfe-Shop, Kisten-Shops (Survival), Markt, Aufträge, Abholbox, Verkaufen, Server-Shop, Lager, Kit-Vorschau, Admin-Menüs. Dafür kommen später eigene Hintergrund-Grafiken
+    - [x] SMP: Trophäen (Hauptmenü) als Liga-Leiter in Frost (Fortschritt zur nächsten Liga, Ligen mit Belohnung, Abholen), Duelle (`/duell`) als Fechthalle (Herausforderung annehmen, Spieler herausfordern), Turnier (`/turnier`) als Banner in Gold und Purpur (Preis in großer Schrift, An-/Abmelden, Teilnehmer, Verwaltung für Admins), Raid-Versicherung (`/versichern`) als Büro (Auszahlung, Prämie, Laufzeit, Policen mit Kündigen nach Nachfrage), Steckbriefe (`/bounty`) als Papier-Plakate „GESUCHT“
+    - [x] Skyblock (`/skyblock`) in Wolken-Weiß: Checkliste mit Balken (Knopf öffnet die Truhe mit den echten Items), alle Erfolge als Karten mit Balken und Belohnung
+    - Bleiben Truhen (zeigen echte Items, die ein Dialog nicht zeichnen kann, oder man legt Items hinein): Köpfe-Shop, Kisten-Shops (Survival), Markt, Aufträge, Abholbox, Verkaufen, Server-Shop, Lager, Kit-Vorschau, Skyblock-Checkliste, Admin-Menüs. Die alten Truhen-Menüs der neuen Dialoge bleiben als Ersatz ohne Pack
+    - [ ] Eigene Hintergrund-Grafiken für die Truhen-Fenster
 
 ## Ordnergruppe 5 – Scoreboard und Anzeigen (Refs: Video Scoreboard_Money, GELD_XP-Anzeige)
 - [x] 5.1 Sidebar SMP (v1.32)

@@ -108,6 +108,10 @@ BOXES = {
     "petal_card": ("C87AA0", "64304E", "1C0814"),
     "lime": ("C8E650", "6E8A22", "1C230A"),      # Farmpass: Feld-Limette
     "lime_card": ("94B03E", "4A5C1C", "141A08"),
+    "frost": ("A8E8FF", "4A88A8", "0C1C26"),     # SMP-Trophäen: Liga-Leiter in Frost
+    "frost_card": ("78B4CC", "3A6070", "0A161C"),
+    "cloud": ("E8F6FF", "7AA8CC", "142434"),     # Skyblock: Wolken und Himmel
+    "cloud_card": ("A8CCE4", "4A6E8A", "0E1A26"),
 }
 
 # Casino-Kästen (Roulette- und Musik-Dialog im Clip): eigene Ecken, Rand von außen nach innen ("edge"), Füllung N.

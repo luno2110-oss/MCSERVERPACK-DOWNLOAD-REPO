@@ -62,6 +62,7 @@ public final class KubySkyblock extends JavaPlugin {
         }
         instance = this;
         core = c;
+        de.kuby.kubyskyblock.gui.SkyScreen.samples(core::registerSelfTestCanvas);
         saveDefaultConfig();
         islands = new IslandService(this, core);
         streaks = new StreakService(this, core);

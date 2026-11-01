@@ -22,7 +22,7 @@ public final class SkyblockPlayerCommand implements CommandExecutor {
             sender.sendMessage("Nur Spieler können diesen Befehl nutzen.");
             return true;
         }
-        new SkyblockMenu(core).open(p);
+        new de.kuby.kubyskyblock.gui.SkyScreen(core).open(p);
         return true;
     }
 }

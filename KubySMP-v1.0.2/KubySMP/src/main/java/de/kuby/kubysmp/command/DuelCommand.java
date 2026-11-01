@@ -26,7 +26,7 @@ public final class DuelCommand implements CommandExecutor {
             return true;
         }
         if (args.length == 0) {
-            new DuelMenu(plugin).open(p);
+            new de.kuby.kubysmp.gui.SmpScreens(plugin).duels(p);
             return true;
         }
         if (args[0].equalsIgnoreCase("accept")) {

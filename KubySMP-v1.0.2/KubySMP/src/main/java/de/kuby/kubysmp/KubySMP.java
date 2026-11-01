@@ -87,14 +87,15 @@ public final class KubySMP extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new CombatListener(core), this);
         getServer().getPluginManager().registerEvents(new InsuranceListener(core), this);
 
+        de.kuby.kubysmp.gui.SmpScreens.samples(core::registerSelfTestCanvas);
         core.registerMainEntry(new KubyPlugins.MainEntry(Material.IRON_SWORD, "Duelle", "Duelle starten oder annehmen",
-                p -> new DuelMenu(core).open(p)));
+                p -> new de.kuby.kubysmp.gui.SmpScreens(core).duels(p)));
         core.registerMainEntry(new KubyPlugins.MainEntry(Material.TOTEM_OF_UNDYING, "Turnier", "K.O.-Turnier anmelden",
-                p -> new TournamentMenu(core).open(p)));
+                p -> new de.kuby.kubysmp.gui.SmpScreens(core).tournament(p)));
         core.registerMainEntry(new KubyPlugins.MainEntry(Material.NETHER_STAR, "Trophäen", "Trophäen und Ligen",
-                p -> new TrophyMenu(core).open(p)));
+                p -> new de.kuby.kubysmp.gui.SmpScreens(core).trophies(p)));
         core.registerMainEntry(new KubyPlugins.MainEntry(Material.SHIELD, "Versicherung", "Raid-Versicherung für Kisten",
-                p -> new InsuranceMenu(core).open(p)));
+                p -> new de.kuby.kubysmp.gui.SmpScreens(core).insurance(p)));
         core.registerAdminButton(new KubyPlugins.AdminButton(19, Material.IRON_SWORD, "Kampf", "Kopfgelder und laufende Duelle",
                 p -> new AdminCombatMenu(core).open(p)));
         core.registerAdminButton(new KubyPlugins.AdminButton(21, Material.TOTEM_OF_UNDYING, "Turnier", "Turnier steuern",

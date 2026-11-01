@@ -33,7 +33,7 @@ public final class VersichernCommand implements CommandExecutor {
 
     private void versichern(Player p, String[] args) {
         if (args.length > 0 && args[0].equalsIgnoreCase("liste")) {
-            new InsuranceMenu(plugin).open(p);
+            new de.kuby.kubysmp.gui.SmpScreens(plugin).insurance(p);
             return;
         }
         Block target = p.getTargetBlockExact(5);
