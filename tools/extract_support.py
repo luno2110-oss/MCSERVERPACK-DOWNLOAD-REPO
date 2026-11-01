@@ -67,19 +67,27 @@ def nine_clean(a, x, y, w, h, n=7, mirror_bottom=False):
 def clean_corners(img, n=7):
     """Runde Ecken: je Zeile von außen her durchsichtig bis zum ersten Pixel in der Umrissfarbe (Mitte der oberen bzw.
     unteren Kante). Gezählt wird an allen vier Ecken, es gilt die kleinste Zahl (die Ecken sind gleich geformt): liegt
-    hinter einer Ecke fast schwarzer Hintergrund, hält nine_auto ihn sonst für den Umriss."""
+    hinter einer Ecke fast schwarzer Hintergrund, hält nine_auto ihn sonst für den Umriss. Findet keine Ecke den Umriss
+    (Kasten ohne schwarzen Rand an der Seite), bleibt die Zeile, wie nine_auto sie gemacht hat."""
     a = np.array(img)
     size = a.shape[0]
     for j in range(n):
-        counts = []
-        for bottom in (False, True):
-            outline = a[size - 1 if bottom else 0, n, :3].astype(int)
-            yy = size - 1 - j if bottom else j
-            for right in (False, True):
-                k = 0
-                while k < n and np.abs(a[yy, size - 1 - k if right else k, :3].astype(int) - outline).sum() > 12:
-                    k += 1
-                counts.append(k)
+        # erst streng (Umrissfarbe), dann großzügig (aufgehellter Umriss an der Rundung, z. B. 091D0D statt 000100)
+        for tol in (12, 60):
+            counts = []
+            for bottom in (False, True):
+                outline = a[size - 1 if bottom else 0, n, :3].astype(int)
+                yy = size - 1 - j if bottom else j
+                for right in (False, True):
+                    k = 0
+                    while k < n and np.abs(a[yy, size - 1 - k if right else k, :3].astype(int) - outline).sum() > tol:
+                        k += 1
+                    if k < n:
+                        counts.append(k)
+            if counts:
+                break
+        if not counts:
+            continue
         k = min(counts)
         for yy in (j, size - 1 - j):
             a[yy, :k, 3] = 0

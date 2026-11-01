@@ -26,8 +26,11 @@ ASSETS_SUPPORT = os.path.join(HERE, "assets", "support")
 ASSETS_INFOBAR = os.path.join(HERE, "assets", "infobar")
 # Profil (Release „Neue-referenzen“, extract_profile.py): Präfix pf_
 ASSETS_PROFILE = os.path.join(HERE, "assets", "profile")
+# Spieler-Warps (Release „Neue-referenzen“, extract_pwarps.py): Präfix pw_
+ASSETS_PWARPS = os.path.join(HERE, "assets", "pwarps")
 SETS = ((ASSETS, "js_"), (ASSETS_SURVIVAL, "jss_"), (ASSETS_PLAYTIME, "pt_"), (ASSETS_RULES, "rg_"),
-        (ASSETS_FRIENDS, "fr_"), (ASSETS_SUPPORT, "su_"), (ASSETS_INFOBAR, "ib_"), (ASSETS_PROFILE, "pf_"))
+        (ASSETS_FRIENDS, "fr_"), (ASSETS_SUPPORT, "su_"), (ASSETS_INFOBAR, "ib_"), (ASSETS_PROFILE, "pf_"),
+        (ASSETS_PWARPS, "pw_"))
 
 
 def available():

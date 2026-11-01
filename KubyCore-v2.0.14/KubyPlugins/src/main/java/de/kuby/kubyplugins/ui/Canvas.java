@@ -137,7 +137,31 @@ public final class Canvas {
      * im Sprach-Kontext übersetzt (I18n), damit Breiten zum angezeigten Text passen.
      */
     public static int width(String text, boolean bold) {
-        text = I18n.ctx(text);
+        return rawWidth(tx(text), bold);
+    }
+
+    /**
+     * Markiert Text, den Spieler geschrieben haben (Warp-Namen, Orte, Beschreibungen): wird nie übersetzt, sonst würde
+     * z. B. „Essen“ in einer Beschreibung zu „Food“. Das Zeichen davor zeichnet Canvas nicht; fit und wrap behalten es.
+     */
+    public static String lit(String text) {
+        return text == null || text.isEmpty() || text.charAt(0) == LIT ? text : LIT + text;
+    }
+
+    private static final char LIT = '\u0001';
+
+    /** Übersetzt im Sprach-Kontext, außer markierten Spieler-Text (dann ohne Markierung). */
+    private static String tx(String text) {
+        if (text != null && !text.isEmpty() && text.charAt(0) == LIT) return text.substring(1);
+        return I18n.ctx(text);
+    }
+
+    private static boolean isLit(String text) {
+        return text != null && !text.isEmpty() && text.charAt(0) == LIT;
+    }
+
+    /** Breite ohne Übersetzung (Text ist schon übersetzt bzw. Spieler-Text). */
+    private static int rawWidth(String text, boolean bold) {
         int w = 0;
         for (int i = 0; i < text.length(); i++) {
             w += advance(text.charAt(i)) + (bold ? 1 : 0);
@@ -148,6 +172,12 @@ public final class Canvas {
     public static int width(List<Span> spans) {
         int w = 0;
         for (Span s : spans) w += width(s.text(), s.bold());
+        return w;
+    }
+
+    private static int rawWidth(List<Span> spans) {
+        int w = 0;
+        for (Span s : spans) w += rawWidth(s.text(), s.bold());
         return w;
     }
 
@@ -170,7 +200,7 @@ public final class Canvas {
 
     /** Ersetzt Zeichen, die die Kit-Schrift nicht kennt, durch '?'. */
     public static String clean(String text) {
-        text = I18n.ctx(text);
+        text = tx(text);
         StringBuilder sb = new StringBuilder(text.length());
         for (int i = 0; i < text.length(); i++) {
             char c = text.charAt(i);
@@ -181,10 +211,11 @@ public final class Canvas {
 
     /** Kürzt Text mit "..." auf höchstens max Pixel. */
     public static String fit(String text, boolean bold, int max) {
-        text = I18n.ctx(text);
-        if (width(text, bold) <= max) return text;
+        boolean lit = isLit(text);
+        text = tx(text);
+        if (rawWidth(text, bold) <= max) return lit ? lit(text) : text;
         String dots = "...";
-        int budget = max - width(dots, bold);
+        int budget = max - rawWidth(dots, bold);
         StringBuilder sb = new StringBuilder();
         int w = 0;
         for (int i = 0; i < text.length(); i++) {
@@ -193,27 +224,29 @@ public final class Canvas {
             sb.append(text.charAt(i));
             w += a;
         }
-        return sb.toString().stripTrailing() + dots;
+        String out = sb.toString().stripTrailing() + dots;
+        return lit ? lit(out) : out;
     }
 
     /** Bricht Text an Leerzeichen um, sodass jede Zeile höchstens max Pixel breit ist. */
     public static List<String> wrap(String text, int max) {
-        text = I18n.ctx(text);
+        boolean lit = isLit(text);
+        text = tx(text);
         List<String> out = new ArrayList<>();
         for (String para : text.split("\\R", -1)) {
             StringBuilder line = new StringBuilder();
             for (String word : para.split(" ")) {
                 // Wörter, die allein nicht in die Zeile passen (Links, Spam), hart trennen
-                while (width(word, false) > max) {
+                while (rawWidth(word, false) > max) {
                     int cut = word.length() - 1;
-                    while (cut > 1 && width(word.substring(0, cut), false) > max) cut--;
+                    while (cut > 1 && rawWidth(word.substring(0, cut), false) > max) cut--;
                     if (!line.isEmpty()) out.add(line.toString());
                     line = new StringBuilder();
                     out.add(word.substring(0, cut));
                     word = word.substring(cut);
                 }
                 String probe = line.isEmpty() ? word : line + " " + word;
-                if (width(probe, false) > max && !line.isEmpty()) {
+                if (rawWidth(probe, false) > max && !line.isEmpty()) {
                     out.add(line.toString());
                     line = new StringBuilder(word);
                 } else {
@@ -222,13 +255,14 @@ public final class Canvas {
             }
             if (!line.isEmpty()) out.add(line.toString());
         }
+        if (lit) out.replaceAll(Canvas::lit);
         return out;
     }
 
     /** Text ab x (links). Gibt die Breite zurück. */
     public int text(int x, int y, String text, TextColor color, boolean bold) {
         String t = clean(text);
-        int w = width(t, bold);
+        int w = rawWidth(t, bold);
         if (t.isEmpty()) return 0;
         glyphs.add(new Glyph(Kind.TEXT, x, y, w, LINE, w, Z_TEXT, t, color, bold, 0, KitData.T_MAX, y - 3, y + 9));
         return w;
@@ -248,14 +282,14 @@ public final class Canvas {
 
     /** Text, der bei right endet. */
     public int textRight(int right, int y, String text, TextColor color, boolean bold) {
-        int w = width(clean(text), bold);
+        int w = rawWidth(clean(text), bold);
         text(right - w, y, text, color, bold);
         return w;
     }
 
     /** Text mittig um cx. */
     public int textCenter(int cx, int y, String text, TextColor color, boolean bold) {
-        int w = width(clean(text), bold);
+        int w = rawWidth(clean(text), bold);
         text(cx - w / 2, y, text, color, bold);
         return w;
     }
@@ -268,7 +302,7 @@ public final class Canvas {
     }
 
     public int textRight(int right, int y, List<Span> spans) {
-        int w = width(cleanAll(spans));
+        int w = rawWidth(cleanAll(spans));
         return text(right - w, y, spans);
     }
 

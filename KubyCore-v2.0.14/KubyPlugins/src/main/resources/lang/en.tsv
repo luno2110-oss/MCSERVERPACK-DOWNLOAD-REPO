@@ -105,6 +105,7 @@
  ausgezahlt · <green>+{}</green>	 cashed out · <green>+{}</green>
  bis 	 to 
  bis Stufe 	 until level 
+ diese Woche · {} gesamt	 this week · {} total
  entfernen (zweimal klicken)	 remove (click twice)
  erreicht! <gray>Belohnungen: <white>/battlepass	 reached! <gray>Rewards: <white>/battlepass
  frei	 free
@@ -136,6 +137,7 @@
  und 1 Token	 and 1 token
  verkauft für 	 sold for 
  von {} Blöcken genutzt	 of {} blocks used
+ von {} Plätzen belegt	 of {} slots used
  von {} Stufen abgeholt	 of {} levels claimed
  vor dem Start	 before the start
  wartet	 waiting
@@ -2281,6 +2283,7 @@ Angel-Zone	Fishing zone
 Angel-Zone 	Fishing zone 
 Angeln	Fishing
 Angeln in Survival kurz erklärt	Fishing in Survival explained briefly
+Angepinnt	Pinned
 Angler-Job aktiv (Level {}): +{} % Glück und Preis	Angler job active (level {}): +{} % luck and price
 Angler-Job: +{} %	Angler job: +{} %
 Anglerglück	Angler's luck
@@ -2291,6 +2294,7 @@ Ankündigung eingeben:	Enter announcement:
 Anleitung zeigen	Show the guide
 Anleitung zum Verlinken	How to link
 Annehmen	Accept
+Anpinnen	Pin
 Anrichte	Sideboard
 Ansehen	View
 Ansehen oder kündigen	View or cancel
@@ -2415,6 +2419,7 @@ Baumstämme aller Holzarten fällen	Chop logs of all wood types
 Baumstämme fällen	Chop logs
 Baut zusammen 400 Erze ab	Mine 400 ores together
 Bauwelt	Build world
+Bearbeiten	Edit
 Befehl mit %player%	Command with %player%
 Befehle	Commands
 Begleiter	Companion
@@ -2443,6 +2448,7 @@ Beim Team liegt nichts.	Nothing is waiting for the team.
 Beistelltisch	Side Table
 Beißt nachts doppelt so oft	Bites twice as often at night
 Beleidigungen, Drohungen und diskriminierende Äußerungen sind verboten.	Insults, threats and discriminatory remarks are forbidden.
+Beliebt zuerst	Popular first
 Belohnung	Reward
 Belohnung eingeben (STUFE SPUR ART WERT):	Enter reward (LEVEL TRACK TYPE VALUE):
 Belohnung für <white>{}</white> abgeholt!	Reward for <white>{}</white> claimed!
@@ -2463,6 +2469,7 @@ Beruf und Level	Profession and level
 Beruf wählen	Choose a job
 Berufe	Jobs
 Beschreib deine Frage etwas genauer (mindestens 10 Zeichen).	Describe your question a bit more precisely (at least 10 characters).
+Beschreibung · was es dort gibt (bis 60 Zeichen)	Description · what is there (up to 60 characters)
 Beschreibung ändern	Change description
 Beschwerden über Entscheidungen können sachlich beim Team eingereicht werden.	Complaints about decisions can be brought to the team in a factual way.
 Besiege 10 Spieler (SMP)	Defeat 10 players (SMP)
@@ -2508,6 +2515,7 @@ Blackjack-Höchsteinsatz (Chips)	Blackjack max bet (chips)
 Blackjack-Tisch 	Blackjack table
 Blackjack-Tisch hier	Blackjack table here
 Blatt-Symbol	Leaf symbol
+Blau	Blue
 Blauer Marlin	Blue Marlin
 Blitz	Lightning
 Blumenhocker {}	Plant Stand {}
@@ -2542,6 +2550,8 @@ Bunte Stoffe	Colorful Fabrics
 Buy-in zwischen {} und {} Chips.	Buy-in between {} and {} chips.
 Bäckerei	Bakery
 Bäuerin Berta	Farmer Berta
+Bücher	Books
+Bücher/Handelshalle	Books/Trading hall
 Bücherregal	Bookshelf
 Bürostuhl	Office Chair
 CLAIMBLÖCKE	CLAIM BLOCKS
@@ -2631,6 +2641,7 @@ Daily: Steigerung	Daily: increase
 Daily: Zyklus-Bonus	Daily: cycle bonus
 DailyPot-Mitteilungen	DailyPot messages
 Damit sich auf Survival alle wohlfühlen, gelten diese Regeln für jeden Spieler. Klick auf einen Paragraphen, um ihn zu lesen.	So that everyone feels at home on Survival, these rules apply to every player. Click a section to read it.
+Danach Name, Farbe und Icon einstellen.	Then set its name, color and icon.
 Danach zerfällt das Grab und alles fällt heraus. Dann kann es jeder aufheben. Mit dem Farmpass hält dein Grab länger.	After that the grave falls apart and everything drops out. Then anyone can pick it up. With the farm pass your grave lasts longer.
 Danke! Dein Ticket ist als gelöst markiert.	Thanks! Your ticket is marked as solved.
 Das Ausnutzen von Bugs und Exploits zur Beschaffung von Items, Geld oder anderen Vorteilen ist verboten.	Using bugs and exploits to get items, money or other advantages is forbidden.
@@ -2772,6 +2783,7 @@ Der Markt wartet auf meinen Kabeljau. Bringst du mir fünf Stück? Ich zahl gut!
 Der Name braucht 3 bis 16 Zeichen: Buchstaben, Zahlen, _ oder -.	The name needs 3 to 16 characters: letters, numbers, _ or -.
 Der Name braucht 3 bis 20 Zeichen (Buchstaben, Zahlen, Leerzeichen).	The name needs 3 to 20 characters (letters, numbers, spaces).
 Der Name darf 1 bis 16 Buchstaben, Zahlen, Leerzeichen, _ oder - haben.	The name may have 1 to 16 letters, numbers, spaces, _ or -.
+Der Ort-Name darf höchstens 24 Zeichen haben.	The place name can have at most 24 characters.
 Der Platz ist besetzt.	This seat is taken.
 Der Poker-Tisch ist noch nicht eingerichtet.	The poker table isn't set up yet.
 Der Preis muss eine Zahl sein.	The price must be a number.
@@ -2804,6 +2816,7 @@ Die Bank ist noch nicht eingerichtet.	The bank isn't set up yet.
 Die Bank zieht	The dealer draws
 Die Bauwelt darf nicht absichtlich verwüstet werden.	The build world must not be deliberately devastated.
 Die Belohnung hast du schon abgeholt.	You already claimed the reward.
+Die Beschreibung darf höchstens 60 Zeichen haben.	The description can have at most 60 characters.
 Die Duellarena ist nicht konfiguriert.	The duel arena isn't configured.
 Die Enderchest ist schon maximal ausgebaut.	The ender chest is already fully upgraded.
 Die Farmwelt ist zum Abbauen da. Hier darfst du alles farmen, Grundstücke gibt es dort nicht.	The farm world is for mining. You may farm everything here, there are no plots there.
@@ -2880,6 +2893,8 @@ Diesen Meilenstein gibt es nicht mehr.	This milestone no longer exists.
 Diesen Schlüssel gibt es nicht.	This key does not exist.
 Diesen Spieler kenne ich nicht.	I don't know this player.
 Diesen Titel gibt es nicht.	This title doesn't exist.
+Diesen Warp gibt es nicht mehr.	This warp no longer exists.
+Diesen Warp hast du nicht.	You don't own this warp.
 Dieser Freund ist gerade nicht online.	This friend isn't online right now.
 Dieser Name ist reserviert.	This name is reserved.
 Dieser Platz ist schon frei.	This slot is already free.
@@ -3028,6 +3043,7 @@ Du hast nicht genug$ für diesen Einsatz.	You don't have enough $ for this bet.
 Du hast noch kein Konto. Öffne /bank.	You don't have an account yet. Open /bank.
 Du hast noch kein Ticket.	You don't have a ticket yet.
 Du hast noch nicht gespielt.	You haven't played yet.
+Du hast schon alle Warp-Plätze belegt.	All your warp slots are already used.
 Du hast schon die höchste Stufe.	You already have the highest level.
 Du hast schon eine Totenkiste.	You already have a death chest.
 Du hast schon eine laufende Nebenquest. Abbrechen mit /sidequests cancel.	You already have a running side quest. Cancel with /sidequests cancel.
@@ -3073,6 +3089,7 @@ Duelle	Duels
 Duelle & Turnier	Duels & tournament
 Duelle nur mit Discord	Duels only with Discord
 Duelle starten oder annehmen	Start or accept duels
+Dunkelgrün	Dark green
 Dunkelzahn	Darkfang
 Duo-RTP: zu zweit an einen Ort, Kampf!	Duo RTP: two players to one place, fight!
 Dupen und das Ausnutzen von Bugs sind verboten. Gefundene Fehler meldest du dem Team und bekommst dafür eine Belohnung.	Duping and abusing bugs is forbidden. Report bugs you find to the team and you get a reward for it.
@@ -3167,6 +3184,7 @@ Enderchest: Stufe 2	Ender chest: level 2
 Enderchest: Stufe 3	Ender chest: level 3
 Endfunke	End Spark
 Endgänger	End Walker
+Endgültig löschen	Delete for good
 Endportalchen	Little End Portal
 Endsteinchen	End Pebble
 Entdecker	Explorer
@@ -3205,6 +3223,7 @@ Erntezeit	Harvest time
 Erreiche Angel-Level 10	Reach fishing level 10
 Erreiche Level 10	Reach level 10
 Erst Discord verlinken	Link Discord first
+Erst Platz {} belegen.	Fill slot {} first.
 Erst beide Bedingungen erfüllen	Meet both requirements first
 Erst einen Chip wählen	Choose a chip first
 Erste Mahlzeit	First meal
@@ -3258,6 +3277,7 @@ Fange {} Fische in der Nacht	Catch {} fish at night
 Fange {} Fische mit 4 oder 5 Sternen	Catch {} fish with 4 or 5 stars
 Fange {} Fische mit Köder	Catch {} fish with bait
 Fangt zusammen 300 Fische	Catch 300 fish together
+Farbe des Namens	Name color
 Farbe setzen	Bet on a color
 Farm-Baumeister	Farm Builder
 Farmen	Farms
@@ -3386,6 +3406,7 @@ Geh zum Roulette-Tisch.	Go to the roulette table.
 Geht beide zum Priester in der Kirche, dort sagst du mit Rechtsklick Ja. <click:run_command:'/marry church'><#FF7AC0>[Zur Kirche]</click> <click:run_command:'/marry deny'><red>[Ablehnen]</click>	Go to the priest in the church together, you say yes there with a right-click. <click:run_command:'/marry church'><#FF7AC0>[To the church]</click> <click:run_command:'/marry deny'><red>[Decline]</click>
 Geisterfisch	Ghost Fish
 Gekaufte Haustiere findest du unter /pet.	Pets you bought are under /pet.
+Gelb	Yellow
 Geld	Money
 Geld & Markt	Money & market
 Geld + XP	Money + XP
@@ -3461,6 +3482,7 @@ Goldköder	Gold bait
 Grab	Grave
 Grabe 96 Blöcke Erde, Sand oder Kies	Dig 96 blocks of dirt, sand or gravel
 Graeber	Digger
+Grau	Gray
 Grenzen anzeigen	Show borders
 Grenzen hier anzeigen	Show borders here
 Griefing ist auch außerhalb von Claims verboten.	Griefing is also forbidden outside of claims.
@@ -3569,6 +3591,7 @@ Hier darfst du nicht bauen.	You may not build here.
 Hier gibt es in diesem Modus nichts.	There is nothing here in this mode.
 Hier in der Zone beißt es deutlich besser	Here in the zone they bite much better
 Hier ist kein Platz.	There's no room here.
+Hier ist noch nichts	Nothing here yet
 Hier kannst du kein Home setzen.	You can't set a home here.
 Hier sitzt schon jemand.	Someone is already sitting here.
 Hier steht noch kein Crash-Bildschirm.	There is no crash screen here yet.
@@ -3683,6 +3706,7 @@ In die Tiefe	Into the depths
 In diesem Modus gibt es keine Kisten.	There are no crates in this mode.
 In diesem Modus gibt es keine Spielzeit-Stufen	There are no playtime levels in this mode
 In diesem Modus gibt es keine Stufen	There are no levels in this mode
+In dieser Kategorie gibt es gerade keinen Warp.	There is no warp in this category right now.
 Info-Leiste	Info bar
 Info-Leiste an	Info bar on
 Info-Leiste aus	Info bar off
@@ -3779,12 +3803,14 @@ Karte ziehen	Hit
 Karten werden ausgeteilt	Dealing cards
 Kasse	Cashier
 Kasse setzen	Set cashier
+Kategorie	Category
 Katze	Cat
 Katzenohren	Cat ears
 Kaufen	Buy
 Kaufen · 	Buy · 
 Kaufen · {} Tokens	Buy · {} tokens
 Kaufen?	Buy?
+Kauft einen Warp genau hier, wo du stehst.	Buys a warp exactly where you are standing.
 Kaum geholfen	Barely helped
 Kein Angler-Job: mit dem Angler-Job mehr Glück und Preis	No angler job: the angler job gives more luck and price
 Kein Freund ist gerade in Survival. Sonst: /marry propose <Spieler>	No friend is in Survival right now. Otherwise: /marry propose <player>
@@ -3797,6 +3823,7 @@ Kein Spam, keine Werbung für andere Server, keine Caps-Flut und keine verbotene
 Kein Spieler erhält aufgrund seines Ranges oder seiner Spielzeit das Recht, die Regeln zu missachten.	No player gets the right to ignore the rules because of their rank or playtime.
 Kein Team	No team
 Kein Turnier aktiv.	No tournament active.
+Kein Warp passt zu deiner Suche.	No warp matches your search.
 Keine Anfrage unterwegs	No request pending
 Keine Anfrage von diesem Spieler.	No request from this player.
 Keine Angebote	No offers
@@ -3996,6 +4023,7 @@ Level eines anderen	Someone else's level
 Level von 	Level of 
 Level-Rangliste	Level ranking
 Liga	League
+Lila	Purple
 Links und Belohnungen	Links and rewards
 Linksklick Ecke 1, Rechtsklick Ecke 2	Left-click corner 1, right-click corner 2
 Lodde	Capelin
@@ -4062,6 +4090,7 @@ Meine	Mine
 Meine Fälle ({})	My cases ({})
 Meine Ställe sind so leer. Ein paar Jungtiere wären schön.	My stables are so empty. A few young animals would be nice.
 Meine Tickets	My tickets
+Meine Warps	My warps
 Meintest du 	Did you mean 
 Meisten Fails	Most fails
 Meister-Angler	Master angler
@@ -4118,6 +4147,7 @@ Mitglieder nimmst du an der Bank am Spawn auf.	You add members at the bank at sp
 Mitteilungen	Alerts
 Mittwoch	Wednesday
 Mob-Köpfe	Mob heads
+Mobfarm	Mob farm
 Mobs aus Spawnern und gezüchtete Tiere zählen nicht	Mobs from spawners and bred animals don't count
 Moderlieschen	Sunbleak
 Modul {} installiert. Hub erstellen mit /kp create hub 	Module {} installed. Create the hub with /kp create hub 
@@ -4187,7 +4217,9 @@ Nachtwache	Night watch
 Nachwuchs	Offspring
 Name der neuen Arena:	Name of the new arena:
 Name für das neue Hologramm:	Name for the new hologram:
+Name · 3 bis 16 Zeichen: Buchstaben, Zahlen, _ oder -	Name · 3 to 16 characters: letters, digits, _ or -
 Name ändern	Change name
+Name, Besitzer oder ein Wort aus der Beschreibung	Name, owner or a word from the description
 Name, ID, Material oder Nummer eingeben:	Enter name, ID, material or number:
 Namen	Names
 Namen von Spielern, Teams, Warps und Haustieren dürfen nicht beleidigend oder anstößig sein.	Names of players, teams, warps and pets must not be insulting or offensive.
@@ -4227,6 +4259,7 @@ Neues Möbel: <white>{}</white>. Rechtsklick auf einen Block in deinem Grundstü
 Neues Ticket	New ticket
 Neues Ticket <white>#{}</white> von <white>{}</white>: {} <click:run_command:'/support ticket {}'><#FF6478>[Ansehen]</click>	New ticket <white>#{}</white> from <white>{}</white>: {} <click:run_command:'/support ticket {}'><#FF6478>[View]</click>
 Neues Ticket schreiben	Write a new ticket
+Neueste zuerst	Newest first
 Neueste zuerst · 	Newest first · 
 Neuling	Newbie
 Neustart	Restart
@@ -4236,6 +4269,7 @@ Nicht genug Juwelen	Not enough jewels
 Nicht genug$ ({}).	Not enough $ ({}).
 Nicht genug$.	Not enough $.
 Nicht in der Top 10	Not in the top 10
+Nicht mehr anpinnen	Unpin
 Nicht möglich: 	Not possible:
 Niemand	Nobody
 Niemand kann dir gerade Anfragen schicken	Nobody can send you requests right now
@@ -4300,6 +4334,7 @@ Nächster Song	Next song
 Näher an 21 als der Dealer	Closer to 21 than the dealer
 OK: {} für 	OK: {} for
 Oben am Bildschirm zeigt dir die Info-Leiste deine Coins, Juwelen, deinen Job, wo du gerade bist und deine Quest.	At the top of the screen the info bar shows your coins, jewels, your job, where you are right now and your quest.
+Oben in der Liste halten	Keep at the top of the list
 Oberwelt	Overworld
 Obstkorb	Fruit Basket
 Offen	Open
@@ -4314,6 +4349,8 @@ Online in Survival	Online in Survival
 Online, aber nicht in Survival	Online, but not in Survival
 Order aufgeben	Place an order
 Ort	Place
+Ort · z. B. Mein Shop (bis 24 Zeichen, leer: Grundstück)	Place · e.g. My Shop (up to 24 characters, empty: plot)
+Ort, Beschreibung, Kategorie und Farbe	Place, description, category and color
 Ost	East
 Ozean	Ocean
 Ozelot	Ocelot
@@ -4359,6 +4396,9 @@ Piratenhut	Pirate hat
 Platin	Platinum
 Platin Rang	Platinum Rank
 Platz {} in der Top 10	Rank {} in the top 10
+Platz {} · frei	Slot {} · free
+Platz {} · gesperrt	Slot {} · locked
+Platz {} · {} Coins · genau hier, wo du stehst	Slot {} · {} coins · exactly where you stand
 Platz: XP-Preis	Slot: XP price
 Platzhalter: <white>{time} {index} {total} {arena}</white> · abbrechen mit <white>abbrechen</white>	Placeholders: <white>{time} {index} {total} {arena}</white> · cancel with <white>abbrechen</white>
 Plünderung	Looting
@@ -4682,12 +4722,14 @@ Spam, übermäßiger Capslock und das wiederholte Stören des Chats sind zu verm
 Spawn, Casino, Claim	spawn, casino, claim
 Spawn, Grundstück, Wildnis, Farmwelt	Spawn, plot, wilderness, farm world
 Spawn, öffentliche Wege und Gemeinschaftsprojekte dürfen nicht ohne Erlaubnis verändert oder beschädigt werden.	Spawn, public paths and community projects must not be changed or damaged without permission.
+Speichern	Save
 Speichern, Quiz, Ankündigungen	Saving, quiz, announcements
 Spiegel	Mirror
 Spiel 1 Stunde auf dem Server	Play 1 hour on the server
 Spiel 10 Stunden auf dem Server	Play 10 hours on the server
 Spiel 50 Stunden auf dem Server	Play 50 hours on the server
 Spiel eine Runde, dann bist du dabei	Play a round and you're in
+Spiele	Games
 Spiele 20 Stunden auf Kuby	Play 20 hours on Kuby
 Spiele 45 Minuten in Survival	Play 45 minutes in Survival
 Spiele 6 Stunden in Survival	Play 6 hours in Survival
@@ -4707,6 +4749,7 @@ Spieler-Warps	Player warps
 Spieler-Warps bringen andere zu deinem Laden oder Bauwerk. Mit /sw siehst du alle und reist mit einem Klick hin.	Player warps bring others to your shop or building. With /sw you see all of them and travel there with one click.
 Spielername	Player name
 Spielername eingeben:	Enter player name:
+Spielerwarps	Player warps
 Spielzeit	Playtime
 Spielzeit 	Playtime 
 Spielzeit-Stufen	Playtime levels
@@ -4749,6 +4792,7 @@ Steine aus Generatoren zählen nicht	Stones from generators don't count
 Steinpilz	Porcini
 Stell deine erste Frage über „Frage stellen“.	Ask your first question with “Ask a question”.
 Stell den Server nach deinem Geschmack ein	Set up the server the way you like it
+Stell dich auf dein Grundstück, um hier einen Warp zu kaufen.	Stand on your plot to buy a warp here.
 Stelle 16 Brote her	Make 16 bread
 Stellt einen Barkeeper an deine Position	Places a bartender at your position
 Stern	Star
@@ -4801,6 +4845,7 @@ Stück pro Woche	Pieces per week
 Stühle, Bänke, Hocker	Chairs, benches, stools
 Such dir einen Platz und sichere ihn mit der Claim-Axt. Dann kann dort niemand etwas kaputt machen.	Find a spot and protect it with the claim axe. Then nobody can break anything there.
 Suche	Search
+Suchen	Search
 Sumpf & Höhlen	Swamp & caves
 Sumpfhexe	Swamp Witch
 Super, alles geklärt	Great, all sorted
@@ -4952,6 +4997,7 @@ Täglich	Daily
 Töpfe, Ranken, Pilze	Pots, vines, mushrooms
 Töten ist erlaubt, aber kein Spawn-Camping, kein Fallen-Stellen an Spawn und Portalen und kein Ausnutzen von Grundstücken.	Killing is allowed, but no spawn camping, no traps at spawn and portals and no abuse of plots.
 Türen, Falltüren, Zauntore	Doors, trapdoors, fence gates
+Türkis	Turquoise
 UNGEWÖHNLICH!	UNCOMMON!
 Uhrzeit	Time
 Uhrzeit 	Time 
@@ -5074,9 +5120,16 @@ Waldwächter	Forest Warden
 Wanda braucht eine neue Brücke. Dafür brauche ich viele Bretter.	Wanda needs a new bridge. For that I need lots of planks.
 Warme Gewässer	Warm waters
 Warnung in der Actionbar, wenn Monster in der Nähe sind.	Warning in the action bar when monsters are nearby.
+Warp an deine Position verschoben.	Warp moved to your position.
+Warp gekauft. Stell noch Ort, Beschreibung, Kategorie und Farbe ein.	Warp bought. Now set its place, description, category and color.
+Warp gelöscht. Die Coins gibt es nicht zurück.	Warp deleted. You won't get the coins back.
+Warp hier kaufen	Buy a warp here
+Warp kaufen	Buy warp
+Warp löschen?	Delete warp?
 Warps ansehen	View warps
 Warps gehen nur in der Survival-Welt (nicht in der Farmwelt, im Nether oder End).	Warps only work in the Survival world (not in the farm world, the nether or the end).
 Warps gibt es nur in Survival.	Warps only exist in Survival.
+Warps suchen	Search warps
 Warrior Rang	Warrior rank
 Warte auf	Waiting for
 Warte auf Einsätze..	Waiting for bets..
@@ -5101,6 +5154,7 @@ Weiter	Next
 Weiter: 	Next: 
 Weitere 1	More 1
 Weitere 2	More 2
+Weiß	White
 Weißer Hai	Great White Shark
 Wels	Catfish
 Welt	World
@@ -5207,6 +5261,7 @@ Zu den offenen Fragen	To the open questions
 Zu einem Home reisen	Travel to a home
 Zu klein geworden? Mit der Claim-Axt kannst du dein Grundstück erweitern.	Grown too small? You can expand your plot with the claim axe.
 Zu zweit an einen Zufallsort, Kampf!	Two of you to a random place, fight!
+Zu {} reisen	Travel to {}
 Zu {} teleportieren	Teleport to {}
 Zu „Hinzufügen“	To “Add”
 Zuechter	Breeder
@@ -5405,11 +5460,13 @@ zweiter Beruf	second job
 über 21	over 21
 überall	anywhere
 „Letzte Runden“	“Last rounds”
+„{}“ wirklich löschen? Die Coins gibt es nicht zurück.	Really delete “{}”? You won't get the coins back.
 ‹ Zurück	‹ Back
 → Geschenk für 	→ Gift for 
 → Geschenk für {}	→ Gift for {}
 → Ränge · Battlepass · Crates · Vorteilspakete	→ Ranks · Battle pass · Crates · Bundles
 → Ränge · Farmpass · Crates · Pakete · Möbel · Pets	→ Ranks · Farm pass · Crates · Bundles · Furniture · Pets
+→ Shops · Farmen · Spiele · Parkour	→ Shops · Farms · Games · Parkour
 ● Offline	● Offline
 ● Online	● Online
 ★ BESTER WERT	★ BEST VALUE

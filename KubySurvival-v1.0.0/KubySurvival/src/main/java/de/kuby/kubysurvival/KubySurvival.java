@@ -136,6 +136,34 @@ public final class KubySurvival extends JavaPlugin {
                 new de.kuby.kubysurvival.stats.ProfileScreen.Quests(9999, 1234, 30, 365), pa));
         core.registerSelfTestCanvas("Profil Welt", () -> de.kuby.kubysurvival.stats.ProfileScreen.world(ph,
                 new de.kuby.kubysurvival.stats.ProfileScreen.World(9_876_543, 321, 1_000_000, 12, 4000, 4000), pa));
+        // Spielerwarps: lange Namen, Besitzer, Orte, Beschreibungen und große Zahlen; leer; Meine Warps; Kopf-Varianten
+        de.kuby.kubysurvival.shops.WarpScreen.Actions wa = (de.kuby.kubysurvival.shops.WarpScreen.Actions) java.lang.reflect.Proxy
+                .newProxyInstance(getClass().getClassLoader(), new Class<?>[]{de.kuby.kubysurvival.shops.WarpScreen.Actions.class},
+                        (o, m, args) -> (java.util.function.Consumer<org.bukkit.entity.Player>) pl -> { });
+        java.util.List<de.kuby.kubysurvival.shops.WarpScreen.Card> wcards = new java.util.ArrayList<>();
+        for (WarpService.Category wc : new WarpService.Category[]{WarpService.Category.BUECHER, WarpService.Category.MOBFARM,
+                WarpService.Category.PARKOUR}) {
+            wcards.add(new de.kuby.kubysurvival.shops.WarpScreen.Card("WWWWWWWWWWWWWWWW", 0xFCA800, "MMMMMMMMMMMMMMMM", wc,
+                    "WWWWWWWWWWWWWWWWWWWWWWWW", "-29999999, 320, -29999999", 999_999, 9_999_999,
+                    "W".repeat(60), wc == WarpService.Category.MOBFARM));
+        }
+        core.registerSelfTestCanvas("Spielerwarps Liste", () -> de.kuby.kubysurvival.shops.WarpScreen.list(
+                new de.kuby.kubysurvival.shops.WarpScreen.ListView(999_999_999, WarpService.Category.SPIELE, false,
+                        "eine sehr lange Suche nach etwas", wcards, 1, 99), wa));
+        core.registerSelfTestCanvas("Spielerwarps leer", () -> de.kuby.kubysurvival.shops.WarpScreen.list(
+                new de.kuby.kubysurvival.shops.WarpScreen.ListView(0, null, true, "", java.util.List.of(), 0, 1), wa));
+        core.registerSelfTestCanvas("Spielerwarps Meine", () -> de.kuby.kubysurvival.shops.WarpScreen.mine(
+                new de.kuby.kubysurvival.shops.WarpScreen.MineView(999_999_999, java.util.List.of(
+                        new de.kuby.kubysurvival.shops.WarpScreen.Slot(1, 50_000, wcards.get(0), false, 0),
+                        new de.kuby.kubysurvival.shops.WarpScreen.Slot(2, 150_000, null, true, 0),
+                        new de.kuby.kubysurvival.shops.WarpScreen.Slot(3, 500_000, null, false, 0))), wa));
+        core.registerSelfTestCanvas("Spielerwarps Meine fehlt", () -> de.kuby.kubysurvival.shops.WarpScreen.mine(
+                new de.kuby.kubysurvival.shops.WarpScreen.MineView(0, java.util.List.of(
+                        new de.kuby.kubysurvival.shops.WarpScreen.Slot(1, 999_999_999, null, true, 999_999_999),
+                        new de.kuby.kubysurvival.shops.WarpScreen.Slot(2, 999_999_999, null, false, 0))), wa));
+        core.registerSelfTestCanvas("Spielerwarps Suche", de.kuby.kubysurvival.shops.WarpScreen::searchHead);
+        core.registerSelfTestCanvas("Spielerwarps Formular", () -> de.kuby.kubysurvival.shops.WarpScreen.formHead(999_999_999,
+                "WWWWWWWWWWWWWWWW", "„WWWWWWWWWWWWWWWW“ wirklich löschen? Die Coins gibt es nicht zurück."));
         core.registerSelfTestCheck("Möbel-Katalog", () -> {
             int n = 0;
             for (FurnitureCatalog.Tab t : FurnitureCatalog.tabs()) {

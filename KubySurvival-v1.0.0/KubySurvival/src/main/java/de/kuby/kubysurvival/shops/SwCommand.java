@@ -15,9 +15,11 @@ import java.util.List;
 public final class SwCommand implements CommandExecutor, TabCompleter {
 
     private final KubySurvival addon;
+    private final WarpDialogs dialogs;
 
     public SwCommand(KubySurvival addon) {
         this.addon = addon;
+        this.dialogs = new WarpDialogs(addon);
     }
 
     @Override
@@ -26,8 +28,12 @@ public final class SwCommand implements CommandExecutor, TabCompleter {
         WarpService ws = addon.warps();
         String sub = args.length == 0 ? "" : args[0].toLowerCase();
         switch (sub) {
-            case "" -> new WarpMenu(addon, false, 0).open(p);
-            case "manage", "verwalten" -> new WarpMenu(addon, true, 0).open(p);
+            case "" -> {
+                if (!dialogs.open(p)) new WarpMenu(addon, false, 0).open(p);
+            }
+            case "manage", "verwalten", "meine" -> {
+                if (!dialogs.openMine(p)) new WarpMenu(addon, true, 0).open(p);
+            }
             case "create", "erstellen", "kaufen" -> {
                 if (args.length < 2) {
                     long price = ws.nextPrice(p.getUniqueId());
@@ -57,7 +63,7 @@ public final class SwCommand implements CommandExecutor, TabCompleter {
                 Msg.send(p, "<light_purple><b>Spieler-Warps</b>");
                 Msg.send(p, "<white>/sw <gray>Alle Warps · <white>/sw <Name> <gray>Hinreisen");
                 Msg.send(p, "<white>/sw create <Name> <gray>Warp hier kaufen (50.000 / 150.000 / 500.000 Coins)");
-                Msg.send(p, "<white>/sw manage <gray>Deine Warps: verschieben, Symbol, löschen");
+                Msg.send(p, "<white>/sw meine <gray>Deine Warps: Ort, Beschreibung, Kategorie, Farbe, verschieben, löschen");
             }
             default -> {
                 WarpService.Warp w = ws.get(args[0]);
