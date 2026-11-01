@@ -614,13 +614,34 @@ def s_enderchest():
     return a
 
 
+def s_alert():
+    """Rotes Ausrufezeichen (Hinweis „Belohnung abholbar“): leicht schräg und gerundet, dunkle Umrandung, Glanz."""
+    a = Art(20)
+    a.ellipse(8, 1, 15, 7, "F03A3A")
+    a.poly([(8, 4), (15, 4), (12, 13), (9, 13)], "F03A3A")
+    a.ellipse(6, 14, 11, 19, "F03A3A")
+    a.dots([(10, 3), (11, 2), (10, 4), (9, 6)], "FFB8B0")
+    a.dot(8, 15, "FFB8B0")
+    return a
+
+
+def s_alert_small():
+    a = Art(14)
+    a.ellipse(5, 1, 10, 5, "F03A3A")
+    a.poly([(5, 3), (10, 3), (8, 9), (6, 9)], "F03A3A")
+    a.ellipse(4, 10, 7, 13, "F03A3A")
+    a.dots([(7, 2), (6, 4)], "FFB8B0")
+    return a
+
+
 TILES = [("menu", i_menu), ("angeln", i_angeln), ("jobs", i_jobs), ("grundstuecke", i_grundstuecke),
          ("heiraten", i_heiraten), ("bank", i_bank), ("duelle", i_duelle), ("turnier", i_turnier),
          ("versicherung", i_versicherung), ("shop", i_shop), ("markt", i_markt), ("wirtschaft", i_wirtschaft),
          ("boerse", i_boerse), ("tagespot", i_tagespot), ("duo_rtp", i_duo_rtp), ("spielzeit", i_spielzeit),
          ("titel", i_titel), ("kosmetik", i_kosmetik), ("haustiere", i_haustiere), ("insel", i_insel), ("generator", i_generator),
          ("groesse", i_groesse), ("mitglieder", i_mitglieder),
-         ("s_wildnis", s_wildnis), ("s_homes", s_homes), ("s_enderchest", s_enderchest)]
+         ("s_wildnis", s_wildnis), ("s_homes", s_homes), ("s_enderchest", s_enderchest),
+         ("alert", s_alert), ("alert_s", s_alert_small)]
 
 
 def trim(img):

@@ -28,9 +28,13 @@ public final class MainScreen {
             JEWELS = TextColor.color(0x5FE3A0), DARK = TextColor.color(0x1A1206);
 
     /** Kachel: Name, Text für den Tooltip, Icon, eigene Grafik (vor dem Icon, darf fehlen), Klick. */
-    public record Tile(String name, String desc, KitData.Icon icon, KitData.Sprite art, Consumer<Player> click) {
+    public record Tile(String name, String desc, KitData.Icon icon, KitData.Sprite art, Consumer<Player> click, boolean alert) {
         public Tile(String name, String desc, KitData.Icon icon, Consumer<Player> click) {
-            this(name, desc, icon, MainScreen.art(name), click);
+            this(name, desc, icon, MainScreen.art(name), click, false);
+        }
+
+        public Tile(String name, String desc, KitData.Icon icon, KitData.Sprite art, Consumer<Player> click) {
+            this(name, desc, icon, art, click, false);
         }
     }
 
@@ -168,7 +172,8 @@ public final class MainScreen {
         List<Tile> progress = new ArrayList<>();
         for (KubyPlugins.MainEntry e : plugin.mainEntries()) {
             if (!e.visibleIn(mode)) continue;
-            Tile t = new Tile(e.name(), e.desc(), Icons.of(e.icon(), KitData.Icon.STAR), go(e.action()));
+            Tile t = new Tile(e.name(), e.desc(), Icons.of(e.icon(), KitData.Icon.STAR), MainScreen.art(e.name()), go(e.action()),
+                    plugin.menuAlert(e.name(), p));
             if (e.mode() == null) progress.add(t);
             else mine.add(t);
         }
@@ -245,6 +250,7 @@ public final class MainScreen {
                 else c.icon(x + (TW - 32) / 2, ty + 3, t.icon(), true, Icons.tint(t.icon()));
                 c.textCenter(x + TW / 2, ty + 35, Canvas.fit(t.name(), true, TW - 8), CREAM, true);
                 c.action(x, ty, TW, TH, t.click(), t.name() + " · " + t.desc());
+                if (t.alert()) c.sprite(x + TW - 9, ty - 6, KitData.Sprite.HB_ALERT);
                 i++;
             }
             y += ((s.tiles().size() + 3) / 4) * (TH + GAP) + 6;

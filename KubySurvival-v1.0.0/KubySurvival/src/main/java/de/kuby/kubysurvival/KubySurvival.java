@@ -541,6 +541,7 @@ public final class KubySurvival extends JavaPlugin {
                 p -> angelMenus.open(p)));
         core.registerMainEntry(de.kuby.kubyplugins.service.ModeService.SURVIVAL, new KubyPlugins.MainEntry(Material.IRON_PICKAXE, "Jobs", "Job wählen, Level, Tokens und Token-Shop",
                 p -> new de.kuby.kubysurvival.jobs.JobScreen(this).open(p)));
+        core.registerMenuAlert("Quests", p -> !questDialogs.alerts(p.getUniqueId()).isEmpty());
         core.registerMainEntry(de.kuby.kubyplugins.service.ModeService.SURVIVAL, new KubyPlugins.MainEntry(Material.WRITABLE_BOOK, "Quests", "Tages-, Wochen- und Team-Quests, Geschichte",
                 p -> { if (!questDialogs.open(p)) new QuestMenu(this).open(p); }));
         core.registerMainEntry(de.kuby.kubyplugins.service.ModeService.SURVIVAL, new KubyPlugins.MainEntry(Material.LEAD, "Haustiere", "Begleiter rufen, reiten, umbenennen",

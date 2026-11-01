@@ -76,9 +76,18 @@ public final class QuestScreen {
      * Kachel: Bereich, Titel (Event-Name oder Bereich), Untertitel (fertig gesetzt), erledigt, gesamt (total < 0: Prozent),
      * eigenes Symbol (Event-Preset; null = Symbol des Bereichs).
      */
-    public record Tile(Area area, String title, String sub, long done, long total, KitData.Sprite art) {
+    public record Tile(Area area, String title, String sub, long done, long total, KitData.Sprite art, boolean alert) {
         public Tile(Area area, String title, String sub, long done, long total) {
-            this(area, title, sub, done, total, null);
+            this(area, title, sub, done, total, null, false);
+        }
+
+        public Tile(Area area, String title, String sub, long done, long total, KitData.Sprite art) {
+            this(area, title, sub, done, total, art, false);
+        }
+
+        /** Mit rotem Ausrufezeichen (Belohnung abholbar). */
+        public Tile alerted(boolean on) {
+            return new Tile(area, title, sub, done, total, art, on);
         }
     }
 
@@ -256,6 +265,7 @@ public final class QuestScreen {
         String count = t.total() < 0 ? t.done() + " %" : t.done() + "/" + t.total();
         c.textRight(x + 119, y + 50, count, WHITE, false);
         c.action(x, y, 126, 67, a.area(ar), ar.label);
+        if (t.alert()) c.sprite(x + 126 - 10, y - 7, KitData.Sprite.HB_ALERT);
     }
 
     private static void small(Canvas c, int x, int y, KitData.Box box, KitData.Sprite s, String label, Consumer<Player> click) {
@@ -341,9 +351,17 @@ public final class QuestScreen {
                        String buttonText, String sub, String hint, Consumer<Player> click) {}
 
     /** Reiter: Bereich, Name (beim Event der Event-Name), Zähler, Aussehen des Events (null = Halloween/Bereich). */
-    public record Tab(Area area, String title, String count, Theme theme) {
+    public record Tab(Area area, String title, String count, Theme theme, boolean alert) {
         public Tab(Area area, String title, String count) {
-            this(area, title, count, null);
+            this(area, title, count, null, false);
+        }
+
+        public Tab(Area area, String title, String count, Theme theme) {
+            this(area, title, count, theme, false);
+        }
+
+        public Tab alerted(boolean on) {
+            return new Tab(area, title, count, theme, on);
         }
     }
 
@@ -391,11 +409,13 @@ public final class QuestScreen {
                 c.textFlat(x + 29, 61, Canvas.caps(Canvas.fit(t.title(), true, 120)), DARK, true);
                 int cw = Canvas.width(t.count(), false);
                 c.textFlat(x + 192 - cw, 61, t.count(), DARK, false);
+                if (t.alert()) c.sprite(x + 200 - 7, 49, KitData.Sprite.HB_ALERT_S);
                 x += 204;
             } else {
                 c.box(x, 54, 34, 22, ar.tab, Canvas.Z_BUTTON);
                 icon(c, x, 57, 34, 16, t.theme() != null ? t.theme().tab() : ar.tabIcon);
                 c.action(x, 54, 34, 22, a.area(ar), t.title() + " · " + t.count());
+                if (t.alert()) c.sprite(x + 34 - 7, 49, KitData.Sprite.HB_ALERT_S);
                 x += 38;
             }
         }

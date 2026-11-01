@@ -198,7 +198,29 @@ public final class QuestDialogs {
         tiles.add(new QuestScreen.Tile(Area.TEAM, "Team", td == null ? Canvas.caps("Kein Team") : Canvas.caps(td.name()), teamPct, -1));
         int[] side = sideCount(id);
         tiles.add(new QuestScreen.Tile(Area.SIDE, "Nebenquests", side[2] + " " + Canvas.caps("frei"), side[0], side[1]));
+        java.util.Set<Area> alerts = alerts(id);
+        tiles.replaceAll(tl -> tl.alerted(alerts.contains(tl.area())));
         UiDialog.show(p, QuestScreen.overview(new QuestScreen.Overview(head, tracked, tiles), actions), QuestScreen.HEIGHT);
+    }
+
+    /** Bereiche mit abholbarer Belohnung (rotes Ausrufezeichen). */
+    public java.util.Set<Area> alerts(UUID id) {
+        java.util.Set<Area> out = java.util.EnumSet.noneOf(Area.class);
+        for (String k : q().claimable(id)) {
+            switch (k.substring(0, 2)) {
+                case "d:" -> out.add(Area.DAILY);
+                case "w:" -> out.add(Area.WEEKLY);
+                case "t:" -> out.add(Area.TEAM);
+                case "m:" -> out.add(Area.MILE);
+                default -> out.add(Area.MAIN);
+            }
+        }
+        EventService es = ev();
+        if (es != null && es.active() != null) {
+            int acc = es.accepted(id);
+            if (acc >= 0 && es.state(id, acc) == EventService.State.DONE) out.add(Area.EVENT);
+        }
+        return out;
     }
 
     private int claimedCount(UUID id, String prefix, List<Def> defs) {
@@ -229,14 +251,17 @@ public final class QuestDialogs {
         Def td = q.teamDef(id);
         int teamPct = td == null ? 0 : (int) Math.min(100, q.progressOf(id, "t:" + td.id()) * 100 / Math.max(1, td.amount()));
         EventService.Event e = ev() == null ? null : ev().active();
-        return List.of(e == null ? new QuestScreen.Tab(Area.EVENT, "Event", "0/0")
+        java.util.Set<Area> al = alerts(id);
+        List<QuestScreen.Tab> list = new ArrayList<>(List.of(e == null ? new QuestScreen.Tab(Area.EVENT, "Event", "0/0")
                         : new QuestScreen.Tab(Area.EVENT, e.name(), ev().claimedCount(id) + "/" + e.chapters().size(),
                         QuestScreen.Theme.of(e.theme())),
                 new QuestScreen.Tab(Area.DAILY, "Täglich", claimedCount(id, "d:", dl) + "/" + dl.size()),
                 new QuestScreen.Tab(Area.WEEKLY, "Wöchentlich", claimedCount(id, "w:", wl) + "/" + wl.size()),
                 new QuestScreen.Tab(Area.MAIN, "Hauptquests", q.storyIndex(id) + "/" + q.storySize()),
                 new QuestScreen.Tab(Area.MILE, "Meilensteine", mile[0] + "/" + mile[1]),
-                new QuestScreen.Tab(Area.TEAM, "Team", teamPct + " %"));
+                new QuestScreen.Tab(Area.TEAM, "Team", teamPct + " %")));
+        list.replaceAll(tb -> tb.alerted(al.contains(tb.area())));
+        return list;
     }
 
     /** Eine Tages-, Wochen- oder Team-Quest als Karte: Verfolgen, Abholen oder abgeholt. */

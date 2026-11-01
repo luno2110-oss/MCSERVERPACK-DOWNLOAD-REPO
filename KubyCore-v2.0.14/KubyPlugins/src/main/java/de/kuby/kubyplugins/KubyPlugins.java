@@ -725,6 +725,17 @@ public final class KubyPlugins extends JavaPlugin {
     private final java.util.List<AdminButton> adminButtons = new java.util.ArrayList<>();
 
     public void registerMainEntry(MainEntry e) { mainEntries.add(e); }
+    /** Rotes Ausrufezeichen auf einer Hauptmenü-Kachel (Name des Eintrags), wenn die Prüfung für den Spieler zutrifft. */
+    private final java.util.Map<String, java.util.function.Predicate<org.bukkit.entity.Player>> menuAlerts = new java.util.HashMap<>();
+    public void registerMenuAlert(String entry, java.util.function.Predicate<org.bukkit.entity.Player> check) { menuAlerts.put(entry, check); }
+    public boolean menuAlert(String entry, org.bukkit.entity.Player p) {
+        var c = menuAlerts.get(entry);
+        try {
+            return c != null && c.test(p);
+        } catch (RuntimeException e) {
+            return false;
+        }
+    }
     /** Eintrag nur für einen Modus (z. B. ModeService.SURVIVAL). */
     public void registerMainEntry(String mode, MainEntry e) { mainEntries.add(new MainEntry(e.icon(), e.name(), e.desc(), e.action(), mode)); }
     public void registerAdminButton(AdminButton b) { adminButtons.add(b); }
