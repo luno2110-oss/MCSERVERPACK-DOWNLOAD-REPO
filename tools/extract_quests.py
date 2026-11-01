@@ -112,6 +112,8 @@ def main():
     gold, gold_dark = hexc("FCB037"), hexc("C68A2B")
     # so hoch wie der leere Balken (Rand-Zeilen durchsichtig), damit beide dieselben Schrift-Höhen nutzen
     strip([None] + [gold] * 3 + [gold_dark] + [None], [None] * 6, os.path.join(out, "strip_fill_gold.png"))
+    # Meilensteine: helle Füllung
+    strip([None] + [hexc("FCCF79")] * 3 + [hexc("C6A35F")] + [None], [None] * 6, os.path.join(out, "strip_fill_cream.png"))
 
     # ---------------- Grafiken ----------------
     arts = {
@@ -126,6 +128,8 @@ def main():
         "s_streak": (17, (162, 353, 186, 371)), "s_help": (17, (302, 353, 324, 371)),
         "q_mark": (18, (6, 86, 24, 108)), "candy": (18, (88, 154, 106, 172)), "lock": (18, (6, 212, 24, 232)),
         "hourglass": (22, (6, 98, 24, 120)),
+        "feather": (34, (166, 184, 187, 201)), "gift": (22, (352, 310, 371, 332)), "qbig": (22, (8, 311, 24, 333)),
+        "lock_s": (18, (292, 244, 310, 264)), "set_clock": (22, (334, 292, 352, 311)),
     }
     on_box = {
         "logo": (0, 0, 390, 48), "title": (0, 0, 390, 48), "fire": (0, 0, 390, 48), "medal": (0, 0, 390, 48),
@@ -161,6 +165,11 @@ def main():
         img, xy = art(im[i], *rect) if name.startswith("tab_") else art_on(im[i], *rect, box)
         img.save(os.path.join(out, "art_%s.png" % name))
         pos[name] = {"x": xy[0], "y": xy[1], "w": img.width, "h": img.height, "bild": i}
+    # Blättern: Pfeil-Kästen (rechts auf Seite 1 von Täglich, links auf Seite 2)
+    pill(im[22], 231, 261, 24, 14).save(os.path.join(out, "art_page_next.png"))
+    pos["page_next"] = {"x": 231, "y": 261, "w": 24, "h": 14, "bild": 22}
+    pill(im[23], 135, 279, 24, 14).save(os.path.join(out, "art_page_prev.png"))
+    pos["page_prev"] = {"x": 135, "y": 279, "w": 24, "h": 14, "bild": 23}
     # Zurück-Knopf im Kopf
     pill(im[18], 8, 13, 22, 22).save(os.path.join(out, "art_back.png"))
     pos["back"] = {"x": 8, "y": 13, "w": 22, "h": 22, "bild": 18}

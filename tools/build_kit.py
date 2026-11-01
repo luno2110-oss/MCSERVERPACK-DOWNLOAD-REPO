@@ -146,7 +146,8 @@ ALL_BOXES = list(BOXES) + list(CASINO_BOXES) + list(SLICED_BOXES)
 # Reiter im Survival-Juwelenshop): schmale Mittelstücke
 NARROW_BOXES = (("field_red", "field_green", "field_black", "field_felt") + tuple(build_battlepass.boxes())
                 + ("jss_tab_brown", "jss_tab_off", "jss_tab_pink", "rg_nav", "fr_btn", "fr_sub_on", "fr_sub_off",
-                   "pw_page_on", "pw_page_off"))
+                   "pw_page_on", "pw_page_off", "qu_tab_event", "qu_tab_daily", "qu_tab_weekly", "qu_tab_main",
+                   "qu_tab_mile", "qu_tab_team"))
 
 # Knöpfe 22 px: (Rand, Füllung oben hell, Füllung, Schatten 1, Schatten 2) oder Umriss-Knopf (Rand, Füllung)
 BUTTONS = {
@@ -563,11 +564,15 @@ def text_widths(vroot):
 class Sheet:
     """Zeichen-Raster mit gleich großen Zellen; ein Provider je Schrift."""
 
-    def __init__(self, name, cell_w, cell_h, first_char):
+    def __init__(self, name, cell_w, cell_h, first_char, limit=None, overflow=None):
         self.name, self.cw, self.ch, self.first = name, cell_w, cell_h, first_char
         self.cells = []          # (key, image)
+        # voll (limit Zellen): weitere Zellen in den Überlauf-Bogen (eigener Zeichenbereich)
+        self.limit, self.overflow = limit, overflow
 
     def add(self, key, img):
+        if self.limit is not None and len(self.cells) >= self.limit and self.overflow is not None:
+            return self.overflow.add(key, img)
         assert img.width <= self.cw and img.height <= self.ch, (key, img.size)
         self.cells.append((key, img))
         return chr(self.first + len(self.cells) - 1)
@@ -605,7 +610,9 @@ class Sheet:
 def build_pieces():
     # Bereiche in den Schriften b<s>: E000-EDFF und F000-F7FF (EE00-EFFF: Leerzeichen der Titelschrift, ab F801:
     # Abstände). Die Kästen brauchen am meisten Platz (je Stil 6 + 3 Zeichen, schmale Stile mehr).
-    caps9 = Sheet("caps9", CAP, ROW, 0xE000)
+    # E000-E7FF reicht nicht mehr für alle Ecken: Überlauf in F100-F7FF (in den b-Schriften frei)
+    caps9b = Sheet("caps9b", CAP, ROW, 0xF100)
+    caps9 = Sheet("caps9", CAP, ROW, 0xE000, limit=0x800, overflow=caps9b)
     segs9 = Sheet("segs9", SEG, ROW, 0xE800)
     caps22 = Sheet("caps22", CAP, BTN_H, 0xEC00)
     segs22 = Sheet("segs22", SEG, BTN_H, 0xED00)
@@ -676,9 +683,9 @@ def build_pieces():
     for x, y in arrow:
         hback.putpixel((x, y), rgb("FCFCFC"))
     misc.add(("back_help",), hback)
-    sheets = [caps9, segs9, caps22, segs22, misc, caps16, segs16]
+    sheets = [caps9, segs9, caps22, segs22, misc, caps16, segs16, caps9b]
     # alle Bögen liegen in derselben Schrift (b<s>): Zeichenbereiche dürfen sich nicht überschneiden
-    ends = [0xE800, 0xEC00, 0xED00, 0xED80, 0xEE00, 0xF080, 0xF100]
+    ends = [0xE800, 0xEC00, 0xED00, 0xED80, 0xEE00, 0xF080, 0xF100, 0xF800]
     for sh, end in zip(sheets, ends):
         assert sh.first + len(sh.cells) <= end, "Bogen %s (%d Zellen) läuft über %04X" % (sh.name, len(sh.cells), end)
     return sheets

@@ -638,6 +638,7 @@ public final class Canvas {
                 case 'ä' -> sb.append('\ue0f0');
                 case 'ö' -> sb.append('\ue0f1');
                 case 'ü' -> sb.append('\ue0f2');
+                case 'ß' -> sb.append("ꜱꜱ");
                 default -> {
                     int i = "abcdefghijklmnopqrstuvwxyz".indexOf(c);
                     sb.append(i >= 0 ? "ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘǫʀꜱᴛᴜᴠᴡxʏᴢ".charAt(i) : c);
