@@ -88,13 +88,13 @@ public final class KubySMP extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new InsuranceListener(core), this);
 
         de.kuby.kubysmp.gui.SmpScreens.samples(core::registerSelfTestCanvas);
-        core.registerMainEntry(new KubyPlugins.MainEntry(Material.IRON_SWORD, "Duelle", "Duelle starten oder annehmen",
+        core.registerMainEntry(de.kuby.kubyplugins.service.ModeService.SMP, new KubyPlugins.MainEntry(Material.IRON_SWORD, "Duelle", "Duelle starten oder annehmen",
                 p -> new de.kuby.kubysmp.gui.SmpScreens(core).duels(p)));
-        core.registerMainEntry(new KubyPlugins.MainEntry(Material.TOTEM_OF_UNDYING, "Turnier", "K.O.-Turnier anmelden",
+        core.registerMainEntry(de.kuby.kubyplugins.service.ModeService.SMP, new KubyPlugins.MainEntry(Material.TOTEM_OF_UNDYING, "Turnier", "K.O.-Turnier anmelden",
                 p -> new de.kuby.kubysmp.gui.SmpScreens(core).tournament(p)));
-        core.registerMainEntry(new KubyPlugins.MainEntry(Material.NETHER_STAR, "Trophäen", "Trophäen und Ligen",
+        core.registerMainEntry(de.kuby.kubyplugins.service.ModeService.SMP, new KubyPlugins.MainEntry(Material.NETHER_STAR, "Trophäen", "Trophäen und Ligen",
                 p -> new de.kuby.kubysmp.gui.SmpScreens(core).trophies(p)));
-        core.registerMainEntry(new KubyPlugins.MainEntry(Material.SHIELD, "Versicherung", "Raid-Versicherung für Kisten",
+        core.registerMainEntry(de.kuby.kubyplugins.service.ModeService.SMP, new KubyPlugins.MainEntry(Material.SHIELD, "Versicherung", "Raid-Versicherung für Kisten",
                 p -> new de.kuby.kubysmp.gui.SmpScreens(core).insurance(p)));
         core.registerAdminButton(new KubyPlugins.AdminButton(19, Material.IRON_SWORD, "Kampf", "Kopfgelder und laufende Duelle",
                 p -> new AdminCombatMenu(core).open(p)));

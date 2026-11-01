@@ -34,7 +34,8 @@ public final class MainMenu extends GuiMenu {
         this.page = page;
     }
 
-    private List<Entry> entries() {
+    private List<Entry> entries(Player viewer) {
+        String mode = plugin.modes().modeOf(viewer.getUniqueId());
         List<Entry> list = new ArrayList<>();
         // Seite 1: Alltag
         list.add(new Entry(Material.GOLD_INGOT, "Wirtschaft", "Rangliste der reichsten Spieler", p -> new LeaderboardMenu(plugin).open(p)));
@@ -64,14 +65,18 @@ public final class MainMenu extends GuiMenu {
         list.add(new Entry(Material.ENDER_CHEST, "Enderchest", "Dein erweiterbares Lager", p -> p.openInventory(plugin.enderchests().open(p))));
         list.add(new Entry(Material.KNOWLEDGE_BOOK, "Guide", "Alles Wichtige auf zwölf Seiten", p -> p.performCommand("guide")));
         for (KubyPlugins.MainEntry e : plugin.mainEntries()) {
-            list.add(new Entry(e.icon(), e.name(), e.desc(), e.action()));
+            if (e.visibleIn(mode)) list.add(new Entry(e.icon(), e.name(), e.desc(), e.action()));
+        }
+        // Battlepass und Duo-RTP gibt es nur im SMP
+        if (!de.kuby.kubyplugins.service.ModeService.SMP.equals(mode)) {
+            list.removeIf(en -> en.name().equals("Battlepass") || en.name().equals("Duo-RTP"));
         }
         return list;
     }
 
     @Override
     protected void build(Player p) {
-        List<Entry> all = entries();
+        List<Entry> all = entries(p);
         int pages = (all.size() + PER_PAGE - 1) / PER_PAGE;
         int cur = Math.max(0, Math.min(page, pages - 1));
         int start = cur * PER_PAGE;

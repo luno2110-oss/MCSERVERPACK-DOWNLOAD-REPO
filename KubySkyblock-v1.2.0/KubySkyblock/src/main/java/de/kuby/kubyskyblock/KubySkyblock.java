@@ -78,6 +78,12 @@ public final class KubySkyblock extends JavaPlugin {
 
         core.modes().onEnter(ModeService.SKYBLOCK, p -> islands.ensureIsland(p));
         core.registerKpSub("skyblock", command);
+        core.registerMainEntry(ModeService.SKYBLOCK, new KubyPlugins.MainEntry(org.bukkit.Material.GRASS_BLOCK, "Insel",
+                "Zuhause, Mitglieder, Upgrades und Level", de.kuby.kubyskyblock.gui.IslandScreen::open));
+        core.registerMainEntry(ModeService.SKYBLOCK, new KubyPlugins.MainEntry(org.bukkit.Material.GOLD_INGOT, "Top-Inseln",
+                "Die besten Inseln nach Level", de.kuby.kubyskyblock.gui.IslandScreen::top));
+        core.registerMainEntry(ModeService.SKYBLOCK, new KubyPlugins.MainEntry(org.bukkit.Material.BOOK, "Checkliste",
+                "Alle Items sammeln, Erfolge und Meilensteine", pl -> new de.kuby.kubyskyblock.gui.SkyScreen(core).open(pl)));
         getServer().getPluginManager().registerEvents(new SkyblockListener(this, core), this);
         getServer().getPluginManager().registerEvents(new ProgressListener(this, core), this);
         getServer().getPluginManager().registerEvents(new de.kuby.kubyskyblock.listener.IslandListener(this, core), this);

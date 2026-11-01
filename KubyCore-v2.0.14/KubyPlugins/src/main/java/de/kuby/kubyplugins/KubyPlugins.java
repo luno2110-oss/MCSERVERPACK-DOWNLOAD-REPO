@@ -396,6 +396,7 @@ public final class KubyPlugins extends JavaPlugin {
         battlepass.start();
         getServer().getPluginManager().registerEvents(new de.kuby.kubyplugins.listener.ModelListener(this), this);
         getServer().getPluginManager().registerEvents(new WorldBorderListener(this), this);
+        getServer().getPluginManager().registerEvents(new de.kuby.kubyplugins.listener.ModeCommandListener(this), this);
         getServer().getPluginManager().registerEvents(new EditListener(this), this);
         getServer().getPluginManager().registerEvents(new RegionListener(this), this);
         getServer().getPluginManager().registerEvents(new BlackjackListener(this), this);
@@ -704,9 +705,17 @@ public final class KubyPlugins extends JavaPlugin {
     public void registerKpSub(String name, java.util.function.BiConsumer<org.bukkit.entity.Player, String[]> handler) { kpSubs.put(name, handler); }
     public java.util.function.BiConsumer<org.bukkit.entity.Player, String[]> kpSub(String name) { return kpSubs.get(name); }
 
-    /** Eintrag im Hauptmenü, den ein Addon hinzufügt. */
+    /** Eintrag im Hauptmenü, den ein Addon hinzufügt; mode: nur in diesem Modus zu sehen (null = in allen). */
     public record MainEntry(org.bukkit.Material icon, String name, String desc,
-                            java.util.function.Consumer<org.bukkit.entity.Player> action) {}
+                            java.util.function.Consumer<org.bukkit.entity.Player> action, String mode) {
+        public MainEntry(org.bukkit.Material icon, String name, String desc, java.util.function.Consumer<org.bukkit.entity.Player> action) {
+            this(icon, name, desc, action, null);
+        }
+
+        public boolean visibleIn(String m) {
+            return mode == null || mode.equals(m);
+        }
+    }
 
     /** Knopf im Admin-Menü an einem festen Platz, den ein Addon hinzufügt. */
     public record AdminButton(int slot, org.bukkit.Material icon, String name, String desc,
@@ -716,6 +725,8 @@ public final class KubyPlugins extends JavaPlugin {
     private final java.util.List<AdminButton> adminButtons = new java.util.ArrayList<>();
 
     public void registerMainEntry(MainEntry e) { mainEntries.add(e); }
+    /** Eintrag nur für einen Modus (z. B. ModeService.SURVIVAL). */
+    public void registerMainEntry(String mode, MainEntry e) { mainEntries.add(new MainEntry(e.icon(), e.name(), e.desc(), e.action(), mode)); }
     public void registerAdminButton(AdminButton b) { adminButtons.add(b); }
     public java.util.List<MainEntry> mainEntries() { return mainEntries; }
     public java.util.List<AdminButton> adminButtons() { return adminButtons; }

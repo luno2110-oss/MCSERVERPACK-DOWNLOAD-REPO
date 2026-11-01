@@ -533,6 +533,60 @@ totenkiste:
   owner-access-level3: true
 
 # Ränge von niedrig nach hoch. Erkannt über LuckPerms (group.<rang>) oder kuby.rank.<rang>.
+# Befehle nur in bestimmten Modi (smp, survival, skyblock, hub); in anderen Modi kommt eine Meldung. Admins dürfen überall.
+modus-befehle:
+  # SMP
+  battlepass: [smp]
+  rtpqueue: [smp]
+  bounty: [smp]
+  bounties: [smp]
+  trophaeen: [smp]
+  duell: [smp]
+  duel: [smp]
+  turnier: [smp]
+  versichern: [smp]
+  # Survival
+  angeln: [survival]
+  claim: [survival]
+  job: [survival]
+  jobs: [survival]
+  quest: [survival]
+  quests: [survival]
+  sidequests: [survival]
+  nebenquests: [survival]
+  sidequest: [survival]
+  farmwelt: [survival]
+  farmworld: [survival]
+  sw: [survival]
+  pwarp: [survival]
+  playerwarp: [survival]
+  chestshop: [survival]
+  laden: [survival]
+  shops: [survival]
+  pet: [survival]
+  pets: [survival]
+  haustier: [survival]
+  farmpass: [survival]
+  pass: [survival]
+  tokens: [survival]
+  tokenshop: [survival]
+  bauwelt: [survival]
+  marry: [survival]
+  heiraten: [survival]
+  ehe: [survival]
+  bank: [survival]
+  konto: [survival]
+  heads: [survival]
+  koepfe: [survival]
+  kopf: [survival]
+  moebel: [survival]
+  furniture: [survival]
+  # Skyblock
+  skyblock: [skyblock]
+  insel: [skyblock]
+  is: [skyblock]
+  island: [skyblock]
+
 ranks:
   order: [vip, ultimate, warrior, legend]
 

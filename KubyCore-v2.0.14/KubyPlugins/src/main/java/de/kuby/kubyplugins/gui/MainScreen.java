@@ -60,6 +60,10 @@ public final class MainScreen {
             case "Grundstücke" -> KitData.Sprite.HB_GRUNDSTUECKE;
             case "Heiraten" -> KitData.Sprite.HB_HEIRATEN;
             case "Bank" -> KitData.Sprite.HB_BANK;
+            // Skyblock
+            case "Insel" -> KitData.Sprite.HB_INSEL;
+            case "Top-Inseln" -> KitData.Sprite.QU_RANK_HEAD;
+            case "Checkliste" -> KitData.Sprite.QU_T_SIDE;
             // SMP
             case "Duelle" -> KitData.Sprite.HB_DUELLE;
             case "Turnier" -> KitData.Sprite.HB_TURNIER;
@@ -95,8 +99,13 @@ public final class MainScreen {
         };
     }
 
+    /** Menü eines Modus: Kopf-Grafik und Farbe des Modus (null = Standard). */
     public record View(String player, String mode, long coins, long jewels, List<Quick> quick, List<Section> sections,
-                       List<Quick> footer) {}
+                       List<Quick> footer, KitData.Sprite head, TextColor modeColor) {
+        public View(String player, String mode, long coins, long jewels, List<Quick> quick, List<Section> sections, List<Quick> footer) {
+            this(player, mode, coins, jewels, quick, sections, footer, null, null);
+        }
+    }
 
     private final KubyPlugins plugin;
 
@@ -125,55 +134,81 @@ public final class MainScreen {
         return go(p -> p.performCommand(command));
     }
 
+    /**
+     * Menü je Modus: SMP (Kampf, Battlepass, Duo-RTP), Survival (Farmen, Farmpass, Heiraten, Haustiere ...), Skyblock
+     * (Insel, Top-Inseln, Checkliste) und Lobby. Einträge der Addons erscheinen nur in ihrem Modus.
+     */
     View view(Player p) {
         String mode = plugin.modes().modeOf(p.getUniqueId());
-        String modeName = switch (mode) {
-            case ModeService.SURVIVAL -> "Survival";
-            case ModeService.SMP -> "SMP";
-            case ModeService.SKYBLOCK -> "Skyblock";
-            default -> "Lobby";
-        };
-        List<Quick> quick = List.of(
-                new Quick("Spawn", KitData.Icon.COMPASS, KitData.Button.TEAL, go(pl -> Teleports.spawn(plugin, pl))),
-                new Quick("Wildnis", KitData.Icon.ENDER_PEARL, KitData.Button.GREEN, go(pl -> Teleports.randomTeleport(plugin, pl))),
-                new Quick("Homes", KitData.Icon.RED_BED, KitData.Button.PURPLE, go(pl -> new HomesScreen(plugin).open(pl))),
-                new Quick("Enderchest", KitData.Icon.ENDER_CHEST, KitData.Button.DARK,
-                        go(pl -> pl.openInventory(plugin.enderchests().open(pl)))));
+        boolean smp = ModeService.SMP.equals(mode), surv = ModeService.SURVIVAL.equals(mode), sky = ModeService.SKYBLOCK.equals(mode);
+        boolean hub = !smp && !surv && !sky;
+        String modeName = smp ? "SMP" : surv ? "Survival" : sky ? "Skyblock" : "Lobby";
+        TextColor modeColor = smp ? TextColor.color(0xFF7A6A) : surv ? TextColor.color(0x7FE08A) : sky ? TextColor.color(0x9AD8FF)
+                : TextColor.color(0xF2C84A);
+        KitData.Sprite head = smp ? KitData.Sprite.HB_DUELLE : surv ? KitData.Sprite.HB_GRUNDSTUECKE : sky ? KitData.Sprite.HB_INSEL
+                : KitData.Sprite.HB_MENU;
 
-        List<Tile> daily = new ArrayList<>(List.of(
-                new Tile("Shop", "Sektionen, Wochenende und Daily Shop", KitData.Icon.EMERALD, go(pl -> new ShopMenu(plugin).open(pl))),
-                new Tile("Markt", "Items kaufen und verkaufen", KitData.Icon.CHEST_BLOCK, go(pl -> new MarketMenu(plugin).open(pl))),
-                new Tile("Wirtschaft", "Rangliste der reichsten Spieler", KitData.Icon.GOLD_INGOT, go(pl -> new TopListScreen(plugin).money(pl))),
-                new Tile("Börse", "Anteile an Shop-Items kaufen und verkaufen", KitData.Icon.EMERALD, go(pl -> new ExtraScreens(plugin).investments(pl))),
-                new Tile("Täglich", "30-Tage-Kalender mit Belohnungen", KitData.Icon.CLOCK, go(pl -> new DailyScreens(plugin).calendar(pl))),
-                new Tile("Team", "Team verwalten, Kasse und Teamhome", KitData.Icon.WHITE_BANNER, go(pl -> new TeamScreen(plugin).open(pl))),
-                new Tile("Tagespot", "Lose kaufen, Ziehung um 19 Uhr", KitData.Icon.GOLD_BLOCK, go(pl -> new DailyScreens(plugin).pot(pl))),
-                new Tile("Duo-RTP", "Zu zweit an einen Zufallsort, Kampf!", KitData.Icon.FIRE_CHARGE, go(pl -> new ExtraScreens(plugin).rtp(pl))),
-                new Tile("Freunde", "Freunde, Anfragen und Nachspringen", KitData.Icon.COOKIE, cmd("friends"))));
-        List<Tile> progress = new ArrayList<>(List.of(
-                new Tile("Battlepass", "100 Stufen, Quests und Belohnungen", KitData.Icon.BOOK, go(pl -> plugin.battlepassScreen().open(pl))),
-                new Tile("Spielzeit", "Stufen nach aktiver Spielzeit", KitData.Icon.EXPERIENCE, go(pl -> new PlaytimeScreen(plugin).open(pl))),
-                new Tile("Titel", "Wähle deinen Titel neben dem Namen", KitData.Icon.NAME_TAG, go(pl -> new ProgressScreens(plugin).tags(pl))),
-                new Tile("Kits", "Starter- und Rang-Kits abholen", KitData.Icon.IRON_CHESTPLATE, go(pl -> new ProgressScreens(plugin).kits(pl))),
-                new Tile("Kosmetik", "Hüte, Spuren und Effekte", KitData.Icon.AMETHYST, go(pl -> new CosmeticsScreen(plugin).open(pl))),
-                new Tile("Statistik", "Deine Werte und Ranglisten", KitData.Icon.SPYGLASS, cmd("stats"))));
+        List<Quick> quick = new ArrayList<>();
+        quick.add(new Quick("Spawn", KitData.Icon.COMPASS, KitData.Button.TEAL, go(pl -> Teleports.spawn(plugin, pl))));
+        if (sky) {
+            quick.add(new Quick("Insel", KitData.Icon.GRASS_BLOCK, KitData.Sprite.HB_S_HOMES, KitData.Button.GREEN, cmd("insel home")));
+            quick.add(new Quick("Top-Inseln", KitData.Icon.GOLD_INGOT, KitData.Sprite.QU_S_RANK, KitData.Button.PURPLE, cmd("insel top")));
+        } else if (!hub) {
+            quick.add(new Quick("Wildnis", KitData.Icon.ENDER_PEARL, KitData.Button.GREEN, go(pl -> Teleports.randomTeleport(plugin, pl))));
+            quick.add(new Quick("Homes", KitData.Icon.RED_BED, KitData.Button.PURPLE, go(pl -> new HomesScreen(plugin).open(pl))));
+        } else {
+            quick.add(new Quick("Modus wählen", KitData.Icon.COMPASS, KitData.Sprite.QU_COMPASS, KitData.Button.GREEN,
+                    go(pl -> new ModeSelectMenu(plugin).open(pl))));
+        }
+        if (!hub) quick.add(new Quick("Enderchest", KitData.Icon.ENDER_CHEST, KitData.Button.DARK,
+                go(pl -> pl.openInventory(plugin.enderchests().open(pl)))));
+
+        // Modus: Einträge der Addons, dazu die Kern-Funktionen dieses Modus
         List<Tile> mine = new ArrayList<>();
+        List<Tile> progress = new ArrayList<>();
         for (KubyPlugins.MainEntry e : plugin.mainEntries()) {
+            if (!e.visibleIn(mode)) continue;
             Tile t = new Tile(e.name(), e.desc(), Icons.of(e.icon(), KitData.Icon.STAR), go(e.action()));
-            if (e.name().equals("Erfolge")) progress.add(t);
+            if (e.mode() == null) progress.add(t);
             else mine.add(t);
         }
+        if (smp) {
+            mine.add(new Tile("Battlepass", "100 Stufen, Quests und Belohnungen", KitData.Icon.BOOK, go(pl -> plugin.battlepassScreen().open(pl))));
+            mine.add(new Tile("Duo-RTP", "Zu zweit an einen Zufallsort, Kampf!", KitData.Icon.FIRE_CHARGE, go(pl -> new ExtraScreens(plugin).rtp(pl))));
+        }
+
+        List<Tile> daily = new ArrayList<>();
+        if (!hub) {
+            daily.add(new Tile("Shop", "Sektionen, Wochenende und Daily Shop", KitData.Icon.EMERALD, go(pl -> new ShopMenu(plugin).open(pl))));
+            daily.add(new Tile("Markt", "Items kaufen und verkaufen", KitData.Icon.CHEST_BLOCK, go(pl -> new MarketMenu(plugin).open(pl))));
+            daily.add(new Tile("Wirtschaft", "Rangliste der reichsten Spieler", KitData.Icon.GOLD_INGOT, go(pl -> new TopListScreen(plugin).money(pl))));
+            daily.add(new Tile("Börse", "Anteile an Shop-Items kaufen und verkaufen", KitData.Icon.EMERALD, go(pl -> new ExtraScreens(plugin).investments(pl))));
+        }
+        daily.add(new Tile("Täglich", "30-Tage-Kalender mit Belohnungen", KitData.Icon.CLOCK, go(pl -> new DailyScreens(plugin).calendar(pl))));
+        if (!hub) daily.add(new Tile("Team", "Team verwalten, Kasse und Teamhome", KitData.Icon.WHITE_BANNER, go(pl -> new TeamScreen(plugin).open(pl))));
+        daily.add(new Tile("Tagespot", "Lose kaufen, Ziehung um 19 Uhr", KitData.Icon.GOLD_BLOCK, go(pl -> new DailyScreens(plugin).pot(pl))));
+        daily.add(new Tile("Freunde", "Freunde, Anfragen und Nachspringen", KitData.Icon.COOKIE, cmd("friends")));
+
+        List<Tile> prog = new ArrayList<>();
+        prog.add(new Tile("Spielzeit", "Stufen nach aktiver Spielzeit", KitData.Icon.EXPERIENCE, go(pl -> new PlaytimeScreen(plugin).open(pl))));
+        prog.add(new Tile("Titel", "Wähle deinen Titel neben dem Namen", KitData.Icon.NAME_TAG, go(pl -> new ProgressScreens(plugin).tags(pl))));
+        if (!hub) prog.add(new Tile("Kits", "Starter- und Rang-Kits abholen", KitData.Icon.IRON_CHESTPLATE, go(pl -> new ProgressScreens(plugin).kits(pl))));
+        prog.add(new Tile("Kosmetik", "Hüte, Spuren und Effekte", KitData.Icon.AMETHYST, go(pl -> new CosmeticsScreen(plugin).open(pl))));
+        prog.add(new Tile("Statistik", "Deine Werte und Ranglisten", KitData.Icon.SPYGLASS, cmd("stats")));
+        prog.addAll(progress);
+
         List<Section> sections = new ArrayList<>();
-        if (!mine.isEmpty()) sections.add(new Section(modeName, TextColor.color(0x7FE08A), KitData.Box.GREEN, mine));
+        KitData.Box modeBox = smp ? KitData.Box.RED : sky ? KitData.Box.TEAL : KitData.Box.GREEN;
+        if (!mine.isEmpty()) sections.add(new Section(modeName, modeColor, modeBox, mine));
         sections.add(new Section("Alltag", TextColor.color(0x64C0FF), KitData.Box.NAVY, daily));
-        sections.add(new Section("Fortschritt", TextColor.color(0xD08CFF), KitData.Box.PURPLE, progress));
+        sections.add(new Section("Fortschritt", TextColor.color(0xD08CFF), KitData.Box.PURPLE, prog));
         List<Quick> footer = List.of(
                 new Quick("Guide", KitData.Icon.KNOWLEDGE_BOOK, KitData.Button.GOLD_LINE, cmd("guide")),
                 new Quick("Regeln", KitData.Icon.WRITTEN_BOOK, KitData.Button.GOLD_LINE, cmd("regeln")),
                 new Quick("Support", KitData.Icon.BELL, KitData.Button.GOLD_LINE, cmd("support")),
                 new Quick("Einstellungen", KitData.Icon.SET_GEAR_BIG, KitData.Button.GOLD_LINE, cmd("settings")));
         return new View(p.getName(), modeName, plugin.economy().balance(p.getUniqueId()),
-                plugin.jewels().balance(p.getUniqueId()), quick, sections, footer);
+                plugin.jewels().balance(p.getUniqueId()), quick, sections, footer, head, modeColor);
     }
 
     /** Nur Darstellung (auch für Vorschau und Selbsttest). */
@@ -181,9 +216,11 @@ public final class MainScreen {
         Canvas c = new Canvas(W).heading("Hauptmenü", GOLD);
         // Kopf: Titel gold, darunter Gruß; rechts Coins und Juwelen
         c.box(0, 0, W, 54, KitData.Box.HUB);
-        c.sprite(11, 12, KitData.Sprite.HB_MENU);
+        KitData.Sprite head = v.head() != null ? v.head() : KitData.Sprite.HB_MENU;
+        c.sprite(10 + (32 - head.width) / 2, 11 + (32 - head.height) / 2, head);
         c.title(50, 12, "Menü");
-        c.text(50, 36, Canvas.fit(Canvas.lit(v.player()), false, 140) + " · " + v.mode(), GRAY, false);
+        int pw = c.text(50, 36, Canvas.fit(Canvas.lit(v.player()), false, 140) + " · ", GRAY, false);
+        c.text(50 + pw, 36, v.mode(), v.modeColor() != null ? v.modeColor() : GRAY, true);
         int nw = c.textRight(372, 14, Msg.coins(v.coins()), COINS, true);
         c.icon(372 - nw - 20, 10, KitData.Icon.GOLD_INGOT, false);
         int jw = c.textRight(372, 32, Msg.coins(v.jewels()), JEWELS, true);

@@ -537,23 +537,23 @@ public final class KubySurvival extends JavaPlugin {
                 return false;
             }
         });
-        core.registerMainEntry(new KubyPlugins.MainEntry(Material.FISHING_ROD, "Angeln", "Fischbuch, Rute, Köder, Händler, Bestenliste",
+        core.registerMainEntry(de.kuby.kubyplugins.service.ModeService.SURVIVAL, new KubyPlugins.MainEntry(Material.FISHING_ROD, "Angeln", "Fischbuch, Rute, Köder, Händler, Bestenliste",
                 p -> angelMenus.open(p)));
-        core.registerMainEntry(new KubyPlugins.MainEntry(Material.IRON_PICKAXE, "Jobs", "Job wählen, Level, Tokens und Token-Shop",
+        core.registerMainEntry(de.kuby.kubyplugins.service.ModeService.SURVIVAL, new KubyPlugins.MainEntry(Material.IRON_PICKAXE, "Jobs", "Job wählen, Level, Tokens und Token-Shop",
                 p -> new de.kuby.kubysurvival.jobs.JobScreen(this).open(p)));
-        core.registerMainEntry(new KubyPlugins.MainEntry(Material.WRITABLE_BOOK, "Quests", "Tages-, Wochen- und Team-Quests, Geschichte",
+        core.registerMainEntry(de.kuby.kubyplugins.service.ModeService.SURVIVAL, new KubyPlugins.MainEntry(Material.WRITABLE_BOOK, "Quests", "Tages-, Wochen- und Team-Quests, Geschichte",
                 p -> { if (!questDialogs.open(p)) new QuestMenu(this).open(p); }));
-        core.registerMainEntry(new KubyPlugins.MainEntry(Material.LEAD, "Haustiere", "Begleiter rufen, reiten, umbenennen",
+        core.registerMainEntry(de.kuby.kubyplugins.service.ModeService.SURVIVAL, new KubyPlugins.MainEntry(Material.LEAD, "Haustiere", "Begleiter rufen, reiten, umbenennen",
                 p -> new de.kuby.kubysurvival.pets.PetScreen(this).open(p)));
-        core.registerMainEntry(new KubyPlugins.MainEntry(Material.LILY_PAD, "Farmpass", "Monats-Pass mit Vorteilen",
+        core.registerMainEntry(de.kuby.kubyplugins.service.ModeService.SURVIVAL, new KubyPlugins.MainEntry(Material.LILY_PAD, "Farmpass", "Monats-Pass mit Vorteilen",
                 p -> new de.kuby.kubysurvival.farmpass.FarmpassScreen(this).open(p)));
-        core.registerMainEntry(new KubyPlugins.MainEntry(Material.ENDER_PEARL, "Spieler-Warps", "Läden und Bauwerke anderer besuchen",
+        core.registerMainEntry(de.kuby.kubyplugins.service.ModeService.SURVIVAL, new KubyPlugins.MainEntry(Material.ENDER_PEARL, "Spieler-Warps", "Läden und Bauwerke anderer besuchen",
                 p -> { if (!warpDialogs.open(p)) new WarpMenu(this, false, 0).open(p); }));
-        core.registerMainEntry(new KubyPlugins.MainEntry(Material.GOLDEN_AXE, "Grundstücke", "Landclaims sichern",
+        core.registerMainEntry(de.kuby.kubyplugins.service.ModeService.SURVIVAL, new KubyPlugins.MainEntry(Material.GOLDEN_AXE, "Grundstücke", "Landclaims sichern",
                 p -> p.performCommand("claim")));
-        core.registerMainEntry(new KubyPlugins.MainEntry(Material.POPPY, "Heiraten", "Antrag, Hochzeit und Ehe-Konto",
+        core.registerMainEntry(de.kuby.kubyplugins.service.ModeService.SURVIVAL, new KubyPlugins.MainEntry(Material.POPPY, "Heiraten", "Antrag, Hochzeit und Ehe-Konto",
                 marryMenus::marry));
-        core.registerMainEntry(new KubyPlugins.MainEntry(Material.GOLD_INGOT, "Bank", "Ehe-Konto und Konten mit Freunden",
+        core.registerMainEntry(de.kuby.kubyplugins.service.ModeService.SURVIVAL, new KubyPlugins.MainEntry(Material.GOLD_INGOT, "Bank", "Ehe-Konto und Konten mit Freunden",
                 marryMenus::bank));
 
         getServer().getScheduler().runTaskTimer(this, () -> {
