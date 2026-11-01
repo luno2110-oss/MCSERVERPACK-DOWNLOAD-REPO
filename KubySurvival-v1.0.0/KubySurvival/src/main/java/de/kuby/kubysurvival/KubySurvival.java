@@ -172,6 +172,8 @@ public final class KubySurvival extends JavaPlugin {
         de.kuby.kubysurvival.quests.QuestSamples.register(core::registerSelfTestCanvas);
         de.kuby.kubysurvival.jobs.JobScreen.samples(core::registerSelfTestCanvas);
         de.kuby.kubysurvival.claim.ClaimScreen.samples(core::registerSelfTestCanvas);
+        de.kuby.kubysurvival.pets.PetScreen.samples(core::registerSelfTestCanvas);
+        de.kuby.kubysurvival.farmpass.FarmpassScreen.samples(core::registerSelfTestCanvas);
         core.registerSelfTestCheck("Möbel-Katalog", () -> {
             int n = 0;
             for (FurnitureCatalog.Tab t : FurnitureCatalog.tabs()) {
@@ -532,9 +534,9 @@ public final class KubySurvival extends JavaPlugin {
         core.registerMainEntry(new KubyPlugins.MainEntry(Material.WRITABLE_BOOK, "Quests", "Tages-, Wochen- und Team-Quests, Geschichte",
                 p -> { if (!questDialogs.open(p)) new QuestMenu(this).open(p); }));
         core.registerMainEntry(new KubyPlugins.MainEntry(Material.LEAD, "Haustiere", "Begleiter rufen, reiten, umbenennen",
-                p -> new PetMenu(this).open(p)));
+                p -> new de.kuby.kubysurvival.pets.PetScreen(this).open(p)));
         core.registerMainEntry(new KubyPlugins.MainEntry(Material.LILY_PAD, "Farmpass", "Monats-Pass mit Vorteilen",
-                p -> new FarmpassMenu(this).open(p)));
+                p -> new de.kuby.kubysurvival.farmpass.FarmpassScreen(this).open(p)));
         core.registerMainEntry(new KubyPlugins.MainEntry(Material.ENDER_PEARL, "Spieler-Warps", "Läden und Bauwerke anderer besuchen",
                 p -> { if (!warpDialogs.open(p)) new WarpMenu(this, false, 0).open(p); }));
         core.registerMainEntry(new KubyPlugins.MainEntry(Material.GOLDEN_AXE, "Grundstücke", "Landclaims sichern",

@@ -42,10 +42,10 @@ public final class PetCommand implements CommandExecutor, TabCompleter {
         }
         if (!(sender instanceof Player p)) return true;
         switch (sub) {
-            case "" -> new PetMenu(addon).open(p);
+            case "" -> new PetScreen(addon).open(p);
             case "summon", "rufen" -> {
                 if (args.length < 2) {
-                    new PetMenu(addon).open(p);
+                    new PetScreen(addon).open(p);
                     return true;
                 }
                 String name = String.join(" ", Arrays.copyOfRange(args, 1, args.length));

@@ -201,6 +201,9 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
     - [x] Team (`/team`) als Gildenhalle in Indigo: Name, Level, Team-XP, Felder Kasse (einzahlen, abheben für den Chef), Lager, Teamhome (hinreisen, hier setzen), Mitglieder als Chips (Chef mit Stern, online grün), Verlassen/Auflösen nach Nachfrage; ohne Team die Befehle zum Gründen
     - [x] XP-Shop (`/xpshop`) in Erfahrungs-Grün, Investments (`/investments`) als Börsen-Tafel (Kurs, Wert, Gewinn grün/rot, +1k/+10k, alle verkaufen), Duo-RTP (`/rtpqueue`) als Arena mit „VS“, Quiz-Abstimmung (`/quizvote`) als Schultafel mit Stimmen-Balken
     - [x] Technik: Überlauf-Bogen für Kasten-Mittelstücke (`segs9b`, F400-F7FF), Platz für weitere Farbwelten
+    - [x] Haustiere (`/pet`) in Blütenrosa: gerufenes Haustier oben (Aufsteigen, Wegschicken), alle Haustiere als Kacheln mit Bild (Shop-Pets aus dem Pack, sonst Spawn-Ei), eigene zuerst, ★ Liebling und ✎ Umbenennen als kleine Knöpfe, gesperrte mit Preis (Kaufen nach Nachfrage) oder Juwelen (öffnet den Juwelenshop) oder Quelle; 16 je Seite. Neu: 24 Spawn-Ei-Icons
+    - [x] Farmpass (`/farmpass`, Juwelenshop → Farmpass) in Feld-Limette mit Reitern Vorteile und Haustiere: Status, Store-Link ohne Pass, Schalter Fliegen, Wochenkiste, Werkbank, alle Vorteile als Karten; Pass-Haustiere und Monats-Haustiere zum Wählen
+    - Bleiben Truhen (zeigen echte Items, die ein Dialog nicht zeichnen kann, oder man legt Items hinein): Köpfe-Shop, Kisten-Shops (Survival), Markt, Aufträge, Abholbox, Verkaufen, Server-Shop, Lager, Kit-Vorschau, Admin-Menüs. Dafür kommen später eigene Hintergrund-Grafiken
 
 ## Ordnergruppe 5 – Scoreboard und Anzeigen (Refs: Video Scoreboard_Money, GELD_XP-Anzeige)
 - [x] 5.1 Sidebar SMP (v1.32)

@@ -472,7 +472,7 @@ public final class SurvivalShop implements Listener {
                 return pl -> {
                     Sfx.play(core, pl, Sfx.Kind.CLICK);
                     pl.closeInventory();
-                    new FarmpassMenu(addon).open(pl);
+                    new de.kuby.kubysurvival.farmpass.FarmpassScreen(addon).open(pl);
                 };
             }
 
@@ -480,7 +480,7 @@ public final class SurvivalShop implements Listener {
                 return pl -> {
                     Sfx.play(core, pl, Sfx.Kind.CLICK);
                     pl.closeInventory();
-                    new FarmpassPetMenu(addon).open(pl);
+                    new de.kuby.kubysurvival.farmpass.FarmpassScreen(addon).open(pl, de.kuby.kubysurvival.farmpass.FarmpassScreen.Tab.PETS);
                 };
             }
 

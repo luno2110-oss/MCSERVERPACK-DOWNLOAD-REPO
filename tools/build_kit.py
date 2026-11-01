@@ -104,6 +104,10 @@ BOXES = {
     "ember": ("FF9A50", "A8461E", "2A0E06"),     # Duo-RTP: Arena in Glut
     "ember_card": ("C86A38", "6A2C12", "1C0904"),
     "chalk": ("B08050", "6A4626", "203A2A"),     # Quiz: Schultafel mit Holzrahmen
+    "petal": ("FFA8D0", "A0507A", "2A0E1E"),     # Haustiere: Blütenrosa
+    "petal_card": ("C87AA0", "64304E", "1C0814"),
+    "lime": ("C8E650", "6E8A22", "1C230A"),      # Farmpass: Feld-Limette
+    "lime_card": ("94B03E", "4A5C1C", "141A08"),
 }
 
 # Casino-Kästen (Roulette- und Musik-Dialog im Clip): eigene Ecken, Rand von außen nach innen ("edge"), Füllung N.
@@ -781,6 +785,19 @@ VANILLA_ICONS = {
     "snowball": "item/snowball.png", "music_disc_pigstep": "item/music_disc_pigstep.png",
     "glass_bottle": "item/glass_bottle.png", "skull_banner_pattern": "item/skull_banner_pattern.png",
     "recovery_compass": "item/recovery_compass_00.png",
+    # Haustiere (Spawn-Eier, seit 1.21.5 eigene Bilder je Tier)
+    "egg_armadillo": "item/armadillo_spawn_egg.png", "egg_axolotl": "item/axolotl_spawn_egg.png",
+    "egg_bee": "item/bee_spawn_egg.png", "egg_camel": "item/camel_spawn_egg.png",
+    "egg_cat": "item/cat_spawn_egg.png", "egg_chicken": "item/chicken_spawn_egg.png",
+    "egg_cow": "item/cow_spawn_egg.png", "egg_donkey": "item/donkey_spawn_egg.png",
+    "egg_fox": "item/fox_spawn_egg.png", "egg_frog": "item/frog_spawn_egg.png",
+    "egg_goat": "item/goat_spawn_egg.png", "egg_horse": "item/horse_spawn_egg.png",
+    "egg_ocelot": "item/ocelot_spawn_egg.png", "egg_panda": "item/panda_spawn_egg.png",
+    "egg_parrot": "item/parrot_spawn_egg.png", "egg_pig": "item/pig_spawn_egg.png",
+    "egg_polar_bear": "item/polar_bear_spawn_egg.png", "egg_rabbit": "item/rabbit_spawn_egg.png",
+    "egg_sheep": "item/sheep_spawn_egg.png", "egg_skeleton_horse": "item/skeleton_horse_spawn_egg.png",
+    "egg_sniffer": "item/sniffer_spawn_egg.png", "egg_turtle": "item/turtle_spawn_egg.png",
+    "egg_wolf": "item/wolf_spawn_egg.png", "egg_allay": "item/allay_spawn_egg.png",
 }
 
 

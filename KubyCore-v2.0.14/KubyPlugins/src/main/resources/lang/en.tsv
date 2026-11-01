@@ -7,6 +7,7 @@
  (Stundenbudget voll)	 (hourly budget full)
  (neuer Wert):	 (new value):
  (vorher {})	 (before {})
+ ({} frei)	 ({} free)
  / {} Grundstücke	 / {} claims
  <click:run_command:'/friend jump {}'><green>[Nachspringen]</click>	 <click:run_command:'/friend jump {}'><green>[Jump to them]</click>
  <click:run_command:'/poker raise {}'><hover:show_text:'Mindesterhöhung'><yellow>[Raise auf {}]</yellow></hover></click> <click:suggest_command:'/poker raise '><hover:show_text:'Betrag selbst eingeben'><yellow>[Raise …]</yellow></hover></click>	 <click:run_command:'/poker raise {}'><hover:show_text:'Minimum raise'><yellow>[Raise to {}]</yellow></hover></click> <click:suggest_command:'/poker raise '><hover:show_text:'Enter the amount yourself'><yellow>[Raise …]</yellow></hover></click>
@@ -37,6 +38,7 @@
  Angebote gleichzeitig	 offers at the same time
  Aufgabe	 task
  Aufgaben	 tasks
+ Auswahl offen	 picks open
  Bankier entfernt.	 banker removed.
  Blöcke	 blocks
  Blöcke <gray>(frei: {})	 blocks <gray>(free: {})
@@ -69,6 +71,7 @@
  Minute	 minute
  Minuten	 minutes
  Mit Chips spielst du an allen Tischen	 With chips you play at all tables
+ Monat	 month
  Priester entfernt.	 priest removed.
  Punkte	 points
  Punkte)	 points)
@@ -147,6 +150,7 @@
  von {} Stufen abgeholt	 of {} levels claimed
  vor dem Start	 before the start
  wartet	 waiting
+ wählen	 choose
  {}x {} für {} ({})	 {}x {} for {} ({})
  · +{} und {} Tokens	 · +{} and {} tokens
  · 2 Blöcke breit	 · 2 blocks wide
@@ -2269,11 +2273,13 @@ Allgemeines Verhalten	General conduct
 Alltag	Everyday
 Als Besitzer löst du das Konto an der Bank auf.	As the owner you close the account at the bank.
 Als Geschenk	As a gift
+Als Liebling markieren	Mark as favourite
 Am Haken hing ein Schatz: 	A treasure was on the hook: 
 Am See	At the lake
 Am Spawn	At spawn
 Am Spawn bist du sicher. Gebaut wird in der Bauwelt, dahin kommst du mit /bauwelt oder über den Brunnen am Spawn.	At spawn you are safe. You build in the build world, you get there with /bauwelt or through the fountain at spawn.
 Am Spawn kannst du kein Home setzen.	You can't set a home at spawn.
+Am Spawn, im Casino und auf	At spawn, in the casino and on
 Am Spawn, im Casino und auf deinen	At spawn, in the casino and on your
 Am Tisch oder beim Croupier öffnest du mit /roulette das Menü. Chip wählen, dann auf ein Feld klicken.	At the table or at the croupier, /roulette opens the menu. Choose a chip, then click a field.
 Am Zaubertisch verzaubern: je mehr Stufen, desto mehr Lohn	Enchant at the enchanting table: the more levels, the more pay
@@ -2394,6 +2400,7 @@ Aufnehmen kannst du nur Freunde (/friend add).	You can only add friends (/friend
 Aufnehmen:	Add:
 Aufstehen mit Schleichen. Wer mitten in der Runde aufsteht, hält automatisch.	Stand up by sneaking. If you stand up in the middle of a round, you stand automatically.
 Aufsteigen	Mount
+Aufsteigen (/pet ride)	Mount (/pet ride)
 Aufsteiger	Climber
 Aufstellen auf deinem Grundstück, Shift+Linksklick hebt es wieder auf.	Place it on your plot, Shift+left-click picks it up again.
 Aufstieg	Rise
@@ -3372,6 +3379,7 @@ Farmen und Redstone	Farms and redstone
 Farmen und Redstone-Anlagen sind erlaubt, solange sie keine anderen Regeln verletzen.	Farms and redstone builds are allowed as long as they don't break any other rules.
 Farmpass	Farm pass
 Farmpass im Store	Farm pass in the store
+Farmpass im Store kaufen	Buy the Farmpass in the store
 Farmpass-Menü	Farm pass menu
 Farmpass-Menü öffnen	Open farm pass menu
 Farmpass-Monat	Farm pass month
@@ -3416,6 +3424,9 @@ Fleißig	Hard-working
 Fliegen	Flying
 Fliegen & Monats-Pet	Flying & monthly pet
 Fliegen an/aus	Flying on/off
+Fliegen an/aus (/farmpass fly)	Flying on/off (/farmpass fly)
+Fliegen: an	Flying: on
+Fliegen: aus	Flying: off
 Fliegenpilz	Fly Agaric
 Fluss, Ozean, warm, kalt, Sumpf: je Biom andere Fische.	River, ocean, warm, cold, swamp: different fish per biome.
 Flussbarsch	Perch
@@ -3527,6 +3538,7 @@ Gerade online in 	Online right now in
 Gerade wartet hier kein Ticket.	No ticket is waiting here right now.
 Gerade wartet keine Frage.	No question is waiting right now.
 Gerissen	Broken
+Gerufen:	Summoned:
 Gerüst	Scaffolding
 Gesamt	Total
 Geschenk an 	Gift to 
@@ -3612,6 +3624,7 @@ Grundstück 	Claim
 Grundstück von 	Plot of 
 Grundstück, in dem du stehst, löschen	Delete the plot you are standing in
 Grundstücke	Plots
+Grundstücken (deine, Freunde)	claims (yours, friends')
 Gruß an Berta	Greetings to Berta
 Gräber	Digger
 Grönlandhai	Greenland Shark
@@ -3875,6 +3888,7 @@ Jede fertige Aufgabe bringt Coins und Job-XP. Mit Job-XP steigt dein Level von 1
 Jeden Monat eins für immer	One to keep every month
 Jeden Tag eine Stunde mit +50 % auf alle Fische.	Every day one hour with +50 % on all fish.
 Jeden Tag gibt es neue Quests, jede Woche größere. Dazu kommen eine lange Geschichte, Meilensteine, Team-Quests und ein paar geheime.	There are new quests every day and bigger ones every week. Plus a long story, milestones, team quests and a few secret ones.
+Jeden Tag {} statt 	Every day {} instead of 
 Jeden Tag {} statt {}	Every day {} instead of {}
 Jeden {} um {} Uhr wird der Jackpot ausgelost. Er wächst mit jedem Einsatz im Casino. Wer seit der letzten Ziehung einmal gespielt hat, ist dabei, und einer gewinnt den ganzen Topf in Chips.	Every {} at {} o'clock the jackpot is drawn. It grows with every bet in the casino. Everyone who played once since the last drawing is in, and one wins the whole pot in chips.
 Jeder Dreh füllt den Topf.	Every spin fills the pot.
@@ -3953,7 +3967,9 @@ Kein Freund ist gerade in Survival. Sonst: /marry propose <Spieler>	No friend is
 Kein Job	No job
 Kein Konto mit diesem Namen. Deine Konten: /bank	No account with this name. Your accounts: /bank
 Kein Köder aktiv	No bait active
+Kein Liebling mehr	No longer favourite
 Kein Name.	No name.
+Kein Pass · nur im Store	No pass · only in the store
 Kein Schlüssel	No key
 Kein Spam, keine Werbung für andere Server, keine Caps-Flut und keine verbotenen Inhalte.	No spam, no advertising for other servers, no caps flood and no forbidden content.
 Kein Spieler erhält aufgrund seines Ranges oder seiner Spielzeit das Recht, die Regeln zu missachten.	No player gets the right to ignore the rules because of their rank or playtime.
@@ -4029,6 +4045,7 @@ Klick: einfügen	Click: insert
 Klick: im Juwelenshop ansehen	Click: view in the jewel shop
 Klick: kaufen (danach bestätigen)	Click: buy (then confirm)
 Klick: nächste Stellung	Click: next position
+Klick: rufen	Click: summon
 Klick: tragen	Click: wear
 Klick: umschalten	Click: toggle
 Klick: verzaubern	Click: enchant
@@ -4318,6 +4335,7 @@ Modus: <yellow>{}</yellow>	Mode: <yellow>{}</yellow>
 Monat	Month
 Monat 	Month 
 Monats-Haustier wählen	Choose the monthly pet
+Monats-Haustiere · bleiben für immer	Monthly pets · yours forever
 Monats-Pass mit Vorteilen	Monthly pass with perks
 Monats-Pets	Monthly pets
 Mondfisch	Sunfish
@@ -4478,6 +4496,7 @@ Nochmal klicken: jetzt kaufen	Click again: buy now
 Nochmal klicken: kaufen	Click again: buy
 Nochmal klicken: wirklich löschen	Click again: really delete
 Nochmal klicken: {} entfernen	Click again: remove {}
+Nochmal: kaufen!	Again: buy!
 Nord	North
 Nordost	Northeast
 Nordwest	Northwest
@@ -4498,6 +4517,7 @@ Nur die kleinen	Only the small ones
 Nur die seltenen	Only the rare ones
 Nur dieser Song, immer wieder.	Only this song, over and over.
 Nur in der Angel-Zone	Only in the fishing zone
+Nur mit Pass	Only with the pass
 Nur wer das Konto eröffnet hat, entfernt Mitglieder.	Only whoever opened the account removes members.
 Nur wer das Konto eröffnet hat, löst es auf.	Only whoever opened the account closes it.
 Nur wer das Konto eröffnet hat, nimmt neue Mitglieder auf.	Only whoever opened the account adds new members.
@@ -4545,6 +4565,7 @@ Paragraph {} von {}	Section {} of {}
 Partikel & Effekte	Particles & effects
 Partikel von Hüten, Teleports, Casino und Kisten.	Particles of hats, teleports, casino and crates.
 Partyhut	Party hat
+Pass nötig	Pass needed
 Pay-Bestätigung	Pay confirmation
 Perlchen	Pearlie
 Permanenter Bann	Permanent ban
@@ -4716,6 +4737,8 @@ Rucksack vergrößern	Enlarge backpack
 Rucksack öffnen	Open backpack
 Rucksack-Item holen	Get the backpack item
 Ruf zuerst ein Haustier: /pet	Call a pet first: /pet
+Rufen und reiten im Haustier-Menü: /pet	Summon and ride in the pet menu: /pet
+Rufen, reiten, umbenennen · ★ = Liebling	Summon, ride, rename · ★ = favourite
 Ruhig, Farmen, Angeln	Calm, farming, fishing
 Run beenden	End run
 Run beendet.	Run ended.
@@ -5223,6 +5246,7 @@ UNGEWÖHNLICH!	UNCOMMON!
 Uhrzeit	Time
 Uhrzeit 	Time 
 Ultimate Rang	Ultimate rank
+Umbenennen	Rename
 Unbekannt	Unknown
 Unbekannt. /poker zeigt die Befehle.	Unknown. /poker shows the commands.
 Unbekannte Aktion. Möglich: fold, check, call, raise <Betrag>, allin	Unknown action. Possible: fold, check, call, raise <amount>, allin
@@ -5329,6 +5353,7 @@ Vorige Seite	Previous page
 Voriger Paragraph	Previous section
 Vorratskiste {}	Storage Crate {}
 Vorschau	Preview
+Vorteile	Perks
 Vorteile ansehen	View perks
 Vorteile und Store-Link	Perks and store link
 Vorteils-Paket	Perk bundle
@@ -5383,6 +5408,7 @@ Was sind Quests	What are quests
 Wasserdrache	Water Dragon
 Wechseln geht jederzeit, dein Level bleibt. Danach musst du 30 Minuten warten.	You can switch any time, your level stays. After that you have to wait 30 minutes.
 Weg zeigen	Show way
+Wegschicken	Send away
 Wegweiser {}	Signpost {}
 Wegweisung an/aus	Signpost on/off
 Weihnachtsmütze	Santa hat
@@ -5403,6 +5429,7 @@ Wer online ist, wo, und nachspringen	Who is online, where, and jump to them
 Wer schon lange spielt und seinen Discord verlinkt hat, kann selbst Helfer werden.	If you have played for a long time and linked your Discord, you can become a helper yourself.
 Wer viele Tage hintereinander votet, baut eine Serie auf: ab 10 Tagen gibt es je Vote-Tag 250 Coins extra, ab 25 Tagen 500 und ab 50 Tagen 1.000. Die besten Voter des Monats bekommen extra Preise.	If you vote many days in a row, you build a streak: from 10 days you get 250 extra coins per vote day, from 25 days 500 and from 50 days 1,000. The best voters of the month get extra prizes.
 Werbung für andere Server oder externe Projekte ist ohne Erlaubnis des Teams nicht gestattet.	Advertising other servers or outside projects is not allowed without the team's permission.
+Werkbank	Crafting table
 Werkbank & Endertruhe	Workbench & ender chest
 Werkbank immer dabei	Crafting table always with you
 Wert	Value
@@ -5448,6 +5475,7 @@ Wochenende	Weekend
 Wochenende: Angebote	Weekend: offers
 Wochenende: Neuwurf	Weekend: reroll
 Wochenkiste	Weekly crate
+Wochenkiste!	Weekly chest!
 Wochenpreis: Juwelen	Weekly prize: jewels
 Wunschbär	Wish Bear
 Wurf	Roll
@@ -5576,6 +5604,7 @@ Züchter	Breeder
 [Name]	[name]
 \n<gray>Noch keine Einträge seit dem Start.	\n<gray>No entries since the start yet.
 \n<gray>Noch keine Runden gespielt.	\n<gray>No rounds played yet.
+ab Montag	from Monday
 ab {} Std.	from {} h
 abgehoben	withdrew
 aktiv	active
@@ -5608,11 +5637,13 @@ erreicht	reached
 exklusive Items	exclusive items
 fertig	ready
 freie Claim-Blöcke	free claim blocks
+freigeschaltet	unlocked
 für Freunde	for friends
 für Juwelen	for jewels
 für andere Spieler	for other players
 gelöst	solved
 gerade in 	right now in 
+gesammelt	collected
 geschenk für 	gift for 
 geschlossen	closed
 gesperrt	locked
@@ -5633,6 +5664,7 @@ jemand anderem	someone else
 kein Grund angegeben	no reason given
 kein Liebling mehr	no longer a favorite
 kein Titel	no title
+keine Auswahl offen	no pick open
 keiner	none
 klein	small
 köpfe	heads
@@ -5661,6 +5693,7 @@ nächster Warp: {} Coins	next warp: {} coins
 oder unten einen Namen eintippen	or type a name below
 offen	open
 ohne Tod	no deaths
+pro Monat für immer	per month forever
 pro bezahltem Monat,	per paid month,
 ränge	ranks
 s warten	s waiting
@@ -5755,6 +5788,8 @@ zweiter Beruf	second job
 ✔ bereit	✔ ready
 ✔ du	✔ you
 ✔ erledigt	✔ done
+✔ gehört dir	✔ yours
+✔ gerufen · Klick: weg	✔ summoned · click: send away
 ✔ hat dein Item	✔ your item has it
 ✦ Wer zu lange wartet, verliert alles ✦	✦ Whoever waits too long loses everything ✦
 ❤ Antrag	❤ Propose

@@ -71,7 +71,7 @@ public final class FarmpassCommand implements CommandExecutor, TabCompleter {
         }
         if (!(sender instanceof Player p)) return true;
         switch (sub) {
-            case "pet", "haustier" -> new FarmpassPetMenu(addon).open(p);
+            case "pet", "haustier" -> new FarmpassScreen(addon).open(p, FarmpassScreen.Tab.PETS);
             case "fly", "fliegen" -> {
                 if (!fp.active(p.getUniqueId())) {
                     Msg.send(p, "<gray>Fliegen gibt es mit dem <green>Farmpass<gray>.");
@@ -84,7 +84,7 @@ public final class FarmpassCommand implements CommandExecutor, TabCompleter {
                 String err = fp.claimWeekly(p);
                 if (err != null) Msg.send(p, "<red>" + err);
             }
-            default -> new FarmpassMenu(addon).open(p);
+            default -> new FarmpassScreen(addon).open(p);
         }
         return true;
     }
