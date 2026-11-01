@@ -790,6 +790,8 @@ VANILLA_ICONS = {
     "glass_bottle": "item/glass_bottle.png", "skull_banner_pattern": "item/skull_banner_pattern.png",
     "recovery_compass": "item/recovery_compass_00.png",
     "pumpkin_pie": "item/pumpkin_pie.png",
+    # Event-Presets (Shop-Angebote)
+    "melon_slice": "item/melon_slice.png", "cooked_cod": "item/cooked_cod.png", "gunpowder": "item/gunpowder.png",
     # Haustiere (Spawn-Eier, seit 1.21.5 eigene Bilder je Tier)
     "egg_armadillo": "item/armadillo_spawn_egg.png", "egg_axolotl": "item/axolotl_spawn_egg.png",
     "egg_bee": "item/bee_spawn_egg.png", "egg_camel": "item/camel_spawn_egg.png",

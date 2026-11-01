@@ -98,6 +98,19 @@ public final class QuestSamples {
         }
         reg.accept("Quests Candy-Shop", () -> QuestScreen.eventShop(new QuestScreen.ShopView(W16, W16, BIG, offers), NO));
         reg.accept("Quests Candy-Shop leer", () -> QuestScreen.eventShop(new QuestScreen.ShopView("Event", "Candy Corn", 0, List.of()), NO));
+        // Jedes Preset einmal mit seinen Grafiken (Kopf, Reiter, Währung) und langem Shop-Namen
+        for (String preset : EventService.PRESETS) {
+            QuestScreen.Theme th = QuestScreen.Theme.of(preset);
+            List<Reward> pr = List.of(Reward.of(Kind.COINS, BIG), Reward.currency(SMALL, th), Reward.of(Kind.TOKENS, SMALL));
+            List<Card> pc = List.of(new Card(Style.GOLD, null, null, null, Icon.QUEST, W16, "Kurz.", pr, 0.0, false,
+                    "0/4 " + Canvas.caps("Ziele"), Btn.GOLD, "Annehmen", Canvas.caps("Kapitel") + " 99", null, NO));
+            List<QuestScreen.Tab> pt = new ArrayList<>(tabs());
+            pt.set(0, new QuestScreen.Tab(Area.EVENT, W16, "99/99", th));
+            reg.accept("Quests Event " + preset, () -> QuestScreen.list(new ListView(Area.EVENT, W16, "endet 31.12. um 23:59 Uhr", "99/99", pt, pc,
+                    null, null, 0, 1, null, new QuestScreen.Shop(W16, BIG, NO, th, W16 + "-Shop")), ACTIONS));
+            reg.accept("Quests Shop " + preset, () -> QuestScreen.eventShop(new QuestScreen.ShopView(W16, W16, BIG, offers.subList(0, 3), th,
+                    W16 + "-Shop"), NO));
+        }
 
         KitData.Sprite[] faces = {KitData.Sprite.QU_FACE_LEONIE, KitData.Sprite.QU_FACE_FRIEDA, KitData.Sprite.QU_FACE_MORTIS,
                 KitData.Sprite.QU_FACE_LILIA, KitData.Sprite.QU_FACE_KONRAD, KitData.Sprite.QU_FACE_HERMANN,

@@ -230,7 +230,8 @@ public final class QuestDialogs {
         int teamPct = td == null ? 0 : (int) Math.min(100, q.progressOf(id, "t:" + td.id()) * 100 / Math.max(1, td.amount()));
         EventService.Event e = ev() == null ? null : ev().active();
         return List.of(e == null ? new QuestScreen.Tab(Area.EVENT, "Event", "0/0")
-                        : new QuestScreen.Tab(Area.EVENT, e.name(), ev().claimedCount(id) + "/" + e.chapters().size()),
+                        : new QuestScreen.Tab(Area.EVENT, e.name(), ev().claimedCount(id) + "/" + e.chapters().size(),
+                        QuestScreen.Theme.of(e.theme())),
                 new QuestScreen.Tab(Area.DAILY, "Täglich", claimedCount(id, "d:", dl) + "/" + dl.size()),
                 new QuestScreen.Tab(Area.WEEKLY, "Wöchentlich", claimedCount(id, "w:", wl) + "/" + wl.size()),
                 new QuestScreen.Tab(Area.MAIN, "Hauptquests", q.storyIndex(id) + "/" + q.storySize()),
@@ -367,12 +368,13 @@ public final class QuestDialogs {
                     subtitle = "Gerade kein Event";
                     title = "Event";
                 } else {
-                    for (EventService.Chapter c : e.chapters()) all.add(chapterCard(id, e, c));
+                    QuestScreen.Theme th = QuestScreen.Theme.of(e.theme());
+                    for (EventService.Chapter c : e.chapters()) all.add(chapterCard(id, e, c, th));
                     int done = ev().claimedCount(id);
                     count = done + "/" + e.chapters().size();
                     title = e.name();
                     subtitle = done + " von " + e.chapters().size() + " Kapiteln · " + ev().endText(e);
-                    shop = new QuestScreen.Shop(e.currency(), ev().candy(id), this::shop);
+                    shop = new QuestScreen.Shop(e.currency(), ev().candy(id), this::shop, th, e.shopName());
                     if (page < 0) page = Math.max(0, ev().current(id)) / 3;
                 }
             }
@@ -399,26 +401,26 @@ public final class QuestDialogs {
         if (e == null) return new QuestScreen.Tile(Area.EVENT, "Event", Canvas.caps("Gerade keins"), 0, 0);
         int cur = ev().current(id);
         return new QuestScreen.Tile(Area.EVENT, e.name(), cur < 0 ? Canvas.caps("Alle geschafft") : Canvas.caps("Kapitel") + " " + (cur + 1),
-                ev().claimedCount(id), e.chapters().size());
+                ev().claimedCount(id), e.chapters().size(), QuestScreen.Theme.of(e.theme()).head());
     }
 
-    private static List<Reward> eventRewards(EventService.Chapter c) {
+    private static List<Reward> eventRewards(EventService.Chapter c, QuestScreen.Theme th) {
         List<Reward> out = new ArrayList<>();
         if (c.coins() > 0) out.add(Reward.of(Kind.COINS, c.coins()));
-        if (c.candy() > 0) out.add(Reward.of(Kind.CANDY, c.candy()));
+        if (c.candy() > 0) out.add(Reward.currency(c.candy(), th));
         if (c.tokens() > 0) out.add(Reward.of(Kind.TOKENS, c.tokens()));
         return out;
     }
 
     /** Kapitel als Karte: offen (Annehmen), angenommen (Ziele, Verfolgen), geschafft (Abholen), abgeholt oder gesperrt. */
-    private Card chapterCard(UUID id, EventService.Event e, EventService.Chapter c) {
+    private Card chapterCard(UUID id, EventService.Event e, EventService.Chapter c, QuestScreen.Theme th) {
         EventService es = ev();
         int i = c.index(), n = c.goals().size();
         EventService.State st = es.state(id, i);
         String ziele = Canvas.caps("Ziele");
         String kap = Canvas.caps("Kapitel") + " " + (i + 1);
         return switch (st) {
-            case OPEN -> new Card(Style.GOLD, null, null, null, Icon.QUEST, c.name(), c.text(), eventRewards(c), 0.0, false,
+            case OPEN -> new Card(Style.GOLD, null, null, null, Icon.QUEST, c.name(), c.text(), eventRewards(c, th), 0.0, false,
                     "0/" + n + " " + ziele, Btn.GOLD, "Annehmen", kap, null, p -> {
                 err(p, es.accept(p, i));
                 reopen(p);
@@ -442,18 +444,18 @@ public final class QuestDialogs {
                     q().setTracked(p.getUniqueId(), tracked ? null : "e:" + i);
                     reopen(p);
                 };
-                yield new Card(Style.GOLD, null, null, null, Icon.TRACK, c.name(), desc.toString(), eventRewards(c), n == 0 ? 1.0 : sum / n,
+                yield new Card(Style.GOLD, null, null, null, Icon.TRACK, c.name(), desc.toString(), eventRewards(c, th), n == 0 ? 1.0 : sum / n,
                         false, done + "/" + n + " " + ziele, st == EventService.State.DONE ? Btn.GOLD : Btn.LINE,
                         st == EventService.State.DONE ? "Abholen" : tracked ? "Verfolgt" : "Verfolgen", kap, null, click);
             }
-            case CLAIMED -> new Card(Style.BROWN, null, null, null, Icon.TASK, c.name(), c.text(), eventRewards(c), 1.0, false,
+            case CLAIMED -> new Card(Style.BROWN, null, null, null, Icon.TASK, c.name(), c.text(), eventRewards(c, th), 1.0, false,
                     Canvas.caps("Erledigt"), Btn.NONE, null, null, null, null);
-            default -> new Card(Style.GRAY, null, null, null, Icon.LOCK, c.name(), c.text(), eventRewards(c), null, false, null,
+            default -> new Card(Style.GRAY, null, null, null, Icon.LOCK, c.name(), c.text(), eventRewards(c, th), null, false, null,
                     Btn.LOCKED, null, null, es.lockText(id, i), null);
         };
     }
 
-    /** Candy-Shop des laufenden Events. */
+    /** Shop des laufenden Events (Halloween: Candy-Shop). */
     public void shop(Player p) {
         EventService es = ev();
         EventService.Event e = es == null ? null : es.active();
@@ -471,19 +473,33 @@ public final class QuestDialogs {
                 shop(pl);
             }));
         }
-        UiDialog.show(p, QuestScreen.eventShop(new QuestScreen.ShopView(e.name(), e.currency(), candy, offers),
+        UiDialog.show(p, QuestScreen.eventShop(new QuestScreen.ShopView(e.name(), e.currency(), candy, offers,
+                        QuestScreen.Theme.of(e.theme()), e.shopName()),
                 pl -> list(pl, Area.EVENT, -1)), QuestScreen.HEIGHT);
     }
 
     private static KitData.Icon offerIcon(EventService.Offer o) {
         return switch (o.kind()) {
             case "TITLE" -> KitData.Icon.NAME_TAG;
-            case "COSMETIC" -> KitData.Icon.AMETHYST;
+            case "COSMETIC" -> hatIcon(o.value());
             case "KEY" -> KitData.Icon.TRIAL_KEY;
             case "COINS" -> KitData.Icon.GOLD_INGOT;
             case "TOKENS" -> KitData.Icon.EXPERIENCE;
             default -> de.kuby.kubyplugins.ui.Icons.of(Material.matchMaterial(o.value()), KitData.Icon.PAPER);
         };
+    }
+
+    /** Hut-Kosmetik (hut_<name>) mit ihrem Bild, sonst Amethyst. */
+    private static KitData.Icon hatIcon(String cosmetic) {
+        String v = cosmetic.toLowerCase(java.util.Locale.ROOT);
+        if (v.startsWith("hut_")) {
+            try {
+                return KitData.Icon.valueOf("HAT_" + v.substring(4).toUpperCase(java.util.Locale.ROOT));
+            } catch (IllegalArgumentException ignored) {
+                // kein Bild für diesen Hut
+            }
+        }
+        return KitData.Icon.AMETHYST;
     }
 
     private void pages_put(UUID id, int page) {

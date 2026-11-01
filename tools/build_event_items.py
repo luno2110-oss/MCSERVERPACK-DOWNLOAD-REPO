@@ -1,7 +1,9 @@
-"""Items der Events (Quest-Event-Kapitel): Candy Corn (orange und selten lila) als Item-Modelle
-kuby:event/candy_corn und kuby:event/candy_corn_purple. Bild aus den Quest-Referenzen (tools/assets/quests/art_candy.png).
+"""Sammel-Items der Event-Presets als Item-Modelle kuby:event/<name>: Candy Corn (Halloween, orange und selten lila, Bild aus
+den Quest-Referenzen tools/assets/quests/art_candy.png) und die Items der übrigen Presets aus build_event_art.py
+(tools/assets/events/item_<name>.png: Lebkuchen, Kleeblatt, Herz, Osterei, Muschel und ihre seltenen Sorten).
 """
 import colorsys
+import glob
 import json
 import os
 
@@ -36,7 +38,10 @@ def build(out):
     idir = os.path.join(out, "assets/kuby/items/event")
     for d in (tdir, mdir, idir):
         os.makedirs(d, exist_ok=True)
-    for name, img in (("candy_corn", tex), ("candy_corn_purple", _purple(tex))):
+    items = [("candy_corn", tex), ("candy_corn_purple", _purple(tex))]
+    for f in sorted(glob.glob(os.path.join(HERE, "assets/events/item_*.png"))):
+        items.append((os.path.basename(f)[5:-4], Image.open(f).convert("RGBA")))
+    for name, img in items:
         img.save(os.path.join(tdir, name + ".png"))
         with open(os.path.join(mdir, name + ".json"), "w", encoding="utf-8") as f:
             json.dump({"parent": "minecraft:item/generated", "textures": {"layer0": "kuby:item/event/" + name}}, f)

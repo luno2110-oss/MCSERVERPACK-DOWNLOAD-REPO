@@ -1,0 +1,108 @@
+# Event-Preset „Valentinstag“ (7.2. bis 16.2.). Alle Presets liegen in plugins/KubySurvival/events/ (eine Datei je Event, Dateiname = ID).
+# Admins: /kp event presets (Liste) · laden <ID> (sofort starten) · auto (wieder nach Datum) · stop · an|aus <ID> (jedes Jahr
+# automatisch ja/nein) · sammeln · regen · feuerwerk · reset <Spieler> · reload. Fehlt eine Datei, kommt sie beim Start zurück.
+#
+# start/ende: „MM-TT HH:mm“ (deutsche Zeit) oder relativ zu Ostern: „ostern-2 04:00“ (Karfreitag), „ostern+1 04:00“ (Ostermontag).
+# grafik: Bilder im Pack (halloween, weihnachten, silvester, valentinstag, ostern, sommer); farbe: Farbe der Meldungen.
+# sammeln: Items, die am Survival-Spawn liegen (Event-Währung); selten-…: seltene Sorte (leuchtet, zählt selten-wert).
+# spezial: regen-minuten/regen-menge = Sammel-Regen am Spawn mit Meldung; feuerwerk „MM-TT HH:mm“ oder täglich „HH:mm“.
+# Kapitel der Reihe nach; „ab“ sperrt bis zu diesem Tag (MM-TT oder ostern±Tage). Belohnungen: coins, waehrung, tokens.
+# Ziele (type, arg, menge, bedingung, text):
+#   sammeln [selten]        Sammel-Items am Spawn (selten: nur die seltenen)
+#   break <Block|Gruppe>    Abbauen (Kürbis/Melone nur gewachsen; Gruppen logs, ores, stones, crops, dig, flowers, #tag)
+#   place <Block|Gruppe>    Setzen (lanterns, candles, lights, flowers, saplings, wool, snow, #tag)
+#   pickup <Item>           Aufheben (nicht von Spielern weggeworfen)    throw <Item>   Werfen/Zünden (EGG, SNOWBALL, FIREWORK_ROCKET)
+#   kill <Mob|monster|animal>  Besiegen (keine Spawner)    craft/eat/smelt <Item>   Herstellen / essen / im Ofen
+#   breed/tame [Tier|animal]   Züchten / zähmen          snowball [Ziel]   mit Schneebällen treffen    build SNOW_GOLEM|IRON_GOLEM
+#   carve (Kürbis schnitzen) · brew · fish · treasure · cure · raid · trade · shear · enchant
+# Bedingungen: nacht, tag, nether, schnee (kalte Gegend), wasser, uhrzeit:18-24 (echte Uhrzeit), grundstueck (eigenes/vertrautes)
+# Shop: ART;Wert;Menge;Name;Preis  –  TITLE <Titel-ID>, COSMETIC <Kosmetik-ID>, ITEM <Material>, KEY <Schlüssel>, COINS, TOKENS
+name: "Valentinstag"
+grafik: valentinstag
+farbe: "#FF7AA8"
+automatisch: true
+start: "02-07 04:00"
+ende: "02-16 04:00"
+waehrung: "Herzen"
+shop-name: "Herz-Shop"
+sammeln:
+  item: herz
+  material: PINK_DYE
+  name: "<#FF7AA8>Herz"
+  selten-item: herz_kristall
+  selten-material: DIAMOND
+  selten-name: "<aqua>Kristallherz"
+  radius: 70
+  max: 40
+  alle-sekunden: 20
+  selten-chance: 0.08
+  selten-wert: 5
+spezial:
+  regen-minuten: 45
+  regen-menge: 30
+  feuerwerk: "02-14 21:00"
+  feuerwerk-sekunden: 300
+kapitel:
+  - name: "Herzklopfen"
+    text: "Rund um den Spawn liegen Herzen verstreut. Sammel sie und pflück Blumen für jemanden, den du magst."
+    coins: 1500
+    waehrung: 60
+    tokens: 6
+    ziele:
+      - {type: sammeln, menge: 25, text: "Sammle 25 Herzen am Spawn"}
+      - {type: break, arg: flowers, menge: 20, text: "Pflück 20 Blumen"}
+  - name: "Ein Garten voller Rosen"
+    text: "Rosen sind rot, Veilchen sind blau ... Pflanz Blumen auf deinem Grundstück und stell Kerzen dazu."
+    coins: 2000
+    waehrung: 80
+    tokens: 7
+    ziele:
+      - {type: place, arg: flowers, menge: 16, bedingung: grundstueck, text: "Pflanz 16 Blumen auf dein Grundstück"}
+      - {type: place, arg: candles, menge: 6, bedingung: grundstueck, text: "Stell 6 Kerzen auf dein Grundstück"}
+  - name: "Liebe geht durch den Magen"
+    text: "Back einen Kuchen und Kekse für ein Picknick zu zweit."
+    coins: 2500
+    waehrung: 100
+    tokens: 8
+    ziele:
+      - {type: craft, arg: CAKE, menge: 2, text: "Back 2 Kuchen"}
+      - {type: craft, arg: COOKIE, menge: 16, text: "Back 16 Kekse"}
+  - name: "Tierische Liebe"
+    text: "Auch die Tiere feiern mit: Züchte Tiere und zähm dir einen treuen Begleiter."
+    coins: 3000
+    waehrung: 120
+    tokens: 10
+    ziele:
+      - {type: breed, menge: 10, text: "Züchte 10 Tiere"}
+      - {type: tame, menge: 1, text: "Zähm ein Tier"}
+  - name: "Kristallherzen"
+    text: "Die seltenen Kristallherzen funkeln am Spawn. Finde sie, bevor sie jemand anderes findet."
+    ab: "02-12"
+    coins: 3500
+    waehrung: 150
+    tokens: 11
+    ziele:
+      - {type: sammeln, arg: selten, menge: 5, text: "Finde 5 Kristallherzen"}
+      - {type: sammeln, menge: 40, text: "Sammle 40 Herzen am Spawn"}
+  - name: "Der Tag der Liebe"
+    text: "Heute ist Valentinstag. Mach jemandem eine Freude: Pflanz Blumen und lass am Abend Raketen steigen."
+    ab: "02-14"
+    coins: 5000
+    waehrung: 250
+    tokens: 18
+    ziele:
+      - {type: place, arg: flowers, menge: 10, text: "Pflanz 10 Blumen"}
+      - {type: throw, arg: FIREWORK_ROCKET, menge: 10, text: "Zünde 10 Raketen"}
+titel:
+  romantiker: "<#FF7AA8>Romantiker"
+  herzensbrecher: "<#F0406E>Herzensbrecher"
+shop:
+  - "ITEM;POPPY;16;16 Mohnblumen;20"
+  - "ITEM;CAKE;2;2 Kuchen;40"
+  - "COINS;5000;1;5.000 Coins;150"
+  - "TOKENS;5;1;5 Tokens;200"
+  - "KEY;episch;1;Epischer Schlüssel;350"
+  - "TITLE;romantiker;1;Titel „Romantiker“;400"
+  - "COSMETIC;hut_blumenkranz;1;Blumenkranz;500"
+  - "TITLE;herzensbrecher;1;Titel „Herzensbrecher“;600"
+  - "COSMETIC;hut_katzenohren;1;Katzenohren;700"

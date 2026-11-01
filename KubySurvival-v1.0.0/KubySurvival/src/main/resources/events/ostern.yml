@@ -1,0 +1,121 @@
+# Event-Preset „Ostern“ (Freitag vor Palmsonntag bis Ostermontag). Alle Presets liegen in plugins/KubySurvival/events/ (eine Datei je Event, Dateiname = ID).
+# Admins: /kp event presets (Liste) · laden <ID> (sofort starten) · auto (wieder nach Datum) · stop · an|aus <ID> (jedes Jahr
+# automatisch ja/nein) · sammeln · regen · feuerwerk · reset <Spieler> · reload. Fehlt eine Datei, kommt sie beim Start zurück.
+#
+# start/ende: „MM-TT HH:mm“ (deutsche Zeit) oder relativ zu Ostern: „ostern-2 04:00“ (Karfreitag), „ostern+1 04:00“ (Ostermontag).
+# grafik: Bilder im Pack (halloween, weihnachten, silvester, valentinstag, ostern, sommer); farbe: Farbe der Meldungen.
+# sammeln: Items, die am Survival-Spawn liegen (Event-Währung); selten-…: seltene Sorte (leuchtet, zählt selten-wert).
+# spezial: regen-minuten/regen-menge = Sammel-Regen am Spawn mit Meldung; feuerwerk „MM-TT HH:mm“ oder täglich „HH:mm“.
+# Kapitel der Reihe nach; „ab“ sperrt bis zu diesem Tag (MM-TT oder ostern±Tage). Belohnungen: coins, waehrung, tokens.
+# Ziele (type, arg, menge, bedingung, text):
+#   sammeln [selten]        Sammel-Items am Spawn (selten: nur die seltenen)
+#   break <Block|Gruppe>    Abbauen (Kürbis/Melone nur gewachsen; Gruppen logs, ores, stones, crops, dig, flowers, #tag)
+#   place <Block|Gruppe>    Setzen (lanterns, candles, lights, flowers, saplings, wool, snow, #tag)
+#   pickup <Item>           Aufheben (nicht von Spielern weggeworfen)    throw <Item>   Werfen/Zünden (EGG, SNOWBALL, FIREWORK_ROCKET)
+#   kill <Mob|monster|animal>  Besiegen (keine Spawner)    craft/eat/smelt <Item>   Herstellen / essen / im Ofen
+#   breed/tame [Tier|animal]   Züchten / zähmen          snowball [Ziel]   mit Schneebällen treffen    build SNOW_GOLEM|IRON_GOLEM
+#   carve (Kürbis schnitzen) · brew · fish · treasure · cure · raid · trade · shear · enchant
+# Bedingungen: nacht, tag, nether, schnee (kalte Gegend), wasser, uhrzeit:18-24 (echte Uhrzeit), grundstueck (eigenes/vertrautes)
+# Shop: ART;Wert;Menge;Name;Preis  –  TITLE <Titel-ID>, COSMETIC <Kosmetik-ID>, ITEM <Material>, KEY <Schlüssel>, COINS, TOKENS
+name: "Ostern"
+grafik: ostern
+farbe: "#9EE07A"
+automatisch: true
+start: "ostern-9 04:00"
+ende: "ostern+2 04:00"
+waehrung: "Ostereier"
+shop-name: "Eier-Shop"
+sammeln:
+  item: osterei
+  material: EGG
+  name: "<#9EE07A>Osterei"
+  selten-item: osterei_gold
+  selten-material: GOLD_NUGGET
+  selten-name: "<gold>Goldenes Ei"
+  radius: 70
+  max: 40
+  alle-sekunden: 20
+  selten-chance: 0.08
+  selten-wert: 5
+spezial:
+  regen-minuten: 40
+  regen-menge: 30
+kapitel:
+  - name: "Die Eiersuche beginnt"
+    text: "Der Osterhase hat bunte Eier rund um den Spawn versteckt. Such sie und sammel auch die Eier deiner Hühner ein."
+    coins: 1500
+    waehrung: 60
+    tokens: 6
+    ziele:
+      - {type: sammeln, menge: 25, text: "Sammle 25 Ostereier am Spawn"}
+      - {type: pickup, arg: eggs, menge: 16, text: "Sammle 16 Hühnereier"}
+  - name: "Möhren für den Hasen"
+    text: "Der Osterhase hat Hunger. Ernte Karotten und mach goldene Karotten für besondere Gäste."
+    coins: 2000
+    waehrung: 80
+    tokens: 7
+    ziele:
+      - {type: break, arg: CARROTS, menge: 48, text: "Ernte 48 Karotten"}
+      - {type: craft, arg: GOLDEN_CARROT, menge: 4, text: "Stell 4 goldene Karotten her"}
+  - name: "Frühlingsblumen"
+    text: "Der Frühling ist da. Pflanz Blumen und Setzlinge auf deinem Grundstück."
+    coins: 2000
+    waehrung: 80
+    tokens: 7
+    ziele:
+      - {type: place, arg: flowers, menge: 16, bedingung: grundstueck, text: "Pflanz 16 Blumen auf dein Grundstück"}
+      - {type: place, arg: saplings, menge: 8, bedingung: grundstueck, text: "Pflanz 8 Setzlinge auf dein Grundstück"}
+  - name: "Hasen und Küken"
+    text: "Für den Osterhof brauchst du Nachwuchs: Züchte Kaninchen und Hühner."
+    coins: 2500
+    waehrung: 100
+    tokens: 8
+    ziele:
+      - {type: breed, arg: RABBIT, menge: 4, text: "Züchte 4 Kaninchen"}
+      - {type: breed, arg: CHICKEN, menge: 6, text: "Züchte 6 Hühner"}
+  - name: "Eierwerfen"
+    text: "Ein alter Osterbrauch: Wirf Eier, so weit du kannst. Vielleicht schlüpft ja ein Küken!"
+    coins: 2500
+    waehrung: 100
+    tokens: 8
+    ziele:
+      - {type: throw, arg: eggs, menge: 20, text: "Wirf 20 Eier"}
+  - name: "Der Osterkuchen"
+    text: "Zu Ostern gehört ein Kuchen auf den Tisch. Und die goldenen Eier am Spawn sind die größte Überraschung."
+    coins: 3000
+    waehrung: 120
+    tokens: 10
+    ziele:
+      - {type: craft, arg: CAKE, menge: 2, text: "Back 2 Kuchen"}
+      - {type: sammeln, arg: selten, menge: 3, text: "Finde 3 goldene Eier"}
+  - name: "Das Osterfeuer"
+    text: "Am Abend vor Ostern brennt das Osterfeuer. Fäll Holz dafür und vertreib die Monster der Nacht."
+    ab: "ostern-1"
+    coins: 3500
+    waehrung: 150
+    tokens: 11
+    ziele:
+      - {type: break, arg: logs, menge: 64, text: "Fäll 64 Stämme"}
+      - {type: kill, arg: monster, menge: 25, bedingung: nacht, text: "Besiege nachts 25 Monster"}
+  - name: "Frohe Ostern!"
+    text: "Ostersonntag! Finde die letzten goldenen Eier und sammel noch einmal kräftig am Spawn."
+    ab: "ostern"
+    coins: 5000
+    waehrung: 300
+    tokens: 20
+    ziele:
+      - {type: sammeln, arg: selten, menge: 5, text: "Finde 5 goldene Eier"}
+      - {type: sammeln, menge: 50, text: "Sammle 50 Ostereier am Spawn"}
+titel:
+  osterhase: "<#9EE07A>Osterhase"
+  eierkoenig: "<#FFE070>Eierkönig"
+shop:
+  - "ITEM;EGG;16;16 Eier;20"
+  - "ITEM;GOLDEN_CARROT;8;8 goldene Karotten;40"
+  - "COINS;5000;1;5.000 Coins;150"
+  - "TOKENS;5;1;5 Tokens;200"
+  - "KEY;episch;1;Epischer Schlüssel;350"
+  - "TITLE;osterhase;1;Titel „Osterhase“;450"
+  - "COSMETIC;hut_blumenkranz;1;Blumenkranz;500"
+  - "TITLE;eierkoenig;1;Titel „Eierkönig“;650"
+  - "COSMETIC;hut_katzenohren;1;Katzenohren;700"

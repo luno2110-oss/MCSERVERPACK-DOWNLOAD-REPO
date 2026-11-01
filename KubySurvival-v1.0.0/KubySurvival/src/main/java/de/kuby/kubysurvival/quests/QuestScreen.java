@@ -72,8 +72,40 @@ public final class QuestScreen {
     public record Tracked(String area, String name, String task, long coins, long claims, long tokens, double progress,
                           String goal, String button, String hint) {}
 
-    /** Kachel: Bereich, Titel (Event-Name oder Bereich), Untertitel (fertig gesetzt), erledigt, gesamt (total < 0: Prozent). */
-    public record Tile(Area area, String title, String sub, long done, long total) {}
+    /**
+     * Kachel: Bereich, Titel (Event-Name oder Bereich), Untertitel (fertig gesetzt), erledigt, gesamt (total < 0: Prozent),
+     * eigenes Symbol (Event-Preset; null = Symbol des Bereichs).
+     */
+    public record Tile(Area area, String title, String sub, long done, long total, KitData.Sprite art) {
+        public Tile(Area area, String title, String sub, long done, long total) {
+            this(area, title, sub, done, total, null);
+        }
+    }
+
+    /**
+     * Aussehen eines Event-Presets: Kopf-Grafik (32 px), Symbol im breiten und im schmalen Reiter (16 px), Symbol der
+     * Währung (12 px) und ihre Farbe. Bilder: tools/build_event_art.py (Sprites ev_<preset>_…).
+     */
+    public record Theme(KitData.Sprite head, KitData.Sprite pill, KitData.Sprite tab, KitData.Sprite coin, TextColor color) {
+        public static final Theme HALLOWEEN = new Theme(KitData.Sprite.QU_T_EVENT, KitData.Sprite.QU_PILL_I_EVENT,
+                KitData.Sprite.QU_TAB_I_EVENT, KitData.Sprite.QU_CANDY, TextColor.color(0xFC8888));
+
+        public static Theme of(String id) {
+            return switch (id == null ? "" : id) {
+                case "weihnachten" -> new Theme(KitData.Sprite.EV_WEIHNACHTEN_HEAD, KitData.Sprite.EV_WEIHNACHTEN_ICON,
+                        KitData.Sprite.EV_WEIHNACHTEN_ICON, KitData.Sprite.EV_WEIHNACHTEN_COIN, TextColor.color(0xE8A060));
+                case "silvester" -> new Theme(KitData.Sprite.EV_SILVESTER_HEAD, KitData.Sprite.EV_SILVESTER_ICON,
+                        KitData.Sprite.EV_SILVESTER_ICON, KitData.Sprite.EV_SILVESTER_COIN, TextColor.color(0x7CE08A));
+                case "valentinstag" -> new Theme(KitData.Sprite.EV_VALENTINSTAG_HEAD, KitData.Sprite.EV_VALENTINSTAG_ICON,
+                        KitData.Sprite.EV_VALENTINSTAG_ICON, KitData.Sprite.EV_VALENTINSTAG_COIN, TextColor.color(0xFF7AA8));
+                case "ostern" -> new Theme(KitData.Sprite.EV_OSTERN_HEAD, KitData.Sprite.EV_OSTERN_ICON,
+                        KitData.Sprite.EV_OSTERN_ICON, KitData.Sprite.EV_OSTERN_COIN, TextColor.color(0x9EE07A));
+                case "sommer" -> new Theme(KitData.Sprite.EV_SOMMER_HEAD, KitData.Sprite.EV_SOMMER_ICON,
+                        KitData.Sprite.EV_SOMMER_ICON, KitData.Sprite.EV_SOMMER_COIN, TextColor.color(0x7AD8F0));
+                default -> HALLOWEEN;
+            };
+        }
+    }
 
     public record Overview(Head head, Tracked tracked, List<Tile> tiles) {}
 
@@ -216,7 +248,7 @@ public final class QuestScreen {
     private static void tile(Canvas c, int x, int y, Tile t, Actions a) {
         Area ar = t.area();
         c.box(x, y, 126, 67, ar.tile, Canvas.Z_BUTTON);
-        icon(c, x + 8, y + 7, 30, 32, ar.icon);
+        icon(c, x + 8, y + 7, 30, 32, t.art() != null ? t.art() : ar.icon);
         c.text(x + 44, y + 9, Canvas.caps(Canvas.fit(t.title(), ar.bold, 78)), ar.title, ar.bold);
         // Untertitel kommt fertig (Kapitälchen außer Zahlen und Einheiten wie „24min“)
         c.text(x + 44, y + 20, Canvas.fit(t.sub(), false, 78), ar.sub, false);
@@ -281,9 +313,19 @@ public final class QuestScreen {
         }
     }
 
-    public record Reward(Kind kind, String text) {
+    /** Belohnung: Art, Zahl als Text, eigenes Symbol und Farbe (Event-Währung; null = wie die Art). */
+    public record Reward(Kind kind, String text, KitData.Sprite icon, TextColor color) {
+        public Reward(Kind kind, String text) {
+            this(kind, text, null, null);
+        }
+
         public static Reward of(Kind k, long v) {
             return new Reward(k, n(v));
+        }
+
+        /** Event-Währung im Aussehen des Presets. */
+        public static Reward currency(long v, Theme t) {
+            return t == null ? of(Kind.CANDY, v) : new Reward(Kind.CANDY, n(v), t.coin(), t.color());
         }
     }
 
@@ -298,8 +340,12 @@ public final class QuestScreen {
                        String desc, List<Reward> rewards, Double progress, boolean cream, String count, Btn button,
                        String buttonText, String sub, String hint, Consumer<Player> click) {}
 
-    /** Reiter: Bereich, Name (beim Event der Event-Name), Zähler. */
-    public record Tab(Area area, String title, String count) {}
+    /** Reiter: Bereich, Name (beim Event der Event-Name), Zähler, Aussehen des Events (null = Halloween/Bereich). */
+    public record Tab(Area area, String title, String count, Theme theme) {
+        public Tab(Area area, String title, String count) {
+            this(area, title, count, null);
+        }
+    }
 
     /** Set-Bonus unter Täglich und Wöchentlich. */
     public record Bonus(int done, int total, String time, List<Reward> rewards) {}
@@ -316,8 +362,12 @@ public final class QuestScreen {
         }
     }
 
-    /** Leiste unter der Event-Liste: Währung, Stand und Klick zum Shop. */
-    public record Shop(String currency, long balance, Consumer<Player> open) {}
+    /** Leiste unter der Event-Liste: Währung, Stand, Klick zum Shop, Aussehen und Name des Shops. */
+    public record Shop(String currency, long balance, Consumer<Player> open, Theme theme, String name) {
+        public Shop(String currency, long balance, Consumer<Player> open) {
+            this(currency, balance, open, Theme.HALLOWEEN, "Candy-Shop");
+        }
+    }
 
     public static Canvas list(ListView v, Actions a) {
         Canvas c = new Canvas(W).heading("Quests", GOLD);
@@ -325,7 +375,7 @@ public final class QuestScreen {
         c.box(0, 0, W, 48, KitData.Box.QU_HEAD);
         c.sprite(8, 13, KitData.Sprite.QU_BACK);
         c.action(8, 13, 22, 22, a.overview(), "Zurück");
-        icon(c, 39, 8, 30, 32, v.area().icon);
+        icon(c, 39, 8, 30, 32, v.shop() != null && v.shop().theme() != null ? v.shop().theme().head() : v.area().icon);
         c.text(78, 13, Canvas.caps(Canvas.fit(v.title(), true, 220)), v.area().title, true);
         c.text(78, 27, Canvas.fit(v.subtitle(), false, 240), LIGHT, false);
         c.textRight(380, 13, v.count(), WHITE, true);
@@ -337,14 +387,14 @@ public final class QuestScreen {
             Area ar = t.area();
             if (ar == v.area()) {
                 c.box(x, 54, 200, 22, ar.pill, Canvas.Z_BUTTON);
-                icon(c, x + 7, 57, 16, 16, ar.pillIcon);
+                icon(c, x + 7, 57, 16, 16, t.theme() != null ? t.theme().pill() : ar.pillIcon);
                 c.textFlat(x + 29, 61, Canvas.caps(Canvas.fit(t.title(), true, 120)), DARK, true);
                 int cw = Canvas.width(t.count(), false);
                 c.textFlat(x + 192 - cw, 61, t.count(), DARK, false);
                 x += 204;
             } else {
                 c.box(x, 54, 34, 22, ar.tab, Canvas.Z_BUTTON);
-                icon(c, x, 57, 34, 16, ar.tabIcon);
+                icon(c, x, 57, 34, 16, t.theme() != null ? t.theme().tab() : ar.tabIcon);
                 c.action(x, 54, 34, 22, a.area(ar), t.title() + " · " + t.count());
                 x += 38;
             }
@@ -393,17 +443,21 @@ public final class QuestScreen {
             rewardsRight(c, 381, y + 30, b.rewards());
             y += 51 + 12;
         }
-        // Event: Leiste zum Candy-Shop
+        // Event: Leiste zum Shop des Events
         Shop s = v.shop();
         if (s != null) {
+            Theme th = s.theme() != null ? s.theme() : Theme.HALLOWEEN;
+            String name = s.name() != null ? s.name() : "Candy-Shop";
             c.box(0, y, W, 33, KitData.Box.QU_CARD_GOLD);
-            c.sprite(10, y + 10, KitData.Sprite.QU_CANDY);
-            int nw = c.text(28, y + 8, n(s.balance()), CANDY, true);
+            icon(c, 8, y + 8, 16, 16, th.coin());
+            int nw = c.text(28, y + 8, n(s.balance()), th.color(), true);
             c.text(28 + nw + 5, y + 8, Canvas.fit(s.currency(), false, 140), LIGHT, false);
             c.text(28, y + 19, "Für Titel, Hüte, Schlüssel und mehr", GRAY, false);
-            c.box(284, y + 7, 96, 18, KitData.Box.QU_BTN_GOLD, Canvas.Z_BUTTON);
-            c.textFlat(332 - Canvas.width("Candy-Shop", true) / 2, y + 13, "Candy-Shop", DARK, true);
-            c.action(0, y, W, 33, s.open(), "Candy-Shop öffnen");
+            int bw = Math.max(96, Canvas.width(Canvas.fit(name, true, 140), true) + 16);
+            c.box(380 - bw, y + 7, bw, 18, KitData.Box.QU_BTN_GOLD, Canvas.Z_BUTTON);
+            String label = Canvas.fit(name, true, 140);
+            c.textFlat(380 - bw / 2 - Canvas.width(label, true) / 2, y + 13, label, DARK, true);
+            c.action(0, y, W, 33, s.open(), name + " öffnen");
         }
         return c;
     }
@@ -415,18 +469,24 @@ public final class QuestScreen {
     /** Angebot: Icon, Name, Preis, gekauft (einmalige Angebote), bezahlbar, Klick. */
     public record ShopOffer(KitData.Icon icon, String name, long price, boolean owned, boolean affordable, Consumer<Player> buy) {}
 
-    public record ShopView(String event, String currency, long balance, List<ShopOffer> offers) {}
+    public record ShopView(String event, String currency, long balance, List<ShopOffer> offers, Theme theme, String name) {
+        public ShopView(String event, String currency, long balance, List<ShopOffer> offers) {
+            this(event, currency, balance, offers, Theme.HALLOWEEN, "Candy-Shop");
+        }
+    }
 
     public static Canvas eventShop(ShopView v, Consumer<Player> back) {
         Canvas c = new Canvas(W).heading("Quests", GOLD);
         c.box(0, 0, W, 48, KitData.Box.QU_HEAD);
         c.sprite(8, 13, KitData.Sprite.QU_BACK);
         c.action(8, 13, 22, 22, back, "Zurück");
-        icon(c, 39, 8, 30, 32, KitData.Sprite.QU_T_EVENT);
-        c.text(78, 13, Canvas.caps("Candy-Shop"), Area.EVENT.title, true);
+        Theme th = v.theme() != null ? v.theme() : Theme.HALLOWEEN;
+        String shopName = v.name() != null ? v.name() : "Candy-Shop";
+        icon(c, 39, 8, 30, 32, th.head());
+        c.text(78, 13, Canvas.caps(Canvas.fit(shopName, true, 200)), Area.EVENT.title, true);
         c.text(78, 27, Canvas.fit(v.event() + " · nur während des Events", false, 200), LIGHT, false);
-        int nw = c.textRight(380, 13, n(v.balance()), CANDY, true);
-        c.sprite(380 - nw - 16, 11, KitData.Sprite.QU_CANDY);
+        int nw = c.textRight(380, 13, n(v.balance()), th.color(), true);
+        icon(c, 380 - nw - 17, 10, 14, 14, th.coin());
         c.textRight(380, 27, Canvas.caps(Canvas.fit(v.currency(), false, 100)), LIGHT, false);
         int y = 54, cw = (W - 4) / 2, ch = 46;
         for (int i = 0; i < v.offers().size(); i++) {
@@ -435,8 +495,8 @@ public final class QuestScreen {
             c.box(x, oy, cw, ch, o.owned() ? KitData.Box.QU_CARD_BROWN : o.affordable() ? KitData.Box.QU_CARD_GOLD : KitData.Box.QU_CARD_GRAY);
             c.icon(x + 8, oy + 8, o.icon(), false);
             c.text(x + 30, oy + 10, Canvas.fit(o.name(), true, cw - 38), o.owned() ? LIGHT : NAME, true);
-            c.sprite(x + 10, oy + 28, KitData.Sprite.QU_CANDY);
-            c.text(x + 28, oy + 30, n(o.price()), o.affordable() || o.owned() ? CANDY : GRAY, true);
+            icon(c, x + 8, oy + 27, 16, 14, th.coin());
+            c.text(x + 28, oy + 30, n(o.price()), o.affordable() || o.owned() ? th.color() : GRAY, true);
             if (o.owned()) {
                 c.textRight(x + cw - 10, oy + 30, "✔ " + Canvas.caps("Gekauft"), LIGHT, false);
             } else {
@@ -448,7 +508,7 @@ public final class QuestScreen {
                 if (o.buy() != null) c.action(x, oy, cw, ch, o.buy(), o.name() + " für " + n(o.price()) + " " + v.currency());
             }
         }
-        if (v.offers().isEmpty()) c.text(4, y, "Im Candy-Shop gibt es gerade nichts.", LIGHT, false);
+        if (v.offers().isEmpty()) c.text(4, y, "Im Shop gibt es gerade nichts.", LIGHT, false);
         return c;
     }
 
@@ -465,9 +525,9 @@ public final class QuestScreen {
         for (Reward r : rs) {
             if (!first) x += 10;
             first = false;
-            KitData.Sprite s = r.kind().icon;
+            KitData.Sprite s = r.icon() != null ? r.icon() : r.kind().icon;
             c.sprite(x + (16 - s.width) / 2, y - 4 + (16 - s.height) / 2, s);
-            x += 19 + c.text(x + 19, y, r.text(), r.kind().color, true);
+            x += 19 + c.text(x + 19, y, r.text(), r.color() != null ? r.color() : r.kind().color, true);
         }
         return x;
     }

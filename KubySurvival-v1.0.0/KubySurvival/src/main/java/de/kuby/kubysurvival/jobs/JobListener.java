@@ -195,7 +195,7 @@ public final class JobListener implements Listener {
     public void onBreed(EntityBreedEvent e) {
         if (!(e.getBreeder() instanceof Player p)) return;
         jobs.reward(p, Job.ZUECHTER, 6, 5);
-        addon.quests().progress(p, "breed", null, 1);
+        addon.quests().progress(p, "breed", e.getEntity(), 1);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

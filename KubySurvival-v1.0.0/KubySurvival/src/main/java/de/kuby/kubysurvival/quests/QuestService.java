@@ -501,6 +501,7 @@ public final class QuestService {
             case "kill" -> subject instanceof Entity e && (arg.equalsIgnoreCase("monster") ? e instanceof Monster
                     : arg.equalsIgnoreCase("animal") ? e instanceof Animals : e.getType().name().equalsIgnoreCase(arg));
             case "jobxp" -> subject instanceof Job j && (j.name().equalsIgnoreCase(arg) || j.ascii.equalsIgnoreCase(arg));
+            case "breed", "tame" -> subject instanceof Entity e && (arg.equalsIgnoreCase("animal") || e.getType().name().equalsIgnoreCase(arg));
             default -> subject instanceof Material m && m.name().equalsIgnoreCase(arg);
         };
     }

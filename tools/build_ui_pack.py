@@ -55,6 +55,9 @@ build_sym.build(OUT)
 import build_chest_bg  # noqa: E402
 build_chest_bg.build(OUT)
 # Event-Items (Candy Corn)
+# Event-Presets: Kopf-Bilder, Reiter-Symbole, Währungen und Sammel-Items zeichnen (tools/assets/events), dann die Items
+import build_event_art  # noqa: E402
+build_event_art.build()
 import build_event_items  # noqa: E402
 build_event_items.build(OUT)
 

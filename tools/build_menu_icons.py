@@ -187,6 +187,8 @@ def icons(vroot):
         ("carved_pumpkin", cube(tx("block/pumpkin_top.png"), tx("block/carved_pumpkin.png"), tx("block/pumpkin_side.png"))),
         ("jack_o_lantern", cube(tx("block/pumpkin_top.png"), tx("block/jack_o_lantern.png"), tx("block/pumpkin_side.png"))),
         ("pumpkin", cube(tx("block/pumpkin_top.png"), tx("block/pumpkin_side.png"), tx("block/pumpkin_side.png"))),
+        # Weihnachten
+        ("snow_block", cube(tx("block/snow.png"), tx("block/snow.png"), tx("block/snow.png"))),
     ]
     return out
 
