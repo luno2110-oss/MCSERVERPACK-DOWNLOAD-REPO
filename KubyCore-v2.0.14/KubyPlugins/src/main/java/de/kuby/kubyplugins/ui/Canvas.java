@@ -521,10 +521,15 @@ public final class Canvas {
      * (nicht bei voller Länge). Liegt über Kästen und Balken (Z_FILL).
      */
     public Canvas strip(int x, int y, KitData.Strip s, int n) {
+        return strip(x, y, s, n, Z_FILL);
+    }
+
+    /** Füllung auf Ebene z (z. B. Z_BUTTON für den leeren Balken unter einer Füllung). */
+    public Canvas strip(int x, int y, KitData.Strip s, int n, int z) {
         n = Math.min(n, s.width);
         if (n <= 0) return this;
         int w = n < s.width ? n + 1 : n;
-        glyphs.add(new Glyph(Kind.ICON, x, y, w, s.height, w + 1, Z_FILL, String.valueOf((char) (s.first + n - 1)),
+        glyphs.add(new Glyph(Kind.ICON, x, y, w, s.height, w + 1, z, String.valueOf((char) (s.first + n - 1)),
                 NamedTextColor.WHITE, false, Math.max(KitData.I_MIN, 7 - s.height), KitData.I_MAX, y, y + s.height));
         return this;
     }

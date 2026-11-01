@@ -21,6 +21,8 @@ public final class SellService {
     private final KubyPlugins plugin;
     private final File file;
     private final Map<UUID, Integer> levels = new ConcurrentHashMap<>();
+    /** Verkaufte Items seit dem Start (Profil „Verkauft“). */
+    private final Map<UUID, Long> sold = new ConcurrentHashMap<>();
 
     public SellService(KubyPlugins plugin) {
         this.plugin = plugin;
@@ -28,6 +30,8 @@ public final class SellService {
         YamlConfiguration yml = YamlConfiguration.loadConfiguration(file);
         for (String key : yml.getKeys(false)) {
             levels.put(UUID.fromString(key), yml.getInt(key + ".level"));
+            long n = yml.getLong(key + ".verkauft");
+            if (n > 0) sold.put(UUID.fromString(key), n);
         }
     }
 
@@ -40,6 +44,10 @@ public final class SellService {
             if (m != null) result.put(m, s.getLong(key));
         }
         return result;
+    }
+
+    public long sold(UUID id) {
+        return sold.getOrDefault(id, 0L);
     }
 
     public int level(UUID id) {
@@ -79,7 +87,7 @@ public final class SellService {
     /** Verkauft alle Items mit Preis aus dem Hauptinventar. Gibt die Auszahlung zurück. */
     public synchronized long sellInventory(Player p) {
         Map<Material, Long> prices = worth();
-        long sum = 0;
+        long sum = 0, items = 0;
         ItemStack[] contents = p.getInventory().getStorageContents();
         for (int i = 0; i < contents.length; i++) {
             ItemStack item = contents[i];
@@ -88,17 +96,23 @@ public final class SellService {
             if (price == null) continue;
             long unit = plugin.weekly().isMeta(item.getType()) ? price * 125 / 100 : price;
             sum += unit * item.getAmount();
+            items += item.getAmount();
             contents[i] = null;
         }
         p.getInventory().setStorageContents(contents);
         long payout = (long) Math.floor(sum * multiplier(p.getUniqueId()));
         if (payout > 0) plugin.economy().deposit(p.getUniqueId(), payout);
+        if (items > 0) {
+            sold.merge(p.getUniqueId(), items, Long::sum);
+            save();
+        }
         return payout;
     }
 
     public synchronized void save() {
         YamlConfiguration yml = new YamlConfiguration();
         levels.forEach((id, lvl) -> yml.set(id + ".level", lvl));
+        sold.forEach((id, n) -> yml.set(id + ".verkauft", n));
         try {
             plugin.getDataFolder().mkdirs();
             yml.save(file);

@@ -92,6 +92,8 @@ public final class QuestService {
         int bestStreak;
         String streakDay = "";
         long total;
+        /** Mit Quests verdiente Tokens seit dem Start (Quest-Rang). */
+        long tokens;
         /** null: automatisch (Geschichte), "-": aus. */
         String tracked;
     }
@@ -352,6 +354,23 @@ public final class QuestService {
 
     public synchronized long total(UUID id) {
         return data(id).total;
+    }
+
+    /** Quest-Ränge: Name und nötige Quest-Tokens (seit dem Start), aufsteigend. */
+    public static final List<Map.Entry<String, Long>> RANKS = List.of(Map.entry("Neuling", 0L), Map.entry("Lehrling", 15L),
+            Map.entry("Entdecker", 40L), Map.entry("Abenteurer", 80L), Map.entry("Veteran", 150L), Map.entry("Held", 250L),
+            Map.entry("Legende", 400L));
+
+    /** Mit Quests verdiente Tokens seit dem Start. */
+    public synchronized long questTokens(UUID id) {
+        return data(id).tokens;
+    }
+
+    /** Index des Quest-Rangs für so viele Quest-Tokens. */
+    public static int rank(long tokens) {
+        int r = 0;
+        for (int i = 0; i < RANKS.size(); i++) if (tokens >= RANKS.get(i).getValue()) r = i;
+        return r;
     }
 
     Map<Integer, Long> streakRewards() {
@@ -626,7 +645,10 @@ public final class QuestService {
 
     private void pay(UUID id, long coins, long tokens, long xp) {
         if (coins > 0) core.modes().depositIn(id, ModeService.SURVIVAL, coins);
-        if (tokens > 0) addon.jobs().addTokens(id, tokens);
+        if (tokens > 0) {
+            addon.jobs().addTokens(id, tokens);
+            data(id).tokens += tokens;
+        }
         if (xp > 0) addon.jobs().addPlayerXp(id, xp);
     }
 
@@ -722,6 +744,7 @@ public final class QuestService {
                 d.bestStreak = s.getInt("best-streak");
                 d.streakDay = s.getString("streak-day", "");
                 d.total = s.getLong("total");
+                d.tokens = s.getLong("tokens");
                 d.tracked = s.getString("tracked");
                 players.put(id, d);
             }
@@ -756,6 +779,7 @@ public final class QuestService {
             out.set(b + "best-streak", d.bestStreak);
             out.set(b + "streak-day", d.streakDay);
             out.set(b + "total", d.total);
+            out.set(b + "tokens", d.tokens);
             out.set(b + "tracked", d.tracked);
         }
         for (Map.Entry<String, TeamQuest> e : teams.entrySet()) {

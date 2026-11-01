@@ -520,6 +520,10 @@ public final class KubyPlugins extends JavaPlugin {
     public de.kuby.kubyplugins.service.PlayerSettings playerSettings() { return playerSettings; }
     private de.kuby.kubyplugins.service.InfoBar infoBar;
     public de.kuby.kubyplugins.service.InfoBar infoBar() { return infoBar; }
+    /** Eigenes Profil statt /stats (Survival-Addon): gibt true zurück, wenn es das Profil gezeigt hat. */
+    private volatile java.util.function.BiPredicate<org.bukkit.entity.Player, org.bukkit.OfflinePlayer> profile;
+    public void profile(java.util.function.BiPredicate<org.bukkit.entity.Player, org.bukkit.OfflinePlayer> opener) { profile = opener; }
+    public java.util.function.BiPredicate<org.bukkit.entity.Player, org.bukkit.OfflinePlayer> profile() { return profile; }
     private de.kuby.kubyplugins.service.NotifyService notifications;
     private de.kuby.kubyplugins.service.DisplaySettings displaySettings;
     private de.kuby.kubyplugins.service.TranslateService translator;

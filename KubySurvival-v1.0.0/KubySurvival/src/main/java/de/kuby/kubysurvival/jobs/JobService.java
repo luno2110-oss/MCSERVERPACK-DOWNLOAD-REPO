@@ -42,6 +42,8 @@ public final class JobService {
         public long tokens;
         /** Coins aus Jobs in der laufenden Stunde. */
         public long earnedHour;
+        /** Mit Jobs verdiente Coins seit dem Start (Profil). */
+        public long earnedTotal;
         public String hour = "";
         public long switchedAt;
         /** Wochenauftrag: Woche (z. B. 2026-W43), Job, Ziel und Stand in Job-XP, abgeschlossen. */
@@ -264,6 +266,7 @@ public final class JobService {
         if (paid > 0) {
             core.economy().deposit(p.getUniqueId(), paid);
             w.earnedHour += paid;
+            w.earnedTotal += paid;
             if (w.earnedHour >= cap) {
                 Msg.send(p, "<yellow>Stundenlimit für Job-Coins erreicht (" + Msg.coins(cap) + "). XP bekommst du weiter, "
                         + "Coins wieder in " + minutesToNextHour() + " Min.");
@@ -349,6 +352,7 @@ public final class JobService {
             w.totalXp = s.getLong("total-xp");
             w.tokens = s.getLong("tokens");
             w.earnedHour = s.getLong("earned-hour");
+            w.earnedTotal = s.getLong("earned-total");
             w.hour = s.getString("hour", "");
             w.switchedAt = s.getLong("switched-at");
             w.orderWeek = s.getString("order.week", "");
@@ -378,6 +382,7 @@ public final class JobService {
             out.set(base + ".total-xp", w.totalXp);
             out.set(base + ".tokens", w.tokens);
             out.set(base + ".earned-hour", w.earnedHour);
+            out.set(base + ".earned-total", w.earnedTotal);
             out.set(base + ".hour", w.hour);
             out.set(base + ".switched-at", w.switchedAt);
             out.set(base + ".order.week", w.orderWeek);

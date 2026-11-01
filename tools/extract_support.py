@@ -51,9 +51,41 @@ def nine_clean(a, x, y, w, h, n=7, mirror_bottom=False):
         ok = np.abs(box[r, :] - col_mode).sum(axis=1) < 6
         return int(ok[edge_cols].sum()), int(ok.sum())
 
-    my = max(rows, key=lambda r: (row_score(r)[0], int(is_fill[r, n:w - n].sum()), row_score(r)[1]))
-    mx = max(cols, key=lambda c: (bool(is_fill[my, c]), col_score(c)))
-    return nine_auto(a, x, y, w, h, n=n, mid=(mx, my), mirror_bottom=mirror_bottom)
+    # Vorbild für saubere Ränder: die innersten Spalten bzw. Zeilen direkt neben den Ecken (meist nur Füllung)
+    def col_clean(c):
+        return any(bool((np.abs(box[edge_rows, c] - box[edge_rows, ref]).sum(axis=1) < 6).all()) for ref in (n, w - n - 1))
+
+    def row_clean(r):
+        return any(bool((np.abs(box[r, edge_cols] - box[ref, edge_cols]).sum(axis=1) < 6).all()) for ref in (n, h - n - 1))
+
+    my = max(rows, key=lambda r: (row_clean(r), row_score(r)[0], int(is_fill[r, n:w - n].sum()), row_score(r)[1]))
+    mx = max(cols, key=lambda c: (bool(is_fill[my, c]), col_clean(c), col_score(c)))
+    img = nine_auto(a, x, y, w, h, n=n, mid=(mx, my), mirror_bottom=mirror_bottom)
+    return clean_corners(img, n)
+
+
+def clean_corners(img, n=7):
+    """Runde Ecken: je Zeile von außen her durchsichtig bis zum ersten Pixel in der Umrissfarbe (Mitte der oberen bzw.
+    unteren Kante). Gezählt wird an allen vier Ecken, es gilt die kleinste Zahl (die Ecken sind gleich geformt): liegt
+    hinter einer Ecke fast schwarzer Hintergrund, hält nine_auto ihn sonst für den Umriss."""
+    a = np.array(img)
+    size = a.shape[0]
+    for j in range(n):
+        counts = []
+        for bottom in (False, True):
+            outline = a[size - 1 if bottom else 0, n, :3].astype(int)
+            yy = size - 1 - j if bottom else j
+            for right in (False, True):
+                k = 0
+                while k < n and np.abs(a[yy, size - 1 - k if right else k, :3].astype(int) - outline).sum() > 12:
+                    k += 1
+                counts.append(k)
+        k = min(counts)
+        for yy in (j, size - 1 - j):
+            a[yy, :k, 3] = 0
+            a[yy, size - k:, 3] = 0
+            a[yy, k:size - k, 3] = 255
+    return Image.fromarray(a, "RGBA")
 
 
 # 4K-Aufnahme: GUI-Pixel (x, y) des Dialogs (x = 0 am linken Rand des Körpers) liegt bei (1332 + 3x + 1, 201 + 3y + 1)

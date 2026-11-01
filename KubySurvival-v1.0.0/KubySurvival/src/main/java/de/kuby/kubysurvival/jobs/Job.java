@@ -8,7 +8,7 @@ import java.util.List;
 public enum Job {
     HOLZFAELLER("Holzfäller", "Holzfaeller", Material.IRON_AXE, "<#C8884A>", "Baumstämme fällen",
             List.of("Baumstämme aller Holzarten fällen", "Selbst gesetzte Stämme zählen nicht")),
-    MINER("Miner", "Miner", Material.IRON_PICKAXE, "<gray>", "Stein und Erze abbauen",
+    MINER("Bergarbeiter", "Bergarbeiter", Material.IRON_PICKAXE, "<gray>", "Stein und Erze abbauen",
             List.of("Erze abbauen: Diamant, Smaragd und Antiker Schrott zahlen am meisten",
                     "Stein, Tiefenschiefer, Netherrack und Co. bringen XP", "Steine aus Generatoren zählen nicht")),
     GRAEBER("Gräber", "Graeber", Material.IRON_SHOVEL, "<#B08850>", "Erde, Sand und Kies graben",
@@ -60,6 +60,7 @@ public enum Job {
         }
         return switch (name.toLowerCase(java.util.Locale.ROOT)) {
             case "lumberjack" -> HOLZFAELLER;
+            case "miner" -> MINER;
             case "digger" -> GRAEBER;
             case "hunter" -> JAEGER;
             case "breeder" -> ZUECHTER;

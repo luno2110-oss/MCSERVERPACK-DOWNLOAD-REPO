@@ -53,6 +53,7 @@ public final class StatsScreen {
     }
 
     public void open(Player viewer, OfflinePlayer target) {
+        if (plugin.profile() != null && plugin.profile().test(viewer, target)) return;
         UUID id = target.getUniqueId();
         String mode = plugin.modes().modeOf(viewer.getUniqueId());
         if (ModeService.HUB.equals(mode)) mode = ModeService.SURVIVAL;

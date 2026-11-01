@@ -120,6 +120,22 @@ public final class KubySurvival extends JavaPlugin {
             core.registerSelfTestCanvas("Survival-Juwelenshop " + pg,
                     () -> de.kuby.kubysurvival.shop.ShopCanvas.canvas(shop.sample(pg), null));
         }
+        // Profil: alle Reiter, mit hohen Zahlen (große Ziffern, lange Balken)
+        de.kuby.kubysurvival.stats.ProfileScreen.Head ph = new de.kuby.kubysurvival.stats.ProfileScreen.Head("Test", "Legend", true, 123);
+        de.kuby.kubysurvival.stats.ProfileScreen.Actions pa = t -> p -> { };
+        core.registerSelfTestCanvas("Profil Übersicht", () -> de.kuby.kubysurvival.stats.ProfileScreen.overview(ph,
+                new de.kuby.kubysurvival.stats.ProfileScreen.Overview(123, 5000, 36900, "123 Std. 4 Min.", "17.10.2026", "Legend",
+                        "Testteam", 12_345_678, 9_999, 25, 7, 20, "Partner", "aktiv"), pa));
+        java.util.List<de.kuby.kubysurvival.stats.ProfileScreen.JobCard> pjobs = new java.util.ArrayList<>();
+        for (de.kuby.kubysurvival.jobs.Job j : de.kuby.kubysurvival.stats.ProfileScreen.ORDER) {
+            pjobs.add(new de.kuby.kubysurvival.stats.ProfileScreen.JobCard(j, 99, 0.5, j == de.kuby.kubysurvival.jobs.Job.MINER));
+        }
+        core.registerSelfTestCanvas("Profil Berufe", () -> de.kuby.kubysurvival.stats.ProfileScreen.jobs(ph,
+                new de.kuby.kubysurvival.stats.ProfileScreen.Jobs(pjobs, 1_234_567, 98_765, 3), pa));
+        core.registerSelfTestCanvas("Profil Quests", () -> de.kuby.kubysurvival.stats.ProfileScreen.quests(ph,
+                new de.kuby.kubysurvival.stats.ProfileScreen.Quests(9999, 1234, 30, 365), pa));
+        core.registerSelfTestCanvas("Profil Welt", () -> de.kuby.kubysurvival.stats.ProfileScreen.world(ph,
+                new de.kuby.kubysurvival.stats.ProfileScreen.World(9_876_543, 321, 1_000_000, 12, 4000, 4000), pa));
         core.registerSelfTestCheck("Möbel-Katalog", () -> {
             int n = 0;
             for (FurnitureCatalog.Tab t : FurnitureCatalog.tabs()) {
@@ -448,6 +464,8 @@ public final class KubySurvival extends JavaPlugin {
         core.registerStat("fish_caught", id -> (long) angeln.profile(id).catches);
         core.registerStat("angel_level", id -> (long) angeln.profile(id).level());
         core.registerStat("claims", id -> (long) claims.claimsOf(id).size());
+        // Profil statt Statistik in Survival (/stats)
+        core.profile(new de.kuby.kubysurvival.stats.ProfileScreen(this, core)::open);
         // Level, Job und Tokens für Scoreboard und Erfolge.
         core.registerStat("player_level", id -> (long) JobService.playerLevel(jobs.worker(id)));
         core.registerStat("tokens", id -> jobs.worker(id).tokens);

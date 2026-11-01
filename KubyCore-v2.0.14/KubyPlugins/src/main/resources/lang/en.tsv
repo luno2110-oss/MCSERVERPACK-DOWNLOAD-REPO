@@ -42,6 +42,7 @@
  Blöcke entfernt	 blocks removed
  Claim-Blöcke	 claim blocks
  Coins	 coins
+ Coins verdient	 coins earned
  Coins</gold> <gray>({}, Stand <gold>{}</gold>)	 coins</gold> <gray>({}, balance <gold>{}</gold>)
  Das Ehe-Konto ({} Coins) wurde halbiert.	 The marriage account ({} coins) was split in half.
  Die Kasse ist auf deinem Konto.	 The till goes to your account.
@@ -51,7 +52,11 @@
  Fische	 fish
  Fänge	 catches
  Gewinner	 winners
+ Grundstück	 plot
+ Grundstücke	 plots
+ Haupt	 Main
  Items zurück. <white>{}</white> passen nicht mehr ins Inventar und bleiben im Grab.	 items back. <white>{}</white> don't fit into your inventory anymore and stay in the grave.
+ Job-XP	 job XP
  Juwel	 jewel
  Juwelen	 jewels
  Juwelen, gilt für Season 	 jewels, valid for season
@@ -64,6 +69,7 @@
  Priester entfernt.	 priest removed.
  Punkte	 points
  Punkte)	 points)
+ Quest-Tokens	 quest tokens
  Reihe	 row
  Reihen	 rows
  Runden · eingesetzt 	 rounds · staked 
@@ -101,6 +107,7 @@
  bis Stufe 	 until level 
  entfernen (zweimal klicken)	 remove (click twice)
  erreicht! <gray>Belohnungen: <white>/battlepass	 reached! <gray>Rewards: <white>/battlepass
+ frei	 free
  für 	 for 
  gefangen! 	 caught! 
  gegen 	 against 
@@ -128,6 +135,7 @@
  steigt immer weiter	 keeps rising
  und 1 Token	 and 1 token
  verkauft für 	 sold for 
+ von {} Blöcken genutzt	 of {} blocks used
  von {} Stufen abgeholt	 of {} levels claimed
  vor dem Start	 before the start
  wartet	 waiting
@@ -2158,6 +2166,7 @@ Abschalten in /settings: Pay-Bestätigung	Turn off in /settings: pay confirmatio
 Abschicken	Submit
 Abschließen	Finish
 Absenden	Send
+Abzeichen	Badges
 Admin-Befehle	Admin commands
 Admin-Panel (nur Admins)	Admin panel (admins only)
 Ah, ein neues Gesicht! Meine Hände zittern, ich krieg keinen Fisch mehr an den Haken. Fängst du mir ein paar?	Ah, a new face! My hands are shaking, I can't get a fish on the hook anymore. Will you catch me a few?
@@ -2322,6 +2331,7 @@ Auch kleinere Beschädigungen und absichtliche Veränderungen an fremden Bauwerk
 Auf Stühle, Bänke und Hocker setzt du dich mit Rechtsklick, überall auf Survival. Aufstehen mit Shift.	You sit on chairs, benches and stools with right-click, anywhere in Survival. Stand up with shift.
 Auf Survival gelten zwölf Paragraphen, zum Beispiel zu Griefing, Claims, PvP und Chat. Mit /regeln liest du sie alle.	Twelve paragraphs apply in Survival, for example about griefing, claims, PvP and chat. Read them all with /regeln.
 Auf dem Konto ist nichts.	There's nothing in the account.
+Auf dem Weg zu Level 	On the way to level 
 Auf die letzte Nachricht antworten	Reply to the last message
 Auf diesem Server nicht eingerichtet.	Not set up on this server.
 Auf diesen Spieler läuft schon ein Kopfgeld in einem anderen Modus.	There is already a bounty on this player in another mode.
@@ -2446,10 +2456,12 @@ Belohnungs-NPC für Arena <white>{}</white> erstellt.	Reward NPC for arena <whit
 Benutzen	Use
 Benötigt Battlepass-Stufe {}.	Requires battle pass level {}.
 Bereit!	Ready!
+Bergarbeiter	Miner
 Bergwerk	Mine
 Berta vom Hof hat mir letztens Brot geschenkt. Sag ihr bitte danke von mir!	Berta from the farm gave me bread the other day. Please say thanks from me!
 Beruf und Level	Profession and level
 Beruf wählen	Choose a job
+Berufe	Jobs
 Beschreib deine Frage etwas genauer (mindestens 10 Zeichen).	Describe your question a bit more precisely (at least 10 characters).
 Beschreibung ändern	Change description
 Beschwerden über Entscheidungen können sachlich beim Team eingereicht werden.	Complaints about decisions can be brought to the team in a factual way.
@@ -2604,6 +2616,7 @@ Creeper-Kopf	Creeper head
 DEINE FREUNDE	YOUR FRIENDS
 DEINE GRÄBER	YOUR GRAVES
 Dabei sein	Be there
+Dabei seit	Member since
 Dafür bekommst du einen Haken hinter deinem Namen und ein Home mehr.	For that you get a check mark after your name and one more home.
 Dafür brauchst du {} Claimblöcke mehr, du hast {}.	You need {} more claim blocks for that, you have {}.
 Dafür brauchst du {} Claimblöcke, du hast {}.	You need {} claim blocks for that, you have {}.
@@ -3527,6 +3540,7 @@ Heiraten gibt es nur in Survival.	Marriage only exists in Survival.
 Heiratsanträge	Marriage proposals
 Heiße Zahlen	Hot numbers
 Heißes Eisen	Hot iron
+Held	Hero
 Helfen	Help
 Helfer	Helper
 Helfer kann werden, wer mindestens {} Stunden gespielt hat (du: {}).	Anyone who has played at least {} hours can become a helper (you: {}).
@@ -3613,6 +3627,7 @@ Höchste Stufe erreicht	Highest level reached
 Höchsteinsatz {} Chips.	Maximum bet {} chips.
 Höchstens {} Chips pro Runde.	At most {} chips per round.
 Höchstens {} je Runde.	At most {} per round.
+Höchster Rang erreicht	Highest rank reached
 Höchstes Level erreicht	Highest level reached
 Höchstes Level erreicht!	Highest level reached!
 Höhlensalmler	Cave Tetra
@@ -3676,6 +3691,7 @@ Infos zur Farmwelt	Info about the farm world
 Inhalt ›	Contents ›
 Ins Casino	To the casino
 Insel, Loot, One-Block	Island, loot, one-block
+Insgesamt 	Total 
 Inventar	Inventory
 Investition: Standardbetrag	Investment: default amount
 Iss 10 Mahlzeiten	Eat 10 meals
@@ -3940,6 +3956,7 @@ Leer	Empty
 Leeres Lager	Empty storage
 Leg Chips aus dem Rack vor dir auf dein Feld. Aufstehen mit Schleichen.	Put chips from the rack in front of you on your spot. Stand up by sneaking.
 Legend Rang	Legend rank
+Legende	Legend
 Legende der Spielzeit	Legend of Playtime
 Legendär	Legendary
 Legendär Crate Schlüssel	Legendary crate key
@@ -3948,6 +3965,7 @@ Legendär-Schlüssel	Legendary key
 Legendäre Kiste	Legendary crate
 Lehnbank	Backed Bench
 Lehnstuhl	Armchair
+Lehrling	Apprentice
 Leider nichts	No luck
 Leider nichts – diesmal keine drei gleichen.	No luck – no three of a kind this time.
 Leise Sohlen	Quiet steps
@@ -4217,6 +4235,7 @@ Nicht genug $.	Not enough $.
 Nicht genug Juwelen	Not enough jewels
 Nicht genug$ ({}).	Not enough $ ({}).
 Nicht genug$.	Not enough $.
+Nicht in der Top 10	Not in the top 10
 Nicht möglich: 	Not possible:
 Niemand	Nobody
 Niemand kann dir gerade Anfragen schicken	Nobody can send you requests right now
@@ -4238,6 +4257,7 @@ Noch keine letzte Runde	No last round yet
 Noch keine letzte Runde.	No last round yet.
 Noch nie online	Never online
 Noch {} Punkte bis Level 	{} more points to level 
+Noch {} Tokens bis zum nächsten Rang	{} more tokens to the next rank
 Nochmal klicken!	Click again!
 Nochmal klicken: Antrag an 	Click again: proposal to 
 Nochmal klicken: Guthaben wird gleichmäßig verteilt	Click again: the balance is split evenly
@@ -4338,6 +4358,7 @@ Pionier	Pioneer
 Piratenhut	Pirate hat
 Platin	Platinum
 Platin Rang	Platinum Rank
+Platz {} in der Top 10	Rank {} in the top 10
 Platz: XP-Preis	Slot: XP price
 Platzhalter: <white>{time} {index} {total} {arena}</white> · abbrechen mit <white>abbrechen</white>	Placeholders: <white>{time} {index} {total} {arena}</white> · cancel with <white>abbrechen</white>
 Plünderung	Looting
@@ -4370,6 +4391,7 @@ Pro Tag	Per day
 Profi	Pro
 Profi an der Rute	Pro at the rod
 Profi-Angler	Pro angler
+Profil	Profile
 Prämie	Bounty
 Prüfen	Check
 Punkte pro Stufe	Points per level
@@ -4380,8 +4402,10 @@ PvP, Kopfgelder, Turniere	PvP, bounties, tournaments
 PvP: Neulingsschutz	PvP: newcomer protection
 PvP: Spawn-Schutz	PvP: spawn protection
 Quest-Menü	Quest menu
+Quest-Rang	Quest rank
 Quest-Rangliste	Quest ranking
 Questmeister	Quest master
+Quests	Quests
 Quiz-Kategorie abstimmen	Vote on the quiz category
 Quiz-Start und Fragen	Quiz start and questions
 Quiz: Abstand	Quiz: interval
@@ -4586,6 +4610,7 @@ Seltene Items, Juwelen und Kosmetik	Rare items, jewels and cosmetics
 Seltene Kiste	Rare crate
 Seltenheit: 	Rarity: 
 Senden	Send
+Serie	Streak
 Server-Booster tragen im Spiel den Tag 	Server boosters wear the tag 
 Server-Meldungen und Tipps im Chat. Wichtige Ansagen kommen immer durch.	Server messages and tips in chat. Important announcements always get through.
 Server-Rekord	Server record
@@ -4973,6 +4998,7 @@ Vereinbarte Handelsgeschäfte sind einzuhalten.	Keep to the trades you agree on.
 Verfolgte Quest	Tracked quest
 Verfolgte Quest mit Fortschritt	Tracked quest with progress
 Vergib Baurechte nur an Spieler, denen du vertraust. Missbrauch von Claim-Berechtigungen bleibt verboten.	Only give build rights to players you trust. Abusing claim permissions remains forbidden.
+Verheiratet	Married
 Verheiratet seit 	Married since 
 Verheiratet steht ein Herz vor deinem Namen im Chat.	When you're married, a heart shows before your name in chat.
 Verheiratet steht ein Herz vor eurem Namen im Chat und in der Tab-Liste.	When you're married, a heart shows before your names in chat and in the tab list.
@@ -4989,6 +5015,7 @@ Verkaufspreis in Coins für {} Stück?	Selling price in coins for {} pieces?
 Verkaufspreise der Items	Selling prices of items
 Verkaufswert 	Selling value 
 Verkaufswert des Gegenstands in der Hand anzeigen.	Show the selling value of the item in your hand.
+Verkauft	Sold
 Verkauft alle Fische · 	Sells all fish · 
 Verkauft nur die Fische des Tages · 	Sells only the fish of the day · 
 Verkauft nur die wertvollen Fische · 	Sells only the valuable fish · 
@@ -5011,6 +5038,7 @@ Verzauberer	Enchanter
 Verzauberte Diamant-Rüstung und Waffen	Enchanted diamond armor and weapons
 Verzauberter Goldapfel	Enchanted golden apple
 Verzauberung	Enchantment
+Veteran	Veteran
 Viel Spaß und viel Glück	Have fun and good luck
 Viele Keys zum Sparpreis	Lots of keys at a low price
 Viele Keys, Sparpreis	Lots of keys, low price
@@ -5075,6 +5103,7 @@ Weitere 1	More 1
 Weitere 2	More 2
 Weißer Hai	Great White Shark
 Wels	Catfish
+Welt	World
 Welt, Koordinaten und Restzeit	World, coordinates and time left
 Weltenbummler	Globetrotter
 Wer fällt, muss auch pflanzen! Bring mir sechzehn Eichensetzlinge.	Whoever chops must also plant! Bring me sixteen oak saplings.
@@ -5240,6 +5269,7 @@ Züchter	Breeder
 \n<gray>Noch keine Runden gespielt.	\n<gray>No rounds played yet.
 ab {} Std.	from {} h
 abgehoben	withdrew
+aktiv	active
 alle Felder aufdecken	reveal all fields
 alle Kategorien	all categories
 alle Tagesaufträge	all daily orders
@@ -5282,6 +5312,7 @@ jeden Monat eins	one every month
 jemand anderem	someone else
 kein Grund angegeben	no reason given
 kein Liebling mehr	no longer a favorite
+keiner	none
 klein	small
 köpfe	heads
 lange nicht gesehen	not seen for a long time
@@ -5370,6 +5401,7 @@ zweiter Beruf	second job
 Übernimmt manuelle Änderungen	Applies manual changes
 Überraschung	Surprise
 Übersetzt Nachrichten anderer Spieler.	Translates messages of other players.
+Übersicht	Overview
 über 21	over 21
 überall	anywhere
 „Letzte Runden“	“Last rounds”
@@ -5378,6 +5410,8 @@ zweiter Beruf	second job
 → Geschenk für {}	→ Gift for {}
 → Ränge · Battlepass · Crates · Vorteilspakete	→ Ranks · Battle pass · Crates · Bundles
 → Ränge · Farmpass · Crates · Pakete · Möbel · Pets	→ Ranks · Farm pass · Crates · Bundles · Furniture · Pets
+● Offline	● Offline
+● Online	● Online
 ★ BESTER WERT	★ BEST VALUE
 ☘ vor deinem Namen	☘ before your name
 ✓ Erledigt	✓ Done
