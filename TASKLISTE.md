@@ -299,10 +299,10 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
 ## Ordnergruppe 10 – Entscheidungen (offen)
 - [x] Rang-Berechtigungen: beides geht (LuckPerms group.<rang> oder kuby.rank.<rang>)
 - [~] Kit-Namen 2 bis 5: VIP, Ultimate, Warrior, Legend. Inhalte der Kits 2 bis 5 noch offen (Admin-Panel → Kits)
-- [ ] Totenkiste Stufe 3: darf nur der Besitzer öffnen?
+- [x] Totenkiste Stufe 3: nur der Besitzer darf öffnen (bestätigt, so umgesetzt; `totenkiste.owner-access-level3`)
 - [ ] Store-Index-Link für Module
-- [ ] Hub-Scoreboard: Layout bestätigen (Clip fehlt)
-- [ ] Survival-Scoreboard: Layout bestätigen (Clip fehlt)
+- ~~Hub-Scoreboard: Layout bestätigen~~ (verworfen)
+- ~~Survival-Scoreboard: Layout bestätigen~~ (verworfen)
 
 ## Ordnergruppe 11 – Plattform
 - [x] Eigene Basis: KubyPlugins für Wirtschaft, Modi, Scoreboard, Homes, Teleport
@@ -366,7 +366,7 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
 - [x] 2a-2d: PvP-Schnittstelle, Verschieben, Menüs (KubySMP 1.0.0)
 - [x] Anti-Farm-XP für Erze (v2.0.7)
 - [ ] Test im Spiel: Kampf, Duell, Turnier, Kopfgeld, Versicherung, Trophäen, Handel, Duo-RTP
-- [ ] Offen für SMP: Kit-Ränge (Entscheidung nötig), Kit 2-5 Inhalte
+- [x] Kits im Spiel einstellen statt in der config: `/kits bearbeiten` (Admins; auch Knopf „Bearbeiten“ im Kits-Dialog und Buch im Truhen-Menü) zeigt alle Kits, „Neues Kit“ legt eins an. Editor: oben 36 Plätze für echte Items (Verzauberungen, Namen, eigene Modelle bleiben erhalten), unten Name (Textfeld), Icon (Item auf den Mauszeiger nehmen und klicken), Rang (für alle, VIP bis Legend oder Platin bis Netherit), Abklingzeit (±10 Min., mit Shift ±1 Std.), Modi (alle, Survival, SMP, Skyblock, Survival+SMP), Testen, Speichern, Löschen (Shift-Klick). Gespeichert in `kits-config.yml`, beim ersten Start aus `config.yml` übernommen; Spieler sehen nur die Kits ihres Modus
 - [ ] Farmpass und Survival (3b, 3c) warten bis der SMP getestet ist
 
 ## Skyblock (neuer Modus)

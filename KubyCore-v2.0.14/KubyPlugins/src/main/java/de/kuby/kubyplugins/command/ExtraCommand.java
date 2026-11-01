@@ -53,7 +53,14 @@ public final class ExtraCommand implements CommandExecutor {
             case "kristaltrade" -> new KristalTradeMenu(plugin).open(p);
             case "investments" -> new de.kuby.kubyplugins.gui.ExtraScreens(plugin).investments(p);
             case "quizvote" -> new de.kuby.kubyplugins.gui.ExtraScreens(plugin).quiz(p);
-            case "kits" -> new de.kuby.kubyplugins.gui.ProgressScreens(plugin).kits(p);
+            case "kits" -> {
+                if (args.length > 0 && (args[0].equalsIgnoreCase("bearbeiten") || args[0].equalsIgnoreCase("edit"))
+                        && p.hasPermission("kuby.admin")) {
+                    new de.kuby.kubyplugins.gui.KitAdminMenu(plugin).open(p);
+                } else {
+                    new de.kuby.kubyplugins.gui.ProgressScreens(plugin).kits(p);
+                }
+            }
             case "tpa" -> tpa(p, args, false);
             case "tpahere" -> tpa(p, args, true);
             case "tpaccept" -> {

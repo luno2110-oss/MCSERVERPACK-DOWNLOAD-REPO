@@ -141,7 +141,7 @@ public final class ProgressScreens {
         }
         KitService ks = plugin.kits();
         List<KitRow> rows = new ArrayList<>();
-        for (KitService.Kit kit : ks.kits()) {
+        for (KitService.Kit kit : ks.kitsFor(p)) {
             long left = ks.remaining(p.getUniqueId(), kit);
             boolean rankOk = kit.rank().isEmpty() || ks.allowed(p, kit);
             boolean empty = kit.items().isEmpty();
@@ -159,7 +159,11 @@ public final class ProgressScreens {
                 new KitPreviewMenu(plugin, kit.id()).open(pl);
             }));
         }
-        UiDialog.show(p, kits(rows), 300);
+        Consumer<Player> edit = p.hasPermission("kuby.admin") ? pl -> {
+            pl.closeDialog();
+            new KitAdminMenu(plugin).open(pl);
+        } : null;
+        UiDialog.show(p, kits(rows, edit), 300);
     }
 
     // ---- Darstellung ----
@@ -236,8 +240,18 @@ public final class ProgressScreens {
     }
 
     public static Canvas kits(List<KitRow> rows) {
+        return kits(rows, null);
+    }
+
+    /** Kits; edit (nur Admins, sonst null): Knopf „Bearbeiten“ oben rechts öffnet den Kit-Editor. */
+    public static Canvas kits(List<KitRow> rows, Consumer<Player> edit) {
         Canvas c = new Canvas(W).heading("Kits", STEEL);
-        head(c, KitData.Box.STEEL, KitData.Icon.IRON_CHESTPLATE, "Kits", STEEL, "Ausrüstung abholen · Vorschau zeigt den Inhalt", SLATE);
+        head(c, KitData.Box.STEEL, KitData.Icon.IRON_CHESTPLATE, "Kits", STEEL,
+                edit == null ? "Ausrüstung abholen · Vorschau zeigt den Inhalt" : "Abholen · Vorschau zeigt den Inhalt", SLATE);
+        if (edit != null) {
+            c.smallButton(W - 8 - 84, 18, 84, KitData.Small.DARK, "Bearbeiten", STEEL, false);
+            c.action(W - 8 - 84, 18, 84, KitData.SMALL_H, edit, "Kits bearbeiten (Admin)");
+        }
         int y = 60;
         for (KitRow k : rows) {
             c.box(0, y, W, 46, k.ready() ? KitData.Box.STEEL : KitData.Box.STEEL_CARD);

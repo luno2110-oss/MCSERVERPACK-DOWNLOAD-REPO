@@ -379,6 +379,7 @@ final class SelfTest {
                     "W".repeat(80), "9999 Std.", "WWWWWWWWWWWW", i % 2 == 0, "W".repeat(40), i % 2 == 0, NO, NO));
             canvas.accept("Kits", () -> de.kuby.kubyplugins.gui.ProgressScreens.kits(kr));
             canvas.accept("Kits leer", () -> de.kuby.kubyplugins.gui.ProgressScreens.kits(List.of()));
+            canvas.accept("Kits Admin", () -> de.kuby.kubyplugins.gui.ProgressScreens.kits(kr, pl -> { }));
         }
 
         // Team, XP-Shop, Investments, Duo-RTP, Quiz: Grenzwerte und leer

@@ -14,26 +14,47 @@ import org.bukkit.inventory.PlayerInventory;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 
-/** Kits aus der config: Items, Icon und Cooldown pro Kit. Leere Kits werden angezeigt, lassen sich aber nicht abholen. */
+/**
+ * Kits: Items, Icon, Abklingzeit, Rang und Modi je Kit. Admins legen sie im Spiel an und bearbeiten sie (/kits bearbeiten,
+ * KitAdminMenu und KitEditMenu); gespeichert in kits-config.yml, die Items vollständig (Verzauberungen, Namen, eigene
+ * Modelle). Beim ersten Start werden die Kits aus config.yml (kits:) übernommen. Leere Kits werden angezeigt, lassen
+ * sich aber nicht abholen. Abholzeiten je Spieler in kits.yml.
+ */
 public final class KitService implements ModeData {
 
-    /** rank: ab welchem Rang das Kit erlaubt ist, leer = für alle. */
-    public record Kit(String id, String name, Material icon, long cooldownMinutes, List<ItemStack> items, String rank) {}
+    /** rank: ab welchem Rang das Kit erlaubt ist, leer = für alle; modes: in welchen Modi es zu sehen ist, leer = allen. */
+    public record Kit(String id, String name, Material icon, long cooldownMinutes, List<ItemStack> items, String rank,
+                      Set<String> modes) {
+        public Kit(String id, String name, Material icon, long cooldownMinutes, List<ItemStack> items, String rank) {
+            this(id, name, icon, cooldownMinutes, items, rank, Set.of());
+        }
+
+        public boolean visibleIn(String mode) {
+            return modes.isEmpty() || modes.contains(mode);
+        }
+    }
 
     private final KubyPlugins plugin;
-    private final File file;
+    private final File file, defFile;
     private final Map<UUID, Map<String, Long>> lastClaim = new HashMap<>();
+    /** Kits in Anzeige-Reihenfolge. */
+    private final Map<String, Kit> defs = new LinkedHashMap<>();
 
     public KitService(KubyPlugins plugin) {
         this.plugin = plugin;
         this.file = new File(plugin.getDataFolder(), "kits.yml");
+        this.defFile = new File(plugin.getDataFolder(), "kits-config.yml");
         YamlConfiguration yml = YamlConfiguration.loadConfiguration(file);
         for (String k : yml.getKeys(false)) {
             ConfigurationSection s = yml.getConfigurationSection(k);
@@ -42,25 +63,121 @@ public final class KitService implements ModeData {
             for (String kit : s.getKeys(false)) m.put(kit, s.getLong(kit));
             lastClaim.put(UUID.fromString(k), m);
         }
+        loadDefs();
     }
 
-    public List<Kit> kits() {
-        Map<String, Kit> sorted = new TreeMap<>();
-        ConfigurationSection root = plugin.getConfig().getConfigurationSection("kits");
-        if (root == null) return new ArrayList<>();
-        for (String id : root.getKeys(false)) {
-            ConfigurationSection s = root.getConfigurationSection(id);
-            if (s == null) continue;
-            Material icon = Material.matchMaterial(s.getString("icon", "CHEST"));
-            List<ItemStack> items = new ArrayList<>();
-            for (String raw : s.getStringList("items")) {
-                ItemStack it = parse(raw);
-                if (it != null) items.add(it);
+    /** Alle Kits (Reihenfolge wie in kits-config.yml). */
+    public synchronized List<Kit> kits() {
+        return new ArrayList<>(defs.values());
+    }
+
+    /** Kits, die im Modus des Spielers zu sehen sind. */
+    public List<Kit> kitsFor(Player p) {
+        String mode = plugin.modes().modeOf(p.getUniqueId());
+        List<Kit> out = new ArrayList<>();
+        for (Kit k : kits()) if (k.visibleIn(mode)) out.add(k);
+        return out;
+    }
+
+    public synchronized Kit kit(String id) {
+        return defs.get(id);
+    }
+
+    /** Kit anlegen oder ersetzen und speichern. */
+    public synchronized void put(Kit kit) {
+        defs.put(kit.id(), kit);
+        saveDefs();
+    }
+
+    public synchronized void delete(String id) {
+        defs.remove(id);
+        saveDefs();
+    }
+
+    /** Neues leeres Kit mit freier ID. */
+    public synchronized Kit create() {
+        int n = defs.size() + 1;
+        while (defs.containsKey("kit" + n)) n++;
+        Kit k = new Kit("kit" + n, "Neues Kit", Material.CHEST, 60, List.of(), "", Set.of());
+        put(k);
+        return k;
+    }
+
+    private synchronized void loadDefs() {
+        defs.clear();
+        if (!defFile.exists()) {
+            // erster Start: Kits aus der config.yml übernehmen
+            ConfigurationSection root = plugin.getConfig().getConfigurationSection("kits");
+            if (root != null) {
+                Map<String, Kit> sorted = new TreeMap<>();
+                for (String id : root.getKeys(false)) {
+                    Kit k = read(id, root.getConfigurationSection(id));
+                    if (k != null) sorted.put(id, k);
+                }
+                defs.putAll(sorted);
             }
-            sorted.put(id, new Kit(id, s.getString("name", "Kit " + id), icon == null ? Material.CHEST : icon,
-                    s.getLong("cooldown-minutes", 30), items, s.getString("rank", "").trim().toLowerCase(Locale.ROOT)));
+            saveDefs();
+            return;
         }
-        return new ArrayList<>(sorted.values());
+        YamlConfiguration yml = YamlConfiguration.loadConfiguration(defFile);
+        ConfigurationSection root = yml.getConfigurationSection("kits");
+        if (root == null) return;
+        for (String id : root.getKeys(false)) {
+            Kit k = read(id, root.getConfigurationSection(id));
+            if (k != null) defs.put(id, k);
+        }
+    }
+
+    private static Kit read(String id, ConfigurationSection s) {
+        if (s == null) return null;
+        Material icon = Material.matchMaterial(s.getString("icon", "CHEST"));
+        List<ItemStack> items = new ArrayList<>();
+        for (String raw : s.getStringList("items")) {
+            ItemStack it = raw.startsWith("b64:") ? fromBase64(raw.substring(4)) : parse(raw);
+            if (it != null) items.add(it);
+        }
+        Set<String> modes = new LinkedHashSet<>();
+        for (String m : s.getString("modus", "").split("[,; ]+")) if (!m.isBlank()) modes.add(m.trim().toLowerCase(Locale.ROOT));
+        return new Kit(id, s.getString("name", "Kit " + id), icon == null || !icon.isItem() ? Material.CHEST : icon,
+                Math.max(0, s.getLong("cooldown-minutes", 30)), items, s.getString("rank", "").trim().toLowerCase(Locale.ROOT), modes);
+    }
+
+    private synchronized void saveDefs() {
+        YamlConfiguration out = new YamlConfiguration();
+        out.options().setHeader(List.of(
+                "Kits, im Spiel bearbeitet mit /kits bearbeiten (Admins). Items stehen vollständig als b64:… (mit Verzauberungen,",
+                "Namen und eigenen Modellen); von Hand gehen auch Zeilen wie \"IRON_SWORD:1:SHARPNESS=2\".",
+                "rank: ab welchem Rang (leer = alle; vip, ultimate, warrior, legend oder platin, diamant, smaragd, netherit)",
+                "modus: in welchen Modi das Kit zu sehen ist (leer = alle; survival, smp, skyblock, mit Komma getrennt)"));
+        for (Kit k : defs.values()) {
+            String b = "kits." + k.id() + ".";
+            out.set(b + "name", k.name());
+            out.set(b + "icon", k.icon().name());
+            out.set(b + "rank", k.rank());
+            out.set(b + "cooldown-minutes", k.cooldownMinutes());
+            out.set(b + "modus", String.join(",", k.modes()));
+            List<String> items = new ArrayList<>();
+            for (ItemStack it : k.items()) if (it != null && !it.getType().isAir()) items.add("b64:" + toBase64(it));
+            out.set(b + "items", items);
+        }
+        try {
+            plugin.getDataFolder().mkdirs();
+            out.save(defFile);
+        } catch (IOException e) {
+            plugin.getLogger().warning("kits-config.yml konnte nicht gespeichert werden: " + e.getMessage());
+        }
+    }
+
+    private static String toBase64(ItemStack it) {
+        return Base64.getEncoder().encodeToString(it.serializeAsBytes());
+    }
+
+    private static ItemStack fromBase64(String s) {
+        try {
+            return ItemStack.deserializeBytes(Base64.getDecoder().decode(s.trim()));
+        } catch (RuntimeException e) {
+            return null;
+        }
     }
 
     /** Format: MATERIAL:MENGE:ENCHANTMENT=STUFE,ENCHANTMENT=STUFE */
@@ -96,9 +213,25 @@ public final class KitService implements ModeData {
         return order.isEmpty() ? List.of("vip", "ultimate", "warrior", "legend") : order;
     }
 
+    /** Survival-Ränge (homes.survival.ranks in der config.yml), niedrigster zuerst. */
+    public List<String> survivalRanks() {
+        List<String> order = plugin.getConfig().getStringList("homes.survival.ranks");
+        return order.isEmpty() ? List.of("platin", "diamant", "smaragd", "netherit") : order;
+    }
+
+    /** Alle Ränge, die ein Kit verlangen kann (für den Editor): SMP/Skyblock, dann Survival. */
+    public List<String> allRanks() {
+        List<String> all = new ArrayList<>(rankOrder());
+        for (String r : survivalRanks()) if (!all.contains(r)) all.add(r);
+        return all;
+    }
+
     /** Höchster Rang des Spielers als Index in rankOrder(), -1 ohne Rang. Erkennt LuckPerms (group.x) und kuby.rank.x. */
     public int rankLevel(Player p) {
-        List<String> order = rankOrder();
+        return rankLevel(p, rankOrder());
+    }
+
+    private static int rankLevel(Player p, List<String> order) {
         for (int i = order.size() - 1; i >= 0; i--) {
             String r = order.get(i).toLowerCase(Locale.ROOT);
             if (p.hasPermission("group." + r) || p.hasPermission("kuby.rank." + r)) return i;
@@ -106,11 +239,12 @@ public final class KitService implements ModeData {
         return -1;
     }
 
-    /** Darf der Spieler das Kit nehmen? Höhere Ränge dürfen auch die Kits der niedrigeren. */
+    /** Darf der Spieler das Kit nehmen? Höhere Ränge dürfen auch die Kits der niedrigeren (je Rang-Liste). */
     public boolean allowed(Player p, Kit kit) {
         if (kit.rank().isEmpty() || p.hasPermission("kuby.admin")) return true;
-        int needed = rankOrder().indexOf(kit.rank());
-        return needed < 0 || rankLevel(p) >= needed;
+        List<String> order = rankOrder().contains(kit.rank()) ? rankOrder() : survivalRanks();
+        int needed = order.indexOf(kit.rank());
+        return needed < 0 || rankLevel(p, order) >= needed;
     }
 
     /** Rangname für die Anzeige, z. B. "VIP". */

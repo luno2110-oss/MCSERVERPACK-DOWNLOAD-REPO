@@ -15,7 +15,7 @@ import java.util.List;
 /** Kit-Übersicht: Linksklick holt das Kit ab, Rechtsklick zeigt die Vorschau. */
 public final class KitMenu extends GuiMenu {
 
-    private static final int[] SLOTS = {10, 11, 12, 13, 14};
+    private static final int[] SLOTS = {10, 11, 12, 13, 14, 15, 16};
 
     public KitMenu(KubyPlugins plugin) {
         super(plugin, Msg.parse("<dark_gray>" + SmallCaps.of("kits")), 3);
@@ -26,7 +26,7 @@ public final class KitMenu extends GuiMenu {
         for (int i = 0; i < 27; i++) {
             set(i, Items.make(Material.GRAY_STAINED_GLASS_PANE, " ", List.of()), null);
         }
-        List<KitService.Kit> kits = plugin.kits().kits();
+        List<KitService.Kit> kits = plugin.kits().kitsFor(p);
         for (int i = 0; i < kits.size() && i < SLOTS.length; i++) {
             KitService.Kit kit = kits.get(i);
             long left = plugin.kits().remaining(p.getUniqueId(), kit);
@@ -57,5 +57,9 @@ public final class KitMenu extends GuiMenu {
             });
         }
         addBack(p);
+        if (p.hasPermission("kuby.admin")) {
+            set(26, Items.make(Material.WRITABLE_BOOK, "<gold>Kits bearbeiten", List.of("<gray>Nur für Admins")),
+                    e -> new KitAdminMenu(plugin).open(p));
+        }
     }
 }
