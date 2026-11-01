@@ -57,6 +57,97 @@ level:
     HOPPER: 10
     SPAWNER: 500
 
+# Generatoren (Grundmechanik): kaufen (/insel -> Generatoren -> Shop), auf die Insel stellen, Lager einsammeln.
+# Arten: item (Ertrag je Stufe), geld (pro-sekunde $), xp (pro-sekunde XP). Qualitäten Silber, Gold, Diamant im Juwelenshop.
+generatoren:
+  max-stufe: 10
+  plaetze: [3, 5, 8, 12, 16]         # Generatoren je Insel nach Größen-Stufe
+  tick-sekunden: 10
+  intervall-sekunden: 30             # Item-Generatoren: Stufe 1 ein Item alle 30 s
+  tempo-pro-stufe: 0.12              # je Stufe 12 % schneller
+  ertrag-pro-stufe: 0.35             # Geld/XP: je Stufe 35 % mehr
+  lager-stunden: 2                   # Geld/XP: Lager reicht für 2 Stunden Ertrag
+  lager: [64, 128, 256, 384, 512, 768, 1024, 1536, 2048, 3072]
+  upgrade-kosten: [0, 2000, 5000, 12000, 25000, 50000, 100000, 200000, 400000, 800000]   # je Art mal Preis/5000
+  qualitaeten:                       # Juwelen: Kauf eines neuen Premium-Generators / Veredeln eines vorhandenen
+    silber: {juwelen: 150, veredeln: 100}
+    gold: {juwelen: 400, veredeln: 300}
+    diamant: {juwelen: 900, veredeln: 700}
+  booster:
+    - {name: "Booster x2 · 30 Minuten", faktor: 2, minuten: 30, juwelen: 60}
+    - {name: "Booster x2 · 2 Stunden", faktor: 2, minuten: 120, juwelen: 200}
+    - {name: "Booster x3 · 30 Minuten", faktor: 3, minuten: 30, juwelen: 150}
+  typen:
+    geld:
+      art: geld
+      name: "Geld-Generator"
+      block: GOLD_BLOCK
+      preis: 10000
+      pro-sekunde: 0.5
+    xp:
+      art: xp
+      name: "XP-Generator"
+      block: SCULK_CATALYST
+      preis: 8000
+      pro-sekunde: 1.0
+    erz:
+      art: item
+      name: "Erz-Generator"
+      block: BLAST_FURNACE
+      preis: 5000
+      ertrag:
+        1: {COAL: 50, RAW_COPPER: 30, RAW_IRON: 20}
+        4: {COAL: 35, RAW_COPPER: 20, RAW_IRON: 25, RAW_GOLD: 12, REDSTONE: 8}
+        7: {COAL: 25, RAW_IRON: 25, RAW_GOLD: 15, REDSTONE: 10, LAPIS_LAZULI: 10, DIAMOND: 3, EMERALD: 2}
+    holz:
+      art: item
+      name: "Holz-Generator"
+      block: BARREL
+      preis: 3000
+      ertrag:
+        1: {OAK_LOG: 40, BIRCH_LOG: 30, SPRUCE_LOG: 30}
+        5: {OAK_LOG: 20, BIRCH_LOG: 15, SPRUCE_LOG: 15, JUNGLE_LOG: 15, ACACIA_LOG: 15, DARK_OAK_LOG: 10, CHERRY_LOG: 10}
+    farm:
+      art: item
+      name: "Farm-Generator"
+      block: COMPOSTER
+      preis: 3000
+      ertrag:
+        1: {WHEAT: 40, CARROT: 30, POTATO: 30}
+        4: {WHEAT: 25, CARROT: 20, POTATO: 20, MELON_SLICE: 15, PUMPKIN: 10, SUGAR_CANE: 10}
+        7: {WHEAT: 20, CARROT: 15, POTATO: 15, MELON_SLICE: 15, PUMPKIN: 10, SUGAR_CANE: 10, COCOA_BEANS: 8, NETHER_WART: 5, GLOW_BERRIES: 2}
+    mob:
+      art: item
+      name: "Mob-Generator"
+      block: CRYING_OBSIDIAN
+      preis: 8000
+      ab-insel-level: 5
+      ertrag:
+        1: {ROTTEN_FLESH: 40, BONE: 30, STRING: 30}
+        4: {ROTTEN_FLESH: 25, BONE: 25, STRING: 20, GUNPOWDER: 15, SPIDER_EYE: 10, ARROW: 5}
+        7: {ROTTEN_FLESH: 15, BONE: 20, STRING: 15, GUNPOWDER: 15, SPIDER_EYE: 10, ENDER_PEARL: 10, BLAZE_ROD: 8, SLIME_BALL: 7}
+    nether:
+      art: item
+      name: "Nether-Generator"
+      block: RESPAWN_ANCHOR
+      preis: 15000
+      ab-insel-level: 15
+      ertrag:
+        1: {NETHERRACK: 40, QUARTZ: 30, GLOWSTONE_DUST: 30}
+        5: {NETHERRACK: 25, QUARTZ: 25, GLOWSTONE_DUST: 20, MAGMA_CREAM: 10, GOLD_NUGGET: 15, BLAZE_POWDER: 5}
+        9: {NETHERRACK: 20, QUARTZ: 25, GLOWSTONE_DUST: 20, MAGMA_CREAM: 10, GOLD_NUGGET: 15, BLAZE_POWDER: 8, NETHERITE_SCRAP: 2}
+    edelstein:
+      art: item
+      name: "Edelstein-Generator"
+      block: AMETHYST_BLOCK
+      preis: 40000
+      ab-insel-level: 30
+      intervall-faktor: 4
+      ertrag:
+        1: {AMETHYST_SHARD: 50, LAPIS_LAZULI: 30, EMERALD: 15, DIAMOND: 5}
+        6: {AMETHYST_SHARD: 35, LAPIS_LAZULI: 25, EMERALD: 25, DIAMOND: 15}
+        10: {AMETHYST_SHARD: 25, LAPIS_LAZULI: 20, EMERALD: 28, DIAMOND: 25, ECHO_SHARD: 2}
+
 oneblock:
   positions:
     - "-40;100;-60"

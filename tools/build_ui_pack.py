@@ -58,6 +58,8 @@ build_chest_bg.build(OUT)
 # Event-Presets: Kopf-Bilder, Reiter-Symbole, Währungen und Sammel-Items zeichnen (tools/assets/events), dann die Items
 import build_event_art  # noqa: E402
 build_event_art.build()
+import build_generator_art  # noqa: E402
+build_generator_art.build()
 import build_event_items  # noqa: E402
 build_event_items.build(OUT)
 

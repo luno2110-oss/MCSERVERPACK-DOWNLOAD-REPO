@@ -33,20 +33,28 @@ def build(out):
     src = Image.open(os.path.join(HERE, "assets/quests/art_candy.png")).convert("RGBA")
     tex = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
     tex.alpha_composite(src, ((16 - src.width) // 2, (16 - src.height) // 2))
-    tdir = os.path.join(out, "assets/kuby/textures/item/event")
-    mdir = os.path.join(out, "assets/kuby/models/item/event")
-    idir = os.path.join(out, "assets/kuby/items/event")
-    for d in (tdir, mdir, idir):
-        os.makedirs(d, exist_ok=True)
     items = [("candy_corn", tex), ("candy_corn_purple", _purple(tex))]
     for f in sorted(glob.glob(os.path.join(HERE, "assets/events/item_*.png"))):
         items.append((os.path.basename(f)[5:-4], Image.open(f).convert("RGBA")))
+    # Skyblock-Generatoren als eigene Gruppe: kuby:generator/<art>
+    gen = [(os.path.basename(f)[5:-4], Image.open(f).convert("RGBA"))
+           for f in sorted(glob.glob(os.path.join(HERE, "assets/generators/item_*.png")))]
+    for group, entries in (("event", items), ("generator", gen)):
+        write_group(out, group, entries)
+
+
+def write_group(out, group, items):
+    tdir = os.path.join(out, "assets/kuby/textures/item/" + group)
+    mdir = os.path.join(out, "assets/kuby/models/item/" + group)
+    idir = os.path.join(out, "assets/kuby/items/" + group)
+    for d in (tdir, mdir, idir):
+        os.makedirs(d, exist_ok=True)
     for name, img in items:
         img.save(os.path.join(tdir, name + ".png"))
         with open(os.path.join(mdir, name + ".json"), "w", encoding="utf-8") as f:
-            json.dump({"parent": "minecraft:item/generated", "textures": {"layer0": "kuby:item/event/" + name}}, f)
+            json.dump({"parent": "minecraft:item/generated", "textures": {"layer0": "kuby:item/" + group + "/" + name}}, f)
         with open(os.path.join(idir, name + ".json"), "w", encoding="utf-8") as f:
-            json.dump({"model": {"type": "minecraft:model", "model": "kuby:item/event/" + name}}, f)
+            json.dump({"model": {"type": "minecraft:model", "model": "kuby:item/" + group + "/" + name}}, f)
 
 
 if __name__ == "__main__":

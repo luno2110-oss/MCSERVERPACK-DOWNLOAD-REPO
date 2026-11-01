@@ -165,7 +165,7 @@ public final class IslandScreen {
                     });
                     if (err != null) feedback(pl, err);
                 }),
-                run(pl -> new SkyScreen(sb().core()).open(pl)),
+                run(GeneratorScreen::island),
                 owner && left == 0 ? run(IslandScreen::chooseReset) : null,
                 owner ? run(pl -> confirm(pl, "Insel aufgeben", i.members.isEmpty()
                         ? "Deine Insel wird geleert und ist dann weg. Wirklich aufgeben?"
@@ -402,7 +402,7 @@ public final class IslandScreen {
         // Insel
         y = section(c, y, "Insel", v.resetHint());
         int bw = (W - 9) / 4;
-        String[] labels = {"Level zählen", "Checkliste", "Neu starten", "Aufgeben"};
+        String[] labels = {"Level zählen", "Generatoren", "Neu starten", "Aufgeben"};
         @SuppressWarnings("unchecked")
         Consumer<Player>[] acts = new Consumer[]{v.recalc(), v.progress(), v.reset(), v.abandon()};
         for (int k = 0; k < 4; k++) {

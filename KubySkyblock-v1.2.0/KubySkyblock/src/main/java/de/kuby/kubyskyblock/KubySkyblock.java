@@ -33,6 +33,7 @@ public final class KubySkyblock extends JavaPlugin {
     private LootService loot;
     private OneBlockService oneblock;
     private ProgressService progress;
+    private de.kuby.kubyskyblock.service.GeneratorService generators;
     private SkyblockCommand command;
     private final Map<UUID, Location[]> corners = new HashMap<>();
 
@@ -44,6 +45,7 @@ public final class KubySkyblock extends JavaPlugin {
     public LootService loot() { return loot; }
     public OneBlockService oneblock() { return oneblock; }
     public ProgressService progress() { return progress; }
+    public de.kuby.kubyskyblock.service.GeneratorService generators() { return generators; }
     public SkyblockCommand command() { return command; }
 
     /** Ecken, die ein Admin mit dem Werkzeug markiert hat. */
@@ -67,6 +69,7 @@ public final class KubySkyblock extends JavaPlugin {
         core = c;
         de.kuby.kubyskyblock.gui.SkyScreen.samples(core::registerSelfTestCanvas);
         de.kuby.kubyskyblock.gui.IslandScreen.samples(core::registerSelfTestCanvas);
+        de.kuby.kubyskyblock.gui.GeneratorScreen.samples(core::registerSelfTestCanvas);
         saveDefaultConfig();
         islands = new IslandService(this, core);
         streaks = new StreakService(this, core);
@@ -74,6 +77,7 @@ public final class KubySkyblock extends JavaPlugin {
         loot = new LootService(this, core);
         oneblock = new OneBlockService(this, core);
         progress = new ProgressService(this, core);
+        generators = new de.kuby.kubyskyblock.service.GeneratorService(this, core);
         command = new SkyblockCommand(this);
 
         core.modes().onEnter(ModeService.SKYBLOCK, p -> islands.ensureIsland(p));
@@ -84,10 +88,26 @@ public final class KubySkyblock extends JavaPlugin {
                 "Die besten Inseln nach Level", de.kuby.kubyskyblock.gui.IslandScreen::top));
         core.registerMainEntry(ModeService.SKYBLOCK, new KubyPlugins.MainEntry(org.bukkit.Material.BOOK, "Checkliste",
                 "Alle Items sammeln, Erfolge und Meilensteine", pl -> new de.kuby.kubyskyblock.gui.SkyScreen(core).open(pl)));
+        core.registerMainEntry(ModeService.SKYBLOCK, new KubyPlugins.MainEntry(org.bukkit.Material.BLAST_FURNACE, "Generatoren",
+                "Geld, XP und Items von selbst: kaufen, aufstellen, einsammeln", de.kuby.kubyskyblock.gui.GeneratorScreen::island));
         getServer().getPluginManager().registerEvents(new SkyblockListener(this, core), this);
         getServer().getPluginManager().registerEvents(new ProgressListener(this, core), this);
         getServer().getPluginManager().registerEvents(new de.kuby.kubyskyblock.listener.IslandListener(this, core), this);
         getServer().getPluginManager().registerEvents(new de.kuby.kubyskyblock.gui.LootEditMenu.Events(), this);
+        getServer().getPluginManager().registerEvents(new de.kuby.kubyskyblock.listener.GeneratorListener(this), this);
+        core.registerJewelShop(ModeService.SKYBLOCK, new KubyPlugins.JewelShopHook() {
+            @Override
+            public boolean open(org.bukkit.entity.Player p, String sub) {
+                if (!core.uiPack().active(p)) return false;
+                de.kuby.kubyskyblock.gui.GeneratorScreen.jewels(p);
+                return true;
+            }
+
+            @Override
+            public boolean gift(org.bukkit.entity.Player p, org.bukkit.entity.Player target) {
+                return false;
+            }
+        });
         if (getCommand("skyblock") != null) getCommand("skyblock").setExecutor(new SkyblockPlayerCommand(core));
         var insel = getCommand("insel");
         if (insel != null) {
@@ -105,5 +125,9 @@ public final class KubySkyblock extends JavaPlugin {
         if (islands != null) islands.save();
         if (loot != null) loot.save();
         if (progress != null) progress.save();
+        if (generators != null) {
+            generators.removeHolograms();
+            generators.save();
+        }
     }
 }
