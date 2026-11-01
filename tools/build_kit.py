@@ -96,6 +96,14 @@ BOXES = {
     "plum_card": ("B0588E", "5A2248", "1A0614"),
     "steel": ("B8C4D0", "5A6470", "15191E"),     # Kits: Waffenkammer
     "steel_card": ("7E8894", "3E464E", "101317"),
+    "indigo": ("9C9CFF", "4646A8", "10102C"),    # Team: Gildenhalle
+    "indigo_card": ("6E6EC8", "34347A", "0C0C22"),
+    "xp": ("B8F060", "5E8A22", "141E08"),        # XP-Shop: Erfahrungs-Grün
+    "terminal": ("4AE0C0", "1E7A68", "061614"),  # Investments: Börsen-Tafel
+    "terminal_row": ("2E9A86", "145248", "04100E"),
+    "ember": ("FF9A50", "A8461E", "2A0E06"),     # Duo-RTP: Arena in Glut
+    "ember_card": ("C86A38", "6A2C12", "1C0904"),
+    "chalk": ("B08050", "6A4626", "203A2A"),     # Quiz: Schultafel mit Holzrahmen
 }
 
 # Casino-Kästen (Roulette- und Musik-Dialog im Clip): eigene Ecken, Rand von außen nach innen ("edge"), Füllung N.
@@ -632,7 +640,9 @@ def build_pieces():
     # E000-E7FF reicht nicht mehr für alle Ecken: Überlauf in F100-F7FF (in den b-Schriften frei)
     caps9b = Sheet("caps9b", CAP, ROW, 0xF100)
     caps9 = Sheet("caps9", CAP, ROW, 0xE000, limit=0x800, overflow=caps9b)
-    segs9 = Sheet("segs9", SEG, ROW, 0xE800)
+    # Mittelstücke: E800-EBFF, danach Überlauf in F400-F7FF (die Ecken im Überlauf enden vor F400)
+    segs9b = Sheet("segs9b", SEG, ROW, 0xF400)
+    segs9 = Sheet("segs9", SEG, ROW, 0xE800, limit=0x400, overflow=segs9b)
     caps22 = Sheet("caps22", CAP, BTN_H, 0xEC00)
     segs22 = Sheet("segs22", SEG, BTN_H, 0xED00)
     misc = Sheet("misc", 24, BTN_H, 0xED80)
@@ -702,9 +712,9 @@ def build_pieces():
     for x, y in arrow:
         hback.putpixel((x, y), rgb("FCFCFC"))
     misc.add(("back_help",), hback)
-    sheets = [caps9, segs9, caps22, segs22, misc, caps16, segs16, caps9b]
+    sheets = [caps9, segs9, caps22, segs22, misc, caps16, segs16, caps9b, segs9b]
     # alle Bögen liegen in derselben Schrift (b<s>): Zeichenbereiche dürfen sich nicht überschneiden
-    ends = [0xE800, 0xEC00, 0xED00, 0xED80, 0xEE00, 0xF080, 0xF100, 0xF800]
+    ends = [0xE800, 0xEC00, 0xED00, 0xED80, 0xEE00, 0xF080, 0xF100, 0xF400, 0xF800]
     for sh, end in zip(sheets, ends):
         assert sh.first + len(sh.cells) <= end, "Bogen %s (%d Zellen) läuft über %04X" % (sh.name, len(sh.cells), end)
     return sheets

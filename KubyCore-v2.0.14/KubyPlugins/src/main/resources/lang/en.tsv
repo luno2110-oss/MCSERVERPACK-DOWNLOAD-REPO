@@ -114,6 +114,7 @@
  erreicht! <gray>Belohnungen: <white>/battlepass	 reached! <gray>Rewards: <white>/battlepass
  frei	 free
  für 	 for 
+ für {} XP	 for {} XP
  gefangen! 	 caught! 
  gegen 	 against 
  gesetzt. Sneaken + Klick, Chat-Knopf oder /cashout	 bet. Sneak + click, chat button or /cashout
@@ -829,6 +830,7 @@ $ zum Gründen	$ to found
 <gray>Du hast <light_purple>{} Tokens<gray>.	<gray>You have <light_purple>{} tokens<gray>.
 <gray>Du hast <white>{}/{} <gray>Warps.	<gray>You have <white>{}/{} <gray>warps.
 <gray>Du hast <white>{}</white> offene Freundesanfrage{}. <click:run_command:'/friends'><green>[Ansehen]</click>	<gray>You have <white>{}</white> open friend request{}. <click:run_command:'/friends'><green>[View]</click>
+<gray>Du hast das Team 	<gray>You have 
 <gray>Du hast das Team verlassen oder aufgelöst.	<gray>You left or disbanded the team.
 <gray>Du hast das Team verlassen.	<gray>You left the team.
 <gray>Du hast eine versicherte Kiste geraidet. Der Besitzer bekommt eine Auszahlung.	<gray>You raided an insured chest. The owner gets a payout.
@@ -1843,6 +1845,7 @@ $ zum Gründen	$ to found
 <red>Nimm einen Spielerkopf mit Haut in die Hand.	<red>Take a player head with a skin into your hand.
 <red>Noch 	<red>Still 
 <red>Noch kein Teamhome. Shift + Klick setzt eins.	<red>No team home yet. Shift + click sets one.
+<red>Noch kein Teamhome. „Hier setzen“ setzt eins.	<red>No team home yet. “Set here” sets one.
 <red>Noch keine Ware	<red>No goods yet
 <red>Noch nicht aufgestellt	<red>Not placed yet
 <red>Noch nicht erreicht</red>	<red>Not reached yet</red>
@@ -2180,6 +2183,7 @@ Abgehoben: <gold>	Withdrawn: <gold>
 Abgeholt	Claimed
 Abheben	Withdraw
 Abheben: 	Withdraw: 
+Abheben: Teamchef	Withdraw: leader
 Abholbox	Pickup box
 Abholbox: Seite 2	Pickup box: page 2
 Abholbox: Seite 3	Pickup box: page 3
@@ -2209,6 +2213,7 @@ Aktualisiert alle zwei Minuten	Updates every two minutes
 Aktuell: {}. Zwei Sprachen zur Wahl.	Current: {}. Two languages to choose from.
 Aktuelles Meta	Current meta
 Alle	All
+Alle Anteile verkaufen	Sell all shares
 Alle Arten, Rekorde und wo sie beißen	All species, records and where they bite
 Alle Befehle	All commands
 Alle Befehle: 	All commands: 
@@ -2338,6 +2343,7 @@ Ansehen oder kündigen	View or cancel
 Ansonsten ist der Einsatz weg.	Otherwise the bet is lost.
 Anteil am Wert in %	Share of the value in %
 Anteil in %	Share in %
+Anteile an Shop-Waren · Kurse schwanken	Shares in shop goods · prices move
 Antrag ablehnen	Decline proposal
 Antrag an <white>{}</white> zurückgezogen.	Proposal to <white>{}</white> withdrawn.
 Antrag an {} (zweimal klicken)	Proposal to {} (click twice)
@@ -2486,6 +2492,7 @@ Beim Priester sagt {} Ja. Wartet zusammen hier.	{} says yes at the priest. Wait 
 Beim Ressourcenabbau ist darauf zu achten, dass keine unnötig großen und störenden Abbauflächen in der Nähe von Bauprojekten oder öffentlichen Bereichen entstehen.	When mining resources, avoid leaving unnecessarily large and unsightly holes near other players' projects or public areas.
 Beim Team liegt nichts.	Nothing is waiting for the team.
 Beistelltisch	Side Table
+Beitreten	Join
 Beißt nachts doppelt so oft	Bites twice as often at night
 Beleidigungen, Drohungen und diskriminierende Äußerungen sind verboten.	Insults, threats and discriminatory remarks are forbidden.
 Beliebt zuerst	Popular first
@@ -2596,6 +2603,7 @@ Bunte Stoffe	Colorful Fabrics
 Buy-in zwischen {} und {} Chips.	Buy-in between {} and {} chips.
 Bäckerei	Bakery
 Bäuerin Berta	Farmer Berta
+Börse	Market
 Bücher	Books
 Bücher/Handelshalle	Books/Trading hall
 Bücherregal	Bookshelf
@@ -2822,6 +2830,7 @@ Deko-NPCs	Decoration NPCs
 Dekoration	Decoration
 Den Anweisungen des Teams ist Folge zu leisten. Fragen und Beschwerden klärst du über /support oder den Discord.	Follow the instructions of the team. Questions and complaints go through /support or the Discord.
 Den Farmpass gibt es nur im Store: 9,99 € im Monat, jederzeit kündbar.	The farm pass is only available in the store: €9.99 per month, cancel any time.
+Depotwert	Portfolio
 Der 	The
 Der Anfragende ist offline.	The requester is offline.
 Der Battle Pass ist nicht eingerichtet.	The battle pass isn't set up.
@@ -3049,6 +3058,7 @@ Du bist gerade im Duell.	You are in a duel right now.
 Du bist gerade im Kampf.	You are in a fight right now.
 Du bist gerade nicht dran.	It's not your turn right now.
 Du bist in dieser Runde nicht dabei.	You are not in this round.
+Du bist in keinem Team.	You are not in a team.
 Du bist ins Leere gefallen. Deine Sachen liegen in der <white>/abholbox</white>, deine XP bekommst du zurück.	You fell into the void. Your things are in the <white>/abholbox</white>, you get your XP back.
 Du bist jetzt <white>Helfer</white>. Neue Tickets siehst du unter „Helfen“, du bekommst eine Nachricht bei jedem neuen Ticket.	You are now a <white>helper</white>. You see new tickets under “Help”, and you get a message for every new ticket.
 Du bist jetzt <white>Helfer</white>. Neue Tickets siehst du unter „Offen“, du bekommst eine Nachricht bei jedem neuen Ticket.	You are now a <white>helper</white>. You see new tickets under “Open”, and you get a message for every new ticket.
@@ -3143,6 +3153,7 @@ Du sitzt schon am Tisch.	You are already sitting at the table.
 Du spielst auf {} · {} von {} Plätzen	You are playing on {} · {} of {} slots
 Du verfolgst gerade keine Quest.	You are not tracking a quest.
 Du wartest gerade auf keine Antwort.	You're not waiting for any answer right now.
+Du wartest. Sobald jemand beitritt, geht es los.	You are waiting. As soon as someone joins, it starts.
 Du: Platz 	You: place 
 Du: {} Trophäen · 	You: {} trophies · 
 Duell-Anfragen	Duel requests
@@ -3222,6 +3233,8 @@ Einer von euch ist schon verheiratet.	One of you is already married.
 Einfach	Simple
 Einfach spielen. Items gibst du im Menü oder am NPC ab.	Just play. Hand in items in the menu or at the NPC.
 Eingezahlt: <gold>	Deposited: <gold>
+Einladen: /team invite <Spieler>  ·  annehmen: /team accept	Invite: /team invite <player>  ·  accept: /team accept
+Einladen: /team invite <Spieler> · entfernen (Chef): /team kick <Spieler>	Invite: /team invite <player> · remove (leader): /team kick <player>
 Einladung annehmen	Accept invitation
 Einmal am Tag abholen · jeder 10. Tag mit Juwelen	Claim once a day · every 10th day with jewels
 Einmalige	One-time
@@ -3469,6 +3482,7 @@ Für jeden bezahlten Monat suchst du dir ein Haustier aus, es bleibt für immer.
 Für mein Meisterstück fehlen nur noch zwei Diamanten. Findest du welche?	My masterpiece only needs two more diamonds. Can you find some?
 Für wen? (Spieler online)	For whom? (player online)
 Für {}	For {}
+Für {} stimmen	Vote for {}
 GELD & MARKT	MONEY & MARKET
 GEWÖHNLICH!	COMMON!
 GRUNDSTÜCKE	PLOTS
@@ -3493,11 +3507,14 @@ Geldbündel	Money Bundles
 Geldkoffer	Money Case
 Geldstapel	Money Stacks
 Gelöst	Solved
+Gemeinsam spielen bringt Team-XP: mehr Plätze, Homes und Lager.	Playing together gives team XP: more slots, homes and storage.
+Gemeinsam spielen, Kasse, Lager und Teamhome	Play together, bank, storage and team home
 Gemeinsam stark	Strong together
 Gemeinsames Konto für euch beide, kostenlos	Shared account for both of you, free
 Gemeinschaftslager und gemeinsame Ressourcen dürfen nur entsprechend den vereinbarten Regeln genutzt werden.	Shared storage and shared resources may only be used according to the agreed rules.
 Gerade	Even
 Gerade gibt es keine Kits.	No kits right now.
+Gerade gibt es keine Waren mit Anteilen.	No goods with shares right now.
 Gerade gibt es nichts zu kaufen.	Nothing to buy right now.
 Gerade ist niemand in deiner Nähe	Nobody is near you right now
 Gerade kein Event	No event right now
@@ -3605,6 +3622,7 @@ Grün	Green
 Grün · 0	Green · 0
 Gründe ein Team mit deinen Freunden. Ihr bekommt einen eigenen Chat, Team-Homes, ein Lager und eine Kasse.	Found a team with your friends. You get your own chat, team homes, a storage and a bank.
 Gründen kostet {}$.	Founding costs {}$.
+Gründen: /team create <Name>  ·  Kosten {}$	Create: /team create <name>  ·  costs {}$
 Grünes Blatt	Green leaf
 Gut gegessen	Well fed
 Gut geholfen	Helped well
@@ -3689,6 +3707,7 @@ Hier in der Zone beißt es deutlich besser	Here in the zone they bite much bette
 Hier ist kein Platz.	There's no room here.
 Hier ist noch nichts	Nothing here yet
 Hier kannst du kein Home setzen.	You can't set a home here.
+Hier setzen	Set here
 Hier sitzt schon jemand.	Someone is already sitting here.
 Hier steht noch kein Crash-Bildschirm.	There is no crash screen here yet.
 Hier steht schon ein Modell.	There is already a model here.
@@ -3752,6 +3771,7 @@ Höchstens {} Lose je Tag. Jedes Los kostet {}$.	At most {} tickets per day. Eac
 Höchstens {} je Runde.	At most {} per round.
 Höchster Rang	Highest rank
 Höchster Rang erreicht	Highest rank reached
+Höchstes Level	Highest level
 Höchstes Level erreicht	Highest level reached
 Höchstes Level erreicht!	Highest level reached!
 Höhlensalmler	Cave Tetra
@@ -3790,6 +3810,7 @@ Im Store holen	Get it in the store
 Im Token-Shop gibt es dafür Claim-Blöcke, einen Rucksack, besondere Verzauberungen, Booster und Bauhelfer.	The token shop has claim blocks, a backpack, special enchantments, boosters and building helpers for that.
 Im Topf	In the pot
 Im Topf 	In the pot
+Im XP-Shop gibt es gerade nichts.	Nothing in the XP shop right now.
 In /cosmetics findest du Hüte, Trails und Haustiere. Ein Trail ist eine Spur aus Partikeln, die dir beim Laufen folgt.	In /cosmetics you find hats, trails and pets. A trail is a track of particles that follows you while walking.
 In /friends siehst du, wer gerade online ist und auf welchem Server. Von dort schreibst du Freunden oder springst ihnen nach.	In /friends you see who is online right now and on which server. From there you message friends or jump to them.
 In /settings schaltest du zum Beispiel private Nachrichten, Freundesanfragen, Sounds, das Scoreboard und die Info-Leiste an und aus.	In /settings you turn on and off, for example, private messages, friend requests, sounds, the scoreboard and the info bar.
@@ -3806,6 +3827,7 @@ In der VIP-Lounge geben dir die Barkeeper einmal am Tag {} Chips. Rein darfst du
 In der VIP-Lounge steht ein Pokertisch: Texas Hold'em gegen andere Spieler, Blinds ab {}/{} Chips. Du setzt dich mit {} bis {} Big Blinds hin und nimmst deinen Stack beim Aufstehen wieder mit.	In the VIP lounge there is a poker table: Texas Hold'em against other players, blinds from {}/{} chips. You sit down with {} to {} big blinds and take your stack with you when you stand up.
 In die Farmwelt	To the farm world
 In die Tiefe	Into the depths
+In die Warteschlange	Join the queue
 In diesem Modus gibt es keine Kisten.	There are no crates in this mode.
 In diesem Modus gibt es keine Spielzeit-Stufen	There are no playtime levels in this mode
 In diesem Modus gibt es keine Stufen	There are no levels in this mode
@@ -3920,6 +3942,7 @@ Katze	Cat
 Katzenohren	Cat ears
 Kaufen	Buy
 Kaufen · 	Buy · 
+Kaufen · Verkaufen	Buy · sell
 Kaufen · {} Tokens	Buy · {} tokens
 Kaufen?	Buy?
 Kauft einen Warp genau hier, wo du stehst.	Buys a warp exactly where you are standing.
@@ -4071,6 +4094,7 @@ Kuchen	Cake
 Kugelfisch	Pufferfish
 Kuh	Cow
 Kundschafter	Scout
+Kurs	Price
 Kurz erklärt	Explained briefly
 Kurze Anleitung	Short guide
 Kälbchen	Calf
@@ -4092,6 +4116,7 @@ Ladenschild	Shop Sign
 Lag-Maschinen und Konstruktionen, die den Server absichtlich überlasten, sind verboten.	Lag machines and contraptions that deliberately overload the server are forbidden.
 Lager	Storage
 Lager & Shop	Storage & shop
+Lager für alle im Team	Storage for the whole team
 Landclaims (Survival)	Land claims (Survival)
 Landclaims sichern	Secure land claims
 Laubdrache	Leaf Dragon
@@ -4415,6 +4440,7 @@ Nicht genug Juwelen	Not enough jewels
 Nicht genug$ ({}).	Not enough $ ({}).
 Nicht genug$.	Not enough $.
 Nicht in der Top 10	Not in the top 10
+Nicht in der Warteschlange.	Not in the queue.
 Nicht mehr anpinnen	Unpin
 Nicht möglich: 	Not possible:
 Niemand	Nobody
@@ -4462,6 +4488,7 @@ Nur Helfer können ein Ticket weitergeben.	Only helpers can pass on a ticket.
 Nur Spieler können diesen Befehl nutzen.	Only players can use this command.
 Nur XP	XP only
 Nur an der Bank am Spawn	Only at the bank at spawn
+Nur der Teamchef	Only the team leader
 Nur der Teamchef kann Allianzen schließen.	Only the team leader can form alliances.
 Nur der Teamchef kann Mitglieder entfernen.	Only the team leader can remove members.
 Nur der Teamchef kann abheben.	Only the team leader can withdraw.
@@ -5084,7 +5111,9 @@ Team-Lager	Team storage
 Team-Leuchten	Team glow
 Team-Menü	Team menu
 Team: Mitglieder	Team: members
+Teamchef	Team leader
 Teamhome	Team home
+Teamhome an deiner Position setzen	Set the team home at your position
 Teamhome auf deiner Position setzen	Set the team home at your position
 Teamkasse	Team bank
 Teamkasse füllen	Fill the team bank
@@ -5261,6 +5290,7 @@ Verkauft alle Fische · 	Sells all fish ·
 Verkauft nur die Fische des Tages · 	Sells only the fish of the day · 
 Verkauft nur die wertvollen Fische · 	Sells only the valuable fish · 
 Verknüpfung nötig	Linking required
+Verlassen	Leave
 Verlauf	History
 Verlinke deinen Account: Geh im Discord in den Kanal „verify“ und klick auf „Verifizieren“. /verify zeigt dir den Weg.	Link your account: in Discord go to the “verify” channel and click “Verifizieren”. /verify shows you the way.
 Verlinke zuerst deinen Discord-Account (/verify zeigt dir den Weg).	Link your Discord account first (/verify shows you the way).
@@ -5318,6 +5348,7 @@ Waage	Scales
 Wald	Forest
 Waldwächter	Forest Warden
 Wanda braucht eine neue Brücke. Dafür brauche ich viele Bretter.	Wanda needs a new bridge. For that I need lots of planks.
+Ware	Item
 Warme Gewässer	Warm waters
 Warnung in der Actionbar, wenn Monster in der Nähe sind.	Warning in the action bar when monsters are nearby.
 Warp an deine Position verschoben.	Warp moved to your position.
@@ -5336,6 +5367,8 @@ Warte auf Einsätze..	Waiting for bets..
 Warte auf Spieler · /poker sitzen	Waiting for players · /poker sitzen
 Warte kurz, bevor du das nächste Ticket schreibst.	Wait a moment before you write the next ticket.
 Warte noch {} Sekunden.	Wait another {} seconds.
+Warteschlange verlassen	Leave the queue
+Wartet …	Waiting …
 Wartezeit	Waiting time
 Wartezeit 	Waiting time 
 Wartezeit noch {} Min.	Waiting time {} more min.
@@ -5359,6 +5392,7 @@ Weitere 1	More 1
 Weitere 2	More 2
 Weiß	White
 Weißer Hai	Great White Shark
+Welche Kategorie kommt nächste Woche?	Which category comes next week?
 Wels	Catfish
 Welt	World
 Welt, Koordinaten und Restzeit	World, coordinates and time left
@@ -5371,6 +5405,7 @@ Wer viele Tage hintereinander votet, baut eine Serie auf: ab 10 Tagen gibt es je
 Werbung für andere Server oder externe Projekte ist ohne Erlaubnis des Teams nicht gestattet.	Advertising other servers or outside projects is not allowed without the team's permission.
 Werkbank & Endertruhe	Workbench & ender chest
 Werkbank immer dabei	Crafting table always with you
+Wert	Value
 Wert ab dem Items gesichert sind	Value from which items are protected
 Wert:	Value:
 Werte in die config.yml schreiben	Write values into the config.yml
@@ -5392,6 +5427,7 @@ Wirklich kaufen? · 	Really buy? ·
 Wirklich scheiden? Das Ehe-Konto wird halbiert, danach dürft ihr eine Zeit lang nicht neu heiraten. <click:run_command:'/marry divorce bestaetigen'><red><b>[Ja, scheiden]</b></click>	Really divorce? The marriage account is split in half, after that you can't marry again for a while. <click:run_command:'/marry divorce bestaetigen'><red><b>[Yes, divorce]</b></click>
 Wirklich verlassen?	Really leave?
 Wirklich?	Really?
+Wirklich? Nochmal klicken: 	Really? Click again: 
 Wirrpilz	Warped Shroom
 Wirtschaft	Economy
 Witherskelett	Wither skeleton
@@ -5429,10 +5465,12 @@ Wähle unten einen Bereich und klicke „Verfolgen“.	Pick an area below and cl
 Wählen	Choose
 Wöchentlich	Weekly
 Würfe	Rolls
+XP aus Kills, Quests und Votes eintauschen	Trade XP from kills, quests and votes
 XP gibt es fürs Online-Sein, für Jobs und für Quests. Jedes Level braucht etwas mehr als das davor.	You get XP for being online, for jobs and for quests. Every level needs a bit more than the one before.
 XP pro Kill	XP per kill
 XP pro Platz	XP per slot
 XP und Daily	XP and daily
+XP verfügbar	XP available
 XP-Shop	XP shop
 Zahl	Number
 Zahl 	Number 
@@ -5499,6 +5537,7 @@ Zum Spawn teleportieren	Teleport to spawn
 Zum Start teleportieren	Teleport to the start
 Zum Store	To the store
 Zum Teamhome reisen	Travel to the team home
+Zum Teamhome teleportieren	Teleport to the team home
 Zum Ziel teleportieren	Teleport to the finish
 Zum Öffnen brauchst du den passenden Schlüssel. Schlüssel gibt es beim Voten, für Spielzeit, bei Events und im Juwelenshop.	You need the matching key to open it. You get keys for voting, for playtime, at events and in the jewel shop.
 Zur Angel-Zone	To the fishing zone
@@ -5524,6 +5563,7 @@ Zuschlag pro Stufe	Bonus per level
 Zusätzliche technische Einschränkungen des Servers sind einzuhalten.	Follow the server's additional technical limits.
 Zwei Kirschen!	Two cherries!
 Zwei Paare	Two pair
+Zwei Spieler, ein Zufallsort, ein Kampf	Two players, one random spot, one fight
 Zweimal klicken zum Kaufen	Click twice to buy
 Zweimal klicken zum Kaufen · Du hast {} Tokens	Click twice to buy · You have {} tokens
 Zweiter Job (Farmpass)	Second job (farm pass)
@@ -5553,6 +5593,7 @@ an 	to
 an den Händler	to the trader
 andere Welt	other world
 angelegt · Klick: ablegen	equipped · Click: take off
+aufgelöst.	disbanded the team.
 beim Team	with the team
 bleiben für immer	stay forever
 braucht {} 	needs {} 
@@ -5644,6 +5685,8 @@ vor 	ago
 vor {} Min.	{} min. ago
 wartet auf Antwort	waiting for an answer
 wieder in 	again in 
+wird gesucht …	searching …
+wählen	vote
 x Grundpreis	x base price
 x basteln	x craft
 x gefangen	x caught
@@ -5710,6 +5753,7 @@ zweiter Beruf	second job
 ✔ aktiv	✔ active
 ✔ angelegt	✔ equipped
 ✔ bereit	✔ ready
+✔ du	✔ you
 ✔ erledigt	✔ done
 ✔ hat dein Item	✔ your item has it
 ✦ Wer zu lange wartet, verliert alles ✦	✦ Whoever waits too long loses everything ✦

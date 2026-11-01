@@ -45,14 +45,14 @@ public final class ExtraCommand implements CommandExecutor {
             case "tags" -> tags(p, args);
             case "rtpqueue" -> rtp(p, args);
             case "meta" -> new MetaMenu(plugin).open(p);
-            case "xpshop" -> new XpShopMenu(plugin).open(p);
+            case "xpshop" -> new de.kuby.kubyplugins.gui.ExtraScreens(plugin).xpShop(p);
             case "booster" -> booster(p);
             case "battlepass" -> plugin.battlepassScreen().open(p);
             case "verify" -> verify(p);
             case "enderchest" -> p.openInventory(plugin.enderchests().open(p));
             case "kristaltrade" -> new KristalTradeMenu(plugin).open(p);
-            case "investments" -> new InvestmentsMenu(plugin).open(p);
-            case "quizvote" -> new QuizVoteMenu(plugin).open(p);
+            case "investments" -> new de.kuby.kubyplugins.gui.ExtraScreens(plugin).investments(p);
+            case "quizvote" -> new de.kuby.kubyplugins.gui.ExtraScreens(plugin).quiz(p);
             case "kits" -> new de.kuby.kubyplugins.gui.ProgressScreens(plugin).kits(p);
             case "tpa" -> tpa(p, args, false);
             case "tpahere" -> tpa(p, args, true);
@@ -136,7 +136,7 @@ public final class ExtraCommand implements CommandExecutor {
             return;
         }
         if (args.length == 0 && plugin.getConfig().getBoolean("rtpqueue.open-menu", false)) {
-            new RtpQueueMenu(plugin).open(p);
+            new de.kuby.kubyplugins.gui.ExtraScreens(plugin).rtp(p);
             return;
         }
         String err = plugin.rtpQueue().join(p);

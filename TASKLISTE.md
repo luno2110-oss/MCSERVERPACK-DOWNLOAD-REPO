@@ -198,6 +198,9 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
     - [x] Tagespot (`/dailypot`) als Lotterie in Kleeblatt-Grün: Topf in großer Goldschrift, Countdown bis zur Ziehung, eigene Lose, Gewinnchance, Lose gesamt, Kaufen (1, 5, 20) mit Limit
     - [x] Bestenlisten (`/baltop`, `/ranking`) als Ruhmeshalle in Königs-Violett: Podest für Platz 1 bis 3, Plätze 4 bis 10, eigener Wert
     - [x] Erfolge (`/erfolge`) als Trophäenschrank in Bronze (Karten mit Balken, erreichte golden, Juwelen-Belohnung, Seiten), Titel (`/tags`) als Namensschilder in Pflaume (in ihrer Farbe, aktiv golden, gesperrte grau, „Ablegen“), Kits (`/kits`) als Waffenkammer in Stahl (Inhalt, Abklingzeit, Rang, Abholen und Vorschau)
+    - [x] Team (`/team`) als Gildenhalle in Indigo: Name, Level, Team-XP, Felder Kasse (einzahlen, abheben für den Chef), Lager, Teamhome (hinreisen, hier setzen), Mitglieder als Chips (Chef mit Stern, online grün), Verlassen/Auflösen nach Nachfrage; ohne Team die Befehle zum Gründen
+    - [x] XP-Shop (`/xpshop`) in Erfahrungs-Grün, Investments (`/investments`) als Börsen-Tafel (Kurs, Wert, Gewinn grün/rot, +1k/+10k, alle verkaufen), Duo-RTP (`/rtpqueue`) als Arena mit „VS“, Quiz-Abstimmung (`/quizvote`) als Schultafel mit Stimmen-Balken
+    - [x] Technik: Überlauf-Bogen für Kasten-Mittelstücke (`segs9b`, F400-F7FF), Platz für weitere Farbwelten
 
 ## Ordnergruppe 5 – Scoreboard und Anzeigen (Refs: Video Scoreboard_Money, GELD_XP-Anzeige)
 - [x] 5.1 Sidebar SMP (v1.32)

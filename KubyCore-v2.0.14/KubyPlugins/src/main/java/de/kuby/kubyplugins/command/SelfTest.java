@@ -381,6 +381,35 @@ final class SelfTest {
             canvas.accept("Kits leer", () -> de.kuby.kubyplugins.gui.ProgressScreens.kits(List.of()));
         }
 
+        // Team, XP-Shop, Investments, Duo-RTP, Quiz: Grenzwerte und leer
+        {
+            List<de.kuby.kubyplugins.gui.TeamScreen.Member> ms = new ArrayList<>();
+            for (int i = 0; i < 20; i++) ms.add(new de.kuby.kubyplugins.gui.TeamScreen.Member("_WWWWWWWWWWWWWWW", i == 0, i % 2 == 0));
+            canvas.accept("Team", () -> de.kuby.kubyplugins.gui.TeamScreen.canvas(new de.kuby.kubyplugins.gui.TeamScreen.View(
+                    "WWWWWWWWWWWWWWWW", 999, 0.5, ms, 999, 999_999_999_999L, 6, 99, 99, true, 999_999_999L, true,
+                    NO, NO, NO, NO, NO, NO, NO)));
+            canvas.accept("Team keins", () -> de.kuby.kubyplugins.gui.TeamScreen.canvas(new de.kuby.kubyplugins.gui.TeamScreen.View(
+                    null, 0, 0, List.of(), 0, 0, 0, 0, 0, false, 999_999_999L, false, null, null, null, null, null, null, null)));
+            List<de.kuby.kubyplugins.gui.ExtraScreens.XpOffer> xo = new ArrayList<>();
+            for (int i = 0; i < 12; i++) xo.add(new de.kuby.kubyplugins.gui.ExtraScreens.XpOffer(de.kuby.kubyplugins.ui.KitData.Icon.EMERALD,
+                    "W".repeat(30), net.kyori.adventure.text.format.TextColor.color(0x5FE3A0), 999_999_999L, i % 2 == 0, NO));
+            canvas.accept("XP-Shop", () -> de.kuby.kubyplugins.gui.ExtraScreens.xpShop(999_999_999L, xo));
+            canvas.accept("XP-Shop leer", () -> de.kuby.kubyplugins.gui.ExtraScreens.xpShop(0, List.of()));
+            List<de.kuby.kubyplugins.gui.ExtraScreens.Stock> st = new ArrayList<>();
+            for (int i = 0; i < 20; i++) st.add(new de.kuby.kubyplugins.gui.ExtraScreens.Stock(de.kuby.kubyplugins.ui.KitData.Icon.DIAMOND,
+                    "W".repeat(30), i % 3 != 0, 999_999_999L, 9999.99, 99999.99, 999_999_999L, i % 2 == 0 ? 999_999_999L : -999_999_999L, NO, NO, NO));
+            canvas.accept("Investments", () -> de.kuby.kubyplugins.gui.ExtraScreens.investments(
+                    new de.kuby.kubyplugins.gui.ExtraScreens.Portfolio(999_999_999_999L, 1, 1_000_000, st)));
+            canvas.accept("Investments leer", () -> de.kuby.kubyplugins.gui.ExtraScreens.investments(
+                    new de.kuby.kubyplugins.gui.ExtraScreens.Portfolio(0, 0, 1000, List.of())));
+            canvas.accept("Duo-RTP", () -> de.kuby.kubyplugins.gui.ExtraScreens.rtp(false, NO, NO));
+            List<de.kuby.kubyplugins.gui.ExtraScreens.Category> qc = new ArrayList<>();
+            for (int i = 0; i < 7; i++) qc.add(new de.kuby.kubyplugins.gui.ExtraScreens.Category("W".repeat(20),
+                    de.kuby.kubyplugins.ui.KitData.Icon.BOOK, 99_999, i == 0, NO));
+            canvas.accept("Quiz-Abstimmung", () -> de.kuby.kubyplugins.gui.ExtraScreens.quiz(
+                    new de.kuby.kubyplugins.gui.ExtraScreens.Quiz("W".repeat(30), 99_999, qc)));
+        }
+
         // Prüfungen aus den Addons (z. B. Survival-Juwelenshop, Möbel- und Pet-Katalog)
         for (java.util.Map.Entry<String, Supplier<Canvas>> en : plugin.selfTestCanvases().entrySet()) {
             canvas.accept(en.getKey(), en.getValue());

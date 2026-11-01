@@ -38,7 +38,7 @@ public final class TeamCommand implements CommandExecutor {
         }
 
         if (args.length == 0) {
-            new TeamMenu(plugin).open(p);
+            new de.kuby.kubyplugins.gui.TeamScreen(plugin).open(p);
             return true;
         }
 
@@ -117,7 +117,7 @@ public final class TeamCommand implements CommandExecutor {
                 reply(p, plugin.teams().ally(p, args[1]), "<green>Allianz mit <white>" + args[1] + " <green>geschlossen. Kein PvP mehr untereinander.");
             }
             case "help" -> sendHelp(p);
-            default -> new TeamMenu(plugin).open(p);
+            default -> new de.kuby.kubyplugins.gui.TeamScreen(plugin).open(p);
         }
         return true;
     }
