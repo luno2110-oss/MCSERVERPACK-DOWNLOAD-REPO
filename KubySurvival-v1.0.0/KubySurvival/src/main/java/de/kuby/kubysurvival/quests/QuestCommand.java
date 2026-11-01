@@ -14,10 +14,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/** /quest [daily|weekly|abholen|streak|top|verfolgen <Quest>|aus|hilfe]. Ohne Argument das Quest-Menü. */
+/** /quest [daily|weekly|haupt|meilensteine|team|neben|abholen|box|streak|top|verfolgen <Quest>|aus|gui|hilfe].
+ * Ohne Argument der Quest-Dialog (mit Pack) oder das Truhen-Menü. */
 public final class QuestCommand implements CommandExecutor, TabCompleter {
 
-    private static final List<String> SUBS = List.of("daily", "weekly", "abholen", "streak", "top", "aus", "hilfe");
+    private static final List<String> SUBS = List.of("daily", "weekly", "haupt", "meilensteine", "team", "neben", "event", "abholen", "box", "streak", "top", "aus", "gui", "hilfe");
 
     private final KubySurvival addon;
 
@@ -36,13 +37,65 @@ public final class QuestCommand implements CommandExecutor, TabCompleter {
         if (!(sender instanceof Player p)) return true;
         QuestService q = addon.quests();
         UUID id = p.getUniqueId();
+        QuestDialogs dlg = addon.questDialogs();
+        boolean ui = dlg != null && dlg.usable(p);
         switch (sub) {
-            case "" -> new QuestMenu(addon).open(p);
+            case "" -> {
+                if (ui) dlg.overview(p);
+                else new QuestMenu(addon).open(p);
+            }
+            case "gui", "menü", "menu" -> {
+                if (dlg == null) return true;
+                if (dlg.toggleChest(p)) {
+                    Msg.send(p, "<gray>/quest öffnet jetzt das <white>Truhen-Menü<gray>. Nochmal <white>/quest gui<gray> für das neue Fenster.");
+                    new QuestMenu(addon).open(p);
+                } else if (dlg.open(p)) {
+                    Msg.send(p, "<gray>/quest öffnet jetzt wieder das <white>neue Fenster<gray>.");
+                } else {
+                    Msg.send(p, "<gray>Das neue Fenster braucht das Kuby-Ressourcenpaket. Ohne Paket bleibt es beim Truhen-Menü.");
+                }
+            }
+            case "event" -> {
+                if (ui) dlg.list(p, QuestScreen.Area.EVENT, 0);
+                else Msg.send(p, "<gray>Gerade läuft kein Quest-Event.");
+            }
+            case "haupt", "hauptquests", "story", "geschichte" -> {
+                if (ui) dlg.list(p, QuestScreen.Area.MAIN, 0);
+                else new QuestMenu(addon).open(p);
+            }
+            case "meilensteine", "meilenstein", "milestones" -> {
+                if (ui) dlg.list(p, QuestScreen.Area.MILE, 0);
+                else new MilestoneMenu(addon).open(p);
+            }
+            case "team" -> {
+                if (ui) dlg.list(p, QuestScreen.Area.TEAM, 0);
+                else new QuestMenu(addon).open(p);
+            }
+            case "neben", "nebenquests", "side" -> {
+                if (ui) dlg.sides(p);
+                else new SideQuestMenu(addon).open(p);
+            }
+            case "box", "abholbox" -> {
+                if (ui) dlg.box(p);
+                else if (q.claimAll(p) == 0) Msg.send(p, "<gray>Gerade gibt es nichts abzuholen.");
+            }
+            case "hilfe", "help", "?" -> {
+                if (ui) dlg.help(p, 0);
+                else help(p);
+            }
             case "daily", "tag", "täglich" -> {
+                if (ui) {
+                    dlg.list(p, QuestScreen.Area.DAILY, 0);
+                    return true;
+                }
                 Msg.send(p, "<yellow><b>Tages-Quests</b> <gray>(neue in " + QuestMenu.untilMidnight() + ")");
                 for (QuestService.Def d : q.dailies(id)) line(p, "d:" + d.id(), d);
             }
-            case "weekly", "woche" -> {
+            case "weekly", "woche", "wöchentlich" -> {
+                if (ui) {
+                    dlg.list(p, QuestScreen.Area.WEEKLY, 0);
+                    return true;
+                }
                 Msg.send(p, "<aqua><b>Wochen-Quests</b> <gray>(neue jeden Montag)");
                 for (QuestService.Def d : q.weeklies(id)) line(p, "w:" + d.id(), d);
             }
@@ -51,6 +104,10 @@ public final class QuestCommand implements CommandExecutor, TabCompleter {
                 if (n == 0) Msg.send(p, "<gray>Gerade gibt es nichts abzuholen. Schau mit <white>/quest</white> nach deinen Quests.");
             }
             case "streak", "serie" -> {
+                if (ui) {
+                    dlg.streak(p);
+                    return true;
+                }
                 int s = q.streak(id);
                 Msg.send(p, "<gold>Deine Serie: <white>" + s + (s == 1 ? " Tag" : " Tage") + " <gray>(beste: " + q.bestStreak(id) + ")");
                 Msg.send(p, "<gray>Hol jeden Tag mindestens eine Tages-Quest ab. Die erste am Tag bringt <gold>"
@@ -63,6 +120,10 @@ public final class QuestCommand implements CommandExecutor, TabCompleter {
                 if (sb.length() > 0) Msg.send(p, "<gray>Tokens bei: " + sb);
             }
             case "top", "rangliste" -> {
+                if (ui) {
+                    dlg.ranking(p, false);
+                    return true;
+                }
                 Msg.send(p, "<gold><b>Quest-Rangliste</b>");
                 int i = 1;
                 for (Map.Entry<UUID, Long> e : q.top(10)) {
@@ -107,10 +168,15 @@ public final class QuestCommand implements CommandExecutor, TabCompleter {
                 {"/quest", "Quest-Menü"},
                 {"/quest daily", "Tages-Quests"},
                 {"/quest weekly", "Wochen-Quests"},
+                {"/quest haupt", "Hauptquests"},
+                {"/quest meilensteine", "Meilensteine"},
+                {"/quest team", "Team-Quests"},
+                {"/quest neben", "Nebenquests"},
                 {"/quest abholen", "Belohnungen abholen"},
                 {"/quest streak", "Deine Serie"},
                 {"/quest top", "Rangliste"},
-                {"/quest aus", "Anzeige oben ausschalten"}};
+                {"/quest aus", "Anzeige oben ausschalten"},
+                {"/quest gui", "Fenster oder Truhen-Menü"}};
         for (String[] l : lines) Msg.send(p, "<click:suggest_command:'" + l[0] + "'><white>" + l[0] + "</click> <gray>" + l[1]);
     }
 

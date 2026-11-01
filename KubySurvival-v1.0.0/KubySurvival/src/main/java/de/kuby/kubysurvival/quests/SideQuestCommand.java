@@ -26,7 +26,11 @@ public final class SideQuestCommand implements CommandExecutor, TabCompleter {
         SideQuestService side = addon.sideQuests();
         String sub = args.length == 0 ? "" : args[0].toLowerCase();
         switch (sub) {
-            case "" -> new SideQuestMenu(addon).open(p);
+            case "" -> {
+                QuestDialogs d = addon.questDialogs();
+                if (d != null && d.usable(p)) d.sides(p);
+                else new SideQuestMenu(addon).open(p);
+            }
             case "nav" -> Msg.send(p, side.toggleNav(p.getUniqueId()) ? "<green>Wegweisung an." : "<gray>Wegweisung aus.");
             case "cancel", "abbrechen" -> Msg.send(p, side.cancel(p.getUniqueId())
                     ? "<gray>Nebenquest abgebrochen. Du kannst sie bei der Figur neu annehmen." : "<gray>Du hast keine laufende Nebenquest.");

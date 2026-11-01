@@ -94,6 +94,12 @@ public final class QuestService {
         long total;
         /** Mit Quests verdiente Tokens seit dem Start (Quest-Rang). */
         long tokens;
+        /** Tokens im laufenden Monat (Rangliste „Monat“), month = „2026-11“. */
+        String month = "";
+        long monthTokens;
+        /** Set-Bonus schon bezahlt: Tag bzw. Woche, für die er bezahlt wurde. */
+        String bonusDay = "";
+        String bonusWeek = "";
         /** null: automatisch (Geschichte), "-": aus. */
         String tracked;
     }
@@ -121,6 +127,7 @@ public final class QuestService {
     private int farmpassDaily = 1;
     private int weeklyCount = 3;
     private long streakBonus = 25;
+    private long[] dailyBonus, weeklyBonus;
     private final Map<UUID, Data> players = new HashMap<>();
     private final Map<String, TeamQuest> teams = new HashMap<>();
 
@@ -149,6 +156,8 @@ public final class QuestService {
         farmpassDaily = Math.max(0, Math.min(4, yml.getInt("farmpass-extra-daily", 1)));
         weeklyCount = Math.max(1, yml.getInt("weekly-count", 3));
         streakBonus = yml.getLong("streak.bonus-coins-per-day", 25);
+        dailyBonus = bonus(yml.getString("set-bonus.daily", "300;2"));
+        weeklyBonus = bonus(yml.getString("set-bonus.weekly", "1000;5"));
         for (String raw : yml.getStringList("streak.rewards")) {
             String[] p = raw.split(";");
             try {
@@ -173,6 +182,16 @@ public final class QuestService {
             } catch (RuntimeException e) {
                 addon.getLogger().warning("quests.yml: Meilenstein ungültig: " + raw);
             }
+        }
+    }
+
+    private static long[] bonus(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        String[] p = raw.split(";");
+        try {
+            return new long[]{Long.parseLong(p[0].trim()), p.length > 1 ? Long.parseLong(p[1].trim()) : 0};
+        } catch (RuntimeException e) {
+            return null;
         }
     }
 
@@ -306,6 +325,10 @@ public final class QuestService {
 
     int storySize() {
         return story.size();
+    }
+
+    Def storyAt(int i) {
+        return story.get(i);
     }
 
     synchronized List<Def> secretsFound(UUID id) {
@@ -545,6 +568,8 @@ public final class QuestService {
         if (key.startsWith("d:")) coins += streakStep(p, d);
         pay(id, coins, def.tokens(), def.xp());
         Msg.send(p, "<green>Belohnung für <white>" + Msg.escape(def.name()) + "<green>: " + rewardText(coins, def.tokens(), def.xp()));
+        if (key.startsWith("d:")) checkSetBonus(p, d, true);
+        if (key.startsWith("w:")) checkSetBonus(p, d, false);
         p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.6f, 1.4f);
         if (key.startsWith("s:")) {
             d.story++;
@@ -647,7 +672,14 @@ public final class QuestService {
         if (coins > 0) core.modes().depositIn(id, ModeService.SURVIVAL, coins);
         if (tokens > 0) {
             addon.jobs().addTokens(id, tokens);
-            data(id).tokens += tokens;
+            Data d = data(id);
+            d.tokens += tokens;
+            String m = month();
+            if (!m.equals(d.month)) {
+                d.month = m;
+                d.monthTokens = 0;
+            }
+            d.monthTokens += tokens;
         }
         if (xp > 0) addon.jobs().addPlayerXp(id, xp);
     }
@@ -707,6 +739,57 @@ public final class QuestService {
 
     // ---------- Rangliste ----------
 
+    static String month() {
+        return LocalDate.now(ZONE).toString().substring(0, 7);
+    }
+
+    /** Tokens im laufenden Monat. */
+    public synchronized long monthTokens(UUID id) {
+        Data d = data(id);
+        return month().equals(d.month) ? d.monthTokens : 0;
+    }
+
+    /** Rangliste nach Tokens (Monat oder gesamt), nur Spieler mit Tokens. */
+    public synchronized List<Map.Entry<UUID, Long>> topTokens(boolean month, int n) {
+        String m = month();
+        List<Map.Entry<UUID, Long>> list = new ArrayList<>();
+        for (Map.Entry<UUID, Data> e : players.entrySet()) {
+            Data d = e.getValue();
+            long v = month ? (m.equals(d.month) ? d.monthTokens : 0) : d.tokens;
+            if (v > 0) list.add(Map.entry(e.getKey(), v));
+        }
+        list.sort((a, b) -> Long.compare(b.getValue(), a.getValue()));
+        return n <= 0 ? list : list.subList(0, Math.min(n, list.size()));
+    }
+
+    // ---------- Set-Bonus ----------
+
+    /** Set-Bonus aus quests.yml (set-bonus.daily / .weekly: "Coins;Tokens"), null = keiner. */
+    long[] setBonus(boolean daily) {
+        return daily ? dailyBonus : weeklyBonus;
+    }
+
+    /** Wurde der Set-Bonus für heute bzw. diese Woche schon bezahlt? */
+    synchronized boolean bonusPaid(UUID id, boolean daily) {
+        Data d = data(id);
+        return daily ? today().equals(d.bonusDay) : week().equals(d.bonusWeek);
+    }
+
+    /** Nach dem Abholen: sind alle Aufträge des Zeitraums abgeholt, gibt es den Set-Bonus (einmal). */
+    private void checkSetBonus(Player p, Data d, boolean daily) {
+        long[] b = setBonus(daily);
+        if (b == null) return;
+        if (daily ? today().equals(d.bonusDay) : week().equals(d.bonusWeek)) return;
+        List<String> keys = daily ? d.daily : d.weekly;
+        if (keys.isEmpty()) return;
+        for (String k : keys) if (!d.claimed.contains((daily ? "d:" : "w:") + k)) return;
+        if (daily) d.bonusDay = today();
+        else d.bonusWeek = week();
+        pay(p.getUniqueId(), b[0], b[1], 0);
+        Msg.send(p, "<gold><b>Set-Bonus!</b> <gray>Alle " + (daily ? "Tagesaufträge" : "Wochenaufträge") + " geschafft: "
+                + rewardText(b[0], b[1], 0));
+    }
+
     public synchronized List<Map.Entry<UUID, Long>> top(int n) {
         List<Map.Entry<UUID, Long>> list = new ArrayList<>();
         for (Map.Entry<UUID, Data> e : players.entrySet()) if (e.getValue().total > 0) list.add(Map.entry(e.getKey(), e.getValue().total));
@@ -746,6 +829,10 @@ public final class QuestService {
                 d.total = s.getLong("total");
                 d.tokens = s.getLong("tokens");
                 d.tracked = s.getString("tracked");
+                d.month = s.getString("month", "");
+                d.monthTokens = s.getLong("month-tokens");
+                d.bonusDay = s.getString("bonus-day", "");
+                d.bonusWeek = s.getString("bonus-week", "");
                 players.put(id, d);
             }
         }
@@ -781,6 +868,10 @@ public final class QuestService {
             out.set(b + "total", d.total);
             out.set(b + "tokens", d.tokens);
             out.set(b + "tracked", d.tracked);
+            out.set(b + "month", d.month);
+            out.set(b + "month-tokens", d.monthTokens);
+            out.set(b + "bonus-day", d.bonusDay);
+            out.set(b + "bonus-week", d.bonusWeek);
         }
         for (Map.Entry<String, TeamQuest> e : teams.entrySet()) {
             String b = "teams." + e.getKey() + ".";

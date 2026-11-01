@@ -740,6 +740,16 @@ def build_icons(vroot):
     return icons
 
 
+def icon_advance8(vroot, file):
+    """Vorschub bei 8 px (halbe Größe)."""
+    ns, p = file.split(":", 1)
+    img = Image.open(os.path.join(vroot, "assets", ns, "textures", p)).convert("RGBA")
+    img = img.crop((0, 0, img.width, img.width))
+    bbox = img.getchannel("A").getbbox()
+    w = bbox[2] if bbox else 0
+    return int(0.5 + w * 8 / img.width) + 1
+
+
 def icon_advances(vroot, file):
     """Vorschub bei 16 px und 32 px: rechteste deckende Spalte + 1, skaliert, + 1."""
     ns, p = file.split(":", 1)
@@ -765,7 +775,8 @@ BIG_FIRST = 0xED80          # eigene 32-px-Icons: ED80 + i (32 px), EDC0 + i (16
 SPRITE_FIRST = 0xF000       # Kacheln (32 x 32) großer Grafiken: F000 + i
 STRIP_FIRST = 0xE000        # Balken mit Farbverlauf: je Länge 1..w ein Zeichen, je Verlauf 256 Zeichen ab E000
 # Blöcke für Verläufe: E000-E8FF (ab E900 liegen die Item-Symbole), dann freie Blöcke EB00 und F700 abwärts
-STRIP_BLOCKS = [STRIP_FIRST + 0x100 * i for i in range(9)] + [0xEB00, 0xF700, 0xF600, 0xF500, 0xF400]
+STRIP_BLOCKS = [STRIP_FIRST + 0x100 * i for i in range(9)] + [0xEB00, 0xF700, 0xF600]
+ICON8_FIRST = 0xF500        # Vanilla-Icons in 8 px (halbe Größe): F500 + i
 STRIP_MAX = 128           # Spalten je Balken-Zeichen (Zelle 129 px, Minecraft erlaubt höchstens 256)
 STRIP_COLS = 8
 
@@ -789,7 +800,7 @@ def sprite_tiles(sprites):
                     continue
                 ch = chr(SPRITE_FIRST + len(tiles))
                 # Grafik-Kacheln dürfen nicht in die Blöcke der Verläufe (ab F400 abwärts belegt) laufen
-                assert ord(ch) < min(bl for bl in STRIP_BLOCKS if bl > SPRITE_FIRST), "zu viele Grafik-Kacheln"
+                assert ord(ch) < ICON8_FIRST, "zu viele Grafik-Kacheln"
                 tiles.append((ch, tile))
                 chars.append(ch)
                 advs.append(bbox[2] + 1)
@@ -877,9 +888,11 @@ def build(out, spaces, vroot, own_icons=(), small_icons=(), big_icons=(), sprite
     icons = build_icons(vroot)
     icon_chars = {}
     icon_adv = {}
+    icon8 = {}
     for i, (name, file) in enumerate(icons):
         icon_chars[name] = (chr(0xE900 + 2 * i), chr(0xE901 + 2 * i))    # 16 px, 32 px
         icon_adv[name] = icon_advances(vroot, file)
+        icon8[name] = (chr(ICON8_FIRST + i), icon_advance8(vroot, file))     # 8 px
     cols = 16
     rows = max(1, (len(own_icons) + cols - 1) // cols)
     own_sheet = Image.new("RGBA", (16 * cols, 16 * rows), T)
@@ -952,6 +965,8 @@ def build(out, spaces, vroot, own_icons=(), small_icons=(), big_icons=(), sprite
                 providers.append({"type": "bitmap", "file": file, "height": 16, "ascent": asc, "chars": [c16]})
             if asc <= 32:
                 providers.append({"type": "bitmap", "file": file, "height": 32, "ascent": asc, "chars": [c32]})
+            if asc <= 8:
+                providers.append({"type": "bitmap", "file": file, "height": 8, "ascent": asc, "chars": [icon8[name][0]]})
         if own_icons:
             if asc <= 16:
                 providers.append({"type": "bitmap", "file": "kuby:k/icons.png", "height": 16, "ascent": asc,
@@ -1003,7 +1018,7 @@ def build(out, spaces, vroot, own_icons=(), small_icons=(), big_icons=(), sprite
 
     widths = text_widths(vroot)
     write_java(sheets, widths, icons, icon_chars, icon_adv, small_data, title_adv, sprite_data,
-               [(name, w, h, first) for name, _s, _c, w, h, first in strip_data])
+               [(name, w, h, first) for name, _s, _c, w, h, first in strip_data], icon8)
     n_fonts = len(T_SHIFTS) + len(B_SHIFTS) + len(I_SHIFTS)
     print("ok kit: %d Schriften, %d Stücke, %d Icons, %d Textzeichen" % (
         n_fonts, sum(len(s.cells) for s in sheets), len(icons), len(widths)))
@@ -1031,7 +1046,9 @@ def jstr(s):
     return '"' + "".join(out) + '"'
 
 
-def write_java(sheets, widths, icons, icon_chars, icon_adv, small_data=(), title_adv=(), sprite_data=(), strip_data=()):
+def write_java(sheets, widths, icons, icon_chars, icon_adv, small_data=(), title_adv=(), sprite_data=(), strip_data=(),
+               icon8=None):
+    icon8 = icon8 or {}
     by = {}
     for sh in sheets:
         for i, (key, img) in enumerate(sh.cells):
@@ -1177,13 +1194,16 @@ def write_java(sheets, widths, icons, icon_chars, icon_adv, small_data=(), title
     for name, _ in icons:
         c16, c32 = icon_chars[name]
         a16, a32 = icon_adv[name]
-        rows.append("        %s(%s, %d, %s, %d)" % (name.upper(), jchar(c16), a16, jchar(c32), a32))
+        c8, a8 = icon8.get(name, ("\u0000", 0))
+        rows.append("        %s(%s, %d, %s, %d, %s, %d)" % (name.upper(), jchar(c16), a16, jchar(c32), a32, jchar(c8), a8))
     L.append(",\n".join(rows) + ";")
     L.append("")
-    L.append("        public final char c16, c32;")
-    L.append("        public final int adv16, adv32;")
+    L.append("        public final char c16, c32, c8;")
+    L.append("        public final int adv16, adv32, adv8;")
     L.append("")
-    L.append("        Icon(char c16, int adv16, char c32, int adv32) {")
+    L.append("        Icon(char c16, int adv16, char c32, int adv32, char c8, int adv8) {")
+    L.append("            this.c8 = c8;")
+    L.append("            this.adv8 = adv8;")
     L.append("            this.c16 = c16;")
     L.append("            this.adv16 = adv16;")
     L.append("            this.c32 = c32;")

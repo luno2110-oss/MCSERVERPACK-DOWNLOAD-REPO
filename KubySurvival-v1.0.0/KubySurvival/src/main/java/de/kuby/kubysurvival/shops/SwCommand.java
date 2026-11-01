@@ -19,7 +19,7 @@ public final class SwCommand implements CommandExecutor, TabCompleter {
 
     public SwCommand(KubySurvival addon) {
         this.addon = addon;
-        this.dialogs = new WarpDialogs(addon);
+        this.dialogs = addon.warpDialogs();
     }
 
     @Override

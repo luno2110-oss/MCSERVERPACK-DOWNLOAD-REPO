@@ -60,7 +60,7 @@ def hexc(s):
 def main():
     ref, out = sys.argv[1], sys.argv[2]
     os.makedirs(out, exist_ok=True)
-    im = {i: load(ref, i) for i in range(17, 39)}
+    im = {i: load(ref, i) for i in list(range(17, 39)) + list(range(79, 91))}
 
     # ---------------- Kästen ----------------
     boxes = {
@@ -79,6 +79,10 @@ def main():
         "tab_event": (22, (0, 54, 34, 22)), "tab_daily": (18, (204, 54, 34, 22)), "tab_weekly": (18, (242, 54, 34, 22)),
         "tab_main": (18, (280, 54, 34, 22)), "tab_mile": (18, (318, 54, 34, 22)), "tab_team": (18, (356, 54, 34, 22)),
         "btn_line": (22, (284, 100, 96, 18)),
+        "npc": (79, (0, 54, 126, 72)), "card_tan": (80, (0, 54, 390, 114)), "card_orange": (83, (0, 54, 390, 96)),
+        "card_green": (84, (0, 81, 390, 94)), "help_tab_off": (84, (98, 54, 95, 22)),
+        "rank_tab_off": (89, (198, 54, 192, 22)), "pod_silver": (89, (0, 90, 126, 70)),
+        "pod_gold": (89, (132, 81, 126, 79)), "pod_bronze": (89, (264, 90, 126, 70)), "rank_row": (89, (8, 177, 184, 16)),
     }
     for name, (i, (x, y, w, h)) in boxes.items():
         if name == "tab_event":
@@ -102,7 +106,8 @@ def main():
     pills = {"pill_event": (18, (0, 54, 200, 22)), "pill_daily": (22, (38, 54, 200, 22)),
              "pill_weekly": (26, (76, 54, 200, 22)), "pill_main": (27, (114, 54, 200, 22)),
              "pill_mile": (33, (152, 54, 200, 22)), "pill_team": (38, (190, 54, 200, 22)),
-             "btn_gold": (17, (284, 91, 96, 18))}
+             "btn_gold": (17, (284, 91, 96, 18)), "btn_wide": (80, (0, 252, 390, 20)),
+             "help_tab_on": (84, (0, 54, 95, 22)), "rank_tab_on": (89, (0, 54, 192, 22))}
     for name, (i, (x, y, w, h)) in pills.items():
         mirrored_template(im[i], x, y, w, h).save(os.path.join(out, "box_%s.png" % name))
 
@@ -170,6 +175,42 @@ def main():
     pos["page_next"] = {"x": 231, "y": 261, "w": 24, "h": 14, "bild": 22}
     pill(im[23], 135, 279, 24, 14).save(os.path.join(out, "art_page_prev.png"))
     pos["page_prev"] = {"x": 135, "y": 279, "w": 24, "h": 14, "bild": 23}
+    # Gesichter der Nebenquest-Figuren (24 x 24, 3-fach vergrößerte Skins; Mortis und Ralf: Schriftrolle)
+    for k, name in enumerate(("leonie", "frieda", "mortis", "lilia", "konrad", "hermann", "rudolf", "mia", "ralf")):
+        x, y = (k % 3) * 132 + 7, 54 + (k // 3) * 81 + 7
+        face = np.zeros((24, 24, 4), dtype=np.uint8)
+        face[..., :3] = im[79][y:y + 24, x:x + 24]
+        face[..., 3] = 255
+        if name in ("mortis", "ralf"):
+            img, xy = art(im[79], x - 1, y - 1, x + 25, y + 25)
+            img.save(os.path.join(out, "art_face_%s.png" % name))
+            pos["face_" + name] = {"x": xy[0], "y": xy[1], "w": img.width, "h": img.height, "bild": 79}
+            continue
+        Image.fromarray(face, "RGBA").save(os.path.join(out, "art_face_%s.png" % name))
+        pos["face_" + name] = {"x": x, "y": y, "w": 24, "h": 24, "bild": 79}
+    # Stern (Schwierigkeit) und Kompass im breiten Knopf der Detailseite
+    for name, (i, rect, box) in {"streak_head": (83, (34, 3, 74, 45), (0, 0, 390, 48)),
+                                 "box_head": (88, (34, 3, 74, 45), (0, 0, 390, 48)),
+                                 "help_head": (84, (34, 3, 74, 45), (0, 0, 390, 48)),
+                                 "rank_head": (89, (34, 3, 74, 45), (0, 0, 390, 48)),
+                                 "tab_clock": (89, (60, 56, 86, 74), (0, 54, 192, 22)),
+                                 "tab_trophy": (89, (262, 56, 284, 74), (198, 54, 192, 22)),
+                                 "m_silver": (89, (48, 96, 80, 128), (0, 90, 126, 70)),
+                                 "m_gold": (89, (180, 88, 212, 122), (132, 81, 126, 79)),
+                                 "m_bronze": (89, (312, 96, 344, 128), (264, 90, 126, 70)),
+                                 "crown": (89, (228, 84, 254, 106), (132, 81, 126, 79)),
+                                 "eye": (85, (4, 318, 40, 360), (0, 270, 390, 103)),
+                                 "shield": (83, (278, 22, 300, 42), (0, 0, 390, 48)),
+                                 "fire_s": (83, (6, 62, 26, 80), (0, 54, 390, 96)),
+                                 "node_on": (83, (40, 80, 68, 112), (0, 54, 390, 96)),
+                                 "node_off": (83, (133, 80, 161, 112), (0, 54, 390, 96)),
+                                 "bulb": (83, (6, 166, 26, 190), (0, 162, 390, 78)),
+                                 "chest_s": (88, (6, 58, 26, 80), (0, 54, 390, 51)),
+                                 "star": (80, (318, 58, 340, 78), (0, 54, 390, 114)),
+                                 "btn_icon": (80, (116, 253, 136, 271), (0, 252, 390, 20))}.items():
+        img, xy = art_on(im[i], *rect, box)
+        img.save(os.path.join(out, "art_%s.png" % name))
+        pos[name] = {"x": xy[0], "y": xy[1], "w": img.width, "h": img.height, "bild": i}
     # Zurück-Knopf im Kopf
     pill(im[18], 8, 13, 22, 22).save(os.path.join(out, "art_back.png"))
     pos["back"] = {"x": 8, "y": 13, "w": 22, "h": 22, "bild": 18}

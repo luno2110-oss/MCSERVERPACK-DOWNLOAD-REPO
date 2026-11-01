@@ -517,6 +517,14 @@ public final class Canvas {
         return this;
     }
 
+    /** Vanilla-Icon in 8 x 8 (halbe Größe, z. B. Gegenstände in Quest-Zielen). Nur für Vanilla-Icons (c8 != 0). */
+    public Canvas icon8(int x, int y, KitData.Icon icon) {
+        if (icon.c8 == 0) return icon(x, y, icon, false);
+        glyphs.add(new Glyph(Kind.ICON, x, y, 8, 8, icon.adv8, Z_ICON, String.valueOf(icon.c8), NamedTextColor.WHITE,
+                false, Math.max(KitData.I_MIN, 7 - 8), KitData.I_MAX, y, y + 8));
+        return this;
+    }
+
     /** Icon in Originalgröße (Chips, Sterne, Noten) mit linker oberer Ecke bei (x, y). Gibt den Vorschub zurück. */
     public int smallIcon(int x, int y, KitData.SmallIcon icon) {
         glyphs.add(new Glyph(Kind.ICON, x, y, icon.advance - 1, icon.height, icon.advance, Z_ICON,

@@ -13,6 +13,11 @@ daily-count: 4
 farmpass-extra-daily: 1         # mit Farmpass so viele Tages-Quests mehr
 weekly-count: 3
 
+# Set-Bonus: wer alle Tages- bzw. Wochenaufträge abholt, bekommt einmal extra "Coins;Tokens" (leer = kein Bonus).
+set-bonus:
+  daily: "300;2"
+  weekly: "1000;5"
+
 # Serie: wer an aufeinanderfolgenden Tagen mindestens eine Tages-Quest abholt, baut eine Serie auf.
 streak:
   bonus-coins-per-day: 25        # Extra-Coins bei der ersten Tages-Quest des Tages: Serie x Wert (höchstens 30 Tage)

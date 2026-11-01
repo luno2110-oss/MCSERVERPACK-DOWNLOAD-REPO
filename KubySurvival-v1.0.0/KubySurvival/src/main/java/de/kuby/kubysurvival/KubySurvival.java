@@ -80,6 +80,8 @@ public final class KubySurvival extends JavaPlugin {
     private IntroService intro;
     private QuestService quests;
     private SideQuestService sideQuests;
+    private de.kuby.kubysurvival.quests.QuestDialogs questDialogs;
+    private de.kuby.kubysurvival.shops.WarpDialogs warpDialogs;
     private FarmWorldService farm;
     private WarpService warps;
     private TokenService tokens;
@@ -102,6 +104,8 @@ public final class KubySurvival extends JavaPlugin {
     public IntroService intro() { return intro; }
     public QuestService quests() { return quests; }
     public SideQuestService sideQuests() { return sideQuests; }
+    public de.kuby.kubysurvival.quests.QuestDialogs questDialogs() { return questDialogs; }
+    public de.kuby.kubysurvival.shops.WarpDialogs warpDialogs() { return warpDialogs; }
     public FarmWorldService farm() { return farm; }
     public WarpService warps() { return warps; }
     public TokenService tokens() { return tokens; }
@@ -164,6 +168,8 @@ public final class KubySurvival extends JavaPlugin {
         core.registerSelfTestCanvas("Spielerwarps Suche", de.kuby.kubysurvival.shops.WarpScreen::searchHead);
         core.registerSelfTestCanvas("Spielerwarps Formular", () -> de.kuby.kubysurvival.shops.WarpScreen.formHead(999_999_999,
                 "WWWWWWWWWWWWWWWW", "„WWWWWWWWWWWWWWWW“ wirklich löschen? Die Coins gibt es nicht zurück."));
+        // Quests: alle Seiten mit Grenzwerten
+        de.kuby.kubysurvival.quests.QuestSamples.register(core::registerSelfTestCanvas);
         core.registerSelfTestCheck("Möbel-Katalog", () -> {
             int n = 0;
             for (FurnitureCatalog.Tab t : FurnitureCatalog.tabs()) {
@@ -310,6 +316,8 @@ public final class KubySurvival extends JavaPlugin {
         command("job", jobCommand);
         PluginCommand jobCmd = getCommand("job");
         if (jobCmd != null) jobCmd.setTabCompleter(jobCommand);
+        questDialogs = new de.kuby.kubysurvival.quests.QuestDialogs(this);
+        warpDialogs = new de.kuby.kubysurvival.shops.WarpDialogs(this);
         QuestCommand questCommand = new QuestCommand(this);
         command("quest", questCommand);
         PluginCommand questCmd = getCommand("quest");
@@ -520,13 +528,13 @@ public final class KubySurvival extends JavaPlugin {
         core.registerMainEntry(new KubyPlugins.MainEntry(Material.IRON_PICKAXE, "Jobs", "Job wählen, Level, Tokens und Token-Shop",
                 p -> new JobMenu(this, core).open(p)));
         core.registerMainEntry(new KubyPlugins.MainEntry(Material.WRITABLE_BOOK, "Quests", "Tages-, Wochen- und Team-Quests, Geschichte",
-                p -> new QuestMenu(this).open(p)));
+                p -> { if (!questDialogs.open(p)) new QuestMenu(this).open(p); }));
         core.registerMainEntry(new KubyPlugins.MainEntry(Material.LEAD, "Haustiere", "Begleiter rufen, reiten, umbenennen",
                 p -> new PetMenu(this).open(p)));
         core.registerMainEntry(new KubyPlugins.MainEntry(Material.LILY_PAD, "Farmpass", "Monats-Pass mit Vorteilen",
                 p -> new FarmpassMenu(this).open(p)));
         core.registerMainEntry(new KubyPlugins.MainEntry(Material.ENDER_PEARL, "Spieler-Warps", "Läden und Bauwerke anderer besuchen",
-                p -> new WarpMenu(this, false, 0).open(p)));
+                p -> { if (!warpDialogs.open(p)) new WarpMenu(this, false, 0).open(p); }));
         core.registerMainEntry(new KubyPlugins.MainEntry(Material.GOLDEN_AXE, "Grundstücke", "Landclaims sichern",
                 p -> p.performCommand("claim")));
         core.registerMainEntry(new KubyPlugins.MainEntry(Material.POPPY, "Heiraten", "Antrag, Hochzeit und Ehe-Konto",
