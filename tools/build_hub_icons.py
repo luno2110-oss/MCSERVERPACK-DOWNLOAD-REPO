@@ -126,6 +126,8 @@ class Art:
         def same(x, y, r):
             return 0 <= x < w and 0 <= y < h and rid[y][x] == r
 
+        # Fläche: Verlauf von oben hell nach unten dunkel, Kanten oben/links hell, unten/rechts dunkel (wie die
+        # Referenz-Grafiken), Schatten unter Teilen, die darüber liegen (später gezeichnete Bereiche)
         for y in range(h):
             for x in range(w):
                 r = rid[y][x]
@@ -137,18 +139,39 @@ class Art:
                     continue
                 lo, hi = span[r]
                 t = (y - lo) / max(1, hi - lo)
-                c = mix(light(base, 0.10), dark(base, 0.14), t)
+                c = mix(light(base, 0.16), dark(base, 0.22), t)
                 if mode == "full":
                     if not same(x, y - 1, r):
-                        c = light(base, 0.36)
+                        c = light(base, 0.46)
                     elif not same(x - 1, y, r):
-                        c = light(base, 0.18)
+                        c = light(base, 0.24)
                     if not same(x, y + 1, r):
-                        c = dark(base, 0.32)
+                        c = dark(base, 0.42)
                     elif not same(x + 1, y, r):
-                        c = dark(base, 0.20)
+                        c = dark(base, 0.28)
+                    above = rid[y - 1][x] if y > 0 else 0
+                    if above > r and same(x, y + 1, r):
+                        c = dark(c, 0.28)
                 px[x, y] = c + (255,)
-        # Umriss: leere Pixel neben einem Bereich
+        # Glanzpunkt oben links in größeren Flächen
+        cells = {}
+        for y in range(h):
+            for x in range(w):
+                r = rid[y][x]
+                if r and self.regions[r][1] == "full":
+                    cells.setdefault(r, []).append((x, y))
+        for r, pts in cells.items():
+            if len(pts) < 30:
+                continue
+            base = self.regions[r][0]
+            inner = [(x, y) for x, y in pts if all(same(x + dx, y + dy, r) for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1), (-1, -1)))]
+            if not inner:
+                continue
+            gx, gy = min(inner, key=lambda q: (q[1] + q[0] * 0.8))
+            for dx, dy, f in ((0, 0, 0.62), (1, 0, 0.45), (0, 1, 0.38)):
+                if same(gx + dx, gy + dy, r):
+                    px[gx + dx, gy + dy] = light(base, f) + (255,)
+        # Umriss: fast schwarz, leicht in der Farbe des Nachbarn
         out = []
         for y in range(h):
             for x in range(w):
@@ -157,7 +180,7 @@ class Art:
                 for dx, dy in ((0, 1), (0, -1), (1, 0), (-1, 0)):
                     xx, yy = x + dx, y + dy
                     if 0 <= xx < w and 0 <= yy < h and rid[yy][xx] and self.regions[rid[yy][xx]][2]:
-                        out.append((x, y, mix(self.regions[rid[yy][xx]][0], INK, 0.82)))
+                        out.append((x, y, mix(self.regions[rid[yy][xx]][0], INK, 0.9)))
                         break
         for x, y, c in out:
             px[x, y] = c + (255,)
