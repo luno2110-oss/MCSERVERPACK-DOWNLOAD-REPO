@@ -20,6 +20,11 @@ public final class OrdersMenu extends GuiMenu {
     }
 
     @Override
+    protected String chestTheme() {
+        return "market";
+    }
+
+    @Override
     protected void build(Player p) {
         int slot = 0;
         for (OrderService.Order o : plugin.orders().inMode(plugin.modes().modeOf(p.getUniqueId()))) {

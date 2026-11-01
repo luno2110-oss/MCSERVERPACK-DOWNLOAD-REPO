@@ -28,6 +28,11 @@ public final class ShopManageMenu extends GuiMenu {
     }
 
     @Override
+    protected String chestTheme() {
+        return "storage";
+    }
+
+    @Override
     protected void build(Player p) {
         ChestShopService cs = addon.chestShops();
         if (shop.item == null) {

@@ -25,6 +25,11 @@ public final class ShopStorageMenu extends GuiMenu {
     }
 
     @Override
+    protected String chestTheme() {
+        return "storage";
+    }
+
+    @Override
     protected void build(Player p) {
         UUID id = p.getUniqueId();
         int unlocked = plugin.shopStorage().unlockedPages(id);

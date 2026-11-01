@@ -22,6 +22,11 @@ public final class MarketMenu extends GuiMenu {
     }
 
     @Override
+    protected String chestTheme() {
+        return "market";
+    }
+
+    @Override
     protected void build(Player p) {
         int slot = 0;
         for (MarketService.Listing l : plugin.market().inMode(plugin.modes().modeOf(p.getUniqueId()))) {

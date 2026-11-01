@@ -63,6 +63,11 @@ final class HeadMenu extends GuiMenu {
     }
 
     @Override
+    protected String chestTheme() {
+        return "heads";
+    }
+
+    @Override
     protected void build(Player p) {
         String price = Msg.coins(heads.price());
         List<HeadService.Category> cats = heads.categories();

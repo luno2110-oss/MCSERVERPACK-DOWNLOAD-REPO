@@ -42,6 +42,11 @@ public final class ShopSectionMenu extends GuiMenu {
     private boolean dailyView() { return ShopService.DAILY.equals(section); }
 
     @Override
+    protected String chestTheme() {
+        return "shop";
+    }
+
+    @Override
     protected void build(Player p) {
         UUID id = p.getUniqueId();
         for (int i = 0; i < 27; i++) {

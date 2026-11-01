@@ -18,6 +18,11 @@ public final class WorthMenu extends GuiMenu {
     }
 
     @Override
+    protected String chestTheme() {
+        return "shop";
+    }
+
+    @Override
     protected void build(Player p) {
         double mult = plugin.sell().multiplier(p.getUniqueId());
         int slot = 0;

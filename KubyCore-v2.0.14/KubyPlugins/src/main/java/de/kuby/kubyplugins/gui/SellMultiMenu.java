@@ -17,6 +17,11 @@ public final class SellMultiMenu extends GuiMenu {
     }
 
     @Override
+    protected String chestTheme() {
+        return "sell";
+    }
+
+    @Override
     protected void build(Player p) {
         int lvl = plugin.sell().level(p.getUniqueId());
         int max = plugin.sell().maxLevel();

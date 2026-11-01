@@ -18,6 +18,11 @@ public final class ShopMenu extends GuiMenu {
     }
 
     @Override
+    protected String chestTheme() {
+        return "shop";
+    }
+
+    @Override
     protected void build(Player p) {
         for (int i = 0; i < 27; i++) {
             set(i, Items.make(Material.GRAY_STAINED_GLASS_PANE, " ", List.of()), null);

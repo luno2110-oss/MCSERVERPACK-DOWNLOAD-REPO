@@ -23,12 +23,36 @@ import java.util.function.Consumer;
 public abstract class GuiMenu implements InventoryHolder {
 
     protected final KubyPlugins plugin;
-    private final Inventory inventory;
+    private Inventory inventory;
+    private final Component title;
+    private final int rows;
+    /** Fenster mit eigenem Hintergrund (Farbwelt aus chestTheme(), Spieler hat das Pack). */
+    private boolean themed;
     private final Map<Integer, Consumer<InventoryClickEvent>> actions = new HashMap<>();
 
     protected GuiMenu(KubyPlugins plugin, Component title, int rows) {
         this.plugin = plugin;
+        this.title = title;
+        this.rows = rows;
         this.inventory = Bukkit.createInventory(this, rows * 9, de.kuby.kubyplugins.util.I18n.ctx(title));
+    }
+
+    /**
+     * Farbwelt des Truhen-Hintergrunds (ChestBg.THEMES), null = normale Truhe. Mit Hintergrund bleiben leere Plätze
+     * frei (keine Glasscheiben), damit die Grafik zu sehen ist.
+     */
+    protected String chestTheme() {
+        return null;
+    }
+
+    /** Beim ersten Öffnen: mit Pack das Fenster mit Hintergrund neu anlegen (der Titel lässt sich später nicht ändern). */
+    private void decorate(Player player) {
+        String theme = chestTheme();
+        if (themed || theme == null || !plugin.uiPack().active(player)) return;
+        Component t = de.kuby.kubyplugins.ui.ChestBg.title(theme, rows,
+                de.kuby.kubyplugins.util.I18n.english(player) ? de.kuby.kubyplugins.util.I18n.tr(title) : title);
+        inventory = Bukkit.createInventory(this, rows * 9, t);
+        themed = true;
     }
 
     @Override
@@ -37,10 +61,11 @@ public abstract class GuiMenu implements InventoryHolder {
     }
 
     public void open(Player player) {
+        decorate(player);
         inventory.clear();
         actions.clear();
         de.kuby.kubyplugins.util.I18n.as(player, () -> build(player));
-        if (fillEmpty()) {
+        if (fillEmpty() && !themed) {
             for (int i = 0; i < inventory.getSize(); i++) {
                 if (inventory.getItem(i) == null) inventory.setItem(i, Items.filler());
             }
@@ -61,7 +86,7 @@ public abstract class GuiMenu implements InventoryHolder {
         inventory.clear();
         actions.clear();
         de.kuby.kubyplugins.util.I18n.as(player, () -> build(player));
-        if (fillEmpty()) {
+        if (fillEmpty() && !themed) {
             for (int i = 0; i < inventory.getSize(); i++) {
                 if (inventory.getItem(i) == null) inventory.setItem(i, Items.filler());
             }
@@ -69,6 +94,8 @@ public abstract class GuiMenu implements InventoryHolder {
     }
 
     protected void set(int slot, ItemStack item, Consumer<InventoryClickEvent> action) {
+        // mit eigenem Hintergrund keine grauen Füll-Scheiben: die Grafik soll sichtbar bleiben
+        if (themed && action == null && item != null && item.getType() == Material.GRAY_STAINED_GLASS_PANE) return;
         inventory.setItem(slot, item);
         if (action != null) actions.put(slot, action);
     }

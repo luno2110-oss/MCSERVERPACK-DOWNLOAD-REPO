@@ -51,6 +51,9 @@ import build_skins  # noqa: E402
 import build_sym  # noqa: E402
 
 build_sym.build(OUT)
+# Truhen-Fenster: eigene Hintergründe je Farbwelt und Reihenzahl (Schrift kuby:chest)
+import build_chest_bg  # noqa: E402
+build_chest_bg.build(OUT)
 
 VANILLA = os.environ.get("KUBY_VANILLA")
 if VANILLA and os.path.isdir(VANILLA):

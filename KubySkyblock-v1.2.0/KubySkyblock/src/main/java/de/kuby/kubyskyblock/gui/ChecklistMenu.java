@@ -21,6 +21,11 @@ public final class ChecklistMenu extends de.kuby.kubyplugins.gui.GuiMenu {
     }
 
     @Override
+    protected String chestTheme() {
+        return "sky";
+    }
+
+    @Override
     protected void build(Player p) {
         var prog = KubySkyblock.get().progress();
         var all = prog.allItems();

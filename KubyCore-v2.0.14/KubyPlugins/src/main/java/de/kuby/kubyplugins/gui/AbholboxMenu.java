@@ -19,6 +19,11 @@ public final class AbholboxMenu extends GuiMenu {
     }
 
     @Override
+    protected String chestTheme() {
+        return "pickup";
+    }
+
+    @Override
     protected void build(Player p) {
         List<ItemStack> items = plugin.abholbox().items(p.getUniqueId());
         int slot = 0;
