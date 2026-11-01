@@ -130,7 +130,7 @@ public final class HelpCommand implements CommandExecutor {
             return true;
         }
         if (command.getName().equalsIgnoreCase("menu")) {
-            new MainMenu(plugin).open(p);
+            new de.kuby.kubyplugins.gui.MainScreen(plugin).open(p);
             return true;
         }
         int requested = 1;

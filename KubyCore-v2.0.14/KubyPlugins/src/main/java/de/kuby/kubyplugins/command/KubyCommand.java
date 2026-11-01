@@ -37,7 +37,7 @@ public final class KubyCommand implements CommandExecutor, TabCompleter {
         UUID id = player.getUniqueId();
 
         switch (command.getName().toLowerCase(Locale.ROOT)) {
-            case "befehle" -> new MainMenu(plugin).open(player);
+            case "befehle" -> new de.kuby.kubyplugins.gui.MainScreen(plugin).open(player);
             case "balance" -> balance(player);
             case "pay" -> pay(player, args);
             case "baltop" -> new LeaderboardMenu(plugin).open(player);

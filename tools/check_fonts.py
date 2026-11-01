@@ -25,6 +25,22 @@ def check_fonts(root):
         for fn in files:
             with open(os.path.join(fdir, fn), encoding="utf-8") as f:
                 data = json.load(f)
+            # Kit-Schriften (k/i*, k/b*): dasselbe Zeichen in zwei Providern heißt, ein Bild fehlt im Spiel (nur der
+            # erste gilt). Die Text-Schriften (k/t*) überdecken Vanilla-Zeichen dagegen absichtlich.
+            seen = {}
+            kit = ns == "kuby" and os.path.basename(fn)[:1] in ("i", "b") and fn.startswith("k" + os.sep)
+            for p in (data["providers"] if kit else []):
+                if p["type"] == "space":
+                    chars = list(p.get("advances", {}))
+                elif p["type"] == "bitmap":
+                    chars = [ch for row in p["chars"] for ch in row if ch != "\u0000"]
+                else:
+                    continue
+                for ch in chars:
+                    if ch in seen and seen[ch] != p.get("file"):
+                        problems.append("%s:%s: Zeichen U+%04X doppelt (%s und %s)" % (ns, fn, ord(ch), seen[ch],
+                                                                                    p.get("file", "space")))
+                    seen.setdefault(ch, p.get("file", "space"))
             for p in data["providers"]:
                 if p["type"] != "bitmap":
                     continue

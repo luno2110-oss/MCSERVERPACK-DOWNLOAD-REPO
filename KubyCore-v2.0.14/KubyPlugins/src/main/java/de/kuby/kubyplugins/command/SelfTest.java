@@ -312,6 +312,27 @@ final class SelfTest {
                             : de.kuby.kubyplugins.service.InfoBar.JobLine.NONE)), ia));
         }
 
+        // Hauptmenü: lange Namen, große Zahlen, volle Bereiche
+        {
+            List<de.kuby.kubyplugins.gui.MainScreen.Tile> tiles = new ArrayList<>();
+            for (int i = 0; i < 13; i++) {
+                tiles.add(new de.kuby.kubyplugins.gui.MainScreen.Tile("WWWWWWWWWWWWWWWW", "W".repeat(80),
+                        de.kuby.kubyplugins.ui.KitData.Icon.values()[i * 7], NO));
+            }
+            List<de.kuby.kubyplugins.gui.MainScreen.Quick> qs = List.of(
+                    new de.kuby.kubyplugins.gui.MainScreen.Quick("WWWWWWWWWWWW", de.kuby.kubyplugins.ui.KitData.Icon.COMPASS,
+                            de.kuby.kubyplugins.ui.KitData.Button.TEAL, NO),
+                    new de.kuby.kubyplugins.gui.MainScreen.Quick("Einstellungen", de.kuby.kubyplugins.ui.KitData.Icon.COMPARATOR,
+                            de.kuby.kubyplugins.ui.KitData.Button.GOLD_LINE, NO));
+            List<de.kuby.kubyplugins.gui.MainScreen.Section> secs = List.of(
+                    new de.kuby.kubyplugins.gui.MainScreen.Section("WWWWWWWWWWWW", net.kyori.adventure.text.format.TextColor.color(0x7FE08A),
+                            de.kuby.kubyplugins.ui.KitData.Box.GREEN, tiles),
+                    new de.kuby.kubyplugins.gui.MainScreen.Section("Leer", net.kyori.adventure.text.format.TextColor.color(0x64C0FF),
+                            de.kuby.kubyplugins.ui.KitData.Box.NAVY, List.of()));
+            canvas.accept("Hauptmenü", () -> de.kuby.kubyplugins.gui.MainScreen.canvas(new de.kuby.kubyplugins.gui.MainScreen.View(
+                    "_WWWWWWWWWWWWWWW", "Skyblock", 999_999_999_999L, 999_999_999L, qs, secs, qs)));
+        }
+
         // Prüfungen aus den Addons (z. B. Survival-Juwelenshop, Möbel- und Pet-Katalog)
         for (java.util.Map.Entry<String, Supplier<Canvas>> en : plugin.selfTestCanvases().entrySet()) {
             canvas.accept(en.getKey(), en.getValue());

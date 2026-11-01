@@ -77,6 +77,8 @@ BOXES = {
     "teal": ("2FCCC0", "1F7A73", "091F23"),      # aktiver Köder
     "gray": ("8A8E96", "44474E", "141519"),      # neutral
     "red": ("FF4D5E", "9A1F2C", "2A0A10"),       # Warnung
+    # Menü-Dialoge (12.10): je Menü eine eigene Farbwelt
+    "hub": ("E8C060", "7A5A20", "121A2E"),       # Hauptmenü: Goldrand auf Nachtblau
 }
 
 # Casino-Kästen (Roulette- und Musik-Dialog im Clip): eigene Ecken, Rand von außen nach innen ("edge"), Füllung N.
@@ -726,6 +728,32 @@ VANILLA_ICONS = {
     "bone": "item/bone.png", "cooked_beef": "item/cooked_beef.png",
     "oak_sapling": "block/oak_sapling.png", "iron_axe": "item/iron_axe.png", "diamond_axe": "item/diamond_axe.png",
     "shulker_shell": "item/shulker_shell.png", "dragon_breath": "item/dragon_breath.png",
+    # Menü-Dialoge (12.10)
+    "fire_charge": "item/fire_charge.png", "iron_chestplate": "item/iron_chestplate.png",
+    "ender_eye": "item/ender_eye.png", "poppy": "block/poppy.png", "raw_gold": "item/raw_gold.png",
+    "goat_horn": "item/goat_horn.png", "chest_minecart": "item/chest_minecart.png", "flower_pot": "item/flower_pot.png",
+    "armor_stand": "item/armor_stand.png", "painting": "item/painting.png", "filled_map": "item/filled_map.png",
+    "spyglass": "item/spyglass.png", "saddle": "item/saddle.png", "golden_carrot": "item/golden_carrot.png",
+    "diamond_chestplate": "item/diamond_chestplate.png", "trident": "item/trident.png",
+    "crossbow": "item/crossbow_standby.png", "mace": "item/mace.png", "wind_charge": "item/wind_charge.png",
+    "end_crystal": "item/end_crystal.png", "sweet_berries": "item/sweet_berries.png", "cake": "item/cake.png",
+    "bucket": "item/bucket.png", "leather": "item/leather.png", "wheat_seeds": "item/wheat_seeds.png",
+    "iron_hoe": "item/iron_hoe.png", "golden_hoe": "item/golden_hoe.png", "iron_shovel": "item/iron_shovel.png",
+    "shears": "item/shears.png", "item_frame": "item/item_frame.png", "copper_ingot": "item/copper_ingot.png",
+    "raw_iron": "item/raw_iron.png", "echo_shard": "item/echo_shard.png", "honeycomb": "item/honeycomb.png",
+    "bread": "item/bread.png", "egg": "item/egg.png", "brush": "item/brush.png", "lantern": "item/lantern.png",
+    "oak_boat": "item/oak_boat.png", "minecart": "item/minecart.png", "blaze_powder": "item/blaze_powder.png",
+    "slime_ball": "item/slime_ball.png", "carrot": "item/carrot.png", "apple": "item/apple.png",
+    "cookie": "item/cookie.png", "torch": "block/torch.png", "lime_dye": "item/lime_dye.png",
+    "red_dye": "item/red_dye.png", "arrow": "item/arrow.png", "redstone": "item/redstone.png",
+    "lever": "block/lever.png", "iron_door": "item/iron_door.png", "bone_meal": "item/bone_meal.png",
+    "golden_sword": "item/golden_sword.png", "golden_pickaxe": "item/golden_pickaxe.png",
+    "netherite_sword": "item/netherite_sword.png", "ghast_tear": "item/ghast_tear.png",
+    "golden_chestplate": "item/golden_chestplate.png", "iron_helmet": "item/iron_helmet.png",
+    "diamond_helmet": "item/diamond_helmet.png", "netherite_chestplate": "item/netherite_chestplate.png",
+    "snowball": "item/snowball.png", "music_disc_pigstep": "item/music_disc_pigstep.png",
+    "glass_bottle": "item/glass_bottle.png", "skull_banner_pattern": "item/skull_banner_pattern.png",
+    "recovery_compass": "item/recovery_compass_00.png",
 }
 
 
@@ -774,8 +802,10 @@ SMALL_FIRST, SMALL_CELL = 0xED00, 20
 BIG_FIRST = 0xED80          # eigene 32-px-Icons: ED80 + i (32 px), EDC0 + i (16 px)
 SPRITE_FIRST = 0xF000       # Kacheln (32 x 32) großer Grafiken: F000 + i
 STRIP_FIRST = 0xE000        # Balken mit Farbverlauf: je Länge 1..w ein Zeichen, je Verlauf 256 Zeichen ab E000
-# Blöcke für Verläufe: E000-E8FF (ab E900 liegen die Item-Symbole), dann freie Blöcke EB00 und F700 abwärts
-STRIP_BLOCKS = [STRIP_FIRST + 0x100 * i for i in range(9)] + [0xEB00, 0xF700, 0xF600]
+# Blöcke für Verläufe: E000-E8FF (ab E900 liegen die Item-Symbole), dann freie Blöcke EB00 und F600
+STRIP_BLOCKS = [STRIP_FIRST + 0x100 * i for i in range(9)] + [0xEB00, 0xF600]
+# Vanilla-Icons: je zwei Zeichen (16 px, 32 px); die ersten 128 ab E900, weitere ab F700 (E900-E9FF ist voll)
+VANILLA_BLOCKS = (0xE900, 0xF700)
 ICON8_FIRST = 0xF500        # Vanilla-Icons in 8 px (halbe Größe): F500 + i
 STRIP_MAX = 128           # Spalten je Balken-Zeichen (Zelle 129 px, Minecraft erlaubt höchstens 256)
 STRIP_COLS = 8
@@ -890,7 +920,9 @@ def build(out, spaces, vroot, own_icons=(), small_icons=(), big_icons=(), sprite
     icon_adv = {}
     icon8 = {}
     for i, (name, file) in enumerate(icons):
-        icon_chars[name] = (chr(0xE900 + 2 * i), chr(0xE901 + 2 * i))    # 16 px, 32 px
+        assert i < 256, "zu viele Vanilla-Icons"
+        base = VANILLA_BLOCKS[i // 128] + 2 * (i % 128)
+        icon_chars[name] = (chr(base), chr(base + 1))    # 16 px, 32 px
         icon_adv[name] = icon_advances(vroot, file)
         icon8[name] = (chr(ICON8_FIRST + i), icon_advance8(vroot, file))     # 8 px
     cols = 16
