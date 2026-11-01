@@ -46,16 +46,21 @@ public final class GeneratorScreen {
     }
 
     public static KitData.Sprite art(String type) {
-        return switch (type) {
-            case "geld" -> KitData.Sprite.GN_GELD;
-            case "xp" -> KitData.Sprite.GN_XP;
-            case "erz" -> KitData.Sprite.GN_ERZ;
-            case "holz" -> KitData.Sprite.GN_HOLZ;
-            case "farm" -> KitData.Sprite.GN_FARM;
-            case "mob" -> KitData.Sprite.GN_MOB;
-            case "nether" -> KitData.Sprite.GN_NETHER;
-            default -> KitData.Sprite.GN_EDELSTEIN;
-        };
+        return art(type, Quality.NORMAL);
+    }
+
+    /** Spawner-Käfig der Art in der Farbe der Qualität (gn_<art>[_silber|_gold|_diamant]); eigene Arten: Edelstein. */
+    public static KitData.Sprite art(String type, Quality q) {
+        String suffix = q == null || q == Quality.NORMAL ? "" : "_" + q.name();
+        try {
+            return KitData.Sprite.valueOf(("GN_" + type + suffix).toUpperCase(java.util.Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            try {
+                return KitData.Sprite.valueOf(("GN_EDELSTEIN" + suffix).toUpperCase(java.util.Locale.ROOT));
+            } catch (IllegalArgumentException e2) {
+                return KitData.Sprite.GN_EDELSTEIN;
+            }
+        }
     }
 
     static TextColor color(Quality q) {
@@ -122,7 +127,7 @@ public final class GeneratorScreen {
         double[] b = s.boost(g.island);
         String boost = b == null ? null : "Booster x" + GeneratorService.fmt(b[0]) + " noch " + de.kuby.kubyplugins.service.KitService.format((long) b[1] - System.currentTimeMillis());
         Quality next = g.quality.next();
-        UiDialog.show(p, canvas(new View(art(t.id()), s.name(t, g.quality), color(g.quality), g.level, s.maxLevel(), rate, fill, store, stock,
+        UiDialog.show(p, canvas(new View(art(t.id(), g.quality), s.name(t, g.quality), color(g.quality), g.level, s.maxLevel(), rate, fill, store, stock,
                 premium, boost, s.upgradePrice(g), next == null ? -1 : s.jewels(next, true), next == null ? null : next.label,
                 t.kind() == Kind.ITEM,
                 run(pl -> {
@@ -243,7 +248,7 @@ public final class GeneratorScreen {
                 case XP -> g.xp / Math.max(1, cap);
                 default -> g.itemCount() / Math.max(1, cap);
             };
-            rows.add(new Row(art(t.id()), s.name(t, g.quality), color(g.quality), g.level, store, fill, run(pl -> open(pl, g))));
+            rows.add(new Row(art(t.id(), g.quality), s.name(t, g.quality), color(g.quality), g.level, store, fill, run(pl -> open(pl, g))));
         }
         double[] b = s.boost(i.slot);
         Consumer<Player> collectAll = run(pl -> {
@@ -379,7 +384,7 @@ public final class GeneratorScreen {
                 case GOLD -> "x2 Ertrag, Upgrades -35 %, Lager x2, offline 100 %, Auto-Verkauf";
                 default -> "x3 Ertrag, Upgrades -50 %, Lager x3, Auto-Verkauf, Auto-Einsammeln";
             };
-            offers.add(new Offer(q == Quality.SILBER ? KitData.Sprite.GN_XP : q == Quality.GOLD ? KitData.Sprite.GN_GELD : KitData.Sprite.GN_EDELSTEIN,
+            offers.add(new Offer(art(q == Quality.SILBER ? "erz" : q == Quality.GOLD ? "geld" : "edelstein", q),
                     q.label + "-Generator", desc, price, null, jewels >= price, run(pl -> chooseKind(pl, q))));
         }
         for (Map<?, ?> b : sb().getConfig().getMapList("generatoren.booster")) {
@@ -413,7 +418,7 @@ public final class GeneratorScreen {
         long price = s.jewels(q, false);
         List<Offer> offers = new ArrayList<>();
         for (Type t : s.types()) {
-            offers.add(new Offer(art(t.id()), q.label + "-" + t.name(), t.kind() == Kind.ITEM ? ores(t) : t.kind() == Kind.MONEY
+            offers.add(new Offer(art(t.id(), q), q.label + "-" + t.name(), t.kind() == Kind.ITEM ? ores(t) : t.kind() == Kind.MONEY
                     ? "ab " + GeneratorService.fmt(t.perSecond() * q.output) + " $ pro Sekunde" : "ab " + GeneratorService.fmt(t.perSecond() * q.output) + " XP pro Sekunde",
                     price, null, sb().core().jewels().balance(p.getUniqueId()) >= price, run(pl -> {
                         if (!sb().core().jewels().take(pl.getUniqueId(), price)) {
@@ -439,16 +444,16 @@ public final class GeneratorScreen {
         String w = "W".repeat(40);
         List<Stock> stock = new ArrayList<>();
         for (int i = 0; i < 12; i++) stock.add(new Stock(KitData.Icon.DIAMOND, w, 999_999_999L));
-        reg.accept("Generator", () -> canvas(new View(KitData.Sprite.GN_ERZ, w, GOLD, 10, 10, w, 1, w, stock, w + w, w, 999_999_999L, 999_999L, "Diamant",
+        reg.accept("Generator", () -> canvas(new View(art("erz", Quality.DIAMANT), w, GOLD, 10, 10, w, 1, w, stock, w + w, w, 999_999_999L, 999_999L, "Diamant",
                 true, no, no, no, no, no, no)));
         reg.accept("Generator Geld", () -> canvas(new View(KitData.Sprite.GN_GELD, "Geld-Generator", STEEL, 1, 10, "0,5 $ pro Sekunde", 0.3,
                 "1.234 / 3.600 $", List.of(), "Offline 50 %", null, -1, -1, null, false, no, null, no, null, no, no)));
         List<Row> rows = new ArrayList<>();
-        for (int i = 0; i < 16; i++) rows.add(new Row(KitData.Sprite.GN_XP, w, CYAN, 10, "999.999.999 XP", 0.5, no));
+        for (int i = 0; i < 16; i++) rows.add(new Row(art("xp", Quality.values()[i % 4]), w, CYAN, 10, "999.999.999 XP", 0.5, no));
         reg.accept("Generatoren", () -> island(rows, 16, w, no, no, no, no));
         reg.accept("Generatoren leer", () -> island(List.of(), 3, null, no, no, no, no));
         List<Offer> offers = new ArrayList<>();
-        for (int i = 0; i < 9; i++) offers.add(new Offer(KitData.Sprite.GN_MOB, w, w + w, 999_999_999L, i % 3 == 0 ? w : null, i % 2 == 0, no));
+        for (int i = 0; i < 9; i++) offers.add(new Offer(art("mob", Quality.values()[i % 4]), w, w + w, 999_999_999L, i % 3 == 0 ? w : null, i % 2 == 0, no));
         reg.accept("Generator-Shop", () -> shop(offers, "Generator-Shop", "999.999.999 $", GOLD, no));
         reg.accept("Generator-Juwelenshop", () -> shop(offers, "Juwelenshop", "999.999 Juwelen", JEWEL, no));
     }

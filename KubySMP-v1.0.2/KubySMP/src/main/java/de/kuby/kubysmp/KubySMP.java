@@ -68,6 +68,10 @@ public final class KubySMP extends JavaPlugin {
         trophies = new TrophyService(core);
         tournaments = new TournamentService(core);
         insurance = new RaidInsuranceService(core);
+        // Werte für SMP-Quests (stat:...) und Erfolge
+        core.registerStat("trophies", id -> (long) core.stats().get(id).trophies);
+        core.registerStat("smp_xp", id -> core.stats().get(id).xp);
+        core.registerStat("deaths_smp", id -> (long) core.stats().get(id).deaths);
 
         core.setPvp(new PvpApi() {
             @Override public boolean inCombat(java.util.UUID id) { return combat.inCombat(id); }

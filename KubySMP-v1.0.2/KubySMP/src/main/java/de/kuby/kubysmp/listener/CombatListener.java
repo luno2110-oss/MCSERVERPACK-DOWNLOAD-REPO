@@ -67,11 +67,13 @@ public final class CombatListener implements Listener {
         TrophyService.Result res = KubySMP.get().trophies().transfer(killer.getUniqueId(), victim.getUniqueId());
         Msg.send(victim, "<red>-" + res.lost() + " Trophäen <gray>durch <white>" + killer.getName());
         plugin.battlepass().progress(killer.getUniqueId(), "kill", 1);
+        plugin.questProgress(killer, "pvp", victim, 1);
         plugin.cosmetics().onKill(killer, victim.getLocation());
 
         long bounty = KubySMP.get().bounties().claim(victim.getUniqueId());
         if (bounty > 0) {
             plugin.economy().deposit(killer.getUniqueId(), bounty);
+            plugin.questProgress(killer, "kopfgeld", null, 1);
             Sfx.play(plugin, killer, Sfx.Kind.BOUNTY);
             plugin.notifications().send("notify.duel", "<gold>Kopfgeld! <white>" + killer.getName()
                     + " <gray>hat <white>" + victim.getName() + " <gray>erledigt und <gold>"

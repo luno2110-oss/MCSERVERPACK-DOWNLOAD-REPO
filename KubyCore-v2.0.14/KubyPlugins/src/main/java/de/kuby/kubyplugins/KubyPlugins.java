@@ -743,6 +743,22 @@ public final class KubyPlugins extends JavaPlugin {
             return false;
         }
     }
+    /** Quest-Fortschritt aus den Addons (SMP: Kills, Duelle, Turniere; Skyblock: Generatoren, Insel). Die Quests
+     *  (KubySurvival, je Modus getrennt) hängen sich hier ein; ohne KubySurvival passiert nichts. */
+    @FunctionalInterface
+    public interface QuestHook { void progress(org.bukkit.entity.Player p, String type, Object subject, long amount); }
+    private final java.util.List<QuestHook> questHooks = new java.util.concurrent.CopyOnWriteArrayList<>();
+    public void registerQuestHook(QuestHook h) { questHooks.add(h); }
+    public void questProgress(org.bukkit.entity.Player p, String type, Object subject, long amount) {
+        if (p == null || amount <= 0) return;
+        for (QuestHook h : questHooks) {
+            try {
+                h.progress(p, type, subject, amount);
+            } catch (RuntimeException e) {
+                getLogger().warning("Quest-Fortschritt (" + type + "): " + e);
+            }
+        }
+    }
     /** Eintrag nur für einen Modus (z. B. ModeService.SURVIVAL). */
     public void registerMainEntry(String mode, MainEntry e) { mainEntries.add(new MainEntry(e.icon(), e.name(), e.desc(), e.action(), mode)); }
     public void registerAdminButton(AdminButton b) { adminButtons.add(b); }

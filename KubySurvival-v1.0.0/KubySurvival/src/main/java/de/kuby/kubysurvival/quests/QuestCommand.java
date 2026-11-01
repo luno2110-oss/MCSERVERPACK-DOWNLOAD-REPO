@@ -30,12 +30,12 @@ public final class QuestCommand implements CommandExecutor, TabCompleter {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         String sub = args.length == 0 ? "" : args[0].toLowerCase();
         if (sub.equals("reload") && sender.hasPermission("kuby.admin")) {
-            addon.quests().loadDefs();
-            Msg.send(sender, "<green>quests.yml neu geladen.");
+            for (QuestService q : addon.allQuests()) q.loadDefs();
+            Msg.send(sender, "<green>quests.yml, quests-smp.yml und quests-skyblock.yml neu geladen.");
             return true;
         }
         if (!(sender instanceof Player p)) return true;
-        QuestService q = addon.quests();
+        QuestService q = addon.quests(p) != null ? addon.quests(p) : addon.quests();
         UUID id = p.getUniqueId();
         QuestDialogs dlg = addon.questDialogs();
         boolean ui = dlg != null && dlg.usable(p);
@@ -153,7 +153,7 @@ public final class QuestCommand implements CommandExecutor, TabCompleter {
     }
 
     private void line(Player p, String key, QuestService.Def d) {
-        QuestService q = addon.quests();
+        QuestService q = addon.quests(p) != null ? addon.quests(p) : addon.quests();
         UUID id = p.getUniqueId();
         String state = q.isClaimed(id, key) ? "<green>✔"
                 : q.isDone(id, key) ? "<click:run_command:'/quest abholen'><gold>[Abholen]</click>"

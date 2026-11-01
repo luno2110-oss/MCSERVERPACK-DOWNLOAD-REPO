@@ -227,6 +227,7 @@ public final class DuelService {
 
         Player winner = Bukkit.getPlayer(winnerId);
         if (winner != null) {
+            plugin.questProgress(winner, "duel", null, 1);
             restore(winner, d.of(winnerId));
             Msg.send(winner, "<green>Du hast das Duell gewonnen! <gray>+" + Msg.coins(pot - tax) + "$");
             Sfx.play(plugin, winner, Sfx.Kind.WIN);

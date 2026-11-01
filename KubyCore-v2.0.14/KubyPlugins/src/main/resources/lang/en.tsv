@@ -6248,3 +6248,212 @@ Platz	Rank
 Mitglied entfernen	Remove member
 Insel verlassen	Leave island
 Insel aufgeben	Abandon island
+<gray>Abklingzeit und Modi einstellen.	<gray>Set cooldown and modes.
+<gray>Items hineinlegen, Name, Icon, Rang,	<gray>Put items in, name, icon, rank,
+<gray>Klick auf ein Kit öffnet den Editor:	<gray>Click a kit to open the editor:
+<gray>Legt ein leeres Kit an und öffnet den Editor.	<gray>Creates an empty kit and opens the editor.
+<gray>Rang: <white>	<gray>Rank: <white>
+<gray>Zu den Kits	<gray>To the kits
+für alle	for everyone
+<gold>Rang: <white>	<gold>Rank: <white>
+<gray>Ab welchem Rang das Kit erlaubt ist.	<gray>From which rank the kit is allowed.
+<gray>Gibt dir den Inhalt (ohne Abklingzeit).	<gray>Gives you the contents (no cooldown).
+<gray>Höhere Ränge dürfen auch niedrigere Kits.	<gray>Higher ranks may also use lower kits.
+<gray>In welchen Modi das Kit zu sehen ist.	<gray>In which modes the kit is shown.
+<gray>Name des Kits (Farben wie {} gehen).	<gray>Kit name (colors like {} work).
+<gray>Nimm ein Item auf den Mauszeiger	<gray>Pick up an item with the cursor
+<gray>Nimm ein Item auf den Mauszeiger und klick dann auf das Icon.	<gray>Pick up an item with the cursor, then click the icon.
+<gray>Shift + Klick: endgültig löschen	<gray>Shift + click: delete for good
+<gray>Speichert auch beim Schließen.	<gray>Also saves when closing.
+<gray>Speichert und zeigt alle Kits	<gray>Saves and shows all kits
+<gray>Zum Löschen <white>Shift + Klick</white> auf die Barriere.	<gray>To delete, <white>Shift + click</white> the barrier.
+<green><b>Übernehmen</b>	<green><b>Apply</b>
+<green>Inhalt von {} in dein Inventar gelegt.	<green>Put the contents of {} into your inventory.
+<red>Das Kit ist voll (36 Plätze).	<red>The kit is full (36 slots).
+<red>Kit löschen	<red>Delete kit
+<red>Kit {} gelöscht.	<red>Kit {} deleted.
+<yellow>Klick: weiter	<yellow>Click: next
+<yellow>Linksklick: nächster · Rechtsklick: voriger	<yellow>Left click: next · Right click: previous
+Modus wählen	Choose mode
+Abholen · Vorschau zeigt den Inhalt	Claim · preview shows the contents
+<gray>Preis für das Item in deiner Hand:	<gray>Price for the item in your hand:
+<red>Nimm das Item, das du verkaufen willst, in die Hand.	<red>Hold the item you want to sell.
+Alle Angebote	All offers
+Bausteine und Baumaterial	Blocks and building material
+Für dein Zuhause	For your home
+Gekaufte und zurückgegebene Items	Bought and returned items
+Gesuche: liefern und kassieren	Requests: deliver and cash in
+Im Markt ansehen	View in the market
+Item in der Hand anbieten	Offer the item in your hand
+Items anderer Spieler kaufen	Buy items from other players
+Items verkaufen	Sell items
+Jeden Tag neu, mit Juwelen	New every day, with jewels
+Klick im Markt zieht zurück	Click in the market to withdraw
+Kurse und Anteile	Prices and shares
+Nahrung für unterwegs	Food for the road
+Name, ID oder Material	Name, ID or material
+Noch keine Angebote. Sei der Erste: Item in die Hand, „Verkaufen“.	No offers yet. Be the first: hold an item, “Sell”.
+Nur Admins	Admins only
+Preise ändern sich mit Angebot und Nachfrage	Prices change with supply and demand
+Schaltungen und Mechanik	Circuits and mechanics
+Spieler handeln untereinander · {} Angebote	Players trade with each other · {} offers
+ von {} verkauft.	 sold by {}.
+<red>Die Börse hat noch keine Werte (Shop-Bereiche sind leer).	<red>The stock market has no stocks yet (shop sections are empty).
+Alle Werte · nach Veränderung (24 h)	All stocks · by change (24 h)
+Alles verkaufen, wenn der Kurs fällt auf (aktuell {})	Sell everything when the price falls to (now {})
+Alles verkaufen, wenn der Kurs steigt auf (aktuell {})	Sell everything when the price rises to (now {})
+Betrag in $ (wird reserviert)	Amount in $ (reserved)
+Bitte eine Zahl über 0 eingeben.	Please enter a number above 0.
+Deine Positionen	Your positions
+Deine letzten Trades	Your latest trades
+Gekauft: {} $ in 	Bought: {} $ in 
+Hälfte verkaufen bei (aktuell {})	Sell half at (now {})
+Kaufen, wenn der Kurs fällt auf (aktuell {})	Buy when the price falls to (now {})
+Kaufen: 	Buy: 
+Keine Position in {} · Gebühr {} % je Trade	No position in {} · fee {} % per trade
+Keine Werte.	No stocks.
+Keine offenen Orders. Limit, Stop-Loss und Take-Profit setzt du im Reiter Markt.	No open orders. Set limit, stop loss and take profit in the Market tab.
+Noch keine Positionen. Kauf im Reiter Markt deinen ersten Wert.	No positions yet. Buy your first stock in the Market tab.
+Noch keine Trades.	No trades yet.
+Offene Orders · werden bei jedem Kurs-Schritt geprüft	Open orders · checked on every price step
+Stop-Loss gesetzt.	Stop loss set.
+Take-Profit gesetzt.	Take profit set.
+Verkaufen: 	Sell: 
+↻ Neu	↻ Refresh
+<red>/{} gibt es nur in {}.	<red>/{} is only available in {}.
+ ausgeführt: <white>{} <gray>zu {}, <gold>+{} $	 executed: <white>{} <gray>at {}, <gold>+{} $
+<#64D8FF><b>Börse:</b> 	<#64D8FF><b>Stocks:</b> 
+<green>{} ausgeführt: <white>{} {} <gray>zu 	<green>{} executed: <white>{} {} <gray>at 
+Das Ziel muss über dem Kurs liegen.	The target must be above the price.
+Davon hast du nichts.	You don't own any of that.
+Der Limit-Kauf muss unter dem Kurs liegen (sonst kauf direkt).	A limit buy must be below the price (otherwise buy directly).
+Der Stop-Loss muss unter dem Kurs liegen.	The stop loss must be below the price.
+Diese Order gibt es nicht mehr.	This order no longer exists.
+Diesen Wert gibt es nicht.	This stock doesn't exist.
+Du hast schon zu viele offene Orders.	You already have too many open orders.
+Für diese Order brauchst du eine Position in {}.	You need a position in {} for this order.
+Ungültiger Kurs.	Invalid price.
+Alle Items sammeln, Erfolge und Meilensteine	Collect every item, achievements and milestones
+Die besten Inseln nach Level	The best islands by level
+Geld, XP und Items von selbst: kaufen, aufstellen, einsammeln	Money, XP and items by themselves: buy, place, collect
+Zuhause, Mitglieder, Upgrades und Level	Home, members, upgrades and level
+ wurde entfernt.	 was removed.
+<#9AD8FF><b>/insel</b> <gray>Menü · <white>home · sethome · einladen <Spieler> · annehmen · entfernen <Spieler> · verlassen · besuchen <Spieler> · top · level · name <Name> · besucher · upgrade <Art> · neustart · aufgeben	<#9AD8FF><b>/insel</b> <gray>menu · <white>home · sethome · einladen <player> · annehmen · entfernen <player> · verlassen · besuchen <player> · top · level · name <name> · besucher · upgrade <type> · neustart · aufgeben
+<green>Insel-Vorlage <white>{}<green> gespeichert. Dein Standplatz ist der Spawn der Insel.	<green>Island template <white>{}<green> saved. Where you stand is the island spawn.
+<green>Vorlage gelöscht.	<green>Template deleted.
+<red>Keine eigene Vorlage mit dieser ID (eingebaute lassen sich in der config abschalten).	<red>No custom template with this ID (built-in ones can be turned off in the config).
+ kaufen	 buy
+ und mehr	 and more
+ von {} Plätzen · 	 of {} slots · 
+1 Item alle {} s	1 item every {} s
+<gold>⚡ Generator-Booster x{} aktiv für {} Minuten.	<gold>⚡ Generator booster x{} active for {} minutes.
+<green>{} gekauft. <gray>Stell ihn auf deine Insel.	<green>{} bought. <gray>Place it on your island.
+<{}>{} gekauft! <gray>Stell ihn auf deine Insel.	<{}>{} bought! <gray>Place it on your island.
+Alle Generatoren deiner Insel x{} für {} Minuten	All generators on your island x{} for {} minutes
+Alle Generatoren der Insel	All generators on the island
+Alle Lager einsammeln	Collect all storages
+Alle einsammeln	Collect all
+Booster x{} noch 	Booster x{} for 
+Dafür brauchst du {} Juwelen.	You need {} jewels for that.
+Der Generator kommt mit Stufe und Qualität in dein Inventar, das Lager wird ausgezahlt.	The generator goes into your inventory with its level and quality, the storage is paid out.
+Geht direkt an dich (online)	Goes straight to you (online)
+Generator öffnen	Open generator
+Generatoren kaufen	Buy generators
+Kaufen, auf die Insel stellen, Lager einsammeln	Buy, place on the island, collect the storage
+Max. Stufe	Max level
+Noch keine Generatoren. Kauf einen im Generator-Shop und stell ihn auf deine Insel.	No generators yet. Buy one in the generator shop and place it on your island.
+Noch nichts produziert.	Nothing produced yet.
+Nächste Qualität (Stufe bleibt)	Next quality (level stays)
+Nächste Stufe	Next level
+Offline 50 %	Offline 50 %
+Offline 50 % · Premium im Juwelenshop	Offline 50 % · premium in the jewel shop
+Ränge, Schlüssel und Pakete	Ranks, keys and bundles
+Silber, Gold, Diamant und Booster	Silver, gold, diamond and boosters
+Stufe {} / {} · 	Level {} / {} · 
+Veredeln: {} · {} Juwelen	Refine: {} · {} jewels
+Wird direkt aufs Konto gezahlt	Paid straight into your account
+Zurück zur Insel	Back to the island
+aufs Konto	to your account
+kein Booster	no booster
+x1,5 Ertrag · Upgrades -20 % · Lager x1,5 · Offline 75 %	x1.5 output · upgrades -20 % · storage x1.5 · offline 75 %
+x1,5 Ertrag, Upgrades -20 %, Lager x1,5, offline 75 %	x1.5 output, upgrades -20 %, storage x1.5, offline 75 %
+x2 Ertrag · Upgrades -35 % · Lager x2 · Offline 100 % · Auto-Verkauf	x2 output · upgrades -35 % · storage x2 · offline 100 % · auto-sell
+x2 Ertrag, Upgrades -35 %, Lager x2, offline 100 %, Auto-Verkauf	x2 output, upgrades -35 %, storage x2, offline 100 %, auto-sell
+<gold>{} <gray>Stufe 	<gold>{} <gray>level 
+<gray>Größe: <white>{} x 	<gray>Size: <white>{} x 
+<gray>Platz: <white>#	<gray>Rank: <white>#
+ Plätze	 slots
+ von der Insel entfernen?	 remove from the island?
+<gold>Loot-Stufe 	<gold>Loot tier 
+<gray>Leg Items hinein. Die Menge im Platz	<gray>Put items in. The amount in the slot
+<gray>Loot-Tabelle {} geleert, es gilt wieder die Liste aus der config.	<gray>Loot table {} cleared, the list from the config applies again.
+<gray>Schließen speichert.	<gray>Closing saves.
+<gray>Shift + Klick: wieder die Liste aus der config	<gray>Shift + click: back to the list from the config
+<gray>ist die Höchstmenge beim Würfeln.	<gray>is the maximum amount when rolling.
+<#9AD8FF>Generator aufgestellt. <gray>Rechtsklick öffnet ihn.	<#9AD8FF>Generator placed. <gray>Right-click opens it.
+<gray>Das ist ein Generator von {}.	<gray>This is a generator of {}.
+<gray>Generator abgebaut, er liegt mit seiner Stufe in deinem Inventar.	<gray>Generator removed, it's in your inventory with its level.
+<#9AD8FF>Verkauft: <white>{} Items <gray>für <gold>{} $	<#9AD8FF>Sold: <white>{} items <gray>for <gold>{} $
+<dark_gray>Rechtsklick auf den Generator öffnet ihn.	<dark_gray>Right-click the generator to open it.
+<gray>Auf deine Insel stellen: produziert von selbst.	<gray>Place it on your island: produces by itself.
+<{}><b>{}</b> <gray>Stufe 	<{}><b>{}</b> <gray>level 
+<{}><b>⚙ {}</b>\n<gray>Stufe <white>{} <dark_gray>· <white>	<{}><b>⚙ {}</b>\n<gray>Level <white>{} <dark_gray>· <white>
+Das Lager ist leer.	The storage is empty.
+Das ist schon die beste Qualität.	That's already the best quality.
+Deine Insel hat nur {} Generator-Plätze. Mehr gibt es mit dem Größen-Upgrade.	Your island only has {} generator slots. Get more with the size upgrade.
+Diesen Generator gibt es ab Insel-Level {}.	This generator unlocks at island level {}.
+Es gibt nichts zu verkaufen.	There's nothing to sell.
+Generatoren stellst du auf deiner Insel auf.	You place generators on your island.
+direkt aufs Konto	straight to your account
+direkt zu dir	straight to you
+Generator Stufe 	Generator level 
+Größe {} x 	Size {} x 
+Insel von 	Island of 
+Die ID darf nur a-z, 0-9, _ und - enthalten.	The ID may only contain a-z, 0-9, _ and -.
+Die Insel des Servers	The server's island
+Die Vorlage ist zu groß (höchstens 200.000 Blöcke).	The template is too big (at most 200,000 blocks).
+Vom Standplatz aus darf die Vorlage höchstens {} Blöcke in jede Richtung reichen (Startgröße der Insel).	From where you stand, the template may reach at most {} blocks in each direction (starting island size).
+Zwischen den Ecken ist nichts gebaut.	Nothing is built between the corners.
+Insel-Aufträge, Generatoren und die Skyblock-Geschichte	Island tasks, generators and the Skyblock story
+PvP-Aufträge, Duelle, Turniere und die SMP-Geschichte	PvP tasks, duels, tournaments and the SMP story
+„WWWWWWWWWWWWWWWW“ wirklich löschen? Die Coins gibt es nicht zurück.	Really delete “WWWWWWWWWWWWWWWW”? The coins are not refunded.
+<gray>/{} gibt es mit dem <green>Farmpass<gray>: <white>/farmpass	<gray>/{} comes with the <green>Farmpass<gray>: <white>/farmpass
+ Gräber	 graves
+Schildkröten	Turtles
+zurückziehen	withdraw
+<white>Nächste Seite »	<white>Next page »
+<white>« Vorige Seite	<white>« Previous page
+<yellow>Klick: im Juwelenshop ansehen <dark_gray>({} Juwelen)	<yellow>Click: view in the jewel shop <dark_gray>({} jewels)
+ läuft jetzt jedes Jahr automatisch.	 now runs automatically every year.
+ läuft nicht mehr automatisch.	 no longer runs automatically.
+<b>Kapitel geschafft!</b> <click:run_command:'/quest event'><gold>[Belohnung abholen]</click>	<b>Chapter done!</b> <click:run_command:'/quest event'><gold>[Claim reward]</click>
+<b>{}:</b> <white>{} <gray>angenommen. Es wird oben angezeigt.	<b>{}:</b> <white>{} <gray>accepted. It's shown at the top.
+<dark_gray>aus	<dark_gray>off
+<gray>Events sind aus, bis <white>/kp event auto<gray> oder <white>/kp event laden<gray>.	<gray>Events are off until <white>/kp event auto<gray> or <white>/kp event laden<gray>.
+<gray>Kapitel {} wartet: <click:run_command:'/quest event'>{}[Ansehen]</click>	<gray>Chapter {} is waiting: <click:run_command:'/quest event'>{}[View]</click>
+<green>Feuerwerk über dem Spawn gezündet.	<green>Fireworks launched above spawn.
+<green>Preset {}<green> geladen und gestartet: {} Kapitel, {}, Shop mit {} Angeboten. <gray>/kp event auto = wieder nach Datum	<green>Preset {}<green> loaded and started: {} chapters, {}, shop with {} offers. <gray>/kp event auto = back to dates
+<green>Presets neu geladen: <white>	<green>Presets reloaded: <white>
+<green>läuft	<green>running
+<red>Kein Event mit Sammel-Items oder niemand in Survival.	<red>No event with collectibles or nobody in Survival.
+<red>Konnte die Datei nicht speichern.	<red>Couldn't save the file.
+keine Sammel-Items	no collectibles
+<green>quests.yml, quests-smp.yml und quests-skyblock.yml neu geladen.	<green>quests.yml, quests-smp.yml and quests-skyblock.yml reloaded.
+ <dark_gray>{} weitere warten noch darauf, entdeckt zu werden …	 <dark_gray>{} more are still waiting to be discovered …
+Besiege {} Spieler.	Defeat {} players.
+Bringe deine Insel auf Level {}.	Bring your island to level {}.
+Erreiche {} Insel-Punkte.	Reach {} island points.
+Habe {} Leute auf deiner Insel.	Have {} people on your island.
+Sammle {} Trophäen.	Collect {} trophies.
+Sammle {} XP im SMP.	Collect {} XP in SMP.
+Stelle 1 Generator auf.	Place 1 generator.
+Stelle {} Generatoren auf.	Place {} generators.
+ Juwelen je Token	 jewels per token
+ Juwelen je Token, sofort auf dein Konto.	 jewels per token, straight to your account.
+, Abo, jederzeit kündbar.	, subscription, cancel any time.
+Juwelen gibt es im Store: 	Jewels are available in the store: 
+Seite {} von 	Page {} of 
+Weiter »	Next »
+« Zurück	« Back
+ hat {} schon.	 already has {}.
+<white>/sw meine <gray>Deine Warps: Ort, Beschreibung, Kategorie, Farbe, verschieben, löschen	<white>/sw meine <gray>Your warps: location, description, category, color, move, delete

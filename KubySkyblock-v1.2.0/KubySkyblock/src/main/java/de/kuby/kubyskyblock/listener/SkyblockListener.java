@@ -9,6 +9,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 
@@ -21,6 +23,34 @@ public final class SkyblockListener implements Listener {
     public SkyblockListener(KubySkyblock addon, KubyPlugins core) {
         this.addon = addon;
         this.core = core;
+    }
+
+    /** Zuletzt von Spielern gesetzte Blöcke: zählen beim Abbauen nicht für Quests (kein Setzen-und-Abbauen). */
+    private static final int PLACED_MAX = 200_000;
+    private final java.util.LinkedHashSet<Long> placed = new java.util.LinkedHashSet<>();
+
+    private static long key(Block b) {
+        return ((long) (b.getX() & 0x3FFFFFF) << 38) | ((long) (b.getZ() & 0x3FFFFFF) << 12) | (b.getY() & 0xFFF);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPlace(BlockPlaceEvent e) {
+        if (!inSkyblock(e.getBlock().getWorld())) return;
+        placed.add(key(e.getBlock()));
+        if (placed.size() > PLACED_MAX) {
+            var it = placed.iterator();
+            it.next();
+            it.remove();
+        }
+    }
+
+    /** Zählt der Abbau für Quests? Pflanzen nur reif, sonst nur Blöcke, die kein Spieler gesetzt hat. */
+    private boolean countsForQuests(Block b) {
+        boolean wasPlaced = placed.remove(key(b));
+        if (b.getBlockData() instanceof org.bukkit.block.data.Ageable a && org.bukkit.Tag.CROPS.isTagged(b.getType())) {
+            return a.getAge() >= a.getMaximumAge();
+        }
+        return !wasPlaced;
     }
 
     private boolean inSkyblock(org.bukkit.World w) {
@@ -77,6 +107,7 @@ public final class SkyblockListener implements Listener {
             return;
         }
         addon.islands().addPoints(b.getLocation(), b.getType(), -1);
+        if (countsForQuests(b)) core.questProgress(p, "abbau", b.getType(), 1);
         addon.streaks().reward(p);
         addon.progress().recordBlock(p);
     }

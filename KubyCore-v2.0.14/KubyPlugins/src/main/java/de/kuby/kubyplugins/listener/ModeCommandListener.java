@@ -24,6 +24,16 @@ public final class ModeCommandListener implements Listener {
 
     public ModeCommandListener(KubyPlugins plugin) {
         this.plugin = plugin;
+        // Quests gibt es jetzt in jedem Modus (eigene Quests je Modus): alte Einträge "quest: [survival]" anheben.
+        boolean changed = false;
+        for (String k : new String[]{"quest", "quests"}) {
+            String path = "modus-befehle." + k;
+            if (List.of("survival").equals(plugin.getConfig().getStringList(path))) {
+                plugin.getConfig().set(path, List.of("smp", "survival", "skyblock"));
+                changed = true;
+            }
+        }
+        if (changed) plugin.saveConfig();
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)

@@ -79,7 +79,7 @@ public final class QuestDialogs {
 
         public Consumer<Player> track() {
             return p -> {
-                QuestService.Track t = q().track(p.getUniqueId());
+                QuestService.Track t = q(p.getUniqueId()).track(p.getUniqueId());
                 if (t != null && t.key().startsWith("n:")) {
                     QuestDialogs.this.navToRunning(p);
                 } else {
@@ -108,8 +108,15 @@ public final class QuestDialogs {
     /** Zuletzt offene Liste je Spieler (für Blättern). */
     private final Map<UUID, Area> open = new HashMap<>();
 
-    private QuestService q() {
-        return addon.quests();
+    /** Quests des Modus, in dem der Spieler gerade ist (Lobby: Survival). */
+    private QuestService q(UUID id) {
+        QuestService q = addon.quests(id);
+        return q != null ? q : addon.quests();
+    }
+
+    /** Events und Nebenquests gibt es nur in Survival. */
+    private boolean survival(UUID id) {
+        return q(id).survivalMode();
     }
 
     /** /quest: Dialog, wenn das Pack geladen ist und der Spieler nicht das Truhen-Menü gewählt hat. */
@@ -149,7 +156,7 @@ public final class QuestDialogs {
 
     public void overview(Player p) {
         UUID id = p.getUniqueId();
-        QuestService q = q();
+        QuestService q = q(id);
         q.checkStats(p);
         open.remove(id);
         long tokens = q.questTokens(id);
@@ -169,7 +176,7 @@ public final class QuestDialogs {
                 case "t:" -> "Team";
                 case "x:" -> "Geheim";
                 case "n:" -> "Nebenquest";
-                case "e:" -> ev() != null && ev().active() != null ? ev().active().name() : "Event";
+                case "e:" -> ev(id) != null && ev(id).active() != null ? ev(id).active().name() : "Event";
                 default -> "Hauptquests";
             };
             Def d = t.def();
@@ -196,8 +203,14 @@ public final class QuestDialogs {
         Def td = q.teamDef(id);
         int teamPct = td == null ? 0 : (int) Math.min(100, q.progressOf(id, "t:" + td.id()) * 100 / Math.max(1, td.amount()));
         tiles.add(new QuestScreen.Tile(Area.TEAM, "Team", td == null ? Canvas.caps("Kein Team") : Canvas.caps(td.name()), teamPct, -1));
-        int[] side = sideCount(id);
-        tiles.add(new QuestScreen.Tile(Area.SIDE, "Nebenquests", side[2] + " " + Canvas.caps("frei"), side[0], side[1]));
+        if (survival(id)) {
+            int[] side = sideCount(id);
+            tiles.add(new QuestScreen.Tile(Area.SIDE, "Nebenquests", side[2] + " " + Canvas.caps("frei"), side[0], side[1]));
+        } else {
+            // SMP und Skyblock haben keine Nebenquest-Figuren: hier stehen die geheimen Quests des Modus.
+            int found = q.secretsFound(id).size(), all = q.secretCount();
+            tiles.add(new QuestScreen.Tile(Area.SIDE, "Geheim", found + "/" + all + " " + Canvas.caps("gefunden"), found, all));
+        }
         java.util.Set<Area> alerts = alerts(id);
         tiles.replaceAll(tl -> tl.alerted(alerts.contains(tl.area())));
         UiDialog.show(p, QuestScreen.overview(new QuestScreen.Overview(head, tracked, tiles), actions), QuestScreen.HEIGHT);
@@ -206,7 +219,7 @@ public final class QuestDialogs {
     /** Bereiche mit abholbarer Belohnung (rotes Ausrufezeichen). */
     public java.util.Set<Area> alerts(UUID id) {
         java.util.Set<Area> out = java.util.EnumSet.noneOf(Area.class);
-        for (String k : q().claimable(id)) {
+        for (String k : q(id).claimable(id)) {
             switch (k.substring(0, 2)) {
                 case "d:" -> out.add(Area.DAILY);
                 case "w:" -> out.add(Area.WEEKLY);
@@ -215,7 +228,7 @@ public final class QuestDialogs {
                 default -> out.add(Area.MAIN);
             }
         }
-        EventService es = ev();
+        EventService es = ev(id);
         if (es != null && es.active() != null) {
             int acc = es.accepted(id);
             if (acc >= 0 && es.state(id, acc) == EventService.State.DONE) out.add(Area.EVENT);
@@ -225,7 +238,7 @@ public final class QuestDialogs {
 
     private int claimedCount(UUID id, String prefix, List<Def> defs) {
         int n = 0;
-        for (Def d : defs) if (q().isClaimed(id, prefix + d.id())) n++;
+        for (Def d : defs) if (q(id).isClaimed(id, prefix + d.id())) n++;
         return n;
     }
 
@@ -245,15 +258,15 @@ public final class QuestDialogs {
     // =================================================================================================================
 
     private List<QuestScreen.Tab> tabs(UUID id) {
-        QuestService q = q();
+        QuestService q = q(id);
         List<Def> dl = q.dailies(id), wl = q.weeklies(id);
         int[] mile = milestoneCount(id);
         Def td = q.teamDef(id);
         int teamPct = td == null ? 0 : (int) Math.min(100, q.progressOf(id, "t:" + td.id()) * 100 / Math.max(1, td.amount()));
-        EventService.Event e = ev() == null ? null : ev().active();
+        EventService.Event e = ev(id) == null ? null : ev(id).active();
         java.util.Set<Area> al = alerts(id);
         List<QuestScreen.Tab> list = new ArrayList<>(List.of(e == null ? new QuestScreen.Tab(Area.EVENT, "Event", "0/0")
-                        : new QuestScreen.Tab(Area.EVENT, e.name(), ev().claimedCount(id) + "/" + e.chapters().size(),
+                        : new QuestScreen.Tab(Area.EVENT, e.name(), ev(id).claimedCount(id) + "/" + e.chapters().size(),
                         QuestScreen.Theme.of(e.theme())),
                 new QuestScreen.Tab(Area.DAILY, "Täglich", claimedCount(id, "d:", dl) + "/" + dl.size()),
                 new QuestScreen.Tab(Area.WEEKLY, "Wöchentlich", claimedCount(id, "w:", wl) + "/" + wl.size()),
@@ -266,7 +279,7 @@ public final class QuestDialogs {
 
     /** Eine Tages-, Wochen- oder Team-Quest als Karte: Verfolgen, Abholen oder abgeholt. */
     private Card taskCard(UUID id, String key, Def d, String label, TextColor labelColor) {
-        QuestService q = q();
+        QuestService q = q(id);
         long prog = Math.min(q.progressOf(id, key), d.amount());
         boolean done = q.isDone(id, key), claimed = q.isClaimed(id, key);
         boolean tracked = key.equals(q.trackedKey(id));
@@ -311,7 +324,7 @@ public final class QuestDialogs {
     /** Liste eines Bereichs; page < 0: Seite mit der aktuellen Quest (Hauptquests) bzw. 0. */
     public void list(Player p, Area a, int page) {
         UUID id = p.getUniqueId();
-        QuestService q = q();
+        QuestService q = q(id);
         q.checkStats(p);
         open.put(id, a);
         List<Card> all = new ArrayList<>();
@@ -385,7 +398,7 @@ public final class QuestDialogs {
                 subtitle = "Neue Aufgabe in " + until(true);
             }
             default -> {
-                EventService.Event e = ev() == null ? null : ev().active();
+                EventService.Event e = ev(id) == null ? null : ev(id).active();
                 if (e == null) {
                     infoLabel = "Kein Event";
                     info = "Gerade läuft kein Event. Schau später wieder vorbei.";
@@ -395,12 +408,12 @@ public final class QuestDialogs {
                 } else {
                     QuestScreen.Theme th = QuestScreen.Theme.of(e.theme());
                     for (EventService.Chapter c : e.chapters()) all.add(chapterCard(id, e, c, th));
-                    int done = ev().claimedCount(id);
+                    int done = ev(id).claimedCount(id);
                     count = done + "/" + e.chapters().size();
                     title = e.name();
-                    subtitle = done + " von " + e.chapters().size() + " Kapiteln · " + ev().endText(e);
-                    shop = new QuestScreen.Shop(e.currency(), ev().candy(id), this::shop, th, e.shopName());
-                    if (page < 0) page = Math.max(0, ev().current(id)) / 3;
+                    subtitle = done + " von " + e.chapters().size() + " Kapiteln · " + ev(id).endText(e);
+                    shop = new QuestScreen.Shop(e.currency(), ev(id).candy(id), this::shop, th, e.shopName());
+                    if (page < 0) page = Math.max(0, ev(id).current(id)) / 3;
                 }
             }
         }
@@ -417,16 +430,17 @@ public final class QuestDialogs {
     // Event
     // =================================================================================================================
 
-    private EventService ev() {
-        return addon.events();
+    /** Events gibt es nur in Survival (in SMP und Skyblock: null). */
+    private EventService ev(UUID id) {
+        return survival(id) ? addon.events() : null;
     }
 
     private QuestScreen.Tile eventTile(UUID id) {
-        EventService.Event e = ev() == null ? null : ev().active();
+        EventService.Event e = ev(id) == null ? null : ev(id).active();
         if (e == null) return new QuestScreen.Tile(Area.EVENT, "Event", Canvas.caps("Gerade keins"), 0, 0);
-        int cur = ev().current(id);
+        int cur = ev(id).current(id);
         return new QuestScreen.Tile(Area.EVENT, e.name(), cur < 0 ? Canvas.caps("Alle geschafft") : Canvas.caps("Kapitel") + " " + (cur + 1),
-                ev().claimedCount(id), e.chapters().size(), QuestScreen.Theme.of(e.theme()).head());
+                ev(id).claimedCount(id), e.chapters().size(), QuestScreen.Theme.of(e.theme()).head());
     }
 
     private static List<Reward> eventRewards(EventService.Chapter c, QuestScreen.Theme th) {
@@ -439,7 +453,7 @@ public final class QuestDialogs {
 
     /** Kapitel als Karte: offen (Annehmen), angenommen (Ziele, Verfolgen), geschafft (Abholen), abgeholt oder gesperrt. */
     private Card chapterCard(UUID id, EventService.Event e, EventService.Chapter c, QuestScreen.Theme th) {
-        EventService es = ev();
+        EventService es = ev(id);
         int i = c.index(), n = c.goals().size();
         EventService.State st = es.state(id, i);
         String ziele = Canvas.caps("Ziele");
@@ -461,12 +475,12 @@ public final class QuestDialogs {
                     if (have < goal.amount()) desc.append(" · ").append(Msg.coins(have)).append("/").append(Msg.coins(goal.amount()));
                 }
                 int done = es.goalsDone(id, i);
-                boolean tracked = ("e:" + i).equals(q().trackedKey(id));
+                boolean tracked = ("e:" + i).equals(q(id).trackedKey(id));
                 Consumer<Player> click = st == EventService.State.DONE ? p -> {
                     err(p, es.claim(p, i));
                     reopen(p);
                 } : p -> {
-                    q().setTracked(p.getUniqueId(), tracked ? null : "e:" + i);
+                    q(p.getUniqueId()).setTracked(p.getUniqueId(), tracked ? null : "e:" + i);
                     reopen(p);
                 };
                 yield new Card(Style.GOLD, null, null, null, Icon.TRACK, c.name(), desc.toString(), eventRewards(c, th), n == 0 ? 1.0 : sum / n,
@@ -482,7 +496,7 @@ public final class QuestDialogs {
 
     /** Shop des laufenden Events (Halloween: Candy-Shop). */
     public void shop(Player p) {
-        EventService es = ev();
+        EventService es = ev(p.getUniqueId());
         EventService.Event e = es == null ? null : es.active();
         if (e == null) {
             list(p, Area.EVENT, 0);
@@ -538,9 +552,9 @@ public final class QuestDialogs {
     /** [erreichte Stufen, Stufen gesamt] über alle Meilensteine. */
     private int[] milestoneCount(UUID id) {
         int done = 0, all = 0;
-        for (Mile m : q().milestones()) {
+        for (Mile m : q(id).milestones()) {
             all += m.tiers().length;
-            done += Math.min(m.tiers().length, q().nextTier(id, m) - 1);
+            done += Math.min(m.tiers().length, q(id).nextTier(id, m) - 1);
         }
         return new int[]{done, all};
     }
@@ -548,10 +562,10 @@ public final class QuestDialogs {
     /** Fortschritt des Meilensteins, der am nächsten an seiner nächsten Stufe ist (Prozent). */
     private int nextMilestonePercent(UUID id) {
         int best = 0;
-        for (Mile m : q().milestones()) {
-            int t = q().nextTier(id, m);
+        for (Mile m : q(id).milestones()) {
+            int t = q(id).nextTier(id, m);
             if (t > m.tiers().length) continue;
-            long cur = q().stat(m.stat(), id), goal = m.tiers()[t - 1];
+            long cur = q(id).stat(m.stat(), id), goal = m.tiers()[t - 1];
             best = Math.max(best, (int) Math.min(100, cur * 100 / Math.max(1, goal)));
         }
         return best;
@@ -567,13 +581,20 @@ public final class QuestDialogs {
             case "quests_done" -> "Schließe " + n + " Quests ab.";
             case "quest_streak_best" -> "Halte einen Streak von " + n + " Tagen.";
             case "claims" -> goal == 1 ? "Besitze 1 Grundstück." : "Besitze " + n + " Grundstücke.";
+            case "kills" -> "Besiege " + n + " Spieler.";
+            case "trophies" -> "Sammle " + n + " Trophäen.";
+            case "smp_xp" -> "Sammle " + n + " XP im SMP.";
+            case "island_level" -> "Bringe deine Insel auf Level " + n + ".";
+            case "island_points" -> "Erreiche " + n + " Insel-Punkte.";
+            case "island_members" -> "Habe " + n + " Leute auf deiner Insel.";
+            case "generators" -> goal == 1 ? "Stelle 1 Generator auf." : "Stelle " + n + " Generatoren auf.";
             default -> "Erreiche " + n + ".";
         };
     }
 
     private Card mileCard(Player p, Mile m) {
         UUID id = p.getUniqueId();
-        QuestService q = q();
+        QuestService q = q(id);
         int tier = q.nextTier(id, m);
         boolean all = tier > m.tiers().length;
         int shown = Math.min(tier, m.tiers().length);
@@ -642,6 +663,10 @@ public final class QuestDialogs {
 
     public void sides(Player p) {
         UUID id = p.getUniqueId();
+        if (!survival(id)) {
+            secrets(p);
+            return;
+        }
         open.put(id, Area.SIDE);
         SideQuestService s = addon.sideQuests();
         List<SideQuestService.Figure> figs = s == null ? List.of() : s.figures();
@@ -658,6 +683,22 @@ public final class QuestDialogs {
         }
         int[] c = sideCount(id);
         UiDialog.show(p, QuestScreen.sides(new QuestScreen.SideView(c[0], c[1], npcs, page, pagesN), actions), QuestScreen.HEIGHT);
+    }
+
+    /** SMP und Skyblock: gefundene geheime Quests im Chat, der Rest bleibt verborgen. */
+    private void secrets(Player p) {
+        UUID id = p.getUniqueId();
+        QuestService q = q(id);
+        List<Def> found = q.secretsFound(id);
+        Msg.send(p, "<light_purple><b>Geheime Quests</b> <gray>(" + found.size() + "/" + q.secretCount() + " gefunden)");
+        for (Def d : found) {
+            String key = "x:" + d.id();
+            String state = q.isClaimed(id, key) ? "<green>✔" : "<click:run_command:'/quest abholen'><gold>[Abholen]</click>";
+            Msg.send(p, " " + state + " <white>" + Msg.escape(d.name()) + " <gray>– " + Msg.escape(d.task()));
+        }
+        int hidden = q.secretCount() - found.size();
+        if (hidden > 0) Msg.send(p, " <dark_gray>" + hidden + " weitere warten noch darauf, entdeckt zu werden …");
+        overview(p);
     }
 
     public void side(Player p, String figureId) {
@@ -736,23 +777,23 @@ public final class QuestDialogs {
     // =================================================================================================================
 
     private List<QuestScreen.Stage> stages(UUID id) {
-        int best = q().bestStreak(id);
+        int best = q(id).bestStreak(id);
         List<QuestScreen.Stage> out = new ArrayList<>();
-        q().streakRewards().entrySet().stream().sorted(Map.Entry.comparingByKey()).limit(4)
+        q(id).streakRewards().entrySet().stream().sorted(Map.Entry.comparingByKey()).limit(4)
                 .forEach(e -> out.add(new QuestScreen.Stage(e.getKey(), 0, e.getValue(), best >= e.getKey())));
         return out;
     }
 
     public void streak(Player p) {
         UUID id = p.getUniqueId();
-        int days = q().streak(id);
+        int days = q(id).streak(id);
         List<QuestScreen.Stage> st = stages(id);
         int nextIn = -1;
         for (QuestScreen.Stage s : st) if (s.days() > days) {
             nextIn = s.days() - days;
             break;
         }
-        UiDialog.show(p, QuestScreen.streak(new QuestScreen.StreakView(days, q().bestStreak(id), null, st, nextIn),
+        UiDialog.show(p, QuestScreen.streak(new QuestScreen.StreakView(days, q(id).bestStreak(id), null, st, nextIn),
                 this::overview), QuestScreen.HEIGHT);
     }
 
@@ -772,8 +813,8 @@ public final class QuestDialogs {
             sb.append(i == ranks.size() - 1 ? " und " : ", ").append(ranks.get(i).getKey()).append(" ab ").append(ranks.get(i).getValue());
         }
         sb.append('.');
-        String main = q().storySize() + " Hauptquests, der Reihe nach. Die nächste kommt, wenn du die letzte abgeholt hast.";
-        long[] db = q().setBonus(true), wb = q().setBonus(false);
+        String main = q(p.getUniqueId()).storySize() + " Hauptquests, der Reihe nach. Die nächste kommt, wenn du die letzte abgeholt hast.";
+        long[] db = q(p.getUniqueId()).setBonus(true), wb = q(p.getUniqueId()).setBonus(false);
         String bonus = (db == null ? "Tagesaufträge: kein Bonus" : "Alle Tagesaufträge: " + Msg.coins(db[0]) + " Coins und " + db[1] + " Tokens")
                 + "\n" + (wb == null ? "Wochenaufträge: kein Bonus" : "Alle Wochenaufträge: " + Msg.coins(wb[0]) + " Coins und " + wb[1] + " Tokens");
         UiDialog.show(p, QuestScreen.help(page, QuestScreen.helpPage(page, sb.toString(), stages(p.getUniqueId()), main, bonus),
@@ -782,7 +823,7 @@ public final class QuestDialogs {
 
     public void ranking(Player p, boolean month) {
         UUID id = p.getUniqueId();
-        QuestService q = q();
+        QuestService q = q(id);
         List<Map.Entry<UUID, Long>> all = q.topTokens(month, 0);
         List<QuestScreen.Entry> top = new ArrayList<>();
         int place = 0;

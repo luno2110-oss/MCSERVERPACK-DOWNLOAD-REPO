@@ -332,6 +332,7 @@ public final class IslandService {
         if (!i.open && !i.isMember(p.getUniqueId()) && !p.hasPermission("kuby.admin")) return "Diese Insel ist für Besucher geschlossen.";
         home(p, i);
         Msg.send(p, "<gray>Du besuchst <white>" + Msg.escape(i.name) + "<gray>.");
+        if (!i.isMember(p.getUniqueId())) core.questProgress(p, "insel_besuch", null, 1);
         return null;
     }
 
@@ -584,6 +585,7 @@ public final class IslandService {
             case GENERATOR -> i.generator++;
         }
         dirty = true;
+        core.questProgress(p, "insel_upgrade", u.name().toLowerCase(), 1);
         for (UUID m : i.everyone()) {
             Player o = Bukkit.getPlayer(m);
             if (o != null) Msg.send(o, "<green>Insel-Upgrade: <white>" + switch (u) {

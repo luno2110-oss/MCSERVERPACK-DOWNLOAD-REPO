@@ -25,8 +25,9 @@ public final class QuestListener implements Listener {
         this.addon = addon;
         addon.getServer().getScheduler().runTaskTimer(addon, () -> {
             for (Player p : addon.getServer().getOnlinePlayers()) {
-                addon.quests().progress(p, "playtime", null, 1);
-                addon.quests().checkStats(p);
+                addon.questProgress(p, "playtime", null, 1);
+                QuestService q = addon.quests(p);
+                if (q != null) q.checkStats(p);
             }
         }, 1200L, 1200L);
     }
@@ -44,21 +45,21 @@ public final class QuestListener implements Listener {
             }
             if (crafts == Integer.MAX_VALUE) crafts = 1;
         }
-        addon.quests().progress(p, "craft", result.getType(), (long) crafts * result.getAmount());
+        addon.questProgress(p, "craft", result.getType(), (long) crafts * result.getAmount());
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onSmelt(FurnaceExtractEvent e) {
-        addon.quests().progress(e.getPlayer(), "smelt", e.getItemType(), e.getItemAmount());
+        addon.questProgress(e.getPlayer(), "smelt", e.getItemType(), e.getItemAmount());
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onEat(PlayerItemConsumeEvent e) {
-        if (e.getItem().getType().isEdible()) addon.quests().progress(e.getPlayer(), "eat", e.getItem().getType(), 1);
+        if (e.getItem().getType().isEdible()) addon.questProgress(e.getPlayer(), "eat", e.getItem().getType(), 1);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onTrade(PlayerTradeEvent e) {
-        addon.quests().progress(e.getPlayer(), "trade", null, 1);
+        addon.questProgress(e.getPlayer(), "trade", null, 1);
     }
 }

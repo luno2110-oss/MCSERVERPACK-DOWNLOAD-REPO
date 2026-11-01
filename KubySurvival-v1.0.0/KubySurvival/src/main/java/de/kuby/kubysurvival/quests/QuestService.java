@@ -34,10 +34,12 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Survival-Quests: täglich, wöchentlich, lange Geschichte (Kapitel nacheinander), Meilensteine, Team-Quests
+ * Quests je Modus (Survival, SMP, Skyblock; je eine Instanz mit eigenen Definitionen und Spielerdaten): täglich, wöchentlich, lange Geschichte (Kapitel nacheinander), Meilensteine, Team-Quests
  * (eine pro Woche und Team) und geheime Quests. Fertige Quests werden im Menü abgeholt. Wer an aufeinanderfolgenden
  * Tagen eine Tages-Quest abholt, baut eine Serie auf. Die verfolgte Quest steht oben am Bildschirm (SurvivalHud).
- * Definitionen in quests.yml, Spielerdaten in questdata.yml.
+ * Definitionen in quests.yml (Survival) bzw. quests-smp.yml / quests-skyblock.yml, Spielerdaten in questdata[-modus].yml.
+ * Belohnungen gehen aufs Konto des Modus; Tokens und Spieler-XP sind in Survival die Job-Tokens und das Level, in den
+ * anderen Modi zählen Tokens nur für den Quest-Rang und XP gehen auf die Kuby-XP (wie Kills und XP-Generatoren).
  *
  * Schlüssel einer Quest: "d:" täglich, "w:" wöchentlich, "s:" Geschichte, "x:" geheim, "t:" Team, "m:id:Stufe" Meilenstein.
  */
@@ -67,6 +69,15 @@ public final class QuestService {
                 case "trade" -> Material.EMERALD;
                 case "jobxp" -> Material.EXPERIENCE_BOTTLE;
                 case "playtime" -> Material.CLOCK;
+                case "pvp" -> Material.NETHERITE_SWORD;
+                case "duel" -> Material.DIAMOND_SWORD;
+                case "turnier" -> Material.GOLDEN_HELMET;
+                case "kopfgeld" -> Material.SKELETON_SKULL;
+                case "abbau" -> Material.COBBLESTONE;
+                case "oneblock" -> Material.GRASS_BLOCK;
+                case "gen_collect", "gen_upgrade", "gen_place" -> Material.BLAST_FURNACE;
+                case "insel_besuch" -> Material.OAK_BOAT;
+                case "loot" -> Material.CHEST;
                 default -> Material.NETHER_STAR;
             };
         }
@@ -113,6 +124,8 @@ public final class QuestService {
 
     private final KubySurvival addon;
     private final KubyPlugins core;
+    /** Modus dieser Quests (ModeService.SURVIVAL, SMP, SKYBLOCK). */
+    private final String mode;
     private final File defFile;
     private final File dataFile;
     private final Map<String, Def> daily = new LinkedHashMap<>();
@@ -132,13 +145,28 @@ public final class QuestService {
     private final Map<String, TeamQuest> teams = new HashMap<>();
 
     public QuestService(KubySurvival addon, KubyPlugins core) {
+        this(addon, core, ModeService.SURVIVAL);
+    }
+
+    public QuestService(KubySurvival addon, KubyPlugins core, String mode) {
         this.addon = addon;
         this.core = core;
-        this.defFile = new File(addon.getDataFolder(), "quests.yml");
-        this.dataFile = new File(addon.getDataFolder(), "questdata.yml");
-        if (!defFile.exists()) addon.saveResource("quests.yml", false);
+        this.mode = mode;
+        String suffix = survivalMode() ? "" : "-" + mode;
+        this.defFile = new File(addon.getDataFolder(), "quests" + suffix + ".yml");
+        this.dataFile = new File(addon.getDataFolder(), "questdata" + suffix + ".yml");
+        if (!defFile.exists()) addon.saveResource(defFile.getName(), false);
         loadDefs();
         loadData();
+    }
+
+    public String mode() {
+        return mode;
+    }
+
+    /** Survival hat Events, Nebenquests, Farmpass, Job-Tokens und Grundstücke; die anderen Modi nicht. */
+    public boolean survivalMode() {
+        return ModeService.SURVIVAL.equals(mode);
     }
 
     // ---------- Definitionen ----------
@@ -163,7 +191,7 @@ public final class QuestService {
             try {
                 streakRewards.put(Integer.parseInt(p[0].trim()), Long.parseLong(p[1].trim()));
             } catch (RuntimeException e) {
-                addon.getLogger().warning("quests.yml: Serie ungültig: " + raw);
+                addon.getLogger().warning(defFile.getName() + ": Serie ungültig: " + raw);
             }
         }
         for (Def d : defs(yml, "daily")) daily.put(d.id(), d);
@@ -180,7 +208,7 @@ public final class QuestService {
                 milestones.add(new Mile(p[0].trim(), p[1].trim(), p[2].trim(), tiers, Long.parseLong(p[4].trim()),
                         Long.parseLong(p[5].trim())));
             } catch (RuntimeException e) {
-                addon.getLogger().warning("quests.yml: Meilenstein ungültig: " + raw);
+                addon.getLogger().warning(defFile.getName() + ": Meilenstein ungültig: " + raw);
             }
         }
     }
@@ -204,10 +232,31 @@ public final class QuestService {
                 out.add(new Def(p[0].trim(), p[1].trim(), p[2].trim(), type[0].toLowerCase(), type.length > 1 ? type[1].trim() : null,
                         Long.parseLong(p[4].trim()), Long.parseLong(p[5].trim()), Long.parseLong(p[6].trim()), Long.parseLong(p[7].trim())));
             } catch (RuntimeException e) {
-                addon.getLogger().warning("quests.yml: Quest ungültig (" + path + "): " + raw);
+                addon.getLogger().warning(defFile.getName() + ": Quest ungültig (" + path + "): " + raw);
             }
         }
         return out;
+    }
+
+    /** Bekannte Quest-Typen (für den SelfTest und Tippfehler in den Dateien). */
+    public static final Set<String> TYPES = Set.of("break", "kill", "fish", "treasure", "breed", "tame", "shear", "enchant",
+            "craft", "smelt", "eat", "trade", "jobxp", "playtime", "stat", "pvp", "duel", "turnier", "turnier_sieg", "kopfgeld",
+            "abbau", "oneblock", "gen_place", "gen_collect", "gen_geld", "gen_xp", "gen_upgrade", "gen_veredeln",
+            "insel_upgrade", "insel_besuch");
+
+    /** SelfTest: genug Quests je Bereich und nur bekannte Typen. null = alles gut. */
+    public synchronized String check() {
+        if (daily.size() < dailyCount) return defFile.getName() + ": nur " + daily.size() + " Tages-Quests für " + dailyCount + " am Tag";
+        if (weekly.size() < weeklyCount) return defFile.getName() + ": nur " + weekly.size() + " Wochen-Quests für " + weeklyCount;
+        if (story.isEmpty()) return defFile.getName() + ": keine Geschichte";
+        if (milestones.isEmpty()) return defFile.getName() + ": keine Meilensteine";
+        List<Def> all = new ArrayList<>(daily.values());
+        all.addAll(weekly.values());
+        all.addAll(story);
+        all.addAll(secret.values());
+        all.addAll(team.values());
+        for (Def d : all) if (!TYPES.contains(d.type())) return defFile.getName() + ": unbekannter Typ " + d.type() + " (" + d.id() + ")";
+        return null;
     }
 
     public List<Mile> milestones() {
@@ -245,7 +294,7 @@ public final class QuestService {
         }
         // Farmpass: weitere Tages-Quests (gleicher Zufall, die ersten bleiben dieselben; auch wenn der Pass mitten am
         // Tag dazukommt)
-        int want = dailyCount + (addon.farmpass() != null && addon.farmpass().active(id) ? farmpassDaily : 0);
+        int want = dailyCount + (survivalMode() && addon.farmpass() != null && addon.farmpass().active(id) ? farmpassDaily : 0);
         if (d.daily.size() < want) {
             for (String q : pick(daily, want, id.hashCode() * 31L + today.hashCode())) {
                 if (d.daily.size() >= want) break;
@@ -406,14 +455,14 @@ public final class QuestService {
 
     // ---------- Team ----------
 
-    private TeamService.Team survivalTeam(UUID id) {
+    private TeamService.Team modeTeam(UUID id) {
         TeamService.Team t = core.teams().of(id);
-        return t != null && ModeService.SURVIVAL.equals(t.mode()) ? t : null;
+        return t != null && mode.equals(t.mode()) ? t : null;
     }
 
-    /** Team-Quest der Woche für das Team des Spielers (null ohne Survival-Team). */
+    /** Team-Quest der Woche für das Team des Spielers (null ohne Team in diesem Modus). */
     synchronized TeamQuest teamQuest(UUID id) {
-        TeamService.Team t = survivalTeam(id);
+        TeamService.Team t = modeTeam(id);
         if (t == null || team.isEmpty()) return null;
         String key = (t.mode() + "_" + t.name().toLowerCase()).replaceAll("[^a-z0-9_-]", "_");
         TeamQuest tq = teams.computeIfAbsent(key, k -> new TeamQuest());
@@ -433,8 +482,9 @@ public final class QuestService {
 
     // ---------- Fortschritt ----------
 
-    private boolean survival(Player p) {
-        return ModeService.SURVIVAL.equals(core.modes().modeOf(p.getUniqueId()));
+    /** Ist der Spieler gerade in dem Modus dieser Quests? */
+    public boolean inMode(Player p) {
+        return mode.equals(core.modes().modeOf(p.getUniqueId()));
     }
 
     /**
@@ -442,10 +492,12 @@ public final class QuestService {
      * ein Job (jobxp) oder null.
      */
     public synchronized void progress(Player p, String type, Object subject, long amount) {
-        if (amount <= 0 || !survival(p)) return;
+        if (amount <= 0 || !inMode(p)) return;
         UUID id = p.getUniqueId();
-        if (addon.sideQuests() != null) addon.sideQuests().progress(p, type, subject, amount);
-        if (addon.events() != null) addon.events().progress(p, type, subject, amount, p.getLocation());
+        if (survivalMode()) {
+            if (addon.sideQuests() != null) addon.sideQuests().progress(p, type, subject, amount);
+            if (addon.events() != null) addon.events().progress(p, type, subject, amount, p.getLocation());
+        }
         Data d = data(id);
         for (String q : d.daily) advance(p, d, "d:", daily.get(q), type, subject, amount);
         for (String q : d.weekly) advance(p, d, "w:", weekly.get(q), type, subject, amount);
@@ -457,7 +509,7 @@ public final class QuestService {
         if (td != null && tq.progress < td.amount() && matches(td, type, subject)) {
             tq.progress = Math.min(td.amount(), tq.progress + amount);
             if (tq.progress >= td.amount()) {
-                TeamService.Team t = survivalTeam(id);
+                TeamService.Team t = modeTeam(id);
                 if (t != null) {
                     for (UUID m : t.members()) {
                         Player mp = Bukkit.getPlayer(m);
@@ -497,12 +549,13 @@ public final class QuestService {
         String arg = q.arg();
         if (arg == null || arg.equals("*")) return true;
         return switch (type) {
-            case "break" -> subject instanceof Material m && blockMatches(arg, m);
+            case "break", "abbau", "oneblock" -> subject instanceof Material m && blockMatches(arg, m);
             case "kill" -> subject instanceof Entity e && (arg.equalsIgnoreCase("monster") ? e instanceof Monster
                     : arg.equalsIgnoreCase("animal") ? e instanceof Animals : e.getType().name().equalsIgnoreCase(arg));
             case "jobxp" -> subject instanceof Job j && (j.name().equalsIgnoreCase(arg) || j.ascii.equalsIgnoreCase(arg));
             case "breed", "tame" -> subject instanceof Entity e && (arg.equalsIgnoreCase("animal") || e.getType().name().equalsIgnoreCase(arg));
-            default -> subject instanceof Material m && m.name().equalsIgnoreCase(arg);
+            default -> subject instanceof Material m ? m.name().equalsIgnoreCase(arg)
+                    : subject instanceof String str && str.equalsIgnoreCase(arg);
         };
     }
 
@@ -526,7 +579,7 @@ public final class QuestService {
 
     /** Werte-Quests (stat:...) prüfen. Läuft jede Minute und beim Öffnen des Menüs. */
     public synchronized void checkStats(Player p) {
-        if (!survival(p)) return;
+        if (!inMode(p)) return;
         UUID id = p.getUniqueId();
         Data d = data(id);
         List<Map.Entry<String, Def>> all = new ArrayList<>();
@@ -601,7 +654,8 @@ public final class QuestService {
         Msg.send(p, "<gold>Serie: <white>" + d.streak + (d.streak == 1 ? " Tag" : " Tage") + " <gray>(+" + Msg.coins(bonus) + " Coins Extra)");
         Long tokens = streakRewards.get(d.streak);
         if (tokens != null && tokens > 0) {
-            addon.jobs().addTokens(p.getUniqueId(), tokens);
+            if (survivalMode()) addon.jobs().addTokens(p.getUniqueId(), tokens);
+            else pay(p.getUniqueId(), 0, tokens, 0);
             Msg.send(p, "<light_purple><b>" + d.streak + " Tage am Stück!</b> +" + tokens + " Tokens");
         }
         return bonus;
@@ -676,9 +730,9 @@ public final class QuestService {
     }
 
     private void pay(UUID id, long coins, long tokens, long xp) {
-        if (coins > 0) core.modes().depositIn(id, ModeService.SURVIVAL, coins);
+        if (coins > 0) core.modes().depositIn(id, mode, coins);
         if (tokens > 0) {
-            addon.jobs().addTokens(id, tokens);
+            if (survivalMode()) addon.jobs().addTokens(id, tokens);
             Data d = data(id);
             d.tokens += tokens;
             String m = month();
@@ -688,7 +742,13 @@ public final class QuestService {
             }
             d.monthTokens += tokens;
         }
-        if (xp > 0) addon.jobs().addPlayerXp(id, xp);
+        if (xp <= 0) return;
+        if (survivalMode()) {
+            addon.jobs().addPlayerXp(id, xp);
+            return;
+        }
+        // SMP und Skyblock: Kuby-XP des Modus (wie Kills, One-Block und XP-Generatoren)
+        core.stats().get(id).xp += xp;
     }
 
     public static String rewardText(long coins, long tokens, long xp) {
@@ -722,7 +782,7 @@ public final class QuestService {
         String key = d.tracked;
         Def def = null;
         if (key != null && key.startsWith("e:")) {
-            Track et = addon.events() == null ? null : addon.events().track(id);
+            Track et = !survivalMode() || addon.events() == null ? null : addon.events().track(id);
             if (et != null && et.key().equals(key)) return et;
             d.tracked = null;
             key = null;
@@ -737,7 +797,7 @@ public final class QuestService {
                 def = null;
             }
         }
-        if (def == null && addon.sideQuests() != null) {
+        if (def == null && survivalMode() && addon.sideQuests() != null) {
             // Ohne eigene Auswahl hat eine laufende Nebenquest Vorrang vor der Geschichte.
             Def side = addon.sideQuests().running(id);
             if (side != null) return new Track("n:" + side.id(), side, addon.sideQuests().runningProgress(id));
@@ -896,7 +956,7 @@ public final class QuestService {
             addon.getDataFolder().mkdirs();
             out.save(dataFile);
         } catch (IOException ex) {
-            addon.getLogger().warning("questdata.yml: " + ex.getMessage());
+            addon.getLogger().warning(dataFile.getName() + ": " + ex.getMessage());
         }
     }
 }

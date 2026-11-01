@@ -92,6 +92,8 @@ public final class GeneratorService {
         public double money, xp, progress;
         public long last;
         UUID display;
+        /** Spawner-Käfig schon eingerichtet (seit dem Start)? */
+        boolean dressed;
 
         Gen(int id, int island, String world, int x, int y, int z, String type, Quality quality, int level) {
             this.id = id;
@@ -302,11 +304,12 @@ public final class GeneratorService {
         return out;
     }
 
-    /** Generator-Item (Block der Art, eigenes Bild, Art, Qualität und Stufe gespeichert). */
+    /** Generator-Item: ein Spawner (wird als Spawner-Käfig aufgestellt) mit eigenem 3D-Modell je Art und Qualität
+     *  (kuby:generator/<art>[_silber|_gold|_diamant]); Art, Qualität und Stufe stehen im Item. */
     public ItemStack item(Type t, Quality q, int level) {
-        ItemStack it = new ItemStack(t.block());
+        ItemStack it = new ItemStack(Material.SPAWNER);
         ItemMeta m = it.getItemMeta();
-        m.setItemModel(NamespacedKey.fromString("kuby:generator/" + t.id()));
+        m.setItemModel(NamespacedKey.fromString("kuby:generator/" + t.id() + (q == Quality.NORMAL ? "" : "_" + q.name().toLowerCase(java.util.Locale.ROOT))));
         m.displayName(Msg.item("<" + q.color + "><b>" + name(t, q) + "</b> <gray>Stufe " + level));
         List<net.kyori.adventure.text.Component> lore = new ArrayList<>();
         lore.add(Msg.item("<gray>Auf deine Insel stellen: produziert von selbst."));
@@ -349,7 +352,10 @@ public final class GeneratorService {
         g.last = System.currentTimeMillis();
         byPos.put(g.key(), g);
         dirty = true;
+        // Käfig einrichten, wenn der Block sicher steht (nach dem Platzieren)
+        Bukkit.getScheduler().runTask(addon, () -> dress(g));
         hologram(g, true);
+        core.questProgress(p, "gen_place", t.id(), 1);
         return null;
     }
 
@@ -503,6 +509,10 @@ public final class GeneratorService {
         g.items.clear();
         dirty = true;
         if (coins == 0 && xp == 0 && items == 0) return "Das Lager ist leer.";
+        // Quests (Skyblock): eingesammelte Items, Geld und XP aus Generatoren
+        core.questProgress(p, "gen_collect", g.type, items);
+        core.questProgress(p, "gen_geld", g.type, coins);
+        core.questProgress(p, "gen_xp", g.type, xp);
         Msg.send(p, "<#9AD8FF>Eingesammelt: " + (coins > 0 ? "<gold>" + Msg.coins(coins) + " $ " : "") + (xp > 0 ? "<green>" + Msg.coins(xp) + " XP " : "")
                 + (items > 0 ? "<white>" + Msg.coins(items) + " Items" : ""));
         return null;
@@ -523,6 +533,7 @@ public final class GeneratorService {
         g.money -= (long) g.money;
         core.economy().deposit(p.getUniqueId(), coins);
         dirty = true;
+        core.questProgress(p, "gen_geld", g.type, coins);
         Msg.send(p, "<#9AD8FF>Verkauft: <white>" + Msg.coins(n) + " Items <gray>für <gold>" + Msg.coins(coins) + " $");
         return null;
     }
@@ -536,6 +547,7 @@ public final class GeneratorService {
         dirty = true;
         hologram(g, false);
         Sfx.play(core, p, Sfx.Kind.LEVEL_UP);
+        core.questProgress(p, "gen_upgrade", g.type, 1);
         return null;
     }
 
@@ -549,6 +561,7 @@ public final class GeneratorService {
         g.quality = next;
         dirty = true;
         hologram(g, false);
+        core.questProgress(p, "gen_veredeln", g.type, 1);
         Sfx.play(core, p, Sfx.Kind.SUCCESS_BIG);
         return null;
     }
@@ -557,9 +570,39 @@ public final class GeneratorService {
     // Schild über dem Generator
     // =================================================================================================================
 
+    /**
+     * Im Spiel steht jeder Generator als Spawner-Käfig; innen dreht sich das Symbol der Art (mit Pack das eigene Bild
+     * kuby:generator_core/<art>, ohne Pack Papier). Er spawnt nie etwas: höchstens 0 Wesen in der Nähe, dazu fängt der
+     * GeneratorListener jedes Spawnen ab. Alte Generatoren (andere Blöcke) werden beim Laden umgestellt.
+     */
+    public void dress(Gen g) {
+        World w = Bukkit.getWorld(g.world);
+        if (w == null || !w.isChunkLoaded(g.x >> 4, g.z >> 4) || byPos.get(g.key()) != g) return;
+        org.bukkit.block.Block b = w.getBlockAt(g.x, g.y, g.z);
+        if (b.getType() != Material.SPAWNER) b.setType(Material.SPAWNER, false);
+        g.dressed = true;
+        if (!(b.getState() instanceof org.bukkit.block.CreatureSpawner cs)) return;
+        try {
+            ItemStack core = new ItemStack(Material.PAPER);
+            ItemMeta cm = core.getItemMeta();
+            cm.setItemModel(NamespacedKey.fromString("kuby:generator_core/" + g.type));
+            core.setItemMeta(cm);
+            cs.setSpawnedItem(core);
+            cs.setMaxNearbyEntities(0);
+            cs.setRequiredPlayerRange(24);
+            cs.setMaxSpawnDelay(400);
+            cs.setMinSpawnDelay(200);
+            cs.setDelay(300);
+            cs.update(true, false);
+        } catch (RuntimeException ex) {
+            addon.getLogger().warning("Generator-Käfig " + g.key() + ": " + ex.getMessage());
+        }
+    }
+
     private void hologram(Gen g, boolean force) {
         World w = Bukkit.getWorld(g.world);
         if (w == null || !w.isChunkLoaded(g.x >> 4, g.z >> 4)) return;
+        if (!g.dressed) dress(g);
         Location l = new Location(w, g.x + 0.5, g.y + 1.35, g.z + 0.5);
         boolean near = false;
         for (Player p : w.getPlayers()) if (p.getLocation().distanceSquared(l) < 48 * 48) near = true;

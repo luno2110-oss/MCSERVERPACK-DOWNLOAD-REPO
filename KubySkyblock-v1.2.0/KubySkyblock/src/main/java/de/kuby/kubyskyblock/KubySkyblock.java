@@ -81,6 +81,23 @@ public final class KubySkyblock extends JavaPlugin {
         command = new SkyblockCommand(this);
 
         core.modes().onEnter(ModeService.SKYBLOCK, p -> islands.ensureIsland(p));
+        // Werte für Skyblock-Quests (stat:...) und Erfolge
+        core.registerStat("island_level", id -> {
+            var i = islands.islandOf(id);
+            return i == null ? 0L : islands.levelOf(i);
+        });
+        core.registerStat("island_points", id -> {
+            var i = islands.islandOf(id);
+            return i == null ? 0L : i.points;
+        });
+        core.registerStat("island_members", id -> {
+            var i = islands.islandOf(id);
+            return i == null ? 0L : (long) i.everyone().size();
+        });
+        core.registerStat("generators", id -> {
+            var i = islands.islandOf(id);
+            return i == null || generators == null ? 0L : (long) generators.onIsland(i.slot).size();
+        });
         core.registerKpSub("skyblock", command);
         core.registerMainEntry(ModeService.SKYBLOCK, new KubyPlugins.MainEntry(org.bukkit.Material.GRASS_BLOCK, "Insel",
                 "Zuhause, Mitglieder, Upgrades und Level", de.kuby.kubyskyblock.gui.IslandScreen::open));

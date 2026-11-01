@@ -114,7 +114,7 @@ public final class JobListener implements Listener {
         if (CROPS.contains(m)) {
             if (b.getBlockData() instanceof Ageable a && a.getAge() >= a.getMaximumAge()) {
                 jobs.reward(p, Job.FARMER, 2, 2);
-                addon.quests().progress(p, "break", m, 1);
+                addon.questProgress(p, "break", m, 1);
             }
             return;
         }
@@ -123,7 +123,7 @@ public final class JobListener implements Listener {
             mark(b, false);
             return;
         }
-        addon.quests().progress(p, "break", m, 1);
+        addon.questProgress(p, "break", m, 1);
         if (Tag.LOGS.isTagged(m)) {
             jobs.reward(p, Job.HOLZFAELLER, 3, 2);
         } else if (ORES.containsKey(m)) {
@@ -177,7 +177,7 @@ public final class JobListener implements Listener {
         LivingEntity mob = e.getEntity();
         Player p = mob.getKiller();
         if (p == null || mob instanceof Player || NO_PAY.contains(mob.getEntitySpawnReason())) return;
-        addon.quests().progress(p, "kill", mob, 1);
+        addon.questProgress(p, "kill", mob, 1);
         if (mob instanceof Monster) {
             int xp = switch (mob.getType()) {
                 case ENDERMAN, WITCH, BLAZE, PIGLIN_BRUTE -> 8;
@@ -195,21 +195,21 @@ public final class JobListener implements Listener {
     public void onBreed(EntityBreedEvent e) {
         if (!(e.getBreeder() instanceof Player p)) return;
         jobs.reward(p, Job.ZUECHTER, 6, 5);
-        addon.quests().progress(p, "breed", e.getEntity(), 1);
+        addon.questProgress(p, "breed", e.getEntity(), 1);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onShear(PlayerShearEntityEvent e) {
         if (!(e.getEntity() instanceof Sheep)) return;
         jobs.reward(e.getPlayer(), Job.ZUECHTER, 2, 2);
-        addon.quests().progress(e.getPlayer(), "shear", null, 1);
+        addon.questProgress(e.getPlayer(), "shear", null, 1);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onEnchant(EnchantItemEvent e) {
         int levels = e.getExpLevelCost();
         jobs.reward(e.getEnchanter(), Job.VERZAUBERER, levels * 4, levels * 4);
-        addon.quests().progress(e.getEnchanter(), "enchant", null, 1);
+        addon.questProgress(e.getEnchanter(), "enchant", null, 1);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -218,7 +218,7 @@ public final class JobListener implements Listener {
         if (e.getState() != PlayerFishEvent.State.CAUGHT_FISH) return;
         if ("survival".equals(addon.core().modes().modeOf(e.getPlayer().getUniqueId()))) return;
         jobs.reward(e.getPlayer(), Job.ANGLER, 5, 5);
-        addon.quests().progress(e.getPlayer(), "fish", null, 1);
+        addon.questProgress(e.getPlayer(), "fish", null, 1);
     }
 
     // ---------- Markierung im Chunk ----------

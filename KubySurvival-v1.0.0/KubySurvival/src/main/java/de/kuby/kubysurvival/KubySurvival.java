@@ -79,6 +79,8 @@ public final class KubySurvival extends JavaPlugin {
     private JobService jobs;
     private IntroService intro;
     private QuestService quests;
+    /** Eigene Quests für SMP und Skyblock (andere Aufgaben, Daten und Belohnungen als Survival). */
+    private QuestService questsSmp, questsSkyblock;
     private SideQuestService sideQuests;
     private de.kuby.kubysurvival.quests.EventService events;
     private de.kuby.kubysurvival.quests.QuestDialogs questDialogs;
@@ -103,7 +105,27 @@ public final class KubySurvival extends JavaPlugin {
     public ClaimTool claimTool() { return claimTool; }
     public JobService jobs() { return jobs; }
     public IntroService intro() { return intro; }
+    /** Survival-Quests (Events, Farmpass und Profil hängen daran). */
     public QuestService quests() { return quests; }
+    /** Quests des Modus, in dem der Spieler gerade ist (null in der Lobby). */
+    public QuestService quests(java.util.UUID id) { return questsOf(core.modes().modeOf(id)); }
+    public QuestService quests(org.bukkit.entity.Player p) { return quests(p.getUniqueId()); }
+    public QuestService questsOf(String mode) {
+        if (de.kuby.kubyplugins.service.ModeService.SURVIVAL.equals(mode)) return quests;
+        if (de.kuby.kubyplugins.service.ModeService.SMP.equals(mode)) return questsSmp;
+        if (de.kuby.kubyplugins.service.ModeService.SKYBLOCK.equals(mode)) return questsSkyblock;
+        return null;
+    }
+    public java.util.List<QuestService> allQuests() {
+        java.util.List<QuestService> out = new java.util.ArrayList<>();
+        for (QuestService q : new QuestService[]{quests, questsSmp, questsSkyblock}) if (q != null) out.add(q);
+        return out;
+    }
+    /** Quest-Aktion melden: geht an die Quests des Modus, in dem der Spieler gerade ist. */
+    public void questProgress(org.bukkit.entity.Player p, String type, Object subject, long amount) {
+        QuestService q = quests(p);
+        if (q != null) q.progress(p, type, subject, amount);
+    }
     public SideQuestService sideQuests() { return sideQuests; }
     public de.kuby.kubysurvival.quests.EventService events() { return events; }
     public de.kuby.kubysurvival.quests.QuestDialogs questDialogs() { return questDialogs; }
@@ -215,6 +237,14 @@ public final class KubySurvival extends JavaPlugin {
             for (String key : List.of("episch", "farm")) if (core.keys().type(key) == null) return "Schlüssel-Art " + key + " fehlt in keys.types";
             return shop.sample(de.kuby.kubysurvival.shop.ShopCanvas.Page.CRATES).rows().size() == 3 ? null : "Kisten fehlen in jewelshop-survival.crates";
         });
+        core.registerSelfTestCheck("Quests je Modus", () -> {
+            if (allQuests().size() != 3) return "Quests fehlen für einen Modus";
+            for (QuestService q : allQuests()) {
+                String err = q.check();
+                if (err != null) return err;
+            }
+            return null;
+        });
         core.registerSelfTestCheck("Farmpass-Seite", () -> {
             List<String[]> perks = shop.farmpassPerks();
             if (quests.farmpassExtraDaily() > 0 && !perks.get(0)[0].endsWith("Daily-Quests")) return "Daily-Quests fehlen";
@@ -237,6 +267,10 @@ public final class KubySurvival extends JavaPlugin {
         claimTool = new ClaimTool(this);
         jobs = new JobService(this, core);
         quests = new QuestService(this, core);
+        questsSmp = new QuestService(this, core, de.kuby.kubyplugins.service.ModeService.SMP);
+        questsSkyblock = new QuestService(this, core, de.kuby.kubyplugins.service.ModeService.SKYBLOCK);
+        // SMP (Kills, Duelle, Turniere, Kopfgeld) und Skyblock (Generatoren, Insel) melden ihre Aktionen über den Kern.
+        core.registerQuestHook(this::questProgress);
         sideQuests = new SideQuestService(this, core);
         events = new de.kuby.kubysurvival.quests.EventService(this, core);
         farm = new FarmWorldService(this, core);
@@ -544,6 +578,10 @@ public final class KubySurvival extends JavaPlugin {
         core.registerMenuAlert("Quests", p -> !questDialogs.alerts(p.getUniqueId()).isEmpty());
         core.registerMainEntry(de.kuby.kubyplugins.service.ModeService.SURVIVAL, new KubyPlugins.MainEntry(Material.WRITABLE_BOOK, "Quests", "Tages-, Wochen- und Team-Quests, Geschichte",
                 p -> { if (!questDialogs.open(p)) new QuestMenu(this).open(p); }));
+        core.registerMainEntry(de.kuby.kubyplugins.service.ModeService.SMP, new KubyPlugins.MainEntry(Material.WRITABLE_BOOK, "Quests", "PvP-Aufträge, Duelle, Turniere und die SMP-Geschichte",
+                p -> { if (!questDialogs.open(p)) new QuestMenu(this).open(p); }));
+        core.registerMainEntry(de.kuby.kubyplugins.service.ModeService.SKYBLOCK, new KubyPlugins.MainEntry(Material.WRITABLE_BOOK, "Quests", "Insel-Aufträge, Generatoren und die Skyblock-Geschichte",
+                p -> { if (!questDialogs.open(p)) new QuestMenu(this).open(p); }));
         core.registerMainEntry(de.kuby.kubyplugins.service.ModeService.SURVIVAL, new KubyPlugins.MainEntry(Material.LEAD, "Haustiere", "Begleiter rufen, reiten, umbenennen",
                 p -> new de.kuby.kubysurvival.pets.PetScreen(this).open(p)));
         core.registerMainEntry(de.kuby.kubyplugins.service.ModeService.SURVIVAL, new KubyPlugins.MainEntry(Material.LILY_PAD, "Farmpass", "Monats-Pass mit Vorteilen",
@@ -565,7 +603,7 @@ public final class KubySurvival extends JavaPlugin {
             angeln.save();
             claims.save();
             jobs.save();
-            quests.save();
+            for (QuestService q : allQuests()) q.save();
             sideQuests.save();
             events.saveIfDirty();
             farm.save();
@@ -592,7 +630,7 @@ public final class KubySurvival extends JavaPlugin {
         if (angeln != null) angeln.save();
         if (claims != null) claims.save();
         if (jobs != null) jobs.save();
-        if (quests != null) quests.save();
+        for (QuestService q : allQuests()) q.save();
         if (sideQuests != null) sideQuests.save();
         if (events != null) {
             events.clearCandy();

@@ -26,7 +26,7 @@ public final class MilestoneMenu extends GuiMenu {
 
     @Override
     protected void build(Player p) {
-        QuestService q = addon.quests();
+        QuestService q = addon.quests(p) != null ? addon.quests(p) : addon.quests();
         UUID id = p.getUniqueId();
         List<QuestService.Mile> list = q.milestones();
         for (int i = 0; i < list.size() && i < 18; i++) {

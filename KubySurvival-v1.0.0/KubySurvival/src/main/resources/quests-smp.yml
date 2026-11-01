@@ -1,0 +1,93 @@
+# SMP-Quests (eigene Aufgaben, eigener Fortschritt, nur im SMP). Format wie quests.yml:
+#   "id;Name;Aufgabe;Typ;Menge;Coins;Tokens;XP"
+# Typen (zusätzlich zu break, kill, craft, smelt, eat, enchant, fish, playtime, stat):
+#   pvp            Spieler besiegen (nicht im Duell)
+#   duel           Duelle gewinnen
+#   turnier        Turnierrunden gewinnen      turnier_sieg   Turnier gewinnen
+#   kopfgeld       Kopfgelder kassieren
+#   stat:<Schlüssel>  kills, trophies, smp_xp, deaths_smp, playtime, votes, quests_done, quest_streak_best
+# Coins gehen aufs SMP-Konto, XP sind SMP-XP (wie bei Kills), Tokens zählen für den Quest-Rang.
+
+daily-count: 4
+weekly-count: 3
+
+set-bonus:
+  daily: "400;2"
+  weekly: "1500;5"
+
+streak:
+  bonus-coins-per-day: 25
+  rewards:
+    - "3;1"
+    - "7;3"
+    - "14;5"
+    - "30;10"
+    - "60;15"
+    - "100;25"
+
+daily:
+  - "pvp;Kopfjäger;Besiege 3 Spieler;pvp;3;600;0;60"
+  - "duell;Duellant;Gewinne 2 Duelle;duel;2;600;0;60"
+  - "monster;Nachtwache;Besiege 25 Monster;kill:monster;25;400;0;40"
+  - "creeper;Kein Krater;Besiege 8 Creeper;kill:CREEPER;8;400;0;40"
+  - "enderman;Perlenjagd;Besiege 5 Enderman;kill:ENDERMAN;5;450;0;45"
+  - "erz;Rohstoffe;Baue 24 Erze ab;break:ores;24;400;0;40"
+  - "diamant;Glitzer;Baue 3 Diamanterze ab;break:ores_diamond;3;600;0;60"
+  - "holz;Holz für Waffen;Fälle 48 Baumstämme;break:logs;48;300;0;30"
+  - "pfeile;Munition;Stelle 64 Pfeile her;craft:ARROW;64;350;0;35"
+  - "apfel;Goldreserve;Stelle 2 goldene Äpfel her;craft:GOLDEN_APPLE;2;500;0;50"
+  - "zauber;Aufgerüstet;Verzaubere 3 Gegenstände;enchant;3;450;0;45"
+  - "ofen;Schmiede;Schmelze 32 Gegenstände;smelt:*;32;300;0;30"
+  - "online;Im Einsatz;Spiele 45 Minuten im SMP;playtime;45;300;0;40"
+
+weekly:
+  - "w_pvp;Kriegsherr;Besiege 30 Spieler;pvp;30;5000;3;500"
+  - "w_duell;Arena-Champion;Gewinne 15 Duelle;duel;15;4500;3;450"
+  - "w_turnier;Turnierkämpfer;Gewinne 3 Turnierrunden;turnier;3;4000;3;400"
+  - "w_kopfgeld;Kopfgeldjäger;Kassiere 3 Kopfgelder;kopfgeld;3;4000;2;400"
+  - "w_monster;Monsterjäger;Besiege 300 Monster;kill:monster;300;3500;2;350"
+  - "w_erz;Bergwerk;Baue 250 Erze ab;break:ores;250;3500;2;350"
+  - "w_diamant;Diamantfieber;Baue 25 Diamanterze ab;break:ores_diamond;25;5000;3;500"
+  - "w_netherit;Antiker Schutt;Baue 8 antike Trümmer ab;break:ANCIENT_DEBRIS;8;6000;3;600"
+  - "w_zauber;Zaubermeister;Verzaubere 20 Gegenstände;enchant;20;3500;2;350"
+  - "w_online;Frontkämpfer;Spiele 6 Stunden im SMP;playtime;360;3500;3;400"
+
+# Die SMP-Geschichte: vom ersten Schwert bis zum Turniersieg.
+story:
+  - "s1;Bewaffnet;Stelle ein Eisenschwert her;craft:IRON_SWORD;1;300;0;30"
+  - "s2;Gepanzert;Stelle einen Eisenbrustpanzer her;craft:IRON_CHESTPLATE;1;400;0;40"
+  - "s3;Erstes Blut;Besiege einen Spieler;pvp;1;600;1;60"
+  - "s4;Herausforderung;Gewinne ein Duell (/duell);duel;1;600;1;60"
+  - "s5;Diamanten;Baue 8 Diamanterze ab;break:ores_diamond;8;1000;1;100"
+  - "s6;Magie;Verzaubere 5 Gegenstände;enchant;5;800;1;80"
+  - "s7;Notfallplan;Stelle 4 goldene Äpfel her;craft:GOLDEN_APPLE;4;800;1;80"
+  - "s8;Aufsteiger;Erreiche 300 Trophäen;stat:trophies;300;1500;2;150"
+  - "s9;Kopfgeld;Kassiere ein Kopfgeld (/bounty);kopfgeld;1;1500;2;150"
+  - "s10;Arena;Gewinne eine Turnierrunde (/turnier);turnier;1;2000;2;200"
+  - "s11;Kampfmaschine;Besiege insgesamt 50 Spieler;stat:kills;50;3000;3;300"
+  - "s12;Netherit;Baue 4 antike Trümmer ab;break:ANCIENT_DEBRIS;4;3000;3;300"
+  - "s13;Champion;Gewinne ein Turnier;turnier_sieg;1;5000;4;500"
+  - "s14;Legende des SMP;Erreiche 1.000 Trophäen;stat:trophies;1000;8000;5;800"
+
+milestones:
+  - "m_kills;Krieger;kills;10,50,200,500,1000;500;2"
+  - "m_trophy;Trophäensammler;trophies;250,500,1000,2000,5000;500;2"
+  - "m_xp;Kampferfahrung;smp_xp;1000,5000,20000,50000;400;2"
+  - "m_zeit;Stammgast;playtime;600,3000,12000,30000;400;2"
+  - "m_quests;Questmeister;quests_done;10,50,200,500,1000;400;2"
+  - "m_serie;Treue;quest_streak_best;7,30,100;600;3"
+
+# Team-Quests für SMP-Teams (/team): eine pro Woche.
+team:
+  - "t_pvp;Kriegstrupp;Besiegt zusammen 100 Spieler;pvp;100;3000;3;300"
+  - "t_duell;Gladiatoren;Gewinnt zusammen 40 Duelle;duel;40;3000;3;300"
+  - "t_monster;Gemeinsam stark;Besiegt zusammen 600 Monster;kill:monster;600;2500;2;250"
+  - "t_erz;Tiefbau;Baut zusammen 500 Erze ab;break:ores;500;2500;2;250"
+
+secret:
+  - "x_drache;Drachentöter;Besiege den Enderdrachen;kill:ENDER_DRAGON;1;10000;10;1000"
+  - "x_wither;Schattenbezwinger;Besiege den Wither;kill:WITHER;1;8000;8;800"
+  - "x_netherit;Unzerstörbar;Stelle einen Netheritbarren her;craft:NETHERITE_INGOT;1;3000;3;300"
+  - "x_hattrick;Hattrick;Gewinne 3 Turniere;turnier_sieg;3;10000;8;1000"
+  - "x_jaeger;Gefürchtet;Kassiere 10 Kopfgelder;kopfgeld;10;6000;5;600"
+  - "x_hundert;Hundert;Besiege insgesamt 100 Spieler;stat:kills;100;6000;5;600"

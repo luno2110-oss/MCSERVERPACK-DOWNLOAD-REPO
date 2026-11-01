@@ -79,6 +79,12 @@ public final class GeneratorListener implements Listener {
         Msg.send(p, "<gray>Generator abgebaut, er liegt mit seiner Stufe in deinem Inventar.");
     }
 
+    /** Generator-Käfige sind Spawner, die nur das Symbol zeigen: sie spawnen nie etwas. */
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onSpawner(org.bukkit.event.entity.SpawnerSpawnEvent e) {
+        if (e.getSpawner() != null && gens().at(e.getSpawner().getBlock()) != null) e.setCancelled(true);
+    }
+
     private void protect(List<Block> blocks) {
         blocks.removeIf(b -> gens().at(b) != null);
     }

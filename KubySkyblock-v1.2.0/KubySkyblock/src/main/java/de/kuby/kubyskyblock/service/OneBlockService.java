@@ -66,6 +66,7 @@ public final class OneBlockService {
         core.economy().deposit(p.getUniqueId(), addon.getConfig().getLong("oneblock.money", 5));
         core.stats().get(p.getUniqueId()).xp += addon.getConfig().getLong("oneblock.xp", 3);
         addon.progress().recordOneBlock(p);
+        core.questProgress(p, "oneblock", old, 1);
         addon.progress().recordItem(p, old);
         b.setType(randomBlock(), false);
         Sfx.play(core, p, Sfx.Kind.CHIME);

@@ -36,11 +36,8 @@ def build(out):
     items = [("candy_corn", tex), ("candy_corn_purple", _purple(tex))]
     for f in sorted(glob.glob(os.path.join(HERE, "assets/events/item_*.png"))):
         items.append((os.path.basename(f)[5:-4], Image.open(f).convert("RGBA")))
-    # Skyblock-Generatoren als eigene Gruppe: kuby:generator/<art>
-    gen = [(os.path.basename(f)[5:-4], Image.open(f).convert("RGBA"))
-           for f in sorted(glob.glob(os.path.join(HERE, "assets/generators/item_*.png")))]
-    for group, entries in (("event", items), ("generator", gen)):
-        write_group(out, group, entries)
+    # Die Skyblock-Generatoren (kuby:generator/...) baut build_generator_art.write_models als 3D-Spawner-Modelle.
+    write_group(out, "event", items)
 
 
 def write_group(out, group, items):

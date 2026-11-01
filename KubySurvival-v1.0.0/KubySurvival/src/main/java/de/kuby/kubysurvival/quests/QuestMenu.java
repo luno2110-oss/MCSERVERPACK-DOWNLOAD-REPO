@@ -40,7 +40,7 @@ public final class QuestMenu extends GuiMenu {
 
     @Override
     protected void build(Player p) {
-        QuestService q = addon.quests();
+        QuestService q = addon.quests(p) != null ? addon.quests(p) : addon.quests();
         UUID id = p.getUniqueId();
         q.checkStats(p);
         List<String> open = q.claimable(id);
@@ -110,7 +110,7 @@ public final class QuestMenu extends GuiMenu {
     }
 
     private void quest(Player p, int slot, String key, QuestService.Def def, String prefix) {
-        QuestService q = addon.quests();
+        QuestService q = addon.quests(p) != null ? addon.quests(p) : addon.quests();
         UUID id = p.getUniqueId();
         boolean done = q.isDone(id, key);
         boolean claimed = q.isClaimed(id, key);

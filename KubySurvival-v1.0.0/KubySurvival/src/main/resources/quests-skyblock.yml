@@ -1,0 +1,97 @@
+# Skyblock-Quests (eigene Aufgaben, eigener Fortschritt, nur in Skyblock). Format wie quests.yml:
+#   "id;Name;Aufgabe;Typ;Menge;Coins;Tokens;XP"
+# Typen (zusätzlich zu kill, craft, smelt, eat, fish, playtime, stat):
+#   abbau:<MATERIAL|ores|ores_<erz>|logs|crops|stones|*>   Blöcke auf der Insel abbauen (auch aus dem Bruchstein-
+#                                                           Generator; selbst gesetzte zählen nicht, Pflanzen nur reif)
+#   oneblock[:<MATERIAL>]   den One-Block abbauen
+#   gen_place[:<art>]       Generator aufstellen (art: geld, xp, erz, holz, farm, mob, nether, edelstein)
+#   gen_collect[:<art>]     Items aus Generatoren einsammeln      gen_geld[:<art>]  $ mit Generatoren verdienen
+#   gen_xp[:<art>]          XP aus Generatoren einsammeln         gen_upgrade[:<art>]  Generator-Stufe kaufen
+#   gen_veredeln[:<art>]    Generator veredeln (Silber, Gold, Diamant)
+#   insel_upgrade[:size|slots|generator]   Insel-Upgrade kaufen   insel_besuch  fremde Insel besuchen
+#   stat:<Schlüssel>        island_level, island_points, island_members, generators, playtime, quests_done, ...
+# Coins gehen aufs Skyblock-Konto, XP sind Skyblock-XP, Tokens zählen für den Quest-Rang.
+
+daily-count: 4
+weekly-count: 3
+
+set-bonus:
+  daily: "400;2"
+  weekly: "1500;5"
+
+streak:
+  bonus-coins-per-day: 25
+  rewards:
+    - "3;1"
+    - "7;3"
+    - "14;5"
+    - "30;10"
+    - "60;15"
+    - "100;25"
+
+daily:
+  - "abbau;Steinbruch;Baue 300 Blöcke auf deiner Insel ab;abbau;300;400;0;40"
+  - "bruch;Bruchstein-Generator;Baue 192 Bruchstein ab;abbau:COBBLESTONE;192;350;0;35"
+  - "erz;Generator-Erze;Baue 32 Erze ab;abbau:ores;32;500;0;50"
+  - "oneblock;Ein Block;Baue den One-Block 50-mal ab;oneblock;50;400;0;40"
+  - "ernte;Generator-Ernte;Sammle 500 Items aus Generatoren;gen_collect;500;450;0;45"
+  - "kasse;Kassensturz;Verdiene 2.000 $ mit Generatoren;gen_geld;2000;400;0;40"
+  - "xp;Wissensdurst;Sammle 300 XP aus Generatoren;gen_xp;300;400;0;0"
+  - "holz;Baumschule;Fälle 32 Baumstämme;abbau:logs;32;350;0;35"
+  - "farm;Inselfarm;Ernte 64 reife Pflanzen;abbau:crops;64;350;0;35"
+  - "besuch;Nachbarschaft;Besuche 2 fremde Inseln (/insel besuchen);insel_besuch;2;300;0;30"
+  - "ofen;Schmelzerei;Schmelze 64 Gegenstände;smelt:*;64;350;0;35"
+  - "monster;Dunkle Ecken;Besiege 15 Monster;kill:monster;15;400;0;40"
+  - "online;Inselzeit;Spiele 45 Minuten in Skyblock;playtime;45;300;0;40"
+
+weekly:
+  - "w_abbau;Großbaustelle;Baue 5.000 Blöcke auf deiner Insel ab;abbau;5000;4000;3;400"
+  - "w_erz;Erzader;Baue 500 Erze ab;abbau:ores;500;4500;3;450"
+  - "w_diamant;Diamantfieber;Baue 25 Diamanterze ab;abbau:ores_diamond;25;5000;3;500"
+  - "w_gen;Fließband;Sammle 10.000 Items aus Generatoren;gen_collect;10000;4500;3;450"
+  - "w_geld;Geldmaschine;Verdiene 30.000 $ mit Generatoren;gen_geld;30000;5000;3;500"
+  - "w_upgrade;Technik-Woche;Kaufe 5 Generator-Stufen;gen_upgrade;5;4000;3;400"
+  - "w_oneblock;Endlos-Block;Baue den One-Block 500-mal ab;oneblock;500;4000;2;400"
+  - "w_besuch;Reiselustig;Besuche 10 fremde Inseln;insel_besuch;10;3000;2;300"
+  - "w_online;Inselbewohner;Spiele 6 Stunden in Skyblock;playtime;360;3500;3;400"
+
+# Die Skyblock-Geschichte: von der kleinen Insel zum Insel-Imperium.
+story:
+  - "s1;Erste Schritte;Baue 64 Blöcke auf deiner Insel ab;abbau;64;300;0;30"
+  - "s2;Der Generator;Baue 128 Bruchstein ab;abbau:COBBLESTONE;128;400;0;40"
+  - "s3;Maschinenzeit;Stelle einen Generator auf (/insel → Generatoren);gen_place;1;600;1;60"
+  - "s4;Erster Ertrag;Sammle 200 Items aus Generatoren;gen_collect;200;600;1;60"
+  - "s5;Wachstum;Bringe deine Insel auf Level 2;stat:island_level;2;800;1;80"
+  - "s6;Ein Block;Baue den One-Block 100-mal ab;oneblock;100;800;1;80"
+  - "s7;Aufgerüstet;Kaufe eine Generator-Stufe;gen_upgrade;1;1000;1;100"
+  - "s8;Inselfarm;Ernte 200 reife Pflanzen;abbau:crops;200;1000;1;100"
+  - "s9;Geldmaschine;Verdiene 10.000 $ mit Generatoren;gen_geld;10000;1500;2;150"
+  - "s10;Mehr Platz;Kaufe ein Insel-Upgrade (/insel → Upgrades);insel_upgrade;1;2000;2;200"
+  - "s11;Gemeinschaft;Habe 2 Leute auf deiner Insel (/insel einladen);stat:island_members;2;2000;2;200"
+  - "s12;Erzbaron;Baue 500 Erze ab;abbau:ores;500;3000;3;300"
+  - "s13;Veredelt;Veredle einen Generator (Silber, Gold, Diamant);gen_veredeln;1;3000;3;300"
+  - "s14;Insel-Baron;Bringe deine Insel auf Level 10;stat:island_level;10;5000;4;500"
+  - "s15;Skyblock-Legende;Bringe deine Insel auf Level 25;stat:island_level;25;10000;5;1000"
+
+milestones:
+  - "m_level;Inselbauer;island_level;2,5,10,25,50;500;2"
+  - "m_gen;Fabrikant;generators;1,3,5,10;400;2"
+  - "m_punkte;Inselwert;island_points;1000,10000,50000,250000;400;2"
+  - "m_zeit;Stammgast;playtime;600,3000,12000,30000;400;2"
+  - "m_quests;Questmeister;quests_done;10,50,200,500,1000;400;2"
+  - "m_serie;Treue;quest_streak_best;7,30,100;600;3"
+
+# Team-Quests für Skyblock-Teams (/team): eine pro Woche.
+team:
+  - "t_abbau;Bautrupp;Baut zusammen 20.000 Blöcke ab;abbau;20000;3000;3;300"
+  - "t_gen;Fabrik;Sammelt zusammen 40.000 Items aus Generatoren;gen_collect;40000;3000;3;300"
+  - "t_geld;Konzern;Verdient zusammen 100.000 $ mit Generatoren;gen_geld;100000;3500;3;350"
+  - "t_oneblock;Block-Brigade;Baut den One-Block zusammen 2.000-mal ab;oneblock;2000;2500;2;250"
+
+secret:
+  - "x_diamant;Glückstreffer;Baue ein Diamanterz aus dem Generator ab;abbau:ores_diamond;1;1500;2;150"
+  - "x_netherit;Tiefenfund;Baue antike Trümmer ab;abbau:ANCIENT_DEBRIS;1;3000;3;300"
+  - "x_edel;Edelmann;Veredle 3 Generatoren;gen_veredeln;3;6000;5;600"
+  - "x_reisend;Weltenbummler;Besuche 50 fremde Inseln;insel_besuch;50;5000;4;500"
+  - "x_endlos;Unendlich;Baue den One-Block 5.000-mal ab;oneblock;5000;8000;6;800"
+  - "x_imperium;Insel-Imperium;Bringe deine Insel auf Level 50;stat:island_level;50;15000;10;1500"

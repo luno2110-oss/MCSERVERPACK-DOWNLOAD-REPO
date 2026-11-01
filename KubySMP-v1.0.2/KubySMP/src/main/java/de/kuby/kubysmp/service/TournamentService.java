@@ -124,7 +124,10 @@ public final class TournamentService {
         int perWin = plugin.getConfig().getInt("tournament.trophies-per-win", 50);
         plugin.stats().get(winner).trophies += perWin;
         Player w = Bukkit.getPlayer(winner);
-        if (w != null) Msg.send(w, "<green>Du kommst weiter! <gray>+" + perWin + " Trophäen");
+        if (w != null) {
+            Msg.send(w, "<green>Du kommst weiter! <gray>+" + perWin + " Trophäen");
+            plugin.questProgress(w, "turnier", null, 1);
+        }
 
         pending--;
         if (pending <= 0) advance();
@@ -193,7 +196,10 @@ public final class TournamentService {
             announce("<gold>★ Turniersieger: <white>" + (name == null ? "Unbekannt" : name)
                     + " <gray>gewinnt <gold>" + Msg.coins(reward) + "$ <gray>und <gold>" + bonus + " Trophäen<gray>!");
             Player p = Bukkit.getPlayer(champion);
-            if (p != null) Sfx.play(plugin, p, Sfx.Kind.EPIC);
+            if (p != null) {
+                Sfx.play(plugin, p, Sfx.Kind.EPIC);
+                plugin.questProgress(p, "turnier_sieg", null, 1);
+            }
         } else {
             announce("<gray>Das Turnier endete ohne Sieger.");
         }

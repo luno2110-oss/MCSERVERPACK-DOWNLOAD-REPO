@@ -297,7 +297,7 @@ public final class JobService {
             p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.8f, 1.2f);
         }
         playerLevelUp(p.getUniqueId(), w, playerBefore);
-        if (addon.quests() != null) addon.quests().progress(p, "jobxp", job, xp);
+        addon.questProgress(p, "jobxp", job, xp);
     }
 
     /** Die Spieler mit den meisten Spieler-XP. */
