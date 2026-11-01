@@ -789,6 +789,7 @@ VANILLA_ICONS = {
     "snowball": "item/snowball.png", "music_disc_pigstep": "item/music_disc_pigstep.png",
     "glass_bottle": "item/glass_bottle.png", "skull_banner_pattern": "item/skull_banner_pattern.png",
     "recovery_compass": "item/recovery_compass_00.png",
+    "pumpkin_pie": "item/pumpkin_pie.png",
     # Haustiere (Spawn-Eier, seit 1.21.5 eigene Bilder je Tier)
     "egg_armadillo": "item/armadillo_spawn_egg.png", "egg_axolotl": "item/axolotl_spawn_egg.png",
     "egg_bee": "item/bee_spawn_egg.png", "egg_camel": "item/camel_spawn_egg.png",

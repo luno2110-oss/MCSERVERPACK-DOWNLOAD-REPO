@@ -88,6 +88,7 @@ public final class AngelListener implements Listener {
                 int xp = 4 + 4 * r.ordinal() * r.ordinal();
                 addon.jobs().reward(p, Job.ANGLER, xp, xp);
                 addon.quests().progress(p, "fish", null, c.amount());
+                if (c.treasure() != null) addon.quests().progress(p, "treasure", null, 1);
             }
             default -> fx.stop(p);
         }

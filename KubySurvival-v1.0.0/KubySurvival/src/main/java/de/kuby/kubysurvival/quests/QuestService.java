@@ -445,6 +445,7 @@ public final class QuestService {
         if (amount <= 0 || !survival(p)) return;
         UUID id = p.getUniqueId();
         if (addon.sideQuests() != null) addon.sideQuests().progress(p, type, subject, amount);
+        if (addon.events() != null) addon.events().progress(p, type, subject, amount, p.getLocation());
         Data d = data(id);
         for (String q : d.daily) advance(p, d, "d:", daily.get(q), type, subject, amount);
         for (String q : d.weekly) advance(p, d, "w:", weekly.get(q), type, subject, amount);
@@ -668,6 +669,11 @@ public final class QuestService {
         return n;
     }
 
+    /** Belohnung von außen (Event-Kapitel): Coins und Tokens, die wie Quest-Tokens zählen. */
+    public synchronized void reward(UUID id, long coins, long tokens) {
+        pay(id, coins, tokens, 0);
+    }
+
     private void pay(UUID id, long coins, long tokens, long xp) {
         if (coins > 0) core.modes().depositIn(id, ModeService.SURVIVAL, coins);
         if (tokens > 0) {
@@ -714,6 +720,12 @@ public final class QuestService {
         if ("-".equals(d.tracked)) return null;
         String key = d.tracked;
         Def def = null;
+        if (key != null && key.startsWith("e:")) {
+            Track et = addon.events() == null ? null : addon.events().track(id);
+            if (et != null && et.key().equals(key)) return et;
+            d.tracked = null;
+            key = null;
+        }
         if (key != null) {
             def = key.startsWith("t:") ? teamDef(id) : def(d, key);
             if (def == null || isDone(id, key) || (key.startsWith("d:") && !d.daily.contains(def.id()))

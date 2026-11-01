@@ -80,6 +80,7 @@ public final class KubySurvival extends JavaPlugin {
     private IntroService intro;
     private QuestService quests;
     private SideQuestService sideQuests;
+    private de.kuby.kubysurvival.quests.EventService events;
     private de.kuby.kubysurvival.quests.QuestDialogs questDialogs;
     private de.kuby.kubysurvival.shops.WarpDialogs warpDialogs;
     private FarmWorldService farm;
@@ -104,6 +105,7 @@ public final class KubySurvival extends JavaPlugin {
     public IntroService intro() { return intro; }
     public QuestService quests() { return quests; }
     public SideQuestService sideQuests() { return sideQuests; }
+    public de.kuby.kubysurvival.quests.EventService events() { return events; }
     public de.kuby.kubysurvival.quests.QuestDialogs questDialogs() { return questDialogs; }
     public de.kuby.kubysurvival.shops.WarpDialogs warpDialogs() { return warpDialogs; }
     public FarmWorldService farm() { return farm; }
@@ -236,6 +238,7 @@ public final class KubySurvival extends JavaPlugin {
         jobs = new JobService(this, core);
         quests = new QuestService(this, core);
         sideQuests = new SideQuestService(this, core);
+        events = new de.kuby.kubysurvival.quests.EventService(this, core);
         farm = new FarmWorldService(this, core);
         warps = new WarpService(this, core);
         farmpass = new FarmpassService(this, core);
@@ -275,6 +278,9 @@ public final class KubySurvival extends JavaPlugin {
             return null;
         });
         getServer().getPluginManager().registerEvents(sideQuests, this);
+        getServer().getPluginManager().registerEvents(new de.kuby.kubysurvival.quests.EventListener(events), this);
+        // Candy Corn am Spawn: alle 5 Sekunden prüfen, verteilt wird im Takt des Events
+        getServer().getScheduler().runTaskTimer(this, events::tick, 100L, 100L);
         getServer().getPluginManager().registerEvents(new QuestListener(this), this);
         intro = new IntroService(this, core);
         getServer().getPluginManager().registerEvents(intro, this);
@@ -342,6 +348,10 @@ public final class KubySurvival extends JavaPlugin {
         command("sidequests", sideCommand);
         PluginCommand sideCmd = getCommand("sidequests");
         if (sideCmd != null) sideCmd.setTabCompleter(sideCommand);
+        core.registerKpSub("event", (p, args) -> {
+            if (p.hasPermission("kuby.admin")) events.admin(p, args);
+            else Msg.send(p, "<red>Nur Admins.");
+        });
         core.registerKpSub("figur", (p, args) -> {
             if (p.hasPermission("kuby.admin")) sideQuests.admin(p, args);
             else Msg.send(p, "<red>Nur Admins.");
@@ -556,6 +566,7 @@ public final class KubySurvival extends JavaPlugin {
             jobs.save();
             quests.save();
             sideQuests.save();
+            events.saveIfDirty();
             farm.save();
             warps.save();
             chestShops.save();
@@ -582,6 +593,10 @@ public final class KubySurvival extends JavaPlugin {
         if (jobs != null) jobs.save();
         if (quests != null) quests.save();
         if (sideQuests != null) sideQuests.save();
+        if (events != null) {
+            events.clearCandy();
+            events.save();
+        }
         if (farm != null) farm.save();
         if (warps != null) warps.save();
         if (chestShops != null) chestShops.save();

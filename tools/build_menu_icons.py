@@ -183,6 +183,10 @@ def icons(vroot):
         ("bricks", cube(tx("block/bricks.png"), tx("block/bricks.png"), tx("block/bricks.png"))),
         ("cobblestone", cube(tx("block/cobblestone.png"), tx("block/cobblestone.png"), tx("block/cobblestone.png"))),
         ("iron_block", cube(tx("block/iron_block.png"), tx("block/iron_block.png"), tx("block/iron_block.png"))),
+        # Halloween-Event
+        ("carved_pumpkin", cube(tx("block/pumpkin_top.png"), tx("block/carved_pumpkin.png"), tx("block/pumpkin_side.png"))),
+        ("jack_o_lantern", cube(tx("block/pumpkin_top.png"), tx("block/jack_o_lantern.png"), tx("block/pumpkin_side.png"))),
+        ("pumpkin", cube(tx("block/pumpkin_top.png"), tx("block/pumpkin_side.png"), tx("block/pumpkin_side.png"))),
     ]
     return out
 

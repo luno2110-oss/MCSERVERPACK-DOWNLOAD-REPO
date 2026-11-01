@@ -77,6 +77,27 @@ public final class QuestSamples {
                 tabs(), List.of(), "Kein Team", "W".repeat(120), 0, 1, null), ACTIONS));
         reg.accept("Quests Event leer", () -> QuestScreen.list(new ListView(Area.EVENT, "Event", "", "0/0",
                 tabs(), List.of(), "Kein Event", "Gerade läuft kein Quest-Event.", 0, 1, null), ACTIONS));
+        // Event mit Kapiteln: angenommenes Kapitel mit vier Zielen (lange Texte), Shop-Leiste; Candy-Shop voll und leer
+        List<Reward> er = List.of(Reward.of(Kind.COINS, BIG), Reward.of(Kind.CANDY, SMALL), Reward.of(Kind.TOKENS, SMALL));
+        String chapterText = "Ein sehr langer Kapiteltext, der umbrechen muss, damit der Umbruch geprüft wird."
+                + "\n✔ Ein erledigtes Ziel mit sehr langem Text, der gekürzt oder umbrochen werden muss"
+                + "\n▸ Sammle 99.999 Candy Corn zwischen 18 und 24 Uhr am Spawn · 12.345/99.999"
+                + "\n▸ Besiege nachts 99.999 Zombies · 0/99.999\n▸ Wehr einen Überfall ab · 0/1";
+        List<Card> chapters = List.of(
+                new Card(Style.GOLD, null, null, null, Icon.TRACK, W16 + W16, chapterText, er, 0.5, false, "3/4 " + Canvas.caps("Ziele"), Btn.LINE,
+                        "Verfolgt", Canvas.caps("Kapitel") + " 99", null, NO),
+                new Card(Style.GOLD, null, null, null, Icon.QUEST, W16 + W16, "Kurz.", er, 0.0, false, "0/4 " + Canvas.caps("Ziele"), Btn.GOLD,
+                        "Annehmen", Canvas.caps("Kapitel") + " 99", null, NO),
+                new Card(Style.GRAY, null, null, null, Icon.LOCK, W16 + W16, "Gesperrt.", er, null, false, null, Btn.LOCKED, null, null,
+                        "Ab Do. 29.10.", null));
+        reg.accept("Quests Event Kapitel", () -> QuestScreen.list(new ListView(Area.EVENT, W16, "99 von 99 Kapiteln · endet 31.12. um 23:59 Uhr",
+                "99/99", tabs(), chapters, null, null, 98, 99, null, new QuestScreen.Shop(W16 + W16, BIG, NO)), ACTIONS));
+        List<QuestScreen.ShopOffer> offers = new ArrayList<>();
+        for (int i = 0; i < 12; i++) {
+            offers.add(new QuestScreen.ShopOffer(KitData.Icon.JACK_O_LANTERN, W16 + W16, BIG, i % 3 == 0, i % 2 == 0, NO));
+        }
+        reg.accept("Quests Candy-Shop", () -> QuestScreen.eventShop(new QuestScreen.ShopView(W16, W16, BIG, offers), NO));
+        reg.accept("Quests Candy-Shop leer", () -> QuestScreen.eventShop(new QuestScreen.ShopView("Event", "Candy Corn", 0, List.of()), NO));
 
         KitData.Sprite[] faces = {KitData.Sprite.QU_FACE_LEONIE, KitData.Sprite.QU_FACE_FRIEDA, KitData.Sprite.QU_FACE_MORTIS,
                 KitData.Sprite.QU_FACE_LILIA, KitData.Sprite.QU_FACE_KONRAD, KitData.Sprite.QU_FACE_HERMANN,

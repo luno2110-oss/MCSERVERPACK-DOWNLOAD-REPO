@@ -31,6 +31,8 @@
  <gray>Einsatz: <gold>{}$	 <gray>Bet: <gold>{}$
  <gray>Gerade ist niemand vom Team online, sie wird gespeichert. Dringendes bitte im Discord melden (/discord).	 <gray>No staff member is online right now, it has been saved. Please report urgent things on Discord (/discord).
  <gray>Stufe {}: <white>{} <dark_gray>({}<dark_gray>)	 <gray>Level {}: <white>{} <dark_gray>({}<dark_gray>)
+ <gray>[aus]	 <gray>[off]
+ <gray>[von Hand]	 <gray>[manual]
  <gray>möchte dich zu sich holen. 	 <gray>wants to bring you to them. 
  <gray>möchte zu dir teleportieren. 	 <gray>wants to teleport to you. 
  <gray>und gewinnt <gold>{}$	 <gray>and wins <gold>{}$
@@ -148,6 +150,7 @@
  verkauft für 	 sold for 
  von {} Blöcken genutzt	 of {} blocks used
  von {} Items gesammelt	 of {} items collected
+ von {} Kapiteln · 	 of {} chapters · 
  von {} Plätzen belegt	 of {} slots used
  von {} Stufen abgeholt	 of {} levels claimed
  vor dem Start	 before the start
@@ -180,6 +183,7 @@
  · läuft ab in {} Std.	 · expires in {} h
  · noch 	 · still 
  · noch offen	 · still open
+ · nur während des Events	 · only during the event
  · verkauft +	 · sold +
  · zurück <#F2C94C>{}</#F2C94C>	 · back <#F2C94C>{}</#F2C94C>
  · {} Blöcke	 · {} blocks
@@ -249,6 +253,8 @@ $ zum Gründen	$ to found
 16 Eisenbarren	16 iron ingots
 16 Enderperlen	16 ender pearls
 16 Erfahrungsfläschchen	16 bottles o' enchanting
+16 Kürbiskuchen	16 pumpkin pies
+16 Kürbislaternen	16 jack o'lanterns
 2 Diamantblöcke	2 diamond blocks
 2 Diamanten	2 diamonds
 2 Kirschen	2 cherries
@@ -275,11 +281,14 @@ $ zum Gründen	$ to found
 48 Fischarten in sechs Gewässern: Fluss, Ozean, warm, kalt, Sumpf und Mythen. Das Biom entscheidet.	48 fish species in six waters: river, ocean, warm, cold, swamp and myths. The biome decides.
 5 Loot-Kisten öffnen	Open 5 loot chests
 5 Schlüssel, 10 % günstiger	5 keys, 10 % cheaper
+5 Tokens	5 tokens
+5.000 Coins	5,000 coins
 500 verschiedene Items sammeln	Collect 500 different items
 6 Diamanten	6 diamonds
 6 Goldene Äpfel	6 golden apples
 6/8 gefangen · volle Seite: 3.000$ + 2 Tokens	6/8 caught · full page: 3,000$ + 2 tokens
 8 Enderperlen	8 ender pearls
+8 geschnitzte Kürbisse	8 carved pumpkins
 9,99 € im Monat	€9.99 per month
 9,99 € im Monat, jederzeit kündbar	€9.99 per month, cancel any time
 <!italic><dark_gray>Modus: <yellow>{}</yellow></dark_gray>	<!italic><dark_gray>Mode: <yellow>{}</yellow></dark_gray>
@@ -316,6 +325,8 @@ $ zum Gründen	$ to found
 <#F2C84A>Alle abholen ({})	<#F2C84A>Claim all ({})
 <#F2C84A>Deine Spielzeit	<#F2C84A>Your playtime
 <#F8D35A><b>Neues Konto mit Freunden	<#F8D35A><b>New account with friends
+<#FC981F><b>Kapitel geschafft!</b> <click:run_command:'/quest event'><gold>[Belohnung abholen]</click>	<#FC981F><b>Chapter done!</b> <click:run_command:'/quest event'><gold>[Claim reward]</click>
+<#FC981F><b>{}:</b> <white>{} <gray>angenommen. Es wird oben angezeigt.	<#FC981F><b>{}:</b> <white>{} <gray>accepted. It is shown at the top.
 <#FCC965><b>COINFLIP</b> <dark_gray>▶ <white>{} <gray>gewinnt <gold>{}$<gray>! <dark_gray>(/coinflip)	<#FCC965><b>COINFLIP</b> <dark_gray>▶ <white>{} <gray>wins <gold>{}$<gray>! <dark_gray>(/coinflip)
 <#FCD45D><b>DUELL</b> <dark_gray>▶ <white>{} <gray>besiegt <white>	<#FCD45D><b>DUEL</b> <dark_gray>▶ <white>{} <gray>defeats <white>
 <#FCD45D><b>TIPP</b> <dark_gray>▶ 	<#FCD45D><b>TIP</b> <dark_gray>▶ 
@@ -882,6 +893,7 @@ $ zum Gründen	$ to found
 <gray>Erweitern: Linksklick mit der Axt auf eine Ecke deines Grundstücks, dann Rechtsklick auf die neue Position.	<gray>Expand: left-click a corner of your plot with the axe, then right-click the new position.
 <gray>Erweiterungen: <white>{} <dark_gray>/ <white>	<gray>Upgrades: <white>{} <dark_gray>/ <white>
 <gray>Es sind noch keine Regeln eingetragen.	<gray>No rules have been added yet.
+<gray>Events sind aus, bis <white>/kp event auto<gray> oder <white>/kp event start<gray>.	<gray>Events are off until <white>/kp event auto<gray> or <white>/kp event start<gray>.
 <gray>Fall, Feder, Bestenliste, Prefix</gray>	<gray>Fall, feather, leaderboard, prefix</gray>
 <gray>Farmpass: <white>+	<gray>Farm pass: <white>+
 <gray>Fische, Serie und mehr	<gray>Fish, streak and more
@@ -971,6 +983,7 @@ $ zum Gründen	$ to found
 <gray>Juwelen kann man nicht verschenken	<gray>Jewels can't be gifted
 <gray>Juwelen kaufst du mit <white>/juwelenshop	<gray>You buy jewels with <white>/juwelenshop
 <gray>Juwelen: <aqua>	<gray>Jewels: <aqua>
+<gray>Kapitel {} wartet: <click:run_command:'/quest event'><#FC981F>[Ansehen]</click>	<gray>Chapter {} is waiting: <click:run_command:'/quest event'><#FC981F>[View]</click>
 <gray>Kasse: <gold>{}$	<gray>Bank: <gold>{}$
 <gray>Kaufen: <white>/sw create <Name>	<gray>Buy: <white>/sw create <name>
 <gray>Kein Artikel-Inhalt	<gray>No item contents
@@ -1469,6 +1482,9 @@ $ zum Gründen	$ to found
 <green>Erfolg: <white>{} <gray>- 	<green>Achievement: <white>{} <gray>- 
 <green>Erledigt! Nächste Woche gibt es einen neuen.	<green>Done! There's a new one next week.
 <green>Erreicht	<green>Reached
+<green>Event {} läuft jetzt (von Hand). <gray>/kp event auto = wieder nach Datum	<green>Event {} is now running (manual). <gray>/kp event auto = back to dates
+<green>Event-Stand von {} zurückgesetzt.	<green>Event progress of {} reset.
+<green>Events laufen wieder nach Datum. <gray>Gerade: <white>	<green>Events run by date again. <gray>Now: <white>
 <green>Farmpass für {} um {} Tage verlängert.	<green>Farm pass for {} extended by {} days.
 <green>Farmpass im Store: <click:open_url:'{}'><u><aqua>{}</aqua></u></click>	<green>Farm pass in the store: <click:open_url:'{}'><u><aqua>{}</aqua></u></click>
 <green>Farmpass von {} beendet.	<green>Farm pass of {} ended.
@@ -1485,6 +1501,7 @@ $ zum Gründen	$ to found
 <green>Gekauft! <gray>Hol es in der Abholbox ab.	<green>Bought! <gray>Collect it in the pickup box.
 <green>Gekauft: 	<green>Bought:
 <green>Gekauft: <white>	<green>Bought: <white>
+<green>Gekauft: <white>{} <gray>(-{} {})	<green>Bought: <white>{} <gray>(-{} {})
 <green>Gekauft: <white>{} <gray>({} Juwelen)	<green>Bought: <white>{} <gray>({} jewels)
 <green>Geliefert: <white>{}x <green>für <gold>{}$	<green>Delivered: <white>{}x <green>for <gold>{}$
 <green>Gespeichert.	<green>Saved.
@@ -1604,6 +1621,7 @@ $ zum Gründen	$ to found
 <green>an	<green>on
 <green>angenommen	<green>accepted
 <green>erlaubt	<green>allowed
+<green>events.yml neu geladen.	<green>events.yml reloaded.
 <green>gesetzt</green>	<green>set</green>
 <green>offen	<green>open
 <green>online	<green>online
@@ -1955,6 +1973,7 @@ $ zum Gründen	$ to found
 <red>Shift + Rechtsklick: löschen (ohne Erstattung)	<red>Shift + right-click: delete (no refund)
 <red>Spieler ist offline.	<red>Player is offline.
 <red>Spieler nicht gefunden.	<red>Player not found.
+<red>Spieler nicht online oder kein Event aktiv.	<red>Player not online or no event active.
 <red>Spieler nicht online oder ungültig.	<red>Player not online or invalid.
 <red>Spieler nicht online.	<red>Player not online.
 <red>Spieler offline oder Menge ungültig.	<red>Player offline or invalid amount.
@@ -2336,8 +2355,10 @@ Angel-Turnier	Fishing tournament
 Angel-Zone	Fishing zone
 Angel-Zone 	Fishing zone 
 Angeln	Fishing
+Angeln im Mondlicht	Moonlight Fishing
 Angeln in Survival kurz erklärt	Fishing in Survival explained briefly
 Angepinnt	Pinned
+Angle nachts 2 Schätze	Fish up 2 treasures at night
 Angler-Job aktiv (Level {}): +{} % Glück und Preis	Angler job active (level {}): +{} % luck and price
 Angler-Job: +{} %	Angler job: +{} %
 Anglerglück	Angler's luck
@@ -2446,6 +2467,7 @@ Baby-Warden	Baby Warden
 Baby-Wither	Baby Wither
 Baby-Zombie	Baby Zombie
 Bachforelle	Brown Trout
+Back 8 Kürbiskuchen	Bake 8 pumpkin pies
 Banane	Banana
 Bananen	Bananas
 Bank	Bank
@@ -2490,6 +2512,7 @@ Begrüßungstext eingeben (MiniMessage erlaubt):	Enter the welcome text (MiniMes
 Behandle alle freundlich. Beleidigungen, Hetze, Drohungen und Belästigung sind verboten, auch per Privatnachricht.	Treat everyone kindly. Insults, hate speech, threats and harassment are forbidden, also in private messages.
 Behandle andere Spieler respektvoll. Beleidigungen, Mobbing, Diskriminierung und Drohungen sind verboten.	Treat other players with respect. Insults, bullying, discrimination and threats are forbidden.
 Bei 5.000 Einsatz der ganze Topf, sonst anteilig (mind. 100x)	With a 5,000 bet the whole pot, otherwise a share (min. 100x)
+Bei Nacht beißen die seltsamsten Fische. Wirf die Angel aus, wenn der Mond scheint, und zieh ein paar Schätze aus dem Wasser. Schätze sind besondere Fänge wie Sattel, Namensschild oder verzaubertes Buch.	The strangest fish bite at night. Cast your rod when the moon is out and pull a few treasures from the water. Treasures are special catches like a saddle, a name tag or an enchanted book.
 Bei Streitigkeiten über Claims entscheidet das Serverteam nach Prüfung des Falls.	In disputes about claims, the server team decides after reviewing the case.
 Bei einer Scheidung wird das Ehe-Konto halbiert, jeder bekommt seinen Teil. Danach dürft ihr eine Zeit lang nicht neu heiraten.	In a divorce the marriage account is split in half, each gets their part. After that you can't marry again for a while.
 Bei erheblichen Leistungsproblemen kann das Serverteam verlangen, dass Farmen oder Maschinen angepasst oder abgeschaltet werden.	If there are serious performance problems, the server team may require farms or machines to be changed or switched off.
@@ -2542,15 +2565,22 @@ Besiege 10 Zombies	Defeat 10 zombies
 Besiege 100 Monster	Defeat 100 monsters
 Besiege 100 Spieler (SMP)	Defeat 100 players (SMP)
 Besiege 15 Skelette	Defeat 15 skeletons
+Besiege 15 Wither-Skelette	Defeat 15 wither skeletons
 Besiege 15 Zombies	Defeat 15 zombies
+Besiege 2 Magier	Defeat 2 evokers
 Besiege 20 Monster	Defeat 20 monsters
 Besiege 250 Monster	Defeat 250 monsters
 Besiege 30 Monster	Defeat 30 monsters
+Besiege 5 Hexen	Defeat 5 witches
 Besiege 8 Creeper	Defeat 8 creepers
+Besiege 8 Phantome	Defeat 8 phantoms
 Besiege 8 Skelette	Defeat 8 skeletons
 Besiege den Enderdrachen	Defeat the ender dragon
 Besiege den Wither	Defeat the wither
 Besiege einen Warden	Defeat a warden
+Besiege nachts 20 Skelette	Defeat 20 skeletons at night
+Besiege nachts 25 Zombies	Defeat 25 zombies at night
+Besiege zwischen 18 und 24 Uhr 40 Monster	Defeat 40 monsters between 6 pm and midnight
 Besiegt zusammen 500 Monster	Defeat 500 monsters together
 Besitze 1 Grundstück.	Own 1 claim.
 Besitze {} Grundstücke.	Own {} claims.
@@ -2600,6 +2630,7 @@ Booster: Ende	Booster: end
 Booster: Faktor	Booster: factor
 Booster: Start	Booster: start
 Botschafter	Ambassador
+Brau 9 Tränke	Brew 9 potions
 Braucht den Premium-Pass · Klick: Premium holen	Needs the premium pass · Click: get premium
 Brennholz	Firewood
 Bretter für die Brücke	Planks for the bridge
@@ -2626,6 +2657,8 @@ Bücherregal	Bookshelf
 Bürostuhl	Office Chair
 CLAIMBLÖCKE	CLAIM BLOCKS
 CRATES ANSEHEN	VIEW CRATES
+Candy-Shop	Candy shop
+Candy-Shop öffnen	Open the candy shop
 Casino steuerfrei	Tax-free casino
 Casino-Hilfe	Casino help
 Casino-Hocker	Casino Stool
@@ -2707,6 +2740,7 @@ Dafür brauchst du {} Claimblöcke mehr, du hast {}.	You need {} more claim bloc
 Dafür brauchst du {} Claimblöcke, du hast {}.	You need {} claim blocks for that, you have {}.
 Dafür brauchst du {} Coins.	You need {} coins for that.
 Dafür brauchst du {} Tokens.	You need {} tokens for that.
+Dafür brauchst du {} {}.	You need {} {} for that.
 Dafür fehlen dir Coins ({}).	You are missing coins for that ({}).
 Daily & Tagespot	Daily & daily pot
 Daily Shop: Angebote	Daily shop: offers
@@ -2736,6 +2770,7 @@ Das Serverteam berücksichtigt den jeweiligen Einzelfall und entscheidet über d
 Das Serverteam kann bei Regelverstößen eingreifen und geeignete Maßnahmen ergreifen.	The server team can step in when rules are broken and take suitable action.
 Das Serverteam kann das Regelwerk bei Bedarf ergänzen oder ändern.	The server team can add to or change the rules when needed.
 Das Stehlen von Items aus fremden Kisten, Fässern, Shulkerboxen und anderen Lagern ist verboten.	Stealing items from other players' chests, barrels, shulker boxes and other storage is forbidden.
+Das Tal der Seelen	The Valley of Souls
 Das Team ist inzwischen voll.	The team is full by now.
 Das Turnier ist voll.	The tournament is full.
 Das Umgehen des Claim-Schutzes, um Blöcke abzubauen, Items zu stehlen oder fremde Bauwerke zu beschädigen, ist verboten.	Bypassing claim protection to break blocks, steal items or damage other players' builds is forbidden.
@@ -2744,6 +2779,7 @@ Das dürfen Fremde bei dir	What strangers may do on your land
 Das geht nur in Survival.	That only works in Survival.
 Das gibt es nur aus Kisten.	This is only available from crates.
 Das gibt es nur in Survival.	That only exists in Survival.
+Das große Finale: Schlag einen Überfall auf ein Dorf zurück, vertreib die Plagegeister der Magier und die Hexen, die mitziehen. Danach belohnt dich die Hexe reich.	The grand finale: repel a raid on a village, drive off the evokers' vexes and the witches that come along. Afterwards the witch rewards you richly.
 Das hast du schon.	You already have that.
 Das ist keine Kiste.	That isn't a chest.
 Das ist nicht dein Warp.	This isn't your warp.
@@ -2862,6 +2898,7 @@ Der Herausforderer hat nicht mehr genug$.	The challenger doesn't have enough $ a
 Der Herausforderer ist offline.	The challenger is offline.
 Der Hocker ist besetzt.	The stool is taken.
 Der Knopf am Bedienfeld wählt den Einsatz: Klick erhöht, Schleichen + Klick senkt (10 bis 5.000 Chips).	The button on the panel chooses the bet: click raises, sneak + click lowers (10 to 5,000 chips).
+Der Kürbiskönig	The Pumpkin King
 Der Laden ist gerade geschlossen.	The shop is closed right now.
 Der Markt wartet auf meinen Kabeljau. Bringst du mir fünf Stück? Ich zahl gut!	The market is waiting for my cod. Will you bring me five? I pay well!
 Der Name braucht 3 bis 16 Zeichen: Buchstaben, Zahlen, _ oder -.	The name needs 3 to 16 characters: letters, numbers, _ or -.
@@ -2872,6 +2909,7 @@ Der Platz ist besetzt.	This seat is taken.
 Der Poker-Tisch ist noch nicht eingerichtet.	The poker table isn't set up yet.
 Der Preis muss eine Zahl sein.	The price must be a number.
 Der Roulette-Tisch ist noch nicht aufgebaut.	The roulette table hasn't been set up yet.
+Der Ruf der Hexe	The Witch's Call
 Der Schatz im See	The treasure in the lake
 Der Spawn für diesen Modus ist noch nicht eingerichtet.	The spawn for this mode isn't set up yet.
 Der Spieler ist gerade in einem anderen Modus.	The player is in another mode right now.
@@ -2883,6 +2921,7 @@ Der beste Platz zum Angeln	The best spot for fishing
 Der erste Einsatz startet die Runde, nach {} Sekunden läuft das Licht über die Zahlen und bleibt auf dem Ergebnis stehen.	The first bet starts the round, after {} seconds the light runs over the numbers and stops on the result.
 Der erste Tagesauftrag am Tag bringt extra Coins je Streak-Tag.	The first daily order each day gives extra coins per streak day.
 Der große Einschlag	The big felling
+Der verfluchte Dorfbewohner	The Cursed Villager
 Design	Design
 Design {}	Design {}
 Design, Reihenfolge und Elemente zurücksetzen	Reset design, order and elements
@@ -2909,18 +2948,23 @@ Die Farmwelt ist zum Abbauen da. Hier darfst du alles farmen, Grundstücke gibt 
 Die Farmwelt wird neu erstellt. Die Sachen aus deinem Grab liegen in der <white>/abholbox</white>.	The farm world is being recreated. The things from your grave are in the <white>/abholbox</white>.
 Die Freundesliste dieses Spielers ist voll.	This player's friends list is full.
 Die Herausforderung ist abgelaufen.	The challenge has expired.
+Die Hexe am Spawn braucht Vorräte für die Halloween-Nacht. Sammle das Candy Corn, das rund um den Spawn verstreut liegt, ernte Kürbisse und back Kürbiskuchen. Es zählen nur gewachsene Kürbisse, keine gesetzten.	The witch at spawn needs supplies for Halloween night. Collect the candy corn scattered around spawn, harvest pumpkins and bake pumpkin pies. Only grown pumpkins count, not placed ones.
+Die Hexe will den größten Kürbisberg des Servers. Bau ein richtiges Kürbisfeld an, iss dich satt und schmück dein Grundstück.	The witch wants the biggest pumpkin pile on the server. Grow a real pumpkin field, eat your fill and decorate your claim.
 Die Hochzeit kostet {} Coins, die zahlst du als der, der fragt.	The wedding costs {} coins, you pay as the one who asks.
 Die Hochzeit kostet {} Coins. Bezahlt wird sie von dem, der den Antrag macht.	The wedding costs {} coins. Whoever proposes pays for it.
 Die Kirche gibt es nur in Survival.	The church only exists in Survival.
 Die Kirche ist noch nicht eingerichtet.	The church isn't set up yet.
 Die Kiste des Ladens ist voll.	The shop's chest is full.
 Die Kisten stehen am Spawn. Rechtsklick öffnet eine Kiste, Linksklick zeigt dir, was drin sein kann.	The crates are at spawn. Right-click opens a crate, left-click shows you what can be inside.
+Die Knochenfestung	The Bone Fortress
 Die Kugel liegt auf <{}><b>{} {}</b></{}>	The ball lands on <{}><b>{} {}</b></{}>
 Die Kugel rollt schon.	The ball is already rolling.
 Die Kugel rollt – gleich geht's weiter	The ball is rolling – next round coming up
 Die Kugel rollt – gleich geht's weiter.	The ball is rolling – next round coming up.
 Die Leiste oben am Bildschirm. Inhalt: /bossbar	The bar at the top of the screen. Contents: /bossbar
 Die Nachricht ist leer.	The message is empty.
+Die Nacht der Nächte	The Night of Nights
+Die Nacht erwacht	The Night Awakens
 Die Prämie kostet {}$.	The premium costs {}$.
 Die Regeln gelten für alle Spieler, unabhängig von Rang oder Spielzeit.	The rules apply to all players, regardless of rank or playtime.
 Die Regeln gelten für jeden Spieler, egal welcher Rang und wie lange schon dabei.	The rules apply to every player, no matter the rank or how long they've been here.
@@ -3000,6 +3044,7 @@ Dieser Teamname ist in diesem Modus vergeben.	This team name is taken in this mo
 Dieser Titel ist noch nicht freigeschaltet.	This title isn't unlocked yet.
 Dieses Angebot hast du heute schon gekauft.	You already bought this offer today.
 Dieses Angebot hast du schon gekauft.	You already bought this offer.
+Dieses Angebot ist gerade nicht verfügbar.	This offer is not available right now.
 Dieses Grundstück gibt es nicht mehr.	This plot no longer exists.
 Dieses Haustier gibt es gerade nicht.	This pet isn't available right now.
 Dieses Haustier gibt es nicht zur Auswahl.	This pet isn't available to choose.
@@ -3008,6 +3053,8 @@ Dieses Haustier hast du nicht.	You don't have this pet.
 Dieses Haustier kann man nicht kaufen ({}).	This pet can't be bought ({}).
 Dieses Item ist schon aktiv.	This item is already active.
 Dieses Item steht nicht zur Wahl.	This item isn't up for vote.
+Dieses Kapitel ist noch nicht geschafft.	This chapter is not done yet.
+Dieses Kapitel kannst du gerade nicht annehmen.	You cannot accept this chapter right now.
 Dieses Kit gibt es ab Rang {}.	This kit is available from rank {}.
 Dieses Kit ist noch leer.	This kit is still empty.
 Dieses Konto gibt es nicht mehr.	This account no longer exists.
@@ -3217,6 +3264,7 @@ Eigenes Lager zum Mitnehmen	Your own storage to carry
 Ein Claim darf höchstens {} Blöcke lang sein.	A claim may be at most {} blocks long.
 Ein Claim muss mindestens {}x{} Blöcke groß sein.	A claim must be at least {}x{} blocks big.
 Ein Ehe-Konto könnt ihr erst nach der Hochzeit eröffnen.	You can only open a marriage account after the wedding.
+Ein Fluch hat Dorfbewohner zu Zombies gemacht. Brau Schwächetränke, wirf sie auf einen Zombie-Dorfbewohner und gib ihm danach einen goldenen Apfel.	A curse has turned villagers into zombies. Brew weakness potions, throw one at a zombie villager and then give it a golden apple.
 Ein Grundstück kostet Claim-Blöcke, so viele wie Boden drin liegt. Ein 10×10 kostet 100. Fürs Spielen bekommst du immer neue dazu.	A plot costs claim blocks, as many as there is ground in it. A 10×10 costs 100. You keep getting new ones for playing.
 Ein Helfer antwortet	A helper answers
 Ein Home ist ein Ort, zu dem du dich jederzeit zurück teleportierst.	A home is a place you can teleport back to at any time.
@@ -3302,6 +3350,7 @@ Episch Crate Schlüssel	Epic crate key
 Episch · noch offen	Epic · still open
 Episch-Schlüssel	Epic key
 Epische Kiste	Epic crate
+Epischer Schlüssel	Epic key
 Erde	Dirt
 Erde, Gras, Sand, Kies, Ton, Schlamm und Seelensand graben	Dig dirt, grass, sand, gravel, clay, mud and soul sand
 Erde, Sand und Kies graben	Dig dirt, sand and gravel
@@ -3320,7 +3369,9 @@ Erlaubt sind {} bis {}.	Allowed: {} to {}.
 Erledigt	Done
 Erledigt ✓	Done ✓
 Ernte 150 reife Pflanzen	Harvest 150 ripe crops
+Ernte 16 Kürbisse	Harvest 16 pumpkins
 Ernte 32 reife Pflanzen	Harvest 32 ripe crops
+Ernte 64 Kürbisse	Harvest 64 pumpkins
 Ernte 64 reife Pflanzen	Harvest 64 ripe crops
 Ernte 800 reife Pflanzen	Harvest 800 ripe crops
 Erntehelfer	Harvest helper
@@ -3329,6 +3380,7 @@ Erreiche Angel-Level 10	Reach fishing level 10
 Erreiche Level 10	Reach level 10
 Erst Discord verlinken	Link Discord first
 Erst Kapitel	Requires chapter
+Erst Kapitel {} abschließen	Finish chapter {} first
 Erst Platz {} belegen.	Fill slot {} first.
 Erst Quest	Requires quest
 Erst beide Bedingungen erfüllen	Meet both requirements first
@@ -3370,6 +3422,7 @@ Fang 10 Fische	Catch 10 fish
 Fang 100 Fische	Catch 100 fish
 Fang 500 Fische	Catch 500 fish
 Fang alle 8 Arten einer Seite für eine Belohnung.	Catch all 8 species of a page for a reward.
+Fang nachts 15 Fische	Catch 15 fish at night
 Fange 1.000 Fische	Catch 1,000 fish
 Fange 10 Fische	Catch 10 fish
 Fange 12 Fische	Catch 12 fish
@@ -3415,6 +3468,7 @@ Feuer und Lava dürfen nicht zur großflächigen Zerstörung der Landschaft eing
 Feuerfisch	Lionfish
 Figuren	Figures
 Figuren und Statuen zur Deko sehen (Händler und Croupiers bleiben).	See figures and statues for decoration (traders and croupiers stay).
+Finde 5 lila Candy Corn	Find 5 purple candy corn
 Firma	Company
 Fischbuch	Fish book
 Fischbuch, Rute, Köder, Händler, Bestenliste	Fish book, rod, bait, trader, leaderboard
@@ -3494,6 +3548,7 @@ Fänge	Catches
 Für Baltop-Platz 1	For baltop place 1
 Für Juwelen · sofort da	For jewels · instant
 Für Reports und Strafen: Discord-Ticket.	For reports and punishments: Discord ticket.
+Für Titel, Hüte, Schlüssel und mehr	For titles, hats, keys and more
 Für alle Einsätze der letzten Runde fehlen dir Chips.	You don't have enough chips for all bets of the last round.
 Für bestimmte Welten, Events oder Spielmodi können zusätzliche Regeln gelten.	Additional rules may apply to certain worlds, events or game modes.
 Für die Abstimmung brauchst du einen verknüpften Discord-Account.	You need a linked Discord account to vote.
@@ -3521,6 +3576,9 @@ Geh zum Priester in der Kirche (/marry church), dort sagst du Ja.	Go to the prie
 Geh zum Roulette-Tisch.	Go to the roulette table.
 Geht beide zum Priester in der Kirche, dort sagst du mit Rechtsklick Ja. <click:run_command:'/marry church'><#FF7AC0>[Zur Kirche]</click> <click:run_command:'/marry deny'><red>[Ablehnen]</click>	Go to the priest in the church together, you say yes there with a right-click. <click:run_command:'/marry church'><#FF7AC0>[To the church]</click> <click:run_command:'/marry deny'><red>[Decline]</click>
 Geisterfisch	Ghost Fish
+Geisterjäger	Ghost Hunter
+Geisterstunde	Witching Hour
+Gekauft	Bought
 Gekaufte Haustiere findest du unter /pet.	Pets you bought are under /pet.
 Gelb	Yellow
 Geld	Money
@@ -3546,6 +3604,7 @@ Gerade ist niemand in deiner Nähe	Nobody is near you right now
 Gerade ist niemand sonst online.	Nobody else is online right now.
 Gerade kein Event	No event right now
 Gerade keine Wartezeit	No waiting time right now
+Gerade läuft kein Event.	No event is running right now.
 Gerade läuft kein Event. Schau später wieder vorbei.	No event is running right now. Check back later.
 Gerade nichts bereit	Nothing ready right now
 Gerade nichts offen	Nothing open right now
@@ -3697,6 +3756,7 @@ Haustiere laufen dir hinterher und sehen einfach gut aus. Auf manchen kannst du 
 Haustiere ›	Pets ›
 Hebel ziehen	Pull the lever
 Hecht	Pike
+Heil einen Zombie-Dorfbewohner	Cure a zombie villager
 Heilbutt	Halibut
 Heiligenschein	Halo
 Heiraten	Marriage
@@ -3727,6 +3787,7 @@ Heute noch {} · Gekaufte Stufen geben keine XP	{} left today · Bought levels g
 Heute schon abgeholt · morgen wieder	Already claimed today · back tomorrow
 Heute sind keine Stufen mehr kaufbar.	No more levels can be bought today.
 Hexenhut	Witch hat
+Hexenjagd	Witch Hunt
 Hexenkatze	Witch Cat
 Hexlein	Little Witch
 Hier darf kein Warp stehen.	No warp may stand here.
@@ -3827,6 +3888,7 @@ Ihr seid keine Freunde.	You are not friends.
 Ihr seid schon befreundet.	You are already friends.
 Ikone	Icon
 Im Beutel: 	In the pouch: 
+Im Candy-Shop gibt es gerade nichts.	Nothing in the candy shop right now.
 Im Casino bleibt es ruhig.	The casino stays quiet.
 Im Casino kannst du kein Home setzen.	You can't set a home in the casino.
 Im Casino läuft Musik. Bei DJ Mia oder mit /music suchst du dir Songs aus oder schaltest sie aus.	Music plays in the casino. At DJ Mia or with /music you choose songs or turn them off.
@@ -3837,6 +3899,7 @@ Im Dorf hungern sie. Backst du zehn Brote für mich?	The village is hungry. Will
 Im Juwelenshop gibt es dafür Ränge, Crate-Keys, Vorteilspakete, Möbel und Haustiere.	The jewel shop has ranks, crate keys, bundles, furniture and pets for that.
 Im Markt bietest du Items zum Festpreis an: Item in die Hand nehmen und /markt sell <Preis> eingeben.	In the market you offer items at a fixed price: take the item in your hand and type /markt sell <price>.
 Im Menü rufst du dein Haustier, gibst ihm einen eigenen Namen und markierst Lieblinge.	In the menu you call your pet, give it its own name and mark favorites.
+Im Nether liegt ein Tal voller verlorener Seelen. Finde es, bring Seelensand mit und vertreib, was dort umherschwebt.	In the Nether lies a valley full of lost souls. Find it, bring back soul sand and drive away what floats around there.
 Im Store holen	Get it in the store
 Im Token-Shop gibt es dafür Claim-Blöcke, einen Rucksack, besondere Verzauberungen, Booster und Bauhelfer.	The token shop has claim blocks, a backpack, special enchantments, boosters and building helpers for that.
 Im Topf	In the pot
@@ -3847,6 +3910,7 @@ In /friends siehst du, wer gerade online ist und auf welchem Server. Von dort sc
 In /settings schaltest du zum Beispiel private Nachrichten, Freundesanfragen, Sounds, das Scoreboard und die Info-Leiste an und aus.	In /settings you turn on and off, for example, private messages, friend requests, sounds, the scoreboard and the info bar.
 In Survival gibt es mehr Homes über Ränge ab Platin, Discord (/verify) und den Farmpass.	In Survival you get more homes through ranks from Platin, Discord (/verify) and the farm pass.
 In deinem Rang enthalten	Included in your rank
+In den Netherfestungen wandern die Wither-Skelette durch die Gänge. Zeig ihnen, wer in dieser Nacht spukt.	Wither skeletons roam the halls of the Nether fortresses. Show them who haunts this night.
 In der Angel-Zone zusätzlich +10 % Glück und -10 % Wartezeit	In the fishing zone an extra +10 % luck and -10 % waiting time
 In der Angel-Zone: +10 % Glück, Mythen-Fische und Schätze. Köder und Upgrades verbessern die Angel.	In the fishing zone: +10 % luck, myth fish and treasures. Bait and upgrades improve the rod.
 In der Farmwelt kannst du kein Home setzen. Sie wird jede Woche neu erstellt.	You can't set a home in the farm world. It's recreated every week.
@@ -3877,6 +3941,7 @@ Insgesamt 	Total
 Inventar	Inventory
 Inventar frei	Inventory free
 Investition: Standardbetrag	Investment: default amount
+Iss 10 Kürbiskuchen	Eat 10 pumpkin pies
 Iss 10 Mahlzeiten	Eat 10 meals
 Iss 8 Mahlzeiten	Eat 8 meals
 Iss einen Kugelfisch	Eat a pufferfish
@@ -3963,6 +4028,7 @@ Kampf & Duelle	Combat & duels
 Kampf & Trophäen	Combat & trophies
 Kampftiger	Battle Tiger
 Kapitel	Chapter
+Kapitel geschafft!	Chapter done!
 Karmesinpilz	Crimson Shroom
 Karpfen	Carp
 Karte	Hit
@@ -4152,6 +4218,7 @@ Kündigen	Cancel
 Kündigen (ohne Erstattung)	Cancel (no refund)
 Kürbis	Pumpkin
 Kürbiskuchen	Pumpkin pie
+Kürbiskönig	Pumpkin King
 LEGENDÄR!	LEGENDARY!
 LETZTE RUNDEN	LAST ROUNDS
 LETZTER GEWINN	LAST WIN
@@ -4215,10 +4282,12 @@ Level eines anderen	Someone else's level
 Level von 	Level of 
 Level-Rangliste	Level ranking
 Licht-Block	Light block
+Lichter für die Nacht	Lights for the Night
 Liga	League
 Liga · Kills/Tode	League · kills/deaths
 Ligen	Leagues
 Lila	Purple
+Lila Candy Corn	Purple Candy Corn
 Limit erreicht	Limit reached
 Links und Belohnungen	Links and rewards
 Linksklick Ecke 1, Rechtsklick Ecke 2	Left-click corner 1, right-click corner 2
@@ -4246,6 +4315,7 @@ Löschen	Delete
 Löschen (Shift)	Delete (shift)
 MODUS WÄHLEN:	CHOOSE MODE:
 MYTHISCH!	MYTHIC!
+Mach dein Grundstück bereit für Halloween: Schnitz Kürbisse mit der Schere und stell Laternen und Kerzen auf.	Get your claim ready for Halloween: carve pumpkins with shears and put up lanterns and candles.
 Mach einem Spieler mit /marry propose einen Antrag.	Propose to a player with /marry propose.
 Mach einem Spieler mit /marry propose einen Antrag. Er gilt 10 Minuten.	Propose to a player with /marry propose. It's valid for 10 minutes.
 Mach im Casino 1.000 Chips Plus	Make 1,000 chips profit in the casino
@@ -4489,6 +4559,7 @@ Nicht genug$ ({}).	Not enough $ ({}).
 Nicht genug$.	Not enough $.
 Nicht in der Top 10	Not in the top 10
 Nicht in der Warteschlange.	Not in the queue.
+Nicht jede Hexe ist so freundlich wie die am Spawn. Besiege fremde Hexen in Sümpfen und dunklen Nächten und lern ihr Handwerk am Braustand.	Not every witch is as friendly as the one at spawn. Defeat strange witches in swamps and dark nights and learn their craft at the brewing stand.
 Nicht mehr anpinnen	Unpin
 Nicht möglich: 	Not possible:
 Niemand	Nobody
@@ -4812,9 +4883,13 @@ SPRACHE · LANGUAGE	LANGUAGE · SPRACHE
 STERNE VERGEBEN	GIVE STARS
 Saatgut, Holz, Stein und Werkzeug	Seeds, wood, stone and tools
 Sammelt zusammen 25.000 Job-XP	Collect 25,000 job XP together
+Sammle 20 Knochen im Nether	Collect 20 bones in the Nether
+Sammle 25 Candy Corn am Spawn	Collect 25 candy corn at spawn
 Sammle 3.000 Job-XP	Collect 3,000 job XP
 Sammle 600 Job-XP	Collect 600 job XP
+Sammle 64 Seelensand im Nether	Collect 64 soul sand in the Nether
 Sammle 8.000 Job-XP	Collect 8,000 job XP
+Sammle zwischen 18 und 24 Uhr 40 Candy Corn	Collect 40 candy corn between 6 pm and midnight
 Sammler	Collector
 Samstag	Saturday
 Schaf	Sheep
@@ -4823,6 +4898,7 @@ Schafschur	Sheep shearing
 Schalte die Plätze nacheinander frei.	Unlock the slots one after another.
 Schalte zuerst alle Plätze der ersten drei Reihen frei.	Unlock all slots of the first three rows first.
 Schalter	Switches
+Schatten am Himmel	Shadows in the Sky
 Schattenbezwinger	Shadow conqueror
 Schatz 	Treasure 
 Schatz beim Angeln	Treasure while fishing
@@ -4862,6 +4938,7 @@ Schmied	Smith
 Schmied Bruno	Smith Bruno
 Schneefall	Snowfall
 Schnellspule	Quick reel
+Schnitz 12 Kürbisse	Carve 12 pumpkins
 Schnüffler	Sniffer
 Schon abgeholt	Already claimed
 Schranke	Barrier Gate
@@ -5054,9 +5131,13 @@ Steinbeißer	Spined Loach
 Steindrache	Stone Dragon
 Steine aus Generatoren zählen nicht	Stones from generators don't count
 Steinpilz	Porcini
+Stell 10 Kerzen auf dein Grundstück	Place 10 candles on your claim
+Stell 10 Laternen auf dein Grundstück	Place 10 lanterns on your claim
+Stell 16 Kürbislaternen auf dein Grundstück	Place 16 jack o'lanterns on your claim
 Stell deine erste Frage über „Frage stellen“.	Ask your first question with “Ask a question”.
 Stell den Server nach deinem Geschmack ein	Set up the server the way you like it
 Stell dich auf dein Grundstück, um hier einen Warp zu kaufen.	Stand on your plot to buy a warp here.
+Stell einen goldenen Apfel her	Craft a golden apple
 Stelle 16 Brote her	Make 16 bread
 Stellt einen Barkeeper an deine Position	Places a bartender at your position
 Stern	Star
@@ -5226,6 +5307,8 @@ Titel auswählen	Choose a title
 Titel nur mit verifiziertem Account (/verify).	Titles only with a verified account (/verify).
 Titel tragen	Wear title
 Titel · kurz, worum es geht (bis 40 Zeichen)	Title · in short, what it is about (up to 40 characters)
+Titel „Geisterjäger“	Title “Ghost Hunter”
+Titel „Kürbiskönig“	Title “Pumpkin King”
 Tod	Death
 Tod & Gräber	Death & graves
 Tode	Deaths
@@ -5366,6 +5449,8 @@ Versehentliche Schäden sind dem Eigentümer oder dem Serverteam zu melden.	Repo
 Versicherung	Insurance
 Versteckt am Spawn. Wer sie findet, sieht sie im Menü.	Hidden at spawn. Whoever finds them sees them in the menu.
 Vertraute Spieler	Trusted players
+Vertreib 10 Plagegeister	Drive off 10 vexes
+Vertreib 3 Ghasts	Drive away 3 ghasts
 Verwaltung (Admin)	Management (admin)
 Verwarnung	Warning
 Verzaubere 15 Gegenstände	Enchant 15 items
@@ -5449,6 +5534,7 @@ Weg zeigen	Show way
 Wegschicken	Send away
 Wegweiser {}	Signpost {}
 Wegweisung an/aus	Signpost on/off
+Wehr einen Überfall ab	Repel a raid
 Weihnachtsmütze	Santa hat
 Weiter	Next
 Weiter: 	Next: 
@@ -5461,6 +5547,8 @@ Wels	Catfish
 Welt	World
 Welt, Koordinaten und Restzeit	World, coordinates and time left
 Weltenbummler	Globetrotter
+Wenn es dunkel wird, kommen die Toten aus ihren Löchern. Halt sie nachts zurück. Monster aus Spawnern zählen nicht.	When it gets dark, the dead crawl out of their holes. Hold them back at night. Monsters from spawners do not count.
+Wer drei Nächte nicht schläft, bekommt Besuch von Phantomen. Und am Spawn liegt noch mehr Candy Corn, achte auf die seltenen lila Stücke.	Whoever does not sleep for three nights gets a visit from phantoms. And there is more candy corn at spawn, look out for the rare purple pieces.
 Wer fällt, muss auch pflanzen! Bring mir sechzehn Eichensetzlinge.	Whoever chops must also plant! Bring me sixteen oak saplings.
 Wer gegen die Regeln verstößt, kann verwarnt, gemutet oder gebannt werden. Siehst du einen Verstoß, melde ihn mit /report.	Whoever breaks the rules can be warned, muted or banned. If you see a violation, report it with /report.
 Wer online ist, wo, und nachspringen	Who is online, where, and jump to them
@@ -5633,6 +5721,7 @@ Zwei Spieler, ein Zufallsort, ein Kampf	Two players, one random spot, one fight
 Zweimal klicken zum Kaufen	Click twice to buy
 Zweimal klicken zum Kaufen · Du hast {} Tokens	Click twice to buy · You have {} tokens
 Zweiter Job (Farmpass)	Second job (farm pass)
+Zwischen 18 und 24 Uhr (echte Uhrzeit, deutsche Zeit) ist die Grenze zur Geisterwelt am dünnsten. Jag in dieser Zeit Monster und sammel das Candy Corn, das die Geister am Spawn verlieren.	Between 6 pm and midnight (real time, German time) the border to the spirit world is thinnest. Hunt monsters during that time and collect the candy corn the ghosts drop at spawn.
 Zylinder	Top hat
 Züchte 6 Tiere	Breed 6 animals
 Züchte 8 Tiere	Breed 8 animals
@@ -5675,6 +5764,7 @@ eine Stunde gespielt	played one hour
 einem Freund	a friend
 eingezahlt	deposited
 einmal beim Abschluss	once when taking out
+endet 	ends 
 erlaubt	allowed
 erreicht	reached
 exklusive Items	exclusive items

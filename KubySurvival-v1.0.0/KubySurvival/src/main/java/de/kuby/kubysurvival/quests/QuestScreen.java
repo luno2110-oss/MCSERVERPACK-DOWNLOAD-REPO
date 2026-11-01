@@ -309,7 +309,15 @@ public final class QuestScreen {
      * z. B. „Kein Team“), Seite, Seiten, Set-Bonus (null = keiner).
      */
     public record ListView(Area area, String title, String subtitle, String count, List<Tab> tabs, List<Card> cards,
-                           String infoLabel, String info, int page, int pages, Bonus bonus) {}
+                           String infoLabel, String info, int page, int pages, Bonus bonus, Shop shop) {
+        public ListView(Area area, String title, String subtitle, String count, List<Tab> tabs, List<Card> cards,
+                        String infoLabel, String info, int page, int pages, Bonus bonus) {
+            this(area, title, subtitle, count, tabs, cards, infoLabel, info, page, pages, bonus, null);
+        }
+    }
+
+    /** Leiste unter der Event-Liste: Währung, Stand und Klick zum Shop. */
+    public record Shop(String currency, long balance, Consumer<Player> open) {}
 
     public static Canvas list(ListView v, Actions a) {
         Canvas c = new Canvas(W).heading("Quests", GOLD);
@@ -383,7 +391,64 @@ public final class QuestScreen {
             int dw = c.text(bx, y + 30, b.done() + "/" + b.total(), WHITE, false);
             c.text(bx + dw + 4, y + 30, Canvas.caps("Erledigt"), WHITE, false);
             rewardsRight(c, 381, y + 30, b.rewards());
+            y += 51 + 12;
         }
+        // Event: Leiste zum Candy-Shop
+        Shop s = v.shop();
+        if (s != null) {
+            c.box(0, y, W, 33, KitData.Box.QU_CARD_GOLD);
+            c.sprite(10, y + 10, KitData.Sprite.QU_CANDY);
+            int nw = c.text(28, y + 8, n(s.balance()), CANDY, true);
+            c.text(28 + nw + 5, y + 8, Canvas.fit(s.currency(), false, 140), LIGHT, false);
+            c.text(28, y + 19, "Für Titel, Hüte, Schlüssel und mehr", GRAY, false);
+            c.box(284, y + 7, 96, 18, KitData.Box.QU_BTN_GOLD, Canvas.Z_BUTTON);
+            c.textFlat(332 - Canvas.width("Candy-Shop", true) / 2, y + 13, "Candy-Shop", DARK, true);
+            c.action(0, y, W, 33, s.open(), "Candy-Shop öffnen");
+        }
+        return c;
+    }
+
+    // =================================================================================================================
+    // Candy-Shop (Event)
+    // =================================================================================================================
+
+    /** Angebot: Icon, Name, Preis, gekauft (einmalige Angebote), bezahlbar, Klick. */
+    public record ShopOffer(KitData.Icon icon, String name, long price, boolean owned, boolean affordable, Consumer<Player> buy) {}
+
+    public record ShopView(String event, String currency, long balance, List<ShopOffer> offers) {}
+
+    public static Canvas eventShop(ShopView v, Consumer<Player> back) {
+        Canvas c = new Canvas(W).heading("Quests", GOLD);
+        c.box(0, 0, W, 48, KitData.Box.QU_HEAD);
+        c.sprite(8, 13, KitData.Sprite.QU_BACK);
+        c.action(8, 13, 22, 22, back, "Zurück");
+        icon(c, 39, 8, 30, 32, KitData.Sprite.QU_T_EVENT);
+        c.text(78, 13, Canvas.caps("Candy-Shop"), Area.EVENT.title, true);
+        c.text(78, 27, Canvas.fit(v.event() + " · nur während des Events", false, 200), LIGHT, false);
+        int nw = c.textRight(380, 13, n(v.balance()), CANDY, true);
+        c.sprite(380 - nw - 16, 11, KitData.Sprite.QU_CANDY);
+        c.textRight(380, 27, Canvas.caps(Canvas.fit(v.currency(), false, 100)), LIGHT, false);
+        int y = 54, cw = (W - 4) / 2, ch = 46;
+        for (int i = 0; i < v.offers().size(); i++) {
+            ShopOffer o = v.offers().get(i);
+            int x = (i % 2) * (cw + 4), oy = y + (i / 2) * (ch + 4);
+            c.box(x, oy, cw, ch, o.owned() ? KitData.Box.QU_CARD_BROWN : o.affordable() ? KitData.Box.QU_CARD_GOLD : KitData.Box.QU_CARD_GRAY);
+            c.icon(x + 8, oy + 8, o.icon(), false);
+            c.text(x + 30, oy + 10, Canvas.fit(o.name(), true, cw - 38), o.owned() ? LIGHT : NAME, true);
+            c.sprite(x + 10, oy + 28, KitData.Sprite.QU_CANDY);
+            c.text(x + 28, oy + 30, n(o.price()), o.affordable() || o.owned() ? CANDY : GRAY, true);
+            if (o.owned()) {
+                c.textRight(x + cw - 10, oy + 30, "✔ " + Canvas.caps("Gekauft"), LIGHT, false);
+            } else {
+                int bw = 64;
+                c.box(x + cw - 8 - bw, oy + 23, bw, 18, o.affordable() ? KitData.Box.QU_BTN_GOLD : KitData.Box.QU_BTN_LINE, Canvas.Z_BUTTON);
+                String l = "Kaufen";
+                if (o.affordable()) c.textFlat(x + cw - 8 - bw / 2 - Canvas.width(l, true) / 2, oy + 29, l, DARK, true);
+                else c.text(x + cw - 8 - bw / 2 - Canvas.width(l, true) / 2, oy + 29, l, GRAY, true);
+                if (o.buy() != null) c.action(x, oy, cw, ch, o.buy(), o.name() + " für " + n(o.price()) + " " + v.currency());
+            }
+        }
+        if (v.offers().isEmpty()) c.text(4, y, "Im Candy-Shop gibt es gerade nichts.", LIGHT, false);
         return c;
     }
 
