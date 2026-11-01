@@ -102,7 +102,7 @@ public final class ShopSectionMenu extends GuiMenu {
                 e -> plugin.prompts().ask(p, "Name, ID, Material oder Nummer eingeben:", text ->
                         new ShopSectionMenu(plugin, "Suche", "search", plugin.shop().search(text), 0).open(p)));
         set(22, Items.make(Material.ARROW, "<gray>Zurück zu den Sektionen", List.of()),
-                e -> new ShopMenu(plugin).open(p));
+                e -> new TradeScreens(plugin).shop(p));
         set(24, Items.make(Material.CHEST, "<gold>Abholbox", List.of("<gray>Gekaufte Items abholen")),
                 e -> new ShopStorageMenu(plugin, 0).open(p));
     }

@@ -657,6 +657,94 @@ def s_alert_small():
     return a
 
 
+def c_bloecke():
+    a = Art()
+    a.ground_shadow(3, 27, 29, 31)
+    # Steinblock hinten
+    a.poly([(12, 6), (21, 2), (30, 6), (21, 10)], "B8BEC8")
+    a.poly([(12, 6), (21, 10), (21, 19), (12, 15)], "8E949E")
+    a.poly([(21, 10), (30, 6), (30, 15), (21, 19)], "727882")
+    # Ziegelblock vorn
+    a.poly([(2, 13), (12, 8), (22, 13), (12, 18)], "D86A4A")
+    a.poly([(2, 13), (12, 18), (12, 29), (2, 24)], "B04A30")
+    a.poly([(12, 18), (22, 13), (22, 24), (12, 29)], "8E3A24")
+    for y in (17, 21, 25):
+        a.line([(3, y - 3), (11, y + 1)], "E8D8C8", 1, mode="flat", edge=False)
+        a.line([(13, y + 1), (21, y - 3)], "C8B8A8", 1, mode="flat", edge=False)
+    a.sparkle(28, 23, 1)
+    return a
+
+
+def c_essen():
+    a = Art()
+    a.ground_shadow(3, 26, 29, 31)
+    # Steak
+    a.ellipse(2, 9, 22, 26, "A8542E")
+    a.ellipse(5, 12, 19, 23, "C8683A", mode="soft", edge=False)
+    a.line([(8, 15), (15, 20)], "F0D8C0", 2, mode="soft", edge=False)
+    a.ellipse(16, 18, 23, 25, "F4ECDC")
+    # Apfel
+    a.ellipse(17, 5, 30, 18, "E83A3A")
+    a.rect(23, 1, 24, 6, WOOD)
+    a.ellipse(24, 1, 29, 5, "4AC860")
+    a.sparkle(4, 4, 1)
+    return a
+
+
+def c_redstone():
+    a = Art()
+    a.ground_shadow(3, 26, 29, 31)
+    a.ellipse(2, 18, 20, 28, "C81E1E")
+    for x, y in ((5, 20), (9, 22), (13, 20), (16, 23), (8, 25)):
+        a.dot(x, y, "FF7A6A")
+    # Fackel
+    a.rect(21, 11, 24, 28, WOOD)
+    a.ellipse(19, 3, 26, 12, "E83A3A")
+    a.ellipse(21, 5, 24, 9, "FFB0A0", mode="soft", edge=False)
+    a.sparkle(28, 3, 2, "FFB0A0")
+    return a
+
+
+def c_deko():
+    a = Art()
+    a.ground_shadow(6, 27, 26, 31)
+    a.poly([(8, 19), (24, 19), (22, 29), (10, 29)], "C8683A")
+    a.rect(7, 17, 25, 20, "D87A48")
+    a.line([(16, 17), (16, 8)], "3AA850", 2, mode="soft")
+    a.ellipse(9, 9, 16, 14, "4AC860")
+    for cx, cy in ((16, 2), (20, 6), (16, 9), (12, 6)):
+        a.ellipse(cx - 3, cy - 3, cx + 3, cy + 3, "FF7AA8")
+    a.ellipse(14, 4, 18, 8, "FFE070")
+    a.sparkle(27, 10, 2, "FFD0E0")
+    return a
+
+
+def c_suche():
+    a = Art()
+    a.ground_shadow(4, 27, 28, 31)
+    a.line([(18, 18), (27, 27)], WOOD, 4)
+    a.ellipse(2, 2, 22, 22, GOLD)
+    a.ellipse(5, 5, 19, 19, "9AD8FF", mode="soft")
+    a.dots([(8, 8), (9, 7), (8, 9), (10, 7)], "FFFFFF")
+    a.sparkle(27, 4, 2)
+    return a
+
+
+def c_daily():
+    a = Art()
+    a.ground_shadow(5, 27, 27, 31)
+    a.ellipse(1, 1, 9, 9, GOLD)
+    a.ellipse(23, 1, 31, 9, GOLD)
+    a.ellipse(3, 4, 29, 30, GOLD)
+    a.ellipse(6, 7, 26, 27, "F4EEDC", mode="soft")
+    a.line([(16, 17), (16, 10)], "3A3A48", 2, mode="flat", edge=False)
+    a.line([(16, 17), (21, 20)], "3A3A48", 2, mode="flat", edge=False)
+    a.poly([(16, 21), (20, 25), (16, 29), (12, 25)], "3AD86A")
+    a.dots([(15, 23)], "C8FFD8")
+    a.sparkle(28, 26, 1)
+    return a
+
+
 TILES = [("menu", i_menu), ("angeln", i_angeln), ("jobs", i_jobs), ("grundstuecke", i_grundstuecke),
          ("heiraten", i_heiraten), ("bank", i_bank), ("duelle", i_duelle), ("turnier", i_turnier),
          ("versicherung", i_versicherung), ("shop", i_shop), ("markt", i_markt), ("wirtschaft", i_wirtschaft),
@@ -664,7 +752,9 @@ TILES = [("menu", i_menu), ("angeln", i_angeln), ("jobs", i_jobs), ("grundstueck
          ("titel", i_titel), ("kosmetik", i_kosmetik), ("haustiere", i_haustiere), ("insel", i_insel), ("generator", i_generator),
          ("groesse", i_groesse), ("mitglieder", i_mitglieder),
          ("s_wildnis", s_wildnis), ("s_homes", s_homes), ("s_enderchest", s_enderchest),
-         ("alert", s_alert), ("alert_s", s_alert_small)]
+         ("alert", s_alert), ("alert_s", s_alert_small),
+         ("c_bloecke", c_bloecke), ("c_essen", c_essen), ("c_redstone", c_redstone), ("c_deko", c_deko), ("c_suche", c_suche),
+         ("c_daily", c_daily)]
 
 
 def trim(img):

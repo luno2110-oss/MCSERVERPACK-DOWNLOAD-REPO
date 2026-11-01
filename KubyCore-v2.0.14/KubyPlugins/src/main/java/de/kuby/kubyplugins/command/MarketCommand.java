@@ -26,7 +26,7 @@ public final class MarketCommand implements CommandExecutor {
         if (args.length > 0 && args[0].equalsIgnoreCase("sell")) {
             sell(p, args);
         } else {
-            new MarketMenu(plugin).open(p);
+            new de.kuby.kubyplugins.gui.TradeScreens(plugin).market(p);
         }
         return true;
     }

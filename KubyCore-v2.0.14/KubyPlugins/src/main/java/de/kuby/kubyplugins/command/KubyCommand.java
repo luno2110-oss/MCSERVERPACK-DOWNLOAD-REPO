@@ -41,7 +41,7 @@ public final class KubyCommand implements CommandExecutor, TabCompleter {
             case "balance" -> balance(player);
             case "pay" -> pay(player, args);
             case "baltop" -> new de.kuby.kubyplugins.gui.TopListScreen(plugin).money(player);
-            case "shop" -> new ShopMenu(plugin).open(player);
+            case "shop" -> new de.kuby.kubyplugins.gui.TradeScreens(plugin).shop(player);
             case "sethome" -> setHome(player, args.length > 0 ? args[0] : "base");
             case "home" -> home(player, args);
             case "delhome" -> delHome(player, args);

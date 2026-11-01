@@ -184,8 +184,8 @@ public final class MainScreen {
 
         List<Tile> daily = new ArrayList<>();
         if (!hub) {
-            daily.add(new Tile("Shop", "Sektionen, Wochenende und Daily Shop", KitData.Icon.EMERALD, go(pl -> new ShopMenu(plugin).open(pl))));
-            daily.add(new Tile("Markt", "Items kaufen und verkaufen", KitData.Icon.CHEST_BLOCK, go(pl -> new MarketMenu(plugin).open(pl))));
+            daily.add(new Tile("Shop", "Sektionen, Wochenende und Daily Shop", KitData.Icon.EMERALD, go(pl -> new TradeScreens(plugin).shop(pl))));
+            daily.add(new Tile("Markt", "Items kaufen und verkaufen", KitData.Icon.CHEST_BLOCK, go(pl -> new TradeScreens(plugin).market(pl))));
             daily.add(new Tile("Wirtschaft", "Rangliste der reichsten Spieler", KitData.Icon.GOLD_INGOT, go(pl -> new TopListScreen(plugin).money(pl))));
             daily.add(new Tile("Börse", "Anteile an Shop-Items kaufen und verkaufen", KitData.Icon.EMERALD, go(pl -> new ExtraScreens(plugin).investments(pl))));
         }

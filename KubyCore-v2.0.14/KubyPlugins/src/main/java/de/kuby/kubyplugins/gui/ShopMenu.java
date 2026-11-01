@@ -60,7 +60,7 @@ public final class ShopMenu extends GuiMenu {
         }
     }
 
-    private void section(Player p, String sec) {
+    void section(Player p, String sec) {
         List<ShopService.Item> list;
         if (ShopService.WEEKEND.equals(sec)) {
             list = plugin.shop().weekendPicks(p.getUniqueId());
