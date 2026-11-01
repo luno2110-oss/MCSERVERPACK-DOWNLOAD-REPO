@@ -27,14 +27,73 @@ public final class MainScreen {
             GRAY = TextColor.color(0x9CA3B4), WHITE = TextColor.color(0xF4F4F4), COINS = TextColor.color(0xF8D35A),
             JEWELS = TextColor.color(0x5FE3A0), DARK = TextColor.color(0x1A1206);
 
-    /** Kachel: Name, Text für den Tooltip, Icon, Klick. */
-    public record Tile(String name, String desc, KitData.Icon icon, Consumer<Player> click) {}
+    /** Kachel: Name, Text für den Tooltip, Icon, eigene Grafik (vor dem Icon, darf fehlen), Klick. */
+    public record Tile(String name, String desc, KitData.Icon icon, KitData.Sprite art, Consumer<Player> click) {
+        public Tile(String name, String desc, KitData.Icon icon, Consumer<Player> click) {
+            this(name, desc, icon, MainScreen.art(name), click);
+        }
+    }
 
     /** Bereich: Überschrift, Farbe der Überschrift, Kasten der Kacheln, Kacheln. */
     public record Section(String title, TextColor color, KitData.Box box, List<Tile> tiles) {}
 
-    /** Schnellknopf: Beschriftung, Icon, Knopf-Stil, Klick. */
-    public record Quick(String label, KitData.Icon icon, KitData.Button style, Consumer<Player> click) {}
+    /** Schnellknopf: Beschriftung, Icon, eigene Grafik bis 16 px (darf fehlen), Knopf-Stil, Klick. */
+    public record Quick(String label, KitData.Icon icon, KitData.Sprite art, KitData.Button style, Consumer<Player> click) {
+        public Quick(String label, KitData.Icon icon, KitData.Button style, Consumer<Player> click) {
+            this(label, icon, MainScreen.art(label), style, click);
+        }
+    }
+
+    /**
+     * Eigene Grafik je Eintrag (Pixel-Art aus tools/build_hub_icons.py und den Referenz-Grafiken). Gilt auch für
+     * Einträge der Addons (gleicher Name); ohne Treffer bleibt das Icon.
+     */
+    public static KitData.Sprite art(String name) {
+        return switch (name) {
+            // Survival
+            case "Angeln" -> KitData.Sprite.HB_ANGELN;
+            case "Jobs" -> KitData.Sprite.HB_JOBS;
+            case "Quests" -> KitData.Sprite.QU_LOGO;
+            case "Haustiere" -> KitData.Sprite.HB_HAUSTIERE;
+            case "Farmpass" -> KitData.Sprite.JSS_FP_ICON;
+            case "Spieler-Warps" -> KitData.Sprite.HB_PORTAL;
+            case "Grundstücke" -> KitData.Sprite.HB_GRUNDSTUECKE;
+            case "Heiraten" -> KitData.Sprite.HB_HEIRATEN;
+            case "Bank" -> KitData.Sprite.HB_BANK;
+            // SMP
+            case "Duelle" -> KitData.Sprite.HB_DUELLE;
+            case "Turnier" -> KitData.Sprite.HB_TURNIER;
+            case "Trophäen" -> KitData.Sprite.QU_RANK_HEAD;
+            case "Versicherung" -> KitData.Sprite.HB_VERSICHERUNG;
+            // Alltag
+            case "Shop" -> KitData.Sprite.HB_SHOP;
+            case "Markt" -> KitData.Sprite.HB_MARKT;
+            case "Wirtschaft" -> KitData.Sprite.HB_WIRTSCHAFT;
+            case "Börse" -> KitData.Sprite.HB_BOERSE;
+            case "Täglich" -> KitData.Sprite.QU_T_WEEKLY;
+            case "Team" -> KitData.Sprite.QU_T_TEAM;
+            case "Tagespot" -> KitData.Sprite.HB_TAGESPOT;
+            case "Duo-RTP" -> KitData.Sprite.HB_DUO_RTP;
+            case "Freunde" -> KitData.Sprite.FR_LOGO;
+            // Fortschritt
+            case "Battlepass" -> KitData.Sprite.JS_PASS;
+            case "Spielzeit" -> KitData.Sprite.HB_SPIELZEIT;
+            case "Titel" -> KitData.Sprite.HB_TITEL;
+            case "Kits" -> KitData.Sprite.QU_BOX_HEAD;
+            case "Kosmetik" -> KitData.Sprite.HB_KOSMETIK;
+            case "Statistik" -> KitData.Sprite.PF_AVATAR;
+            case "Erfolge" -> KitData.Sprite.QU_M_GOLD;
+            // Schnellknöpfe und Fußleiste (16 px)
+            case "Spawn" -> KitData.Sprite.QU_COMPASS;
+            case "Wildnis" -> KitData.Sprite.HB_S_WILDNIS;
+            case "Homes" -> KitData.Sprite.HB_S_HOMES;
+            case "Enderchest" -> KitData.Sprite.HB_S_ENDERCHEST;
+            case "Guide" -> KitData.Sprite.QU_S_HELP;
+            case "Regeln" -> KitData.Sprite.PF_Q_QUESTS;
+            case "Support" -> KitData.Sprite.SU_DISCORD;
+            default -> null;
+        };
+    }
 
     public record View(String player, String mode, long coins, long jewels, List<Quick> quick, List<Section> sections,
                        List<Quick> footer) {}
@@ -85,6 +144,7 @@ public final class MainScreen {
                 new Tile("Shop", "Sektionen, Wochenende und Daily Shop", KitData.Icon.EMERALD, go(pl -> new ShopMenu(plugin).open(pl))),
                 new Tile("Markt", "Items kaufen und verkaufen", KitData.Icon.CHEST_BLOCK, go(pl -> new MarketMenu(plugin).open(pl))),
                 new Tile("Wirtschaft", "Rangliste der reichsten Spieler", KitData.Icon.GOLD_INGOT, go(pl -> new TopListScreen(plugin).money(pl))),
+                new Tile("Börse", "Anteile an Shop-Items kaufen und verkaufen", KitData.Icon.EMERALD, go(pl -> new ExtraScreens(plugin).investments(pl))),
                 new Tile("Täglich", "30-Tage-Kalender mit Belohnungen", KitData.Icon.CLOCK, go(pl -> new DailyScreens(plugin).calendar(pl))),
                 new Tile("Team", "Team verwalten, Kasse und Teamhome", KitData.Icon.WHITE_BANNER, go(pl -> new TeamScreen(plugin).open(pl))),
                 new Tile("Tagespot", "Lose kaufen, Ziehung um 19 Uhr", KitData.Icon.GOLD_BLOCK, go(pl -> new DailyScreens(plugin).pot(pl))),
@@ -111,7 +171,7 @@ public final class MainScreen {
                 new Quick("Guide", KitData.Icon.KNOWLEDGE_BOOK, KitData.Button.GOLD_LINE, cmd("guide")),
                 new Quick("Regeln", KitData.Icon.WRITTEN_BOOK, KitData.Button.GOLD_LINE, cmd("regeln")),
                 new Quick("Support", KitData.Icon.BELL, KitData.Button.GOLD_LINE, cmd("support")),
-                new Quick("Einstellungen", KitData.Icon.COMPARATOR, KitData.Button.GOLD_LINE, cmd("settings")));
+                new Quick("Einstellungen", KitData.Icon.SET_GEAR_BIG, KitData.Button.GOLD_LINE, cmd("settings")));
         return new View(p.getName(), modeName, plugin.economy().balance(p.getUniqueId()),
                 plugin.jewels().balance(p.getUniqueId()), quick, sections, footer);
     }
@@ -121,7 +181,7 @@ public final class MainScreen {
         Canvas c = new Canvas(W).heading("Hauptmenü", GOLD);
         // Kopf: Titel gold, darunter Gruß; rechts Coins und Juwelen
         c.box(0, 0, W, 54, KitData.Box.HUB);
-        c.icon(10, 11, KitData.Icon.COMPASS, true);
+        c.sprite(11, 12, KitData.Sprite.HB_MENU);
         c.title(50, 12, "Menü");
         c.text(50, 36, Canvas.fit(Canvas.lit(v.player()), false, 140) + " · " + v.mode(), GRAY, false);
         int nw = c.textRight(372, 14, Msg.coins(v.coins()), COINS, true);
@@ -144,7 +204,8 @@ public final class MainScreen {
             for (Tile t : s.tiles()) {
                 int x = (i % 4) * (TW + GAP), ty = y + (i / 4) * (TH + GAP);
                 c.box(x, ty, TW, TH, s.box(), Canvas.Z_BUTTON);
-                c.icon(x + (TW - 32) / 2, ty + 3, t.icon(), true, Icons.tint(t.icon()));
+                if (t.art() != null) c.sprite(x + (TW - t.art().width) / 2, ty + 3 + (32 - t.art().height) / 2, t.art());
+                else c.icon(x + (TW - 32) / 2, ty + 3, t.icon(), true, Icons.tint(t.icon()));
                 c.textCenter(x + TW / 2, ty + 35, Canvas.fit(t.name(), true, TW - 8), CREAM, true);
                 c.action(x, ty, TW, TH, t.click(), t.name() + " · " + t.desc());
                 i++;
@@ -170,7 +231,8 @@ public final class MainScreen {
             String label = Canvas.fit(q.label(), !line, w - 16 - 4 - 6);
             int gw = 16 + 4 + Canvas.width(label, !line);
             int gx = x + (w - gw) / 2;
-            c.icon(gx, y + 3, q.icon(), false);
+            if (q.art() != null) c.sprite(gx + (16 - q.art().width) / 2, y + 3 + (16 - q.art().height) / 2, q.art());
+            else c.icon(gx, y + 3, q.icon(), false);
             if (line) c.text(gx + 20, y + 7, label, color, false);
             else if (q.style() == KitData.Button.TEAL || q.style() == KitData.Button.GREEN) c.textFlat(gx + 20, y + 7, label, DARK, true);
             else c.text(gx + 20, y + 7, label, WHITE, true);

@@ -30,9 +30,11 @@ ASSETS_PROFILE = os.path.join(HERE, "assets", "profile")
 ASSETS_PWARPS = os.path.join(HERE, "assets", "pwarps")
 # Quests (Release „Neue-referenzen“, extract_quests.py): Präfix qu_
 ASSETS_QUESTS = os.path.join(HERE, "assets", "quests")
+# Hauptmenü (eigene Zeichnungen, build_hub_icons.py): Präfix hb_
+ASSETS_HUB = os.path.join(HERE, "assets", "hub")
 SETS = ((ASSETS, "js_"), (ASSETS_SURVIVAL, "jss_"), (ASSETS_PLAYTIME, "pt_"), (ASSETS_RULES, "rg_"),
         (ASSETS_FRIENDS, "fr_"), (ASSETS_SUPPORT, "su_"), (ASSETS_INFOBAR, "ib_"), (ASSETS_PROFILE, "pf_"),
-        (ASSETS_PWARPS, "pw_"), (ASSETS_QUESTS, "qu_"))
+        (ASSETS_PWARPS, "pw_"), (ASSETS_QUESTS, "qu_"), (ASSETS_HUB, "hb_"))
 
 
 def available():

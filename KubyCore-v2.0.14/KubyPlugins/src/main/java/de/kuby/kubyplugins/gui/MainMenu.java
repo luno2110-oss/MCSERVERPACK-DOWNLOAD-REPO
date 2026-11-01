@@ -39,6 +39,7 @@ public final class MainMenu extends GuiMenu {
         // Seite 1: Alltag
         list.add(new Entry(Material.GOLD_INGOT, "Wirtschaft", "Rangliste der reichsten Spieler", p -> new LeaderboardMenu(plugin).open(p)));
         list.add(new Entry(Material.EMERALD, "Shop", "Sektionen, Wochenende und Daily Shop", p -> new ShopMenu(plugin).open(p)));
+        list.add(new Entry(Material.EMERALD_BLOCK, "Börse", "Anteile an Shop-Items kaufen und verkaufen", p -> new InvestmentsMenu(plugin).open(p)));
         list.add(new Entry(Material.RED_BED, "Homes", "Deine Basen verwalten", p -> new HomesMenu(plugin).open(p)));
         list.add(new Entry(Material.CLOCK, "Täglich", "30-Tage-Kalender mit Belohnungen", p -> new DailyMenu(plugin).open(p)));
         list.add(new Entry(Material.WHITE_BANNER, "Team", "Team verwalten, Kasse und Teamhome", p -> new TeamMenu(plugin).open(p)));

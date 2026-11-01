@@ -88,6 +88,9 @@ if VANILLA and os.path.isdir(VANILLA):
     build_pets.catalog()
     # Juwelenshop (SMP), Battle-Pass und Guide: große Grafiken als Sprites, goldener Schlüssel als eigenes Icon
     import build_jewelshop  # noqa: E402
+    # Hauptmenü: eigene Icons neu zeichnen (tools/assets/hub, als Sprites hb_…)
+    import build_hub_icons  # noqa: E402
+    build_hub_icons.build()
     import build_battlepass  # noqa: E402
     import build_guide  # noqa: E402
     own += build_battlepass.icons()
