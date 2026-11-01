@@ -45,6 +45,10 @@ def check_fonts(root):
                 w, h = png_size(img)
                 if w % len(rows[0]) or h % len(rows):
                     problems.append("%s: Bild %dx%d passt nicht zu %dx%d Zeichen" % (where, w, h, len(rows[0]), len(rows)))
+                # Minecraft legt Zeichen auf 256 x 256 große Schrift-Seiten; größere Zellen fehlen im Spiel (Kästchen),
+                # und alles dahinter in derselben Zeile verrutscht
+                elif w // len(rows[0]) > 256 or h // len(rows) > 256:
+                    problems.append("%s: Zelle %dx%d größer als 256 px" % (where, w // len(rows[0]), h // len(rows)))
     return problems
 
 

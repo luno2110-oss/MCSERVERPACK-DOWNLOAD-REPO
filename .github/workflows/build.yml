@@ -19,6 +19,20 @@ jobs:
           java-version: '21'
           cache: maven
 
+      # Grafik-Pack KubyUI zuerst: Schriften prüfen (ein Fehler macht in Minecraft alle Zeichen der Schrift zu Kästchen),
+      # mit festen Zeitstempeln und Reihenfolge packen (SHA-1 wechselt nur bei echten Änderungen) und die SHA-1 ins
+      # KubyCore-Jar schreiben: das Plugin lädt dann genau das Pack seines eigenen Builds (Zeichen passen zueinander).
+      - name: UI-Pack packen
+        run: |
+          python3 tools/check_fonts.py resourcepack/KubyUI
+          find resourcepack/KubyUI -exec touch -d '2026-01-01 00:00:00' {} +
+          mkdir -p dist
+          (cd resourcepack/KubyUI && find . -type f | sort | zip -X -q -@ ../../dist/KubyUI-Pack.zip)
+          SHA=$(sha1sum dist/KubyUI-Pack.zip | cut -c1-40)
+          echo "sha1=$SHA" > KubyCore-v2.0.14/KubyPlugins/src/main/resources/ui-pack.properties
+          echo "UI_SHA=$SHA" >> "$GITHUB_ENV"
+          echo "UI-Pack $SHA"
+
       - name: KubyCore bauen
         working-directory: KubyCore-v2.0.14/KubyPlugins
         run: |
@@ -58,11 +72,6 @@ jobs:
           TXT
           sed -i 's/^          //' dist/INSTALLATION.txt
           sed -i "s/\${GITHUB_SHA}/${GITHUB_SHA::7}/" dist/INSTALLATION.txt
-          # Grafik-Pack KubyUI: Schriften prüfen (ein Fehler macht in Minecraft alle Zeichen der Schrift zu Kästchen),
-          # dann mit festen Zeitstempeln und Reihenfolge packen, damit die SHA-1 nur bei echten Änderungen wechselt.
-          python3 tools/check_fonts.py resourcepack/KubyUI
-          find resourcepack/KubyUI -exec touch -d '2026-01-01 00:00:00' {} +
-          (cd resourcepack/KubyUI && find . -type f | sort | zip -X -q -@ ../../dist/KubyUI-Pack.zip)
           cp PLUGINS.md dist/
           (cd dist && zip -q KubyPlugins.zip *.jar INSTALLATION.txt PLUGINS.md KubyUI-Pack.zip)
           ls -la dist
@@ -78,6 +87,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # Pack zusätzlich unter seiner SHA-1 im festen Release "ui-packs" (bleibt liegen, ältere Plugins finden ihres)
+          gh release view ui-packs >/dev/null 2>&1 || gh release create ui-packs --title "UI-Packs je Build" \
+            --notes "KubyUI-Pack je Stand, benannt nach den ersten 12 Zeichen der SHA-1. Das Plugin lädt sein passendes Pack selbst." --latest=false
+          cp dist/KubyUI-Pack.zip "dist/KubyUI-${UI_SHA::12}.zip"
+          gh release upload ui-packs "dist/KubyUI-${UI_SHA::12}.zip" --clobber
+          rm "dist/KubyUI-${UI_SHA::12}.zip"
           gh release delete latest --yes --cleanup-tag || true
           gh release create latest dist/KubyPlugins.zip dist/KubyUI-Pack.zip dist/*.jar --title "Aktueller Stand" \
             --notes "Automatisch gebaut aus Commit ${GITHUB_SHA::7}. KubyPlugins.zip enthält alle Jars und eine Anleitung." --latest

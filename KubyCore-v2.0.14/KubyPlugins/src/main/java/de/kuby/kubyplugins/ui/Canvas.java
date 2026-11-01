@@ -560,7 +560,17 @@ public final class Canvas {
 
     /** Füllung auf Ebene z (z. B. Z_BUTTON für den leeren Balken unter einer Füllung). */
     public Canvas strip(int x, int y, KitData.Strip s, int n, int z) {
-        n = Math.min(n, s.width);
+        // ein Zeichen hat höchstens s.width Spalten (Minecraft lädt keine Zellen über 256 px): längere Balken aus
+        // vollen Stücken ohne Endspalte und einem letzten Stück mit Endspalte
+        while (n > s.width) {
+            stripPiece(x, y, s, s.width, z);
+            x += s.width;
+            n -= s.width;
+        }
+        return stripPiece(x, y, s, n, z);
+    }
+
+    private Canvas stripPiece(int x, int y, KitData.Strip s, int n, int z) {
         if (n <= 0) return this;
         int w = n < s.width ? n + 1 : n;
         glyphs.add(new Glyph(Kind.ICON, x, y, w, s.height, w + 1, z, String.valueOf((char) (s.first + n - 1)),

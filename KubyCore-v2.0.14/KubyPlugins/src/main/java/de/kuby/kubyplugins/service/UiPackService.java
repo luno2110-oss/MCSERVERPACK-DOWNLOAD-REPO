@@ -25,17 +25,43 @@ import java.util.concurrent.ConcurrentHashMap;
  * bei wem es geladen ist. Menüs nutzen die eigenen Grafiken nur dann, sonst die normale Ansicht.
  * Die SHA-1-Prüfsumme wird beim Start und alle 30 Minuten aus der URL berechnet, damit Spieler das Pack
  * zwischenspeichern und Updates erkennen.
+ * <p>
+ * ui.pack-url "auto" (und die alte Adresse von „latest“): das Pack genau dieses Builds aus dem Release „ui-packs“.
+ * Die SHA-1 schreibt CI beim Bauen ins Jar (ui-pack.properties). So passen die Zeichen im Pack immer zu KitData,
+ * auch wenn „latest“ schon neuer ist als das Plugin auf dem Server.
  */
 public final class UiPackService implements Listener {
 
     public static final UUID PACK_ID = UUID.nameUUIDFromBytes("kuby-ui-pack".getBytes(StandardCharsets.UTF_8));
 
+    private static final String RELEASES = "https://github.com/luno2110-oss/MCSERVERPACK-DOWNLOAD-REPO/releases/download/";
+
     private final KubyPlugins plugin;
     private final Set<UUID> loaded = ConcurrentHashMap.newKeySet();
     private volatile byte[] hash;
+    /** SHA-1 des Packs, mit dem dieses Jar gebaut wurde (null: lokal gebaut). */
+    private final String buildSha;
 
     public UiPackService(KubyPlugins plugin) {
         this.plugin = plugin;
+        String sha = null;
+        try (java.io.InputStream in = plugin.getResource("ui-pack.properties")) {
+            if (in != null) {
+                java.util.Properties pr = new java.util.Properties();
+                pr.load(in);
+                String v = pr.getProperty("sha1", "").trim();
+                if (v.matches("[0-9a-f]{40}")) sha = v;
+            }
+        } catch (java.io.IOException ignored) {
+        }
+        this.buildSha = sha;
+        if (sha != null) hash = java.util.HexFormat.of().parseHex(sha);
+    }
+
+    /** Eigene Adresse oder die des passenden Packs („auto“, leer oder die alte Standard-Adresse von „latest“). */
+    private boolean auto(String configured) {
+        return configured == null || configured.isBlank() || configured.equalsIgnoreCase("auto")
+                || configured.toLowerCase(java.util.Locale.ROOT).endsWith("/releases/download/latest/kubyui-pack.zip");
     }
 
     public void start() {
@@ -43,7 +69,10 @@ public final class UiPackService implements Listener {
     }
 
     private String url() {
-        return plugin.getConfig().getString("ui.pack-url", "");
+        String configured = plugin.getConfig().getString("ui.pack-url", "auto");
+        if (buildSha != null && auto(configured)) return RELEASES + "ui-packs/KubyUI-" + buildSha.substring(0, 12) + ".zip";
+        if (configured == null || configured.equalsIgnoreCase("auto")) return RELEASES + "latest/KubyUI-Pack.zip";
+        return configured;
     }
 
     /** Lädt das Pack herunter und berechnet die SHA-1 (läuft im Hintergrund). */
@@ -59,7 +88,12 @@ public final class UiPackService implements Listener {
                 plugin.getLogger().warning("UI-Pack nicht erreichbar (HTTP " + res.statusCode() + "): " + url);
                 return;
             }
-            hash = MessageDigest.getInstance("SHA-1").digest(res.body());
+            byte[] got = MessageDigest.getInstance("SHA-1").digest(res.body());
+            if (buildSha != null && auto(plugin.getConfig().getString("ui.pack-url", "auto"))
+                    && !java.util.Arrays.equals(got, hash)) {
+                plugin.getLogger().warning("UI-Pack unter " + url + " passt nicht zu diesem Build (SHA-1 abweichend).");
+            }
+            hash = got;
         } catch (Exception e) {
             plugin.getLogger().warning("UI-Pack konnte nicht geprüft werden: " + e.getMessage());
         }

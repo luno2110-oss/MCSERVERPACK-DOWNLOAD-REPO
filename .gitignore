@@ -3,3 +3,6 @@ target/
 .idea/
 *.iml
 __pycache__/
+
+# von CI erzeugt (SHA-1 des UI-Packs dieses Builds)
+KubyCore-v2.0.14/KubyPlugins/src/main/resources/ui-pack.properties

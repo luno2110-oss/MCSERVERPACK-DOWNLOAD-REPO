@@ -757,6 +757,9 @@ SMALL_FIRST, SMALL_CELL = 0xED00, 20
 BIG_FIRST = 0xED80          # eigene 32-px-Icons: ED80 + i (32 px), EDC0 + i (16 px)
 SPRITE_FIRST = 0xF000       # Kacheln (32 x 32) großer Grafiken: F000 + i
 STRIP_FIRST = 0xE000        # Balken mit Farbverlauf: je Länge 1..w ein Zeichen, je Verlauf 256 Zeichen ab E000
+# Blöcke für Verläufe: E000-E8FF (ab E900 liegen die Item-Symbole), dann freie Blöcke EB00 und F700 abwärts
+STRIP_BLOCKS = [STRIP_FIRST + 0x100 * i for i in range(9)] + [0xEB00, 0xF700, 0xF600, 0xF500, 0xF400]
+STRIP_MAX = 128           # Spalten je Balken-Zeichen (Zelle 129 px, Minecraft erlaubt höchstens 256)
 STRIP_COLS = 8
 
 
@@ -778,6 +781,8 @@ def sprite_tiles(sprites):
                     advs.append(0)
                     continue
                 ch = chr(SPRITE_FIRST + len(tiles))
+                # Grafik-Kacheln dürfen nicht in die Blöcke der Verläufe (ab F400 abwärts belegt) laufen
+                assert ord(ch) < min(bl for bl in STRIP_BLOCKS if bl > SPRITE_FIRST), "zu viele Grafik-Kacheln"
                 tiles.append((ch, tile))
                 chars.append(ch)
                 advs.append(bbox[2] + 1)
@@ -790,16 +795,24 @@ def strip_sheets(strips):
     die ersten n Spalten und dahinter die Endspalte (bei n = w ohne). Gibt [(name, Bogen, Zeilen, w, h, first)]."""
     out = []
     for k, (name, img) in enumerate(strips):
+        # höchstens STRIP_MAX Spalten je Zeichen: Minecraft lädt keine Schrift-Zellen über 256 px (Zelle = w + 1);
+        # längere Balken setzt Canvas.strip aus mehreren Stücken zusammen
         w, h = img.width - 1, img.height
-        assert w <= 256 and h <= 32, name
-        first = STRIP_FIRST + 256 * k
+        body = img.crop((0, 0, w, h))
+        uniform = all(body.crop((x, 0, x + 1, h)).tobytes() == body.crop((0, 0, 1, h)).tobytes() for x in range(w))
+        if uniform:
+            w = min(w, STRIP_MAX)
+        assert w <= 255 and h <= 32, name + ": Verlauf zu lang (Zelle > 256 px)"
+        end = img.crop((img.width - 1, 0, img.width, h))
+        assert k < len(STRIP_BLOCKS), "zu viele Verläufe"
+        first = STRIP_BLOCKS[k]
         rows = (w + STRIP_COLS - 1) // STRIP_COLS
         sheet = Image.new("RGBA", (STRIP_COLS * (w + 1), rows * h), T)
         for n in range(1, w + 1):
             cell = Image.new("RGBA", (w + 1, h), T)
             cell.paste(img.crop((0, 0, n, h)), (0, 0))
             if n < w:
-                cell.paste(img.crop((w, 0, w + 1, h)), (n, 0))
+                cell.paste(end, (n, 0))
             sheet.paste(cell, (((n - 1) % STRIP_COLS) * (w + 1), ((n - 1) // STRIP_COLS) * h))
         chars = ["".join(chr(first + r * STRIP_COLS + c) if r * STRIP_COLS + c < w else "\u0000"
                          for c in range(STRIP_COLS)) for r in range(rows)]

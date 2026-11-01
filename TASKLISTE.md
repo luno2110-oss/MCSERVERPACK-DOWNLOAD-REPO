@@ -251,6 +251,8 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
 - [x] 9.4 Quiz auf 241 Fragen erweitert (alle 7 Kategorien, keine Doppelten), falsche Glowstone-Frage ersetzt
 - [~] 9.5 Anti-Farm-XP (Test offen): gesetzte XP-Blöcke im Chunk markiert (übersteht Neustart, keine Obergrenze, wandert mit Kolben), keine XP für Mobs aus Spawnern/Spawn-Eiern/Trial-Spawnern. Schalter: xp-sources.anti-farm
 - [~] 9.6 Kit-Rang-Filter (Test offen): Kit 2 VIP, 3 Ultimate, 4 Warrior, 5 Legend, höhere Ränge dürfen niedrigere Kits. Erkennung über LuckPerms (group.x) oder kuby.rank.x, Reihenfolge in ranks.order
+- [x] 9.7 Grafik-Fehler im Spiel (Info-Leiste: Design-Zeilen mit Kästchen und verrutschten Teilen): Balken-Zeichen lagen in 257 px breiten Schrift-Zellen, Minecraft lädt nur Zellen bis 256 px. Jetzt höchstens 128 px je Zeichen, längere Balken setzt `Canvas.strip` aus Stücken zusammen (Info-Leiste, Profil, Quests); `tools/check_fonts.py` meldet zu große Zellen im CI.
+- [x] 9.8 Pack passt immer zum Plugin (Battlepass verrutscht, weil das Pack von „latest“ neuer war als das installierte Plugin): CI schreibt die SHA-1 des Packs ins KubyCore-Jar und legt jedes Pack im Release „ui-packs“ ab; `ui.pack-url: auto` (auch die alte „latest“-Adresse) lädt genau das Pack des eigenen Builds. Nach dem nächsten Plugin-Update gilt das automatisch.
 
 ## Ordnergruppe 10 – Entscheidungen (offen)
 - [x] Rang-Berechtigungen: beides geht (LuckPerms group.<rang> oder kuby.rank.<rang>)
