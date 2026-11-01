@@ -101,14 +101,16 @@ public final class EconomyMarketService implements ModeData {
         return active.getOrDefault(id, true);
     }
 
-    /** Aktueller Preis eines Shop-Items. */
+    /** Aktueller Preis eines Shop-Items: der Live-Kurs der Börse (TradingService), sonst Grundpreis mal Faktor. */
     public synchronized long priceOf(ShopService.Item it) {
+        if (plugin.trading() != null) return Math.max(1, Math.round(plugin.trading().price(it.id(), it.price() * factorOf(it.id()))));
         return Math.max(1, Math.round(it.price() * factorOf(it.id())));
     }
 
     /** Verbuchung eines Kaufs: Stückzahl für den Richtwert, Erlös abzüglich Steuer in den Topf. */
     public synchronized void recordSale(String id, int units, long paid) {
         sold.merge(id, units, Integer::sum);
+        if (plugin.trading() != null) plugin.trading().demand(id, units, 1);
         double tax = plugin.getConfig().getDouble("economy.tax-percent", 9) / 100.0;
         pool.merge(id, paid * (1.0 - tax), Double::sum);
         save();
@@ -197,9 +199,8 @@ public final class EconomyMarketService implements ModeData {
                 Rarity r = rarityOf(it.material());
                 double daily = target(r) / 7.0;
                 double ratio = daily > 0 ? sold.getOrDefault(id, 0) / daily : 1.0;
-                double delta = Math.max(-MAX_STEP, Math.min(MAX_STEP, (ratio - 1.0) * 0.1));
-                double f = Math.max(0.05, factorOf(id) * (1.0 + delta));
-                factor.put(id, f);
+                // Preise kommen jetzt live aus der Börse (TradingService): hier nur noch die alte Preisgrenze prüfen
+                double f = factorOf(id);
                 long effective = Math.round(it.price() * f);
                 if (isActive(id) && effective < minPrice(r)) {
                     active.put(id, false);

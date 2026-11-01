@@ -281,6 +281,8 @@ BAR_FILLS = {
 }
 BAR_H = 7
 LINE_W = (32, 16, 8, 4, 2, 1)     # Linien-Stücke (Unterstreichung), größte zuerst
+VBAR_W = (1, 3)                   # senkrechte Balken (Kurs-Charts): Breiten
+VBAR_H = (8, 4, 2, 1)             # und Höhen, größte zuerst
 
 CORNER_BOX = [
     "....KKK",
@@ -700,6 +702,10 @@ def build_pieces():
     # Linien 1 px hoch, weiß (mit der Textfarbe eingefärbt): Unterstreichungen von Links
     for w in LINE_W:
         (segs9 if w > CAP else caps9).add(("line", w), Image.new("RGBA", (w, 1), (255, 255, 255, 255)))
+    # Senkrechte Balken 1 und 3 px breit, 8/4/2/1 px hoch, weiß (eingefärbt): Kerzen und Dochte der Kurs-Charts
+    for w in VBAR_W:
+        for h in VBAR_H:
+            caps9.add(("vbar", w, h), Image.new("RGBA", (w, h), (255, 255, 255, 255)))
     for name in BAR_FILLS:
         for w in (1, 2, 4, 8):
             caps9.add(("fill", name, w), draw_bar_fill(w, name))
@@ -1282,6 +1288,8 @@ def write_java(sheets, widths, icons, icon_chars, icon_adv, small_data=(), title
     L.append("    public static final Piece[] BAR2_NARROW = {%s};" % ", ".join(piece(("bar2", w)) for w in NARROW))
     L.append("    /** Linien 1 px hoch (weiß, eingefärbt): 32, 16, 8, 4, 2, 1 px. */")
     L.append("    public static final Piece[] LINE = {%s};" % ", ".join(piece(("line", w)) for w in LINE_W))
+    L.append("    public static final Piece[] VBAR1 = {%s};" % ", ".join(piece(("vbar", 1, h)) for h in VBAR_H))
+    L.append("    public static final Piece[] VBAR3 = {%s};" % ", ".join(piece(("vbar", 3, h)) for h in VBAR_H))
     L.append("    public static final Piece BACK = %s;" % piece(("back",)))
     L.append("    public static final Piece BACK_HELP = %s;" % piece(("back_help",)))
     L.append("")

@@ -490,6 +490,23 @@ public final class Canvas {
     }
 
     /**
+     * Senkrechter Balken (1 oder 3 px breit) von y bis y + h - 1 in Farbe color, über Kästen (Z_FILL): Kerzen und
+     * Dochte von Kurs-Charts. Aus Stücken 8/4/2/1 px hoch zusammengesetzt.
+     */
+    public Canvas vbar(int x, int y, int w, int h, TextColor color) {
+        KitData.Piece[] set = w >= 3 ? KitData.VBAR3 : KitData.VBAR1;
+        int p = y, end = y + Math.max(1, h);
+        for (KitData.Piece n : set) {
+            while (end - p >= n.height()) {
+                glyphs.add(new Glyph(Kind.BG, x, p, n.width(), n.height(), n.advance(), Z_FILL, String.valueOf(n.c()), color, false,
+                        0, KitData.B_MAX, p, p + n.height()));
+                p += n.height();
+            }
+        }
+        return this;
+    }
+
+    /**
      * Unterstreichung wie bei Minecraft unter Text bei (x, y) mit Vorschub w: Linie in Zeile y + 8 von x - 1 bis
      * x + w - 1 über den Schatten der Unterlängen, ihr Schatten (Farbe / 4) eine Zeile tiefer und einen Pixel weiter
      * rechts unter dem Text der nächsten Zeile.

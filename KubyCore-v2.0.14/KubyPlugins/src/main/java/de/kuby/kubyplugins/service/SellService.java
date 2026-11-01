@@ -97,6 +97,7 @@ public final class SellService {
             long unit = plugin.weekly().isMeta(item.getType()) ? price * 125 / 100 : price;
             sum += unit * item.getAmount();
             items += item.getAmount();
+            if (plugin.trading() != null) plugin.trading().demandMaterial(item.getType(), item.getAmount(), -1);
             contents[i] = null;
         }
         p.getInventory().setStorageContents(contents);

@@ -148,6 +148,10 @@ public final class ExtraScreens {
             new InvestmentsMenu(plugin).open(p);
             return;
         }
+        if (plugin.trading() != null) {
+            new TradingScreen(plugin).open(p);
+            return;
+        }
         UUID id = p.getUniqueId();
         EconomyMarketService inv = plugin.investments();
         long step = plugin.getConfig().getLong("economy.invest-step", 1000);

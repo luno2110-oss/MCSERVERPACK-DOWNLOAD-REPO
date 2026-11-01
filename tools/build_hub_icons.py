@@ -745,6 +745,21 @@ def c_daily():
     return a
 
 
+def i_trade():
+    """Logo der Trading-App: dunkle Kachel mit grünen und roten Kerzen und Pfeil nach oben."""
+    a = Art()
+    a.ground_shadow(3, 27, 29, 31)
+    a.poly([(4, 1), (27, 1), (30, 4), (30, 25), (27, 28), (4, 28), (1, 25), (1, 4)], "24324A")
+    for x, y0, y1, w0, w1, col in ((6, 14, 21, 12, 23, "F2545B"), (12, 11, 18, 9, 20, "3AD86A"), (18, 13, 19, 11, 21, "F2545B"),
+                                   (24, 6, 14, 4, 16, "3AD86A")):
+        a.line([(x + 1, w0), (x + 1, w1)], "9AA8BC", 1, mode="flat", edge=False)
+        a.rect(x, y0, x + 2, y1, col, mode="soft", edge=False)
+    a.line([(4, 20), (10, 13), (15, 16), (26, 4)], "FFE070", 1, mode="flat", edge=False)
+    a.dots([(24, 4), (25, 4), (26, 4), (26, 5), (26, 6)], "FFE070")
+    a.sparkle(29, 27, 1)
+    return a
+
+
 TILES = [("menu", i_menu), ("angeln", i_angeln), ("jobs", i_jobs), ("grundstuecke", i_grundstuecke),
          ("heiraten", i_heiraten), ("bank", i_bank), ("duelle", i_duelle), ("turnier", i_turnier),
          ("versicherung", i_versicherung), ("shop", i_shop), ("markt", i_markt), ("wirtschaft", i_wirtschaft),
@@ -754,7 +769,7 @@ TILES = [("menu", i_menu), ("angeln", i_angeln), ("jobs", i_jobs), ("grundstueck
          ("s_wildnis", s_wildnis), ("s_homes", s_homes), ("s_enderchest", s_enderchest),
          ("alert", s_alert), ("alert_s", s_alert_small),
          ("c_bloecke", c_bloecke), ("c_essen", c_essen), ("c_redstone", c_redstone), ("c_deko", c_deko), ("c_suche", c_suche),
-         ("c_daily", c_daily)]
+         ("c_daily", c_daily), ("trade", i_trade)]
 
 
 def trim(img):

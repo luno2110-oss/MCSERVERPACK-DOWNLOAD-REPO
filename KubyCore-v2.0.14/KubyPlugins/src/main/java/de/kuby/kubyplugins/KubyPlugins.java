@@ -116,6 +116,7 @@ public final class KubyPlugins extends JavaPlugin {
     private EnderChestService enderchests;
     private HotbarDisplay hotbar;
     private EconomyMarketService investments;
+    private de.kuby.kubyplugins.service.TradingService trading;
     private ItemValueService itemValues;
     private TotenkisteService totenkisten;
     private KitService kits;
@@ -186,6 +187,7 @@ public final class KubyPlugins extends JavaPlugin {
         enderchests = new EnderChestService(this);
         hotbar = new HotbarDisplay(this);
         investments = new EconomyMarketService(this);
+        trading = new de.kuby.kubyplugins.service.TradingService(this);
         itemValues = new ItemValueService(this);
         totenkisten = new TotenkisteService(this);
         kits = new KitService(this);
@@ -216,6 +218,7 @@ public final class KubyPlugins extends JavaPlugin {
         registerStat("kills", id -> (long) stats().get(id).kills);
         registerStat("casino_plus", id -> Math.max(0L, casinoLog.netOf(id)));
         de.kuby.kubyplugins.gui.TradeScreens.samples(this::registerSelfTestCanvas);
+        de.kuby.kubyplugins.gui.TradingScreen.samples(this::registerSelfTestCanvas);
         registerMainEntry(new MainEntry(org.bukkit.Material.NETHER_STAR, "Erfolge", "Fortschritt und Belohnungen",
                 p -> new de.kuby.kubyplugins.gui.ProgressScreens(this).achievements(p, 0)));
         blackjack = new de.kuby.kubyplugins.casino.BlackjackService(this);
@@ -481,6 +484,7 @@ public final class KubyPlugins extends JavaPlugin {
         jewels.save();
         dailyPot.save();
         investments.saveNow();
+        if (trading != null) trading.save();
         totenkisten.saveNow();
         modes.save();
         playtime.save();
@@ -565,6 +569,7 @@ public final class KubyPlugins extends JavaPlugin {
     public ShopStorageService shopStorage() { return shopStorage; }
     public EnderChestService enderchests() { return enderchests; }
     public EconomyMarketService investments() { return investments; }
+    public de.kuby.kubyplugins.service.TradingService trading() { return trading; }
     public ItemValueService itemValues() { return itemValues; }
     public TotenkisteService totenkisten() { return totenkisten; }
     public KitService kits() { return kits; }

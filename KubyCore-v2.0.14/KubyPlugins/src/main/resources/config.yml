@@ -534,6 +534,17 @@ totenkiste:
   owner-access-level3: true
 
 # Ränge von niedrig nach hoch. Erkannt über LuckPerms (group.<rang>) oder kuby.rank.<rang>.
+# Börse als Trading-App (/investments, Kachel Börse): jedes Item der Shop-Bereiche ist ein Wert mit Live-Kurs
+trading:
+  tick-sekunden: 20          # Kurs-Schritt
+  schwankung: 0.0008         # zufällige Schwankung je Schritt (0.0008 = 0,08 %)
+  rueckkehr: 0.02            # Zug zum fairen Preis (Grundpreis mal Nachfrage) je Schritt
+  nachfrage-wirkung: 0.02    # wie stark Shop-Käufe/-Verkäufe die Nachfrage bewegen
+  nachfrage-abbau: 0.0005    # Nachfrage kehrt je Schritt so weit zu 1 zurück
+  liquiditaet: 2000000       # große Orders bewegen den Kurs: Betrag / Liquidität (höchstens 5 %)
+  gebuehr-prozent: 0.5       # Gebühr je Kauf und Verkauf
+  max-orders: 10             # offene Orders je Spieler und Modus
+
 # Befehle nur in bestimmten Modi (smp, survival, skyblock, hub); in anderen Modi kommt eine Meldung. Admins dürfen überall.
 modus-befehle:
   # SMP
