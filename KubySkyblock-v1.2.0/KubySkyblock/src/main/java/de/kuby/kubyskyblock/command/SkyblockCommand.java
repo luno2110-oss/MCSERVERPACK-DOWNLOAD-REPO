@@ -47,14 +47,63 @@ public final class SkyblockCommand implements BiConsumer<Player, String[]> {
                 Msg.send(p, "<gray>Linksklick: Ecke 1, Rechtsklick: Ecke 2. Dann <white>/kp skyblock template save");
             }
             case "template" -> {
-                if (args.length < 3 || !args[2].equalsIgnoreCase("save")) { help(p); return; }
-                var c = addon.templateCorners(p.getUniqueId());
-                if (c == null) { Msg.send(p, "<red>Markiere erst zwei Ecken mit dem Werkzeug."); return; }
-                String err = addon.templates().save(c[0], c[1], p.getLocation());
+                String act = args.length > 2 ? args[2].toLowerCase(Locale.ROOT) : "";
+                switch (act) {
+                    case "save" -> {
+                        if (args.length < 4) {
+                            Msg.send(p, "<red>/kp skyblock template save <id> [Name] <gray>(Icon = Item in der Hand)");
+                            return;
+                        }
+                        var c = addon.templateCorners(p.getUniqueId());
+                        if (c == null) {
+                            Msg.send(p, "<red>Markiere erst zwei Ecken mit dem Werkzeug.");
+                            return;
+                        }
+                        String id = args[3].toLowerCase(Locale.ROOT);
+                        String name = args.length > 4 ? String.join(" ", java.util.Arrays.copyOfRange(args, 4, args.length)) : id;
+                        String err = addon.templates().save(id, name, p.getInventory().getItemInMainHand().getType(), c[0], c[1], p.getLocation());
+                        if (err != null) Msg.send(p, "<red>" + err);
+                        else {
+                            Sfx.play(addon.core(), p, Sfx.Kind.SUCCESS);
+                            Msg.send(p, "<green>Insel-Vorlage <white>" + id + "<green> gespeichert. Dein Standplatz ist der Spawn der Insel.");
+                        }
+                    }
+                    case "delete" -> {
+                        if (args.length < 4) {
+                            Msg.send(p, "<red>/kp skyblock template delete <id>");
+                            return;
+                        }
+                        Msg.send(p, addon.templates().delete(args[3].toLowerCase(Locale.ROOT)) ? "<green>Vorlage gelöscht."
+                                : "<red>Keine eigene Vorlage mit dieser ID (eingebaute lassen sich in der config abschalten).");
+                    }
+                    case "list" -> {
+                        Msg.send(p, "<gold>Insel-Vorlagen:");
+                        for (var t : addon.templates().all()) {
+                            Msg.send(p, " <white>" + t.id() + " <gray>" + t.name() + " · " + t.blocks().size() + " Blöcke"
+                                    + (t.builtin() ? " <dark_gray>(eingebaut)" : ""));
+                        }
+                    }
+                    default -> help(p);
+                }
+            }
+            case "insel" -> {
+                if (args.length < 3) {
+                    Msg.send(p, "<red>/kp skyblock insel <Spieler> <gray>(zur Insel des Spielers)");
+                    return;
+                }
+                String err = addon.islands().visit(p, args[2]);
                 if (err != null) Msg.send(p, "<red>" + err);
-                else { Sfx.play(addon.core(), p, Sfx.Kind.SUCCESS); Msg.send(p, "<green>Insel-Vorlage gespeichert."); }
             }
             case "loot" -> {
+                if (args.length >= 3 && args[2].equalsIgnoreCase("edit")) {
+                    var tiers = addon.loot().tiers();
+                    if (args.length < 4 || !tiers.contains(args[3].toLowerCase(Locale.ROOT))) {
+                        Msg.send(p, "<red>/kp skyblock loot edit <" + String.join("|", tiers) + ">");
+                        return;
+                    }
+                    new de.kuby.kubyskyblock.gui.LootEditMenu(args[3].toLowerCase(Locale.ROOT)).open(p);
+                    return;
+                }
                 if (args.length < 3 || !args[2].equalsIgnoreCase("generate")) { help(p); return; }
                 int n = 10;
                 if (args.length >= 4) { try { n = Integer.parseInt(args[3]); } catch (NumberFormatException ignored) { } }
@@ -74,8 +123,11 @@ public final class SkyblockCommand implements BiConsumer<Player, String[]> {
 
     private void help(Player p) {
         Msg.send(p, "<gold>/kp skyblock tool <dark_gray>- <gray>Werkzeug holen");
-        Msg.send(p, "<gold>/kp skyblock template save <dark_gray>- <gray>Insel-Vorlage aus den Ecken");
+        Msg.send(p, "<gold>/kp skyblock template save <id> [Name] <dark_gray>- <gray>Insel-Vorlage aus den Ecken (Icon = Item in der Hand)");
+        Msg.send(p, "<gold>/kp skyblock template list|delete <id> <dark_gray>- <gray>Vorlagen ansehen oder löschen");
+        Msg.send(p, "<gold>/kp skyblock insel <Spieler> <dark_gray>- <gray>Zur Insel eines Spielers");
         Msg.send(p, "<gold>/kp skyblock loot generate [anzahl] <dark_gray>- <gray>Loot-Inseln erzeugen");
+        Msg.send(p, "<gold>/kp skyblock loot edit <stufe> <dark_gray>- <gray>Loot-Tabelle im Spiel bearbeiten");
         Msg.send(p, "<gold>/kp skyblock oneblock setup <dark_gray>- <gray>One-Block-Plattformen aufbauen");
         Msg.send(p, "<gold>/kp skyblock list <dark_gray>- <gray>Übersicht");
     }

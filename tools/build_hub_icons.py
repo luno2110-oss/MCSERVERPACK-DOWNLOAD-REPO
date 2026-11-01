@@ -521,6 +521,70 @@ def i_haustiere():
     return a
 
 
+def i_insel():
+    a = Art()
+    a.poly([(3, 15), (29, 15), (23, 21), (17, 29), (15, 29), (9, 21)], "8A5A32")
+    a.poly([(9, 19), (14, 19), (13, 24)], "7A7A86", mode="soft", edge=False)
+    a.poly([(19, 19), (24, 18), (19, 25)], "7A7A86", mode="soft", edge=False)
+    a.ellipse(2, 11, 30, 19, "6CC048")
+    a.dots([(6, 14), (10, 13), (14, 15), (24, 14), (27, 15)], "A2E070")
+    a.rect(21, 5, 22, 14, WOOD)
+    a.ellipse(16, 0, 27, 9, "3AA850")
+    a.dots([(18, 2), (19, 2), (17, 3)], "8AE090")
+    a.rect(6, 10, 10, 13, "B07A3A")
+    a.rect(6, 10, 10, 10, "8A5A2A", mode="flat", edge=False)
+    a.dot(8, 11, GOLD)
+    a.ellipse(26, 23, 30, 26, "8A5A32")
+    a.sparkle(4, 4, 2, "E0F4FF")
+    a.sparkle(29, 30, 1, "E0F4FF")
+    return a
+
+
+def i_generator():
+    a = Art()
+    a.ground_shadow(4, 27, 28, 31)
+    a.rect(6, 6, 25, 25, "8A8A94")
+    for (x, y) in ((9, 9), (15, 12), (20, 8), (11, 18), (19, 19)):
+        a.rect(x, y, x + 2, y + 1, "6A6A74", mode="flat", edge=False)
+    a.rect(12, 9, 14, 11, "F2C443", mode="soft", edge=False)
+    a.rect(18, 14, 20, 16, "62D6E0", mode="soft", edge=False)
+    a.rect(8, 20, 10, 22, "E84848", mode="soft", edge=False)
+    a.ellipse(0, 12, 6, 20, "FF8A1E")
+    a.dots([(2, 14), (2, 15)], "FFE070")
+    a.ellipse(26, 12, 31, 20, "3A8AE8")
+    a.dots([(28, 14), (28, 15)], "C8E8FF")
+    a.sparkle(26, 3, 2)
+    return a
+
+
+def i_groesse():
+    a = Art()
+    a.rect(8, 8, 23, 23, "6CC048")
+    a.dots([(11, 11), (15, 14), (19, 12), (12, 19), (20, 20)], "A2E070")
+    for poly in ([(16, 0), (21, 5), (11, 5)], [(16, 31), (21, 26), (11, 26)], [(0, 16), (5, 11), (5, 21)], [(31, 16), (26, 11), (26, 21)]):
+        a.poly(poly, "FFD84A")
+    a.sparkle(27, 4, 1)
+    return a
+
+
+def i_mitglieder():
+    a = Art()
+    a.ground_shadow(3, 27, 29, 31)
+    # hinten: zweiter Kopf
+    a.rect(15, 4, 28, 17, "E8B48A")
+    a.rect(15, 4, 28, 8, "C88A3A")
+    a.dots([(18, 11), (19, 11), (24, 11), (25, 11)], "3A5AC8")
+    a.rect(14, 18, 29, 27, "3AA850")
+    # vorn: erster Kopf
+    a.rect(3, 8, 16, 21, "D8A07A")
+    a.rect(3, 8, 16, 11, "5A3A1E")
+    a.dots([(6, 15), (7, 15), (12, 15), (13, 15)], "FFFFFF")
+    a.dots([(7, 15), (13, 15)], "3A2A6A")
+    a.rect(2, 22, 17, 30, "3A8AE8")
+    a.sparkle(29, 2, 1)
+    return a
+
+
 # ---------------------------------------------------------------- Knöpfe (16 px)
 def s_wildnis():
     a = Art(16)
@@ -554,7 +618,8 @@ TILES = [("menu", i_menu), ("angeln", i_angeln), ("jobs", i_jobs), ("grundstueck
          ("heiraten", i_heiraten), ("bank", i_bank), ("duelle", i_duelle), ("turnier", i_turnier),
          ("versicherung", i_versicherung), ("shop", i_shop), ("markt", i_markt), ("wirtschaft", i_wirtschaft),
          ("boerse", i_boerse), ("tagespot", i_tagespot), ("duo_rtp", i_duo_rtp), ("spielzeit", i_spielzeit),
-         ("titel", i_titel), ("kosmetik", i_kosmetik), ("haustiere", i_haustiere),
+         ("titel", i_titel), ("kosmetik", i_kosmetik), ("haustiere", i_haustiere), ("insel", i_insel), ("generator", i_generator),
+         ("groesse", i_groesse), ("mitglieder", i_mitglieder),
          ("s_wildnis", s_wildnis), ("s_homes", s_homes), ("s_enderchest", s_enderchest)]
 
 

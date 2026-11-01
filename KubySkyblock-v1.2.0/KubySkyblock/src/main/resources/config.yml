@@ -1,11 +1,66 @@
 reward:
   money: 2
   xp: 1
+# Inseln der Spieler (/insel). Sie liegen in einer Spirale um den Skyblock-Spawn (0, 0) mit festem Abstand.
+insel:
+  abstand: 200                  # Abstand der Insel-Mitten (größte Insel muss kleiner sein)
+  weltgrenze: 50000
+  groessen: [15, 25, 35, 50, 70]  # Radius je Größen-Stufe (15 = 31 x 31 Blöcke)
+  mitglieder: [2, 4, 6, 10]       # Mitglieder (ohne Besitzer) je Stufe
+  upgrades:
+    groesse: [0, 25000, 75000, 200000, 500000]   # Preis für Stufe 1, 2, ... (Index 0 = Start)
+    mitglieder: [0, 10000, 40000, 100000]
+  besucher-standard: true       # neue Inseln offen für Besucher
+  pvp: false                    # Kampf zwischen Spielern in der Skyblock-Welt
+  void-rettung: true            # wer ins Leere fällt, landet zu Hause statt zu sterben
+  neustart-abklingzeit-stunden: 24
+  leeren-spalten-pro-tick: 400  # Neustart/Aufgeben: so viele Spalten je Tick leeren
+  eingebaute-vorlagen: true     # Klassisch, Wüste, Schnee anbieten (eigene: /kp skyblock template save <id>)
+  start-kiste: ["ICE:2", "LAVA_BUCKET:1", "BONE_MEAL:3", "MELON_SEEDS:1", "PUMPKIN_SEEDS:1", "SUGAR_CANE:1", "RED_MUSHROOM:1",
+    "BROWN_MUSHROOM:1", "WHEAT_SEEDS:2"]
+
+# Bruchstein-Generator: je Stufe Preis und Gewichte der Blöcke, die statt Bruchstein entstehen
+generator:
+  stufen:
+    - {kosten: 0, bloecke: {COBBLESTONE: 100}}
+    - {kosten: 5000, bloecke: {COBBLESTONE: 85, COAL_ORE: 10, IRON_ORE: 5}}
+    - {kosten: 20000, bloecke: {COBBLESTONE: 75, COAL_ORE: 10, IRON_ORE: 8, COPPER_ORE: 4, GOLD_ORE: 3}}
+    - {kosten: 60000, bloecke: {COBBLESTONE: 65, COAL_ORE: 10, IRON_ORE: 9, COPPER_ORE: 5, GOLD_ORE: 4, REDSTONE_ORE: 3, LAPIS_ORE: 3, DIAMOND_ORE: 1}}
+    - {kosten: 150000, bloecke: {COBBLESTONE: 58, COAL_ORE: 10, IRON_ORE: 10, COPPER_ORE: 5, GOLD_ORE: 5, REDSTONE_ORE: 4, LAPIS_ORE: 4, DIAMOND_ORE: 2, EMERALD_ORE: 2}}
+    - {kosten: 400000, bloecke: {COBBLESTONE: 50, COAL_ORE: 10, IRON_ORE: 11, COPPER_ORE: 5, GOLD_ORE: 6, REDSTONE_ORE: 4, LAPIS_ORE: 4, DIAMOND_ORE: 4, EMERALD_ORE: 3, ANCIENT_DEBRIS: 1}}
+
+# Insel-Level: Punkte aller Blöcke auf der Insel (gezählt beim Bauen und mit /insel level)
+level:
+  punkte-pro-level: 100
+  standard-wert: 1
+  werte:
+    DIRT: 0
+    GRASS_BLOCK: 0
+    COBBLESTONE: 0
+    NETHERRACK: 0
+    SAND: 0
+    GRAVEL: 0
+    STONE: 1
+    IRON_BLOCK: 50
+    GOLD_BLOCK: 80
+    REDSTONE_BLOCK: 30
+    LAPIS_BLOCK: 30
+    EMERALD_BLOCK: 150
+    DIAMOND_BLOCK: 300
+    NETHERITE_BLOCK: 2000
+    BEACON: 1000
+    CONDUIT: 400
+    DRAGON_EGG: 5000
+    ENCHANTING_TABLE: 50
+    ANVIL: 30
+    HOPPER: 10
+    SPAWNER: 500
+
 oneblock:
   positions:
-    - "-3000;100;0"
-    - "-3000;100;40"
-    - "-3000;100;80"
+    - "-40;100;-60"
+    - "0;100;-60"
+    - "40;100;-60"
   money: 5
   xp: 3
   blocks:
@@ -16,8 +71,11 @@ oneblock:
     DIAMOND_ORE: 1
     OAK_LOG: 6
     SAND: 5
+# Loot-Inseln (/kp skyblock loot generate). Loot je Stufe: im Spiel bearbeitete Tabelle (/kp skyblock loot edit <stufe>),
+# sonst "list" (MATERIAL;Höchstmenge), mit random-all: true zusätzlich manchmal ein zufälliges erreichbares Item.
 loot:
   cooldown-minutes: 360
+  abstand-zum-spawn: 13000      # Loot-Inseln liegen weiter draußen als die Inseln der Spieler
   tiers:
     nutzlos:
       weight: 40
@@ -25,16 +83,15 @@ loot:
       items: 1
       money: 10
       xp: 2
-      random-all: true
-      max-amount: 2
+      list: ["DIRT;4", "COBBLESTONE;8", "STICK;6", "ROTTEN_FLESH;4", "BONE;3", "STRING;3", "WHEAT_SEEDS;4", "OAK_SAPLING;1", "GRAVEL;6", "FEATHER;3"]
     normal:
       weight: 30
       radius: 3
       items: 2
       money: 50
       xp: 10
-      random-all: true
-      max-amount: 4
+      list: ["IRON_INGOT;4", "COAL;8", "BREAD;4", "OAK_LOG;8", "SAND;12", "CLAY_BALL;8", "SUGAR_CANE;3", "PUMPKIN_SEEDS;2",
+        "MELON_SEEDS;2", "CACTUS;2", "EGG;4", "LEATHER;4", "ARROW;12", "BIRCH_SAPLING;1", "SPRUCE_SAPLING;1"]
     gut:
       weight: 15
       radius: 4
@@ -43,8 +100,8 @@ loot:
       xp: 40
       jewel-chance: 0.05
       jewels: 1
-      random-all: true
-      max-amount: 8
+      list: ["IRON_INGOT;8", "GOLD_INGOT;6", "REDSTONE;16", "LAPIS_LAZULI;12", "COPPER_INGOT;12", "COOKED_BEEF;8", "OBSIDIAN;4",
+        "SLIME_BALL;4", "COCOA_BEANS;3", "SWEET_BERRIES;4", "NAME_TAG;1", "SADDLE;1", "BOOK;4", "JUNGLE_SAPLING;2", "GLOWSTONE_DUST;8"]
     stark:
       weight: 10
       radius: 5
@@ -53,8 +110,8 @@ loot:
       xp: 120
       jewel-chance: 0.2
       jewels: 2
-      random-all: true
-      max-amount: 16
+      list: ["DIAMOND;3", "EMERALD;6", "GOLDEN_APPLE;2", "ENDER_PEARL;4", "BLAZE_ROD;3", "NETHER_WART;4", "QUARTZ;16", "IRON_BLOCK;2",
+        "EXPERIENCE_BOTTLE;12", "CHERRY_SAPLING;1", "MANGROVE_PROPAGULE;1", "TURTLE_EGG;2", "AMETHYST_SHARD;8", "PRISMARINE_SHARD;8"]
     overpowered:
       weight: 4
       radius: 6
@@ -63,8 +120,8 @@ loot:
       xp: 400
       jewel-chance: 0.6
       jewels: 5
-      random-all: true
-      max-amount: 32
+      list: ["DIAMOND;8", "DIAMOND_BLOCK;1", "EMERALD_BLOCK;2", "NETHERITE_SCRAP;2", "TOTEM_OF_UNDYING;1", "ENCHANTED_GOLDEN_APPLE;1",
+        "SHULKER_SHELL;2", "HEART_OF_THE_SEA;1", "TRIDENT;1", "ECHO_SHARD;2", "SNIFFER_EGG;1", "GHAST_TEAR;4", "WITHER_SKELETON_SKULL;1"]
     gott:
       weight: 1
       radius: 6
@@ -73,8 +130,33 @@ loot:
       xp: 1000
       jewel-chance: 1.0
       jewels: 15
-      random-all: true
-      max-amount: 64
+      list: ["NETHERITE_INGOT;2", "DIAMOND_BLOCK;4", "ELYTRA;1", "NETHER_STAR;1", "BEACON;1", "TOTEM_OF_UNDYING;2",
+        "ENCHANTED_GOLDEN_APPLE;3", "SHULKER_SHELL;6", "HEAVY_CORE;1", "DRAGON_BREATH;4", "TRIDENT;1", "CONDUIT;1"]
+
+# Juwelen, wenn ein Spieler dieses Item zum ersten Mal sammelt (Checkliste)
+seltene-items:
+  DIAMOND: 1
+  EMERALD: 1
+  NETHERITE_INGOT: 10
+  NETHERITE_BLOCK: 25
+  ELYTRA: 20
+  NETHER_STAR: 15
+  BEACON: 20
+  DRAGON_EGG: 50
+  DRAGON_HEAD: 15
+  TOTEM_OF_UNDYING: 8
+  ENCHANTED_GOLDEN_APPLE: 10
+  TRIDENT: 10
+  HEART_OF_THE_SEA: 6
+  CONDUIT: 10
+  HEAVY_CORE: 15
+  ECHO_SHARD: 4
+  SHULKER_SHELL: 5
+  SNIFFER_EGG: 6
+  WITHER_SKELETON_SKULL: 5
+  MUSIC_DISC_PIGSTEP: 8
+  MUSIC_DISC_OTHERSIDE: 8
+
 achievements:
   erste_schritte:
     name: Erste Schritte

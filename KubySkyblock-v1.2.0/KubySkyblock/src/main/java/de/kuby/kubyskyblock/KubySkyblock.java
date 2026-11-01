@@ -19,7 +19,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-/** Skyblock-Modus: Inseln, Vorlagen, Loot-Inseln, One-Block, Multiplikator-Serie. Braucht KubyCore. */
+/**
+ * Skyblock-Modus: Inseln mit Mitgliedern, Upgrades, Level und Schutz (/insel), Vorlagen, Loot-Inseln, One-Block,
+ * Multiplikator-Serie, Checkliste und Erfolge (/skyblock). Braucht KubyCore.
+ */
 public final class KubySkyblock extends JavaPlugin {
 
     private static KubySkyblock instance;
@@ -63,6 +66,7 @@ public final class KubySkyblock extends JavaPlugin {
         instance = this;
         core = c;
         de.kuby.kubyskyblock.gui.SkyScreen.samples(core::registerSelfTestCanvas);
+        de.kuby.kubyskyblock.gui.IslandScreen.samples(core::registerSelfTestCanvas);
         saveDefaultConfig();
         islands = new IslandService(this, core);
         streaks = new StreakService(this, core);
@@ -76,7 +80,16 @@ public final class KubySkyblock extends JavaPlugin {
         core.registerKpSub("skyblock", command);
         getServer().getPluginManager().registerEvents(new SkyblockListener(this, core), this);
         getServer().getPluginManager().registerEvents(new ProgressListener(this, core), this);
+        getServer().getPluginManager().registerEvents(new de.kuby.kubyskyblock.listener.IslandListener(this, core), this);
+        getServer().getPluginManager().registerEvents(new de.kuby.kubyskyblock.gui.LootEditMenu.Events(), this);
         if (getCommand("skyblock") != null) getCommand("skyblock").setExecutor(new SkyblockPlayerCommand(core));
+        var insel = getCommand("insel");
+        if (insel != null) {
+            var ic = new de.kuby.kubyskyblock.command.IslandCommand(this, core);
+            insel.setExecutor(ic);
+            insel.setTabCompleter(ic);
+        }
+        getServer().getScheduler().runTaskTimer(this, islands::saveIfDirty, 6000L, 6000L);
         getLogger().info("KubySkyblock aktiv.");
     }
 

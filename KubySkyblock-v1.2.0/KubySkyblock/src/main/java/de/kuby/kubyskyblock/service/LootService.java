@@ -23,8 +23,10 @@ import java.util.Random;
 import java.util.UUID;
 
 /**
- * Loot-Inseln in der Skyblock-Welt. Jede Insel hat eine Stufe (von nutzlos bis overpowered).
- * Die Kiste auf der Insel gibt Loot. Pro Spieler und Insel gibt es eine Abklingzeit.
+ * Loot-Inseln in der Skyblock-Welt. Jede Insel hat eine Stufe (von nutzlos bis gott). Die Kiste auf der Insel gibt
+ * Loot aus der Loot-Tabelle der Stufe: zuerst die im Spiel bearbeitete Tabelle (/kp skyblock loot edit <stufe>,
+ * loot-tabellen.yml, Menge im Slot = Höchstmenge), sonst die Liste in der config, sonst ein zufälliges erreichbares
+ * Item (nie Creative-Blöcke). Pro Spieler und Insel gibt es eine Abklingzeit.
  */
 public final class LootService {
 
@@ -36,11 +38,27 @@ public final class LootService {
     private final Random rnd = new Random();
     private final Map<String, Island> islands = new HashMap<>();
     private final Map<String, Long> cooldown = new HashMap<>();
+    /** Im Spiel bearbeitete Loot-Tabellen je Stufe. */
+    private final Map<String, List<ItemStack>> tables = new HashMap<>();
+    private final File tableFile;
 
     public LootService(KubySkyblock addon, KubyPlugins core) {
         this.addon = addon;
         this.core = core;
         this.file = new File(addon.getDataFolder(), "loot.yml");
+        this.tableFile = new File(addon.getDataFolder(), "loot-tabellen.yml");
+        YamlConfiguration ty = YamlConfiguration.loadConfiguration(tableFile);
+        for (String tier : ty.getKeys(false)) {
+            List<ItemStack> items = new ArrayList<>();
+            for (String b64 : ty.getStringList(tier)) {
+                try {
+                    items.add(ItemStack.deserializeBytes(java.util.Base64.getDecoder().decode(b64)));
+                } catch (RuntimeException ignored) {
+                    // kaputtes Item überspringen
+                }
+            }
+            tables.put(tier, items);
+        }
         for (String s : YamlConfiguration.loadConfiguration(file).getStringList("islands")) {
             String[] p = s.split(";");
             if (p.length < 5) continue;
@@ -59,8 +77,14 @@ public final class LootService {
         List<String> names = new ArrayList<>(tiers.getKeys(false));
         int made = 0;
         for (int i = 0; i < count; i++) {
-            int x = rnd.nextInt(40000) - 20000;
-            int z = rnd.nextInt(40000) - 20000;
+            // außerhalb der Spieler-Inseln (Spirale um den Spawn) und innerhalb der Weltgrenze
+            int inner = addon.getConfig().getInt("loot.abstand-zum-spawn", 13000);
+            int outer = Math.max(inner + 1000, addon.getConfig().getInt("insel.weltgrenze", 50000) / 2 - 1000);
+            int x, z;
+            do {
+                x = rnd.nextInt(2 * outer) - outer;
+                z = rnd.nextInt(2 * outer) - outer;
+            } while (Math.max(Math.abs(x), Math.abs(z)) < inner);
             String tier = names.get(weighted(tiers, names));
             int r = tiers.getInt(tier + ".radius", 3);
             Location base = new Location(w, x, 100, z);
@@ -128,19 +152,54 @@ public final class LootService {
         return null;
     }
 
-    /** Zufälliges Item: zufälliger Eintrag aus allen Materialien, oder aus der Stufen-Liste. */
+    /** Stufen aus der config (Reihenfolge nutzlos ... gott). */
+    public List<String> tiers() {
+        ConfigurationSection s = addon.getConfig().getConfigurationSection("loot.tiers");
+        return s == null ? List.of() : new ArrayList<>(s.getKeys(false));
+    }
+
+    public List<ItemStack> table(String tier) {
+        return tables.getOrDefault(tier, List.of());
+    }
+
+    /** Im Spiel bearbeitete Tabelle speichern (leer = wieder config/zufällig). */
+    public void setTable(String tier, List<ItemStack> items) {
+        if (items.isEmpty()) tables.remove(tier);
+        else tables.put(tier, new ArrayList<>(items));
+        YamlConfiguration out = new YamlConfiguration();
+        tables.forEach((k, v) -> {
+            List<String> l = new ArrayList<>();
+            for (ItemStack it : v) l.add(java.util.Base64.getEncoder().encodeToString(it.serializeAsBytes()));
+            out.set(k, l);
+        });
+        try {
+            addon.getDataFolder().mkdirs();
+            out.save(tableFile);
+        } catch (IOException e) {
+            addon.getLogger().warning("loot-tabellen.yml konnte nicht gespeichert werden: " + e.getMessage());
+        }
+    }
+
+    /** Zufälliges Item der Stufe: bearbeitete Tabelle, sonst config-Liste, sonst zufällig (nur erreichbare Items). */
     private ItemStack rollItem(ConfigurationSection t) {
-        if (t.getBoolean("random-all", false)) {
-            List<Material> all = new ArrayList<>();
-            for (Material m : Material.values()) if (m.isItem() && !m.isAir()) all.add(m);
-            return new ItemStack(all.get(rnd.nextInt(all.size())), 1 + rnd.nextInt(Math.max(1, t.getInt("max-amount", 1))));
+        List<ItemStack> table = tables.get(t.getName());
+        if (table != null && !table.isEmpty()) {
+            ItemStack pick = table.get(rnd.nextInt(table.size())).clone();
+            pick.setAmount(1 + rnd.nextInt(Math.max(1, pick.getAmount())));
+            return pick;
         }
         List<String> entries = t.getStringList("list");
-        if (entries.isEmpty()) return null;
+        boolean randomAll = t.getBoolean("random-all", false);
+        if (entries.isEmpty() || randomAll && rnd.nextInt(4) == 0) {
+            if (!randomAll) return null;
+            List<Material> all = Obtainable.all();
+            return new ItemStack(all.get(rnd.nextInt(all.size())), 1 + rnd.nextInt(Math.max(1, t.getInt("max-amount", 1))));
+        }
         String e = entries.get(rnd.nextInt(entries.size()));
         String[] p = e.split(";");
         try {
             Material m = Material.valueOf(p[0].trim().toUpperCase());
+            if (!Obtainable.is(m)) return null;
             int max = p.length > 1 ? Integer.parseInt(p[1].trim()) : 1;
             return new ItemStack(m, 1 + rnd.nextInt(Math.max(1, max)));
         } catch (IllegalArgumentException ex) {

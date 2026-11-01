@@ -54,7 +54,7 @@ public final class SkyblockListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onBreak(BlockBreakEvent e) {
         if (!inSkyblock(e.getBlock().getWorld())) return;
         var p = e.getPlayer();
@@ -70,11 +70,13 @@ public final class SkyblockListener implements Listener {
             e.setCancelled(true);
             return;
         }
-        // Abbau nur auf der eigenen Insel
-        if (!addon.islands().isIslandOwner(p.getUniqueId(), b.getLocation()) && !p.hasPermission("kuby.admin")) {
+        // Abbau nur auf der eigenen Insel (Mitglieder), außerhalb nur Admins
+        if (!addon.islands().canBuild(p, b.getLocation())) {
             e.setCancelled(true);
+            p.sendActionBar(de.kuby.kubyplugins.util.Msg.parse("<red>Das ist nicht deine Insel."));
             return;
         }
+        addon.islands().addPoints(b.getLocation(), b.getType(), -1);
         addon.streaks().reward(p);
         addon.progress().recordBlock(p);
     }

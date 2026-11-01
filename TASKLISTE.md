@@ -373,8 +373,15 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
 - [x] Etappe 1 Grundgerüst: Modus Skyblock im Kern, Modus-Auswahl als GUI am Kompass, Addon KubySkyblock (Insel pro Spieler beim Betreten, 50.000er Weltgrenze, Multiplikator-Serie 18-24 Uhr)
 - [x] Etappe 2 (v1.1.0): Insel-Editor mit Werkzeug und zwei Ecken, Loot-Inseln (6 Stufen, nutzlos bis gott), drei One-Block-Plattformen mit Zufallsblock
 - [x] Etappe 3 (KubySkyblock 1.2.0, KubyCore 2.0.14): Checkliste aller Items (aufheben, herstellen, Loot), Erfolge, Meilensteine (10/25/50/75/100%) mit Loot-Belohnung, /skyblock-Menü
-- [ ] Etappe 4: Skyblock-Module (Insel-Vorlagen, Loot-Tabellen)
-- [ ] Juwelen für sehr seltene Items
+- [x] Etappe 4 Insel-Kern (KubySkyblock 1.3.0): `/insel` (auch `/is`, `/island`) als Dialog im Himmels-Look (ohne Pack Truhe): Kopf mit Name, Level, Punkten und Platz; Nach Hause, Home hier, Besucher an/aus, Top-Inseln; Upgrades Größe (31 bis 141 Blöcke), Mitglieder (2 bis 10) und Erz-Generator (6 Stufen bis Antiker Schrott) mit Preis; Mitglieder mit Einladen (Textfeld), Annehmen per Klick, Entfernen, Verlassen; Level zählen, Checkliste, Neu starten (mit Vorlagen-Wahl, 24 h Abklingzeit), Aufgeben (geht an ein Mitglied oder wird geleert); Top-Inseln mit Medaillen
+  - [x] Inseln liegen jetzt in einer Spirale um den Spawn (Abstand 200), vorher lagen sie ab Insel 250 außerhalb der Weltgrenze; alte Inseln behalten ihre Lage
+  - [x] Schutz: Bauen, Abbauen, Kisten, Türen, Schalter, Eimer, Tiere, Rahmen, Rüstungsständer nur für Mitglieder; außerhalb der Inseln nur Admins; kein PvP (`insel.pvp`); wer ins Leere fällt, landet zu Hause
+  - [x] Insel-Level aus den Punkten aller Blöcke (`level.werte`), beim Bauen mitgezählt, `/insel level` zählt neu (im Hintergrund)
+  - [x] Insel-Vorlagen zur Wahl beim ersten Betreten: eingebaut Klassisch, Wüste, Schnee; eigene mit `/kp skyblock template save <id> [Name]` (Ausrichtung der Blöcke und Kisten-Inhalt bleiben), `template list|delete`; alte `template.yml` wird zu `templates/standard.yml`
+  - [x] One-Block-Plattformen beim Spawn (−40/0/40, 100, −60), Loot-Inseln weit draußen (ab 13.000 Blöcke vom Spawn)
+- [x] Etappe 5 Loot-Tabellen: je Stufe feste Listen statt völlig zufälliger Items (vorher waren auch Command-Blöcke, Barrieren und Spawn-Eier möglich), im Spiel bearbeitbar mit `/kp skyblock loot edit <stufe>` (Items hineinlegen, Menge = Höchstmenge); Checkliste ohne unerreichbare Items
+- [x] Juwelen für sehr seltene Items beim ersten Fund (`seltene-items`, z. B. Elytra 20, Drachenei 50, Netherit-Barren 10)
+- [ ] Skyblock im Spiel testen: Insel anlegen, Mitglieder, Upgrades, Generator, Level, Neustart, Schutz
 - [ ] Skyblock-Welt anlegen: /kp create skyblock, danach Spawn setzen
 
 ## Entscheidungen (Stand: Sitzung mit Claude)

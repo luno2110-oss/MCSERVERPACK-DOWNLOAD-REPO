@@ -6144,3 +6144,107 @@ Schneeflocke	Snowflake
 [Zum Spawn]	[To spawn]
 Im Shop gibt es gerade nichts.	There is nothing in the shop right now.
 <b>☄ {}:</b> <white>Am Spawn regnet es {}! <click:run_command:'/spawn'>{}[Zum Spawn]</click>	<b>☄ {}:</b> <white>It's raining {} at spawn! <click:run_command:'/spawn'>{}[To spawn]</click>
+<#9AD8FF>Insel-Level: <white>{} <gray>({} Punkte, Platz #{})	<#9AD8FF>Island level: <white>{} <gray>({} points, rank #{})
+<gray>Die Insel wird gezählt ...	<gray>Counting your island ...
+<red>Das löscht deine Insel (oder gibt sie an ein Mitglied). Sicher? <white>/insel aufgeben bestätigen	<red>This deletes your island (or hands it to a member). Sure? <white>/insel aufgeben bestätigen
+<red>Inseln gibt es nur im Skyblock-Modus.	<red>Islands only exist in Skyblock mode.
+Besucher sind jetzt erlaubt.	Visitors are now allowed.
+Besucher sind jetzt gesperrt.	Visitors are now blocked.
+Du hast keine Insel.	You don't have an island.
+Einladung an {} geschickt.	Invitation sent to {}.
+Upgrade gekauft.	Upgrade bought.
+Willkommen auf der Insel!	Welcome to the island!
+Zuhause gesetzt.	Home set.
+<aqua>Insel-Level: <white>{} <gray>({} Punkte)	<aqua>Island level: <white>{} <gray>({} points)
+<aqua>Level zählen	<aqua>Count level
+<gray>Level: <white>{} <dark_gray>({} Punkte)	<gray>Level: <white>{} <dark_gray>({} points)
+<gray>Nächste Stufe: <gold>{} $	<gray>Next tier: <gold>{} $
+<green>Höchste Stufe	<green>Max tier
+<green>Nach Hause	<green>Go home
+<green>Zuhause hier setzen	<green>Set home here
+<#9AD8FF><b>Auf die Insel einladen</b>	<#9AD8FF><b>Invite to the island</b>
+<#9AD8FF>Insel-Level: <white>{} <gray>({} Punkte)	<#9AD8FF>Island level: <white>{} <gray>({} points)
+<gray>Name des Spielers (muss online sein).	<gray>Player name (must be online).
+<gray>Spieler	<gray>Player
+<green>Einladung an {} geschickt.	<green>Invitation sent to {}.
+<red>Das geht nur im Skyblock-Modus.	<red>That only works in Skyblock mode.
+Alles auf der Insel wird gelöscht und neu als „{}“ gebaut. Upgrades und Mitglieder bleiben.	Everything on the island is deleted and rebuilt as "{}". Upgrades and members stay.
+Besuch: an	Visits: on
+Besuch: aus	Visits: off
+Deine Insel wird geleert und ist dann weg. Wirklich aufgeben?	Your island will be cleared and gone. Really abandon it?
+Die Insel geht an {}. Wirklich aufgeben?	The island goes to {}. Really abandon it?
+Du kannst sie später mit „Neu starten“ wechseln	You can change it later with "Restart"
+Es gibt noch keine Insel-Vorlage.	There is no island template yet.
+Home hier	Home here
+Level nach Punkten aller Blöcke	Level from the points of all blocks
+Level zählen	Count level
+Level {} · {} / {} Punkte	Level {} · {} / {} points
+Nach Hause	Go home
+Neu starten	Restart
+Noch keine Inseln.	No islands yet.
+Willst du {} wirklich verlassen?	Do you really want to leave {}?
+Wähle die neue Vorlage	Choose the new template
+mehr Erze	more ores
+<red>Shift + Klick: Insel löschen und neu bauen	<red>Shift + click: delete and rebuild the island
+<yellow>Klick: wählen	<yellow>Click: choose
+Insel neu starten	Restart island
+Wähle deine Insel	Choose your island
+<gray>Du bist ins Leere gefallen und wieder zu Hause.	<gray>You fell into the void and are back home.
+<red>Das ist nicht deine Insel.	<red>This is not your island.
+<#9AD8FF><b>Insel-Einladung:</b> <white>{} <gray>lädt dich auf <white>{}<gray> ein. <click:run_command:'/insel annehmen'><green>[Annehmen]</click> <gray>(5 Minuten)	<#9AD8FF><b>Island invite:</b> <white>{} <gray>invites you to <white>{}<gray>. <click:run_command:'/insel annehmen'><green>[Accept]</click> <gray>(5 minutes)
+<#9AD8FF><b>Willkommen auf deiner Insel!</b> <gray>Mit <white>/insel</white> verwaltest du sie.	<#9AD8FF><b>Welcome to your island!</b> <gray>Manage it with <white>/insel</white>.
+<gold>Du bist jetzt Besitzer von {}.	<gold>You now own {}.
+<gray>Deine Insel ist aufgegeben. Mit <white>/insel</white> startest du eine neue.	<gray>Your island is abandoned. Start a new one with <white>/insel</white>.
+<gray>Deine Insel wird geleert und neu gebaut ...	<gray>Your island is being cleared and rebuilt ...
+<gray>Die Insel wurde für Besucher geschlossen.	<gray>The island was closed to visitors.
+<gray>Du besuchst <white>{}<gray>.	<gray>You are visiting <white>{}<gray>.
+<gray>Du hast die Insel verlassen. Mit <white>/insel</white> startest du eine neue.	<gray>You left the island. Start a new one with <white>/insel</white>.
+<green>Die Insel ist neu gebaut.	<green>The island has been rebuilt.
+<green>Du bist jetzt Mitglied von <white>{}<green>.	<green>You are now a member of <white>{}<green>.
+<green>{} ist jetzt Mitglied deiner Insel.	<green>{} is now a member of your island.
+<red>Die Skyblock-Welt ist noch nicht eingerichtet.	<red>The Skyblock world is not set up yet.
+<red>Du wurdest von der Insel {} entfernt.	<red>You were removed from the island {}.
+Als Besitzer kannst du nicht gehen. Gib die Insel mit /insel aufgeben auf.	As the owner you can't leave. Abandon the island with /insel aufgeben.
+Dafür brauchst du {} $.	You need {} $ for that.
+Das Level wurde gerade erst berechnet.	The level was just calculated.
+Das ist schon die höchste Stufe.	That is already the highest tier.
+Deine Insel ist voll ({} Mitglieder). Erweitere sie unter Upgrades.	Your island is full ({} members). Expand it under Upgrades.
+Der Name braucht 1 bis 32 Zeichen.	The name needs 1 to 32 characters.
+Die Insel ist inzwischen voll.	The island is full by now.
+Die Insel wird gerade neu gebaut.	The island is being rebuilt right now.
+Die Skyblock-Welt ist noch nicht eingerichtet.	The Skyblock world is not set up yet.
+Diese Insel gibt es nicht mehr.	This island no longer exists.
+Diese Insel ist für Besucher geschlossen.	This island is closed to visitors.
+Dieser Spieler hat keine Insel.	This player has no island.
+Dieser Spieler ist kein Mitglied.	This player is not a member.
+Du besitzt eine Insel mit Mitgliedern. Gib sie erst ab oder entferne die Mitglieder.	You own an island with members. Hand it over or remove the members first.
+Du bist schon auf deiner Insel.	You are already on your island.
+Du hast keine offene Einladung.	You have no open invitation.
+Du hast schon eine Insel.	You already have an island.
+Du hast schon eine Insel. Verlass sie erst mit /insel verlassen oder gib sie mit /insel aufgeben auf.	You already have an island. Leave it with /insel verlassen or abandon it with /insel aufgeben first.
+Nur der Besitzer kann Mitglieder entfernen.	Only the owner can remove members.
+Nur der Besitzer kann das ändern.	Only the owner can change that.
+Nur der Besitzer kann die Insel aufgeben.	Only the owner can abandon the island.
+Nur der Besitzer kann die Insel neu starten.	Only the owner can restart the island.
+Nur der Besitzer kann die Insel umbenennen.	Only the owner can rename the island.
+Nur der Besitzer kann einladen.	Only the owner can invite.
+Stell dich dafür auf deine Insel.	Stand on your island to do that.
+<#5FE3A0><b>Seltener Fund!</b> <white>{} <gray>zum ersten Mal: <#5FE3A0>+{} Juwelen	<#5FE3A0><b>Rare find!</b> <white>{} <gray>for the first time: <#5FE3A0>+{} jewels
+Die bekannte L-Insel mit Eiche und Kiste	The well-known L island with an oak and a chest
+Eine verschneite Insel mit Fichte	A snowy island with a spruce
+Sand, Kaktus und viel Sonne	Sand, cactus and lots of sun
+Wüste	Desert
+Klassisch	Classic
+Schnee	Snow
+Insel	Island
+Upgrades	Upgrades
+Generator	Generator
+Einladen	Invite
+Aufgeben	Abandon
+Checkliste	Checklist
+Besitzer	Owner
+Top-Inseln	Top Islands
+Platz	Rank
+Mitglied entfernen	Remove member
+Insel verlassen	Leave island
+Insel aufgeben	Abandon island

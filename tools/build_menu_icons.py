@@ -189,6 +189,8 @@ def icons(vroot):
         ("pumpkin", cube(tx("block/pumpkin_top.png"), tx("block/pumpkin_side.png"), tx("block/pumpkin_side.png"))),
         # Weihnachten
         ("snow_block", cube(tx("block/snow.png"), tx("block/snow.png"), tx("block/snow.png"))),
+        # Skyblock-Vorlagen
+        ("sand", cube(tx("block/sand.png"), tx("block/sand.png"), tx("block/sand.png"))),
     ]
     return out
 

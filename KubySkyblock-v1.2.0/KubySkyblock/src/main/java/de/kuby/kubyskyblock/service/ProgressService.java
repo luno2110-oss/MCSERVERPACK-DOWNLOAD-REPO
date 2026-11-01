@@ -41,7 +41,7 @@ public final class ProgressService {
         this.addon = addon;
         this.core = core;
         this.file = new File(addon.getDataFolder(), "progress.yml");
-        for (Material m : Material.values()) if (m.isItem() && !m.isAir()) allItems.add(m);
+        allItems.addAll(Obtainable.all());
         ConfigurationSection a = addon.getConfig().getConfigurationSection("achievements");
         if (a != null) {
             for (String id : a.getKeys(false)) {
@@ -66,8 +66,16 @@ public final class ProgressService {
 
     public void recordItem(Player p, Material m) {
         if (m == null || !m.isItem() || m.isAir()) return;
+        if (!Obtainable.is(m)) return;
         Set<Material> set = collected.computeIfAbsent(p.getUniqueId(), k -> EnumSet.noneOf(Material.class));
         if (set.add(m)) {
+            long jewels = addon.getConfig().getLong("seltene-items." + m.name(), 0);
+            if (jewels > 0) {
+                core.jewels().add(p.getUniqueId(), jewels);
+                Msg.send(p, "<#5FE3A0><b>Seltener Fund!</b> <white>" + m.name().toLowerCase().replace('_', ' ') + " <gray>zum ersten Mal: <#5FE3A0>+"
+                        + jewels + " Juwelen");
+                Sfx.play(core, p, Sfx.Kind.EPIC);
+            }
             checkMilestones(p);
             checkAchievements(p);
         }
