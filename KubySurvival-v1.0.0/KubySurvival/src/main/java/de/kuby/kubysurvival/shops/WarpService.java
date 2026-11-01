@@ -155,8 +155,10 @@ public final class WarpService {
         if (!w.place.isBlank()) return w.place;
         String owner = org.bukkit.Bukkit.getOfflinePlayer(w.owner).getName();
         // Englisch direkt (die Vorlage „s Grundstück“ würde auch „Dieses Grundstück“ treffen)
-        if (de.kuby.kubyplugins.util.I18n.context()) return (owner == null ? "Player" : owner) + "'s plot";
-        return (owner == null ? "Spieler" : owner) + "s Grundstück";
+        // wie im Original auf 24 Zeichen gekürzt (so lang darf ein eigener Ort-Name sein)
+        String auto = de.kuby.kubyplugins.util.I18n.context() ? (owner == null ? "Player" : owner) + "'s plot"
+                : (owner == null ? "Spieler" : owner) + "s Grundstück";
+        return auto.length() > 24 ? auto.substring(0, 24) : auto;
     }
 
     /** Einstellungen des Besitzers: Kategorie, Farbe, Ort-Name, Beschreibung. Null bei Erfolg, sonst warum nicht. */
