@@ -154,7 +154,7 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Selbsttest baut alle Seiten und prüft Möbel- und Pet-Katalog, Shop-Bilder, Schlüsselarten und Farmpass-Seite
   - Server einrichten: LuckPerms-Gruppen `platin`, `diamant`, `smaragd`, `netherit`; Farm-Kiste am Spawn aufstellen (`/keys kiste set farm survival`). Ältere `config.yml`: `keys.types` um `farm;Farm;#54FC54` und `crates.survival` um die Farm-Kiste ergänzen (der Shop-Abschnitt `jewelshop-survival` kommt bei Fehlen aus dem Plugin)
   - Abweichung von der Referenz: der Tokens-Hinweis nennt `/tokenshop` statt `/shop` (in Survival öffnet `/shop` den Item-Shop)
-- [ ] 12.9 Dialoge nach den neuen Referenzen (Release „Neue-referenzen“, 91 Bilder), pixelgenau wie die Shops:
+- [x] 12.9 Dialoge nach den neuen Referenzen (Release „Neue-referenzen“, 91 Bilder), pixelgenau wie die Shops:
   - [x] 12.9a Spielzeit: Kopf mit Geschenk, „x von 57 Stufen abgeholt“, „Deine Spielzeit“; „Alle abholen (n)“, Seiten „Stufen 1 bis 4“ mit Pfeilen; Zeilen mit Name, Belohnung (Coins, Tokens, Vote-/Epic-/Kosmetik-Key), „ab n Std.“, Balken, „Bereit!“ und Abholen; Farbe je Stufengruppe (57 Stufen)
     - Grafiken pixelgenau aus den Referenzen (`tools/extract_playtime.py` → `tools/assets/playtime`, Präfix `pt_`): Kopf, Knöpfe, Seiten-Knöpfe, 10 Zeilen-Farben (grau, türkis, gold, orange, bernstein, blau, pink, lila, rot, bereit grün), Geschenk, Sanduhr, Balken
     - Balken mit Farbverlauf wie in der Referenz: neue Kit-Funktion `Canvas.strip` (ein Zeichen je Füllbreite, `KitData.Strip`), Füllung wie im Original `max(3, round(200 · Anteil) − 1)` px
