@@ -129,8 +129,11 @@ public final class IslandListener implements Listener {
         if (!inSkyblock(victim.getWorld())) return;
         Player p = attacker(e.getDamager());
         if (p == null) return;
-        if (victim instanceof Player && !addon.getConfig().getBoolean("insel.pvp", false)) {
-            e.setCancelled(true);
+        if (victim instanceof Player) {
+            Location spawn = core.modes().spawnOf(ModeService.SKYBLOCK);
+            int r = addon.getConfig().getInt("insel.pvp-spawn-radius", 40);
+            boolean atSpawn = spawn != null && spawn.getWorld() == victim.getWorld() && spawn.distanceSquared(victim.getLocation()) < (double) r * r;
+            if (!addon.getConfig().getBoolean("insel.pvp", true) || atSpawn) e.setCancelled(true);
             return;
         }
         if (victim instanceof Monster || victim instanceof Player) return;

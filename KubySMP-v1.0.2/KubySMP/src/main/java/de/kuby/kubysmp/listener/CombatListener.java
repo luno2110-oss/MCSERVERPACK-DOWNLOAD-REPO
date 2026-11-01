@@ -50,6 +50,8 @@ public final class CombatListener implements Listener {
     @EventHandler
     public void onDeath(PlayerDeathEvent e) {
         if (KubySMP.get().duels().handleDeath(e)) return;
+        // Kills, Tode, Trophäen und Kopfgelder zählen nur im SMP
+        if (!de.kuby.kubyplugins.service.ModeService.SMP.equals(plugin.modes().modeOf(e.getEntity().getUniqueId()))) return;
         plugin.rtpQueue().onDeath(e.getEntity().getUniqueId());
         Player victim = e.getEntity();
         KubySMP.get().combat().clear(victim.getUniqueId());

@@ -93,14 +93,16 @@ public final class StatsScreen {
             cells.add(new Cell(KitData.Icon.DIAMOND, "Kills", n(s.kills), GREEN));
             cells.add(new Cell(KitData.Icon.TOTEM, "Tode", n(s.deaths), red));
             cells.add(new Cell(KitData.Icon.STAR, "K/D", String.format(Locale.GERMANY, "%.2f", s.deaths == 0 ? s.kills : (double) s.kills / s.deaths), WHITE));
-            cells.add(new Cell(KitData.Icon.GOLD_INGOT, "Trophäen", n(s.trophies), gold));
-            cells.add(new Cell(KitData.Icon.NAME_TAG, "Liga", net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText()
-                    .serialize(Msg.parse(StatsService.league(s.trophies))), WHITE));
+            if (ModeService.SMP.equals(mode)) {
+                cells.add(new Cell(KitData.Icon.GOLD_INGOT, "Trophäen", n(s.trophies), gold));
+                cells.add(new Cell(KitData.Icon.NAME_TAG, "Liga", net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText()
+                        .serialize(Msg.parse(StatsService.league(s.trophies))), WHITE));
+            }
             cells.add(new Cell(KitData.Icon.EXPERIENCE, "XP", n(s.xp), GREEN));
             cells.add(new Cell(KitData.Icon.GOLD_NUGGET, "Coins", n(plugin.modes().moneyIn(id, mode)), gold));
             cells.add(new Cell(KitData.Icon.CLOCK, "Spielzeit", PlaytimeScreen.duration(plugin.playtime().minutesOf(id)), WHITE));
             cells.add(new Cell(KitData.Icon.PAPER, "Votes", n(stat("votes", id)), green));
-            boards.add(new Board("Trophäen", "ranking"));
+            if (ModeService.SMP.equals(mode)) boards.add(new Board("Trophäen", "ranking"));
             boards.add(new Board("Casino", "casino stats"));
         }
         String name = target.getName() == null ? "Unbekannt" : target.getName();

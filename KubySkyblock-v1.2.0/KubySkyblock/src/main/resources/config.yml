@@ -11,7 +11,8 @@ insel:
     groesse: [0, 25000, 75000, 200000, 500000]   # Preis für Stufe 1, 2, ... (Index 0 = Start)
     mitglieder: [0, 10000, 40000, 100000]
   besucher-standard: true       # neue Inseln offen für Besucher
-  pvp: false                    # Kampf zwischen Spielern in der Skyblock-Welt
+  pvp: true                     # Kampf zwischen Spielern in der Skyblock-Welt (nicht am Spawn)
+  pvp-spawn-radius: 40
   void-rettung: true            # wer ins Leere fällt, landet zu Hause statt zu sterben
   neustart-abklingzeit-stunden: 24
   leeren-spalten-pro-tick: 400  # Neustart/Aufgeben: so viele Spalten je Tick leeren

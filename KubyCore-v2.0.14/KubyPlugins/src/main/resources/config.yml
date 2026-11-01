@@ -67,6 +67,7 @@ sellmulti:
   max-level: 10
 
 pvp:
+  modi: [smp, skyblock]         # nur hier dürfen Spieler sich schaden (Survival und Lobby: kein PvP)
   newbie-minutes: 30
   spawn-radius: 30
 
@@ -545,6 +546,7 @@ modus-befehle:
   duel: [smp]
   turnier: [smp]
   versichern: [smp]
+  ranking: [smp]
   # Survival
   angeln: [survival]
   claim: [survival]

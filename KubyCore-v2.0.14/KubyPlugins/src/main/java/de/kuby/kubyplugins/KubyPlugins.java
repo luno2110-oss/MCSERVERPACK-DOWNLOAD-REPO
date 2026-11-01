@@ -397,6 +397,7 @@ public final class KubyPlugins extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new de.kuby.kubyplugins.listener.ModelListener(this), this);
         getServer().getPluginManager().registerEvents(new WorldBorderListener(this), this);
         getServer().getPluginManager().registerEvents(new de.kuby.kubyplugins.listener.ModeCommandListener(this), this);
+        getServer().getPluginManager().registerEvents(new de.kuby.kubyplugins.listener.PvpModeListener(this), this);
         getServer().getPluginManager().registerEvents(new EditListener(this), this);
         getServer().getPluginManager().registerEvents(new RegionListener(this), this);
         getServer().getPluginManager().registerEvents(new BlackjackListener(this), this);
