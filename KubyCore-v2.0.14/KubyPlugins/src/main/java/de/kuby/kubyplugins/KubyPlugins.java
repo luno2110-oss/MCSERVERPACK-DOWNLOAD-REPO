@@ -168,6 +168,7 @@ public final class KubyPlugins extends JavaPlugin {
         stats = new StatsService(this);
         prompts = new PromptService(this);
         playerSettings = new de.kuby.kubyplugins.service.PlayerSettings(this);
+        infoBar = new de.kuby.kubyplugins.service.InfoBar(this);
         loadLanguage();
         notifications = new de.kuby.kubyplugins.service.NotifyService(this);
         dailyPot = new DailyPotService(this);
@@ -345,6 +346,8 @@ public final class KubyPlugins extends JavaPlugin {
                 playerSettings.reset(p.getUniqueId(), "bar.");
                 playerSettings.set(p.getUniqueId(), "infobar", true);
                 de.kuby.kubyplugins.util.Msg.send(p, "<green>Info-Leiste zurückgesetzt.");
+            } else if (bar && uiPack.active(p)) {
+                new de.kuby.kubyplugins.gui.InfoBarScreen(this).show(p);
             } else if (bar) {
                 new de.kuby.kubyplugins.gui.PlayerSettingsMenu(this, true).open(p);
             } else {
@@ -515,6 +518,8 @@ public final class KubyPlugins extends JavaPlugin {
     public PromptService prompts() { return prompts; }
     private de.kuby.kubyplugins.service.PlayerSettings playerSettings;
     public de.kuby.kubyplugins.service.PlayerSettings playerSettings() { return playerSettings; }
+    private de.kuby.kubyplugins.service.InfoBar infoBar;
+    public de.kuby.kubyplugins.service.InfoBar infoBar() { return infoBar; }
     private de.kuby.kubyplugins.service.NotifyService notifications;
     private de.kuby.kubyplugins.service.DisplaySettings displaySettings;
     private de.kuby.kubyplugins.service.TranslateService translator;

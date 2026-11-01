@@ -541,6 +541,43 @@ def hud_cap():
     return img
 
 
+# Info-Leiste nach den Referenzen „Neue-referenzen“ (tools/extract_infobar.py, Ordner tools/assets/infobar): je Design
+# das Mittelstück in Binärstücken (1 bis 64 px), die Enden mit Verzierung, dazu Münzen, Juwel, Angel und der Punkt „·“.
+# Muss zu SurvivalHud (Zeichen, Abstände) und InfoBar.Design (Maße) passen.
+INFOBAR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "infobar")
+IB_DESIGNS = ("wald", "kristall", "krone", "frost")
+IB_BASE, IB_STEP, IB_ICONS = 0xE200, 0x20, 0xE280
+IB_BODY_ASCENT = 12 - HUD_TEXT_SHIFT     # Oberkante des Mittelstücks 5 px über der Schrift
+
+
+def build_infobar(save):
+    if not os.path.isdir(INFOBAR):
+        print("Hinweis: %s fehlt, Info-Leiste nur im alten Design" % INFOBAR)
+        return
+    with open(os.path.join(INFOBAR, "art.json"), encoding="utf-8") as f:
+        meta = json.load(f)
+    for i, name in enumerate(IB_DESIGNS):
+        base = IB_BASE + IB_STEP * i
+        body = Image.open(os.path.join(INFOBAR, "strip_body_%s.png" % name)).convert("RGBA")
+        column = body.crop((0, 0, 1, body.height))
+        for k, width in enumerate((1, 2, 4, 8, 16, 32, 64)):
+            tile = new(width, body.height)
+            for x in range(width):
+                tile.paste(column, (x, 0))
+            save(tile, "ib_%s_%d" % (name, width), body.height, IB_BODY_ASCENT, chr(base + k))
+        up = meta["design"][name]["up"]
+        for side, off in (("l", 8), ("r", 9)):
+            cap = Image.open(os.path.join(INFOBAR, "art_cap_%s_%s.png" % (side, name))).convert("RGBA")
+            save(cap, "ib_%s_cap_%s" % (name, side), cap.height, IB_BODY_ASCENT + up, chr(base + off))
+    for k, name in enumerate(("coin", "gem", "rod")):
+        img = Image.open(os.path.join(INFOBAR, "art_hud_%s.png" % name)).convert("RGBA")
+        dy = meta["art"]["hud_" + name]["y"]
+        save(img, "ib_" + name, img.height, IB_BODY_ASCENT - dy, chr(IB_ICONS + k))
+    dot = new(1, 1)
+    dot.putpixel((0, 0), (255, 255, 255, 255))
+    save(dot, "ib_dot", 1, IB_BODY_ASCENT - 8, chr(IB_ICONS + 3))
+
+
 def build_hud(out, spaces):
     tex = os.path.join(out, "assets/kubyplugins/textures/hud")
     font = os.path.join(out, "assets/kubyplugins/font")
@@ -574,6 +611,7 @@ def build_hud(out, spaces):
     for i, name in enumerate(ICON_ORDER):
         providers.append({"type": "bitmap", "file": "kubyplugins:sb/sb_" + name + ".png", "height": 8,
                           "ascent": 7 - HUD_TEXT_SHIFT + 1, "chars": [chr(0xE010 + i)]})
+    build_infobar(save)
     with open(os.path.join(font, "hud.json"), "w", encoding="utf-8") as f:
         json.dump({"providers": providers}, f, ensure_ascii=True, indent=1)
     # Den weissen Bossbar-Balken unsichtbar machen (die Anzeige nutzt nur den Titel)

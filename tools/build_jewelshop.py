@@ -22,8 +22,10 @@ ASSETS_RULES = os.path.join(HERE, "assets", "rules")
 ASSETS_FRIENDS = os.path.join(HERE, "assets", "friends")
 # Support (Release „Neue-referenzen“, extract_support.py): Präfix su_
 ASSETS_SUPPORT = os.path.join(HERE, "assets", "support")
+# Info-Leiste (Release „Neue-referenzen“, extract_infobar.py): Präfix ib_; die Leisten-Teile nutzt auch build_sb_pack.py
+ASSETS_INFOBAR = os.path.join(HERE, "assets", "infobar")
 SETS = ((ASSETS, "js_"), (ASSETS_SURVIVAL, "jss_"), (ASSETS_PLAYTIME, "pt_"), (ASSETS_RULES, "rg_"),
-        (ASSETS_FRIENDS, "fr_"), (ASSETS_SUPPORT, "su_"))
+        (ASSETS_FRIENDS, "fr_"), (ASSETS_SUPPORT, "su_"), (ASSETS_INFOBAR, "ib_"))
 
 
 def available():

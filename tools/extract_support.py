@@ -16,7 +16,6 @@ Ausgabe (Präfix su_ im Kit):
 import json
 import os
 import sys
-from collections import Counter
 
 import numpy as np
 from PIL import Image
@@ -27,25 +26,33 @@ from extract_playtime import pill  # noqa: E402
 
 
 def nine_clean(a, x, y, w, h, n=7, mirror_bottom=False):
-    """9-Slice wie nine_auto, aber Mittelzeile und -spalte so, dass auch ihr Schnittpunkt Füllfarbe ist und ihre
-    Randstücke der Mehrheit gleichen (in vollen Karten mit Bild, Text und Knopf trifft nine_auto sonst ein
-    Schriftpixel oder den Pfeil am Rand, und der ganze Innenraum oder die Kante bekäme einen Punkt)."""
+    """9-Slice wie nine_auto, aber Mittelzeile und -spalte so, dass auch ihr Schnittpunkt Füllfarbe ist und sie
+    möglichst überall der häufigsten Farbe ihrer Zeile bzw. Spalte gleichen (in vollen Karten mit Bild, Text und Knopf
+    trifft nine_auto sonst ein Schriftpixel, einen Schatten oder den Pfeil am Rand, und der ganze Innenraum oder die
+    Kante bekäme einen Punkt)."""
     box = a[y:y + h, x:x + w]
     fill = mode_color(box[n:h - n, n:w - n])
     is_fill = np.abs(box - fill).sum(axis=2) < 6
     rows = list(range(n, h - n)) if h > 2 * n else [n]
     cols = list(range(n, w - n))
+    top = h if not mirror_bottom else h - n
+    # häufigste Farbe je Zeile (über die inneren Spalten) und je Spalte (über die inneren Zeilen)
+    row_mode = np.array([mode_color(box[r:r + 1, n:w - n]) for r in range(h)])
+    col_mode = np.array([mode_color(box[n:h - n, c:c + 1]) for c in range(w)])
 
-    def redge(r):
-        return box[r, :n].tobytes() + box[r, w - n:].tobytes()
+    edge_rows = [r for r in range(top) if r < n or r >= h - n]
+    edge_cols = list(range(n)) + list(range(w - n, w))
 
-    def cedge(c):
-        return box[:n, c].tobytes() + (b"" if mirror_bottom else box[h - n:, c].tobytes())
+    def col_score(c):
+        ok = np.abs(box[:top, c] - row_mode[:top]).sum(axis=1) < 6
+        return int(ok[edge_rows].sum()), int(ok.sum())
 
-    best_r = Counter(map(redge, rows)).most_common(1)[0][0]
-    my = max(rows, key=lambda r: (redge(r) == best_r, int(is_fill[r, n:w - n].sum())))
-    best_c = Counter(map(cedge, cols)).most_common(1)[0][0]
-    mx = max(cols, key=lambda c: (bool(is_fill[my, c]), cedge(c) == best_c, int(is_fill[n:h - n, c].sum())))
+    def row_score(r):
+        ok = np.abs(box[r, :] - col_mode).sum(axis=1) < 6
+        return int(ok[edge_cols].sum()), int(ok.sum())
+
+    my = max(rows, key=lambda r: (row_score(r)[0], int(is_fill[r, n:w - n].sum()), row_score(r)[1]))
+    mx = max(cols, key=lambda c: (bool(is_fill[my, c]), col_score(c)))
     return nine_auto(a, x, y, w, h, n=n, mid=(mx, my), mirror_bottom=mirror_bottom)
 
 

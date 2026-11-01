@@ -1,6 +1,7 @@
 package de.kuby.kubyplugins.gui;
 
 import de.kuby.kubyplugins.KubyPlugins;
+import de.kuby.kubyplugins.service.InfoBar;
 import de.kuby.kubyplugins.service.PlayerSettings;
 import de.kuby.kubyplugins.util.Items;
 import de.kuby.kubyplugins.util.Msg;
@@ -16,9 +17,10 @@ public final class PlayerSettingsMenu extends GuiMenu {
     private static final String[] GENERAL = {"msg", "friends", "tpa", "jump", "sounds", "scoreboard", "infobar"};
     private static final Material[] GENERAL_ICONS = {Material.PAPER, Material.PLAYER_HEAD, Material.ENDER_PEARL,
             Material.FEATHER, Material.NOTE_BLOCK, Material.OAK_SIGN, Material.WHITE_BANNER};
-    private static final String[] BAR = {"infobar", "bar.money", "bar.job", "bar.place", "bar.time", "bar.quest"};
-    private static final Material[] BAR_ICONS = {Material.WHITE_BANNER, Material.GOLD_NUGGET, Material.IRON_PICKAXE, Material.COMPASS,
-            Material.CLOCK, Material.WRITABLE_BOOK};
+    private static final String[] BAR = {"infobar", "bar.time", "bar.coins", "bar.jewels", "bar.job", "bar.place", "bar.quest",
+            "bar.side"};
+    private static final Material[] BAR_ICONS = {Material.WHITE_BANNER, Material.CLOCK, Material.SUNFLOWER, Material.EMERALD,
+            Material.IRON_PICKAXE, Material.COMPASS, Material.WRITABLE_BOOK, Material.MAP};
 
     private final boolean bar;
 
@@ -35,10 +37,12 @@ public final class PlayerSettingsMenu extends GuiMenu {
         for (int i = 0; i < keys.length; i++) {
             String key = keys[i];
             PlayerSettings.Option o = PlayerSettings.OPTIONS.get(key);
-            boolean on = plugin.playerSettings().get(p.getUniqueId(), key);
+            InfoBar.Element el = element(key);
+            boolean on = el != null ? plugin.infoBar().visible(p.getUniqueId(), el) : plugin.playerSettings().get(p.getUniqueId(), key);
             set(start + i, Items.make(icons[i], (on ? "<green>" : "<red>") + o.name(false) + ": " + (on ? "an" : "aus"),
                     List.of("<gray>" + o.desc(false), "", "<yellow>Klick zum Umschalten")), e -> {
-                plugin.playerSettings().toggle(p.getUniqueId(), key);
+                if (el != null) plugin.infoBar().toggle(p.getUniqueId(), el);
+                else plugin.playerSettings().toggle(p.getUniqueId(), key);
                 Sfx.play(plugin, p, Sfx.Kind.CLICK);
                 open(p);
             });
@@ -51,5 +55,10 @@ public final class PlayerSettingsMenu extends GuiMenu {
                     e -> new PlayerSettingsMenu(plugin, true).open(p));
         }
         addBack(p);
+    }
+
+    private static InfoBar.Element element(String key) {
+        for (InfoBar.Element e : InfoBar.Element.values()) if (e.key().equals(key)) return e;
+        return null;
     }
 }

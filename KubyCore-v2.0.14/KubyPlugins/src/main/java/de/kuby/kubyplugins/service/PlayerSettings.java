@@ -66,6 +66,11 @@ public final class PlayerSettings {
             new Choice("time", "Uhrzeit", "Time"),
             new Choice("off", "Deaktiviert", "Disabled"));
 
+    /** Designs der Info-Leiste (InfoBar.Design), das erste ist der Standard. */
+    public static final List<Choice> BAR_DESIGNS = List.of(new Choice("wald", "Wald", "Forest"),
+            new Choice("kristall", "Kristall", "Crystal"), new Choice("krone", "Krone", "Crown"),
+            new Choice("frost", "Frost", "Frost"));
+
     public static final List<Choice> AUTO_TPA = List.of(
             new Choice("off", "Aus", "Off"),
             new Choice("friends", "Freunde", "Friends"),
@@ -178,7 +183,12 @@ public final class PlayerSettings {
         add("bar.place", null, "Leiste: Ort", "Bar: place", "Spawn, Grundstück, Wildnis, Farmwelt",
                 "Spawn, claim, wilderness, farm world", true);
         add("bar.quest", null, "Leiste: Quest", "Bar: quest", "Verfolgte Quest mit Fortschritt", "Tracked quest with progress", true);
-        add("bar.time", null, "Leiste: Uhrzeit", "Bar: time", "Echte Uhrzeit (Berlin)", "Real time (Berlin)", false);
+        add("bar.time", null, "Leiste: Uhrzeit", "Bar: time", "Tageszeit in der Welt", "Time of day in the world", false);
+        add("bar.coins", null, "Leiste: Coins", "Bar: coins", "Dein Kontostand", "Your balance", true);
+        add("bar.jewels", null, "Leiste: Juwelen", "Bar: jewels", "Deine Juwelen", "Your jewels", true);
+        add("bar.side", null, "Leiste: Nebenquest", "Bar: side quest", "Aktive Nebenquest", "Active side quest", true);
+        addChoice("bar.design", null, "Leiste: Design", "Bar: design", "Aussehen der Info-Leiste.", "Look of the info bar.",
+                BAR_DESIGNS, ALL);
         add("translate", null, "Auto-Übersetzen", "Auto-translate",
                 "Übersetzt Nachrichten anderer Spieler.", "Translates messages from other players.", false);
         addChoice("lang", null, "Sprache", "Language", "Sprache der Menüs und Meldungen.",

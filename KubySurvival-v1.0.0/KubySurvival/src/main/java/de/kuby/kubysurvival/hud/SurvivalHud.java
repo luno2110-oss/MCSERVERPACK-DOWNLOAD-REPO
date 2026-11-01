@@ -1,6 +1,9 @@
 package de.kuby.kubysurvival.hud;
 
 import de.kuby.kubyplugins.KubyPlugins;
+import de.kuby.kubyplugins.service.InfoBar;
+import de.kuby.kubyplugins.service.InfoBar.Design;
+import de.kuby.kubyplugins.service.InfoBar.Element;
 import de.kuby.kubyplugins.service.ModeService;
 import de.kuby.kubyplugins.ui.Ui;
 import de.kuby.kubysurvival.KubySurvival;
@@ -8,6 +11,7 @@ import de.kuby.kubysurvival.claim.ClaimService;
 import de.kuby.kubysurvival.angeln.AngelService;
 import de.kuby.kubysurvival.jobs.JobService;
 import de.kuby.kubysurvival.quests.QuestService;
+import de.kuby.kubysurvival.quests.SideQuestService;
 import de.kuby.kubyplugins.util.Msg;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.key.Key;
@@ -31,56 +35,62 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Survival-Leiste oben (Platz der Bossbar): drei Holzleisten mit Geld und Juwelen, aktivem Job und Ort.
- * Darunter die verfolgte Quest als grüne Bossbar.
- * Die Leisten sind Zeichen der Schrift kubyplugins:hud aus dem Pack KubyUI, der Bossbar-Balken selbst ist
+ * Survival-Leiste oben (Platz der Bossbar) nach der Referenz „Neue-referenzen“: Leisten im gewählten Design (Wald,
+ * Kristall, Krone, Frost) mit Uhrzeit, Geld (Coins und Juwelen nebeneinander in einer Leiste), Job und Ort in der
+ * Reihenfolge aus /bossbar. Verfolgte Quest und Nebenquest stehen als eigene Balken darunter (ebenfalls in dieser
+ * Reihenfolge). Die Leisten sind Zeichen der Schrift kubyplugins:hud aus dem Pack KubyUI, der Bossbar-Balken selbst ist
  * durch das Pack unsichtbar (Farbe weiß). Solange die Leiste sichtbar ist, entfällt die Anzeige über der Hotbar.
- * Muss zu tools/build_sb_pack.py (build_hud) passen.
+ * Muss zu tools/build_sb_pack.py (build_infobar) passen; die Vorschau im Menü (InfoBarScreen) nutzt dieselben Maße.
  */
 public final class SurvivalHud implements Listener {
 
     private static final Key FONT = Key.key("kubyplugins", "hud");
-    private static final char CAP_LEFT = '';
-    private static final char CAP_RIGHT = '';
-    private static final char DOT = '';
-    private static final int TILE_BASE = 0xE040;              // Breiten 1, 2, 4, ..., 64
+    /** Je Design: Mittelstück 1, 2, 4, ..., 64 px ab base, Enden bei base + 8 und base + 9 (siehe build_infobar). */
+    private static final int IB_BASE = 0xE200, IB_STEP = 0x20;
     private static final int[] TILE_WIDTHS = {64, 32, 16, 8, 4, 2, 1};
-    private static final char I_COIN = '';
-    private static final char I_GEM = '';
-    private static final char I_ROD = '';
-    private static final char I_COMPASS = '';
-    private static final char I_CLOCK = '';
-    private static final int ICON_ADV = 9;
-    private static final int GAP = 2;                          // Abstand zwischen den Leisten
-
-    private static final TextColor DARK = TextColor.color(0x3C2D1E);
-    private static final TextColor TEAL = TextColor.color(0x2E8C8C);
-    private static final TextColor GRAY = TextColor.color(0x55504A);
-    private static final TextColor OLIVE = TextColor.color(0x8A8424);
-    private static final TextColor GREEN = TextColor.color(0x3A9440);
+    private static final char I_COIN = '', I_GEM = '', I_ROD = '', DOT = '';
+    /** Kompass und Uhr aus dem Scoreboard (8 x 8, 1 px über der Schrift). */
+    private static final char I_COMPASS = '', I_CLOCK = '';
+    private static final int GAP = 4;                          // Abstand zwischen den Leisten
+    private static final TextColor DOT_COLOR = TextColor.color(0x545454);
 
     private final KubySurvival addon;
     private final KubyPlugins core;
     private final Map<UUID, BossBar> bars = new HashMap<>();
-    /** Verfolgte Quest: eigene Bossbar mit grünem Balken. Unter der Leiste liegt eine leere Bossbar als Abstand. */
-    private final Map<UUID, BossBar> questBars = new HashMap<>();
+    /** Balken unter der Leiste (Quest, Nebenquest) in der Reihenfolge, in der sie gezeigt werden. */
+    private final Map<UUID, List<Row>> rows = new HashMap<>();
+    /** Unter der Leiste eine leere Bossbar als Abstand zu den Balken. */
     private final Map<UUID, BossBar> spacers = new HashMap<>();
+
+    private record Row(Element element, BossBar bar) {}
 
     public SurvivalHud(KubySurvival addon, KubyPlugins core) {
         this.addon = addon;
         this.core = core;
         core.setHotbarHidden(p -> bars.containsKey(p.getUniqueId()));
+        InfoBar.jobSource(this::jobLine);
         addon.getServer().getScheduler().runTaskTimer(addon, this::tick, 20L, 10L);
+    }
+
+    private InfoBar.JobLine jobLine(Player p) {
+        JobService jobs = addon.jobs();
+        JobService.Worker w = jobs.worker(p.getUniqueId());
+        if (w.job == null) return InfoBar.JobLine.NONE;
+        return new InfoBar.JobLine(w.job.display, jobs.jobLevel(w, w.job), jobs.progress(w, w.job), w.earnedHour,
+                jobs.hourlyCap(w));
+    }
+
+    private boolean survival(Player p) {
+        return ModeService.SURVIVAL.equals(core.modes().modeOf(p.getUniqueId()));
     }
 
     /** Leiste nur in Survival und nur mit geladenem Pack (sonst bleibt die Anzeige über der Hotbar). */
     private boolean wants(Player p) {
-        return core.getConfig().getBoolean("survival-hud.enabled", true)
-                && core.playerSettings().get(p.getUniqueId(), "infobar")
-                && (core.playerSettings().get(p.getUniqueId(), "bar.money") || core.playerSettings().get(p.getUniqueId(), "bar.job")
-                    || core.playerSettings().get(p.getUniqueId(), "bar.place") || core.playerSettings().get(p.getUniqueId(), "bar.time"))
-                && ModeService.SURVIVAL.equals(core.modes().modeOf(p.getUniqueId()))
-                && core.uiPack().active(p);
+        UUID id = p.getUniqueId();
+        if (!core.getConfig().getBoolean("survival-hud.enabled", true) || !core.infoBar().on(id) || !survival(p)
+                || !core.uiPack().active(p)) return false;
+        for (Element e : Element.values()) if (!e.row() && core.infoBar().visible(id, e)) return true;
+        return false;
     }
 
     private void tick() {
@@ -92,6 +102,7 @@ public final class SurvivalHud implements Listener {
                 if (bar != null) {
                     p.hideBossBar(bar);
                     bars.remove(id);
+                    added = true;
                 }
             } else {
                 Component title = build(p);
@@ -104,63 +115,100 @@ public final class SurvivalHud implements Listener {
                     bar.name(title);
                 }
             }
-            questBar(p, added);
+            rows(p, added);
         }
     }
 
-    /** Zeigt die verfolgte Quest unter der Leiste (in Survival, auch ohne Pack). */
-    private void questBar(Player p, boolean hudAdded) {
+    // ---------- Balken unter der Leiste ----------
+
+    /** Inhalt eines Balkens: Titel, Fortschritt 0..1, Farbe; null = nichts anzuzeigen. */
+    private record RowContent(Component name, float progress, BossBar.Color color) {}
+
+    private RowContent content(Player p, Element e) {
         UUID id = p.getUniqueId();
-        QuestService.Track t = ModeService.SURVIVAL.equals(core.modes().modeOf(id)) && addon.quests() != null
-                && core.playerSettings().get(id, "infobar") && core.playerSettings().get(id, "bar.quest")
-                ? addon.quests().track(id) : null;
-        BossBar quest = questBars.get(id);
-        BossBar spacer = spacers.get(id);
-        if (t == null) {
-            if (quest != null) p.hideBossBar(questBars.remove(id));
-            if (spacer != null) p.hideBossBar(spacers.remove(id));
-            return;
+        if (e == Element.QUEST) {
+            QuestService.Track t = addon.quests() == null ? null : addon.quests().track(id);
+            if (t == null) return null;
+            long goal = Math.max(1, t.def().amount());
+            return new RowContent(Msg.parse("<gold>" + Msg.escape(t.def().name()) + " <dark_gray>· <white>" + Msg.escape(t.def().task())
+                    + " <dark_gray>· <green>" + Msg.coins(t.progress()) + "/" + Msg.coins(goal)),
+                    Math.max(0f, Math.min(1f, (float) t.progress() / goal)), BossBar.Color.GREEN);
         }
+        SideQuestService side = addon.sideQuests();
+        QuestService.Def d = side == null ? null : side.running(id);
+        if (d == null) return null;
+        SideQuestService.Figure f = side.runningFigure(id);
+        long goal = Math.max(1, d.amount());
+        long have = side.runningProgress(id);
+        return new RowContent(Msg.parse("<light_purple>" + Msg.escape(f == null ? d.name() : f.name()) + " <dark_gray>· <white>"
+                + Msg.escape(d.task()) + " <dark_gray>· <green>" + Msg.coins(have) + "/" + Msg.coins(goal)),
+                Math.max(0f, Math.min(1f, (float) have / goal)), BossBar.Color.PURPLE);
+    }
+
+    /** Zeigt Quest und Nebenquest unter der Leiste (in Survival, auch ohne Pack), in der eingestellten Reihenfolge. */
+    private void rows(Player p, boolean hudChanged) {
+        UUID id = p.getUniqueId();
+        List<Element> want = new ArrayList<>();
+        List<RowContent> contents = new ArrayList<>();
+        if (survival(p) && core.infoBar().on(id)) {
+            for (Element e : core.infoBar().order(id)) {
+                if (!e.row() || !core.infoBar().visible(id, e)) continue;
+                RowContent c = content(p, e);
+                if (c == null) continue;
+                want.add(e);
+                contents.add(c);
+            }
+        }
+        List<Row> have = rows.getOrDefault(id, List.of());
         boolean hud = bars.containsKey(id);
-        // Reihenfolge: Leiste, Abstand, Quest. Kommt etwas Neues dazu, wird neu aufgebaut.
-        boolean rebuild = hudAdded || quest == null || (hud != (spacer != null));
+        List<Element> haveEls = new ArrayList<>();
+        for (Row r : have) haveEls.add(r.element());
+        // Reihenfolge: Leiste, Abstand, Balken. Ändert sich etwas daran, wird neu aufgebaut.
+        boolean rebuild = hudChanged || !haveEls.equals(want) || (hud && !want.isEmpty()) != spacers.containsKey(id);
         if (rebuild) {
-            if (quest != null) p.hideBossBar(quest);
+            for (Row r : have) p.hideBossBar(r.bar());
+            BossBar spacer = spacers.remove(id);
             if (spacer != null) p.hideBossBar(spacer);
-            spacers.remove(id);
-            if (hud) {
+            List<Row> fresh = new ArrayList<>();
+            if (hud && !want.isEmpty()) {
                 spacer = BossBar.bossBar(Component.empty(), 0f, BossBar.Color.WHITE, BossBar.Overlay.PROGRESS);
                 spacers.put(id, spacer);
                 p.showBossBar(spacer);
             }
-            if (quest == null) {
-                quest = BossBar.bossBar(Component.empty(), 0f, BossBar.Color.GREEN, BossBar.Overlay.NOTCHED_10);
-                questBars.put(id, quest);
+            for (int i = 0; i < want.size(); i++) {
+                RowContent c = contents.get(i);
+                BossBar b = BossBar.bossBar(c.name(), c.progress(), c.color(), BossBar.Overlay.NOTCHED_10);
+                fresh.add(new Row(want.get(i), b));
+                p.showBossBar(b);
             }
-            p.showBossBar(quest);
+            if (fresh.isEmpty()) rows.remove(id);
+            else rows.put(id, fresh);
+            return;
         }
-        long goal = Math.max(1, t.def().amount());
-        float progress = Math.max(0f, Math.min(1f, (float) t.progress() / goal));
-        Component name = Msg.parse("<gold>" + Msg.escape(t.def().name()) + " <dark_gray>· <white>" + Msg.escape(t.def().task())
-                + " <dark_gray>· <green>" + Msg.coins(t.progress()) + "/" + Msg.coins(goal));
-        if (!name.equals(quest.name())) quest.name(name);
-        if (quest.progress() != progress) quest.progress(progress);
+        for (int i = 0; i < have.size(); i++) {
+            BossBar b = have.get(i).bar();
+            RowContent c = contents.get(i);
+            if (!c.name().equals(b.name())) b.name(c.name());
+            if (b.progress() != c.progress()) b.progress(c.progress());
+        }
     }
 
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
-        bars.remove(e.getPlayer().getUniqueId());
-        questBars.remove(e.getPlayer().getUniqueId());
-        spacers.remove(e.getPlayer().getUniqueId());
+        UUID id = e.getPlayer().getUniqueId();
+        bars.remove(id);
+        rows.remove(id);
+        spacers.remove(id);
     }
 
     public void shutdown() {
         for (Player p : Bukkit.getOnlinePlayers()) {
-            BossBar bar = bars.remove(p.getUniqueId());
+            UUID id = p.getUniqueId();
+            BossBar bar = bars.remove(id);
             if (bar != null) p.hideBossBar(bar);
-            BossBar quest = questBars.remove(p.getUniqueId());
-            if (quest != null) p.hideBossBar(quest);
-            BossBar spacer = spacers.remove(p.getUniqueId());
+            for (Row r : rows.getOrDefault(id, List.of())) p.hideBossBar(r.bar());
+            rows.remove(id);
+            BossBar spacer = spacers.remove(id);
             if (spacer != null) p.hideBossBar(spacer);
         }
     }
@@ -169,46 +217,81 @@ public final class SurvivalHud implements Listener {
 
     private Component build(Player p) {
         UUID id = p.getUniqueId();
-        Strip s = new Strip();
-        List<Part> money = new ArrayList<>();
-        money.add(Part.icon(I_COIN));
-        money.add(Part.text(number(core.economy().balance(id)), DARK));
-        money.add(Part.gap(6));
-        money.add(Part.icon(I_GEM));
-        money.add(Part.text(number(core.jewels().balance(id)), DARK));
-        if (core.playerSettings().get(id, "bar.money")) s.panel(money);
+        InfoBar ib = core.infoBar();
+        return title(ib.design(id), ib.order(id), e -> ib.visible(id, e), core.economy().balance(id),
+                core.jewels().balance(id), jobLine(p), place(p), worldTime(p));
+    }
 
-        // Aktiver Job: Level, Fortschritt, Job-Coins diese Stunde / Stundenlimit
-        JobService jobs = addon.jobs();
-        JobService.Worker w = jobs.worker(id);
-        List<Part> job = new ArrayList<>();
-        job.add(Part.icon(I_ROD));
-        if (w.job == null) {
-            job.add(Part.text("Kein Job", GRAY));
-            job.add(Part.dot());
-            job.add(Part.text("/job", TEAL));
-        } else {
-            job.add(Part.text(w.job.ascii, TEAL));
-            job.add(Part.text(" Lv " + jobs.jobLevel(w, w.job), GRAY));
-            job.add(Part.dot());
-            job.add(Part.text(jobs.progress(w, w.job) + "%", OLIVE));
-            job.add(Part.dot());
-            job.add(Part.text(number(w.earnedHour) + "/" + number(jobs.hourlyCap(w)), GREEN));
+    /** Titel der Leiste aus fertigen Werten (auch für die Vorschau ohne Server). */
+    public static Component title(Design d, List<Element> order, java.util.function.Predicate<Element> visible, long coins,
+                                  long jewels, InfoBar.JobLine j, String place, String time) {
+        TextColor value = color(d, 0x493326, 0xFCFCFC), gray = color(d, 0x717171, 0xA8A8A8);
+        Strip s = new Strip(d);
+        List<Part> panel = null;
+        Element last = null;
+        for (Element e : order) {
+            if (e.row() || !visible.test(e)) continue;
+            // Coins und Juwelen direkt hintereinander teilen sich eine Leiste
+            boolean join = panel != null && (e == Element.JEWELS && last == Element.COINS || e == Element.COINS && last == Element.JEWELS);
+            if (!join) {
+                if (panel != null) s.panel(panel);
+                panel = new ArrayList<>();
+            } else {
+                panel.add(Part.gap(8));
+            }
+            switch (e) {
+                case COINS -> {
+                    panel.add(Part.icon(I_COIN, 10, 4));
+                    panel.add(Part.text(number(coins), value, d));
+                }
+                case JEWELS -> {
+                    panel.add(Part.icon(I_GEM, 8, 5));
+                    panel.add(Part.text(number(jewels), value, d));
+                }
+                case JOB -> {
+                    TextColor name = color(d, 0x2E8D8D, 0x54FCFC);
+                    panel.add(Part.icon(I_ROD, 10, 4));
+                    if (j.name() == null) {
+                        panel.add(Part.text("Kein Job", gray, d));
+                        panel.addAll(Part.dot(d));
+                        panel.add(Part.text("/job", name, d));
+                    } else {
+                        panel.add(Part.text(ascii(j.name()), name, d));
+                        panel.add(Part.text(" Lv ", gray, d));
+                        panel.add(Part.text(String.valueOf(j.level()), value, d));
+                        panel.addAll(Part.dot(d));
+                        panel.add(Part.text(j.percent() + "%", color(d, 0x7B7B28, 0xFCFC54), d));
+                        panel.addAll(Part.dot(d));
+                        panel.add(Part.text(number(j.earned()), color(d, 0x339C33, 0x54FC54), d));
+                        panel.add(Part.text("/" + number(j.cap()), gray, d));
+                    }
+                }
+                case PLACE -> {
+                    panel.add(Part.icon(I_COMPASS, 8, 4));
+                    panel.add(Part.text(place, value, d));
+                }
+                case TIME -> {
+                    panel.add(Part.icon(I_CLOCK, 8, 4));
+                    panel.add(Part.text(time, value, d));
+                }
+                default -> {
+                }
+            }
+            last = e;
         }
-        if (core.playerSettings().get(id, "bar.job")) s.panel(job);
-
-        List<Part> place = new ArrayList<>();
-        place.add(Part.icon(I_COMPASS));
-        place.add(Part.text(place(p), DARK));
-        if (core.playerSettings().get(id, "bar.place")) s.panel(place);
-        if (core.playerSettings().get(id, "bar.time")) {
-            List<Part> time = new ArrayList<>();
-            time.add(Part.icon(I_CLOCK));
-            time.add(Part.text(java.time.LocalTime.now(java.time.ZoneId.of("Europe/Berlin"))
-                    .format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")), DARK));
-            s.panel(time);
-        }
+        if (panel != null) s.panel(panel);
         return s.build();
+    }
+
+    private static TextColor color(Design d, int wald, int dark) {
+        return TextColor.color(d.dark ? dark : wald);
+    }
+
+    /** Tageszeit in der Welt als HH:MM (Tick 0 = 06:00). */
+    private static String worldTime(Player p) {
+        long t = p.getWorld().getTime();
+        long h = (t / 1000 + 6) % 24, m = (t % 1000) * 60 / 1000;
+        return String.format(Locale.ROOT, "%02d:%02d", h, m);
     }
 
     /** Ort: Spawn, eigenes oder fremdes Grundstück, Angelzone oder Wildnis. */
@@ -249,22 +332,26 @@ public final class SurvivalHud implements Listener {
 
     /** Ein Stück Inhalt: Platz im Layout und tatsächlicher Vorschub der Zeichen. */
     private record Part(Component c, int width, int advance) {
-        static Part icon(char ch) {
-            return new Part(glyph(String.valueOf(ch)), ICON_ADV + 2, ICON_ADV);
+        /** Grafik width px breit, danach gap px Abstand. */
+        static Part icon(char ch, int width, int gap) {
+            return new Part(glyph(String.valueOf(ch)), width + gap, width + 1);
         }
 
-        static Part text(String s, TextColor color) {
+        /** Text: im Wald dunkel ohne Schatten, sonst hell mit Schatten (wie Minecraft-Schrift). */
+        static Part text(String s, TextColor color, Design d) {
             int w = Ui.width(s, false);
-            return new Part(Component.text(s, color).font(FONT).shadowColor(ShadowColor.none()), w, w);
+            Component c = Component.text(s, color).font(FONT);
+            return new Part(d.dark ? c : c.shadowColor(ShadowColor.none()), w, w);
         }
 
         static Part gap(int px) {
             return new Part(Component.empty(), px, 0);
         }
 
-        static Part dot() {
-            return new Part(Component.empty().append(glyph(Ui.spaceChars(3))).append(glyph(String.valueOf(DOT)))
-                    .append(glyph(Ui.spaceChars(3))), 9, 9);
+        /** „ · “: Leerzeichen, Punkt (1 px, dunkelgrau), Leerzeichen. */
+        static List<Part> dot(Design d) {
+            Component c = Component.text(String.valueOf(DOT), DOT_COLOR).font(FONT);
+            return List.of(gap(4), new Part(d.dark ? c : c.shadowColor(ShadowColor.none()), 2, 2), gap(4));
         }
     }
 
@@ -273,40 +360,47 @@ public final class SurvivalHud implements Listener {
     }
 
     /**
-     * Setzt die Leisten nebeneinander. Jede Leiste: Pfosten links (Textur 12 px, Pfosten bei 5-8), Holzleiste mit
-     * Cremefeld ab x = 7, Inhalt ab x = 12, Pfosten rechts. Der Cursor wird mit Leerzeichen der Schrift gesetzt,
+     * Setzt die Leisten nebeneinander: linkes Ende (d.cap breit), Mittelstück in Binärstücken, rechtes Ende; der
+     * Inhalt beginnt 1 px nach dem linken Ende und endet am rechten. Der Cursor wird mit Leerzeichen der Schrift gesetzt,
      * die Gesamtbreite stimmt, damit Minecraft die Leiste richtig mittig setzt.
      */
     private static final class Strip {
         private final TextComponent.Builder out = Component.text();
+        private final Design design;
+        private final int base;
         private int cursor;
         private int x;
+
+        Strip(Design d) {
+            this.design = d;
+            this.base = IB_BASE + IB_STEP * d.ordinal();
+        }
 
         void panel(List<Part> parts) {
             int content = 0;
             for (Part p : parts) content += p.width();
-            int body = content + 10;
+            int body = content + 1;
+            int cap = design.cap;
             int x0 = x;
-            // Holzleiste in Binärstücken
-            int pos = x0 + 7;
+            int pos = x0 + cap;
             int rest = body;
             for (int i = 0; i < TILE_WIDTHS.length; i++) {
                 while (rest >= TILE_WIDTHS[i]) {
-                    put(pos, String.valueOf((char) (TILE_BASE + (TILE_WIDTHS.length - 1 - i))), TILE_WIDTHS[i] + 1);
+                    put(pos, String.valueOf((char) (base + (TILE_WIDTHS.length - 1 - i))), TILE_WIDTHS[i] + 1);
                     pos += TILE_WIDTHS[i];
                     rest -= TILE_WIDTHS[i];
                 }
             }
-            put(x0, String.valueOf(CAP_LEFT), 13);
-            put(x0 + body + 2, String.valueOf(CAP_RIGHT), 13);
-            int cx = x0 + 12;
+            put(x0, String.valueOf((char) (base + 8)), cap + 1);
+            put(x0 + cap + body, String.valueOf((char) (base + 9)), cap + 1);
+            int cx = x0 + cap + 1;
             for (Part p : parts) {
                 moveTo(cx);
                 out.append(p.c());
                 cursor = cx + p.advance();
                 cx += p.width();
             }
-            x = x0 + body + 14 + GAP;
+            x = x0 + 2 * cap + body + GAP;
         }
 
         private void put(int at, String ch, int advance) {

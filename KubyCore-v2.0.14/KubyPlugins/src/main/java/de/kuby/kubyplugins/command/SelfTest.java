@@ -296,6 +296,22 @@ final class SelfTest {
             fails.add("Support Neues Ticket: " + t);
         }
 
+        // Info-Leiste: alle Designs, an und aus, eigene Reihenfolge
+        de.kuby.kubyplugins.gui.InfoBarScreen.Actions ia = (de.kuby.kubyplugins.gui.InfoBarScreen.Actions)
+                java.lang.reflect.Proxy.newProxyInstance(de.kuby.kubyplugins.gui.InfoBarScreen.Actions.class.getClassLoader(),
+                        new Class<?>[]{de.kuby.kubyplugins.gui.InfoBarScreen.Actions.class}, (o, m, args) -> NO);
+        for (de.kuby.kubyplugins.service.InfoBar.Design d : de.kuby.kubyplugins.service.InfoBar.Design.values()) {
+            boolean on = d.ordinal() % 2 == 0;
+            List<de.kuby.kubyplugins.service.InfoBar.Element> order = new ArrayList<>(List.of(de.kuby.kubyplugins.service.InfoBar.Element.values()));
+            java.util.Collections.rotate(order, d.ordinal());
+            List<Boolean> vis = new ArrayList<>();
+            for (int i = 0; i < order.size(); i++) vis.add(i % 3 != 0);
+            canvas.accept("Info-Leiste " + d.label, () -> de.kuby.kubyplugins.gui.InfoBarScreen.canvas(
+                    new de.kuby.kubyplugins.gui.InfoBarScreen.View(on, d, order, vis, new de.kuby.kubyplugins.gui.InfoBarScreen.Sample(
+                            "1.234.567", "320", on ? new de.kuby.kubyplugins.service.InfoBar.JobLine("Holzfäller", 12, 45, 1200, 3060)
+                            : de.kuby.kubyplugins.service.InfoBar.JobLine.NONE)), ia));
+        }
+
         // Prüfungen aus den Addons (z. B. Survival-Juwelenshop, Möbel- und Pet-Katalog)
         for (java.util.Map.Entry<String, Supplier<Canvas>> en : plugin.selfTestCanvases().entrySet()) {
             canvas.accept(en.getKey(), en.getValue());

@@ -2165,6 +2165,7 @@ Aktenkoffer	Briefcase
 Aktiv	Active
 Aktiv bis {}, verlängern im Store	Active until {}, renew in the store
 Aktiv ✓	Active ✓
+Aktive Nebenquest	Active side quest
 Aktive Zeit in {}, ohne AFK	Active time in {}, without AFK
 Aktualisiert alle zwei Minuten	Updates every two minutes
 Aktuell: {}. Zwei Sprachen zur Wahl.	Current: {}. Two languages to choose from.
@@ -2348,6 +2349,7 @@ Auserwählter	Chosen One
 Ausgestiegen bei 	Cashed out at
 Ausrufezeichen	Exclamation mark
 Ausrüstung, Spawner und Kosmetik	Gear, spawners and cosmetics
+Aussehen der Info-Leiste.	Look of the info bar.
 Ausverkauft.	Sold out.
 Auswahl anlegen	Put on selection
 Auszahlen	Cash out
@@ -2446,6 +2448,7 @@ Benötigt Battlepass-Stufe {}.	Requires battle pass level {}.
 Bereit!	Ready!
 Bergwerk	Mine
 Berta vom Hof hat mir letztens Brot geschenkt. Sag ihr bitte danke von mir!	Berta from the farm gave me bread the other day. Please say thanks from me!
+Beruf und Level	Profession and level
 Beruf wählen	Choose a job
 Beschreib deine Frage etwas genauer (mindestens 10 Zeichen).	Describe your question a bit more precisely (at least 10 characters).
 Beschreibung ändern	Change description
@@ -2769,6 +2772,9 @@ Der Winter kommt und mein Holzstapel ist klein. Fällst du ein paar Bäume?	Wint
 Der beste Platz zum Angeln	The best spot for fishing
 Der erste Einsatz startet die Runde, nach {} Sekunden läuft das Licht über die Zahlen und bleibt auf dem Ergebnis stehen.	The first bet starts the round, after {} seconds the light runs over the numbers and stops on the result.
 Der große Einschlag	The big felling
+Design	Design
+Design {}	Design {}
+Design, Reihenfolge und Elemente zurücksetzen	Reset design, order and elements
 Diamant	Diamond
 Diamant Rang	Diamond Rank
 Diamant bei 3000	Diamond at 3000
@@ -3663,6 +3669,8 @@ In diesem Modus gibt es keine Kisten.	There are no crates in this mode.
 In diesem Modus gibt es keine Spielzeit-Stufen	There are no playtime levels in this mode
 In diesem Modus gibt es keine Stufen	There are no levels in this mode
 Info-Leiste	Info bar
+Info-Leiste an	Info bar on
+Info-Leiste aus	Info bar off
 Info-Leiste einrichten	Set up the info bar
 Infos zur Farmwelt	Info about the farm world
 Inhalt ›	Contents ›
@@ -3890,6 +3898,7 @@ Kostet 	Costs
 Kostet <green>	Costs <green>
 Kraken-Junges	Baby Kraken
 Krieger	Warrior
+Kristall	Crystal
 Kristall-Tausch	Crystal trade
 Kristallforelle	Crystal Trout
 Kristallini	Crystallini
@@ -3942,9 +3951,16 @@ Lehnstuhl	Armchair
 Leider nichts	No luck
 Leider nichts – diesmal keine drei gleichen.	No luck – no three of a kind this time.
 Leise Sohlen	Quiet steps
+Leiste	Bar
+Leiste ausblenden	Hide bar
+Leiste einblenden	Show bar
 Leiste einrichten	Set up the bar
+Leiste: Coins	Bar: coins
+Leiste: Design	Bar: design
 Leiste: Geld	Bar: money
 Leiste: Job	Bar: job
+Leiste: Juwelen	Bar: jewels
+Leiste: Nebenquest	Bar: side quest
 Leiste: Ort	Bar: place
 Leiste: Quest	Bar: quest
 Leiste: Uhrzeit	Bar: time
@@ -4134,6 +4150,8 @@ NPCs entfernen	Remove NPCs
 NPCs zentrieren	Center NPCs
 Nach deiner Scheidung darfst du ab {} wieder heiraten.	After your divorce you may marry again from {}.
 Nach deiner Scheidung darfst du erst ab {} wieder heiraten.	After your divorce you may only marry again from {}.
+Nach oben	Move up
+Nach unten	Move down
 Nach {} Sekunden steigt der Multiplikator, die Kurve wächst.	After {} seconds the multiplier rises, the curve grows.
 Nachricht an 	Message to 
 Nachricht schreiben	Write a message
@@ -4158,6 +4176,7 @@ Namen von Spielern, Teams, Warps und Haustieren dürfen nicht beleidigend oder a
 Namensschild	Name tag
 Nebelzahn	Mistfang
 Nebenjob	Side job
+Nebenquest	Side quest
 Nebenquests	Side quests
 Nebenquests bekommst du bei Figuren in der Welt. Jede Figur hat mehrere Aufgaben, die nacheinander kommen.	You get side quests from figures in the world. Each figure has several tasks that come one after another.
 Netherit Rang	Netherite Rank
@@ -4274,6 +4293,7 @@ Ohne Verlinkung kannst du keine Spielzeit-Belohnungen abholen und kein Helfer im
 Online in Survival	Online in Survival
 Online, aber nicht in Survival	Online, but not in Survival
 Order aufgeben	Place an order
+Ort	Place
 Ost	East
 Ozean	Ocean
 Ozelot	Ocelot
@@ -4678,6 +4698,7 @@ Springt zum nächsten Song	Skips to the next song
 Spur	Trail
 Stammgast	Regular
 Stammspieler	Regular player
+Standard	Default
 Standardtext für <white>{}</white> wiederhergestellt.	Default text for <white>{}</white> restored.
 Start & Ziel	Start & finish
 Start gesetzt.	Start set.
@@ -4792,6 +4813,7 @@ Tagespot: Max. Lose	Daily pot: max. tickets
 Tagespot: Steuer	Daily pot: tax
 Tagespot: Ziehung	Daily pot: drawing
 Tageszeit	Time of day
+Tageszeit in der Welt	Time of day in the world
 Tauscht <green>{}</green> in Chips	Exchanges <green>{}</green> for chips
 Team & Freunde	Team & friends
 Team auflösen	Disband team
@@ -4948,6 +4970,7 @@ VIP Rang	VIP rank
 Verbessere deine Angel dauerhaft	Improve your rod permanently
 Verdient	Earned
 Vereinbarte Handelsgeschäfte sind einzuhalten.	Keep to the trades you agree on.
+Verfolgte Quest	Tracked quest
 Verfolgte Quest mit Fortschritt	Tracked quest with progress
 Vergib Baurechte nur an Spieler, denen du vertraust. Missbrauch von Claim-Berechtigungen bleibt verboten.	Only give build rights to players you trust. Abusing claim permissions remains forbidden.
 Verheiratet seit 	Married since 
@@ -5018,6 +5041,7 @@ Voten	Voting
 Voten für Juwelen und Coins	Vote for jewels and coins
 WIE GUT WURDE DIR GEHOLFEN?	HOW WELL WERE YOU HELPED?
 Waage	Scales
+Wald	Forest
 Waldwächter	Forest Warden
 Wanda braucht eine neue Brücke. Dafür brauche ich viele Bretter.	Wanda needs a new bridge. For that I need lots of planks.
 Warme Gewässer	Warm waters
@@ -5038,6 +5062,7 @@ Was du einmal hast, behältst du und kannst es jederzeit an- und ablegen.	What y
 Was du gekauft hast oder was nicht verkauft wurde, wartet in deiner Abholbox.	What you bought or what wasn't sold waits in your pickup box.
 Was in der Kiste sein kann	What can be in the crate
 Was oben am Bildschirm steht	What's at the top of the screen
+Was oben in deiner Leiste steht, und wo.	What your bar at the top shows, and where.
 Was oben in der Info-Leiste steht, stellst du mit /bossbar ein.	What the info bar at the top shows, you set with /bossbar.
 Wasserdrache	Water Dragon
 Wechseln geht jederzeit, dein Level bleibt. Danach musst du 30 Minuten warten.	You can switch any time, your level stays. After that you have to wait 30 minutes.
@@ -5084,6 +5109,7 @@ Wirklich?	Really?
 Wirrpilz	Warped Shroom
 Wirtschaft	Economy
 Witherskelett	Wither skeleton
+Wo du gerade bist	Where you are right now
 Wo sie beißen	Where they bite
 Woche	Week
 Woche, Ränge und Rekorde	Week, ranks and records
