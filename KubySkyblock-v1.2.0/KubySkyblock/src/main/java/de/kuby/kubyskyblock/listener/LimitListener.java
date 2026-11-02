@@ -114,13 +114,17 @@ public final class LimitListener implements Listener {
             return;
         }
         // Spawnrate: beim natürlichen Spawnen (und aus echten Spawnern) mit etwas Glück ein zweites Wesen
-        if ((r == SpawnReason.NATURAL || r == SpawnReason.SPAWNER) && ThreadLocalRandom.current().nextDouble() < is.spawnChance(i)) {
+        int extras = r == SpawnReason.NATURAL || r == SpawnReason.SPAWNER ? IslandService.rolls(is.spawnChance(i)) : 0;
+        if (extras > 0) {
             EntityType type = e.getEntityType();
             Location l = e.getLocation().clone();
+            boolean baby = e.getEntity() instanceof org.bukkit.entity.Ageable src && !src.isAdult();
             org.bukkit.Bukkit.getScheduler().runTask(addon, () -> {
-                if (!addon.limits().allowSpawn(i, k) || l.getWorld() == null) return;
-                Entity extra = l.getWorld().spawnEntity(l, type, SpawnReason.CUSTOM);
-                if (extra instanceof org.bukkit.entity.Ageable a && e.getEntity() instanceof org.bukkit.entity.Ageable src && !src.isAdult()) a.setBaby();
+                for (int n = 0; n < extras; n++) {
+                    if (!addon.limits().allowSpawn(i, k) || l.getWorld() == null) return;
+                    Entity extra = l.getWorld().spawnEntity(l, type, SpawnReason.CUSTOM);
+                    if (baby && extra instanceof org.bukkit.entity.Ageable a) a.setBaby();
+                }
             });
         }
     }
@@ -132,9 +136,9 @@ public final class LimitListener implements Listener {
         if (!(e.getNewState().getBlockData() instanceof Ageable a) || a.getAge() >= a.getMaximumAge()) return;
         if (!inSkyblock(e.getBlock().getWorld())) return;
         Island i = addon.islands().islandAt(e.getBlock().getLocation());
-        double chance = addon.islands().growthChance(i);
-        if (chance <= 0 || ThreadLocalRandom.current().nextDouble() >= chance) return;
-        a.setAge(a.getAge() + 1);
+        int extra = IslandService.rolls(addon.islands().growthChance(i));
+        if (extra <= 0) return;
+        a.setAge(Math.min(a.getMaximumAge(), a.getAge() + extra));
         e.getNewState().setBlockData(a);
     }
 }

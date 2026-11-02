@@ -465,6 +465,12 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - One-Block: Wirkung nach Anteil am Höchst-Level (volle Wirkung gleich wie vorher: +100 % XP/Geld, 40 % Doppel-Beute, -80 % Cooldown, Eile I bis V alle 4 Level)
   - Bestehende Server: unveränderte alte Standard-Werte in der config werden beim Start ersetzt; gespeicherte Stände werden einmal umgerechnet (gleiche Wirkung wie vorher, `upgrade-version: 2` in islands.yml und oneblock.yml). Eigene, geänderte config-Werte bleiben; dann bleiben auch die Stände im alten Format (Warnung im Log)
   - „Block-Stufe“ heißt jetzt „Block-Level“ (Summe aller One-Block-Upgrades), Guide erklärt die 3 Stufen
+- [x] Stufe 4 der Upgrades (Wunsch des Besitzers): Level 21 bis 50, nur mit Juwelen
+  - Insel: Preis in Juwelen = 10 x 1,1^(Level - 21) (`insel.juwelen-stufe`), One-Block: 8 x 1,1^(Level - 21), bezahlt der Spieler, der klickt (`oneblock.juwelen-stufe`)
+  - Wirkung wächst weiter: Wachstum bis 200 % (über 100 % sicher eine Stufe mehr, Rest = Chance auf eine zweite), Spawnrate bis 140 %, Limits +5 % je Level, Mitglieder bis 52, Größe +1 Radius je Level bis zur Grenze des Insel-Abstands (bei 200 Abstand Radius 95 = Level 45, danach endet das Upgrade), Generator mit 30 weiteren Level (mehr Diamant, Smaragd, Antiker Schrott); One-Block: XP/Geld bis +200 %, Doppel-Beute bis 70 %, Cooldown bis -95 %, Eile bis VIII, Glück stärker
+  - Icons Stufe 4: kleine Regenbogen-Sterne (jeder Stern eine Farbe), Text „Stufe 4“ in Regenbogen-Buchstaben, Balken grün, Preis mit Juwelen-Zeichen
+  - config: Listen auf 51 Werte (Größe, Mitglieder, Generator), One-Block max 50; Server mit den Standard-Werten der 20-Level-Version werden beim Start automatisch umgestellt
+- [x] Icons: Essen nur noch der saftige Apfel; Limits als Verkehrszeichen 250 „Durchfahrt verboten“ (flach, streng symmetrisch); Spawnrate als Zombie im Mini-Stil (Vanilla-Farben, Rampen `zombie`, `hemd`, `hose`)
 
 ## Entscheidungen (Stand: Sitzung mit Claude)
 - Ziel: Paper 1.21.11. SMP = PvP und Action (töten, greifen erlaubt, außer Cheaten, Duplizieren und Bugs ausnutzen). Survival = ruhig, bauen und farmen, Plots geschützt bzw. claimbar.

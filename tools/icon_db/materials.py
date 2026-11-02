@@ -58,6 +58,10 @@ RAMPS = {
     "ender": ["#020E14", "#05151C", "#10232D", "#192328", "#233032", "#34494B", "#4B645C", "#597163"],
     "bett": ["#6B1213", "#851A1A", "#902120", "#A22722", "#B53129", "#C9473A"],
     "planke": ["#695433", "#9B7742", "#9F844D", "#AF8F55", "#B8945F", "#C29D62"],
+    # Zombie (Vanilla): Haut dunkel -> hell, Augen fast schwarz an Index 0; Hemd türkis, Hose blau-violett
+    "zombie": ["#1A1A1A", "#385226", "#3E692D", "#4E7B36", "#698756", "#799C65"],
+    "hemd": ["#007A7A", "#009E9E", "#00AFAF", "#00CCCC"],
+    "hose": ["#2A2366", "#3A3189", "#463AA5", "#5A4EC0"],
 }
 
 

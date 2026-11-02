@@ -9,8 +9,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Level der Skyblock-Upgrades (Insel und One-Block): Level 0 bis 20 in drei Stufen. Stufe 1 = Level 1 bis 10, Stufe 2 =
- * bis 15, Stufe 3 = bis 20 (Wunsch des Besitzers). Die Icons zeigen die Stufe: ab Stufe 2 goldene, ab Stufe 3 lila Sterne.
+ * Level der Skyblock-Upgrades (Insel und One-Block): Level 0 bis 50 in vier Stufen (Wunsch des Besitzers). Stufe 1 =
+ * Level 1 bis 10, Stufe 2 = bis 15, Stufe 3 = bis 20 (bezahlt mit Geld bzw. Block-XP), Stufe 4 = Level 21 bis 50, nur
+ * mit Juwelen. Die Icons zeigen die Stufe: ab Stufe 2 goldene, ab Stufe 3 lila, in Stufe 4 Regenbogen-Sterne.
  * <p>
  * Früher hatten die Upgrades 4 bis 10 Stufen. Diese Klasse ersetzt unveränderte alte Standard-Werte in der config durch
  * die neuen 20-Level-Listen und rechnet gespeicherte Stände so um, dass jede Insel und jedes Team genau die bisherige
@@ -18,23 +19,45 @@ import java.util.Map;
  */
 public final class UpgradeLevels {
 
-    public static final int MAX = 20;
-    /** Version der gespeicherten Upgrade-Stände (1 = alte Stufen, 2 = Level 0 bis 20). */
+    /** Letztes Level, das mit Geld (Insel) bzw. Block-XP (One-Block) bezahlt wird (Ende von Stufe 3). */
+    public static final int BASE = 20;
+    /** Höchstes Level (Ende von Stufe 4, Level über BASE nur mit Juwelen). */
+    public static final int MAX = 50;
+    /** Version der gespeicherten Upgrade-Stände (1 = alte Stufen, 2 = Level 0 bis 20/50). */
     public static final int VERSION = 2;
 
     private UpgradeLevels() {
     }
 
-    /** Radius je Größen-Level (wie config insel.groessen). */
-    public static final List<Integer> SIZES = List.of(15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35, 38, 41, 44, 47, 50, 54, 58, 62, 66, 70);
-    /** Mitglieder (ohne Besitzer) je Level (wie config insel.mitglieder). */
-    public static final List<Integer> MEMBERS = List.of(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22);
+    /** Radius je Größen-Level (wie config insel.groessen): bis Level 20 wie die alten Stufen, danach +1 je Level. */
+    public static final List<Integer> SIZES;
+    /** Mitglieder (ohne Besitzer) je Level (wie config insel.mitglieder): 2 + Level. */
+    public static final List<Integer> MEMBERS;
+
+    static {
+        List<Integer> s = new ArrayList<>(List.of(15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35, 38, 41, 44, 47, 50, 54, 58, 62, 66, 70));
+        for (int l = BASE + 1; l <= MAX; l++) s.add(70 + l - BASE);
+        SIZES = List.copyOf(s);
+        List<Integer> m = new ArrayList<>();
+        for (int l = 0; l <= MAX; l++) m.add(2 + l);
+        MEMBERS = List.copyOf(m);
+    }
+
+    /** Ist das nächste Level eines aus Stufe 4 (nur Juwelen)? */
+    public static boolean jewelLevel(int level) {
+        return level > BASE;
+    }
+
+    /** Juwelen-Preis eines Levels aus Stufe 4: basis * faktor^(Level - 21), gerundet. */
+    public static long jewels(int level, double basis, double faktor) {
+        return Math.max(1, Math.round(basis * Math.pow(faktor, Math.max(0, level - BASE - 1))));
+    }
 
     /** Ersatz-Preisliste, wenn die config keine hat: Level 1 kostet first, jedes weitere 22 % mehr (gerundet). */
     public static List<Long> prices(long first) {
         List<Long> out = new ArrayList<>();
         out.add(0L);
-        for (int l = 1; l <= MAX; l++) {
+        for (int l = 1; l <= BASE; l++) {
             double v = first * Math.pow(1.22, l - 1);
             double e = Math.pow(10, Math.floor(Math.log10(v)) - 1);
             out.add(Math.round(Math.round(v / e) * e));
@@ -42,9 +65,9 @@ public final class UpgradeLevels {
         return out;
     }
 
-    /** Stufe eines Levels: 1 (bis 10), 2 (bis 15), 3 (bis 20). */
+    /** Stufe eines Levels: 1 (bis 10), 2 (bis 15), 3 (bis 20), 4 (bis 50, Juwelen). */
     public static int tier(int level) {
-        return level > 15 ? 3 : level > 10 ? 2 : 1;
+        return level > BASE ? 4 : level > 15 ? 3 : level > 10 ? 2 : 1;
     }
 
     // =================================================================================================================
@@ -85,21 +108,36 @@ public final class UpgradeLevels {
     // config: alte Standard-Werte durch die neuen ersetzen
     // =================================================================================================================
 
-    private static final Map<String, List<Long>> OLD_LISTS = Map.of(
-            "insel.groessen", List.of(15L, 25L, 35L, 50L, 70L),
-            "insel.mitglieder", List.of(2L, 4L, 6L, 10L),
-            "insel.upgrades.groesse", List.of(0L, 25_000L, 75_000L, 200_000L, 500_000L),
-            "insel.upgrades.mitglieder", List.of(0L, 10_000L, 40_000L, 100_000L),
-            "insel.upgrades.wachstum", List.of(0L, 15_000L, 50_000L, 150_000L, 400_000L),
-            "insel.upgrades.spawnrate", List.of(0L, 20_000L, 60_000L, 180_000L, 450_000L),
-            "insel.upgrades.limits", List.of(0L, 25_000L, 75_000L, 200_000L, 500_000L));
+    /** Alte Standard-Listen (5 Stufen und 20 Level ohne Stufe 4), die durch die aktuellen ersetzt werden. */
+    private static final List<Map.Entry<String, List<Long>>> OLD_LISTS = List.of(
+            Map.entry("insel.groessen", List.of(15L, 25L, 35L, 50L, 70L)),
+            Map.entry("insel.groessen", longs(SIZES.subList(0, BASE + 1))),
+            Map.entry("insel.mitglieder", List.of(2L, 4L, 6L, 10L)),
+            Map.entry("insel.mitglieder", longs(MEMBERS.subList(0, BASE + 1))),
+            Map.entry("insel.upgrades.groesse", List.of(0L, 25_000L, 75_000L, 200_000L, 500_000L)),
+            Map.entry("insel.upgrades.mitglieder", List.of(0L, 10_000L, 40_000L, 100_000L)),
+            Map.entry("insel.upgrades.wachstum", List.of(0L, 15_000L, 50_000L, 150_000L, 400_000L)),
+            Map.entry("insel.upgrades.spawnrate", List.of(0L, 20_000L, 60_000L, 180_000L, 450_000L)),
+            Map.entry("insel.upgrades.limits", List.of(0L, 25_000L, 75_000L, 200_000L, 500_000L)));
     private static final Map<String, Double> OLD_BONUS = Map.of("wachstum.bonus-je-stufe", 0.25, "spawnrate.bonus-je-stufe", 0.2,
             "limits.bonus-je-stufe", 0.25);
     /** One-Block: Upgrade -> alte Werte (max, basis, faktor). */
     private static final Map<String, double[]> OLD_ONEBLOCK = Map.of("glueck", new double[]{10, 250, 1.55},
             "cooldown", new double[]{10, 200, 1.5}, "tempo", new double[]{5, 600, 2.2}, "xp", new double[]{10, 200, 1.5},
             "geld", new double[]{10, 200, 1.5}, "beute", new double[]{10, 300, 1.55});
-    private static final List<Long> OLD_GENERATOR_COSTS = List.of(0L, 5_000L, 20_000L, 60_000L, 150_000L, 400_000L);
+    private static final List<List<Long>> OLD_GENERATOR_COSTS = List.of(List.of(0L, 5_000L, 20_000L, 60_000L, 150_000L, 400_000L),
+            List.of(0L, 1500L, 1900L, 2400L, 3100L, 4000L, 5000L, 6400L, 8200L, 10_000L, 13_000L, 17_000L, 22_000L, 27_000L,
+                    35_000L, 45_000L, 57_000L, 72_000L, 92_000L, 120_000L, 150_000L));
+    /** One-Block-Werte der 20-Level-Version (max, basis, faktor): nur max wird auf 50 gehoben. */
+    private static final Map<String, double[]> V2_ONEBLOCK = Map.of("glueck", new double[]{20, 125, 1.245},
+            "cooldown", new double[]{20, 100, 1.225}, "tempo", new double[]{20, 150, 1.218}, "xp", new double[]{20, 100, 1.225},
+            "geld", new double[]{20, 100, 1.225}, "beute", new double[]{20, 150, 1.245});
+
+    private static List<Long> longs(List<Integer> l) {
+        List<Long> out = new ArrayList<>();
+        for (int v : l) out.add((long) v);
+        return out;
+    }
 
     /**
      * Ersetzt in der config der Server-Installation alle Upgrade-Werte, die noch genau den alten Standard haben, durch
@@ -110,7 +148,7 @@ public final class UpgradeLevels {
         Configuration d = c.getDefaults();
         if (d == null) return 0;
         int n = 0;
-        for (Map.Entry<String, List<Long>> e : OLD_LISTS.entrySet()) {
+        for (Map.Entry<String, List<Long>> e : OLD_LISTS) {
             if (c.isSet(e.getKey()) && numbers(c.getList(e.getKey())).equals(e.getValue())) {
                 c.set(e.getKey(), d.getList(e.getKey()));
                 n++;
@@ -119,7 +157,7 @@ public final class UpgradeLevels {
         List<Map<?, ?>> gen = c.getMapList("generator.stufen");
         List<Long> costs = new ArrayList<>();
         for (Map<?, ?> m : gen) costs.add(m.get("kosten") instanceof Number x ? x.longValue() : -1L);
-        if (costs.equals(OLD_GENERATOR_COSTS)) {
+        if (OLD_GENERATOR_COSTS.contains(costs)) {
             c.set("generator.stufen", d.getList("generator.stufen"));
             n++;
         }
@@ -129,20 +167,22 @@ public final class UpgradeLevels {
                 n++;
             }
         }
-        for (Map.Entry<String, double[]> e : OLD_ONEBLOCK.entrySet()) {
-            String b = "oneblock.upgrades." + e.getKey() + ".";
-            double[] o = e.getValue();
-            if (c.isSet(b + "max") && c.getInt(b + "max") == (int) o[0] && Math.abs(c.getDouble(b + "basis") - o[1]) < 1e-9
-                    && Math.abs(c.getDouble(b + "faktor") - o[2]) < 1e-9) {
-                c.set(b + "max", d.getInt(b + "max"));
-                c.set(b + "basis", d.getDouble(b + "basis"));
-                c.set(b + "faktor", d.getDouble(b + "faktor"));
-                n++;
+        for (Map<String, double[]> old : List.of(OLD_ONEBLOCK, V2_ONEBLOCK)) {
+            for (Map.Entry<String, double[]> e : old.entrySet()) {
+                String b = "oneblock.upgrades." + e.getKey() + ".";
+                double[] o = e.getValue();
+                if (c.isSet(b + "max") && c.getInt(b + "max") == (int) o[0] && Math.abs(c.getDouble(b + "basis") - o[1]) < 1e-9
+                        && Math.abs(c.getDouble(b + "faktor") - o[2]) < 1e-9) {
+                    c.set(b + "max", d.getInt(b + "max"));
+                    c.set(b + "basis", d.getDouble(b + "basis"));
+                    c.set(b + "faktor", d.getDouble(b + "faktor"));
+                    n++;
+                }
             }
         }
         if (n > 0) {
             plugin.saveConfig();
-            plugin.getLogger().info("Upgrades: " + n + " alte Standard-Werte auf 20 Level (3 Stufen) umgestellt.");
+            plugin.getLogger().info("Upgrades: " + n + " alte Standard-Werte auf 50 Level (4 Stufen) umgestellt.");
         }
         return n;
     }

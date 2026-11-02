@@ -190,9 +190,13 @@ public final class IslandService {
         return Math.min(r, spacing() / 2 - 5);
     }
 
+    /** Höchstes Größen-Level: das letzte, bei dem die Insel noch wächst (der Radius endet bei abstand / 2 - 5). */
     public int maxSize() {
         List<Integer> sizes = addon.getConfig().getIntegerList("insel.groessen");
-        return (sizes.isEmpty() ? UpgradeLevels.SIZES.size() : sizes.size()) - 1;
+        int n = (sizes.isEmpty() ? UpgradeLevels.SIZES.size() : sizes.size()) - 1;
+        int max = 0;
+        for (int l = 1; l <= n; l++) if (radius(l) > radius(l - 1)) max = l;
+        return max;
     }
 
     public int radius(Island i) {
@@ -784,9 +788,12 @@ public final class IslandService {
         });
     }
 
-    /** Haben alle Insel-Upgrades in der config schon 20 Level? */
+    /** Hat die config schon die Level-Listen (mindestens 20 Level, Preise in $ für Level 1 bis 20)? */
     public boolean levelsReady() {
-        for (Upgrade u : Upgrade.values()) if (maxLevel(u) != UpgradeLevels.MAX) return false;
+        int need = UpgradeLevels.BASE + 1;
+        if (addon.getConfig().getIntegerList("insel.groessen").size() < need || addon.getConfig().getIntegerList("insel.mitglieder").size() < need
+                || generatorLevels().size() < need) return false;
+        for (Upgrade u : Upgrade.values()) if (u != Upgrade.GENERATOR && prices(u).size() != need) return false;
         return true;
     }
 
@@ -795,27 +802,62 @@ public final class IslandService {
             case SIZE -> maxSize();
             case SLOTS -> maxSlots();
             case GENERATOR -> Math.max(0, generatorLevels().size() - 1);
-            default -> prices(u).size() - 1;
+            default -> {
+                int m = prices(u).size() - 1;
+                yield m >= UpgradeLevels.BASE ? UpgradeLevels.MAX : m;
+            }
         };
     }
 
-    /** Preis für die nächste Stufe (-1 = schon höchste). */
+    /** Ist das nächste Level aus Stufe 4 (Level 21-50, nur mit Juwelen)? */
+    public boolean jewelStep(Island i, Upgrade u) {
+        return UpgradeLevels.jewelLevel(level(i, u) + 1);
+    }
+
+    /** Preis für das nächste Level (-1 = schon höchstes): bis Level 20 in $, in Stufe 4 in Juwelen (jewelStep). */
     public long price(Island i, Upgrade u) {
         int next = level(i, u) + 1;
         if (next > maxLevel(u)) return -1;
+        if (UpgradeLevels.jewelLevel(next)) {
+            return UpgradeLevels.jewels(next, addon.getConfig().getDouble("insel.juwelen-stufe.basis", 10),
+                    addon.getConfig().getDouble("insel.juwelen-stufe.faktor", 1.1));
+        }
         if (u == Upgrade.GENERATOR) return generatorLevels().get(next).cost();
         List<Long> l = prices(u);
         return l.get(Math.min(next, l.size() - 1));
     }
 
-    /** Bonus des Wachstums-Upgrades: Chance, dass eine Pflanze gleich eine Stufe mehr wächst (0 bis 1). */
+    /** Bonus des Wachstums-Upgrades: Chance auf eine Stufe mehr beim Wachsen (bis 1 bei Level 20, in Stufe 4 bis 2:
+     *  über 1 sicher eine mehr, der Rest ist die Chance auf eine zweite). */
     public double growthChance(Island i) {
-        return i == null ? 0 : Math.min(1.0, i.growth * addon.getConfig().getDouble("wachstum.bonus-je-stufe", 0.05));
+        return i == null ? 0 : growthAt(i.growth);
     }
 
-    /** Bonus des Spawnrate-Upgrades: Chance auf ein zweites Wesen beim natürlichen Spawnen (0 bis 1). */
+    public double growthAt(int level) {
+        return bonus(level, "wachstum", 0.05, 0.0333);
+    }
+
+    public double spawnAt(int level) {
+        return bonus(level, "spawnrate", 0.04, 0.02);
+    }
+
+    /** Bonus des Spawnrate-Upgrades: Chance auf ein weiteres Wesen beim natürlichen Spawnen (bis 0,8 bei Level 20, in
+     *  Stufe 4 bis 1,4: über 1 sicher eines mehr, der Rest ist die Chance auf ein drittes). */
     public double spawnChance(Island i) {
-        return i == null ? 0 : Math.min(1.0, i.spawn * addon.getConfig().getDouble("spawnrate.bonus-je-stufe", 0.04));
+        return i == null ? 0 : spawnAt(i.spawn);
+    }
+
+    /** Bonus eines Levels: bis Level 20 bonus-je-stufe je Level, darüber bonus-stufe4 je Level (höchstens 2). */
+    private double bonus(int level, String key, double per, double per4) {
+        int base = Math.min(level, UpgradeLevels.BASE), extra = Math.max(0, level - UpgradeLevels.BASE);
+        double v = base * addon.getConfig().getDouble(key + ".bonus-je-stufe", per) + extra * addon.getConfig().getDouble(key + ".bonus-stufe4", per4);
+        return Math.max(0, Math.min(2.0, v));
+    }
+
+    /** Wie oft ein Bonus greift: ganzer Teil sicher, Rest als Chance (z. B. 1,4 = einmal sicher, zu 40 % zweimal). */
+    public static int rolls(double chance) {
+        int n = (int) Math.floor(chance);
+        return n + (java.util.concurrent.ThreadLocalRandom.current().nextDouble() < chance - n ? 1 : 0);
     }
 
     public String upgrade(Player p, Upgrade u) {
@@ -823,8 +865,13 @@ public final class IslandService {
         if (i == null) return "Du hast keine Insel.";
         if (!has(i, p.getUniqueId(), Right.UPGRADES)) return "Upgrades kaufen dürfen nur Besitzer, Co-Besitzer und Mitglieder mit dem Recht dazu.";
         long price = price(i, u);
-        if (price < 0) return "Das ist schon die höchste Stufe.";
-        if (!core.economy().withdraw(p.getUniqueId(), price)) return "Dafür brauchst du " + Msg.coins(price) + " $.";
+        if (price < 0) return "Das ist schon das höchste Level.";
+        if (jewelStep(i, u)) {
+            // Stufe 4 (Level 21-50): nur mit Juwelen
+            if (!core.jewels().take(p.getUniqueId(), price)) return "Stufe 4 gibt es nur mit Juwelen: du brauchst " + Msg.coins(price) + " Juwelen.";
+        } else if (!core.economy().withdraw(p.getUniqueId(), price)) {
+            return "Dafür brauchst du " + Msg.coins(price) + " $.";
+        }
         switch (u) {
             case SIZE -> i.size++;
             case SLOTS -> i.slots++;
@@ -840,7 +887,7 @@ public final class IslandService {
             if (o != null) Msg.send(o, "<green>Insel-Upgrade: <white>" + switch (u) {
                 case SIZE -> "Größe " + (2 * radius(i) + 1) + " x " + (2 * radius(i) + 1);
                 case SLOTS -> memberLimit(i) + " Mitglieder";
-                case GENERATOR -> "Generator Stufe " + (i.generator + 1);
+                case GENERATOR -> "Generator Level " + i.generator;
                 case GROWTH -> "Wachstum +" + Math.round(growthChance(i) * 100) + " %";
                 case SPAWN -> "Spawnrate +" + Math.round(spawnChance(i) * 100) + " %";
                 case LIMIT -> "Limits +" + Math.round(addon.limits().bonus(i) * 100) + " %";

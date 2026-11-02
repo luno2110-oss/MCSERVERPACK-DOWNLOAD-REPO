@@ -192,7 +192,8 @@ public final class OneBlockScreen {
     // Block des Teams: Upgrades
     // =================================================================================================================
 
-    public record Card(Upgrade upgrade, int level, int max, String now, String next, long price, boolean affordable, Consumer<Player> buy) {}
+    public record Card(Upgrade upgrade, int level, int max, String now, String next, long price, boolean jewels, boolean affordable,
+                       Consumer<Player> buy) {}
 
     public record BlockView(String title, String sub, long xp, long mined, int stage, long ownXp, List<Card> cards,
                             Consumer<Player> deposit100, Consumer<Player> deposit1000, Consumer<Player> depositAll,
@@ -215,7 +216,9 @@ public final class OneBlockScreen {
         for (Upgrade u : Upgrade.values()) {
             int lvl = pr.level(u), max = s.max(u);
             long price = s.price(pr, u);
-            cards.add(new Card(u, lvl, max, s.effect(u, lvl), lvl < max ? s.effect(u, lvl + 1) : null, price, price >= 0 && pr.xp >= price,
+            boolean jw = s.jewelStep(pr, u);
+            long have = jw ? sb().core().jewels().balance(p.getUniqueId()) : pr.xp;
+            cards.add(new Card(u, lvl, max, s.effect(u, lvl), lvl < max ? s.effect(u, lvl + 1) : null, price, jw, price >= 0 && have >= price,
                     run(pl -> {
                         feedback(pl, s.upgrade(pl, u));
                         block(pl);
@@ -278,8 +281,8 @@ public final class OneBlockScreen {
             if (cd.next() != null) c.text(x + 44 + nw + 3, cy + 18, Canvas.fit("→ " + shortNext(cd.now(), cd.next()), false, cw - 55 - nw), GOLD, false);
             // Balken in der Farbe der Stufe, rechts daneben die Stufe (1: Level 1-10, 2: bis 15, 3: bis 20)
             c.bar(x + 44, cy + 31, cw - 52 - 46, cd.max() == 0 ? 1 : (double) cd.level() / cd.max(), UpgradeTier.fill(cd.level()));
-            c.textRight(x + cw - 8, cy + 30, "Stufe " + UpgradeTier.of(cd.level()), UpgradeTier.color(cd.level()), false);
-            String label = maxed ? "Ausgebaut" : "Upgrade · " + Msg.coins(cd.price()) + " XP";
+            UpgradeTier.textRight(c, x + cw - 8, cy + 30, "Stufe " + UpgradeTier.of(cd.level()), cd.level(), false);
+            String label = maxed ? "Ausgebaut" : "Upgrade · " + Msg.coins(cd.price()) + (cd.jewels() ? " Juwelen" : " XP");
             c.smallButton(x + 6, cy + ch - KitData.SMALL_H - 4, cw - 12, maxed ? KitData.Small.DARK : cd.affordable() ? KitData.Small.GOLD : KitData.Small.DARK,
                     label, maxed ? GOLD : cd.affordable() ? GOLD : DIM, true);
             if (!maxed) c.action(x + 6, cy + ch - KitData.SMALL_H - 4, cw - 12, KitData.SMALL_H, cd.buy(), cd.upgrade().desc);
@@ -349,10 +352,11 @@ public final class OneBlockScreen {
                 List.of(), null, no)));
         List<Card> cards = new ArrayList<>();
         int i = 0;
-        int[] levels = {3, 12, 20, 16, 9, 15};
+        int[] levels = {3, 12, 50, 16, 27, 15};
         for (Upgrade u : Upgrade.values()) {
             int lvl = levels[i];
-            cards.add(new Card(u, lvl, 20, "Selten x12,8", lvl == 20 ? null : "Selten x13,1", lvl == 20 ? -1 : 999_999_999L, i % 2 == 0, no));
+            cards.add(new Card(u, lvl, 50, "Selten x12,8", lvl == 50 ? null : "Selten x13,1", lvl == 50 ? -1 : lvl >= 20 ? 9_999 : 999_999_999L,
+                    lvl >= 20, i % 2 == 0, no));
             i++;
         }
         reg.accept("One-Block Upgrades", () -> block(new BlockView(w, "Team " + w + " · 999.999.999 abgebaut", 999_999_999L, 999_999_999L, 55,

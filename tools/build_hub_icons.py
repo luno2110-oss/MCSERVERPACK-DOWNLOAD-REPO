@@ -461,10 +461,10 @@ def build():
         full.crop(box).save(os.path.join(OUT, "art_%s.png" % name))
         names.append(name)
         if name in px.UPGRADE_ICONS:
-            # Upgrade-Stufen 2 und 3: ganze 32-px-Kachel mit dem Icon in der Mitte und Sternen darum (die Dialoge setzen
+            # Upgrade-Stufen 2 bis 4: ganze 32-px-Kachel mit dem Icon in der Mitte und Sternen darum (die Dialoge setzen
             # Bilder mit (32 - Breite) / 2, so liegt das Motiv genau wie bei Stufe 1)
             tile = px.centered(full)
-            for t in (2, 3):
+            for t in (2, 3, 4):
                 px.tier(tile, t).save(os.path.join(OUT, "art_%s_t%d.png" % (name, t)))
                 names.append("%s_t%d" % (name, t))
     # Spieler-Warps: Portal aus den Referenzen, auf 32 px Höhe gekürzt (oben und unten nur Funkeln)

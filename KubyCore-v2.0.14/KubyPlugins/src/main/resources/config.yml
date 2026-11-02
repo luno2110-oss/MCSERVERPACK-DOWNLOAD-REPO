@@ -1890,7 +1890,8 @@ guide:
             - "> Generator: bessere Erze aus dem Bruchstein-Generator"
             - "> Wachstum und Spawnrate: schnellere Pflanzen, mehr Tiere"
             - "> Limits: mehr Trichter, Kolben und Tiere erlaubt"
-            - "> Jedes Upgrade hat 20 Level in 3 Stufen: 1-10, 11-15, 16-20."
+            - "> Jedes Upgrade hat 50 Level in 4 Stufen: 1-10, 11-15, 16-20 mit Geld,"
+            - "> 21-50 (Stufe 4, Regenbogen-Sterne) nur mit Juwelen."
             - ""
             - "Neu anfangen geht mit `/insel neustart` (einmal am Tag)."
           name-en: "Island"
@@ -1906,7 +1907,8 @@ guide:
             - "> Generator: better ores from the cobblestone generator"
             - "> Growth and spawn rate: faster crops, more animals"
             - "> Limits: more hoppers, pistons and animals allowed"
-            - "> Every upgrade has 20 levels in 3 tiers: 1-10, 11-15, 16-20."
+            - "> Every upgrade has 50 levels in 4 tiers: 1-10, 11-15, 16-20 with money,"
+            - "> 21-50 (tier 4, rainbow stars) only with jewels."
             - ""
             - "Starting over works with `/insel neustart` (once a day)."
         mitglieder:
@@ -1978,7 +1980,7 @@ guide:
             - ""
             - "# Upgrades"
             - "> Glück, Cooldown, Tempo, XP- und Geld-Bonus, Doppel-Beute"
-            - "> Je 20 Level in 3 Stufen: 1-10, 11-15, 16-20."
+            - "> Je 50 Level in 4 Stufen: 1-20 mit Block-XP, 21-50 (Stufe 4) nur mit Juwelen."
             - "> Wer 7 Tage nicht abbaut, verliert den Block (Upgrades bleiben)."
           name-en: "One-Block"
           lines-en:
@@ -1991,7 +1993,7 @@ guide:
             - ""
             - "# Upgrades"
             - "> Luck, cooldown, speed, XP and money bonus, double loot"
-            - "> 20 levels each in 3 tiers: 1-10, 11-15, 16-20."
+            - "> 50 levels each in 4 tiers: 1-20 with block XP, 21-50 (tier 4) only with jewels."
             - "> Not mining for 7 days loses the block (upgrades stay)."
         geld:
           name: "Shop & Geld"

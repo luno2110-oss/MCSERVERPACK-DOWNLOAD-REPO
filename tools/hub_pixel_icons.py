@@ -784,29 +784,22 @@ def is_wachstum():
 
 
 def c_essen():
-    """Essen: gebratenes Steak (Fettrand, Grillstreifen) und ein saftiger roter Apfel mit Glanz."""
-    shape = [(0, 20), (3, 15), (9, 12), (16, 12), (21, 14), (24, 19), (23, 25), (18, 29), (9, 30), (3, 28)]
-    st = Icon()
-    m = st._mask(lambda d: d.polygon(shape, fill=255))
-    # Fettrand: 2 px am oberen und linken Rand, dahinter das Fleisch
-    rim = {p for p in m if ((p[0], p[1] - 1) not in m or (p[0], p[1] - 2) not in m) and p[1] < 20}
-    st.add(m - rim, "steak", form="round", lo=2, hi=-1)
-    st.add(rim, "papier", form="round", lo=5, hi=-1, sep=False)
-    # Grillstreifen: drei gleiche Diagonalen, die mittlere kürzer (Muster mit Bruch)
-    for x0, y0, n in ((5, 27, 10), (10, 27, 7), (14, 27, 10)):
-        line = [(x0 + i, y0 - i) for i in range(n) if (x0 + i, y0 - i) in m - rim]
-        st.px(line, "steak", 0)
-        st.px([(x + 1, y) for x, y in line if (x + 1, y) in m - rim], "steak", 2)
-    steak = st.render()
+    """Essen: ein saftiger roter Apfel (zwei Rundungen oben, Stiel, Blatt), großer Glanz oben links, Gegenlicht unten
+    rechts."""
     ap = Icon()
-    body = disc([8, 12, 14, 16, 16, 16, 16, 16, 16, 16, 14, 14, 12, 8], 15, 4) | disc([4, 6], 17, 3) | disc([4, 6], 24, 3)
-    ap.add(body, "rot", form="round", lo=1, hi=-1)
-    ap.rect(22, 0, 23, 5, "stiel", lo=1, hi=3)
-    ap.poly([(24, 2), (27, 0), (30, 1), (27, 4)], "gras", lo=3, hi=-2)
-    ap.px([(18, 7), (19, 7), (18, 8), (19, 6)], "papier", -1)
-    ap.px([(17, 9), (17, 10), (20, 7)], "rot", -1)
-    ap.px([(29, 14), (29, 13), (28, 15)], "rot", 7)
-    return Img(stack(steak, ap.render()))
+    body = disc([10, 16, 20, 22, 24, 24, 26, 26, 26, 26, 26, 26, 26, 24, 24, 22, 20, 18, 14, 10], 3, 8)
+    lobes = disc([6, 10, 12], 5, 5) | disc([6, 10, 12], 17, 5)
+    ap.add(body | lobes, "rot", form="round", lo=1, hi=-1)
+    ap.poly([(15, 9), (17, 9), (16, 11)], "rot", lo=0, hi=2, sep=False)
+    ap.rect(15, 1, 16, 8, "stiel", lo=1, hi=3)
+    ap.poly([(17, 4), (21, 1), (26, 1), (23, 5), (18, 6)], "gras", lo=2, hi=-2)
+    ap.px([(19, 4), (20, 3), (21, 3)], "gras", -1)
+    # saftiger Glanz: Fleck oben links (hellste Stufe und Creme), dazu ein Lichtpunkt; Gegenlicht am Rand unten rechts
+    ap.px([(8, 12), (9, 12), (8, 13), (8, 14), (9, 11)], "papier", -1)
+    ap.px([(10, 11), (9, 13), (7, 15)], "rot", -1)
+    ap.px([(12, 10)], "papier", -2)
+    ap.px([(25, 22), (26, 21), (24, 24)], "rot", 7)
+    return ap
 
 
 def c_redstone():
@@ -881,24 +874,79 @@ def i_oneblock():
 
 
 def is_spawn():
-    a = Icon()
-    a.ellipse(17, 2, 29, 18, "feuer", form="round", lo=2, hi=-3)
-    a.px([(21, 6), (25, 10), (22, 13), (26, 6)], "rot", 1)
-    a.ellipse(3, 8, 20, 30, "tuerkis", form="round", lo=1, hi=-1, gloss="auto")
-    for x, y, w in ((7, 13, 3), (13, 19, 3), (7, 23, 2)):
-        a.ellipse(x, y, x + w, y + w, "tuerkis", form="round", lo=0, hi=2, sep=False, rim=False)
-    return a
+    """Spawnrate: Zombie im Mini-Stil (großer Kopf, kleiner Körper) in Vanilla-Farben: grüne Haut mit dunklem Haar,
+    schwarze Augen, türkises Hemd, Arme nach vorn gestreckt, blaue Hose. Licht von links oben."""
+    pix = {}
+    X0, Y0 = 5, 1          # Kopf 18 x 15
+    for y in range(15):
+        for x in range(18):
+            k = 3
+            if y < 3:
+                k = 1 if (x + 2 * y) % 5 else 2      # Haar: dunkles Muster, gleichmäßig
+            elif y == 3:
+                k = 2 if x % 3 else 1
+            if x == 0 and y >= 3:
+                k = 4                                 # Lichtkante links
+            if x == 17 or y == 14:
+                k = 2                                 # Schattenkante rechts und unten
+            pix[(X0 + x, Y0 + y)] = ("zombie", k)
+    for ex in (3, 11):                                # Augen 3 x 2, schwarz
+        for dx in range(3):
+            for dy in range(2):
+                pix[(X0 + ex + dx + 1, Y0 + 7 + dy)] = ("zombie", 0)
+    for dx in (8, 9):                                 # Nase und Mund dunkler
+        pix[(X0 + dx, Y0 + 9)] = ("zombie", 1)
+    for dx in range(6, 12):
+        pix[(X0 + dx, Y0 + 11)] = ("zombie", 1)
+    for dx in (4, 13):                                # Wangen etwas heller (Licht), Muster
+        pix[(X0 + dx, Y0 + 5)] = ("zombie", 5)
+    # Körper: Hemd 12 breit, Arme nach vorn (Ärmel türkis, Hände grün)
+    for y in range(16, 22):
+        for x in range(8, 20):
+            pix[(x, y)] = ("hemd", 3 if x == 8 else 1 if x == 19 or y == 21 else 2)
+    for y in range(16, 19):
+        for x in list(range(2, 8)) + list(range(20, 26)):
+            hand = x < 4 or x > 23
+            pix[(x, y)] = ("zombie", 4 if y == 16 else 3) if hand else ("hemd", 3 if y == 16 else 1 if y == 18 else 2)
+    # Hose mit Beinen, Schuhe
+    for y in range(22, 29):
+        for x in range(9, 19):
+            if y >= 25 and 13 <= x <= 14:
+                continue
+            pix[(x, y)] = ("hose", 3 if x in (9, 15) else 1 if x in (12, 18) or y == 28 else 2)
+    for x in list(range(9, 13)) + list(range(15, 19)):
+        pix[(x, 29)] = ("eisen", 3)
+    return Img(layer(pix))
+
+
+def ring_rows(d):
+    """Zeilenbreiten einer runden Scheibe mit Durchmesser d (pixelgenau, achsensymmetrisch)."""
+    r = d / 2
+    return [2 * round(math.sqrt(max(0.0, r * r - (j + 0.5 - r) ** 2))) for j in range(d)]
 
 
 def is_limits():
-    a = Icon()
-    a.add(disc([10, 14, 18, 20, 22, 24, 24, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 24, 24, 22, 20, 18, 14, 10], 3, 4),
-          "rot", form="round", lo=1, hi=-1)
-    a.add(disc([10, 14, 16, 18, 20, 20, 22, 22, 22, 22, 22, 22, 22, 22, 22, 20, 20, 18, 16, 14, 10], 5, 5) - set(),
-          "rot", form="round", lo=2, hi=-2, sep=False, rim=False)
-    a.rect(9, 14, 22, 17, "silber", lo=5, hi=-1)
-    a.px([(9, 9), (10, 8), (11, 8), (8, 10)], "rot", -1)
-    return a
+    """Limits: deutsches Verkehrszeichen „Durchfahrt verboten“ (Zeichen 250): breiter roter Ring um eine weiße Fläche.
+    Flach und streng symmetrisch wie das echte Schild; nur ein kleiner Glanz oben links bricht die Symmetrie."""
+    outer = disc(ring_rows(28), 2, 2)
+    inner = disc(ring_rows(18), 7, 7)
+    ring = outer - inner
+    pix = {p: ("rot", 5) for p in ring}
+    for p in inner:
+        pix[p] = ("silber", 7)
+    N4 = ((1, 0), (-1, 0), (0, 1), (0, -1))
+    # Ring: 1 px heller Außenrand, 1 px dunkler Innenrand (ringsum gleich, damit der Ring überall gleich dick wirkt)
+    for (x, y) in ring:
+        if any((x + dx, y + dy) not in outer for dx, dy in N4):
+            pix[(x, y)] = ("rot", 6)
+        elif any((x + dx, y + dy) in inner for dx, dy in N4):
+            pix[(x, y)] = ("rot", 3)
+    for (x, y) in inner:
+        if any((x + dx, y + dy) not in inner for dx, dy in N4):
+            pix[(x, y)] = ("silber", 5)
+    for q in ((8, 6), (9, 5), (10, 5), (7, 7)):
+        pix[q] = ("rot", 8)
+    return Img(layer(pix))
 
 
 def is_besuch():
@@ -990,6 +1038,9 @@ UPGRADE_ICONS = ["groesse", "mitglieder", "generator", "is_wachstum", "is_spawn"
 STAR5 = ["..t..", "..a..", "taCat", "..a..", "..t.."]
 STAR3 = [".a.", "aCa", ".a."]
 STAR_COL = {2: ("gold", {"C": 8, "a": 6, "t": 4}), 3: ("lila", {"C": 9, "a": 7, "t": 5})}
+# Stufe 4 (Level 21-50, nur mit Juwelen): jeder Stern in einer anderen Regenbogen-Farbe (Kern hell, Arme satt)
+RAINBOW = [("rot", {"C": 8, "a": 6, "t": 4}), ("feuer", {"C": 8, "a": 6, "t": 4}), ("gold", {"C": 8, "a": 6, "t": 4}),
+           ("smaragd", {"C": 9, "a": 7, "t": 5}), ("blau", {"C": 9, "a": 6, "t": 4}), ("lila", {"C": 9, "a": 7, "t": 5})]
 
 
 def star_spots(img, n=4, min_dist=9):
@@ -1022,18 +1073,19 @@ def star_spots(img, n=4, min_dist=9):
 
 
 def tier(img, level):
-    """Icon einer Upgrade-Stufe (1, 2, 3) auf einer 32-px-Kachel: ab Stufe 2 Funkel-Sterne um das Motiv."""
+    """Icon einer Upgrade-Stufe (1 bis 4) auf einer 32-px-Kachel: ab Stufe 2 Funkel-Sterne um das Motiv (2 gold,
+    3 lila, 4 Regenbogen: jeder Stern eine andere Farbe)."""
     if level < 2:
         return img
     out = img.copy()
     px = out.load()
-    mat, idx = STAR_COL[min(3, level)]
-    spots = star_spots(img)
+    spots = star_spots(img, n=5 if level >= 4 else 4)
     if len(spots) < 3:
         # Icon füllt die Kachel: Sterne als Glanz auf die Ecken des Motivs (oben links groß, wie das Licht)
         x0, y0, x1, y1 = img.getchannel("A").getbbox()
         spots += [(x0 + 3, y0 + 3, True), (x1 - 4, y0 + 2, False), (x1 - 3, y1 - 4, False)][:3 - len(spots)]
-    for cx, cy, big in spots:
+    for k, (cx, cy, big) in enumerate(spots):
+        mat, idx = RAINBOW[k % len(RAINBOW)] if level >= 4 else STAR_COL[level]
         rows = STAR5 if big else STAR3
         h = len(rows) // 2
         for (x, y), c in grid(rows, cx - h, cy - h).items():

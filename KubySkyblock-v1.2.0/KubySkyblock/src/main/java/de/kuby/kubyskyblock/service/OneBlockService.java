@@ -49,12 +49,12 @@ public final class OneBlockService {
 
     /** Upgrades des Blocks: Name, Wirkung, Höchst-Level (20, drei Stufen), Grundkosten und Faktor je Level (Block-XP). */
     public enum Upgrade {
-        GLUECK("Glück", "Seltene Blöcke kommen öfter", 20, 125, 1.245),
-        COOLDOWN("Cooldown", "Der neue Block ist schneller da", 20, 100, 1.225),
-        TEMPO("Tempo", "Eile am Block: schneller abbauen", 20, 150, 1.218),
-        XP("XP-Bonus", "Mehr XP je Abbau", 20, 100, 1.225),
-        GELD("Geld-Bonus", "Mehr Geld je Abbau", 20, 100, 1.225),
-        BEUTE("Doppel-Beute", "Chance auf doppelten Loot", 20, 150, 1.245);
+        GLUECK("Glück", "Seltene Blöcke kommen öfter", 50, 125, 1.245),
+        COOLDOWN("Cooldown", "Der neue Block ist schneller da", 50, 100, 1.225),
+        TEMPO("Tempo", "Eile am Block: schneller abbauen", 50, 150, 1.218),
+        XP("XP-Bonus", "Mehr XP je Abbau", 50, 100, 1.225),
+        GELD("Geld-Bonus", "Mehr Geld je Abbau", 50, 100, 1.225),
+        BEUTE("Doppel-Beute", "Chance auf doppelten Loot", 50, 150, 1.245);
 
         public final String label, desc;
         final int max;
@@ -307,27 +307,44 @@ public final class OneBlockService {
         return Math.max(0, addon.getConfig().getInt("oneblock.upgrades." + u.key() + ".max", u.max));
     }
 
-    /** Anteil am vollen Upgrade (0 bis 1): die volle Wirkung bleibt gleich, egal wie viele Level die config hat. */
+    /** Anteil an der Grundwirkung (Stufe 1 bis 3, bis Level 20): 0 bis 1, die volle Wirkung bei Level 20 bleibt gleich. */
     private double frac(Upgrade u, int lvl) {
-        int m = max(u);
+        int m = Math.min(max(u), UpgradeLevels.BASE);
         return m <= 0 ? 0 : Math.max(0, Math.min(1, (double) lvl / m));
     }
 
-    /** Eile-Stufe am Block (0 = keine, 1 bis 5 = Eile I bis V): alle 4 Level eine mehr. */
-    public int haste(int lvl) {
-        return lvl <= 0 ? 0 : (int) Math.ceil(5 * frac(Upgrade.TEMPO, lvl));
+    /** Anteil an Stufe 4 (Level 21 bis Höchst-Level, nur mit Juwelen): 0 bis 1. */
+    private double extra(Upgrade u, int lvl) {
+        int m = max(u) - UpgradeLevels.BASE;
+        return m <= 0 ? 0 : Math.max(0, Math.min(1, (double) (lvl - UpgradeLevels.BASE) / m));
     }
 
-    /** Haben alle One-Block-Upgrades in der config schon 20 Level? */
+    /** Eile-Stufe am Block (0 = keine): bis Level 20 Eile I bis V (alle 4 Level eine mehr), in Stufe 4 bis Eile VIII
+     *  (alle 10 Level eine mehr). */
+    public int haste(int lvl) {
+        if (lvl <= 0) return 0;
+        return (int) Math.ceil(5 * frac(Upgrade.TEMPO, lvl)) + (int) Math.floor(3 * extra(Upgrade.TEMPO, lvl) + 1e-9);
+    }
+
+    /** Haben alle One-Block-Upgrades in der config schon mindestens 20 Level? */
     public boolean levelsReady() {
-        for (Upgrade u : Upgrade.values()) if (max(u) != UpgradeLevels.MAX) return false;
+        for (Upgrade u : Upgrade.values()) if (max(u) < UpgradeLevels.BASE) return false;
         return true;
     }
 
-    /** Preis der nächsten Stufe in Block-XP, -1 wenn ausgebaut. */
+    /** Ist das nächste Level aus Stufe 4 (Level 21-50, nur mit Juwelen des Spielers)? */
+    public boolean jewelStep(Progress pr, Upgrade u) {
+        return UpgradeLevels.jewelLevel(pr.level(u) + 1);
+    }
+
+    /** Preis des nächsten Levels, -1 wenn ausgebaut: bis Level 20 in Block-XP, in Stufe 4 in Juwelen (jewelStep). */
     public long price(Progress pr, Upgrade u) {
         int lvl = pr.level(u);
         if (lvl >= max(u)) return -1;
+        if (UpgradeLevels.jewelLevel(lvl + 1)) {
+            return UpgradeLevels.jewels(lvl + 1, addon.getConfig().getDouble("oneblock.juwelen-stufe.basis", 8),
+                    addon.getConfig().getDouble("oneblock.juwelen-stufe.faktor", 1.1));
+        }
         long base = addon.getConfig().getLong("oneblock.upgrades." + u.key() + ".basis", u.base);
         double f = addon.getConfig().getDouble("oneblock.upgrades." + u.key() + ".faktor", u.factor);
         return Math.round(base * Math.pow(f, lvl));
@@ -339,8 +356,13 @@ public final class OneBlockService {
         Progress pr = progress(t);
         long price = price(pr, u);
         if (price < 0) return u.label + " ist schon ausgebaut.";
-        if (pr.xp < price) return "Euch fehlen noch " + Msg.coins(price - pr.xp) + " Block-XP.";
-        pr.xp -= price;
+        if (jewelStep(pr, u)) {
+            // Stufe 4: bezahlt der Spieler, der klickt, mit eigenen Juwelen
+            if (!core.jewels().take(p.getUniqueId(), price)) return "Stufe 4 gibt es nur mit Juwelen: du brauchst " + Msg.coins(price) + " Juwelen.";
+        } else {
+            if (pr.xp < price) return "Euch fehlen noch " + Msg.coins(price - pr.xp) + " Block-XP.";
+            pr.xp -= price;
+        }
         pr.levels.put(u, pr.level(u) + 1);
         dirty = true;
         Platform pf = claimOf(t);
@@ -376,8 +398,8 @@ public final class OneBlockService {
             case GLUECK -> "Selten x" + fmt(luckFactor(lvl));
             case COOLDOWN -> fmt(cooldown(lvl)) + " s";
             case TEMPO -> lvl == 0 ? "aus" : "Eile " + roman(haste(lvl));
-            case XP, GELD -> "+" + Math.round(frac(u, lvl) * 100) + " %";
-            case BEUTE -> Math.round(frac(u, lvl) * 40) + " %";
+            case XP, GELD -> "+" + Math.round((frac(u, lvl) + extra(u, lvl)) * 100) + " %";
+            case BEUTE -> Math.round(frac(u, lvl) * 40 + extra(u, lvl) * 30) + " %";
         };
     }
 
@@ -400,13 +422,13 @@ public final class OneBlockService {
 
     /** Glück: Gewichte hoch e (volles Upgrade 0,4 = seltene Blöcke viel öfter). */
     private double exponent(int luck) {
-        return Math.max(0.2, 1 - 0.6 * frac(Upgrade.GLUECK, luck));
+        return Math.max(0.2, 1 - 0.6 * frac(Upgrade.GLUECK, luck) - 0.15 * extra(Upgrade.GLUECK, luck));
     }
 
     /** Cooldown: volles Upgrade -80 %. */
     public double cooldown(int lvl) {
         double base = addon.getConfig().getDouble("oneblock.cooldown", 1.5);
-        return Math.round(base * Math.max(0.2, 1 - 0.8 * frac(Upgrade.COOLDOWN, lvl)) * 100) / 100.0;
+        return Math.round(base * Math.max(0.05, 1 - 0.8 * frac(Upgrade.COOLDOWN, lvl) - 0.15 * extra(Upgrade.COOLDOWN, lvl)) * 100) / 100.0;
     }
 
     public static String fmt(double v) {
@@ -437,17 +459,17 @@ public final class OneBlockService {
         List<ItemStack> give = new ArrayList<>();
         if (drops.isEmpty()) give.add(new ItemStack(old, 1));
         else for (ItemStack d : drops) give.add(d.clone());
-        boolean doubled = pr != null && rnd.nextDouble() < frac(Upgrade.BEUTE, pr.level(Upgrade.BEUTE)) * 0.4;
+        boolean doubled = pr != null && rnd.nextDouble() < frac(Upgrade.BEUTE, pr.level(Upgrade.BEUTE)) * 0.4 + extra(Upgrade.BEUTE, pr.level(Upgrade.BEUTE)) * 0.3;
         if (doubled) for (ItemStack d : new ArrayList<>(give)) give.add(d.clone());
         for (ItemStack d : give) p.getInventory().addItem(d).values().forEach(r -> p.getWorld().dropItem(p.getLocation(), r));
-        double money = addon.getConfig().getLong("oneblock.money", 5) * (1 + (pr == null ? 0 : frac(Upgrade.GELD, pr.level(Upgrade.GELD))));
-        double xp = addon.getConfig().getLong("oneblock.xp", 3) * (1 + (pr == null ? 0 : frac(Upgrade.XP, pr.level(Upgrade.XP))));
+        double money = addon.getConfig().getLong("oneblock.money", 5) * (1 + (pr == null ? 0 : frac(Upgrade.GELD, pr.level(Upgrade.GELD)) + extra(Upgrade.GELD, pr.level(Upgrade.GELD))));
+        double xp = addon.getConfig().getLong("oneblock.xp", 3) * (1 + (pr == null ? 0 : frac(Upgrade.XP, pr.level(Upgrade.XP)) + extra(Upgrade.XP, pr.level(Upgrade.XP))));
         long coins = Math.round(money), xpl = Math.round(xp);
         core.economy().deposit(p.getUniqueId(), coins);
         core.stats().get(p.getUniqueId()).xp += xpl;
         String extra = "";
         if (pr != null) {
-            long bx = Math.round(addon.getConfig().getLong("oneblock.team-xp", 2) * (1 + frac(Upgrade.XP, pr.level(Upgrade.XP))));
+            long bx = Math.round(addon.getConfig().getLong("oneblock.team-xp", 2) * (1 + frac(Upgrade.XP, pr.level(Upgrade.XP)) + extra(Upgrade.XP, pr.level(Upgrade.XP))));
             pr.xp += bx;
             pr.earned += bx;
             pr.mined++;

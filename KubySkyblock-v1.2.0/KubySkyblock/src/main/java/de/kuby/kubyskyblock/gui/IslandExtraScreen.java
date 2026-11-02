@@ -356,8 +356,8 @@ public final class IslandExtraScreen {
     // Limits
     // =================================================================================================================
 
-    public record LimitView(String island, int level, String bonus, List<LimitService.Usage> usage, String next, long price, boolean affordable,
-                            Consumer<Player> buy, Consumer<Player> back) {}
+    public record LimitView(String island, int level, String bonus, List<LimitService.Usage> usage, String next, long price, boolean jewels,
+                            boolean affordable, Consumer<Player> buy, Consumer<Player> back) {}
 
     public static void limits(Player p) {
         IslandService is = sb().islands();
@@ -373,11 +373,12 @@ public final class IslandExtraScreen {
             return;
         }
         long price = is.price(i, IslandService.Upgrade.LIMIT);
-        long coins = sb().core().economy().balance(p.getUniqueId());
+        boolean jw = is.jewelStep(i, IslandService.Upgrade.LIMIT);
+        long coins = jw ? sb().core().jewels().balance(p.getUniqueId()) : sb().core().economy().balance(p.getUniqueId());
         boolean may = is.has(i, p.getUniqueId(), IslandService.Right.UPGRADES);
         double per = sb().getConfig().getDouble("limits.bonus-je-stufe", 0.05);
         UiDialog.show(p, limitCanvas(new LimitView(i.name, i.limit, "+" + Math.round(sb().limits().bonus(i) * 100) + " %", us,
-                price < 0 ? null : "Level " + (i.limit + 1) + ": +" + Math.round((i.limit + 1) * per * 100) + " %", Math.max(0, price),
+                price < 0 ? null : "Level " + (i.limit + 1) + ": +" + Math.round((i.limit + 1) * per * 100) + " %", Math.max(0, price), jw,
                 price >= 0 && coins >= price, price >= 0 && may ? run(pl -> {
                     feedback(pl, is.upgrade(pl, IslandService.Upgrade.LIMIT));
                     limits(pl);
@@ -395,11 +396,14 @@ public final class IslandExtraScreen {
         c.box(0, y, W, 40, KitData.Box.CLOUD_CARD);
         KitData.Sprite li = UpgradeTier.icon(KitData.Sprite.HB_IS_LIMITS, v.level());
         c.sprite(6 + (32 - li.width) / 2, y + 4 + (32 - li.height) / 2, li);
-        c.text(44, y + 7, "Upgrade Limits · Lvl " + v.level() + " · Stufe " + UpgradeTier.of(v.level()) + " (" + v.bonus() + ")", CLOUD, true);
+        int tw = c.text(44, y + 7, "Upgrade Limits · Lvl " + v.level() + " · ", CLOUD, true);
+        tw += UpgradeTier.text(c, 44 + tw, y + 7, "Stufe " + UpgradeTier.of(v.level()), v.level(), true);
+        c.text(44 + tw, y + 7, " (" + v.bonus() + ")", CLOUD, true);
         if (v.next() == null) {
             c.text(44, y + 21, Canvas.caps("Höchste Stufe"), GREEN, false);
         } else {
-            c.text(44, y + 21, Canvas.fit("→ " + v.next() + " · " + Msg.coins(v.price()) + " $", false, W - 44 - 80), v.affordable() ? GREEN : RED, false);
+            c.text(44, y + 21, Canvas.fit("→ " + v.next() + " · " + Msg.coins(v.price()) + (v.jewels() ? " Juwelen" : " $"), false, W - 44 - 80),
+                    v.affordable() ? GREEN : RED, false);
             c.smallButton(W - 8 - 62, y + 12, 62, v.affordable() && v.buy() != null ? KitData.Small.GOLD : KitData.Small.DARK, "Kaufen",
                     v.affordable() && v.buy() != null ? GOLD : DIM, true);
             if (v.buy() != null && v.affordable()) c.action(W - 8 - 62, y + 12, 62, KitData.SMALL_H, v.buy(), "Limits verbessern");
@@ -452,7 +456,7 @@ public final class IslandExtraScreen {
         List<LimitService.Usage> us = new ArrayList<>();
         for (String n : List.of(w, "Kolben", "Beobachter", "Werfer & Spender", "Verstärker & Komparatoren")) us.add(new LimitService.Usage(n, 99_999, 99_999, true));
         for (LimitService.Kind k : LimitService.Kind.values()) us.add(new LimitService.Usage(k.label, 50, 60, k.ordinal() % 2 == 0));
-        reg.accept("Insel Limits", () -> limitCanvas(new LimitView(w, 99, "+999 %", us, "Level 99: +999 %", 999_999_999L, true, no, no)));
-        reg.accept("Insel Limits max", () -> limitCanvas(new LimitView("Insel", 4, "+100 %", us.subList(5, us.size()), null, 0, false, null, no)));
+        reg.accept("Insel Limits", () -> limitCanvas(new LimitView(w, 33, "+999 %", us, "Level 99: +999 %", 999_999_999L, true, true, no, no)));
+        reg.accept("Insel Limits max", () -> limitCanvas(new LimitView("Insel", 4, "+100 %", us.subList(5, us.size()), null, 0, false, false, null, no)));
     }
 }

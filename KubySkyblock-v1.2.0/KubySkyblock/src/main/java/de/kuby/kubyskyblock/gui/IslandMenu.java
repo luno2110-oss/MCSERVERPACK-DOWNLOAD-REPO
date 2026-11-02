@@ -87,7 +87,8 @@ public final class IslandMenu extends GuiMenu {
                 case LIMIT -> "Limits";
             };
             set(slot++, Items.make(m, "<gold>" + name + " <gray>" + UpgradeTier.label(is.level(i, u), is.maxLevel(u)), List.of(price < 0
-                    ? "<green>Höchstes Level" : "<gray>Nächstes Level: <gold>" + Msg.coins(price) + " $", "<yellow>Klick: kaufen")), e -> {
+                    ? "<green>Höchstes Level" : "<gray>Nächstes Level: " + (is.jewelStep(i, u) ? "<green>" + Msg.coins(price) + " Juwelen"
+                    : "<gold>" + Msg.coins(price) + " $"), "<yellow>Klick: kaufen")), e -> {
                 result(p, is.upgrade(p, u));
                 refresh(p);
             });

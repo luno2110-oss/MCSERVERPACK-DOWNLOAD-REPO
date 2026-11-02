@@ -44,9 +44,9 @@ public final class IslandScreen {
             DIM = TextColor.color(0x5E7488), DARK = TextColor.color(0x10202E);
 
     /** Upgrade-Karte: Name, Bild (je Stufe), Level und Höchst-Level, jetzt, nächstes Level (null = höchstes), Preis,
-     *  bezahlbar, Klick (null = keiner). */
-    public record Up(String name, KitData.Sprite icon, int level, int max, String now, String next, long price, boolean affordable,
-                     Consumer<Player> buy) {}
+     *  in Juwelen (Stufe 4), bezahlbar, Klick (null = keiner). */
+    public record Up(String name, KitData.Sprite icon, int level, int max, String now, String next, long price, boolean jewels,
+                     boolean affordable, Consumer<Player> buy) {}
 
     /** Mitglied: Name, Besitzer, online, Entfernen (null = nicht erlaubt). */
     public record Member(String name, boolean owner, boolean online, Consumer<Player> kick, String role, String promoteLabel, Consumer<Player> promote) {
@@ -154,27 +154,27 @@ public final class IslandScreen {
                 case GROWTH -> {
                     name = "Wachstum";
                     icon = KitData.Sprite.HB_IS_WACHSTUM;
-                    double per = sb().getConfig().getDouble("wachstum.bonus-je-stufe", 0.25);
                     now = i.growth == 0 ? "normal" : "+" + Math.round(is.growthChance(i) * 100) + " % Pflanzen";
-                    next = price < 0 ? null : "+" + Math.round(Math.min(1, (i.growth + 1) * per) * 100) + " % schneller wachsen";
+                    next = price < 0 ? null : "+" + Math.round(is.growthAt(i.growth + 1) * 100) + " % schneller wachsen";
                 }
                 case SPAWN -> {
                     name = "Spawnrate";
                     icon = KitData.Sprite.HB_IS_SPAWN;
-                    double per = sb().getConfig().getDouble("spawnrate.bonus-je-stufe", 0.2);
                     now = i.spawn == 0 ? "normal" : "+" + Math.round(is.spawnChance(i) * 100) + " % Wesen";
-                    next = price < 0 ? null : "+" + Math.round(Math.min(1, (i.spawn + 1) * per) * 100) + " % Tiere und Monster";
+                    next = price < 0 ? null : "+" + Math.round(is.spawnAt(i.spawn + 1) * 100) + " % Tiere und Monster";
                 }
                 default -> {
                     name = "Limits";
                     icon = KitData.Sprite.HB_IS_LIMITS;
-                    double per = sb().getConfig().getDouble("limits.bonus-je-stufe", 0.25);
+                    double per = sb().getConfig().getDouble("limits.bonus-je-stufe", 0.05);
                     now = i.limit == 0 ? "Grundwerte" : "+" + Math.round(sb().limits().bonus(i) * 100) + " %";
                     next = price < 0 ? null : "+" + Math.round((i.limit + 1) * per * 100) + " % Trichter, Tiere …";
                 }
             }
             int lvl = is.level(i, u);
-            ups.add(new Up(name, UpgradeTier.icon(icon, lvl), lvl, is.maxLevel(u), now, next, Math.max(0, price), price >= 0 && coins >= price,
+            boolean jw = is.jewelStep(i, u);
+            long have = jw ? sb().core().jewels().balance(id) : coins;
+            ups.add(new Up(name, UpgradeTier.icon(icon, lvl), lvl, is.maxLevel(u), now, next, Math.max(0, price), jw, price >= 0 && have >= price,
                     price < 0 ? null : run(pl -> {
                 feedback(pl, is.upgrade(pl, u));
                 open(pl);
@@ -578,14 +578,20 @@ public final class IslandScreen {
             c.sprite(x + 6 + (32 - u.icon().width) / 2, cy + 6 + (32 - u.icon().height) / 2, u.icon());
             c.text(x + 42, cy + 8, Canvas.fit(u.name(), true, cw - 48), CLOUD, true);
             c.text(x + 42, cy + 20, Canvas.fit(u.now(), false, cw - 48), MIST, false);
-            c.text(x + 42, cy + 31, Canvas.fit(UpgradeTier.shortLabel(u.level()), false, cw - 48), UpgradeTier.color(u.level()), false);
+            UpgradeTier.text(c, x + 42, cy + 31, Canvas.fit(UpgradeTier.shortLabel(u.level()), false, cw - 48), u.level(), false);
             if (u.next() == null) {
                 c.text(x + 8, cy + 46, Canvas.caps("Höchstes Level"), GREEN, false);
             } else {
                 List<String> nl = Canvas.wrap("→ " + u.next(), cw - 16);
                 for (int l = 0; l < Math.min(2, nl.size()); l++) c.text(x + 8, cy + 42 + 10 * l, nl.get(l), GREEN, false);
                 int bw = 46;
-                c.text(x + 8, cy + ch - 14, Canvas.fit(Msg.coins(u.price()) + " $", false, cw - 16 - bw - 4), u.affordable() ? GOLD : RED, false);
+                if (u.jewels()) {
+                    // Stufe 4: Preis in Juwelen, mit dem Juwelen-Zeichen statt Wort (passt in die schmale Karte)
+                    int tw = c.text(x + 8, cy + ch - 14, Canvas.fit(Msg.coins(u.price()), false, cw - 16 - bw - 16), u.affordable() ? UpgradeTier.JEWEL : RED, false);
+                    c.sprite(x + 8 + tw + 2, cy + ch - 16, KitData.Sprite.IB_EL_JEWELS);
+                } else {
+                    c.text(x + 8, cy + ch - 14, Canvas.fit(Msg.coins(u.price()) + " $", false, cw - 16 - bw - 4), u.affordable() ? GOLD : RED, false);
+                }
                 c.smallButton(x + cw - 6 - bw, cy + ch - 20, bw, u.affordable() ? KitData.Small.GOLD : KitData.Small.DARK, "Kaufen",
                         u.affordable() ? GOLD : DIM, true);
                 if (u.buy() != null && u.affordable()) c.action(x + cw - 6 - bw, cy + ch - 20, bw, KitData.SMALL_H, u.buy(), u.name() + " verbessern");
@@ -718,20 +724,20 @@ public final class IslandScreen {
     public static void samples(java.util.function.BiConsumer<String, java.util.function.Supplier<Canvas>> reg) {
         Consumer<Player> no = p -> { };
         String w = "W".repeat(40);
-        List<Up> ups = List.of(new Up("Größe", UpgradeTier.icon(KitData.Sprite.HB_GROESSE, 19), 19, 20, "999 x 999", "999 x 999", 999_999_999L, true, no),
-                new Up("Mitglieder", UpgradeTier.icon(KitData.Sprite.HB_MITGLIEDER, 12), 12, 20, "99 Plätze", "99 Plätze", 999_999_999L, false, no),
-                new Up("Generator", KitData.Sprite.HB_GENERATOR, 4, 20, "Erze aus 99 Sorten", "Level 99: Diamant, Smaragd, Antiker Schrott, Lapis", 1, true, no),
-                new Up("Wachstum", UpgradeTier.icon(KitData.Sprite.HB_IS_WACHSTUM, 16), 16, 20, "+100 % Pflanzen", "+100 % schneller wachsen", 999_999_999L, true, no),
-                new Up("Spawnrate", UpgradeTier.icon(KitData.Sprite.HB_IS_SPAWN, 11), 11, 20, "+100 % Wesen", "+100 % Tiere und Monster", 999_999_999L, false, no),
-                new Up("Limits", UpgradeTier.icon(KitData.Sprite.HB_IS_LIMITS, 20), 20, 20, "+999 %", null, 0, false, null));
+        List<Up> ups = List.of(new Up("Größe", UpgradeTier.icon(KitData.Sprite.HB_GROESSE, 19), 19, 50, "999 x 999", "999 x 999", 999_999_999L, false, true, no),
+                new Up("Mitglieder", UpgradeTier.icon(KitData.Sprite.HB_MITGLIEDER, 12), 12, 50, "99 Plätze", "99 Plätze", 999_999_999L, false, false, no),
+                new Up("Generator", KitData.Sprite.HB_GENERATOR, 4, 50, "Erze aus 99 Sorten", "Level 99: Diamant, Smaragd, Antiker Schrott, Lapis", 1, false, true, no),
+                new Up("Wachstum", UpgradeTier.icon(KitData.Sprite.HB_IS_WACHSTUM, 37), 37, 50, "+200 % Pflanzen", "+200 % schneller wachsen", 9_999, true, true, no),
+                new Up("Spawnrate", UpgradeTier.icon(KitData.Sprite.HB_IS_SPAWN, 16), 16, 50, "+100 % Wesen", "+100 % Tiere und Monster", 999_999_999L, false, false, no),
+                new Up("Limits", UpgradeTier.icon(KitData.Sprite.HB_IS_LIMITS, 50), 50, 50, "+999 %", null, 0, false, false, null));
         List<Member> ms = new ArrayList<>();
         for (int k = 0; k < 11; k++) ms.add(new Member("W".repeat(16), k == 0, k % 2 == 0, k == 0 ? null : no));
         reg.accept("Insel", () -> canvas(new View(w, 999_999L, 99_999, 999_999_999L, 999_999_999L, true, true, 999_999_999L, ups, ms, 11,
                 no, no, no, no, no, null, no, no, no, no, "Neustart in 23h 59m 59s")));
         reg.accept("Insel Mitglied", () -> canvas(new View("Insel", 0, 0, 0, 100, false, false, 0,
-                List.of(new Up("Größe", KitData.Sprite.HB_GROESSE, 0, 20, "31 x 31", null, 0, false, null),
-                        new Up("Mitglieder", KitData.Sprite.HB_MITGLIEDER, 0, 20, "2 Plätze", null, 0, false, null),
-                        new Up("Generator", KitData.Sprite.HB_GENERATOR, 0, 20, "Nur Bruchstein", null, 0, false, null)),
+                List.of(new Up("Größe", KitData.Sprite.HB_GROESSE, 0, 50, "31 x 31", null, 0, false, false, null),
+                        new Up("Mitglieder", KitData.Sprite.HB_MITGLIEDER, 0, 50, "2 Plätze", null, 0, false, false, null),
+                        new Up("Generator", KitData.Sprite.HB_GENERATOR, 0, 50, "Nur Bruchstein", null, 0, false, false, null)),
                 List.of(new Member("Luno", true, true, null), new Member("Kuby", false, false, null)), 3,
                 no, no, null, no, null, no, no, no, null, null, null)));
         List<TopRow> rows = new ArrayList<>();
