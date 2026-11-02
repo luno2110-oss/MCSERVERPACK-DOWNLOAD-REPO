@@ -265,7 +265,7 @@ public final class QuestScreen {
         String count = t.total() < 0 ? t.done() + " %" : t.done() + "/" + t.total();
         c.textRight(x + 119, y + 50, count, WHITE, false);
         c.action(x, y, 126, 67, a.area(ar), ar.label);
-        if (t.alert()) c.sprite(x + 126 - 10, y - 7, KitData.Sprite.HB_ALERT);
+        if (t.alert()) c.sprite(x + 126 - 16, y - 7, KitData.Sprite.HB_ALERT);
     }
 
     private static void small(Canvas c, int x, int y, KitData.Box box, KitData.Sprite s, String label, Consumer<Player> click) {
@@ -409,13 +409,13 @@ public final class QuestScreen {
                 c.textFlat(x + 29, 61, Canvas.caps(Canvas.fit(t.title(), true, 120)), DARK, true);
                 int cw = Canvas.width(t.count(), false);
                 c.textFlat(x + 192 - cw, 61, t.count(), DARK, false);
-                if (t.alert()) c.sprite(x + 200 - 7, 49, KitData.Sprite.HB_ALERT_S);
+                if (t.alert()) c.sprite(x + 200 - 10, 49, KitData.Sprite.HB_ALERT_S);
                 x += 204;
             } else {
                 c.box(x, 54, 34, 22, ar.tab, Canvas.Z_BUTTON);
                 icon(c, x, 57, 34, 16, t.theme() != null ? t.theme().tab() : ar.tabIcon);
                 c.action(x, 54, 34, 22, a.area(ar), t.title() + " · " + t.count());
-                if (t.alert()) c.sprite(x + 34 - 7, 49, KitData.Sprite.HB_ALERT_S);
+                if (t.alert()) c.sprite(x + 34 - 10, 49, KitData.Sprite.HB_ALERT_S);
                 x += 38;
             }
         }

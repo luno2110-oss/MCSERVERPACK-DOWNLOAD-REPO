@@ -253,7 +253,7 @@ public final class MainScreen {
                 else c.icon(x + (TW - 32) / 2, ty + 3, t.icon(), true, Icons.tint(t.icon()));
                 c.textCenter(x + TW / 2, ty + 35, Canvas.fit(t.name(), true, TW - 8), CREAM, true);
                 c.action(x, ty, TW, TH, t.click(), t.name() + " · " + t.desc());
-                if (t.alert()) c.sprite(x + TW - 9, ty - 6, KitData.Sprite.HB_ALERT);
+                if (t.alert()) c.sprite(x + TW - 15, ty - 6, KitData.Sprite.HB_ALERT);
                 i++;
             }
             y += ((s.tiles().size() + 3) / 4) * (TH + GAP) + 6;

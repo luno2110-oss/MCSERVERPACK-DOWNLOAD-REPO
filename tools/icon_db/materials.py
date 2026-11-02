@@ -47,6 +47,10 @@ RAMPS = {
     "rosa": ["#6E1838", "#A72656", "#B92664", "#CE316E", "#E03C7D", "#F86298", "#F985B1", "#FBB3CF"],
     # Glas/Wasser hell: Sanduhr (quests/art_hourglass)
     "glas": ["#1A4A66", "#287498", "#4097B9", "#6FCAE9", "#A8E4F6", "#D8F4FB"],
+    # Stiel wie der Vanilla-Stock: Angel der Info-Leiste (infobar/art_hud_rod), Licht aus jewelshop_survival/f_tisch_gruen
+    "stiel": ["#281E0B", "#483515", "#674D1E", "#876627", "#9C7C40"],
+    # Kessel/dunkles Metall, blau-violett: Profi-Paket (jewelshop/art_pack_profi)
+    "kessel": ["#25293E", "#393D55", "#4D516A", "#6E7188", "#80849C"],
 }
 
 

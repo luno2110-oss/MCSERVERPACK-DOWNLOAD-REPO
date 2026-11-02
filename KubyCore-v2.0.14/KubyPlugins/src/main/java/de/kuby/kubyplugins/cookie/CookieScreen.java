@@ -154,7 +154,7 @@ public final class CookieScreen {
             c.sprite(x + (tw - t.art().width) / 2, ty + 5 + (32 - t.art().height) / 2, t.art());
             c.textCenter(x + tw / 2, ty + 40, t.name(), GOLD, true);
             c.textCenter(x + tw / 2, ty + 50, Canvas.fit(t.sub(), false, tw - 6), t.alert() ? GREEN : TAN, false);
-            if (t.alert()) c.sprite(x + tw - 14, ty + 3, KitData.Sprite.HB_ALERT_S);
+            if (t.alert()) c.sprite(x + tw - 17, ty + 3, KitData.Sprite.HB_ALERT_S);
             c.action(x, ty, tw, th, t.open(), t.name());
         }
         y += 2 * (th + 4) + 2;
