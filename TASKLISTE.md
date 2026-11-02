@@ -436,7 +436,7 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Börse und Hut (Kosmetik): die alten Icons bleiben
   - Pfote (Haustiere) und Markt: alte Icons, Kontur stärker (Fast-Schwarz #060401 statt getönt, Diagonal-Ecken geschlossen)
   - Jobs und Tempo: Werkzeuge im Minecraft-Look (Umriss und Farbaufteilung der Vanilla-Spitzhacke und -Schaufel in doppelter Größe, Kopf in Rampen-Stufen, Stiel wie der Vanilla-Stock, 1 px Licht oben und Schatten unten); Jobs: Diamant-Spitzhacke mit gekreuzter Eisenschaufel, Tempo: Diamant-Spitzhacke mit Blitz
-  - Generator: Menü-Icon ist jetzt genau die Grafik der Generatoren im Spiel (Edelstein-Generator im goldenen Käfig aus `build_generator_art.py`, Wunsch des Besitzers); die Generator-Grafiken selbst wurden nie geändert
+  - Generator: Menü-Icon ist jetzt genau die Grafik der Generatoren im Spiel (Edelstein-Generator im goldenen Käfig aus `build_generator_art.py`, Wunsch des Besitzers); die Generator-Grafiken selbst wurden nie geändert; auch die Kachel „Generatoren“ im Hauptmenü zeigt jetzt denselben Edelstein-Generator (vorher Geld-Generator in Gold)
   - Glück: Kleeblatt mit eigener schwarzer Kontur, Trennlinien genau auf den Diagonalen, Mittelrippe an jeder Herz-Kerbe
   - Tagespot: Konzept der neuen Version (Goldberg, Kleeblatt) im alten dunklen Kessel (Füße, runder Bauch, breiter Rand; Rampe `kessel`), Kleeblatt 9 x 9 mit klaren Lücken
   - XP: klarer Kern (dunkelgrüner Ring, helles Gelb, Glanz oben links)
