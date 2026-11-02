@@ -43,8 +43,10 @@ public final class IslandScreen {
             GOLD = TextColor.color(0xF8D35A), GREEN = TextColor.color(0x7FE08A), RED = TextColor.color(0xF27A7A),
             DIM = TextColor.color(0x5E7488), DARK = TextColor.color(0x10202E);
 
-    /** Upgrade-Karte: Name, Bild, jetzt, nächste Stufe (null = höchste), Preis, bezahlbar, Klick (null = keiner). */
-    public record Up(String name, KitData.Sprite icon, String now, String next, long price, boolean affordable, Consumer<Player> buy) {}
+    /** Upgrade-Karte: Name, Bild (je Stufe), Level und Höchst-Level, jetzt, nächstes Level (null = höchstes), Preis,
+     *  bezahlbar, Klick (null = keiner). */
+    public record Up(String name, KitData.Sprite icon, int level, int max, String now, String next, long price, boolean affordable,
+                     Consumer<Player> buy) {}
 
     /** Mitglied: Name, Besitzer, online, Entfernen (null = nicht erlaubt). */
     public record Member(String name, boolean owner, boolean online, Consumer<Player> kick, String role, String promoteLabel, Consumer<Player> promote) {
@@ -145,8 +147,9 @@ public final class IslandScreen {
                 case GENERATOR -> {
                     name = "Generator";
                     icon = KitData.Sprite.HB_GENERATOR;
-                    now = "Stufe " + (i.generator + 1);
-                    next = price < 0 ? null : "Stufe " + (i.generator + 2) + ": " + newOres(is, i.generator + 1);
+                    now = i.generator == 0 ? "Nur Bruchstein" : "Erze aus " + is.generatorLevels().get(Math.min(i.generator,
+                            is.generatorLevels().size() - 1)).weights().size() + " Sorten";
+                    next = price < 0 ? null : "Level " + (i.generator + 1) + ": " + newOres(is, i.generator + 1);
                 }
                 case GROWTH -> {
                     name = "Wachstum";
@@ -170,7 +173,9 @@ public final class IslandScreen {
                     next = price < 0 ? null : "+" + Math.round((i.limit + 1) * per * 100) + " % Trichter, Tiere …";
                 }
             }
-            ups.add(new Up(name, icon, now, next, Math.max(0, price), price >= 0 && coins >= price, price < 0 ? null : run(pl -> {
+            int lvl = is.level(i, u);
+            ups.add(new Up(name, UpgradeTier.icon(icon, lvl), lvl, is.maxLevel(u), now, next, Math.max(0, price), price >= 0 && coins >= price,
+                    price < 0 ? null : run(pl -> {
                 feedback(pl, is.upgrade(pl, u));
                 open(pl);
             })));
@@ -573,8 +578,9 @@ public final class IslandScreen {
             c.sprite(x + 6 + (32 - u.icon().width) / 2, cy + 6 + (32 - u.icon().height) / 2, u.icon());
             c.text(x + 42, cy + 8, Canvas.fit(u.name(), true, cw - 48), CLOUD, true);
             c.text(x + 42, cy + 20, Canvas.fit(u.now(), false, cw - 48), MIST, false);
+            c.text(x + 42, cy + 31, Canvas.fit(UpgradeTier.shortLabel(u.level()), false, cw - 48), UpgradeTier.color(u.level()), false);
             if (u.next() == null) {
-                c.text(x + 8, cy + 46, Canvas.caps("Höchste Stufe"), GREEN, false);
+                c.text(x + 8, cy + 46, Canvas.caps("Höchstes Level"), GREEN, false);
             } else {
                 List<String> nl = Canvas.wrap("→ " + u.next(), cw - 16);
                 for (int l = 0; l < Math.min(2, nl.size()); l++) c.text(x + 8, cy + 42 + 10 * l, nl.get(l), GREEN, false);
@@ -712,20 +718,20 @@ public final class IslandScreen {
     public static void samples(java.util.function.BiConsumer<String, java.util.function.Supplier<Canvas>> reg) {
         Consumer<Player> no = p -> { };
         String w = "W".repeat(40);
-        List<Up> ups = List.of(new Up("Größe", KitData.Sprite.HB_GROESSE, "999 x 999", "999 x 999", 999_999_999L, true, no),
-                new Up("Mitglieder", KitData.Sprite.HB_MITGLIEDER, "99 Plätze", "99 Plätze", 999_999_999L, false, no),
-                new Up("Generator", KitData.Sprite.HB_GENERATOR, "Stufe 99", "Stufe 99: Diamant, Smaragd, Antiker Schrott, Lapis", 1, true, no),
-                new Up("Wachstum", KitData.Sprite.HB_IS_WACHSTUM, "+100 % Pflanzen", "+100 % schneller wachsen", 999_999_999L, true, no),
-                new Up("Spawnrate", KitData.Sprite.HB_IS_SPAWN, "+100 % Wesen", "+100 % Tiere und Monster", 999_999_999L, false, no),
-                new Up("Limits", KitData.Sprite.HB_IS_LIMITS, "+999 %", null, 0, false, null));
+        List<Up> ups = List.of(new Up("Größe", UpgradeTier.icon(KitData.Sprite.HB_GROESSE, 19), 19, 20, "999 x 999", "999 x 999", 999_999_999L, true, no),
+                new Up("Mitglieder", UpgradeTier.icon(KitData.Sprite.HB_MITGLIEDER, 12), 12, 20, "99 Plätze", "99 Plätze", 999_999_999L, false, no),
+                new Up("Generator", KitData.Sprite.HB_GENERATOR, 4, 20, "Erze aus 99 Sorten", "Level 99: Diamant, Smaragd, Antiker Schrott, Lapis", 1, true, no),
+                new Up("Wachstum", UpgradeTier.icon(KitData.Sprite.HB_IS_WACHSTUM, 16), 16, 20, "+100 % Pflanzen", "+100 % schneller wachsen", 999_999_999L, true, no),
+                new Up("Spawnrate", UpgradeTier.icon(KitData.Sprite.HB_IS_SPAWN, 11), 11, 20, "+100 % Wesen", "+100 % Tiere und Monster", 999_999_999L, false, no),
+                new Up("Limits", UpgradeTier.icon(KitData.Sprite.HB_IS_LIMITS, 20), 20, 20, "+999 %", null, 0, false, null));
         List<Member> ms = new ArrayList<>();
         for (int k = 0; k < 11; k++) ms.add(new Member("W".repeat(16), k == 0, k % 2 == 0, k == 0 ? null : no));
         reg.accept("Insel", () -> canvas(new View(w, 999_999L, 99_999, 999_999_999L, 999_999_999L, true, true, 999_999_999L, ups, ms, 11,
                 no, no, no, no, no, null, no, no, no, no, "Neustart in 23h 59m 59s")));
         reg.accept("Insel Mitglied", () -> canvas(new View("Insel", 0, 0, 0, 100, false, false, 0,
-                List.of(new Up("Größe", KitData.Sprite.HB_GROESSE, "31 x 31", null, 0, false, null),
-                        new Up("Mitglieder", KitData.Sprite.HB_MITGLIEDER, "2 Plätze", null, 0, false, null),
-                        new Up("Generator", KitData.Sprite.HB_GENERATOR, "Stufe 1", null, 0, false, null)),
+                List.of(new Up("Größe", KitData.Sprite.HB_GROESSE, 0, 20, "31 x 31", null, 0, false, null),
+                        new Up("Mitglieder", KitData.Sprite.HB_MITGLIEDER, 0, 20, "2 Plätze", null, 0, false, null),
+                        new Up("Generator", KitData.Sprite.HB_GENERATOR, 0, 20, "Nur Bruchstein", null, 0, false, null)),
                 List.of(new Member("Luno", true, true, null), new Member("Kuby", false, false, null)), 3,
                 no, no, null, no, null, no, no, no, null, null, null)));
         List<TopRow> rows = new ArrayList<>();

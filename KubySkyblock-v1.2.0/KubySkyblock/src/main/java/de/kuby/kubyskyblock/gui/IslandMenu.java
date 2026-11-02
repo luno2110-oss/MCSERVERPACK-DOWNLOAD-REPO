@@ -86,8 +86,8 @@ public final class IslandMenu extends GuiMenu {
                 case SPAWN -> "Spawnrate";
                 case LIMIT -> "Limits";
             };
-            set(slot++, Items.make(m, "<gold>" + name + " <gray>Stufe " + (is.level(i, u) + 1), List.of(price < 0 ? "<green>Höchste Stufe"
-                    : "<gray>Nächste Stufe: <gold>" + Msg.coins(price) + " $", "<yellow>Klick: kaufen")), e -> {
+            set(slot++, Items.make(m, "<gold>" + name + " <gray>" + UpgradeTier.label(is.level(i, u), is.maxLevel(u)), List.of(price < 0
+                    ? "<green>Höchstes Level" : "<gray>Nächstes Level: <gold>" + Msg.coins(price) + " $", "<yellow>Klick: kaufen")), e -> {
                 result(p, is.upgrade(p, u));
                 refresh(p);
             });

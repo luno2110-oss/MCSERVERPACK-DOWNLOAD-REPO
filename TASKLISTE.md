@@ -443,6 +443,28 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Duo-RTP: symmetrischer Iso-Würfel mit gleich hohen Seiten, klaren Kanten und weichen Ecken, runde Augen in Iso-Verzerrung
   - Hinweis-Abzeichen (rotes Ausrufezeichen) als runde Scheibe in 18 px und 12 px statt 30 px, damit es an Kacheln, Reitern und Karten passt (Lage in Hauptmenü, Quests und Cookie Clicker angepasst)
   - Neue Rampen in `materials.py`: `stiel` (Vanilla-Stock aus infobar/art_hud_rod) und `kessel` (jewelshop/art_pack_profi)
+- [x] Icon-Runde 3 nach der Durchsicht des Besitzers:
+  - Tagespot wieder der erste Entwurf (Eisentopf voller Münzen, Kleeblatt)
+  - Essen: gebratenes Steak (Fettrand, Grillstreifen in gleichem Abstand, einer kürzer) und ein saftiger Apfel mit Glanz
+  - Wachstum: ohne Block, Keimling mit klarem Pfeil (45-Grad-Kanten, Kontur); Stufe 2 und 3 mit kleinen Funkel-Sternen
+  - Duelle: Diamant- und Eisenschwert gekreuzt im Minecraft-Look (Vanilla-Umriss in doppelter Größe)
+  - Redstone: klebriger Kolben als Iso-Block (Schleim oben, Holzkopf, Bruchstein)
+  - Turnier: römische Fackel (goldener Griff mit Ringen, Schale mit Zacken-Band, dreizüngige Flamme)
+  - XP: auch die zwei kleinen Kugeln mit klarem Kern
+  - Limits: nur noch das rote Schild mit Balken
+  - Enderkiste (16 px) im Vanilla-Look, Homes (16 px) als sauberes Bett
+  - Bank ohne Tür (Säulen gleichmäßig), Spielzeit nur noch die Sanduhr mit glatten Rändern
+  - Besuchen: Wegweiser mit Holzpfahl statt Gras, Biom-Inseln neu (Schnee-Insel mit Fichte, dahinter Sand-Insel mit Kaktus)
+  - Heiraten: Ringe verschlungen und geschlossen (oben liegt Gold, unten Silber vorn)
+  - Neue Rampen: `steak` (Referenzen), `ender`, `bett`, `planke` (Vanilla-Farben für Minecraft-Gegenstände)
+- [x] Upgrades in 3 Stufen bis Level 20 (Insel: Größe, Mitglieder, Generator, Wachstum, Spawnrate, Limits; One-Block: Glück, Cooldown, Tempo, XP, Geld, Doppel-Beute):
+  - Stufe 1 = Level 1-10, Stufe 2 = bis 15, Stufe 3 = bis 20 (`UpgradeLevels`, `UpgradeTier`)
+  - Icons je Stufe: Stufe 1 normal, Stufe 2 mit kleinen goldenen Funkel-Sternen, Stufe 3 mit lila Sternen (`art_<name>_t2/_t3`, 32-px-Kachel, Motiv liegt wie bei Stufe 1)
+  - Karten zeigen „Lvl 12 · Stufe 2“ in der Farbe der Stufe (grau, gold, lila); One-Block: Balken in Stufen-Farbe, „Stufe n“ daneben
+  - config: Listen mit 21 Werten (Radius 15 bis 70, Mitglieder 2 bis 22, Preise je Level steigen um 22 %), Generator mit 21 Level (alte 6 Stufen auf Level 0/4/8/12/16/20, Erze dazwischen gleichmäßig), Bonus je Level 5 %/4 %/5 %
+  - One-Block: Wirkung nach Anteil am Höchst-Level (volle Wirkung gleich wie vorher: +100 % XP/Geld, 40 % Doppel-Beute, -80 % Cooldown, Eile I bis V alle 4 Level)
+  - Bestehende Server: unveränderte alte Standard-Werte in der config werden beim Start ersetzt; gespeicherte Stände werden einmal umgerechnet (gleiche Wirkung wie vorher, `upgrade-version: 2` in islands.yml und oneblock.yml). Eigene, geänderte config-Werte bleiben; dann bleiben auch die Stände im alten Format (Warnung im Log)
+  - „Block-Stufe“ heißt jetzt „Block-Level“ (Summe aller One-Block-Upgrades), Guide erklärt die 3 Stufen
 
 ## Entscheidungen (Stand: Sitzung mit Claude)
 - Ziel: Paper 1.21.11. SMP = PvP und Action (töten, greifen erlaubt, außer Cheaten, Duplizieren und Bugs ausnutzen). Survival = ruhig, bauen und farmen, Plots geschützt bzw. claimbar.

@@ -127,6 +127,8 @@ public final class IslandService {
     private final Set<Integer> busy = new HashSet<>();
     private int next = 1;
     private boolean dirty;
+    /** Format der gespeicherten Upgrade-Stände (UpgradeLevels.VERSION = Level 0 bis 20). */
+    private int upgradeVersion = UpgradeLevels.VERSION;
 
     public IslandService(KubySkyblock addon, KubyPlugins core) {
         this.addon = addon;
@@ -183,14 +185,14 @@ public final class IslandService {
     /** Radius der Insel je Größen-Stufe (insel.groessen). */
     public int radius(int level) {
         List<Integer> sizes = addon.getConfig().getIntegerList("insel.groessen");
-        if (sizes.isEmpty()) sizes = List.of(15, 25, 35, 50, 70);
+        if (sizes.isEmpty()) sizes = UpgradeLevels.SIZES;
         int r = sizes.get(Math.max(0, Math.min(level, sizes.size() - 1)));
         return Math.min(r, spacing() / 2 - 5);
     }
 
     public int maxSize() {
         List<Integer> sizes = addon.getConfig().getIntegerList("insel.groessen");
-        return (sizes.isEmpty() ? 5 : sizes.size()) - 1;
+        return (sizes.isEmpty() ? UpgradeLevels.SIZES.size() : sizes.size()) - 1;
     }
 
     public int radius(Island i) {
@@ -569,13 +571,13 @@ public final class IslandService {
 
     public int memberLimit(Island i) {
         List<Integer> l = addon.getConfig().getIntegerList("insel.mitglieder");
-        if (l.isEmpty()) l = List.of(2, 4, 6, 10);
+        if (l.isEmpty()) l = UpgradeLevels.MEMBERS;
         return l.get(Math.max(0, Math.min(i.slots, l.size() - 1)));
     }
 
     public int maxSlots() {
         List<Integer> l = addon.getConfig().getIntegerList("insel.mitglieder");
-        return (l.isEmpty() ? 4 : l.size()) - 1;
+        return (l.isEmpty() ? UpgradeLevels.MEMBERS.size() : l.size()) - 1;
     }
 
     public String invite(Player p, Player target) {
@@ -773,13 +775,19 @@ public final class IslandService {
         };
         List<Long> l = addon.getConfig().getLongList("insel.upgrades." + key);
         if (!l.isEmpty()) return l;
-        return switch (u) {
-            case SIZE -> List.of(0L, 25_000L, 75_000L, 200_000L, 500_000L);
-            case SLOTS -> List.of(0L, 10_000L, 40_000L, 100_000L);
-            case GROWTH -> List.of(0L, 15_000L, 50_000L, 150_000L, 400_000L);
-            case SPAWN -> List.of(0L, 20_000L, 60_000L, 180_000L, 450_000L);
-            default -> List.of(0L, 25_000L, 75_000L, 200_000L, 500_000L);
-        };
+        return UpgradeLevels.prices(switch (u) {
+            case SIZE -> 6_700;
+            case SLOTS -> 2_900;
+            case GROWTH -> 4_200;
+            case SPAWN -> 4_600;
+            default -> 5_000;
+        });
+    }
+
+    /** Haben alle Insel-Upgrades in der config schon 20 Level? */
+    public boolean levelsReady() {
+        for (Upgrade u : Upgrade.values()) if (maxLevel(u) != UpgradeLevels.MAX) return false;
+        return true;
     }
 
     public int maxLevel(Upgrade u) {
@@ -802,12 +810,12 @@ public final class IslandService {
 
     /** Bonus des Wachstums-Upgrades: Chance, dass eine Pflanze gleich eine Stufe mehr wächst (0 bis 1). */
     public double growthChance(Island i) {
-        return i == null ? 0 : Math.min(1.0, i.growth * addon.getConfig().getDouble("wachstum.bonus-je-stufe", 0.25));
+        return i == null ? 0 : Math.min(1.0, i.growth * addon.getConfig().getDouble("wachstum.bonus-je-stufe", 0.05));
     }
 
     /** Bonus des Spawnrate-Upgrades: Chance auf ein zweites Wesen beim natürlichen Spawnen (0 bis 1). */
     public double spawnChance(Island i) {
-        return i == null ? 0 : Math.min(1.0, i.spawn * addon.getConfig().getDouble("spawnrate.bonus-je-stufe", 0.2));
+        return i == null ? 0 : Math.min(1.0, i.spawn * addon.getConfig().getDouble("spawnrate.bonus-je-stufe", 0.04));
     }
 
     public String upgrade(Player p, Upgrade u) {
@@ -1000,6 +1008,7 @@ public final class IslandService {
 
     private void load() {
         YamlConfiguration y = YamlConfiguration.loadConfiguration(file);
+        upgradeVersion = levelsReady() ? UpgradeLevels.VERSION : 1;
         if (!y.contains("version")) {
             // altes Format: UUID -> Nummer im Raster (100er Abstand, 500 je Reihe)
             int slot = 1;
@@ -1025,6 +1034,14 @@ public final class IslandService {
             return;
         }
         next = y.getInt("next", 1);
+        // Upgrade-Stände aus der Zeit mit 4 bis 6 Stufen auf Level 0 bis 20 umrechnen (gleiche Wirkung)
+        int stored = y.getInt("upgrade-version", 1);
+        boolean migrate = stored < UpgradeLevels.VERSION && levelsReady();
+        upgradeVersion = migrate ? UpgradeLevels.VERSION : stored;
+        if (stored < UpgradeLevels.VERSION && !migrate) {
+            addon.getLogger().warning("islands.yml: Upgrades noch im alten Format, die config hat aber keine 20-Level-Listen "
+                    + "(insel.groessen, insel.mitglieder, insel.upgrades.*, generator.stufen). Stände bleiben unverändert.");
+        }
         ConfigurationSection root = y.getConfigurationSection("islands");
         if (root == null) return;
         for (String k : root.getKeys(false)) {
@@ -1061,6 +1078,15 @@ public final class IslandService {
                 i.growth = s.getInt("growth");
                 i.spawn = s.getInt("spawn");
                 i.limit = s.getInt("limit");
+                if (migrate) {
+                    i.size = UpgradeLevels.islandSize(i.size);
+                    i.slots = UpgradeLevels.islandSlots(i.slots);
+                    i.generator = UpgradeLevels.islandGenerator(i.generator);
+                    i.growth = UpgradeLevels.islandBonus(i.growth);
+                    i.spawn = UpgradeLevels.islandBonus(i.spawn);
+                    i.limit = UpgradeLevels.islandBonus(i.limit);
+                    dirty = true;
+                }
                 i.points = s.getLong("points");
                 i.created = s.getLong("created");
                 i.lastReset = s.getLong("reset");
@@ -1089,6 +1115,7 @@ public final class IslandService {
     public synchronized void save() {
         YamlConfiguration out = new YamlConfiguration();
         out.set("version", 2);
+        out.set("upgrade-version", upgradeVersion);
         out.set("next", next);
         for (Island i : bySlot.values()) {
             String b = "islands." + i.slot + ".";

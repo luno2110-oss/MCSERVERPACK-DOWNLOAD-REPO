@@ -277,20 +277,50 @@ def i_ob_tempo():
     return Img(stack(pw, ph, bolt(21, 17)))
 
 
+SWORD = ["................",
+         ".............222",
+         "............2771",
+         "...........27571",
+         "..........27571.",
+         ".........27561..",
+         "........27561...",
+         "..22...26561....",
+         "..232.26561.....",
+         "...2416461......",
+         "...244361.......",
+         "....2321........",
+         "...BC1221.......",
+         "..BDA.1121......",
+         "22CA....11......",
+         "231.............",
+         "111............."]
+
+
+def sword(mat, dx=0, dy=0, flip=False):
+    n = len(RAMPS[mat])
+    hp, wp = {}, {}
+    for (x, y), c in grid(SWORD[1:], 0, 0).items():
+        for ex in (0, 1):
+            for ey in (0, 1):
+                X, Y = 2 * x + ex + dx, 2 * y + ey + dy
+                if flip:
+                    X = 31 - X
+                if c in STICK:
+                    wp[(X, Y)] = ("stiel", STICK[c])
+                else:
+                    hp[(X, Y)] = (mat, round(1 + (int(c) - 1) * (n - 2) / 6))
+    for d in (hp, wp):
+        keys = set(d)
+        for (x, y), (m, k) in list(d.items()):
+            if (x, y - 1) not in keys:
+                d[(x, y)] = (m, min(len(RAMPS[m]) - 1, k + 1))
+            elif (x, y + 1) not in keys:
+                d[(x, y)] = (m, max(0, k - 1))
+    return stack(layer(wp), layer(hp))
+
+
 def i_duelle():
-    a = Icon()
-    for flip in (False, True):
-        def P(x, y):
-            return (31 - x, y) if flip else (x, y)
-        a.poly([P(3, 2), P(7, 2), P(22, 17), P(19, 20)], "silber", lo=1, hi=-1)
-        a.line([P(17, 23), P(24, 16)], 3, "gold", lo=1, hi=-2)
-        a.line([P(22, 21), P(28, 27)], 3, "holz", lo=1, hi=-2)
-        if flip:
-            a.rect(2, 27, 4, 29, "gold", lo=2, hi=-2)
-        else:
-            a.rect(27, 27, 29, 29, "gold", lo=2, hi=-2)
-    a.px([(4, 3), (5, 3)], "silber", -1)
-    return a
+    return Img(stack(sword("eisen", flip=True), sword("tuerkis")))
 
 
 # ---------------------------------------------------------------------------------------------------------- Kompass, Uhr
@@ -344,14 +374,11 @@ def i_bank():
     a = Icon()
     a.poly([(16, 1), (30, 9), (2, 9)], "silber", lo=1, hi=-2)
     a.rect(2, 9, 29, 11, "silber", lo=2, hi=-2)
-    for x in (4, 10, 18, 24):
+    for x in (5, 11, 17, 23):
         a.rect(x, 12, x + 3, 24, "silber", form="cyl", lo=1, hi=-2)
     a.rect(1, 25, 30, 27, "silber", lo=2, hi=-2)
     a.rect(0, 28, 31, 30, "silber", lo=1, hi=-3)
-    coin(a, 12, 2, 19, 8, motif=False)
-    a.px([(15, 13), (16, 13)], "gold", 5)
-    # Tür zwischen den Säulen (Bruch im Säulen-Muster)
-    a.rect(14, 15, 17, 24, "holz", lo=1, hi=-3)
+    a.ellipse(12, 2, 19, 8, "gold", form="round", lo=0, hi=-2, gloss="auto")
     return a
 
 
@@ -369,16 +396,24 @@ def i_insel():
 
 
 def is_biom():
-    a = Icon()
-    a.poly([(3, 17), (29, 17), (23, 23), (17, 31), (15, 31), (9, 23)], "erde", lo=1, hi=-1)
-    a.rect(2, 14, 15, 18, "gras", lo=1, hi=-1)
-    a.rect(16, 14, 29, 18, "papier", lo=5, hi=-1)
-    a.rect(8, 7, 9, 14, "holz", form="cyl", lo=1, hi=-2)
-    a.ellipse(1, 0, 15, 9, "rosa", form="round", lo=1, hi=-1)
-    a.rect(21, 4, 24, 14, "gras", form="cyl", lo=0, hi=-3)
-    a.rect(18, 7, 20, 10, "gras", form="cyl", lo=0, hi=-3)
-    a.rect(25, 8, 27, 11, "gras", form="cyl", lo=0, hi=-3)
-    return a
+    big = Icon()
+    # große Insel vorn links: Schnee mit Fichte
+    big.poly([(1, 19), (21, 19), (17, 24), (13, 30), (9, 30), (5, 24)], "erde", lo=1, hi=-1)
+    big.poly([(6, 24), (10, 24), (9, 28)], "eisen", lo=2, hi=4, sep=False)
+    big.ellipse(0, 15, 22, 22, "glas", form="round", lo=3, hi=-1)
+    big.poly([(11, 3), (16, 10), (14, 10), (18, 15), (4, 15), (8, 10), (6, 10)], "smaragd", lo=0, hi=4)
+    big.rect(10, 15, 12, 18, "holz", lo=1, hi=-3)
+    big.px([(11, 3), (10, 4), (11, 4), (12, 4), (8, 10), (9, 10), (6, 10), (4, 15), (5, 15), (14, 10)], "glas", -1)
+    b = big.render()
+    small = Icon()
+    # kleine Insel hinten rechts: Sand mit Kaktus
+    small.poly([(19, 10), (31, 10), (28, 14), (25, 18), (23, 14)], "erde", lo=2, hi=-1)
+    small.ellipse(18, 7, 31, 12, "papier", form="round", lo=5, hi=-1)
+    small.rect(24, 1, 26, 9, "gras", form="cyl", lo=1, hi=-3)
+    small.rect(21, 3, 22, 6, "gras", form="cyl", lo=1, hi=-3)
+    small.rect(28, 2, 29, 5, "gras", form="cyl", lo=1, hi=-3)
+    small.px([(23, 6), (27, 5)], "gras", 3)
+    return Img(stack(small.render(), b))
 
 
 def i_grundstuecke():
@@ -396,27 +431,45 @@ def i_grundstuecke():
 
 # ---------------------------------------------------------------------------------------------------------- Edles
 def i_heiraten():
-    a = Icon()
-    a.ellipse(1, 9, 20, 28, "gold", form="round", lo=0, hi=-2)
-    a.cut_ellipse(5, 13, 16, 24)
-    a.ellipse(12, 11, 31, 30, "silber", form="round", lo=0, hi=-2)
-    a.cut_ellipse(16, 15, 27, 26)
-    # Herz-Diamant oben auf dem goldenen Ring
-    a.poly([(7, 7), (10, 3), (14, 7), (10, 11)], "rosa", lo=2, hi=-1, gloss=[(9, 5)])
-    a.px([(3, 13), (4, 12)], "gold", -1)
-    return a
+    g = Icon()
+    g.ellipse(1, 9, 20, 28, "gold", form="round", lo=0, hi=-2)
+    g.cut_ellipse(5, 13, 16, 24)
+    g.px([(3, 13), (4, 12)], "gold", -1)
+    s = Icon()
+    s.ellipse(12, 11, 31, 30, "silber", form="round", lo=0, hi=-2)
+    s.cut_ellipse(16, 15, 27, 26)
+    gem = Icon()
+    gem.poly([(7, 7), (10, 3), (14, 7), (10, 11)], "rosa", lo=2, hi=-1, gloss=[(9, 5)])
+    gi, si = g.render(), s.render()
+    out = stack(si, gi)
+    # unten liegt das Silber oben: verschlungen, beide Ringe geschlossen
+    sp = si.load()
+    op = out.load()
+    for y in range(20, 32):
+        for x in range(10, 22):
+            if sp[x, y][3]:
+                op[x, y] = sp[x, y]
+    return Img(stack(out, gem.render()))
 
 
 def i_turnier():
     a = Icon()
-    a.poly([(2, 8), (9, 16), (16, 5), (23, 16), (30, 8), (27, 25), (5, 25)], "gold", lo=1, hi=-2)
-    a.rect(5, 23, 27, 28, "gold", lo=1, hi=-3)
-    for x, mat in ((8, "rot"), (15, "smaragd"), (22, "blau")):
-        a.ellipse(x, 23, x + 3, 26, mat, form="round", lo=2, hi=-1, gloss=[(x + 1, 24)])
-    for x, y in ((2, 8), (16, 5), (30, 8)):
-        a.ellipse(x - 2, y - 3, x + 1, y, "gold", form="round", lo=3, hi=-1)
-    a.px([(6, 13), (7, 14)], "gold", -1)
-    return a
+    # Griff: nach unten schmaler, zwei Ringe (Muster), unten ein Knauf
+    a.poly([(12, 17), (19, 17), (17, 28), (14, 28)], "gold", form="cyl", lo=1, hi=-2)
+    a.rect(13, 28, 18, 30, "gold", lo=1, hi=-3)
+    a.rect(13, 21, 18, 22, "gold", lo=3, hi=-1, sep=True)
+    # Schale mit Rand und Zacken-Band
+    a.poly([(7, 11), (24, 11), (21, 17), (10, 17)], "gold", form="cyl", lo=1, hi=-2)
+    a.rect(6, 10, 25, 12, "gold", lo=3, hi=-1)
+    a.px([(10, 14), (13, 14), (16, 14), (19, 14)], "gold", 7)
+    a.px([(11, 15), (14, 15), (17, 15), (20, 15)], "gold", 2)
+    bowl = a.render()
+    f = Icon()
+    # Flamme: drei Zungen, die mittlere am höchsten, nach rechts geweht (Bruch der Symmetrie)
+    f.poly([(8, 10), (9, 5), (11, 7), (13, 1), (16, 5), (18, 0), (20, 4), (22, 2), (23, 6), (23, 10)], "feuer", form="round", lo=2, hi=-2)
+    f.poly([(11, 10), (13, 5), (15, 7), (18, 3), (20, 7), (20, 10)], "feuer", form="round", lo=6, hi=-1, sep=False)
+    f.px([(16, 8), (17, 7), (15, 9), (16, 9), (17, 9)], "feuer", -1)
+    return Img(stack(f.render(), bowl))
 
 
 def is_pokal():
@@ -508,47 +561,20 @@ def ob_beute():
     return a
 
 
-def mini_clover(ox, oy):
-    """Kleines Kleeblatt 9 x 9: vier Blätter mit Kerbe, die Lücken werden zur Kontur (klare Trennlinien)."""
-    rows = [".oo...oo.",
-            "oooo.oooo",
-            "oooo.oooo",
-            ".ooo.ooo.",
-            "....+....",
-            ".ooo.ooo.",
-            "oooo.oooo",
-            "oooo.oooo",
-            ".oo...oo."]
-    cells = grid(rows, ox, oy)
-    pts = {p for p, c in cells.items() if c == "o"}
-    pix = {}
-    for (x, y) in pts:
-        i, j = x - ox, y - oy
-        # Blatt oben links am hellsten, unten rechts am dunkelsten (Licht oben links)
-        k = 5 if (i < 4 and j < 4) else 3 if (i > 4 and j > 4) else 4
-        if (x, y - 1) not in pts:
-            k += 2
-        elif (x, y + 1) not in pts:
-            k -= 1
-        pix[(x, y)] = ("gras", max(1, min(8, k)))
-    pix[(ox + 4, oy + 4)] = ("gras", 2)
-    return pix
-
-
 def i_tagespot():
-    """Tagespot: der alte dunkle Kessel (Füße, runder Bauch, breiter Rand) voller Gold, Kleeblatt für das Glück."""
+    """Tagespot (erster Entwurf): runder Eisentopf voller Goldmünzen, Kleeblatt oben rechts."""
     a = Icon()
-    a.ellipse(6, 6, 26, 18, "gold", form="round", lo=2, hi=-1)
-    for x, y in ((8, 6), (14, 3), (20, 6)):
-        a.ellipse(x, y, x + 6, y + 6, "gold", form="round", lo=0, hi=-2, gloss="auto")
-    a.rect(5, 26, 8, 30, "kessel", lo=0, hi=2)
-    a.rect(23, 26, 26, 30, "kessel", lo=0, hi=2)
-    a.ellipse(4, 13, 27, 30, "kessel", form="round", lo=0, hi=-1)
-    a.ellipse(3, 11, 28, 17, "kessel", form="round", lo=1, hi=-1)
-    a.ellipse(6, 12, 25, 16, "gold", form="round", lo=3, hi=-1, sep=False)
-    a.px([(10, 13), (16, 12), (21, 13)], "gold", -1)
-    a.px([(7, 19), (7, 20), (8, 18)], "kessel", -1)
-    return Img(stack(a.render(), layer(mini_clover(22, 0))))
+    a.ellipse(3, 12, 28, 30, "eisen", form="round", lo=0, hi=-3)
+    a.ellipse(4, 9, 27, 15, "eisen", form="round", lo=1, hi=-2)
+    a.ellipse(6, 8, 25, 14, "gold", form="round", lo=3, hi=-1, sep=False)
+    for x, y in ((8, 5), (14, 3), (20, 5)):
+        coin(a, x, y, x + 6, y + 6, motif=False)
+    a.px([(10, 6), (16, 4)], "gold", -1)
+    a.rect(2, 13, 4, 15, "eisen", lo=1, hi=-2)
+    a.rect(27, 13, 29, 15, "eisen", lo=1, hi=-2)
+    for cx, cy in ((24, 2), (27, 2), (24, 5), (27, 5)):
+        a.ellipse(cx - 1, cy - 1, cx + 1, cy + 1, "gras", form="round", lo=2, hi=-1)
+    return a
 
 
 def clover(cx, cy, R=8.6):
@@ -609,37 +635,48 @@ def ob_glueck():
     return Img(stack(a.render(), clover(15, 14)))
 
 
-def ob_xp():
-    """XP-Bonus: Erfahrungskugel mit klarem Kern (dunkelgrüner Ring, helles Gelb, Glanz oben links)."""
-    a = Icon()
-    a.ellipse(2, 2, 25, 25, "gras", form="round", lo=0, hi=-1)
-    a.ellipse(21, 19, 29, 27, "gras", form="round", lo=1, hi=-1, gloss="auto")
-    a.ellipse(23, 1, 29, 7, "gras", form="round", lo=2, hi=-1)
-    a.px([(7, 6), (8, 5), (6, 7)], "gras", -1)
-    cx, cy = 12.5, 12.5
+def xp_core(a, cx, cy, r_in, r_ring):
+    """Kern einer Erfahrungskugel: helles Gelb, außen ein dunkelgrüner Ring."""
     for y in range(32):
         for x in range(32):
             r = math.hypot(x + 0.5 - cx, y + 0.5 - cy)
-            if r <= 4.6:
-                a.px([(x, y)], "gold", 7 if r > 2.4 else 8)
-            elif r <= 5.7:
+            if r <= r_in:
+                a.px([(x, y)], "gold", 8 if r <= r_in * 0.5 else 7)
+            elif r <= r_ring:
                 a.px([(x, y)], "gras", 2)
+
+
+def ob_xp():
+    a = Icon()
+    a.ellipse(2, 2, 25, 25, "gras", form="round", lo=0, hi=-1)
+    a.ellipse(21, 19, 29, 27, "gras", form="round", lo=1, hi=-1)
+    a.ellipse(23, 1, 29, 7, "gras", form="round", lo=2, hi=-1)
+    a.px([(7, 6), (8, 5), (6, 7)], "gras", -1)
+    xp_core(a, 12.5, 12.5, 4.6, 5.7)
     a.px([(10, 10), (11, 10), (10, 11)], "papier", -1)
     a.px([(14, 15), (15, 14), (15, 15)], "gold", 6)
+    for (x, y), c in grid([".rr.", "rYyr", "ryyr", ".rr."], 24, 22).items():
+        a.px([(x, y)], *{"r": ("gras", 2), "Y": ("papier", -1), "y": ("gold", 7)}[c])
+    for (x, y), c in grid([".r.", "rYr", ".r."], 25, 3).items():
+        a.px([(x, y)], *{"r": ("gras", 2), "Y": ("gold", 8)}[c])
     return a
 
 
 def i_spielzeit():
+    top_w = [16, 18, 18, 18, 16, 14, 12, 10, 8, 6, 4]
+    glass_w = top_w + [4, 4] + top_w[::-1]
+    glass = disc(glass_w, 7, 4)
     a = Icon()
-    a.rect(5, 1, 26, 5, "holz", lo=1, hi=-2)
-    a.rect(5, 26, 26, 30, "holz", lo=1, hi=-2)
-    a.rect(6, 6, 8, 25, "holz", form="cyl", lo=0, hi=-3)
-    a.rect(23, 6, 25, 25, "holz", form="cyl", lo=0, hi=-3)
-    a.poly([(10, 6), (21, 6), (17, 15), (17, 16), (21, 25), (10, 25), (14, 16), (14, 15)], "glas", lo=2, hi=-1, sep=False)
-    a.poly([(11, 8), (20, 8), (16, 14), (15, 14)], "gold", lo=4, hi=-2, sep=False)
-    a.poly([(15, 19), (16, 19), (20, 24), (11, 24)], "gold", lo=3, hi=-2, sep=False)
-    a.px([(15, 15), (15, 16), (15, 17), (15, 18)], "gold", 5)
-    a.px([(11, 7), (12, 7), (11, 22)], "glas", -1)
+    a.rect(5, 1, 26, 3, "holz", lo=1, hi=-2)
+    a.rect(5, 28, 26, 30, "holz", lo=1, hi=-2)
+    a.add(glass, "glas", form="cyl", lo=2, hi=-1)
+    # Sand: oben ein Rest über dem Hals, unten ein Hügel, dazwischen ein Faden
+    sand_top = {(x, y) for (x, y) in glass if 11 <= y <= 14}
+    sand_bot = {(x, y) for (x, y) in glass if y >= 22 and abs(x + 0.5 - 16) <= (y - 19) * 1.6}
+    a.add(sand_top, "gold", form="cyl", lo=4, hi=-2, sep=False)
+    a.add(sand_bot, "gold", form="cyl", lo=3, hi=-2, sep=False)
+    a.px([(15, y) for y in range(15, 22)], "gold", 6)
+    a.px([(9, 5), (9, 6), (10, 7), (9, 24), (9, 25)], "glas", -1)
     return a
 
 
@@ -713,40 +750,83 @@ def i_angeln():
     return a
 
 
+ARROW = ["....A....",
+         "...AAA...",
+         "..AAAAA..",
+         ".AAAAAAA.",
+         "AAAAAAAAA",
+         "..AAAAA..",
+         "..AAAAA..",
+         "..AAAAA..",
+         "..AAAAA..",
+         "..AAAAA..",
+         "..AAAAA..",
+         "..AAAAA.."]
+
+
+def arrow(ox, oy):
+    pts = set(grid(ARROW, ox, oy))
+    pix = {p: ("gold", k) for p, k in edge_tone(pts, 5, 2, 8, up=2, left=2, down=-2, right=-2).items()}
+    for y in range(oy + 6, oy + 11):
+        pix[(ox + 3, y)] = ("gold", 7)
+    return layer(pix)
+
+
 def is_wachstum():
     a = Icon()
-    a.rect(2, 21, 21, 30, "erde", lo=1, hi=-1)
-    a.rect(2, 19, 21, 22, "gras", lo=1, hi=-1)
-    a.line([(11, 19), (11, 9)], 2, "gras", lo=0, hi=4)
-    a.poly([(11, 13), (3, 10), (1, 5), (7, 5), (11, 10)], "gras", lo=2, hi=-1)
-    a.poly([(12, 10), (16, 3), (22, 2), (21, 8), (13, 13)], "gras", lo=2, hi=-1)
-    a.poly([(26, 1), (31, 8), (28, 8), (28, 20), (24, 20), (24, 8), (21, 8)], "gold", lo=2, hi=-1)
-    return a
+    a.line([(10, 30), (10, 22), (11, 16), (11, 12)], 2, "gras", lo=0, hi=3)
+    a.poly([(10, 19), (3, 17), (0, 12), (2, 10), (7, 11), (10, 15)], "gras", lo=2, hi=-1)
+    a.poly([(12, 14), (14, 8), (19, 5), (22, 6), (20, 11), (13, 16)], "gras", lo=2, hi=-1)
+    a.px([(4, 13), (5, 13), (6, 14)], "gras", -1)
+    a.px([(15, 9), (16, 8), (17, 8)], "gras", -1)
+    a.px([(10, 29), (11, 29), (10, 30), (11, 30)], "gras", 0)
+    return Img(stack(a.render(), arrow(22, 9)))
 
 
 def c_essen():
-    a = Icon()
-    a.ellipse(1, 11, 23, 28, "papier", form="round", lo=4, hi=-1)          # Fettrand
-    a.ellipse(3, 13, 21, 26, "rot", form="round", lo=0, hi=4, sep=False)   # Fleisch
-    a.px([(7, 17), (8, 17), (9, 18), (13, 21), (14, 21), (15, 22), (10, 23)], "rot", 5)   # Marmorierung
-    a.rect(19, 18, 26, 21, "papier", form="cyl", lo=6, hi=-1)               # Knochen
-    a.ellipse(24, 16, 30, 21, "papier", form="round", lo=6, hi=-1)
-    a.ellipse(13, 1, 27, 15, "rot", form="round", lo=1, hi=-1, gloss="auto")
-    a.rect(20, 0, 21, 3, "holz", lo=1, hi=-2)
-    a.ellipse(22, 0, 26, 3, "gras", form="round", lo=2, hi=-1)
-    return a
+    """Essen: gebratenes Steak (Fettrand, Grillstreifen) und ein saftiger roter Apfel mit Glanz."""
+    shape = [(0, 20), (3, 15), (9, 12), (16, 12), (21, 14), (24, 19), (23, 25), (18, 29), (9, 30), (3, 28)]
+    st = Icon()
+    m = st._mask(lambda d: d.polygon(shape, fill=255))
+    # Fettrand: 2 px am oberen und linken Rand, dahinter das Fleisch
+    rim = {p for p in m if ((p[0], p[1] - 1) not in m or (p[0], p[1] - 2) not in m) and p[1] < 20}
+    st.add(m - rim, "steak", form="round", lo=2, hi=-1)
+    st.add(rim, "papier", form="round", lo=5, hi=-1, sep=False)
+    # Grillstreifen: drei gleiche Diagonalen, die mittlere kürzer (Muster mit Bruch)
+    for x0, y0, n in ((5, 27, 10), (10, 27, 7), (14, 27, 10)):
+        line = [(x0 + i, y0 - i) for i in range(n) if (x0 + i, y0 - i) in m - rim]
+        st.px(line, "steak", 0)
+        st.px([(x + 1, y) for x, y in line if (x + 1, y) in m - rim], "steak", 2)
+    steak = st.render()
+    ap = Icon()
+    body = disc([8, 12, 14, 16, 16, 16, 16, 16, 16, 16, 14, 14, 12, 8], 15, 4) | disc([4, 6], 17, 3) | disc([4, 6], 24, 3)
+    ap.add(body, "rot", form="round", lo=1, hi=-1)
+    ap.rect(22, 0, 23, 5, "stiel", lo=1, hi=3)
+    ap.poly([(24, 2), (27, 0), (30, 1), (27, 4)], "gras", lo=3, hi=-2)
+    ap.px([(18, 7), (19, 7), (18, 8), (19, 6)], "papier", -1)
+    ap.px([(17, 9), (17, 10), (20, 7)], "rot", -1)
+    ap.px([(29, 14), (29, 13), (28, 15)], "rot", 7)
+    return Img(stack(steak, ap.render()))
 
 
 def c_redstone():
-    a = Icon()
-    a.poly([(1, 25), (4, 20), (9, 17), (15, 18), (19, 21), (22, 26), (18, 29), (6, 29)], "rot", lo=0, hi=-2)
-    a.poly([(6, 22), (10, 19), (14, 20), (16, 23), (11, 25)], "rot", lo=3, hi=-1, sep=False)
-    for x, y in ((5, 21), (11, 19), (15, 22), (8, 26), (17, 26)):
-        a.px([(x, y)], "rot", -1)
-    a.rect(21, 9, 24, 29, "holz", form="cyl", lo=1, hi=-2)
-    a.ellipse(19, 2, 26, 10, "rot", form="round", lo=2, hi=-1, gloss="auto")
-    a.px([(20, 0), (25, 1), (18, 5)], "rot", -2)
-    return a
+    pal = {"i": "#CFCACA", "w": "#B9965C", "W": "#8B6E40", "g": "#85C675", "G": "#6EAC5F", "s": "#5E9A4F", "S": "#4F8B41",
+           "L": "#878787", "m": "#737373", "d": "#5A5A5A", "k": "#484848"}
+    top = ["iwwiwwi",
+           "wgggGGw",
+           "wgGGGsw",
+           "igGGGsi",
+           "wGGGssw",
+           "wGssSSw",
+           "iwwiwwi"]
+    side = ["iwwiwwi",
+            "WWWWWWW",
+            "LLmLLLm",
+            "LmLLmLL",
+            "mLLdLLm",
+            "LLmLLdL",
+            "dkddkdd"]
+    return Img(iso_block(top, side, side, pal, shade=(1.0, 0.84, 0.62)))
 
 
 def c_bloecke():
@@ -858,24 +938,22 @@ def is_spawn():
 
 def is_limits():
     a = Icon()
-    a.rect(2, 3, 27, 9, "eisen", lo=1, hi=-2)
-    a.rect(5, 5, 24, 7, "eisen", lo=0, hi=1, sep=False, rim=False)
-    a.poly([(4, 10), (25, 10), (20, 19), (9, 19)], "eisen", lo=2, hi=-2)
-    a.rect(11, 19, 18, 23, "eisen", lo=1, hi=-2)
-    a.rect(13, 23, 16, 27, "eisen", lo=1, hi=4)
-    a.ellipse(18, 18, 31, 31, "rot", form="round", lo=1, hi=-1)
-    a.rect(21, 23, 28, 26, "silber", lo=5, hi=-1, sep=False)
+    a.add(disc([10, 14, 18, 20, 22, 24, 24, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 24, 24, 22, 20, 18, 14, 10], 3, 4),
+          "rot", form="round", lo=1, hi=-1)
+    a.add(disc([10, 14, 16, 18, 20, 20, 22, 22, 22, 22, 22, 22, 22, 22, 22, 20, 20, 18, 16, 14, 10], 5, 5) - set(),
+          "rot", form="round", lo=2, hi=-2, sep=False, rim=False)
+    a.rect(9, 14, 22, 17, "silber", lo=5, hi=-1)
+    a.px([(9, 9), (10, 8), (11, 8), (8, 10)], "rot", -1)
     return a
 
 
 def is_besuch():
     a = Icon()
-    a.rect(14, 2, 17, 30, "holz", form="cyl", lo=0, hi=-3)
+    a.poly([(14, 2), (17, 2), (17, 27), (15.5, 31), (14, 27)], "holz", form="cyl", lo=0, hi=-3)
     a.poly([(4, 5), (24, 5), (29, 10), (24, 15), (4, 15)], "papier", lo=3, hi=-1)
     a.poly([(27, 17), (8, 17), (3, 22), (8, 27), (27, 27)], "papier", lo=2, hi=-2)
     for y, x0, x1 in ((9, 7, 20), (11, 7, 17), (21, 11, 24), (23, 14, 24)):
         a.px([(x, y) for x in range(x0, x1 + 1)], "papier", 2)
-    a.rect(11, 29, 20, 31, "gras", lo=2, hi=-1)
     return a
 
 
@@ -889,19 +967,46 @@ def s_wildnis():
 
 
 def s_homes():
-    a = Icon(16)
-    a.rect(3, 7, 12, 14, "papier", lo=4, hi=-1)
-    a.poly([(8, 1), (15, 8), (1, 8)], "rot", lo=1, hi=-1)
-    a.rect(7, 10, 9, 14, "holz", lo=1, hi=-2)
-    return a
+    """Bett (16 px) wie in Minecraft: weißes Kissen, rote Decke mit Falte, Holzrahmen mit Füßen."""
+    rows = ["..PPPP.........",
+            ".PPPPPPBBBBBBBB",
+            ".PPPPPPBBBBBBBB",
+            ".ppppppBBBBBBBB",
+            "WWWWWWWbbbbbbbb",
+            "WWWWWWWWWWWWWWW",
+            "wwwwwwwwwwwwwww",
+            "ww...........ww"]
+    col = {"P": ("papier", 9), "p": ("papier", 6), "B": ("bett", 4), "b": ("bett", 1), "W": ("planke", 4),
+           "w": ("planke", 1)}
+    pix = {p: col[c] for p, c in grid(rows, 0, 4).items()}
+    for x in range(7, 15):
+        pix[(x, 5)] = ("bett", 5)
+    pix[(2, 4)] = ("papier", 9)
+    pix[(2, 5)] = ("papier", 9)
+    for y in (6, 7):
+        pix[(10, y)] = ("bett", 2)
+    pix[(0, 8)] = ("planke", 5)
+    return Img(layer(pix, 16))
 
 
 def s_enderchest():
-    a = Icon(16)
-    a.rect(1, 3, 14, 14, "tuerkis", lo=0, hi=3)
-    a.rect(1, 3, 14, 7, "tuerkis", lo=1, hi=4)
-    a.rect(6, 6, 9, 9, "smaragd", lo=3, hi=-1, gloss=[(7, 7)])
-    return a
+    """Enderkiste im Vanilla-Look (16 px): dunkles Obsidian-Grün, heller Deckel-Rand, Fuge, goldenes Schloss."""
+    face = iso_map((8, 1), (1, 4.5), (15, 4.5), (8, 8), 7, 16)
+    pix = {}
+    for p, (f, u, v) in face.items():
+        if f == "top":
+            k = 6 if (u < 0.12 or v < 0.12) else 4 if (u > 0.88 or v > 0.88) else 3
+        else:
+            lid = v < 0.36
+            k = (5 if lid else 2) if f == "left" else (3 if lid else 1)
+            if 0.36 <= v < 0.5:
+                k = 0
+            if v < 0.14:
+                k += 2
+        pix[p] = ("ender", min(7, k))
+    for q, k in (((4, 8), 7), ((5, 8), 6), ((4, 9), 5), ((5, 9), 4), ((4, 10), 4), ((5, 10), 3)):
+        pix[q] = ("gold", k)
+    return Img(layer(pix, 16))
 
 
 def s_alert():
@@ -921,6 +1026,74 @@ def s_alert_small():
     a.rect(5, 3, 6, 6, "silber", lo=5, hi=-1, sep=False)
     a.rect(5, 8, 6, 8, "silber", lo=5, hi=-1, sep=False)
     return a
+
+
+# ---------------------------------------------------------------------------------------------------------- Upgrade-Stufen
+# Upgrades haben 3 Stufen (Level 1-10, 11-15, 16-20). Stufe 1 ist das normale Icon, Stufe 2 bekommt kleine goldene
+# Funkel-Sterne um das Motiv, Stufe 3 dieselben Sterne in Lila. Sterne ohne Kontur (Effekte), abwechselnd 5 und 3 px.
+UPGRADE_ICONS = ["groesse", "mitglieder", "generator", "is_wachstum", "is_spawn", "is_limits", "ob_glueck", "ob_cooldown",
+                 "ob_tempo", "ob_xp", "ob_geld", "ob_beute"]
+STAR5 = ["..t..", "..a..", "taCat", "..a..", "..t.."]
+STAR3 = [".a.", "aCa", ".a."]
+STAR_COL = {2: ("gold", {"C": 8, "a": 6, "t": 4}), 3: ("lila", {"C": 9, "a": 7, "t": 5})}
+
+
+def star_spots(img, n=4, min_dist=9):
+    """Stellen für die Sterne auf der ganzen Kachel: frei mit 1 px Abstand zur Form, aber nah daran (höchstens 8 px),
+    untereinander mindestens min_dist auseinander; zuerst bis zu zwei große, sonst kleine Sterne."""
+    a = img.getchannel("A")
+    px = a.load()
+    W, Hh = img.size
+    filled = {(x, y) for y in range(Hh) for x in range(W) if px[x, y]}
+
+    def free(cx, cy, r):
+        return all(0 <= cx + dx < W and 0 <= cy + dy < Hh and (cx + dx, cy + dy) not in filled
+                   for dx in range(-r, r + 1) for dy in range(-r, r + 1))
+    cands = []
+    for cy in range(1, Hh - 1):
+        for cx in range(1, W - 1):
+            if free(cx, cy, 2):
+                d = min(abs(cx - x) + abs(cy - y) for x, y in filled)
+                if d <= 8:
+                    cands.append((d, cx, cy, free(cx, cy, 3)))
+    cands.sort()
+    chosen = []
+    for d, cx, cy, big_ok in cands:
+        if len(chosen) >= n:
+            break
+        if all(abs(cx - x) + abs(cy - y) >= min_dist for x, y, _ in chosen):
+            big = big_ok and sum(1 for c in chosen if c[2]) < 2
+            chosen.append((cx, cy, big))
+    return chosen
+
+
+def tier(img, level):
+    """Icon einer Upgrade-Stufe (1, 2, 3) auf einer 32-px-Kachel: ab Stufe 2 Funkel-Sterne um das Motiv."""
+    if level < 2:
+        return img
+    out = img.copy()
+    px = out.load()
+    mat, idx = STAR_COL[min(3, level)]
+    spots = star_spots(img)
+    if len(spots) < 3:
+        # Icon füllt die Kachel: Sterne als Glanz auf die Ecken des Motivs (oben links groß, wie das Licht)
+        x0, y0, x1, y1 = img.getchannel("A").getbbox()
+        spots += [(x0 + 3, y0 + 3, True), (x1 - 4, y0 + 2, False), (x1 - 3, y1 - 4, False)][:3 - len(spots)]
+    for cx, cy, big in spots:
+        rows = STAR5 if big else STAR3
+        h = len(rows) // 2
+        for (x, y), c in grid(rows, cx - h, cy - h).items():
+            px[x, y] = rgb(RAMPS[mat][idx[c]]) + (255,)
+    return out
+
+
+def centered(img, size=32):
+    """Icon beschnitten und mittig auf eine Kachel gesetzt (wie die Dialoge es mit (32 - Breite) / 2 setzen)."""
+    box = img.getchannel("A").getbbox()
+    c = img.crop(box)
+    out = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    out.alpha_composite(c, ((size - c.width) // 2, (size - c.height) // 2))
+    return out
 
 
 # Name -> Zeichnung (Börse, Kosmetik, Haustiere und Markt bleiben die alten aus build_hub_icons.py)

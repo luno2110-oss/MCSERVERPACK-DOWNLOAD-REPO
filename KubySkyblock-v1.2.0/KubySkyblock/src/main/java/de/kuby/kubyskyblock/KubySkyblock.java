@@ -82,6 +82,8 @@ public final class KubySkyblock extends JavaPlugin {
         de.kuby.kubyskyblock.gui.SkyShopScreen.samples(core::registerSelfTestCanvas);
         de.kuby.kubyskyblock.gui.IslandExtraScreen.samples(core::registerSelfTestCanvas);
         saveDefaultConfig();
+        // Upgrades mit 20 Level: alte Standard-Werte der config ersetzen, bevor Inseln und One-Block ihre Stände laden
+        de.kuby.kubyskyblock.service.UpgradeLevels.updateConfig(this);
         islands = new IslandService(this, core);
         biomes = new de.kuby.kubyskyblock.service.BiomeIslandService(this, core);
         limits = new de.kuby.kubyskyblock.service.LimitService(this);

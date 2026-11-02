@@ -5,14 +5,16 @@ reward:
 insel:
   abstand: 200                  # Abstand der Insel-Mitten (größte Insel muss kleiner sein)
   weltgrenze: 50000
-  groessen: [15, 25, 35, 50, 70]  # Radius je Größen-Stufe (15 = 31 x 31 Blöcke)
-  mitglieder: [2, 4, 6, 10]       # Mitglieder (ohne Besitzer) je Stufe
-  upgrades:
-    groesse: [0, 25000, 75000, 200000, 500000]   # Preis für Stufe 1, 2, ... (Index 0 = Start)
-    mitglieder: [0, 10000, 40000, 100000]
-    wachstum: [0, 15000, 50000, 150000, 400000]    # Pflanzen wachsen schneller (wachstum.bonus-je-stufe)
-    spawnrate: [0, 20000, 60000, 180000, 450000]   # mehr Tiere und Monster (spawnrate.bonus-je-stufe)
-    limits: [0, 25000, 75000, 200000, 500000]      # höhere Lag-Grenzen (limits.bonus-je-stufe)
+  # Upgrades: Level 0 bis 20 in drei Stufen (Level 1-10 Stufe 1, 11-15 Stufe 2, 16-20 Stufe 3). Listen mit 21 Werten,
+  # Index = Level (0 = Start). Alte Inseln (5 Stufen) werden beim Laden auf dieselben Werte umgerechnet.
+  groessen: [15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35, 38, 41, 44, 47, 50, 54, 58, 62, 66, 70]  # Radius (15 = 31 x 31)
+  mitglieder: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]     # Mitglieder ohne Besitzer
+  upgrades:                     # Preis für Level 1, 2, ... (Index 0 = Start)
+    groesse: [0, 6700, 8200, 10000, 12000, 15000, 18000, 22000, 27000, 33000, 40000, 49000, 60000, 73000, 89000, 110000, 130000, 160000, 200000, 240000, 290000]
+    mitglieder: [0, 2900, 3600, 4400, 5300, 6500, 7900, 9700, 12000, 14000, 18000, 21000, 26000, 32000, 39000, 48000, 58000, 71000, 86000, 110000, 130000]
+    wachstum: [0, 4200, 5100, 6300, 7600, 9300, 11000, 14000, 17000, 21000, 25000, 31000, 37000, 46000, 56000, 68000, 83000, 100000, 120000, 150000, 180000]    # wachstum.bonus-je-stufe
+    spawnrate: [0, 4600, 5600, 6900, 8400, 10000, 12000, 15000, 19000, 23000, 28000, 34000, 41000, 50000, 61000, 75000, 91000, 110000, 140000, 170000, 200000]  # spawnrate.bonus-je-stufe
+    limits: [0, 5000, 6200, 7500, 9200, 11000, 14000, 17000, 20000, 25000, 30000, 37000, 45000, 55000, 67000, 82000, 100000, 120000, 150000, 180000, 220000]   # limits.bonus-je-stufe
   besucher-standard: true       # neue Inseln offen für Besucher
   pvp: true                     # Kampf zwischen Spielern in der Skyblock-Welt (nicht am Spawn)
   pvp-spawn-radius: 40
@@ -23,15 +25,31 @@ insel:
   start-kiste: ["ICE:2", "LAVA_BUCKET:1", "BONE_MEAL:3", "MELON_SEEDS:1", "PUMPKIN_SEEDS:1", "SUGAR_CANE:1", "RED_MUSHROOM:1",
     "BROWN_MUSHROOM:1", "WHEAT_SEEDS:2"]
 
-# Bruchstein-Generator: je Stufe Preis und Gewichte der Blöcke, die statt Bruchstein entstehen
+# Bruchstein-Generator: je Level (0 bis 20) Preis und Gewichte der Blöcke, die statt Bruchstein entstehen. Die alten
+# 6 Stufen liegen auf Level 0, 4, 8, 12, 16 und 20, dazwischen steigen die Erze gleichmäßig.
 generator:
   stufen:
     - {kosten: 0, bloecke: {COBBLESTONE: 100}}
-    - {kosten: 5000, bloecke: {COBBLESTONE: 85, COAL_ORE: 10, IRON_ORE: 5}}
-    - {kosten: 20000, bloecke: {COBBLESTONE: 75, COAL_ORE: 10, IRON_ORE: 8, COPPER_ORE: 4, GOLD_ORE: 3}}
-    - {kosten: 60000, bloecke: {COBBLESTONE: 65, COAL_ORE: 10, IRON_ORE: 9, COPPER_ORE: 5, GOLD_ORE: 4, REDSTONE_ORE: 3, LAPIS_ORE: 3, DIAMOND_ORE: 1}}
-    - {kosten: 150000, bloecke: {COBBLESTONE: 58, COAL_ORE: 10, IRON_ORE: 10, COPPER_ORE: 5, GOLD_ORE: 5, REDSTONE_ORE: 4, LAPIS_ORE: 4, DIAMOND_ORE: 2, EMERALD_ORE: 2}}
-    - {kosten: 400000, bloecke: {COBBLESTONE: 50, COAL_ORE: 10, IRON_ORE: 11, COPPER_ORE: 5, GOLD_ORE: 6, REDSTONE_ORE: 4, LAPIS_ORE: 4, DIAMOND_ORE: 4, EMERALD_ORE: 3, ANCIENT_DEBRIS: 1}}
+    - {kosten: 1500, bloecke: {COBBLESTONE: 96, COAL_ORE: 2, IRON_ORE: 1}}
+    - {kosten: 1900, bloecke: {COBBLESTONE: 92, COAL_ORE: 5, IRON_ORE: 2}}
+    - {kosten: 2400, bloecke: {COBBLESTONE: 89, COAL_ORE: 8, IRON_ORE: 4}}
+    - {kosten: 3100, bloecke: {COBBLESTONE: 85, COAL_ORE: 10, IRON_ORE: 5}}
+    - {kosten: 4000, bloecke: {COBBLESTONE: 82, COAL_ORE: 10, IRON_ORE: 6, COPPER_ORE: 1, GOLD_ORE: 1}}
+    - {kosten: 5000, bloecke: {COBBLESTONE: 80, COAL_ORE: 10, IRON_ORE: 6, COPPER_ORE: 2, GOLD_ORE: 2}}
+    - {kosten: 6400, bloecke: {COBBLESTONE: 78, COAL_ORE: 10, IRON_ORE: 7, COPPER_ORE: 3, GOLD_ORE: 2}}
+    - {kosten: 8200, bloecke: {COBBLESTONE: 75, COAL_ORE: 10, IRON_ORE: 8, COPPER_ORE: 4, GOLD_ORE: 3}}
+    - {kosten: 10000, bloecke: {COBBLESTONE: 72, COAL_ORE: 10, IRON_ORE: 8, COPPER_ORE: 4, GOLD_ORE: 3, REDSTONE_ORE: 1, LAPIS_ORE: 1, DIAMOND_ORE: 1}}
+    - {kosten: 13000, bloecke: {COBBLESTONE: 70, COAL_ORE: 10, IRON_ORE: 8, COPPER_ORE: 4, GOLD_ORE: 4, REDSTONE_ORE: 2, LAPIS_ORE: 2, DIAMOND_ORE: 1}}
+    - {kosten: 17000, bloecke: {COBBLESTONE: 68, COAL_ORE: 10, IRON_ORE: 9, COPPER_ORE: 5, GOLD_ORE: 4, REDSTONE_ORE: 2, LAPIS_ORE: 2, DIAMOND_ORE: 1}}
+    - {kosten: 22000, bloecke: {COBBLESTONE: 65, COAL_ORE: 10, IRON_ORE: 9, COPPER_ORE: 5, GOLD_ORE: 4, REDSTONE_ORE: 3, LAPIS_ORE: 3, DIAMOND_ORE: 1}}
+    - {kosten: 27000, bloecke: {COBBLESTONE: 63, COAL_ORE: 10, IRON_ORE: 9, COPPER_ORE: 5, GOLD_ORE: 4, REDSTONE_ORE: 3, LAPIS_ORE: 3, DIAMOND_ORE: 1, EMERALD_ORE: 1}}
+    - {kosten: 35000, bloecke: {COBBLESTONE: 62, COAL_ORE: 10, IRON_ORE: 10, COPPER_ORE: 5, GOLD_ORE: 4, REDSTONE_ORE: 4, LAPIS_ORE: 4, DIAMOND_ORE: 2, EMERALD_ORE: 1}}
+    - {kosten: 45000, bloecke: {COBBLESTONE: 60, COAL_ORE: 10, IRON_ORE: 10, COPPER_ORE: 5, GOLD_ORE: 5, REDSTONE_ORE: 4, LAPIS_ORE: 4, DIAMOND_ORE: 2, EMERALD_ORE: 2}}
+    - {kosten: 57000, bloecke: {COBBLESTONE: 58, COAL_ORE: 10, IRON_ORE: 10, COPPER_ORE: 5, GOLD_ORE: 5, REDSTONE_ORE: 4, LAPIS_ORE: 4, DIAMOND_ORE: 2, EMERALD_ORE: 2}}
+    - {kosten: 72000, bloecke: {COBBLESTONE: 56, COAL_ORE: 10, IRON_ORE: 10, COPPER_ORE: 5, GOLD_ORE: 5, REDSTONE_ORE: 4, LAPIS_ORE: 4, DIAMOND_ORE: 2, EMERALD_ORE: 2, ANCIENT_DEBRIS: 1}}
+    - {kosten: 92000, bloecke: {COBBLESTONE: 54, COAL_ORE: 10, IRON_ORE: 10, COPPER_ORE: 5, GOLD_ORE: 6, REDSTONE_ORE: 4, LAPIS_ORE: 4, DIAMOND_ORE: 3, EMERALD_ORE: 2, ANCIENT_DEBRIS: 1}}
+    - {kosten: 120000, bloecke: {COBBLESTONE: 52, COAL_ORE: 10, IRON_ORE: 11, COPPER_ORE: 5, GOLD_ORE: 6, REDSTONE_ORE: 4, LAPIS_ORE: 4, DIAMOND_ORE: 4, EMERALD_ORE: 3, ANCIENT_DEBRIS: 1}}
+    - {kosten: 150000, bloecke: {COBBLESTONE: 50, COAL_ORE: 10, IRON_ORE: 11, COPPER_ORE: 5, GOLD_ORE: 6, REDSTONE_ORE: 4, LAPIS_ORE: 4, DIAMOND_ORE: 4, EMERALD_ORE: 3, ANCIENT_DEBRIS: 1}}
 
 # Insel-Level: Punkte aller Blöcke auf der Insel (gezählt beim Bauen und mit /insel level)
 level:
@@ -153,17 +171,17 @@ generatoren:
 
 # Skyblock-Shop (/shop, /sell, Shop-Kachel; auch /insel shop): "MATERIAL;Menge;Kaufpreis;Verkaufspreis je Stück;Name".
 # Kaufpreis 0 = nur verkaufen, Verkaufspreis 0 = nur kaufen. Die Verkaufspreise gelten auch für Generator-Ertrag.
-# Upgrade Wachstum: Chance je Stufe, dass eine Pflanze beim Wachsen gleich eine Stufe mehr wächst
+# Upgrade Wachstum: Chance je Level, dass eine Pflanze beim Wachsen gleich eine Stufe mehr wächst (Level 20 = 100 %)
 wachstum:
-  bonus-je-stufe: 0.25
-# Upgrade Spawnrate: Chance je Stufe auf ein zweites Wesen beim natürlichen Spawnen (und aus echten Spawnern)
+  bonus-je-stufe: 0.05
+# Upgrade Spawnrate: Chance je Level auf ein zweites Wesen beim natürlichen Spawnen und aus echten Spawnern (Level 20 = 80 %)
 spawnrate:
-  bonus-je-stufe: 0.20
+  bonus-je-stufe: 0.04
 
-# Lag-Grenzen je Insel (mit ihren Biom-Inseln). Das Upgrade „Limits“ hebt alle Grenzen um bonus-je-stufe an.
+# Lag-Grenzen je Insel (mit ihren Biom-Inseln). Das Upgrade „Limits“ hebt alle Grenzen je Level um bonus-je-stufe an.
 limits:
   aktiv: true
-  bonus-je-stufe: 0.25
+  bonus-je-stufe: 0.05
   bloecke:
     trichter: {name: Trichter, max: 48, items: [HOPPER]}
     kolben: {name: Kolben, max: 32, items: [PISTON, STICKY_PISTON]}
@@ -321,23 +339,24 @@ oneblock:
     - "-40;100;-60"
     - "0;100;-60"
     - "40;100;-60"
-  money: 5            # $ je Abbau (Geld-Bonus: +10 % je Stufe)
-  xp: 3               # XP je Abbau (XP-Bonus: +10 % je Stufe)
+  money: 5            # $ je Abbau (Geld-Bonus: +5 % je Level)
+  xp: 3               # XP je Abbau (XP-Bonus: +5 % je Level)
   team-xp: 2          # Block-XP fürs Team je Abbau (mit XP-Bonus)
-  cooldown: 1.5       # Sekunden bis der neue Block erscheint (Cooldown-Upgrade: -8 % je Stufe, höchstens -80 %)
+  cooldown: 1.5       # Sekunden bis der neue Block erscheint (Cooldown-Upgrade: -4 % je Level, höchstens -80 %)
   claim:
     preis: 25000      # $ zum Beanspruchen
     min-mitglieder: 1 # so viele Leute muss das Team haben
     verfall-tage: 7   # wer so lange nicht abbaut, verliert die Plattform (Upgrades bleiben beim Team)
-  # Upgrades: Kosten in Block-XP = basis * faktor^Stufe. Glück: seltene Blöcke öfter, Cooldown: Block schneller da,
-  # Tempo: Eile I bis V am Block, XP/Geld: +10 % je Stufe, Beute: 4 % Chance je Stufe auf doppelten Loot.
+  # Upgrades: Level 0 bis 20 in drei Stufen (1-10, 11-15, 16-20). Kosten in Block-XP = basis * faktor^Level.
+  # Glück: seltene Blöcke öfter, Cooldown: Block schneller da, Tempo: Eile I bis V am Block (alle 4 Level eine mehr),
+  # XP/Geld: +5 % je Level, Beute: 2 % Chance je Level auf doppelten Loot. Alte Stände werden beim Laden umgerechnet.
   upgrades:
-    glueck: {max: 10, basis: 250, faktor: 1.55}
-    cooldown: {max: 10, basis: 200, faktor: 1.5}
-    tempo: {max: 5, basis: 600, faktor: 2.2}
-    xp: {max: 10, basis: 200, faktor: 1.5}
-    geld: {max: 10, basis: 200, faktor: 1.5}
-    beute: {max: 10, basis: 300, faktor: 1.55}
+    glueck: {max: 20, basis: 125, faktor: 1.245}
+    cooldown: {max: 20, basis: 100, faktor: 1.225}
+    tempo: {max: 20, basis: 150, faktor: 1.218}
+    xp: {max: 20, basis: 100, faktor: 1.225}
+    geld: {max: 20, basis: 100, faktor: 1.225}
+    beute: {max: 20, basis: 150, faktor: 1.245}
   blocks:             # Block: Gewicht (je kleiner, desto seltener)
     STONE: 14
     DIRT: 8

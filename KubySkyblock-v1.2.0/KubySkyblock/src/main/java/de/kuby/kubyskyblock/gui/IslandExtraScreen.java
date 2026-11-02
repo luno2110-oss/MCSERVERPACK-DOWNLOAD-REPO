@@ -368,16 +368,16 @@ public final class IslandExtraScreen {
         }
         List<LimitService.Usage> us = sb().limits().usage(i);
         if (!sb().core().uiPack().active(p)) {
-            Msg.send(p, "<#9AD8FF><b>Limits</b> <gray>(Upgrade Stufe " + i.limit + ", +" + Math.round(sb().limits().bonus(i) * 100) + " %)");
+            Msg.send(p, "<#9AD8FF><b>Limits</b> <gray>(Upgrade " + UpgradeTier.label(i.limit, sb().islands().maxLevel(IslandService.Upgrade.LIMIT)) + ", +" + Math.round(sb().limits().bonus(i) * 100) + " %)");
             for (LimitService.Usage u : us) Msg.send(p, " <white>" + u.name() + ": " + (u.used() >= u.max() ? "<red>" : "<green>") + u.used() + "/" + u.max());
             return;
         }
         long price = is.price(i, IslandService.Upgrade.LIMIT);
         long coins = sb().core().economy().balance(p.getUniqueId());
         boolean may = is.has(i, p.getUniqueId(), IslandService.Right.UPGRADES);
-        double per = sb().getConfig().getDouble("limits.bonus-je-stufe", 0.25);
+        double per = sb().getConfig().getDouble("limits.bonus-je-stufe", 0.05);
         UiDialog.show(p, limitCanvas(new LimitView(i.name, i.limit, "+" + Math.round(sb().limits().bonus(i) * 100) + " %", us,
-                price < 0 ? null : "Stufe " + (i.limit + 1) + ": +" + Math.round((i.limit + 1) * per * 100) + " %", Math.max(0, price),
+                price < 0 ? null : "Level " + (i.limit + 1) + ": +" + Math.round((i.limit + 1) * per * 100) + " %", Math.max(0, price),
                 price >= 0 && coins >= price, price >= 0 && may ? run(pl -> {
                     feedback(pl, is.upgrade(pl, IslandService.Upgrade.LIMIT));
                     limits(pl);
@@ -393,8 +393,9 @@ public final class IslandExtraScreen {
         y = table(c, y + 6, "Wesen", v.usage().subList(blocks, v.usage().size()));
         y += 6;
         c.box(0, y, W, 40, KitData.Box.CLOUD_CARD);
-        c.sprite(6 + (32 - KitData.Sprite.HB_IS_LIMITS.width) / 2, y + 4 + (32 - KitData.Sprite.HB_IS_LIMITS.height) / 2, KitData.Sprite.HB_IS_LIMITS);
-        c.text(44, y + 7, "Upgrade Limits · Stufe " + v.level() + " (" + v.bonus() + ")", CLOUD, true);
+        KitData.Sprite li = UpgradeTier.icon(KitData.Sprite.HB_IS_LIMITS, v.level());
+        c.sprite(6 + (32 - li.width) / 2, y + 4 + (32 - li.height) / 2, li);
+        c.text(44, y + 7, "Upgrade Limits · Lvl " + v.level() + " · Stufe " + UpgradeTier.of(v.level()) + " (" + v.bonus() + ")", CLOUD, true);
         if (v.next() == null) {
             c.text(44, y + 21, Canvas.caps("Höchste Stufe"), GREEN, false);
         } else {
@@ -451,7 +452,7 @@ public final class IslandExtraScreen {
         List<LimitService.Usage> us = new ArrayList<>();
         for (String n : List.of(w, "Kolben", "Beobachter", "Werfer & Spender", "Verstärker & Komparatoren")) us.add(new LimitService.Usage(n, 99_999, 99_999, true));
         for (LimitService.Kind k : LimitService.Kind.values()) us.add(new LimitService.Usage(k.label, 50, 60, k.ordinal() % 2 == 0));
-        reg.accept("Insel Limits", () -> limitCanvas(new LimitView(w, 99, "+999 %", us, "Stufe 99: +999 %", 999_999_999L, true, no, no)));
+        reg.accept("Insel Limits", () -> limitCanvas(new LimitView(w, 99, "+999 %", us, "Level 99: +999 %", 999_999_999L, true, no, no)));
         reg.accept("Insel Limits max", () -> limitCanvas(new LimitView("Insel", 4, "+100 %", us.subList(5, us.size()), null, 0, false, null, no)));
     }
 }

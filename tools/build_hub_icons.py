@@ -454,10 +454,19 @@ def trim(img):
 def build():
     os.makedirs(OUT, exist_ok=True)
     names = []
+    import hub_pixel_icons as px
     for name, fn in tiles():
-        img = trim(fn().render())
-        img.save(os.path.join(OUT, "art_%s.png" % name))
+        full = fn().render()
+        box = full.getchannel("A").getbbox()
+        full.crop(box).save(os.path.join(OUT, "art_%s.png" % name))
         names.append(name)
+        if name in px.UPGRADE_ICONS:
+            # Upgrade-Stufen 2 und 3: ganze 32-px-Kachel mit dem Icon in der Mitte und Sternen darum (die Dialoge setzen
+            # Bilder mit (32 - Breite) / 2, so liegt das Motiv genau wie bei Stufe 1)
+            tile = px.centered(full)
+            for t in (2, 3):
+                px.tier(tile, t).save(os.path.join(OUT, "art_%s_t%d.png" % (name, t)))
+                names.append("%s_t%d" % (name, t))
     # Spieler-Warps: Portal aus den Referenzen, auf 32 px Höhe gekürzt (oben und unten nur Funkeln)
     src = os.path.join(HERE, "assets", "pwarps", "art_portal.png")
     if os.path.exists(src):

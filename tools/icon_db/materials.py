@@ -51,6 +51,13 @@ RAMPS = {
     "stiel": ["#281E0B", "#483515", "#674D1E", "#876627", "#9C7C40"],
     # Kessel/dunkles Metall, blau-violett: Profi-Paket (jewelshop/art_pack_profi)
     "kessel": ["#25293E", "#393D55", "#4D516A", "#6E7188", "#80849C"],
+    # Steak, rotbraun: Rang-Kopf und Bronze-Medaille der Quests (quests/art_rank_head, quests/art_m_bronze),
+    # Licht aus jewelshop_survival/f_kleiderstange_2, dunkelste Stufe wie das Vanilla-Steak
+    "steak": ["#2A160D", "#58240E", "#682511", "#833316", "#9B3F1A", "#BC4A35"],
+    # Minecraft-Gegenstände in Vanilla-Farben (Wunsch: Minecraft-Look): Enderkiste, rotes Bett, Eichenbretter
+    "ender": ["#020E14", "#05151C", "#10232D", "#192328", "#233032", "#34494B", "#4B645C", "#597163"],
+    "bett": ["#6B1213", "#851A1A", "#902120", "#A22722", "#B53129", "#C9473A"],
+    "planke": ["#695433", "#9B7742", "#9F844D", "#AF8F55", "#B8945F", "#C29D62"],
 }
 
 

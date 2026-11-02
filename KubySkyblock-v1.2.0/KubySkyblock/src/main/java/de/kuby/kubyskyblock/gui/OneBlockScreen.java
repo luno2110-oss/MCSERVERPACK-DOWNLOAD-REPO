@@ -126,7 +126,7 @@ public final class OneBlockScreen {
                     act = null;
                 }
             } else if (pf == own) {
-                status = "Euer Block · Stufe " + (pr == null ? 0 : pr.total()) + " · " + Msg.coins(pr == null ? 0 : pr.mined) + " abgebaut";
+                status = "Euer Block · Block-Level " + (pr == null ? 0 : pr.total()) + " · " + Msg.coins(pr == null ? 0 : pr.mined) + " abgebaut";
                 sc = GOLD;
                 button = "Upgrades";
                 style = KitData.Small.GREEN;
@@ -143,8 +143,8 @@ public final class OneBlockScreen {
             spots.add(new Spot(icon, pf.name(), status, sc, button, style, bc, act, run(pl -> teleport(pl, pf))));
         }
         String line = t == null ? "Ohne Team: /team erstellen <Name>, dann einen Block beanspruchen"
-                : own == null ? "Block-XP " + Msg.coins(pr.xp) + " · Stufe " + pr.total() + " · noch kein Block"
-                : own.name() + " · Block-XP " + Msg.coins(pr.xp) + " · Stufe " + pr.total();
+                : own == null ? "Block-XP " + Msg.coins(pr.xp) + " · Block-Level " + pr.total() + " · noch kein Block"
+                : own.name() + " · Block-XP " + Msg.coins(pr.xp) + " · Block-Level " + pr.total();
         UiDialog.show(p, overview(new Overview(t == null ? null : t.name(), line, sb().core().stats().get(p.getUniqueId()).xp, spots,
                 t == null ? null : run(OneBlockScreen::block), run(IslandScreen::open))), 330);
     }
@@ -256,7 +256,7 @@ public final class OneBlockScreen {
         c.sprite(10 + (32 - KitData.Sprite.HB_ONEBLOCK.width) / 2, 11 + (32 - KitData.Sprite.HB_ONEBLOCK.height) / 2, KitData.Sprite.HB_ONEBLOCK);
         c.text(50, 10, Canvas.fit(v.title(), true, 190), SKY, true);
         c.text(50, 23, Canvas.fit(v.sub(), false, 200), MIST, false);
-        c.text(50, 36, "Block-Stufe " + v.stage(), GOLD, true);
+        c.text(50, 36, "Block-Level " + v.stage(), GOLD, true);
         c.textRight(W - 10, 10, Canvas.caps("Block-XP"), MIST, false);
         c.textRight(W - 10, 22, Msg.coins(v.xp()), XPC, true);
         // Balken: Fortschritt zum günstigsten offenen Upgrade
@@ -269,13 +269,16 @@ public final class OneBlockScreen {
             int x = (i % 2) * (cw + 4), cy = y + (i / 2) * (ch + 4);
             boolean maxed = cd.price() < 0;
             c.box(x, cy, cw, ch, maxed ? KitData.Box.GOLD : KitData.Box.CLOUD_CARD);
-            KitData.Sprite a = art(cd.upgrade());
+            KitData.Sprite a = UpgradeTier.icon(art(cd.upgrade()), cd.level());
             c.sprite(x + 6 + (32 - a.width) / 2, cy + 5 + (32 - a.height) / 2, a);
-            c.text(x + 44, cy + 6, cd.upgrade().label, maxed ? GOLD : CLOUD, true);
-            c.textRight(x + cw - 8, cy + 6, cd.level() + "/" + cd.max(), maxed ? GOLD : MIST, true);
+            String lv = "Lvl " + cd.level() + "/" + cd.max();
+            c.text(x + 44, cy + 6, Canvas.fit(cd.upgrade().label, true, cw - 52 - Canvas.width(lv, true) - 4), maxed ? GOLD : CLOUD, true);
+            c.textRight(x + cw - 8, cy + 6, lv, maxed ? GOLD : MIST, true);
             int nw = c.text(x + 44, cy + 18, Canvas.fit(cd.next() == null ? "Jetzt: " + cd.now() : cd.now(), false, cw - 52), XPC, false);
             if (cd.next() != null) c.text(x + 44 + nw + 3, cy + 18, Canvas.fit("→ " + shortNext(cd.now(), cd.next()), false, cw - 55 - nw), GOLD, false);
-            c.bar(x + 44, cy + 31, cw - 52, cd.max() == 0 ? 1 : (double) cd.level() / cd.max(), maxed ? KitData.Fill.GOLD : KitData.Fill.CYAN);
+            // Balken in der Farbe der Stufe, rechts daneben die Stufe (1: Level 1-10, 2: bis 15, 3: bis 20)
+            c.bar(x + 44, cy + 31, cw - 52 - 46, cd.max() == 0 ? 1 : (double) cd.level() / cd.max(), UpgradeTier.fill(cd.level()));
+            c.textRight(x + cw - 8, cy + 30, "Stufe " + UpgradeTier.of(cd.level()), UpgradeTier.color(cd.level()), false);
             String label = maxed ? "Ausgebaut" : "Upgrade · " + Msg.coins(cd.price()) + " XP";
             c.smallButton(x + 6, cy + ch - KitData.SMALL_H - 4, cw - 12, maxed ? KitData.Small.DARK : cd.affordable() ? KitData.Small.GOLD : KitData.Small.DARK,
                     label, maxed ? GOLD : cd.affordable() ? GOLD : DIM, true);
@@ -325,7 +328,7 @@ public final class OneBlockScreen {
             Msg.send(p, " <gray>Block-XP: <green>" + Msg.coins(pr.xp) + " <gray>· Stufe <white>" + pr.total() + " <gray>· <white>/oneblock einzahlen <Menge|alles>");
             for (Upgrade u : Upgrade.values()) {
                 long price = s.price(pr, u);
-                Msg.send(p, "  <white>" + u.label + " " + pr.level(u) + "/" + s.max(u) + " <gray>(" + s.effect(u, pr.level(u)) + ")"
+                Msg.send(p, "  <white>" + u.label + " Lvl " + pr.level(u) + "/" + s.max(u) + " · Stufe " + UpgradeTier.of(pr.level(u)) + " <gray>(" + s.effect(u, pr.level(u)) + ")"
                         + (price < 0 ? " <gold>ausgebaut" : " <click:run_command:'/oneblock upgrade " + u.key() + "'><gold>[" + Msg.coins(price) + " XP]</click>"));
             }
         }
@@ -338,17 +341,18 @@ public final class OneBlockScreen {
     public static void samples(java.util.function.BiConsumer<String, java.util.function.Supplier<Canvas>> reg) {
         Consumer<Player> no = p -> { };
         String w = "W".repeat(40);
-        reg.accept("One-Block", () -> overview(new Overview("Kuby", "One-Block 2 · Block-XP 12.340 · Stufe 17", 4210, List.of(
+        reg.accept("One-Block", () -> overview(new Overview("Kuby", "One-Block 2 · Block-XP 12.340 · Block-Level 75", 4210, List.of(
                 new Spot(KitData.Icon.GRASS_BLOCK, "One-Block 1", "Frei · Beanspruchen: 25.000 $", GREEN, "Beanspruchen", KitData.Small.GOLD, GOLD, no, no),
-                new Spot(KitData.Icon.DIAMOND, "One-Block 2", "Euer Block · Stufe 17 · 12.345 abgebaut", GOLD, "Upgrades", KitData.Small.GREEN, CLOUD, no, no),
+                new Spot(KitData.Icon.DIAMOND, "One-Block 2", "Euer Block · Block-Level 75 · 12.345 abgebaut", GOLD, "Upgrades", KitData.Small.GREEN, CLOUD, no, no),
                 new Spot(KitData.Icon.EMERALD, "One-Block 3", "Team " + w, MIST, "Belegt", KitData.Small.DARK, DIM, null, no)), no, no)));
         reg.accept("One-Block leer", () -> overview(new Overview(null, "Ohne Team: /team erstellen <Name>, dann einen Block beanspruchen", 0,
                 List.of(), null, no)));
         List<Card> cards = new ArrayList<>();
         int i = 0;
+        int[] levels = {3, 12, 20, 16, 9, 15};
         for (Upgrade u : Upgrade.values()) {
-            int lvl = i == 2 ? 5 : i * 2;
-            cards.add(new Card(u, lvl, i == 2 ? 5 : 10, "Selten x12,8", i == 2 ? null : "Selten x13,1", i == 2 ? -1 : 999_999_999L, i % 2 == 0, no));
+            int lvl = levels[i];
+            cards.add(new Card(u, lvl, 20, "Selten x12,8", lvl == 20 ? null : "Selten x13,1", lvl == 20 ? -1 : 999_999_999L, i % 2 == 0, no));
             i++;
         }
         reg.accept("One-Block Upgrades", () -> block(new BlockView(w, "Team " + w + " · 999.999.999 abgebaut", 999_999_999L, 999_999_999L, 55,

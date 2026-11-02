@@ -104,7 +104,7 @@ public final class LimitService {
 
     /** Bonus des Limits-Upgrades (0,25 = +25 %). */
     public double bonus(Island i) {
-        return i == null ? 0 : i.limit * addon.getConfig().getDouble("limits.bonus-je-stufe", 0.25);
+        return i == null ? 0 : i.limit * addon.getConfig().getDouble("limits.bonus-je-stufe", 0.05);
     }
 
     private int scaled(Island i, int base) {

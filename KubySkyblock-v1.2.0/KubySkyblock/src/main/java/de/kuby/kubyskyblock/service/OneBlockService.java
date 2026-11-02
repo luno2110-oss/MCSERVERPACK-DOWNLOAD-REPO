@@ -47,14 +47,14 @@ import java.util.UUID;
  */
 public final class OneBlockService {
 
-    /** Upgrades des Blocks: Name, Wirkung, Höchststufe, Grundkosten und Faktor je Stufe (Block-XP). */
+    /** Upgrades des Blocks: Name, Wirkung, Höchst-Level (20, drei Stufen), Grundkosten und Faktor je Level (Block-XP). */
     public enum Upgrade {
-        GLUECK("Glück", "Seltene Blöcke kommen öfter", 10, 250, 1.55),
-        COOLDOWN("Cooldown", "Der neue Block ist schneller da", 10, 200, 1.5),
-        TEMPO("Tempo", "Eile am Block: schneller abbauen", 5, 600, 2.2),
-        XP("XP-Bonus", "Mehr XP je Abbau", 10, 200, 1.5),
-        GELD("Geld-Bonus", "Mehr Geld je Abbau", 10, 200, 1.5),
-        BEUTE("Doppelte Beute", "Chance auf doppelten Loot", 10, 300, 1.55);
+        GLUECK("Glück", "Seltene Blöcke kommen öfter", 20, 125, 1.245),
+        COOLDOWN("Cooldown", "Der neue Block ist schneller da", 20, 100, 1.225),
+        TEMPO("Tempo", "Eile am Block: schneller abbauen", 20, 150, 1.218),
+        XP("XP-Bonus", "Mehr XP je Abbau", 20, 100, 1.225),
+        GELD("Geld-Bonus", "Mehr Geld je Abbau", 20, 100, 1.225),
+        BEUTE("Doppel-Beute", "Chance auf doppelten Loot", 20, 150, 1.245);
 
         public final String label, desc;
         final int max;
@@ -126,6 +126,8 @@ public final class OneBlockService {
     private final List<Platform> platforms = new ArrayList<>();
     private final Map<String, Progress> progress = new HashMap<>();
     private boolean dirty;
+    /** Format der gespeicherten Upgrade-Stände (UpgradeLevels.VERSION = Level 0 bis 20). */
+    private int upgradeVersion = UpgradeLevels.VERSION;
 
     public OneBlockService(KubySkyblock addon, KubyPlugins core) {
         this.addon = addon;
@@ -305,6 +307,23 @@ public final class OneBlockService {
         return Math.max(0, addon.getConfig().getInt("oneblock.upgrades." + u.key() + ".max", u.max));
     }
 
+    /** Anteil am vollen Upgrade (0 bis 1): die volle Wirkung bleibt gleich, egal wie viele Level die config hat. */
+    private double frac(Upgrade u, int lvl) {
+        int m = max(u);
+        return m <= 0 ? 0 : Math.max(0, Math.min(1, (double) lvl / m));
+    }
+
+    /** Eile-Stufe am Block (0 = keine, 1 bis 5 = Eile I bis V): alle 4 Level eine mehr. */
+    public int haste(int lvl) {
+        return lvl <= 0 ? 0 : (int) Math.ceil(5 * frac(Upgrade.TEMPO, lvl));
+    }
+
+    /** Haben alle One-Block-Upgrades in der config schon 20 Level? */
+    public boolean levelsReady() {
+        for (Upgrade u : Upgrade.values()) if (max(u) != UpgradeLevels.MAX) return false;
+        return true;
+    }
+
     /** Preis der nächsten Stufe in Block-XP, -1 wenn ausgebaut. */
     public long price(Progress pr, Upgrade u) {
         int lvl = pr.level(u);
@@ -356,9 +375,9 @@ public final class OneBlockService {
         return switch (u) {
             case GLUECK -> "Selten x" + fmt(luckFactor(lvl));
             case COOLDOWN -> fmt(cooldown(lvl)) + " s";
-            case TEMPO -> lvl == 0 ? "aus" : "Eile " + roman(lvl);
-            case XP, GELD -> "+" + (lvl * 10) + " %";
-            case BEUTE -> (lvl * 4) + " %";
+            case TEMPO -> lvl == 0 ? "aus" : "Eile " + roman(haste(lvl));
+            case XP, GELD -> "+" + Math.round(frac(u, lvl) * 100) + " %";
+            case BEUTE -> Math.round(frac(u, lvl) * 40) + " %";
         };
     }
 
@@ -379,13 +398,15 @@ public final class OneBlockService {
         return Math.round(after / before * 10) / 10.0;
     }
 
-    private static double exponent(int luck) {
-        return Math.max(0.2, 1 - 0.06 * luck);
+    /** Glück: Gewichte hoch e (volles Upgrade 0,4 = seltene Blöcke viel öfter). */
+    private double exponent(int luck) {
+        return Math.max(0.2, 1 - 0.6 * frac(Upgrade.GLUECK, luck));
     }
 
+    /** Cooldown: volles Upgrade -80 %. */
     public double cooldown(int lvl) {
         double base = addon.getConfig().getDouble("oneblock.cooldown", 1.5);
-        return Math.round(base * Math.max(0.2, 1 - 0.08 * lvl) * 100) / 100.0;
+        return Math.round(base * Math.max(0.2, 1 - 0.8 * frac(Upgrade.COOLDOWN, lvl)) * 100) / 100.0;
     }
 
     public static String fmt(double v) {
@@ -416,17 +437,17 @@ public final class OneBlockService {
         List<ItemStack> give = new ArrayList<>();
         if (drops.isEmpty()) give.add(new ItemStack(old, 1));
         else for (ItemStack d : drops) give.add(d.clone());
-        boolean doubled = pr != null && rnd.nextDouble() < pr.level(Upgrade.BEUTE) * 0.04;
+        boolean doubled = pr != null && rnd.nextDouble() < frac(Upgrade.BEUTE, pr.level(Upgrade.BEUTE)) * 0.4;
         if (doubled) for (ItemStack d : new ArrayList<>(give)) give.add(d.clone());
         for (ItemStack d : give) p.getInventory().addItem(d).values().forEach(r -> p.getWorld().dropItem(p.getLocation(), r));
-        double money = addon.getConfig().getLong("oneblock.money", 5) * (1 + (pr == null ? 0 : pr.level(Upgrade.GELD)) * 0.1);
-        double xp = addon.getConfig().getLong("oneblock.xp", 3) * (1 + (pr == null ? 0 : pr.level(Upgrade.XP)) * 0.1);
+        double money = addon.getConfig().getLong("oneblock.money", 5) * (1 + (pr == null ? 0 : frac(Upgrade.GELD, pr.level(Upgrade.GELD))));
+        double xp = addon.getConfig().getLong("oneblock.xp", 3) * (1 + (pr == null ? 0 : frac(Upgrade.XP, pr.level(Upgrade.XP))));
         long coins = Math.round(money), xpl = Math.round(xp);
         core.economy().deposit(p.getUniqueId(), coins);
         core.stats().get(p.getUniqueId()).xp += xpl;
         String extra = "";
         if (pr != null) {
-            long bx = Math.round(addon.getConfig().getLong("oneblock.team-xp", 2) * (1 + pr.level(Upgrade.XP) * 0.1));
+            long bx = Math.round(addon.getConfig().getLong("oneblock.team-xp", 2) * (1 + frac(Upgrade.XP, pr.level(Upgrade.XP))));
             pr.xp += bx;
             pr.earned += bx;
             pr.mined++;
@@ -506,7 +527,7 @@ public final class OneBlockService {
                         for (UUID m : t.members()) {
                             Player o = Bukkit.getPlayer(m);
                             if (o != null && o.getWorld().equals(w) && o.getLocation().distanceSquared(c) < 36) {
-                                o.addPotionEffect(new PotionEffect(PotionEffectType.HASTE, 50, tempo - 1, true, false, true));
+                                o.addPotionEffect(new PotionEffect(PotionEffectType.HASTE, 50, haste(tempo) - 1, true, false, true));
                             }
                         }
                     }
@@ -567,6 +588,7 @@ public final class OneBlockService {
     // =================================================================================================================
 
     private void load() {
+        upgradeVersion = levelsReady() ? UpgradeLevels.VERSION : 1;
         if (!file.exists()) return;
         YamlConfiguration y = YamlConfiguration.loadConfiguration(file);
         for (Platform pf : platforms) {
@@ -576,6 +598,10 @@ public final class OneBlockService {
             pf.since = y.getLong(b + "since");
             pf.active = y.getLong(b + "active", System.currentTimeMillis());
         }
+        // Upgrade-Stände aus der Zeit mit 5 oder 10 Stufen auf Level 0 bis 20 umrechnen (gleiche Wirkung)
+        int stored = y.getInt("upgrade-version", 1);
+        boolean migrate = stored < UpgradeLevels.VERSION && levelsReady();
+        upgradeVersion = migrate ? UpgradeLevels.VERSION : stored;
         ConfigurationSection ts = y.getConfigurationSection("teams");
         if (ts != null) {
             for (String k : ts.getKeys(false)) {
@@ -585,6 +611,10 @@ public final class OneBlockService {
                 pr.earned = ts.getLong(k + ".earned");
                 for (Upgrade u : Upgrade.values()) {
                     int v = ts.getInt(k + ".upgrades." + u.key());
+                    if (migrate && v > 0) {
+                        v = UpgradeLevels.oneBlock(u.key(), v);
+                        dirty = true;
+                    }
                     if (v > 0) pr.levels.put(u, v);
                 }
                 progress.put(k, pr);
@@ -598,6 +628,7 @@ public final class OneBlockService {
 
     public void save() {
         YamlConfiguration y = new YamlConfiguration();
+        y.set("upgrade-version", upgradeVersion);
         for (Platform pf : platforms) {
             if (!pf.claimed()) continue;
             String b = "platforms." + pf.index + ".";

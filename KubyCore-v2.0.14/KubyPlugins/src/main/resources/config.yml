@@ -1890,6 +1890,7 @@ guide:
             - "> Generator: bessere Erze aus dem Bruchstein-Generator"
             - "> Wachstum und Spawnrate: schnellere Pflanzen, mehr Tiere"
             - "> Limits: mehr Trichter, Kolben und Tiere erlaubt"
+            - "> Jedes Upgrade hat 20 Level in 3 Stufen: 1-10, 11-15, 16-20."
             - ""
             - "Neu anfangen geht mit `/insel neustart` (einmal am Tag)."
           name-en: "Island"
@@ -1905,6 +1906,7 @@ guide:
             - "> Generator: better ores from the cobblestone generator"
             - "> Growth and spawn rate: faster crops, more animals"
             - "> Limits: more hoppers, pistons and animals allowed"
+            - "> Every upgrade has 20 levels in 3 tiers: 1-10, 11-15, 16-20."
             - ""
             - "Starting over works with `/insel neustart` (once a day)."
         mitglieder:
@@ -1975,7 +1977,8 @@ guide:
             - "> Jeder Abbau bringt Block-XP, ihr könnt auch eigene XP einzahlen."
             - ""
             - "# Upgrades"
-            - "> Glück, Cooldown, Tempo, XP- und Geld-Bonus, Doppelte Beute"
+            - "> Glück, Cooldown, Tempo, XP- und Geld-Bonus, Doppel-Beute"
+            - "> Je 20 Level in 3 Stufen: 1-10, 11-15, 16-20."
             - "> Wer 7 Tage nicht abbaut, verliert den Block (Upgrades bleiben)."
           name-en: "One-Block"
           lines-en:
@@ -1988,6 +1991,7 @@ guide:
             - ""
             - "# Upgrades"
             - "> Luck, cooldown, speed, XP and money bonus, double loot"
+            - "> 20 levels each in 3 tiers: 1-10, 11-15, 16-20."
             - "> Not mining for 7 days loses the block (upgrades stay)."
         geld:
           name: "Shop & Geld"
