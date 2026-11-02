@@ -95,7 +95,7 @@ public final class TradeScreens {
         c.box(0, 0, W, 54, KitData.Box.CLOVER);
         c.sprite(10 + (32 - KitData.Sprite.HB_SHOP.width) / 2, 11 + (32 - KitData.Sprite.HB_SHOP.height) / 2, KitData.Sprite.HB_SHOP);
         c.title(50, 12, "Shop", false, EMERALD);
-        c.text(50, 36, "Preise ändern sich mit Angebot und Nachfrage", MINT, false);
+        c.text(50, 36, "Preise folgen den Kursen der Börse", MINT, false);
         c.textRight(378, 14, Msg.coins(coins) + " $", GOLD, true);
         c.textRight(378, 26, Canvas.caps("Guthaben"), MINT, false);
         int y = 60, cw = (W - 8) / 3, ch = 60;

@@ -85,7 +85,18 @@ public final class TradingScreen {
     public record Market(Head head, List<Chip> chips, boolean prev, boolean next, Consumer<Player> prevPage, Consumer<Player> nextPage,
                          KitData.Icon icon, String symbol, String name, double price, double change, double hi, double lo, Frame frame,
                          List<Bar> bars, String position, long posPnl, List<String[]> orders, List<Consumer<Player>> cancels,
-                         Map<String, Consumer<Player>> actions, Map<Frame, Consumer<Player>> frames, double fee) {}
+                         Map<String, Consumer<Player>> actions, Map<Frame, Consumer<Player>> frames, double fee, List<NewsLine> news) {
+        public Market(Head head, List<Chip> chips, boolean prev, boolean next, Consumer<Player> prevPage, Consumer<Player> nextPage,
+                      KitData.Icon icon, String symbol, String name, double price, double change, double hi, double lo, Frame frame,
+                      List<Bar> bars, String position, long posPnl, List<String[]> orders, List<Consumer<Player>> cancels,
+                      Map<String, Consumer<Player>> actions, Map<Frame, Consumer<Player>> frames, double fee) {
+            this(head, chips, prev, next, prevPage, nextPage, icon, symbol, name, price, change, hi, lo, frame, bars, position, posPnl, orders,
+                    cancels, actions, frames, fee, List.of());
+        }
+    }
+
+    /** Nachricht im Markt: Uhrzeit, Symbol (leer = ganzer Markt), Text, Veränderung in Prozent. */
+    public record NewsLine(String time, String symbol, String text, double pct) {}
 
     public record Row(String symbol, String name, double price, double change, String extra, long pnl, Consumer<Player> click) {}
 
@@ -233,7 +244,17 @@ public final class TradingScreen {
         double[] range = ts.range24(t);
         return new Market(head, chips, st.page > 0, st.page + 1 < pages, go(pl -> state(pl).page = Math.max(0, state(pl).page - 1)),
                 go(pl -> state(pl).page++), Icons.of(t.material, KitData.Icon.PAPER), t.symbol, t.name, t.price, ts.change24(t), range[0], range[1],
-                st.frame, bars, posText, posPnl, ord, cancels, act, frames, ts.feePercent());
+                st.frame, bars, posText, posPnl, ord, cancels, act, frames, ts.feePercent(), newsLines(ts.news(t.symbol, 3)));
+    }
+
+    private static List<NewsLine> newsLines(List<TradingService.News> ns) {
+        List<NewsLine> out = new ArrayList<>();
+        java.time.format.DateTimeFormatter hm = java.time.format.DateTimeFormatter.ofPattern("HH:mm");
+        for (TradingService.News n : ns) {
+            String time = java.time.Instant.ofEpochMilli(n.t()).atZone(java.time.ZoneId.systemDefault()).format(hm);
+            out.add(new NewsLine(time, n.symbol(), n.text(), n.pct()));
+        }
+        return out;
     }
 
     private List<Row> rowsKurse(Player p, List<Ticker> all) {
@@ -492,6 +513,22 @@ public final class TradingScreen {
             if (m.cancels() != null && i < m.cancels().size()) c.action(W - 24, y + 1, 20, KitData.SMALL_H, m.cancels().get(i), "Order stornieren");
             y += 20;
         }
+
+        // Nachrichten zu diesem Wert und zum ganzen Markt
+        if (!m.news().isEmpty()) {
+            if (!m.orders().isEmpty()) y += 2;
+            c.box(0, y, W, 8 + 11 * m.news().size() + 4, KitData.Box.TERMINAL);
+            int ny = y + 6;
+            for (NewsLine nl : m.news()) {
+                int nx = 6;
+                nx += c.text(nx, ny, nl.time(), DIM, false) + 6;
+                nx += c.text(nx, ny, nl.symbol().isEmpty() ? "MARKT" : nl.symbol(), CYAN, true) + 6;
+                String pct = String.format(Locale.GERMANY, "%+.1f %%", nl.pct());
+                nx += c.text(nx, ny, pct, sign(nl.pct()), true) + 6;
+                c.text(nx, ny, Canvas.fit(nl.text(), false, W - nx - 6), TEXT, false);
+                ny += 11;
+            }
+        }
         return c;
     }
 
@@ -576,7 +613,9 @@ public final class TradingScreen {
             can.add(no);
         }
         reg.accept("Börse Markt", () -> market(new Market(h, chips, true, true, no, no, KitData.Icon.DIAMOND, "WWWW", "W".repeat(30), last, 12.3, 999_999,
-                0.01, Frame.H1, bars, "W".repeat(80), -5, ord, can, act, null, 0.5), null));
+                0.01, Frame.H1, bars, "W".repeat(80), -5, ord, can, act, null, 0.5,
+                List.of(new NewsLine("23:59", "WWWW", "W".repeat(60), -99.9), new NewsLine("00:00", "", "W".repeat(60), 99.9),
+                        new NewsLine("12:00", "WWWW", "W".repeat(60), 5.5))), null));
         reg.accept("Börse Markt leer", () -> market(new Market(new Head(0, 0, 0, 0), List.of(), false, false, no, no, KitData.Icon.PAPER, "X", "X",
                 1, 0, 1, 1, Frame.M5, List.of(), null, 0, List.of(), List.of(), act, null, 0.5), null));
         List<Row> rows = new ArrayList<>();

@@ -28,15 +28,24 @@ import java.util.UUID;
 
 /**
  * Börse wie eine Trading-App. Jedes Item der Shop-Bereiche Blöcke, Essen, Redstone und Dekoration ist ein Wert
- * (Ticker). Der Kurs läuft live: alle paar Sekunden eine kleine zufällige Schwankung und ein Zug zurück zum fairen
- * Preis (Shop-Grundpreis mal Nachfrage). Die Nachfrage kommt aus dem Shop: Käufe heben sie, Verkäufe an den Server
- * senken sie, mit der Zeit kehrt sie zu 1 zurück. Große Orders bewegen den Kurs (Liquidität). Der Shop verkauft zum
- * Kurs der Börse.
+ * (Ticker). Der Kurs läuft von selbst wie an einer echten Börse, ohne dass Spieler ihn bewegen (simulierter Verlauf):
+ * <ul>
+ *   <li>zufällige Schwankung je Schritt, je nach Seltenheit des Items stärker oder schwächer,</li>
+ *   <li>Trends (Auf- und Abwärtsphasen), die einige Stunden halten und dann wechseln,</li>
+ *   <li>ruhige und hektische Phasen (die Schwankung selbst schwankt),</li>
+ *   <li>Marktstimmung und Bereiche: alle Werte laufen zum Teil gemeinsam, Werte eines Bereichs noch mehr,</li>
+ *   <li>Nachrichten: seltene Kurssprünge eines Werts oder des ganzen Markts (mit Meldung),</li>
+ *   <li>ein schwacher Zug zurück zum Grundpreis, damit der Kurs langfristig in der Nähe bleibt (Grenzen 35 % bis 300 %).</li>
+ * </ul>
+ * Neue Werte bekommen einen simulierten Verlauf der letzten 60 Tage, damit die Charts nicht leer sind. Optional
+ * (trading.spieler-einfluss) bewegen Shop-Käufe, Verkäufe und große Orders den Kurs zusätzlich. Der Shop verkauft zum
+ * Kurs der Börse, aber nie so billig, dass Kaufen im Shop und Verkaufen an den Server Gewinn bringt.
  *
  * Spieler kaufen und verkaufen zum Kurs (Gebühr je Seite), halten Positionen mit Einstandspreis und legen Orders an:
  * Limit-Kauf (Geld wird reserviert), Limit-Verkauf, Stop-Loss und Take-Profit; sie werden bei jedem Kurs-Schritt
  * geprüft, auch wenn der Spieler offline oder in einem anderen Modus ist. Kerzen in drei Zeitrahmen (5 Minuten,
- * 1 Stunde, 1 Tag). Positionen, Orders und Verlauf gelten je Modus (eigenes Geld je Modus). Daten: trading.yml.
+ * 1 Stunde, 1 Tag). Positionen, Orders und Verlauf gelten je Modus (eigenes Geld je Modus). Daten: trading.yml
+ * (gespeichert im Hintergrund).
  */
 public final class TradingService {
 
@@ -68,6 +77,10 @@ public final class TradingService {
         public final String id, symbol, name;
         public final Material material;
         public double base, price, factor = 1.0;
+        /** Simulation: Bereich (0..3), Grenzen, laufender Trend (je Tag), Ende des Trends, Unruhe (log), Schwankungs-Faktor. */
+        int sector;
+        double floor, cap, drift, lv, volMul = 1.0, rvol = 1.0;
+        long trendUntil;
         final EnumMap<Frame, Deque<Candle>> candles = new EnumMap<>(Frame.class);
 
         Ticker(String id, String symbol, String name, Material material, double base) {
@@ -104,6 +117,12 @@ public final class TradingService {
 
     public record Trade(long t, String ticker, String side, double qty, double price, long coins, long pnl) {}
 
+    /** Nachricht: Zeit, Symbol (leer = ganzer Markt), Text, Veränderung in Prozent. */
+    public record News(long t, String symbol, String text, double pct) {}
+
+    /** Version des Kurs-Modells; ältere Verläufe werden beim Laden einmal neu simuliert. */
+    private static final int MODEL = 2;
+
     private final KubyPlugins plugin;
     private final File file;
     private final Random rnd = new Random();
@@ -114,6 +133,14 @@ public final class TradingService {
     private int nextOrder = 1;
     private long lastTick;
     private boolean dirty;
+    private int model;
+    private final Deque<News> news = new ArrayDeque<>();
+    /** Marktstimmung und Bereiche: Trend je Tag, Ende des Trends, Unruhe (log). Index 0 = Markt, 1..4 = Bereiche. */
+    private final double[] grpDrift = new double[5], grpLv = new double[5];
+    private final long[] grpUntil = new long[5];
+    private Map<Material, Long> worthCache;
+    private long worthAt;
+    private volatile boolean saving;
 
     public TradingService(KubyPlugins plugin) {
         this.plugin = plugin;
@@ -122,7 +149,7 @@ public final class TradingService {
         long period = Math.max(5, plugin.getConfig().getLong("trading.tick-sekunden", 20)) * 20L;
         plugin.getServer().getScheduler().runTaskTimer(plugin, this::tick, 200L, period);
         plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
-            if (dirty) save();
+            if (dirty) saveAsync();
         }, 1200L, 1200L);
     }
 
@@ -138,6 +165,43 @@ public final class TradingService {
         return cfg("gebuehr-prozent", 0.5);
     }
 
+    /** Bewegen Spieler den Kurs (Shop, große Orders)? Standard: nein, der Kurs läuft nur simuliert. */
+    public boolean playerInfluence() {
+        return plugin.getConfig().getBoolean("trading.spieler-einfluss", false);
+    }
+
+    private double sim(String key, double def) {
+        return plugin.getConfig().getDouble("trading.kurs." + key, def);
+    }
+
+    private long tickMs() {
+        return Math.max(5, plugin.getConfig().getLong("trading.tick-sekunden", 10)) * 1000L;
+    }
+
+    /** Einstellungen der Simulation, einmal je Schritt gelesen (nicht je Wert). */
+    private record Params(double sigma, double trend, double hours, double unrest, double kappa, double wm, double ws, double newsRate,
+                          double newsSize, boolean influence) {}
+
+    private Params params() {
+        double wm = Math.max(0, Math.min(0.9, sim("markt-anteil", 0.3)));
+        return new Params(sim("volatilitaet-tag", 0.045), sim("trend-staerke", 0.06), Math.max(0.1, sim("trend-dauer-stunden", 8)),
+                sim("unruhe", 0.5), sim("rueckkehr-tag", 0.25), wm, Math.max(0, Math.min(0.9 - wm, sim("sektor-anteil", 0.25))),
+                sim("nachrichten-pro-tag", 0.2), sim("nachrichten-staerke", 0.07), playerInfluence());
+    }
+
+    /** Wie stark ein Wert schwankt: seltene Items mehr (trading.kurs.seltenheit). */
+    private double rarityVol(Ticker t) {
+        String r = plugin.investments() == null ? "common" : plugin.investments().rarityOf(t.material).name().toLowerCase(Locale.ROOT);
+        double def = switch (r) {
+            case "frequent" -> 0.8;
+            case "rare" -> 1.2;
+            case "very_rare" -> 1.4;
+            case "unique" -> 1.6;
+            default -> 1.0;
+        };
+        return sim("seltenheit." + r, def);
+    }
+
     // =================================================================================================================
     // Ticker
     // =================================================================================================================
@@ -146,20 +210,39 @@ public final class TradingService {
     public synchronized void ensureTickers() {
         Set<String> used = new HashSet<>();
         for (Ticker t : tickers.values()) used.add(t.symbol);
-        for (String sec : EconomyMarketService.DYNAMIC) {
+        long now = System.currentTimeMillis();
+        if (worthCache == null || now - worthAt > 60_000L) {
+            worthCache = plugin.sell() == null ? Map.of() : plugin.sell().worth();
+            worthAt = now;
+        }
+        // Höchster Verkaufswert an den Server: Verkaufs-Stufe ganz oben und Wochen-Meta (+25 %)
+        double maxSell = (1.0 + plugin.getConfig().getInt("sellmulti.max-level", 10) * plugin.getConfig().getDouble("sellmulti.step", 0.05)) * 1.25;
+        double lo = sim("untergrenze", 0.35), hi = sim("obergrenze", 3.0);
+        for (int si = 0; si < EconomyMarketService.DYNAMIC.size(); si++) {
+            String sec = EconomyMarketService.DYNAMIC.get(si);
             for (ShopService.Item it : plugin.shop().items(sec)) {
                 Ticker t = tickers.get(it.id());
                 double base = Math.max(1, it.price());
-                if (t != null) {
-                    t.base = base;
-                    continue;
+                boolean fresh = t == null;
+                if (fresh) {
+                    String sym = symbol(it.material(), used);
+                    used.add(sym);
+                    t = new Ticker(it.id(), sym, nice(it.material()), it.material(), base);
                 }
-                String sym = symbol(it.material(), used);
-                used.add(sym);
-                t = new Ticker(it.id(), sym, nice(it.material()), it.material(), base);
-                seed(t);
-                tickers.put(it.id(), t);
-                dirty = true;
+                t.base = base;
+                t.sector = si;
+                t.rvol = rarityVol(t);
+                // Untergrenze: nie so billig, dass Kaufen im Shop und Verkaufen an den Server Gewinn bringt
+                long w = worthCache.getOrDefault(it.material(), 0L);
+                t.floor = Math.max(base * lo, w > 0 ? w * Math.max(1, it.amount()) * maxSell * 1.05 : 0);
+                t.cap = Math.max(t.floor * 1.5, base * hi);
+                if (fresh) {
+                    seed(t, -1);
+                    tickers.put(it.id(), t);
+                    dirty = true;
+                } else if (t.price < t.floor || t.price > t.cap) {
+                    t.price = Math.max(t.floor, Math.min(t.cap, t.price));
+                }
             }
         }
     }
@@ -178,33 +261,39 @@ public final class TradingService {
         return out;
     }
 
-    /** Neuer Ticker: Kursverlauf rückwärts mit demselben Modell füllen, damit die Charts nicht leer sind. */
-    private void seed(Ticker t) {
-        long now = System.currentTimeMillis();
-        double sigma = cfg("schwankung", 0.0008);
-        for (Frame f : Frame.values()) {
-            Deque<Candle> d = t.candles.get(f);
-            d.clear();
-            double steps = Math.max(1, f.ms / (Math.max(5, cfg("tick-sekunden", 20)) * 1000.0));
-            double vol = sigma * Math.sqrt(steps);
-            double p = t.base;
-            List<Candle> back = new ArrayList<>();
-            long start = now - now % f.ms;
-            for (int i = 0; i < f.keep; i++) {
-                Candle c = new Candle(start - (long) i * f.ms, p);
-                double o = p * Math.exp(rnd.nextGaussian() * vol);
-                o += (t.base - o) * 0.15;
-                c.o = o;
-                c.h = Math.max(o, p) * (1 + Math.abs(rnd.nextGaussian()) * vol * 0.6);
-                c.l = Math.min(o, p) * (1 - Math.abs(rnd.nextGaussian()) * vol * 0.6);
-                c.vol = Math.abs(rnd.nextGaussian()) * 50;
-                back.add(0, c);
-                p = o;
+    /**
+     * Verlauf der letzten 60 Tage mit demselben Modell simulieren, damit die Charts nicht leer sind: stündliche Schritte
+     * bis vor 4 Tagen, dann 5-Minuten-Schritte bis vor 8 Stunden, danach echte Kurs-Schritte. Mit endPrice &gt; 0 wird
+     * der Verlauf so verschoben, dass er genau beim heutigen Kurs endet (bestehende Werte springen nicht).
+     */
+    private void seed(Ticker t, double endPrice) {
+        long now = System.currentTimeMillis(), tick = tickMs();
+        Params pr = params();
+        for (Frame f : Frame.values()) t.candles.get(f).clear();
+        t.price = t.base;
+        t.drift = 0;
+        t.lv = 0;
+        t.trendUntil = 0;
+        long time = now - now % Frame.D1.ms - (Frame.D1.keep - 1) * Frame.D1.ms;
+        long[][] plan = {{now - 4 * Frame.D1.ms, Frame.H1.ms}, {now - 8 * 3_600_000L, Frame.M5.ms}, {now, tick}};
+        for (long[] stage : plan) {
+            long step = stage[1];
+            for (; time < stage[0]; time += step) {
+                step(pr, t, time, step / 86_400_000.0, rnd.nextGaussian(), rnd.nextGaussian(), 0, null);
             }
-            d.addAll(back);
         }
-        Candle last = t.candles.get(Frame.M5).peekLast();
-        t.price = last == null ? t.base : last.c;
+        if (endPrice > 0 && t.price > 0) {
+            double k = endPrice / t.price;
+            for (Frame f : Frame.values()) {
+                for (Candle c : t.candles.get(f)) {
+                    c.o *= k;
+                    c.h *= k;
+                    c.l *= k;
+                    c.c *= k;
+                }
+            }
+            t.price = endPrice;
+        }
     }
 
     public synchronized List<Ticker> tickers() {
@@ -249,14 +338,38 @@ public final class TradingService {
         synchronized (this) {
             ensureTickers();
             long now = System.currentTimeMillis();
+            if (model < MODEL) {
+                // alter, fast flacher Verlauf: einmal neu simulieren, der heutige Kurs bleibt
+                for (Ticker t : tickers.values()) seed(t, t.price);
+                model = MODEL;
+            }
+            // Schrittweite aus der echten Zeit (nach einer Pause höchstens zwei Schritte, kein Sprung)
+            long tick = tickMs();
+            long elapsed = lastTick == 0 ? tick : Math.max(1000L, Math.min(2 * tick, now - lastTick));
             lastTick = now;
-            double sigma = cfg("schwankung", 0.0008), revert = cfg("rueckkehr", 0.02), decay = cfg("nachfrage-abbau", 0.0005);
-            for (Ticker t : tickers.values()) {
-                double fair = t.base * t.factor;
-                t.price = t.price * Math.exp(rnd.nextGaussian() * sigma) + (fair - t.price) * revert;
-                t.price = Math.max(t.base * 0.2, Math.min(t.base * 5.0, t.price));
-                t.factor += (1.0 - t.factor) * decay;
-                candle(t, now, 0);
+            double dt = elapsed / 86_400_000.0;
+            Params pr = params();
+            List<News> fresh = new ArrayList<>();
+            stepGroups(pr, now, dt);
+            double zm = rnd.nextGaussian();
+            double[] zs = new double[grpDrift.length];
+            for (int k = 1; k < zs.length; k++) zs[k] = rnd.nextGaussian();
+            double marketJump = 0;
+            if (rnd.nextDouble() < sim("markt-ereignisse-pro-tag", 0.1) * dt) {
+                marketJump = rnd.nextGaussian() * pr.newsSize() * 0.6;
+                fresh.add(new News(now, "", (marketJump >= 0 ? MARKET_UP : MARKET_DOWN)[rnd.nextInt(MARKET_UP.length)],
+                        (Math.exp(marketJump) - 1) * 100));
+            }
+            for (Ticker t : tickers.values()) step(pr, t, now, dt, zm, zs[1 + Math.min(3, t.sector)], marketJump, fresh);
+            if (pr.influence()) {
+                double decay = cfg("nachfrage-abbau", 0.0005);
+                for (Ticker t : tickers.values()) t.factor += (1.0 - t.factor) * decay;
+            }
+            for (News n : fresh) {
+                news.addFirst(n);
+                while (news.size() > 40) news.pollLast();
+                Runnable note = announce(n);
+                if (note != null) notes.add(note);
             }
             Iterator<Order> it = orders.iterator();
             while (it.hasNext()) {
@@ -275,6 +388,103 @@ public final class TradingService {
             dirty = true;
         }
         notes.forEach(Runnable::run);
+    }
+
+    private static final String[] UP = {"Großauftrag eingegangen", "Lieferengpass treibt den Preis", "Händler kaufen alles auf",
+            "Neue Bauprojekte, hohe Nachfrage", "Lager fast leer", "Sammler greifen zu"};
+    private static final String[] DOWN = {"Riesiges Lager entdeckt", "Überangebot drückt den Preis", "Händler verkaufen in Panik",
+            "Neue Abbau-Methode macht es billig", "Nachfrage bricht ein", "Großverkauf eines Händlers"};
+    private static final String[] MARKET_UP = {"Kauflaune an der ganzen Börse", "Rekordtag: alle Werte steigen", "Händler sind in Feierlaune"};
+    private static final String[] MARKET_DOWN = {"Börsenbeben: alle Werte fallen", "Panik am ganzen Markt", "Händler ziehen ihr Geld ab"};
+
+    /**
+     * Marktstimmung (Index 0) und die vier Bereiche: Trends wechseln nach einigen Stunden, die Unruhe schwankt langsam
+     * (ruhige und hektische Phasen).
+     */
+    private void stepGroups(Params pr, long now, double dt) {
+        for (int k = 0; k < grpDrift.length; k++) {
+            if (now >= grpUntil[k]) {
+                grpDrift[k] = rnd.nextGaussian() * pr.trend() * (k == 0 ? 0.5 : 0.7);
+                grpUntil[k] = now + (long) (-Math.log(1 - rnd.nextDouble()) * pr.hours() * 1.5 * 3_600_000L);
+            }
+            grpLv[k] = ou(grpLv[k], pr.unrest(), dt);
+        }
+    }
+
+    /** Langsam schwankender Wert um 0 mit Streuung sd (Halbwertszeit etwa ein halber Tag). */
+    private double ou(double v, double sd, double dt) {
+        double theta = 1.4;
+        return v - theta * v * dt + sd * Math.sqrt(2 * theta * dt) * rnd.nextGaussian();
+    }
+
+    /**
+     * Ein Kurs-Schritt eines Werts über dt Tage: Trend und Stimmung, Zug zum fairen Preis, Schwankung (Markt, Bereich,
+     * eigener Anteil), dazu selten ein Sprung durch eine Nachricht. Mit out == null (Verlauf simulieren) laufen Markt und
+     * Bereich nur als Zufall mit, ohne Nachrichten.
+     */
+    private void step(Params pr, Ticker t, long now, double dt, double zm, double zs, double marketJump, List<News> out) {
+        if (now >= t.trendUntil) {
+            t.drift = rnd.nextGaussian() * pr.trend();
+            t.trendUntil = now + (long) (-Math.log(1 - rnd.nextDouble()) * pr.hours() * 3_600_000L);
+        }
+        t.lv = ou(t.lv, pr.unrest(), dt);
+        int g = 1 + Math.min(3, t.sector);
+        double groupLv = out == null ? 0 : 0.5 * grpLv[0] + 0.5 * grpLv[g];
+        t.volMul = Math.exp(0.7 * t.lv + 0.5 * groupLv - 0.3 * pr.unrest() * pr.unrest());
+        double s = pr.sigma() * t.rvol * t.volMul;
+        double fair = t.base * (pr.influence() ? t.factor : 1.0);
+        double x = Math.log(t.price / fair);
+        double mu = t.drift - pr.kappa() * x + (out == null ? 0 : 0.7 * grpDrift[0] + 0.7 * grpDrift[g]);
+        double z = Math.sqrt(pr.wm()) * zm + Math.sqrt(pr.ws()) * zs + Math.sqrt(1 - pr.wm() - pr.ws()) * rnd.nextGaussian();
+        double r = (mu - 0.5 * s * s) * dt + s * Math.sqrt(dt) * z + marketJump;
+        if (rnd.nextDouble() < pr.newsRate() * dt) {
+            double j = Math.abs(rnd.nextGaussian()) * pr.newsSize() + 0.015;
+            // weit über dem Grundpreis eher schlechte Nachrichten, weit darunter eher gute
+            double pUp = Math.max(0.15, Math.min(0.85, 0.5 - x));
+            boolean up = rnd.nextDouble() < pUp;
+            r += up ? j : -j;
+            if (out != null) {
+                double pct = (Math.exp(up ? j : -j) - 1) * 100;
+                out.add(new News(now, t.symbol, t.name + ": " + (up ? UP : DOWN)[rnd.nextInt(UP.length)], pct));
+            }
+        }
+        t.price = Math.max(t.floor > 0 ? t.floor : t.base * 0.2, Math.min(t.cap > 0 ? t.cap : t.base * 5.0, t.price * Math.exp(r)));
+        candle(t, now, 0);
+    }
+
+    /** Große Nachrichten (ab 5 %) an Spieler, die den Wert halten; Markt-Nachrichten an alle mit Positionen. */
+    private Runnable announce(News n) {
+        if (Math.abs(n.pct()) < 5) return null;
+        Set<UUID> who = new HashSet<>();
+        for (Map<UUID, Map<String, Position>> byPlayer : positions.values()) {
+            byPlayer.forEach((u, book) -> {
+                if (book.isEmpty()) return;
+                if (n.symbol().isEmpty()) who.add(u);
+                else for (String id : book.keySet()) {
+                    Ticker t = tickers.get(id);
+                    if (t != null && t.symbol.equals(n.symbol())) who.add(u);
+                }
+            });
+        }
+        if (who.isEmpty()) return null;
+        String msg = "<#64D8FF><b>Börse:</b> " + (n.symbol().isEmpty() ? "<white>Ganzer Markt " : "<white>" + n.symbol() + " ")
+                + (n.pct() >= 0 ? "<green>" : "<red>") + String.format(Locale.GERMANY, "%+.1f %%", n.pct()) + " <gray>· " + Msg.escape(n.text());
+        return () -> {
+            for (UUID u : who) {
+                Player p = Bukkit.getPlayer(u);
+                if (p != null) Msg.send(p, msg);
+            }
+        };
+    }
+
+    /** Letzte Nachrichten (neueste zuerst); symbol != null: nur zu diesem Wert und zum ganzen Markt. */
+    public synchronized List<News> news(String symbol, int max) {
+        List<News> out = new ArrayList<>();
+        for (News n : news) {
+            if (out.size() >= max) break;
+            if (symbol == null || n.symbol().isEmpty() || n.symbol().equals(symbol)) out.add(n);
+        }
+        return out;
     }
 
     private void candle(Ticker t, long now, double vol) {
@@ -302,12 +512,17 @@ public final class TradingService {
     public synchronized void demand(String id, int units, int sign) {
         Ticker t = tickers.get(id);
         if (t == null || units <= 0) return;
+        if (!playerInfluence()) {
+            // Kurs läuft nur simuliert: Umsatz zählen, Kurs nicht bewegen
+            candle(t, System.currentTimeMillis(), units);
+            return;
+        }
         Material m = t.material;
         long target = Math.max(1, plugin.getConfig().getLong("economy.target." + plugin.investments().rarityOf(m).name().toLowerCase(Locale.ROOT), 100));
         double impact = cfg("nachfrage-wirkung", 0.02) * units / (target / 7.0);
         impact = Math.max(-0.08, Math.min(0.08, sign * impact));
         t.factor = Math.max(0.3, Math.min(3.0, t.factor * (1 + impact)));
-        t.price = Math.max(t.base * 0.2, Math.min(t.base * 5.0, t.price * (1 + impact * 0.5)));
+        t.price = Math.max(t.floor, Math.min(t.cap, t.price * (1 + impact * 0.5)));
         candle(t, System.currentTimeMillis(), units);
         dirty = true;
     }
@@ -352,8 +567,10 @@ public final class TradingService {
 
     /** Kurs durch eigene Order bewegen (große Beträge mehr). */
     private void impact(Ticker t, double coins, int sign) {
-        double liq = Math.max(1000, cfg("liquiditaet", 2_000_000));
-        t.price = Math.max(t.base * 0.2, Math.min(t.base * 5.0, t.price * (1 + sign * Math.min(0.05, coins / liq))));
+        if (playerInfluence()) {
+            double liq = Math.max(1000, cfg("liquiditaet", 2_000_000));
+            t.price = Math.max(t.floor, Math.min(t.cap, t.price * (1 + sign * Math.min(0.05, coins / liq))));
+        }
         candle(t, System.currentTimeMillis(), coins / Math.max(0.01, t.price));
     }
 
@@ -488,6 +705,23 @@ public final class TradingService {
     private void load() {
         YamlConfiguration y = YamlConfiguration.loadConfiguration(file);
         nextOrder = y.getInt("next-order", 1);
+        model = y.getInt("model", y.contains("tickers") ? 1 : MODEL);
+        for (int k = 0; k < grpDrift.length; k++) {
+            String[] g = y.getString("groups." + k, "0;0;0").split(";");
+            try {
+                grpDrift[k] = Double.parseDouble(g[0]);
+                grpLv[k] = Double.parseDouble(g[1]);
+                grpUntil[k] = Long.parseLong(g[2]);
+            } catch (RuntimeException ignored) {
+            }
+        }
+        for (String n : y.getStringList("news")) {
+            String[] p = n.split(";", 4);
+            try {
+                news.addLast(new News(Long.parseLong(p[0]), p[1], p[3], Double.parseDouble(p[2])));
+            } catch (RuntimeException ignored) {
+            }
+        }
         ConfigurationSection ts = y.getConfigurationSection("tickers");
         if (ts != null) {
             for (String id : ts.getKeys(false)) {
@@ -498,6 +732,13 @@ public final class TradingService {
                 Ticker t = new Ticker(id, s.getString("symbol", id), s.getString("name", nice(m)), m, s.getDouble("base", 1));
                 t.price = s.getDouble("price", t.base);
                 t.factor = s.getDouble("factor", 1.0);
+                String[] st = s.getString("sim", "0;0;0").split(";");
+                try {
+                    t.drift = Double.parseDouble(st[0]);
+                    t.lv = Double.parseDouble(st[1]);
+                    t.trendUntil = Long.parseLong(st[2]);
+                } catch (RuntimeException ignored) {
+                }
                 for (Frame f : Frame.values()) {
                     for (String c : s.getStringList("candles." + f.name())) {
                         String[] p = c.split(";");
@@ -556,9 +797,51 @@ public final class TradingService {
         }
     }
 
-    public synchronized void save() {
+    /** Speichern beim Abschalten (sofort). */
+    public void save() {
+        YamlConfiguration out = snapshot();
+        write(out);
+    }
+
+    /** Regelmäßiges Speichern: Stand im Hauptthread einsammeln, Schreiben (das Teure) im Hintergrund. */
+    public void saveAsync() {
+        if (saving) return;
+        YamlConfiguration out = snapshot();
+        saving = true;
+        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+            try {
+                write(out);
+            } finally {
+                saving = false;
+            }
+        });
+    }
+
+    private void write(YamlConfiguration out) {
+        try {
+            plugin.getDataFolder().mkdirs();
+            File tmp = new File(file.getParentFile(), file.getName() + "." + System.nanoTime() + ".tmp");
+            java.nio.file.Files.writeString(tmp.toPath(), out.saveToString(), java.nio.charset.StandardCharsets.UTF_8);
+            try {
+                java.nio.file.Files.move(tmp.toPath(), file.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING,
+                        java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+            } catch (java.nio.file.AtomicMoveNotSupportedException e) {
+                java.nio.file.Files.move(tmp.toPath(), file.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            }
+        } catch (IOException | RuntimeException e) {
+            plugin.getLogger().warning("trading.yml konnte nicht gespeichert werden: " + e.getMessage());
+        }
+    }
+
+    private synchronized YamlConfiguration snapshot() {
+        dirty = false;
         YamlConfiguration out = new YamlConfiguration();
         out.set("next-order", nextOrder);
+        out.set("model", model);
+        for (int k = 0; k < grpDrift.length; k++) out.set("groups." + k, r4(grpDrift[k]) + ";" + r4(grpLv[k]) + ";" + grpUntil[k]);
+        List<String> ns = new ArrayList<>();
+        for (News n : news) ns.add(n.t() + ";" + n.symbol() + ";" + r4(n.pct()) + ";" + n.text());
+        out.set("news", ns);
         for (Ticker t : tickers.values()) {
             String b = "tickers." + t.id + ".";
             out.set(b + "symbol", t.symbol);
@@ -567,6 +850,7 @@ public final class TradingService {
             out.set(b + "base", t.base);
             out.set(b + "price", t.price);
             out.set(b + "factor", t.factor);
+            out.set(b + "sim", r4(t.drift) + ";" + r4(t.lv) + ";" + t.trendUntil);
             for (Frame f : Frame.values()) {
                 List<String> l = new ArrayList<>();
                 for (Candle c : t.candles.get(f)) {
@@ -588,16 +872,11 @@ public final class TradingService {
             for (Trade tr : d) l.add(tr.t() + ";" + tr.ticker() + ";" + tr.side() + ";" + r4(tr.qty()) + ";" + r4(tr.price()) + ";" + tr.coins() + ";" + tr.pnl());
             out.set("history." + k.replace(':', '|'), l);
         });
-        try {
-            plugin.getDataFolder().mkdirs();
-            out.save(file);
-            dirty = false;
-        } catch (IOException e) {
-            plugin.getLogger().warning("trading.yml konnte nicht gespeichert werden: " + e.getMessage());
-        }
+        return out;
     }
 
+    /** Schnell auf 4 Stellen runden (String.format ist bei Zehntausenden Kerzen zu langsam). */
     private static String r4(double v) {
-        return String.format(Locale.ROOT, "%.4f", v);
+        return Double.toString(Math.round(v * 10_000.0) / 10_000.0);
     }
 }

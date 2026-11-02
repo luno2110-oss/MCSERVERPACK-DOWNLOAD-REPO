@@ -547,12 +547,26 @@ cookie:
     sekunden: 13              # so lange ist ein Glückskeks sichtbar
 
 trading:
-  tick-sekunden: 20          # Kurs-Schritt
-  schwankung: 0.0008         # zufällige Schwankung je Schritt (0.0008 = 0,08 %)
-  rueckkehr: 0.02            # Zug zum fairen Preis (Grundpreis mal Nachfrage) je Schritt
-  nachfrage-wirkung: 0.02    # wie stark Shop-Käufe/-Verkäufe die Nachfrage bewegen
-  nachfrage-abbau: 0.0005    # Nachfrage kehrt je Schritt so weit zu 1 zurück
-  liquiditaet: 2000000       # große Orders bewegen den Kurs: Betrag / Liquidität (höchstens 5 %)
+  tick-sekunden: 10          # Kurs-Schritt
+  # Der Kurs läuft von selbst wie an einer echten Börse (simuliert), ohne dass Spieler ihn bewegen.
+  kurs:
+    volatilitaet-tag: 0.045  # typische Schwankung an einem Tag (0.045 = 4,5 %)
+    trend-staerke: 0.06      # Auf- und Abwärtstrends (Steigung je Tag)
+    trend-dauer-stunden: 8   # so lange hält ein Trend im Schnitt
+    unruhe: 0.5              # Wechsel zwischen ruhigen und hektischen Phasen (0 = immer gleich)
+    rueckkehr-tag: 0.25      # Zug zurück zum Grundpreis je Tag (hält den Kurs langfristig in der Nähe)
+    markt-anteil: 0.3        # alle Werte laufen zum Teil gemeinsam (Marktstimmung)
+    sektor-anteil: 0.25      # Werte eines Bereichs (Blöcke, Essen, Redstone, Deko) laufen zum Teil gemeinsam
+    nachrichten-pro-tag: 0.2 # Kurssprünge durch Nachrichten je Wert und Tag (ab 5 % Meldung an Spieler mit Position)
+    nachrichten-staerke: 0.07
+    markt-ereignisse-pro-tag: 0.1  # Nachrichten für den ganzen Markt
+    untergrenze: 0.35        # Kurs bleibt zwischen 35 % und 300 % des Grundpreises
+    obergrenze: 3.0
+    seltenheit: {frequent: 0.8, common: 1.0, rare: 1.2, very_rare: 1.4, unique: 1.6}  # seltene Items schwanken mehr
+  spieler-einfluss: false    # true: Shop-Käufe, Verkäufe und große Orders bewegen den Kurs zusätzlich
+  nachfrage-wirkung: 0.02    # (nur mit spieler-einfluss) wie stark Shop-Käufe/-Verkäufe die Nachfrage bewegen
+  nachfrage-abbau: 0.0005    # (nur mit spieler-einfluss) Nachfrage kehrt je Schritt so weit zu 1 zurück
+  liquiditaet: 2000000       # (nur mit spieler-einfluss) große Orders bewegen den Kurs: Betrag / Liquidität (höchstens 5 %)
   gebuehr-prozent: 0.5       # Gebühr je Kauf und Verkauf
   max-orders: 10             # offene Orders je Spieler und Modus
 
@@ -1486,7 +1500,7 @@ guide:
         - "> /investments - Anteile an Shop-Items"
         - ""
         - "# Tipp"
-        - "> Preise folgen Angebot und Nachfrage: was viele verkaufen, wird billiger."
+        - "> Shop-Preise folgen der Börse: die Kurse schwanken jeden Tag, kauf wenn es billig ist."
       name-en: "Economy"
       lines-en:
         - "You earn coins by farming, selling, orders and bounties."
@@ -1502,7 +1516,7 @@ guide:
         - "> /investments - shares in shop items"
         - ""
         - "# Tip"
-        - "> Prices follow supply and demand: what many sell gets cheaper."
+        - "> Shop prices follow the stock market: prices change every day, buy when it's cheap."
     markt:
       name: "Markt & Orders"
       icon: nav03

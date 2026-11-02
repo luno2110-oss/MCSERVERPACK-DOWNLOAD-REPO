@@ -6294,7 +6294,7 @@ Nahrung für unterwegs	Food for the road
 Name, ID oder Material	Name, ID or material
 Noch keine Angebote. Sei der Erste: Item in die Hand, „Verkaufen“.	No offers yet. Be the first: hold an item, “Sell”.
 Nur Admins	Admins only
-Preise ändern sich mit Angebot und Nachfrage	Prices change with supply and demand
+Preise folgen den Kursen der Börse	Prices follow the stock market
 Schaltungen und Mechanik	Circuits and mechanics
 Spieler handeln untereinander · {} Angebote	Players trade with each other · {} offers
  von {} verkauft.	 sold by {}.
@@ -6642,3 +6642,39 @@ Der Keksschatz aus Glückskeksen ist doppelt so groß.	The cookie treasure from 
 Die Combo geht bis x3 statt x2.	The combo goes up to x3 instead of x2.
 Ohne dich backt die Bäckerei 10 % mehr und 4 Stunden länger.	While you're away the bakery bakes 10 % more and 4 hours longer.
 Glücksbringer: Glückskekse öfter und länger.	Lucky charms: lucky cookies more often and longer.
+Großauftrag eingegangen	Big order received
+{}: Großauftrag eingegangen	{}: Big order received
+Lieferengpass treibt den Preis	Supply shortage drives the price
+{}: Lieferengpass treibt den Preis	{}: Supply shortage drives the price
+Händler kaufen alles auf	Traders are buying everything
+{}: Händler kaufen alles auf	{}: Traders are buying everything
+Neue Bauprojekte, hohe Nachfrage	New building projects, high demand
+{}: Neue Bauprojekte, hohe Nachfrage	{}: New building projects, high demand
+Lager fast leer	Stock almost empty
+{}: Lager fast leer	{}: Stock almost empty
+Sammler greifen zu	Collectors are buying
+{}: Sammler greifen zu	{}: Collectors are buying
+Riesiges Lager entdeckt	Huge stockpile discovered
+{}: Riesiges Lager entdeckt	{}: Huge stockpile discovered
+Überangebot drückt den Preis	Oversupply pushes the price down
+{}: Überangebot drückt den Preis	{}: Oversupply pushes the price down
+Händler verkaufen in Panik	Traders sell in panic
+{}: Händler verkaufen in Panik	{}: Traders sell in panic
+Neue Abbau-Methode macht es billig	New mining method makes it cheap
+{}: Neue Abbau-Methode macht es billig	{}: New mining method makes it cheap
+Nachfrage bricht ein	Demand collapses
+{}: Nachfrage bricht ein	{}: Demand collapses
+Großverkauf eines Händlers	A trader sells big
+{}: Großverkauf eines Händlers	{}: A trader sells big
+Kauflaune an der ganzen Börse	Buying mood across the market
+{}: Kauflaune an der ganzen Börse	{}: Buying mood across the market
+Rekordtag: alle Werte steigen	Record day: everything rises
+{}: Rekordtag: alle Werte steigen	{}: Record day: everything rises
+Händler sind in Feierlaune	Traders are celebrating
+{}: Händler sind in Feierlaune	{}: Traders are celebrating
+Börsenbeben: alle Werte fallen	Market quake: everything falls
+{}: Börsenbeben: alle Werte fallen	{}: Market quake: everything falls
+Panik am ganzen Markt	Panic across the market
+{}: Panik am ganzen Markt	{}: Panic across the market
+Händler ziehen ihr Geld ab	Traders pull out their money
+{}: Händler ziehen ihr Geld ab	{}: Traders pull out their money
