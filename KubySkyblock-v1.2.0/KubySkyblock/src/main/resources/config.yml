@@ -196,6 +196,7 @@ oneblock:
 # Loot-Inseln (/kp skyblock loot generate). Loot je Stufe: im Spiel bearbeitete Tabelle (/kp skyblock loot edit <stufe>),
 # sonst "list" (MATERIAL;Höchstmenge), mit random-all: true zusätzlich manchmal ein zufälliges erreichbares Item.
 loot:
+  einrichten-anzahl: 40         # so viele Loot-Inseln legt /kp skyblock einrichten an
   cooldown-minutes: 360
   abstand-zum-spawn: 13000      # Loot-Inseln liegen weiter draußen als die Inseln der Spieler
   tiers:

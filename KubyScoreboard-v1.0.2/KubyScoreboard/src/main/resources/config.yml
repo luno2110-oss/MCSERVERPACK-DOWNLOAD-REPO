@@ -9,6 +9,7 @@ scoreboard:
   title:
     smp: "<gold><bold>KUBY SMP"
     survival: "<gold><bold>KUBY SURVIVAL"
+    skyblock: "<gold><bold>KUBY SKYBLOCK"
     hub: "<gold><bold>KUBY HUB"
   ranks:
     - "kuby.rank.legend;<gold>Legend"

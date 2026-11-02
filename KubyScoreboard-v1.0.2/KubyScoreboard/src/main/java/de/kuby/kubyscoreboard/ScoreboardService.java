@@ -288,6 +288,32 @@ public final class ScoreboardService {
                 // Zweite Zeile eingerückt mit orangem Pfeil, Befehl in normaler Schrift
                 out.add(textured ? SbUi.indent(ScoreboardText.icon(ScoreboardText.I_ARROW) + hint2, 16) : "<gold>→ " + hint2);
             }
+            case ModeService.SKYBLOCK -> {
+                out.add(ind.apply(row(ScoreboardText.I_RANK, "RANG", "<gray>" + rank)));
+                out.add(ind.apply(row(ScoreboardText.I_TEAM, "TEAM", "<white>" + teamName)));
+                out.add("");
+                out.add(ind.apply(row(ScoreboardText.I_COIN, "COINS", money)));
+                out.add(ind.apply(row(ScoreboardText.I_GEM, "JUWELEN", "<light_purple>" + ScoreboardText.number(jewels))));
+                out.add(ind.apply(row(ScoreboardText.I_XP, "XP", "<green>" + ScoreboardText.number(xp))));
+                long lvl = plugin.hasStat("island_level") ? plugin.statValue("island_level", id) : 0;
+                long place = plugin.hasStat("island_rank") ? plugin.statValue("island_rank", id) : 0;
+                boolean hasIsland = plugin.hasStat("island_points") && (lvl > 0 || plugin.statValue("island_points", id) > 0 || place > 0);
+                out.add(ind.apply(row(ScoreboardText.I_ISLAND, "INSEL", hasIsland ? "<aqua>" + SmallCaps.of("LV.") + " " + ScoreboardText.number(lvl)
+                        + (place > 0 ? " <gray>#" + place : "") : "<gray>" + SmallCaps.of("KEINE"))));
+                long gens = plugin.hasStat("generators") ? plugin.statValue("generators", id) : 0;
+                long slots = plugin.hasStat("generator_slots") ? plugin.statValue("generator_slots", id) : 0;
+                String boost = plugin.textValue("sb_boost", id);
+                out.add(ind.apply(row(ScoreboardText.I_GENERATOR, "GENERATOREN", "<white>" + gens + "<gray>/" + slots
+                        + (boost.isEmpty() ? "" : " <gold>⚡" + SmallCaps.of(boost)))));
+                String ob = plugin.textValue("sb_oneblock", id);
+                out.add(ind.apply(row(ScoreboardText.I_ONEBLOCK, "ONE-BLOCK", ob.isEmpty() ? "<gray>—" : "<green>" + SmallCaps.of(ob))));
+                out.add(ind.apply(row(ScoreboardText.I_CLOCK, "KEYALL IN", keyall)));
+                out.add("");
+                int w = addon.getConfig().getInt("scoreboard.max-width", 140);
+                String head = "<green>" + SmallCaps.of("SPIELER ONLINE");
+                out.add(textured ? SbUi.center(head) : ScoreboardText.center(head, w));
+                out.add(textured ? SbUi.center(online) : ScoreboardText.center(online, w));
+            }
             case "casino" -> {
                 out.add(ind.apply(row(ScoreboardText.I_RANK, "RANG", "<gray>" + rank)));
                 out.add(ind.apply(ScoreboardText.icon(ScoreboardText.I_NAME) + "<white>" + p.getName()));
@@ -313,6 +339,7 @@ public final class ScoreboardService {
                 out.add(ind.apply("<green>" + SmallCaps.of("MODUS WÄHLEN:")));
                 out.add(ind.apply("<gray>" + SmallCaps.of("LINKS:") + " <white>" + SmallCaps.of("SMP")));
                 out.add(ind.apply("<gray>" + SmallCaps.of("RECHTS:") + " <white>" + SmallCaps.of("SURVIVAL")));
+                out.add(ind.apply("<gray>" + SmallCaps.of("KOMPASS:") + " <white>" + SmallCaps.of("SKYBLOCK")));
                 out.add("");
                 out.add(mid.apply(people));
                 out.add(mid.apply(online));

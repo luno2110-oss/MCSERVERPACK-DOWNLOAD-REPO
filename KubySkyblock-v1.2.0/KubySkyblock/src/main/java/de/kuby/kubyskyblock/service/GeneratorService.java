@@ -297,6 +297,19 @@ public final class GeneratorService {
         return byPos.get(b.getWorld().getName() + ";" + b.getX() + ";" + b.getY() + ";" + b.getZ());
     }
 
+    /** Anzahl der Generatoren je Insel (Zwischenspeicher, wird bei jeder Änderung neu gezählt). */
+    private java.util.Map<Integer, Integer> counts;
+
+    public int count(int island) {
+        java.util.Map<Integer, Integer> c = counts;
+        if (c == null) {
+            c = new HashMap<>();
+            for (Gen g : byPos.values()) c.merge(g.island, 1, Integer::sum);
+            counts = c;
+        }
+        return c.getOrDefault(island, 0);
+    }
+
     public List<Gen> onIsland(int island) {
         List<Gen> out = new ArrayList<>();
         for (Gen g : byPos.values()) if (g.island == island) out.add(g);
@@ -350,6 +363,7 @@ public final class GeneratorService {
         if (is.levelOf(i) < t.unlockLevel() && !p.hasPermission("kuby.admin")) return "Diesen Generator gibt es ab Insel-Level " + t.unlockLevel() + ".";
         Gen g = new Gen(nextId++, i.slot, b.getWorld().getName(), b.getX(), b.getY(), b.getZ(), t.id(), q, Math.max(1, Math.min(level, maxLevel())));
         g.last = System.currentTimeMillis();
+        counts = null;
         byPos.put(g.key(), g);
         dirty = true;
         // Käfig einrichten, wenn der Block sicher steht (nach dem Platzieren)
@@ -362,6 +376,7 @@ public final class GeneratorService {
     /** Abbauen: Generator als Item zurück, Lager wird ausgezahlt. */
     public void remove(Player p, Gen g) {
         collect(p, g);
+        counts = null;
         byPos.remove(g.key());
         removeHologram(g);
         Type t = types.get(g.type);
@@ -673,6 +688,7 @@ public final class GeneratorService {
                             if (mat != null) g.items.put(mat, it.getLong(m));
                         }
                     }
+                    counts = null;
                     byPos.put(g.key(), g);
                 } catch (RuntimeException ex) {
                     addon.getLogger().warning("generators.yml: Generator " + k + " übersprungen (" + ex.getMessage() + ")");

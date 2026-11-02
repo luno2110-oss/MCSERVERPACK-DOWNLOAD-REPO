@@ -286,6 +286,11 @@ SMALL = {
     "H": ["XXX....XXX"] * 3 + ["XXXXXXXXXX"] * 2 + ["XXX....XXX"] * 3,
     "B": ["XXXXXXXXX.", "XXXXXXXXXX", "XXX....XXX", "XXXXXXXXX.", "XXXXXXXXXX", "XXX....XXX", "XXXXXXXXXX",
           "XXXXXXXXX."],
+    # für SKYBLOCK
+    "K": ["XXX...XXX.", "XXX..XXX..", "XXX.XXX...", "XXXXXX....", "XXXXXX....", "XXX.XXX...", "XXX..XXX..", "XXX...XXX."],
+    "Y": ["XXX...XXX", "XXX...XXX", ".XXX.XXX.", "..XXXXX..", "...XXX...", "...XXX...", "...XXX...", "...XXX..."],
+    "O": [".XXXXXXXX.", "XXXXXXXXXX", "XXX....XXX", "XXX....XXX", "XXX....XXX", "XXX....XXX", "XXXXXXXXXX", ".XXXXXXXX."],
+    "C": [".XXXXXXXXX", "XXXXXXXXXX", "XXX.......", "XXX.......", "XXX.......", "XXX.......", "XXXXXXXXXX", ".XXXXXXXXX"],
 }
 GOLD_PAL = {"up": rgb("E4B104"), "lo": rgb("F7DD2D"), "top_up": rgb("FAD830"), "top_lo": rgb("FFF4BE"),
             "left_up": rgb("F5CC24"), "left_lo": rgb("FFF0AA"), "cream": rgb("FFF6D4"),
@@ -472,6 +477,16 @@ ICONS = {
 }
 ICON_ORDER = ["coin", "gem", "xp", "trophy", "sword", "skull", "clock", "people", "rank", "team", "claim", "token",
               "level", "job", "arrow", "spawn", "compass"]
+# Skyblock-Zeilen (eigener Bereich ab 0xE060, weil ab 0xE021 die Casino-Icons liegen)
+SKY_ICONS = {
+    "island": (["..gGGg..", ".gGLLGg.", "gGGGGGGg", "dDDDDDDd", ".sSSSSs.", "..sSSs..", "...ss...", "........"],
+               {"g": "3C8A1E", "G": "6CC048", "L": "A8E070", "d": "6A4222", "D": "9A6438", "s": "6A6A74", "S": "9A9AA4"}),
+    "generator": (["oOOOOOOo", "o.k..k.o", "oKkYYkKo", "o.kYYk.o", "oKkYYkKo", "o.k..k.o", "oOOOOOOo", "........"],
+                  {"o": "2A2E38", "O": "6E7A90", "k": "3C4352", "K": "8E9AB2", "Y": "FFD24A"}),
+    "oneblock": (["...gg...", ".gGLLGg.", "gGGLLGGg", "dgGGGGgD", "dDdggDdD", "dDDdDDDD", ".dDDDDD.", "...dd..."],
+                 {"g": "4A9634", "G": "6CC048", "L": "A8E070", "d": "5A3818", "D": "8A5A30"}),
+}
+SKY_ORDER = ["island", "generator", "oneblock"]
 
 
 def icon(name):
@@ -648,8 +663,13 @@ def build(out, spaces):
 
     for i, (mode, word) in enumerate([("smp", "SMP"), ("survival", "SURVIVAL"), ("hub", "HUB")]):
         save(logo(word, arrows=(mode == "smp")), "logo_" + mode, LOGO_H, LOGO_H - 1, chr(0xE050 + i))
+    # 0xE053 ist das Casino-Logo (build_sb_casino.py)
+    save(logo("SKYBLOCK"), "logo_skyblock", LOGO_H, LOGO_H - 1, chr(0xE054))
     for i, name in enumerate(ICON_ORDER):
         save(icon(name), "sb_" + name, 8, 7, chr(0xE010 + i))
+    ICONS.update(SKY_ICONS)
+    for i, name in enumerate(SKY_ORDER):
+        save(icon(name), "sb_" + name, 8, 7, chr(0xE060 + i))
     # Casino-Variante (Rahmen, Logo, Deko, Icons), siehe build_sb_casino.py
     import build_sb_casino
     build_sb_casino.build(save)

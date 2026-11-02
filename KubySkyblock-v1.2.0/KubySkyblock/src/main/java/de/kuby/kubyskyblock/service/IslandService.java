@@ -727,10 +727,22 @@ public final class IslandService {
         return l.subList(0, Math.min(n, l.size()));
     }
 
+    /** Platz nach Punkten. Aus einem Zwischenspeicher, der höchstens alle 30 Sekunden neu sortiert wird (Scoreboard fragt oft). */
     public int rank(Island i) {
-        List<Island> l = top(Integer.MAX_VALUE);
-        return l.indexOf(i) + 1;
+        if (i == null) return 0;
+        long now = System.currentTimeMillis();
+        if (now - rankAt > 30_000) {
+            rankAt = now;
+            java.util.Map<Integer, Integer> m = new java.util.HashMap<>();
+            List<Island> l = top(Integer.MAX_VALUE);
+            for (int k = 0; k < l.size(); k++) m.put(l.get(k).slot, k + 1);
+            ranks = m;
+        }
+        return ranks.getOrDefault(i.slot, 0);
     }
+
+    private volatile java.util.Map<Integer, Integer> ranks = java.util.Map.of();
+    private long rankAt;
 
     public static String nameOf(UUID id) {
         if (id == null) return "?";

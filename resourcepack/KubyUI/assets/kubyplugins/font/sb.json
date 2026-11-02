@@ -333,6 +333,15 @@
   },
   {
    "type": "bitmap",
+   "file": "kubyplugins:sb/logo_skyblock.png",
+   "height": 32,
+   "ascent": 31,
+   "chars": [
+    "\ue054"
+   ]
+  },
+  {
+   "type": "bitmap",
    "file": "kubyplugins:sb/sb_coin.png",
    "height": 8,
    "ascent": 7,
@@ -482,6 +491,33 @@
    "ascent": 7,
    "chars": [
     "\ue020"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_island.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    "\ue060"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_generator.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    "\ue061"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kubyplugins:sb/sb_oneblock.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    "\ue062"
    ]
   },
   {

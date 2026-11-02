@@ -36,6 +36,10 @@ public final class ScoreboardText {
     public static final String I_CHIP = "\uE022";
     public static final String I_SEVEN = "\uE023";
     public static final String I_DICE = "\uE024";
+    // Skyblock (eigener Bereich, build_sb_pack.SKY_ORDER)
+    public static final String I_ISLAND = "\uE060";
+    public static final String I_GENERATOR = "\uE061";
+    public static final String I_ONEBLOCK = "\uE062";
 
     private static final Pattern TEXT = Pattern.compile(">([^<]+)");
     private static final Pattern TAGS = Pattern.compile("<[^>]+>");

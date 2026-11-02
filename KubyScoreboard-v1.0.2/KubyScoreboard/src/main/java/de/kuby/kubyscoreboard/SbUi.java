@@ -65,6 +65,7 @@ final class SbUi {
             case "smp" -> base;
             case "survival" -> (char) (base + 1);
             case "casino" -> (char) (base + 3);
+            case "skyblock" -> (char) (base + 4);
             default -> (char) (base + 2);
         };
     }

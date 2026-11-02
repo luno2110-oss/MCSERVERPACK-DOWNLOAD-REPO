@@ -110,6 +110,7 @@ public final class SkyblockCommand implements BiConsumer<Player, String[]> {
                 int made = addon.loot().generate(p.getWorld(), Math.min(200, n));
                 Msg.send(p, "<green>" + made + " Loot-Inseln erzeugt.");
             }
+            case "einrichten", "setup" -> de.kuby.kubyskyblock.service.SkyblockSetup.run(addon, p);
             case "oneblock" -> {
                 if (args.length < 3 || !args[2].equalsIgnoreCase("setup")) { help(p); return; }
                 int made = addon.oneblock().setup(p.getWorld());
@@ -122,6 +123,7 @@ public final class SkyblockCommand implements BiConsumer<Player, String[]> {
     }
 
     private void help(Player p) {
+        Msg.send(p, "<gold>/kp skyblock einrichten <dark_gray>- <gray>Alles auf einmal: Welt, Spawn-Insel, Spawn, One-Blocks, Loot-Inseln");
         Msg.send(p, "<gold>/kp skyblock tool <dark_gray>- <gray>Werkzeug holen");
         Msg.send(p, "<gold>/kp skyblock template save <id> [Name] <dark_gray>- <gray>Insel-Vorlage aus den Ecken (Icon = Item in der Hand)");
         Msg.send(p, "<gold>/kp skyblock template list|delete <id> <dark_gray>- <gray>Vorlagen ansehen oder löschen");

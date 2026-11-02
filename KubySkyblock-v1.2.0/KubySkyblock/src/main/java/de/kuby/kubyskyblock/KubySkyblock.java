@@ -97,7 +97,26 @@ public final class KubySkyblock extends JavaPlugin {
         });
         core.registerStat("generators", id -> {
             var i = islands.islandOf(id);
-            return i == null || generators == null ? 0L : (long) generators.onIsland(i.slot).size();
+            return i == null || generators == null ? 0L : (long) generators.count(i.slot);
+        });
+        core.registerStat("island_rank", id -> (long) islands.rank(islands.islandOf(id)));
+        core.registerStat("generator_slots", id -> {
+            var i = islands.islandOf(id);
+            return i == null || generators == null ? 0L : (long) generators.slots(i);
+        });
+        // Texte fürs Scoreboard (schnell: nur Nachschlagen in Maps)
+        core.registerText("sb_boost", id -> {
+            var i = islands.islandOf(id);
+            double[] b = i == null || generators == null ? null : generators.boost(i.slot);
+            return b == null ? "" : "x" + de.kuby.kubyskyblock.service.GeneratorService.fmt(b[0]) + " "
+                    + de.kuby.kubyplugins.service.KitService.format((long) b[1] - System.currentTimeMillis());
+        });
+        core.registerText("sb_oneblock", id -> {
+            if (oneblock == null) return "";
+            var t = oneblock.team(id);
+            if (t == null) return "";
+            var pf = oneblock.claimOf(t);
+            return (pf == null ? "Stufe " : "#" + (pf.index + 1) + " · Stufe ") + oneblock.progress(t).total();
         });
         core.registerKpSub("skyblock", command);
         core.registerMainEntry(ModeService.SKYBLOCK, new KubyPlugins.MainEntry(org.bukkit.Material.GRASS_BLOCK, "Insel",
