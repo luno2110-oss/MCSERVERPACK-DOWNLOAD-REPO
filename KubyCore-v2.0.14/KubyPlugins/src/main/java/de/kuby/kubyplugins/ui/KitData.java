@@ -1801,7 +1801,7 @@ public final class KitData {
         HB_OB_GLUECK(32, 32, 1, "\uf28c", "Q"),
         HB_OB_TEMPO(29, 31, 1, "\uf28d", "N"),
         HB_OB_XP(30, 30, 1, "\uf28e", "O"),
-        HB_ONEBLOCK(31, 32, 1, "\uf28f", "P"),
+        HB_ONEBLOCK(30, 31, 1, "\uf28f", "O"),
         HB_PORTAL(31, 32, 1, "\uf290", "P"),
         HB_S_ENDERCHEST(16, 14, 1, "\uf291", "A"),
         HB_S_HOMES(16, 16, 1, "\uf292", "A"),

@@ -724,23 +724,107 @@ def i_mitglieder():
     return a
 
 
+class _ImgArt:
+    """Fertiges Bild als Kachel (gleiche Schnittstelle wie Art: render())."""
+
+    def __init__(self, img):
+        self.img = img
+
+    def render(self):
+        return self.img
+
+
+def iso_block(top, side_l, side_r, pal, outline="1A1108", shade=(1.0, 0.86, 0.64), size=32):
+    """Pixelgenauer Iso-Würfel (2:1): Oberseite und zwei Seiten aus 7 x 7 Texturen (Zeichen -> Farbe), jeder
+    Texel ist oben eine 4 x 2-Raute und seitlich 2 px breit und 2 px hoch. Licht: oben hell, links mittel, rechts
+    dunkel, nach unten etwas dunkler; helle Kanten oben, dunkle Mittelnaht, dunkle Kontur."""
+    T, L, R, B = (16, 2), (2, 9), (30, 9), (16, 16)
+    H = 14
+    img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    px = img.load()
+    face = {}
+
+    def inv(o, a, b, x, y):
+        # (x, y) = o + u * a + v * b  ->  (u, v)
+        det = a[0] * b[1] - a[1] * b[0]
+        dx, dy = x - o[0], y - o[1]
+        return (dx * b[1] - dy * b[0]) / det, (a[0] * dy - a[1] * dx) / det
+
+    for y in range(size):
+        for x in range(size):
+            cx, cy = x + 0.5, y + 0.5
+            u, v = inv(T, (R[0] - T[0], R[1] - T[1]), (L[0] - T[0], L[1] - T[1]), cx, cy)
+            if 0 <= u < 1 and 0 <= v < 1:
+                face[(x, y)] = ("top", u, v)
+                continue
+            u, v = inv(L, (B[0] - L[0], B[1] - L[1]), (0, H), cx, cy)
+            if 0 <= u < 1 and 0 <= v < 1:
+                face[(x, y)] = ("left", u, v)
+                continue
+            u, v = inv(B, (R[0] - B[0], R[1] - B[1]), (0, H), cx, cy)
+            if 0 <= u < 1 and 0 <= v < 1:
+                face[(x, y)] = ("right", u, v)
+    tex = {"top": top, "left": side_l, "right": side_r}
+    for (x, y), (f, u, v) in face.items():
+        t = tex[f]
+        n = len(t)
+        ch = t[min(n - 1, int(v * n))][min(n - 1, int(u * n))]
+        r, g, b = rgb(pal[ch])
+        k = shade[0] if f == "top" else shade[1] if f == "left" else shade[2]
+        if f == "top":
+            k *= 1.04 - 0.08 * (u + v) / 2          # hinten etwas heller
+            if u < 0.08 or v < 0.08:
+                k *= 1.16                           # helle Kanten hinten oben
+        else:
+            k *= 1.0 - 0.16 * v                     # nach unten dunkler (Schatten)
+            if f == "right" and u < 0.07:
+                k *= 0.78                           # Mittelnaht
+            if f == "left" and u > 0.93:
+                k *= 0.92
+            if v < 0.07:
+                k *= 1.12                           # Kante unter dem Gras
+        px[x, y] = (min(255, int(r * k)), min(255, int(g * k)), min(255, int(b * k)), 255)
+    # Kontur außen
+    oc = rgb(outline)
+    edge = []
+    for y in range(size):
+        for x in range(size):
+            if (x, y) in face:
+                continue
+            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                if (x + dx, y + dy) in face:
+                    edge.append((x, y))
+                    break
+    for (x, y) in edge:
+        px[x, y] = oc + (255,)
+    return img
+
+
 def i_oneblock():
-    """One-Block: großer Grasblock in Iso-Ansicht mit Erzen an den Seiten."""
-    a = Art(premium=True)
-    a.poly([(2, 9), (16, 16), (16, 31), (2, 24)], "9A6438")
-    a.poly([(16, 16), (30, 9), (30, 24), (16, 31)], "6E4426")
-    a.poly([(2, 9), (16, 16), (16, 20), (13, 19), (11, 21), (8, 18), (5, 18), (2, 14)], "58B83C", mode="soft")
-    a.poly([(16, 16), (30, 9), (30, 14), (27, 16), (25, 15), (22, 18), (19, 17), (16, 20)], "48A030", mode="soft")
-    a.poly([(16, 1), (30, 9), (16, 16), (2, 9)], "72D04A")
-    a.dots([(9, 8), (13, 6), (18, 5), (22, 8), (15, 10), (19, 12), (11, 11), (24, 10)], "A8EC74")
-    a.dots([(12, 9), (17, 8), (21, 11), (14, 13)], "4E9E34")
-    a.rect(6, 22, 8, 24, "62E0F0")
-    a.dot(6, 22, "E8FFFF")
-    a.rect(11, 25, 12, 26, "C8C8D0", mode="flat", edge=False)
-    a.rect(21, 22, 23, 24, "FFD24A")
-    a.dot(21, 22, "FFF6C0")
-    a.rect(25, 18, 26, 19, "E85A4A", mode="flat", edge=False)
-    return a
+    """One-Block: symmetrischer Grasblock, klare 7 x 7-Texturen, Licht und Schatten je Seite, dunkle Kontur."""
+    pal = {"g": "62BE3E", "G": "84DA58", "d": "4DA22F", "h": "B0F282", "f": "56AE34", "F": "6CC646",
+           "D": "8F5D35", "e": "AC7748", "k": "6A4224"}
+    top = ["gGgggdg",
+           "gggGggg",
+           "dgggggG",
+           "gggdggg",
+           "gGgggGg",
+           "ggggdgg",
+           "Gggggg" + "g"]
+    side = ["FFFFFFF",
+            "fffffff",
+            "fDffDff",
+            "DDfDDkf",
+            "DkDDeDD",
+            "eDDkDDD",
+            "DDeDDkD"]
+    img = iso_block(top, side, side, pal, shade=(1.0, 0.84, 0.62))
+    # kleines Funkeln oben rechts (wie die anderen Premium-Icons)
+    px = img.load()
+    for (x, y, c) in ((28, 1, "FFFFFF"), (28, 0, "FFF6C8"), (28, 2, "FFF6C8"), (27, 1, "FFF6C8"), (29, 1, "FFF6C8")):
+        if px[x, y][3] == 0:
+            px[x, y] = rgb(c) + (255,)
+    return _ImgArt(img)
 
 
 def ob_glueck():

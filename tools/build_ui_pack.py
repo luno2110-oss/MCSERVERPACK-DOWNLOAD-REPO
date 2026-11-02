@@ -126,6 +126,14 @@ if VANILLA and os.path.isdir(VANILLA):
         holo.append(q)
     with open(os.path.join(OUT, "assets/kuby/font/holo.json"), "w", encoding="utf-8") as fh:
         json.dump({"providers": holo}, fh, ensure_ascii=False)
+    # Item-Bilder für alle Vanilla-Items (kuby:k/x…) und Kategorie-Titel im Referenz-Stil (kuby:k/h…): liegen in
+    # denselben Ordnern, die build_kit leert, also hier jedes Mal neu bauen
+    import build_item_icons  # noqa: E402
+    import build_headline  # noqa: E402
+    build_item_icons.PACK = build_headline.PACK = OUT
+    build_item_icons.VAN = VANILLA
+    build_item_icons.main()
+    build_headline.main()
 else:
     print("Hinweis: KUBY_VANILLA nicht gesetzt, Dialog-Kit nicht neu gebaut")
 
