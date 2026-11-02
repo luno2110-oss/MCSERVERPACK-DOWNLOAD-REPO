@@ -75,8 +75,14 @@ public final class GuideScreen {
 
     /** Seiten aus der config.yml (höchstens zwölf, englisch mit name-en und lines-en, wenn vorhanden). */
     public List<Page> pages(boolean en) {
+        return pages(en, null);
+    }
+
+    /** Seiten für einen Modus: guide.modi.<modus>.pages, sonst die allgemeinen guide.pages (SMP). */
+    public List<Page> pages(boolean en, String mode) {
         List<Page> out = new ArrayList<>();
-        ConfigurationSection s = plugin.getConfig().getConfigurationSection("guide.pages");
+        ConfigurationSection s = mode == null ? null : plugin.getConfig().getConfigurationSection("guide.modi." + mode + ".pages");
+        if (s == null) s = plugin.getConfig().getConfigurationSection("guide.pages");
         if (s == null) return out;
         for (String id : s.getKeys(false)) {
             ConfigurationSection p = s.getConfigurationSection(id);
@@ -129,7 +135,7 @@ public final class GuideScreen {
     /** Öffnet die Seite (Nummer, Kennung oder Name; null = erste). False, wenn es die Seite nicht gibt. */
     public boolean open(Player p, String key) {
         boolean en = plugin.playerSettings().english(p.getUniqueId());
-        List<Page> pages = pages(en);
+        List<Page> pages = pages(en, plugin.modes().modeOf(p.getUniqueId()));
         int i = find(pages, key);
         if (i < 0 || pages.isEmpty()) return false;
         open(p, i);
@@ -138,7 +144,7 @@ public final class GuideScreen {
 
     public void open(Player p, int index) {
         boolean en = plugin.playerSettings().english(p.getUniqueId());
-        List<Page> pages = pages(en);
+        List<Page> pages = pages(en, plugin.modes().modeOf(p.getUniqueId()));
         if (pages.isEmpty()) return;
         int i = Math.floorMod(index, pages.size());
         if (!plugin.uiPack().active(p)) {

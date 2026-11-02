@@ -172,10 +172,11 @@ final class SelfTest {
             public Consumer<Player> page(int index) { return NO; }
             public String url(String target) { return "https://discord.gg/kuby"; }
         };
+        for (String gm : new String[]{null, de.kuby.kubyplugins.service.ModeService.SKYBLOCK})
         for (boolean en : new boolean[]{false, true}) {
-            List<de.kuby.kubyplugins.gui.GuideScreen.Page> guide = plugin.guide().pages(en);
+            List<de.kuby.kubyplugins.gui.GuideScreen.Page> guide = plugin.guide().pages(en, gm);
             if (guide.isEmpty()) fails.add("Guide: keine Seiten in guide.pages");
-            String lang = en ? " (englisch)" : "";
+            String lang = (gm == null ? "" : " " + gm) + (en ? " (englisch)" : "");
             for (int i = 0; i < guide.size(); i++) {
                 final int k = i;
                 de.kuby.kubyplugins.gui.GuideScreen.Page pg = guide.get(i);
