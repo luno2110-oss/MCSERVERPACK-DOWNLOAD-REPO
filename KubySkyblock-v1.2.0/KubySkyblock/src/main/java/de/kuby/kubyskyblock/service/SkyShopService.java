@@ -77,8 +77,7 @@ public final class SkyShopService {
     }
 
     static String nice(Material m) {
-        String n = m.name().toLowerCase().replace('_', ' ');
-        return Character.toUpperCase(n.charAt(0)) + n.substring(1);
+        return de.kuby.kubyplugins.ui.ItemNames.de(m);
     }
 
     /** Eigene Items (Generatoren, Event-Items, umbenannte Sachen) nie verkaufen. */

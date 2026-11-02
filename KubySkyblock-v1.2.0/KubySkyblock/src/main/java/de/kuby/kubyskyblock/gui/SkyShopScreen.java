@@ -1,7 +1,6 @@
 package de.kuby.kubyskyblock.gui;
 
 import de.kuby.kubyplugins.ui.Canvas;
-import de.kuby.kubyplugins.ui.Icons;
 import de.kuby.kubyplugins.ui.KitData;
 import de.kuby.kubyplugins.ui.UiDialog;
 import de.kuby.kubyplugins.util.Msg;
@@ -41,7 +40,7 @@ public final class SkyShopScreen {
         };
     }
 
-    public record Card(KitData.Icon icon, String name, String buyLine, String sellLine, boolean canBuy, boolean canSell,
+    public record Card(org.bukkit.Material material, String name, String buyLine, String sellLine, boolean canBuy, boolean canSell,
                        Consumer<Player> buy, Consumer<Player> sell) {}
 
     public record View(String section, long coins, List<String> tabs, int tab, List<Card> cards, int page, int pages,
@@ -70,7 +69,7 @@ public final class SkyShopScreen {
         List<Card> cards = new ArrayList<>();
         for (Entry e : sec.entries().subList(pg * per, Math.min(sec.entries().size(), pg * per + per))) {
             int have = s.count(p, e.material());
-            cards.add(new Card(Icons.of(e.material(), KitData.Icon.PAPER), e.name(),
+            cards.add(new Card(e.material(), e.name(),
                     e.buy() > 0 ? "x" + e.amount() + " · " + Msg.coins(e.buy()) + " $" : "nur Verkauf",
                     e.sell() > 0 ? Msg.coins(e.sell()) + " $/St. · du hast " + have : "kein Verkauf",
                     e.buy() > 0 && coins >= e.buy(), e.sell() > 0 && have > 0,
@@ -124,7 +123,7 @@ public final class SkyShopScreen {
             Card cd = v.cards().get(i);
             int x = (i % 2) * (cw + 4), cy = y + (i / 2) * (ch + 4);
             c.box(x, cy, cw, ch, KitData.Box.CLOUD_CARD);
-            c.icon(x + 5, cy + 12, cd.icon(), true);
+            c.item(x + 5, cy + 12, cd.material(), true, KitData.Icon.PAPER);
             c.text(x + 40, cy + 5, Canvas.fit(cd.name(), true, cw - 46), CLOUD, true);
             c.text(x + 40, cy + 16, Canvas.fit(cd.buyLine(), false, cw - 46), GOLD, false);
             c.text(x + 40, cy + 26, Canvas.fit(cd.sellLine(), false, cw - 46), GREEN, false);
@@ -181,7 +180,7 @@ public final class SkyShopScreen {
         String w = "W".repeat(40);
         List<Card> cards = new ArrayList<>();
         for (int k = 0; k < 10; k++) {
-            cards.add(new Card(KitData.Icon.GRASS_BLOCK, w, "x64 · 999.999.999 $", "999.999 $/St. · du hast 9.999", k % 2 == 0, k % 3 == 0,
+            cards.add(new Card(org.bukkit.Material.GRASS_BLOCK, w, "x64 · 999.999.999 $", "999.999 $/St. · du hast 9.999", k % 2 == 0, k % 3 == 0,
                     k % 4 == 3 ? null : no, k % 5 == 4 ? null : no));
         }
         List<String> tabs = List.of("Start & Natur", "Farmen", "Blöcke", "Erze", "Mob-Drops", "Werkzeug");

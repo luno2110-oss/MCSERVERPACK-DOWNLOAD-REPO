@@ -63,20 +63,19 @@ public final class TradeScreens {
             new ShopMenu(plugin).open(p);
             return;
         }
-        ShopMenu menu = new ShopMenu(plugin);
+        ShopItemScreen items = new ShopItemScreen(plugin);
         List<Card> cats = List.of(
-                new Card(KitData.Sprite.HB_C_BLOECKE, "Blöcke", "Bausteine und Baumaterial", n("blocks"), go(pl -> menu.section(pl, "blocks"))),
-                new Card(KitData.Sprite.HB_C_ESSEN, "Essen", "Nahrung für unterwegs", n("food"), go(pl -> menu.section(pl, "food"))),
-                new Card(KitData.Sprite.HB_C_REDSTONE, "Redstone", "Schaltungen und Mechanik", n("redstone"), go(pl -> menu.section(pl, "redstone"))),
-                new Card(KitData.Sprite.HB_C_DEKO, "Dekoration", "Für dein Zuhause", n("deco"), go(pl -> menu.section(pl, "deco"))),
+                new Card(KitData.Sprite.HB_C_BLOECKE, "Blöcke", "Bausteine und Baumaterial", n("blocks"), go(pl -> items.open(pl, "blocks", 0))),
+                new Card(KitData.Sprite.HB_C_ESSEN, "Essen", "Nahrung für unterwegs", n("food"), go(pl -> items.open(pl, "food", 0))),
+                new Card(KitData.Sprite.HB_C_REDSTONE, "Redstone", "Schaltungen und Mechanik", n("redstone"), go(pl -> items.open(pl, "redstone", 0))),
+                new Card(KitData.Sprite.HB_C_DEKO, "Dekoration", "Für dein Zuhause", n("deco"), go(pl -> items.open(pl, "deco", 0))),
                 new Card(KitData.Sprite.PT_GIFT_BIG, "Wochenende", "Jedes Wochenende neue Angebote", null,
-                        go(pl -> menu.section(pl, ShopService.WEEKEND))),
-                new Card(KitData.Sprite.HB_C_DAILY, "Daily Shop", "Jeden Tag neu, mit Juwelen", null, go(pl -> menu.section(pl, ShopService.DAILY))));
+                        go(pl -> items.open(pl, ShopService.WEEKEND, 0))),
+                new Card(KitData.Sprite.HB_C_DAILY, "Daily Shop", "Jeden Tag neu, mit Juwelen", null, go(pl -> items.open(pl, ShopService.DAILY, 0))));
         List<Card> tools = new ArrayList<>(List.of(
                 new Card(KitData.Sprite.HB_WIRTSCHAFT, "Verkaufen", "Items verkaufen", null, go(pl -> SellMenu.open(plugin, pl))),
                 new Card(KitData.Sprite.HB_C_SUCHE, "Suche", "Name, ID oder Material", null, go(pl -> plugin.prompts().ask(pl,
-                        "Name, ID, Material oder Nummer eingeben:", text -> new ShopSectionMenu(plugin, "Suche", "search",
-                                plugin.shop().search(text), 0).open(pl)))),
+                        "Name, ID, Material oder Nummer eingeben:", text -> items.search(pl, text)))),
                 new Card(KitData.Sprite.QU_BOX_HEAD, "Abholbox", "Gekaufte Items", null, go(pl -> new ShopStorageMenu(plugin, 0).open(pl))),
                 new Card(KitData.Sprite.HB_BOERSE, "Börse", "Kurse und Anteile", null, go(pl -> new ExtraScreens(plugin).investments(pl)))));
         if (p.hasPermission("kuby.admin")) {

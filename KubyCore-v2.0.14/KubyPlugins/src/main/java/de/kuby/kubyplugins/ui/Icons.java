@@ -57,6 +57,16 @@ public final class Icons {
         return of(m, KitData.Icon.PAPER);
     }
 
+    /** Eigenes Kit-Icon nur für genau dieses Material (mit Alias und Familien wie Betten), sonst null. */
+    public static KitData.Icon exact(Material m) {
+        if (m == null) return null;
+        KitData.Icon ic = of(m, null);
+        if (ic != null) return ic;
+        String n = m.name();
+        if (n.contains("CHEST") && !n.contains("MINECART")) return KitData.Icon.CHEST_BLOCK;
+        return null;
+    }
+
     private static KitData.Icon find(String name) {
         try {
             return KitData.Icon.valueOf(name.toUpperCase(Locale.ROOT));

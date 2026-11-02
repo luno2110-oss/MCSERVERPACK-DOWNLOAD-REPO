@@ -38,7 +38,7 @@ public final class Canvas {
 
     private static final int LINE = 9;
 
-    private enum Kind { TEXT, BG, ICON }
+    private enum Kind { TEXT, BG, ICON, ITEM }
 
     private static final class Glyph {
         final Kind kind;
@@ -534,6 +534,24 @@ public final class Canvas {
         return this;
     }
 
+    /**
+     * Bild eines beliebigen Items (16 x 16, big: 32 x 32) mit linker oberer Ecke bei (x, y): Blöcke in 3D wie im
+     * Inventar, Items flach (ItemIcons). Ohne eigenes Bild (Truhen, Betten, Banner, Köpfe …) das passende Kit-Icon,
+     * sonst fallback.
+     */
+    public Canvas item(int x, int y, org.bukkit.Material m, boolean big, KitData.Icon fallback) {
+        ItemIcons.Entry e = ItemIcons.of(m);
+        if (e == null) {
+            KitData.Icon kit = Icons.exact(m);
+            return icon(x, y, kit != null ? kit : fallback, big);
+        }
+        int size = big ? 32 : 16;
+        char c = (char) ((big ? 0xE000 : 0xE800) + e.index());
+        glyphs.add(new Glyph(Kind.ITEM, x, y, size, size, big ? e.adv32() : e.adv16(), Z_ICON, String.valueOf(c),
+                NamedTextColor.WHITE, false, Math.max(KitData.I_MIN, 7 - size), KitData.I_MAX, y, y + size));
+        return this;
+    }
+
     /** Vanilla-Icon in 8 x 8 (halbe Größe, z. B. Gegenstände in Quest-Zielen). Nur für Vanilla-Icons (c8 != 0). */
     public Canvas icon8(int x, int y, KitData.Icon icon) {
         if (icon.c8 == 0) return icon(x, y, icon, false);
@@ -768,6 +786,7 @@ public final class Canvas {
                 case TEXT -> "k/t" + shift;
                 case BG -> "k/b" + shift;
                 case ICON -> "k/i" + shift;
+                case ITEM -> "k/x" + shift;
             });
             int gap = g.x - cursor;
             if (gap != 0) {

@@ -130,46 +130,21 @@ public final class ShopSectionMenu extends GuiMenu {
     }
 
     private void buy(Player p, ShopService.Item it) {
-        UUID id = p.getUniqueId();
-        boolean wk = weekendView();
-        boolean dl = dailyView();
-        if (!wk && !dl && !plugin.investments().isActive(it.id())) {
-            String err = plugin.investments().reactivate(id, it);
-            result(p, err, "<green>Item ist wieder im Shop!");
-            new ShopSectionMenu(plugin, title, section, plugin.shop().items(section), page).open(p);
-            return;
-        }
-        long price = wk || dl ? it.price() : plugin.investments().priceOf(it);
-        if (wk && plugin.shop().isBought(id, it.id())) {
-            result(p, "Dieses Angebot hast du schon gekauft.", null);
-            return;
-        }
-        if (dl && plugin.shop().dailyBoughtBy(id, it.id())) {
-            result(p, "Dieses Angebot hast du heute schon gekauft.", null);
-            return;
-        }
-        boolean paid = dl ? plugin.jewels().take(id, price) : plugin.economy().withdraw(id, price);
-        if (!paid) {
-            result(p, dl ? "Du brauchst " + it.price() + " Juwelen." : "Nicht genug$ (" + Msg.coins(it.price()) + ").", null);
-            return;
-        }
-        if (!plugin.shopStorage().add(id, new ItemStack(it.material(), it.amount()))) {
-            if (dl) plugin.jewels().add(id, price);
-            else plugin.economy().deposit(id, price);
-            result(p, "Die Abholbox ist voll. Hol Items ab oder schalte eine Seite frei.", null);
-            return;
-        }
-        if (wk) plugin.shop().markBought(id, it.id());
-        if (!wk && !dl) plugin.investments().recordSale(it.id(), it.amount(), price);
-        if (dl) plugin.shop().markDailyBought(id, it.id());
-        Sfx.play(plugin, p, Sfx.Kind.COIN);
-        Msg.send(p, "<green>Gekauft! <gray>Hol es in der Abholbox ab.");
-        if (wk) {
-            new ShopSectionMenu(plugin, title, section, plugin.shop().weekendPicks(id), 0).open(p);
-        } else if (dl) {
-            new ShopSectionMenu(plugin, title, section, plugin.shop().dailyItems(id), 0).open(p);
+        boolean wk = weekendView(), dl = dailyView();
+        boolean reactivate = !wk && !dl && !plugin.investments().isActive(it.id());
+        String err = ShopItemScreen.purchase(plugin, p, section, it);
+        if (err != null) {
+            result(p, err, null);
         } else {
-            open(p);
+            Sfx.play(plugin, p, Sfx.Kind.COIN);
+            Msg.send(p, reactivate ? "<green>Item ist wieder im Shop!" : "<green>Gekauft! <gray>Hol es in der Abholbox ab.");
+        }
+        if (wk) {
+            new ShopSectionMenu(plugin, title, section, plugin.shop().weekendPicks(p.getUniqueId()), 0).open(p);
+        } else if (dl) {
+            new ShopSectionMenu(plugin, title, section, plugin.shop().dailyItems(p.getUniqueId()), 0).open(p);
+        } else {
+            new ShopSectionMenu(plugin, title, section, section.equals("search") ? list : plugin.shop().items(section), page).open(p);
         }
     }
 
@@ -185,6 +160,6 @@ public final class ShopSectionMenu extends GuiMenu {
     }
 
     private static String pretty(Material m) {
-        return m.name().toLowerCase(Locale.ROOT).replace('_', ' ');
+        return de.kuby.kubyplugins.ui.ItemNames.de(m);
     }
 }

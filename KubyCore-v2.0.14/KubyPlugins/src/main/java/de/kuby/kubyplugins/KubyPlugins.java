@@ -244,6 +244,7 @@ public final class KubyPlugins extends JavaPlugin {
             }
         }
         de.kuby.kubyplugins.gui.TradingScreen.samples(this::registerSelfTestCanvas);
+        de.kuby.kubyplugins.gui.ShopItemScreen.samples(this::registerSelfTestCanvas);
         registerMainEntry(new MainEntry(org.bukkit.Material.NETHER_STAR, "Erfolge", "Fortschritt und Belohnungen",
                 p -> new de.kuby.kubyplugins.gui.ProgressScreens(this).achievements(p, 0)));
         blackjack = new de.kuby.kubyplugins.casino.BlackjackService(this);
