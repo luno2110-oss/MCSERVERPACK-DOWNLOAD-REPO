@@ -855,57 +855,11 @@ def c_suche():
 
 
 # ---------------------------------------------------------------------------------------------------------- Skyblock
-def i_generator(cage="gold", core="tuerkis", glow="feuer"):
-    """Generator: Spawner-Käfig als Iso-Würfel wie die Generator-Grafiken im Spiel: 2-px-Rahmen, dünne Gitterstäbe
-    in Dritteln (Muster), dunkles Inneres, nur die Felder an der Mitte glühen, schwebender Edelstein vorn."""
-    face = iso_map((16, 2), (2, 9), (30, 9), (16, 16), 14)
-    S = set(face)
-    N4 = ((1, 0), (-1, 0), (0, 1), (0, -1))
-    ring1 = {p for p in S if any((p[0] + dx, p[1] + dy) not in S for dx, dy in N4)}
-    ring2 = {p for p in S - ring1 if any((p[0] + dx, p[1] + dy) in ring1 for dx, dy in N4)}
-    seam = {p for p in S if any((p[0] + dx, p[1] + dy) in S and face[(p[0] + dx, p[1] + dy)][0] != face[p][0]
-                                for dx, dy in N4)}
-    cn, gn = len(RAMPS[cage]), len(RAMPS[glow])
-
-    def third(t):
-        return int(t * 3 - 1e-9)
-    pix = {}
-    for p, (f, u, v) in face.items():
-        x, y = p
-        bar = False
-        for dx, dy in ((1, 0), (0, 1)):
-            q = (x + dx, y + dy)
-            if q in face and face[q][0] == f and (third(face[q][1]) != third(u) or third(face[q][2]) != third(v)):
-                bar = True
-        side = {"top": 0, "left": 1, "right": 2}[f]
-        if p in ring1 or p in ring2 or p in seam:
-            k = (cn - 2, cn // 2, 2)[side]
-            if p in ring1 and f == "top":
-                k = cn - 1
-            if p in seam and f == "left":
-                k = cn // 2 + 1
-            if p in seam and f == "right":
-                k = 1
-            pix[p] = (cage, k)
-        elif bar:
-            pix[p] = (cage, (cn // 2, 3, 2)[side])
-        else:
-            near = {"top": (2, 2), "left": (2, 0), "right": (0, 0)}[f]
-            dist = abs(third(u) - near[0]) + abs(third(v) - near[1])
-            if dist == 0:
-                pix[p] = (glow, gn - 2 - side)
-            elif dist == 1:
-                pix[p] = (glow, gn - 5 - side)
-            else:
-                pix[p] = ("kessel", 1 if f == "top" else 0)
-    rows = ["..9988..",
-            ".998876.",
-            "88776655",
-            ".766544.",
-            "..5543..",
-            "...43..."]
-    gem = {p: (core, int(c)) for p, c in grid(rows, 12, 13).items()}
-    return Img(stack(layer(pix), layer(gem)))
+def i_generator():
+    """Generator: genau die Grafik der Skyblock-Generatoren im Spiel (Edelstein-Generator im goldenen Käfig aus
+    tools/build_generator_art.py), damit Menü und Generatoren gleich aussehen."""
+    import build_generator_art as gen
+    return Img(gen.art("edelstein", "gold"))
 
 
 def i_groesse():

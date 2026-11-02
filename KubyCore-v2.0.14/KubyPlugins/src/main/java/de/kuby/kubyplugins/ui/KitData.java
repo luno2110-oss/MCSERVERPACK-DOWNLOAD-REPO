@@ -1778,7 +1778,7 @@ public final class KitData {
         HB_C_SUCHE(32, 32, 1, "\uf275", "Q"),
         HB_DUELLE(32, 32, 1, "\uf276", "Q"),
         HB_DUO_RTP(31, 30, 1, "\uf277", "P"),
-        HB_GENERATOR(30, 30, 1, "\uf278", "O"),
+        HB_GENERATOR(31, 32, 1, "\uf278", "P"),
         HB_GENERATOR_T2(32, 32, 1, "\uf279", "P"),
         HB_GENERATOR_T3(32, 32, 1, "\uf27a", "P"),
         HB_GROESSE(32, 32, 1, "\uf27b", "Q"),
