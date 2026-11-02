@@ -70,6 +70,7 @@ public final class KubySkyblock extends JavaPlugin {
         de.kuby.kubyskyblock.gui.SkyScreen.samples(core::registerSelfTestCanvas);
         de.kuby.kubyskyblock.gui.IslandScreen.samples(core::registerSelfTestCanvas);
         de.kuby.kubyskyblock.gui.GeneratorScreen.samples(core::registerSelfTestCanvas);
+        de.kuby.kubyskyblock.gui.OneBlockScreen.samples(core::registerSelfTestCanvas);
         saveDefaultConfig();
         islands = new IslandService(this, core);
         streaks = new StreakService(this, core);
@@ -107,6 +108,8 @@ public final class KubySkyblock extends JavaPlugin {
                 "Alle Items sammeln, Erfolge und Meilensteine", pl -> new de.kuby.kubyskyblock.gui.SkyScreen(core).open(pl)));
         core.registerMainEntry(ModeService.SKYBLOCK, new KubyPlugins.MainEntry(org.bukkit.Material.BLAST_FURNACE, "Generatoren",
                 "Geld, XP und Items von selbst: kaufen, aufstellen, einsammeln", de.kuby.kubyskyblock.gui.GeneratorScreen::island));
+        core.registerMainEntry(ModeService.SKYBLOCK, new KubyPlugins.MainEntry(org.bukkit.Material.GRASS_BLOCK, "One-Block",
+                "Block fürs Team beanspruchen, Block-XP sammeln, Glück, Tempo und Bonus verbessern", de.kuby.kubyskyblock.gui.OneBlockScreen::open));
         getServer().getPluginManager().registerEvents(new SkyblockListener(this, core), this);
         getServer().getPluginManager().registerEvents(new ProgressListener(this, core), this);
         getServer().getPluginManager().registerEvents(new de.kuby.kubyskyblock.listener.IslandListener(this, core), this);
@@ -126,6 +129,12 @@ public final class KubySkyblock extends JavaPlugin {
             }
         });
         if (getCommand("skyblock") != null) getCommand("skyblock").setExecutor(new SkyblockPlayerCommand(core));
+        var obc = getCommand("oneblock");
+        if (obc != null) {
+            var oc = new de.kuby.kubyskyblock.command.OneBlockCommand(this, core);
+            obc.setExecutor(oc);
+            obc.setTabCompleter(oc);
+        }
         var insel = getCommand("insel");
         if (insel != null) {
             var ic = new de.kuby.kubyskyblock.command.IslandCommand(this, core);
@@ -145,6 +154,10 @@ public final class KubySkyblock extends JavaPlugin {
         if (generators != null) {
             generators.removeHolograms();
             generators.save();
+        }
+        if (oneblock != null) {
+            oneblock.removeHolograms();
+            oneblock.save();
         }
     }
 }

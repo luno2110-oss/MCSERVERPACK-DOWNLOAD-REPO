@@ -608,6 +608,97 @@ def i_mitglieder():
     return a
 
 
+def i_oneblock():
+    """Schwebender Grasblock (One-Block) mit Erz-Funken und Spitzhacke."""
+    a = Art()
+    a.ground_shadow(6, 27, 26, 31, 60)
+    a.poly([(4, 10), (16, 16), (16, 29), (4, 23)], "8A5A32")
+    a.poly([(16, 16), (28, 10), (28, 23), (16, 29)], "6E4626")
+    a.poly([(4, 10), (16, 16), (16, 19), (4, 13)], "5CB040", mode="soft")
+    a.poly([(16, 16), (28, 10), (28, 13), (16, 19)], "4A9634", mode="soft")
+    a.poly([(16, 4), (28, 10), (16, 16), (4, 10)], "6CC048")
+    a.dots([(12, 8), (17, 7), (21, 10), (14, 11)], "A2E070")
+    a.rect(8, 18, 9, 19, "62D6E0", mode="flat", edge=False)
+    a.rect(20, 21, 21, 22, "F2C443", mode="flat", edge=False)
+    a.rect(11, 23, 12, 24, "C8C8D0", mode="flat", edge=False)
+    a.line([(23, 0), (30, 7)], "C8D2E0", 2)
+    a.line([(26, 3), (21, 8)], WOOD, 2)
+    a.sparkle(5, 3, 2, "E0F4FF")
+    a.sparkle(30, 17, 1)
+    return a
+
+
+def ob_glueck():
+    a = Art()
+    for cx, cy in ((11, 9), (21, 9), (11, 19), (21, 19)):
+        a.ellipse(cx - 6, cy - 6, cx + 6, cy + 6, "4CC858")
+    a.ellipse(12, 10, 20, 18, "6CE070", mode="soft", edge=False)
+    a.line([(16, 18), (19, 30)], "3A9A44", 2)
+    a.dots([(9, 6), (19, 6)], "C8FFC0")
+    a.sparkle(28, 4, 2)
+    return a
+
+
+def ob_cooldown():
+    a = Art()
+    a.rect(7, 2, 24, 5, WOOD)
+    a.rect(7, 26, 24, 29, WOOD)
+    a.poly([(9, 6), (22, 6), (17, 15), (22, 25), (9, 25), (14, 15)], "D8F0FF")
+    a.poly([(11, 8), (20, 8), (16, 13)], "F2C443", mode="soft", edge=False)
+    a.poly([(16, 18), (21, 24), (10, 24)], "F2C443", mode="soft", edge=False)
+    a.dots([(16, 15), (16, 16)], "F2C443")
+    a.sparkle(28, 14, 1, "E0F4FF")
+    return a
+
+
+def ob_tempo():
+    a = Art()
+    a.line([(9, 26), (23, 8)], WOOD, 3)
+    a.poly([(10, 4), (19, 2), (29, 9), (30, 16), (24, 10), (17, 6)], "62D6E0")
+    a.dots([(18, 3), (20, 3)], "E0FFFF")
+    for y in (17, 21, 25):
+        a.line([(1, y), (6, y)], "F2C443", 1, mode="flat", edge=False)
+    a.sparkle(27, 25, 1)
+    return a
+
+
+def ob_xp():
+    a = Art()
+    a.ellipse(5, 5, 27, 27, "6AD83E")
+    a.ellipse(9, 9, 23, 23, "B8FF6A", mode="soft", edge=False)
+    a.ellipse(13, 13, 19, 19, "F2FFC8", mode="flat", edge=False)
+    a.dots([(9, 9), (10, 8)], "FFFFFF")
+    a.sparkle(27, 4, 2, "E0FFB8")
+    return a
+
+
+def ob_geld():
+    a = Art()
+    a.ground_shadow(3, 26, 29, 31)
+    for i, (x, y) in enumerate(((3, 18), (3, 14), (3, 10), (15, 20), (15, 16))):
+        a.ellipse(x, y, x + 14, y + 7, GOLD)
+    a.ellipse(12, 3, 29, 15, "FFD84A")
+    a.ellipse(16, 5, 25, 13, "F2B42A", mode="soft", edge=False)
+    a.dots([(20, 7), (20, 8), (20, 9), (20, 10)], "FFF2B0")
+    a.sparkle(4, 4, 2)
+    return a
+
+
+def ob_beute():
+    a = Art()
+    a.ground_shadow(2, 26, 30, 31)
+    a.rect(2, 14, 15, 27, "C88A3A")
+    a.rect(2, 14, 15, 17, "A86A2A")
+    a.rect(7, 16, 9, 19, GOLD, mode="flat")
+    a.rect(16, 9, 29, 22, "C88A3A")
+    a.rect(16, 9, 29, 12, "A86A2A")
+    a.rect(21, 11, 23, 14, GOLD, mode="flat")
+    a.dots([(4, 15), (18, 10)], "E8B070")
+    a.sparkle(26, 3, 2)
+    a.sparkle(6, 6, 1, "F0C8FF")
+    return a
+
+
 # ---------------------------------------------------------------- Knöpfe (16 px)
 def s_wildnis():
     a = Art(16)
@@ -765,7 +856,9 @@ TILES = [("menu", i_menu), ("angeln", i_angeln), ("jobs", i_jobs), ("grundstueck
          ("versicherung", i_versicherung), ("shop", i_shop), ("markt", i_markt), ("wirtschaft", i_wirtschaft),
          ("boerse", i_boerse), ("tagespot", i_tagespot), ("duo_rtp", i_duo_rtp), ("spielzeit", i_spielzeit),
          ("titel", i_titel), ("kosmetik", i_kosmetik), ("haustiere", i_haustiere), ("insel", i_insel), ("generator", i_generator),
-         ("groesse", i_groesse), ("mitglieder", i_mitglieder),
+         ("groesse", i_groesse), ("mitglieder", i_mitglieder), ("oneblock", i_oneblock),
+         ("ob_glueck", ob_glueck), ("ob_cooldown", ob_cooldown), ("ob_tempo", ob_tempo), ("ob_xp", ob_xp), ("ob_geld", ob_geld),
+         ("ob_beute", ob_beute),
          ("s_wildnis", s_wildnis), ("s_homes", s_homes), ("s_enderchest", s_enderchest),
          ("alert", s_alert), ("alert_s", s_alert_small),
          ("c_bloecke", c_bloecke), ("c_essen", c_essen), ("c_redstone", c_redstone), ("c_deko", c_deko), ("c_suche", c_suche),

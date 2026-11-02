@@ -6457,3 +6457,54 @@ Weiter »	Next »
 « Zurück	« Back
  hat {} schon.	 already has {}.
 <white>/sw meine <gray>Deine Warps: Ort, Beschreibung, Kategorie, Farbe, verschieben, löschen	<white>/sw meine <gray>Your warps: location, description, category, color, move, delete
+ <gray>Block-XP: <green>{} <gray>· Stufe <white>{} <gray>· <white>/oneblock einzahlen <Menge|alles>	 <gray>Block XP: <green>{} <gray>· level <white>{} <gray>· <white>/oneblock einzahlen <amount|alles>
+ <gray>· Stufe <white>{}\n<gray>{} abgebaut	 <gray>· level <white>{}\n<gray>{} mined
+ · Block-XP {} · Stufe 	 · block XP {} · level 
+<#9AD8FF><b>/oneblock</b> <gray>Menü · <white>beanspruchen <Nr> · freigeben · einzahlen <Menge|alles> · upgrade <Art> · upgrades · tp <Nr>	<#9AD8FF><b>/oneblock</b> <gray>menu · <white>beanspruchen <no> · freigeben · einzahlen <amount|alles> · upgrade <type> · upgrades · tp <no>
+<#9AD8FF><b>{}</b> <gray>gehört jetzt eurem Team. Nur ihr baut dort ab, jeder Abbau füllt eure Block-XP. <white>/oneblock	<#9AD8FF><b>{}</b> <gray>now belongs to your team. Only you mine there, every break fills your block XP. <white>/oneblock
+<#9AD8FF><b>{}</b>\n<green>Frei <gray>· Team kann ihn beanspruchen\n<white>/oneblock	<#9AD8FF><b>{}</b>\n<green>Free <gray>· a team can claim it\n<white>/oneblock
+<gold>One-Block-Upgrade: <white>{} {} <gray>({}, von {})	<gold>One-Block upgrade: <white>{} {} <gray>({}, by {})
+<gray>{} wurde freigegeben. Eure Upgrades bleiben für den nächsten One-Block.	<gray>{} was released. Your upgrades stay for your next One-Block.
+<green>frei	<green>free
+<red>{} gehört Team {}. <gray>/oneblock	<red>{} belongs to team {}. <gray>/oneblock
+<red>{} ist wieder frei: {} Tage hat niemand aus eurem Team dort abgebaut.	<red>{} is free again: nobody from your team mined there for {} days.
+Alle Blöcke	All blocks
+Alle One-Block-Plattformen	All One-Block platforms
+Alle eigenen XP einzahlen	Deposit all your XP
+Beanspruchen geht nur im Team. Gründe eins mit /team erstellen <Name>.	Claiming only works in a team. Found one with /team erstellen <name>.
+Beansprucht: nur das Team baut ab, jeder Abbau bringt Block-XP.	Claimed: only the team mines, every break gives block XP.
+Block für andere Teams freigeben	Release the block for other teams
+Block fürs Team beanspruchen, Block-XP sammeln, Glück, Tempo und Bonus verbessern	Claim a block for your team, collect block XP, improve luck, speed and bonus
+Block-Stufe 	Block level 
+Block-XP und Upgrades	Block XP and upgrades
+Block-XP {} · Stufe {} · noch kein Block	Block XP {} · level {} · no block yet
+Chance auf doppelten Loot	Chance for double loot
+Dein Team braucht mindestens {} Mitglieder.	Your team needs at least {} members.
+Dein Team hat keinen One-Block.	Your team has no One-Block.
+Dein Team hat schon {}.	Your team already has {}.
+Dein Team zahlt {} $. Danach bauen nur noch eure Mitglieder hier ab und jeder Abbau füllt eure Block-XP. Wer {} Tage nicht abbaut, verliert den Block wieder (die Upgrades bleiben).	Your team pays {} $. After that only your members mine here and every break fills your block XP. Whoever doesn't mine for {} days loses the block again (upgrades stay).
+Deine XP:	Your XP:
+Der Block ist danach frei für andere Teams. Eure Block-XP und Upgrades bleiben und gelten wieder, sobald ihr einen Block beansprucht.	The block will then be free for other teams. Your block XP and upgrades stay and apply again as soon as you claim a block.
+Der One-Block gehört immer einem Team. Gründe eins mit /team erstellen <Name>.	A One-Block always belongs to a team. Found one with /team erstellen <name>.
+Der neue Block ist schneller da	The new block appears faster
+Die Skyblock-Welt ist nicht geladen.	The Skyblock world isn't loaded.
+Diese Plattform gibt es nicht.	This platform doesn't exist.
+Du hast keine XP zum Einzahlen.	You have no XP to deposit.
+Einzahlen geht nur im Team.	Depositing only works in a team.
+Euch fehlen noch {} Block-XP.	You still need {} block XP.
+Euer Block · Stufe {} · {} abgebaut	Your block · level {} · {} mined
+Frei · Beanspruchen: {} $	Free · claim: {} $
+Frei · für alle zum Abbauen	Free · anyone can mine
+Ihr habt schon einen	You already have one
+Mehr Geld je Abbau	More money per break
+Mehr XP je Abbau	More XP per break
+Noch keine One-Block-Plattformen (Admins: /kp skyblock oneblock setup).	No One-Block platforms yet (admins: /kp skyblock oneblock setup).
+Nur der Teamleiter kann den One-Block freigeben.	Only the team leader can release the One-Block.
+Nur im Team	Team only
+Ohne Team: /team erstellen <Name>, dann einen Block beanspruchen	No team: /team erstellen <name>, then claim a block
+Seltene Blöcke kommen öfter	Rare blocks appear more often
+Team {} · noch kein Block beansprucht	Team {} · no block claimed yet
+Upgrades gibt es nur im Team.	Upgrades are only available in a team.
+Zum 	To 
+Zum Block des Teams	To the team's block
+Zur Insel	To the island

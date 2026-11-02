@@ -597,6 +597,8 @@ modus-befehle:
   # Skyblock
   skyblock: [skyblock]
   insel: [skyblock]
+  oneblock: [skyblock]
+  ob: [skyblock]
   is: [skyblock]
   island: [skyblock]
 

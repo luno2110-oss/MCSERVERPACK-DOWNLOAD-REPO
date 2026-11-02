@@ -148,21 +148,51 @@ generatoren:
         6: {AMETHYST_SHARD: 35, LAPIS_LAZULI: 25, EMERALD: 25, DIAMOND: 15}
         10: {AMETHYST_SHARD: 25, LAPIS_LAZULI: 20, EMERALD: 28, DIAMOND: 25, ECHO_SHARD: 2}
 
+# One-Block: höchstens drei Plattformen (/kp skyblock oneblock setup). Ein Skyblock-Team kann eine beanspruchen
+# (/oneblock): dann bauen nur seine Mitglieder dort ab, jeder Abbau bringt Block-XP fürs Team, Mitglieder können
+# eigene XP einzahlen. Mit Block-XP kauft das Team Upgrades. Daten in oneblock.yml.
 oneblock:
   positions:
     - "-40;100;-60"
     - "0;100;-60"
     - "40;100;-60"
-  money: 5
-  xp: 3
-  blocks:
-    STONE: 10
-    COAL_ORE: 6
-    IRON_ORE: 4
+  money: 5            # $ je Abbau (Geld-Bonus: +10 % je Stufe)
+  xp: 3               # XP je Abbau (XP-Bonus: +10 % je Stufe)
+  team-xp: 2          # Block-XP fürs Team je Abbau (mit XP-Bonus)
+  cooldown: 1.5       # Sekunden bis der neue Block erscheint (Cooldown-Upgrade: -8 % je Stufe, höchstens -80 %)
+  claim:
+    preis: 25000      # $ zum Beanspruchen
+    min-mitglieder: 1 # so viele Leute muss das Team haben
+    verfall-tage: 7   # wer so lange nicht abbaut, verliert die Plattform (Upgrades bleiben beim Team)
+  # Upgrades: Kosten in Block-XP = basis * faktor^Stufe. Glück: seltene Blöcke öfter, Cooldown: Block schneller da,
+  # Tempo: Eile I bis V am Block, XP/Geld: +10 % je Stufe, Beute: 4 % Chance je Stufe auf doppelten Loot.
+  upgrades:
+    glueck: {max: 10, basis: 250, faktor: 1.55}
+    cooldown: {max: 10, basis: 200, faktor: 1.5}
+    tempo: {max: 5, basis: 600, faktor: 2.2}
+    xp: {max: 10, basis: 200, faktor: 1.5}
+    geld: {max: 10, basis: 200, faktor: 1.5}
+    beute: {max: 10, basis: 300, faktor: 1.55}
+  blocks:             # Block: Gewicht (je kleiner, desto seltener)
+    STONE: 14
+    DIRT: 8
+    GRASS_BLOCK: 6
+    OAK_LOG: 7
+    BIRCH_LOG: 4
+    SAND: 6
+    GRAVEL: 5
+    CLAY: 3
+    COAL_ORE: 8
+    COPPER_ORE: 6
+    IRON_ORE: 5
     GOLD_ORE: 3
+    REDSTONE_ORE: 3
+    LAPIS_ORE: 2
+    MELON: 2
+    PUMPKIN: 2
+    OBSIDIAN: 1
+    EMERALD_ORE: 1
     DIAMOND_ORE: 1
-    OAK_LOG: 6
-    SAND: 5
 # Loot-Inseln (/kp skyblock loot generate). Loot je Stufe: im Spiel bearbeitete Tabelle (/kp skyblock loot edit <stufe>),
 # sonst "list" (MATERIAL;Höchstmenge), mit random-all: true zusätzlich manchmal ein zufälliges erreichbares Item.
 loot:

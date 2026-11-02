@@ -69,6 +69,7 @@ public final class MainScreen {
             case "Top-Inseln" -> KitData.Sprite.QU_RANK_HEAD;
             case "Checkliste" -> KitData.Sprite.QU_T_SIDE;
             case "Generatoren" -> KitData.Sprite.GN_GELD_GOLD;
+            case "One-Block" -> KitData.Sprite.HB_ONEBLOCK;
             // SMP
             case "Duelle" -> KitData.Sprite.HB_DUELLE;
             case "Turnier" -> KitData.Sprite.HB_TURNIER;

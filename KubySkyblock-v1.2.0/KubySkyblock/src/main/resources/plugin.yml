@@ -3,7 +3,7 @@ version: 1.3.0
 main: de.kuby.kubyskyblock.KubySkyblock
 api-version: '1.21'
 depend: [KubyCore]
-description: Skyblock-Modus für KubyCore (Inseln mit Mitgliedern und Upgrades, Loot-Inseln, One-Block, Checkliste)
+description: Skyblock-Modus für KubyCore (Inseln mit Mitgliedern und Upgrades, Generatoren, Loot-Inseln, One-Block mit Team-Upgrades, Checkliste)
 commands:
   skyblock:
     description: "Skyblock-Checkliste und Erfolge"
@@ -12,3 +12,7 @@ commands:
     description: "Deine Insel: Zuhause, Mitglieder, Upgrades, Level, Top-Inseln"
     usage: "/insel [home|einladen|annehmen|besuchen|top|level|upgrade|neustart|aufgeben]"
     aliases: [is, island]
+  oneblock:
+    description: "One-Block: Plattform fürs Team beanspruchen, Block-XP, Upgrades"
+    usage: "/oneblock [beanspruchen <Nr>|freigeben|einzahlen <Menge|alles>|upgrade <Art>|tp <Nr>]"
+    aliases: [ob]
