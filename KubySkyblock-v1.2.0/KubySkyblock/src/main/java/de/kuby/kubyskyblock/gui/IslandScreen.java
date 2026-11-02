@@ -47,13 +47,25 @@ public final class IslandScreen {
     public record Up(String name, KitData.Sprite icon, String now, String next, long price, boolean affordable, Consumer<Player> buy) {}
 
     /** Mitglied: Name, Besitzer, online, Entfernen (null = nicht erlaubt). */
-    public record Member(String name, boolean owner, boolean online, Consumer<Player> kick) {}
+    public record Member(String name, boolean owner, boolean online, Consumer<Player> kick, String role, String promoteLabel, Consumer<Player> promote) {
+        public Member(String name, boolean owner, boolean online, Consumer<Player> kick) {
+            this(name, owner, online, kick, owner ? "Besitzer" : "Mitglied", null, null);
+        }
+    }
 
     public record View(String name, long level, int rank, long points, long nextLevel, boolean open, boolean isOwner, long coins,
                        List<Up> ups, List<Member> members, int limit, Consumer<Player> home, Consumer<Player> setHome,
                        Consumer<Player> toggle, Consumer<Player> top, Consumer<Player> invite, Consumer<Player> leave,
                        Consumer<Player> recalc, Consumer<Player> progress, Consumer<Player> reset, Consumer<Player> abandon,
-                       String resetHint) {}
+                       String resetHint, Consumer<Player> access) {
+        public View(String name, long level, int rank, long points, long nextLevel, boolean open, boolean isOwner, long coins,
+                    List<Up> ups, List<Member> members, int limit, Consumer<Player> home, Consumer<Player> setHome,
+                    Consumer<Player> toggle, Consumer<Player> top, Consumer<Player> invite, Consumer<Player> leave,
+                    Consumer<Player> recalc, Consumer<Player> progress, Consumer<Player> reset, Consumer<Player> abandon, String resetHint) {
+            this(name, level, rank, points, nextLevel, open, isOwner, coins, ups, members, limit, home, setHome, toggle, top, invite, leave,
+                    recalc, progress, reset, abandon, resetHint, null);
+        }
+    }
 
     public record TopRow(int rank, String name, String owner, long level, long points, boolean mine) {}
 
@@ -134,13 +146,20 @@ public final class IslandScreen {
             })));
         }
         List<Member> ms = new ArrayList<>();
+        boolean manage = is.canManage(i, id);
         for (UUID m : i.everyone()) {
             boolean isOwner = m.equals(i.owner);
-            ms.add(new Member(IslandService.nameOf(m), isOwner, Bukkit.getPlayer(m) != null, owner && !isOwner ? run(pl -> confirm(pl,
+            IslandService.Role role = is.role(i, m);
+            boolean co = role == IslandService.Role.CO_BESITZER;
+            boolean mayKick = manage && !isOwner && !m.equals(id) && (owner || !co);
+            ms.add(new Member(IslandService.nameOf(m), isOwner, Bukkit.getPlayer(m) != null, mayKick ? run(pl -> confirm(pl,
                     "Mitglied entfernen", IslandService.nameOf(m) + " von der Insel entfernen?", "Entfernen", q -> {
                         feedback(q, is.kick(q, m));
                         open(q);
-                    })) : null));
+                    })) : null, role.label, owner && !isOwner ? (co ? "Mitglied" : "Co") : null, owner && !isOwner ? run(pl -> {
+                        feedback(pl, is.setCoOwner(pl, m, !co));
+                        open(pl);
+                    }) : null));
         }
         long left = is.resetCooldownLeft(i);
         UiDialog.show(p, canvas(new View(i.name, is.levelOf(i), is.rank(i), i.points, (is.levelOf(i) + 1) * is.perLevel(), i.open, owner,
@@ -150,12 +169,12 @@ public final class IslandScreen {
                     feedback(pl, is.setHome(pl));
                     open(pl);
                 }),
-                owner ? run(pl -> {
+                manage ? run(pl -> {
                     feedback(pl, is.toggleOpen(pl));
                     open(pl);
                 }) : null,
                 run(IslandScreen::top),
-                owner ? run(IslandScreen::askInvite) : null,
+                is.has(i, id, IslandService.Right.EINLADEN) ? run(IslandScreen::askInvite) : null,
                 owner ? null : run(pl -> confirm(pl, "Insel verlassen", "Willst du " + i.name + " wirklich verlassen?", "Verlassen", q ->
                         feedback(q, is.leave(q)))),
                 run(pl -> {
@@ -171,7 +190,8 @@ public final class IslandScreen {
                         ? "Deine Insel wird geleert und ist dann weg. Wirklich aufgeben?"
                         : "Die Insel geht an " + IslandService.nameOf(i.members.iterator().next()) + ". Wirklich aufgeben?", "Aufgeben", q ->
                         feedback(q, is.abandon(q)))) : null,
-                owner && left > 0 ? "Neustart in " + de.kuby.kubyplugins.service.KitService.format(left) : null)), 330);
+                owner && left > 0 ? "Neustart in " + de.kuby.kubyplugins.service.KitService.format(left) : null,
+                manage ? run(IslandScreen::access) : null)), 330);
     }
 
     /** Welche Blöcke ab dieser Generator-Stufe neu dazukommen (kurz). */
@@ -305,6 +325,169 @@ public final class IslandScreen {
     }
 
     // =================================================================================================================
+    // Rechte und Besucher
+    // =================================================================================================================
+
+    /** Ein Spieler in einer Liste mit bis zu zwei Knöpfen. */
+    public record Person(String name, boolean online, String b1, Consumer<Player> a1, String b2, Consumer<Player> a2) {}
+
+    /** Rechte-Tabelle: je Recht die Häkchen für Mitglied, Gast, Besucher; Listen Gäste, Besucher auf der Insel, Gesperrte. */
+    public record AccessView(String island, List<String> rights, boolean[][] on, Consumer<Player>[][] toggle, List<Person> guests,
+                             List<Person> visitors, List<Person> banned, Consumer<Player> addGuest, Consumer<Player> addBan, Consumer<Player> back) {}
+
+    @SuppressWarnings("unchecked")
+    public static void access(Player p) {
+        IslandService is = sb().islands();
+        Island i = is.islandOf(p.getUniqueId());
+        if (i == null || !is.canManage(i, p.getUniqueId())) {
+            feedback(p, "Das dürfen nur Besitzer und Co-Besitzer.");
+            return;
+        }
+        IslandService.Right[] rs = IslandService.Right.values();
+        List<String> names = new ArrayList<>();
+        boolean[][] on = new boolean[rs.length][IslandService.EDITABLE.size()];
+        Consumer<Player>[][] tg = new Consumer[rs.length][IslandService.EDITABLE.size()];
+        for (int r = 0; r < rs.length; r++) {
+            names.add(rs[r].label);
+            for (int k = 0; k < IslandService.EDITABLE.size(); k++) {
+                IslandService.Role role = IslandService.EDITABLE.get(k);
+                IslandService.Right right = rs[r];
+                on[r][k] = i.rights.getOrDefault(role, java.util.EnumSet.noneOf(IslandService.Right.class)).contains(right);
+                // Besucher und Gäste dürfen nie einladen oder Upgrades kaufen
+                boolean allowed = role == IslandService.Role.MITGLIED || (right != IslandService.Right.EINLADEN && right != IslandService.Right.UPGRADES);
+                tg[r][k] = allowed ? run(pl -> {
+                    feedback(pl, is.toggleRight(pl, role, right));
+                    access(pl);
+                }) : null;
+            }
+        }
+        List<Person> guests = new ArrayList<>();
+        for (UUID g : i.trusted) {
+            guests.add(new Person(IslandService.nameOf(g), Bukkit.getPlayer(g) != null, "Entfernen", run(pl -> {
+                feedback(pl, is.trust(pl, g, false));
+                access(pl);
+            }), null, null));
+        }
+        List<Person> visitors = new ArrayList<>();
+        for (Player v : is.visitors(i)) {
+            UUID vid = v.getUniqueId();
+            boolean guest = i.trusted.contains(vid);
+            visitors.add(new Person(v.getName() + (guest ? " (Gast)" : ""), true, "Rauswerfen", run(pl -> {
+                feedback(pl, is.expel(pl, vid));
+                access(pl);
+            }), "Sperren", run(pl -> confirm(pl, "Spieler sperren", v.getName() + " sperren? Er wird sofort von der Insel geworfen und kann nicht mehr hinein.",
+                    "Sperren", q -> {
+                        feedback(q, is.ban(q, vid, true));
+                        access(q);
+                    }))));
+        }
+        List<Person> banned = new ArrayList<>();
+        for (UUID b : i.banned) {
+            banned.add(new Person(IslandService.nameOf(b), Bukkit.getPlayer(b) != null, "Entsperren", run(pl -> {
+                feedback(pl, is.ban(pl, b, false));
+                access(pl);
+            }), null, null));
+        }
+        UiDialog.show(p, access(new AccessView(i.name, names, on, tg, guests, visitors, banned,
+                run(pl -> askName(pl, "Gast hinzufügen", "Gäste dürfen auch auf geschlossene Inseln und bekommen die Rechte der Spalte Gast.",
+                        "Hinzufügen", (q, id) -> feedback(q, is.trust(q, id, true)))),
+                run(pl -> askName(pl, "Spieler sperren", "Gesperrte kommen nicht mehr auf deine Insel, auch nicht, wenn sie offen ist.",
+                        "Sperren", (q, id) -> feedback(q, is.ban(q, id, true)))),
+                run(IslandScreen::open))), 330);
+    }
+
+    public static Canvas access(AccessView v) {
+        Canvas c = new Canvas(W).heading("Rechte & Besucher", SKY);
+        c.box(0, 0, W, 40, KitData.Box.CLOUD);
+        c.sprite(10 + (32 - KitData.Sprite.HB_MITGLIEDER.width) / 2, 4, KitData.Sprite.HB_MITGLIEDER);
+        c.text(50, 9, Canvas.caps("Rechte & Besucher"), SKY, true);
+        c.text(50, 22, Canvas.fit(Canvas.lit(v.island()) + " · Besitzer und Co-Besitzer dürfen alles", false, W - 60), MIST, false);
+        int y = 46;
+        y = section(c, y, "Rechte", null);
+        String[] cols = {"Mitglied", "Gast", "Besucher"};
+        int cx0 = 170, cw = (W - cx0) / 3;
+        for (int k = 0; k < 3; k++) c.textCenter(cx0 + k * cw + cw / 2, y, Canvas.caps(cols[k]), CLOUD, true);
+        y += 12;
+        for (int r = 0; r < v.rights().size(); r++) {
+            c.box(0, y, W, 20, KitData.Box.CLOUD_CARD);
+            c.text(8, y + 6, Canvas.fit(v.rights().get(r), false, cx0 - 12), CLOUD, false);
+            for (int k = 0; k < 3; k++) {
+                int bx = cx0 + k * cw + (cw - 52) / 2;
+                Consumer<Player> t = v.toggle()[r][k];
+                boolean on = v.on()[r][k];
+                if (t == null) {
+                    c.textCenter(cx0 + k * cw + cw / 2, y + 6, "—", DIM, false);
+                    continue;
+                }
+                c.smallButton(bx, y + 2, 52, on ? KitData.Small.GREEN : KitData.Small.DARK, on ? "✔ an" : "aus", on ? CLOUD : DIM, true);
+                c.action(bx, y + 2, 52, KitData.SMALL_H, t, (on ? "Ausschalten: " : "Einschalten: ") + v.rights().get(r) + " für " + cols[k]);
+            }
+            y += 22;
+        }
+        y += 6;
+        y = people(c, y, "Gäste (Vertrauensliste)", v.guests(), "Noch keine Gäste.", v.addGuest(), "Gast hinzufügen");
+        y = people(c, y, "Besucher auf der Insel", v.visitors(), "Gerade ist niemand zu Besuch.", null, null);
+        y = people(c, y, "Gesperrt", v.banned(), "Niemand gesperrt.", v.addBan(), "Spieler sperren");
+        c.smallButton(0, y, 120, KitData.Small.DARK, "« Zur Insel", CLOUD, false);
+        c.action(0, y, 120, KitData.SMALL_H, v.back(), "Zurück zur Insel");
+        return c;
+    }
+
+    private static int people(Canvas c, int y, String title, List<Person> list, String empty, Consumer<Player> add, String addLabel) {
+        y = section(c, y, title, list.isEmpty() ? null : String.valueOf(list.size()));
+        int h = 8 + Math.max(1, list.size()) * 16 + (add != null ? 22 : 0);
+        c.box(0, y, W, h, KitData.Box.CLOUD_CARD);
+        int my = y + 6;
+        if (list.isEmpty()) {
+            c.text(10, my + 3, empty, DIM, false);
+            my += 16;
+        }
+        for (Person ps : list) {
+            c.text(10, my + 3, ps.online() ? "●" : "○", ps.online() ? GREEN : DIM, false);
+            c.text(22, my + 3, Canvas.fit(Canvas.lit(ps.name()), true, 200), CLOUD, true);
+            int bx = W - 8 - 76;
+            if (ps.a1() != null) {
+                c.smallButton(bx, my, 76, KitData.Small.DARK, ps.b1(), "Sperren".equals(ps.b1()) || "Rauswerfen".equals(ps.b1()) ? GOLD : CLOUD, false);
+                c.action(bx, my, 76, KitData.SMALL_H, ps.a1(), ps.b1());
+            }
+            if (ps.a2() != null) {
+                c.smallButton(bx - 80, my, 76, KitData.Small.DARK, ps.b2(), RED, false);
+                c.action(bx - 80, my, 76, KitData.SMALL_H, ps.a2(), ps.b2());
+            }
+            my += 16;
+        }
+        if (add != null) {
+            c.smallButton(10, my + 2, 130, KitData.Small.GREEN, addLabel, CLOUD, true);
+            c.action(10, my + 2, 130, KitData.SMALL_H, add, addLabel);
+        }
+        return y + h + 8;
+    }
+
+    /** Name eingeben (auch für Spieler, die gerade nicht online sind, wenn sie schon einmal da waren). */
+    public static void askName(Player p, String title, String hint, String button, java.util.function.BiConsumer<Player, UUID> onName) {
+        DialogBase base = DialogBase.builder(Msg.parse("<#9AD8FF><b>" + Msg.escape(title) + "</b>"))
+                .canCloseWithEscape(true)
+                .afterAction(DialogBase.DialogAfterAction.CLOSE)
+                .body(List.of(DialogBody.plainMessage(Msg.parse("<gray>" + Msg.escape(hint)), 240)))
+                .inputs(List.of(DialogInput.text("name", Msg.parse("<gray>Spieler")).width(200).maxLength(16).initial("").build()))
+                .build();
+        ClickCallback.Options once = ClickCallback.Options.builder().uses(1).build();
+        ActionButton ok = ActionButton.create(Msg.parse("<green><b>" + Msg.escape(button) + "</b>"), null, 100, DialogAction.customClick((response, audience) -> {
+            if (!(audience instanceof Player pl)) return;
+            String n = response.getText("name");
+            Player online = n == null ? null : Bukkit.getPlayerExact(n.trim());
+            org.bukkit.OfflinePlayer op = online != null ? online : n == null ? null : Bukkit.getOfflinePlayerIfCached(n.trim());
+            if (op == null) feedback(pl, "Diesen Spieler kennt der Server nicht.");
+            else onName.accept(pl, op.getUniqueId());
+            access(pl);
+        }, once));
+        ActionButton no = ActionButton.create(Msg.parse("<gray>Abbrechen"), null, 100, DialogAction.customClick((response, audience) -> {
+            if (audience instanceof Player pl) access(pl);
+        }, once));
+        p.showDialog(Dialog.create(b -> b.empty().base(base).type(DialogType.confirmation(ok, no))));
+    }
+
+    // =================================================================================================================
     // Darstellung
     // =================================================================================================================
 
@@ -382,10 +565,14 @@ public final class IslandScreen {
         for (Member m : v.members()) {
             c.text(10, my + 3, m.online() ? "●" : "○", m.online() ? GREEN : DIM, false);
             int nw = c.text(22, my + 3, Canvas.fit(Canvas.lit(m.name()), true, 180), CLOUD, true);
-            c.text(22 + nw + 6, my + 3, m.owner() ? "Besitzer" : "Mitglied", m.owner() ? GOLD : MIST, false);
+            c.text(22 + nw + 6, my + 3, m.role(), m.owner() ? GOLD : "Co-Besitzer".equals(m.role()) ? SKY : MIST, false);
             if (m.kick() != null) {
                 c.smallButton(W - 8 - 70, my, 70, KitData.Small.DARK, "Entfernen", RED, false);
                 c.action(W - 8 - 70, my, 70, KitData.SMALL_H, m.kick(), "Mitglied entfernen");
+            }
+            if (m.promote() != null) {
+                c.smallButton(W - 8 - 70 - 74, my, 70, KitData.Small.DARK, m.promoteLabel().equals("Co") ? "↑ Co-Besitzer" : "↓ Mitglied", SKY, false);
+                c.action(W - 8 - 70 - 74, my, 70, KitData.SMALL_H, m.promote(), m.promoteLabel().equals("Co") ? "Zum Co-Besitzer machen" : "Zum Mitglied zurückstufen");
             }
             my += 16;
         }
@@ -396,6 +583,10 @@ public final class IslandScreen {
         if (v.leave() != null) {
             c.smallButton(10, my + 4, 100, KitData.Small.DARK, "Verlassen", RED, false);
             c.action(10, my + 4, 100, KitData.SMALL_H, v.leave(), "Insel verlassen");
+        }
+        if (v.access() != null) {
+            c.smallButton(114, my + 4, 150, KitData.Small.GOLD, "Rechte & Besucher", GOLD, true);
+            c.action(114, my + 4, 150, KitData.SMALL_H, v.access(), "Rollen, Rechte, Gäste, Sperrliste");
         }
         y += mh + 10;
 
@@ -495,6 +686,27 @@ public final class IslandScreen {
         for (int k = 1; k <= 10; k++) rows.add(new TopRow(k, w, "W".repeat(16), 999_999_999L, 999_999_999L, k == 4));
         reg.accept("Insel Top", () -> top(rows, new TopRow(99_999, w, "W".repeat(16), 1, 1, true), no));
         reg.accept("Insel Top leer", () -> top(List.of(), null, no));
+        List<Member> roles = new ArrayList<>();
+        roles.add(new Member("W".repeat(16), true, true, null, "Besitzer", null, null));
+        roles.add(new Member("W".repeat(16), false, true, no, "Co-Besitzer", "Mitglied", no));
+        roles.add(new Member("W".repeat(16), false, false, no, "Mitglied", "Co", no));
+        reg.accept("Insel Rollen", () -> canvas(new View(w, 1, 1, 1, 2, true, true, 1, ups, roles, 11, no, no, no, no, no, null, no, no, no, no, null, no)));
+        IslandService.Right[] rs = IslandService.Right.values();
+        boolean[][] on = new boolean[rs.length][3];
+        @SuppressWarnings("unchecked")
+        Consumer<Player>[][] tg = new Consumer[rs.length][3];
+        List<String> rn = new ArrayList<>();
+        for (int r = 0; r < rs.length; r++) {
+            rn.add(rs[r].label);
+            for (int k = 0; k < 3; k++) {
+                on[r][k] = (r + k) % 2 == 0;
+                tg[r][k] = r >= 5 && k > 0 ? null : no;
+            }
+        }
+        List<Person> many = new ArrayList<>();
+        for (int k = 0; k < 6; k++) many.add(new Person("W".repeat(16), k % 2 == 0, "Rauswerfen", no, "Sperren", no));
+        reg.accept("Insel Rechte", () -> access(new AccessView(w, rn, on, tg, many, many, many, no, no, no)));
+        reg.accept("Insel Rechte leer", () -> access(new AccessView("Insel", rn, on, tg, List.of(), List.of(), List.of(), no, no, no)));
         List<Choice> cs = new ArrayList<>();
         for (int k = 0; k < 7; k++) cs.add(new Choice(w, "W".repeat(120), KitData.Icon.GRASS_BLOCK, no));
         reg.accept("Insel Vorlagen", () -> choose(cs, "Wähle deine Insel", "Du kannst sie später mit „Neu starten“ wechseln"));

@@ -92,12 +92,13 @@ public final class IslandListener implements Listener {
             if (e.getAction() == Action.PHYSICAL && b.getType() == Material.FARMLAND && !p.hasPermission("kuby.admin")) e.setCancelled(true);
             return;
         }
-        if (addon.islands().canBuild(p, b.getLocation())) return;
-        if (e.getAction() == Action.PHYSICAL || e.getAction() == Action.RIGHT_CLICK_BLOCK && (b.getType().isInteractable()
-                || e.getItem() != null && e.getItem().getType().isBlock())) {
-            e.setCancelled(true);
-            if (e.getAction() != Action.PHYSICAL && e.getHand() == EquipmentSlot.HAND) deny(p);
-        }
+        if (e.getAction() != Action.PHYSICAL && e.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+        boolean interactable = b.getType().isInteractable();
+        if (e.getAction() == Action.RIGHT_CLICK_BLOCK && !interactable && (e.getItem() == null || !e.getItem().getType().isBlock())) return;
+        IslandService.Right need = rightFor(b, e.getAction() == Action.PHYSICAL);
+        if (addon.islands().can(p, b.getLocation(), need)) return;
+        e.setCancelled(true);
+        if (e.getAction() != Action.PHYSICAL && e.getHand() == EquipmentSlot.HAND) deny(p);
     }
 
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
@@ -114,6 +115,17 @@ public final class IslandListener implements Listener {
             e.setCancelled(true);
             deny(e.getPlayer());
         }
+    }
+
+    /** Welches Recht braucht ein Klick auf diesen Block? Kisten und Öfen: KISTEN; Türen, Knöpfe, Hebel, Druckplatten: TUEREN;
+     *  alles andere (Werkbank, Betten, Redstone einstellen, Feld zertreten): BAUEN. */
+    static IslandService.Right rightFor(Block b, boolean physical) {
+        Material m = b.getType();
+        if (physical) return org.bukkit.Tag.PRESSURE_PLATES.isTagged(m) || m == Material.TRIPWIRE ? IslandService.Right.TUEREN : IslandService.Right.BAUEN;
+        if (b.getState(false) instanceof org.bukkit.inventory.InventoryHolder) return IslandService.Right.KISTEN;
+        if (org.bukkit.Tag.DOORS.isTagged(m) || org.bukkit.Tag.TRAPDOORS.isTagged(m) || org.bukkit.Tag.FENCE_GATES.isTagged(m)
+                || org.bukkit.Tag.BUTTONS.isTagged(m) || m == Material.LEVER) return IslandService.Right.TUEREN;
+        return IslandService.Right.BAUEN;
     }
 
     /** Wer hat angegriffen (auch mit Pfeil oder Trank)? */
@@ -137,7 +149,7 @@ public final class IslandListener implements Listener {
             return;
         }
         if (victim instanceof Monster || victim instanceof Player) return;
-        if (addon.islands().islandAt(victim.getLocation()) != null && !addon.islands().canBuild(p, victim.getLocation())) {
+        if (addon.islands().islandAt(victim.getLocation()) != null && !addon.islands().can(p, victim.getLocation(), IslandService.Right.TIERE)) {
             e.setCancelled(true);
             deny(p);
         }
@@ -147,7 +159,9 @@ public final class IslandListener implements Listener {
     public void onEntityInteract(PlayerInteractEntityEvent e) {
         Entity en = e.getRightClicked();
         if (!inSkyblock(en.getWorld()) || en instanceof org.bukkit.entity.Villager || en instanceof Player) return;
-        if (addon.islands().islandAt(en.getLocation()) != null && !addon.islands().canBuild(e.getPlayer(), en.getLocation())) {
+        IslandService.Right need = en instanceof org.bukkit.entity.Animals || en instanceof org.bukkit.entity.Vehicle
+                ? IslandService.Right.TIERE : en instanceof org.bukkit.inventory.InventoryHolder ? IslandService.Right.KISTEN : IslandService.Right.BAUEN;
+        if (addon.islands().islandAt(en.getLocation()) != null && !addon.islands().can(e.getPlayer(), en.getLocation(), need)) {
             e.setCancelled(true);
             deny(e.getPlayer());
         }
@@ -169,6 +183,38 @@ public final class IslandListener implements Listener {
             e.setCancelled(true);
             deny(p);
         }
+    }
+
+    /** Betreten: gesperrte Spieler nie, geschlossene Inseln nur Mitglieder und Gäste. Nur beim Wechsel in eine andere Insel. */
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onMove(org.bukkit.event.player.PlayerMoveEvent e) {
+        Location to = e.getTo(), from = e.getFrom();
+        if (to.getBlockX() == from.getBlockX() && to.getBlockZ() == from.getBlockZ()) return;
+        if (!inSkyblock(to.getWorld())) return;
+        IslandService is = addon.islands();
+        IslandService.Island target = is.islandAt(to);
+        if (target == null || target == is.islandAt(from) || is.mayEnter(e.getPlayer(), target)) return;
+        e.setTo(from.clone().setDirection(from.getDirection().multiply(-1)));
+        blocked(e.getPlayer(), target);
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onTeleport(org.bukkit.event.player.PlayerTeleportEvent e) {
+        Location to = e.getTo();
+        if (to == null || !inSkyblock(to.getWorld())) return;
+        IslandService.Island target = addon.islands().islandAt(to);
+        if (target == null || addon.islands().mayEnter(e.getPlayer(), target)) return;
+        e.setCancelled(true);
+        blocked(e.getPlayer(), target);
+    }
+
+    private void blocked(Player p, IslandService.Island i) {
+        long now = System.currentTimeMillis();
+        Long last = lastWarn.get(p.getUniqueId());
+        if (last != null && now - last < 2000) return;
+        lastWarn.put(p.getUniqueId(), now);
+        p.sendActionBar(Msg.parse(i.banned.contains(p.getUniqueId()) ? "<red>Du bist auf dieser Insel gesperrt."
+                : "<red>Diese Insel ist für Besucher geschlossen."));
     }
 
     /** Ins Leere gefallen: zurück nach Hause statt zu sterben. */

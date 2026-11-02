@@ -26,7 +26,7 @@ import java.util.Locale;
 public final class IslandCommand implements TabExecutor {
 
     private static final List<String> SUBS = List.of("home", "sethome", "einladen", "annehmen", "entfernen", "verlassen", "besuchen",
-            "top", "level", "name", "besucher", "upgrade", "neustart", "aufgeben");
+            "top", "level", "name", "besucher", "upgrade", "neustart", "aufgeben", "rechte", "gast", "sperren", "entsperren", "rauswerfen", "co");
 
     private final KubySkyblock addon;
     private final KubyPlugins core;
@@ -126,6 +126,36 @@ public final class IslandCommand implements TabExecutor {
                 else if (core.uiPack().active(p)) IslandScreen.open(p);
                 else new de.kuby.kubyskyblock.gui.TemplateMenu(core, true).open(p);
             }
+            case "rechte", "rollen" -> {
+                if (i == null || !is.canManage(i, p.getUniqueId())) result(p, "Das dürfen nur Besitzer und Co-Besitzer.", "");
+                else IslandScreen.access(p);
+            }
+            case "gast", "sperren", "entsperren", "rauswerfen", "co" -> {
+                if (args.length < 2) {
+                    Msg.send(p, "<red>/insel " + sub + " <Spieler>");
+                    return true;
+                }
+                Player online = Bukkit.getPlayerExact(args[1]);
+                OfflinePlayer op = online != null ? online : Bukkit.getOfflinePlayerIfCached(args[1]);
+                if (op == null) {
+                    result(p, "Diesen Spieler kennt der Server nicht.", "");
+                    return true;
+                }
+                java.util.UUID t = op.getUniqueId();
+                switch (sub) {
+                    case "gast" -> {
+                        boolean add = i == null || !i.trusted.contains(t);
+                        result(p, is.trust(p, t, add), add ? op.getName() + " ist jetzt Gast deiner Insel." : op.getName() + " ist kein Gast mehr.");
+                    }
+                    case "sperren" -> result(p, is.ban(p, t, true), op.getName() + " ist gesperrt.");
+                    case "entsperren" -> result(p, is.ban(p, t, false), op.getName() + " ist nicht mehr gesperrt.");
+                    case "rauswerfen" -> result(p, is.expel(p, t), op.getName() + " wurde von der Insel geworfen.");
+                    default -> {
+                        boolean co = i == null || !i.coOwners.contains(t);
+                        result(p, is.setCoOwner(p, t, co), op.getName() + (co ? " ist jetzt Co-Besitzer." : " ist jetzt wieder Mitglied."));
+                    }
+                }
+            }
             case "aufgeben" -> {
                 if (args.length < 2 || !args[1].equalsIgnoreCase("bestätigen") && !args[1].equalsIgnoreCase("bestaetigen")) {
                     Msg.send(p, "<red>Das löscht deine Insel (oder gibt sie an ein Mitglied). Sicher? <white>/insel aufgeben bestätigen");
@@ -135,7 +165,8 @@ public final class IslandCommand implements TabExecutor {
             }
             default -> {
                 Msg.send(p, "<#9AD8FF><b>/insel</b> <gray>Menü · <white>home · sethome · einladen <Spieler> · annehmen · entfernen <Spieler> · "
-                        + "verlassen · besuchen <Spieler> · top · level · name <Name> · besucher · upgrade <Art> · neustart · aufgeben");
+                        + "verlassen · besuchen <Spieler> · top · level · name <Name> · besucher · upgrade <Art> · neustart · aufgeben · rechte · "
+                        + "gast <Spieler> · sperren <Spieler> · entsperren <Spieler> · rauswerfen <Spieler> · co <Spieler>");
             }
         }
         return true;
@@ -150,7 +181,7 @@ public final class IslandCommand implements TabExecutor {
             String sub = args[0].toLowerCase(Locale.ROOT);
             if (sub.equals("upgrade")) {
                 for (String s : List.of("groesse", "mitglieder", "generator")) if (s.startsWith(args[1].toLowerCase(Locale.ROOT))) out.add(s);
-            } else if (List.of("einladen", "besuchen", "entfernen").contains(sub)) {
+            } else if (List.of("einladen", "besuchen", "entfernen", "gast", "sperren", "entsperren", "rauswerfen", "co").contains(sub)) {
                 for (Player p : Bukkit.getOnlinePlayers()) if (p.getName().toLowerCase(Locale.ROOT).startsWith(args[1].toLowerCase(Locale.ROOT))) out.add(p.getName());
             }
         }

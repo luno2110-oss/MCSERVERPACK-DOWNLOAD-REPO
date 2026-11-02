@@ -40,6 +40,40 @@ import java.util.function.Consumer;
  */
 public final class IslandService {
 
+    /** Rollen auf einer Insel. Besitzer und Co-Besitzer dürfen alles (nur der Besitzer kann neu starten oder aufgeben). */
+    public enum Role {
+        BESITZER("Besitzer"), CO_BESITZER("Co-Besitzer"), MITGLIED("Mitglied"), GAST("Gast"), BESUCHER("Besucher");
+
+        public final String label;
+
+        Role(String label) {
+            this.label = label;
+        }
+    }
+
+    /** Rechte, die der Besitzer je Rolle (Mitglied, Gast, Besucher) an- und ausschalten kann. */
+    public enum Right {
+        BAUEN("Bauen und Abbauen"), KISTEN("Kisten, Öfen, Trichter"), TUEREN("Türen, Knöpfe, Hebel"), TIERE("Tiere füttern, reiten, schlagen"),
+        GENERATOREN("Generatoren öffnen"), EINLADEN("Leute einladen"), UPGRADES("Upgrades kaufen");
+
+        public final String label;
+
+        Right(String label) {
+            this.label = label;
+        }
+    }
+
+    /** Rollen, deren Rechte einstellbar sind. */
+    public static final List<Role> EDITABLE = List.of(Role.MITGLIED, Role.GAST, Role.BESUCHER);
+
+    static java.util.EnumMap<Role, java.util.EnumSet<Right>> defaultRights() {
+        java.util.EnumMap<Role, java.util.EnumSet<Right>> m = new java.util.EnumMap<>(Role.class);
+        m.put(Role.MITGLIED, java.util.EnumSet.of(Right.BAUEN, Right.KISTEN, Right.TUEREN, Right.TIERE, Right.GENERATOREN));
+        m.put(Role.GAST, java.util.EnumSet.of(Right.TUEREN, Right.TIERE));
+        m.put(Role.BESUCHER, java.util.EnumSet.noneOf(Right.class));
+        return m;
+    }
+
     public static final class Island {
         public final int slot;
         public UUID owner;
@@ -54,6 +88,11 @@ public final class IslandService {
         public double[] home;
         /** Alte Lage (vor der Spirale), sonst null. */
         public int[] legacy;
+        /** Co-Besitzer (sind auch Mitglieder), Gäste (Vertrauensliste, keine Mitglieder), gesperrte Spieler. */
+        public final Set<UUID> coOwners = new LinkedHashSet<>();
+        public final Set<UUID> trusted = new LinkedHashSet<>();
+        public final Set<UUID> banned = new LinkedHashSet<>();
+        public final java.util.EnumMap<Role, java.util.EnumSet<Right>> rights = defaultRights();
 
         Island(int slot) {
             this.slot = slot;
@@ -189,11 +228,135 @@ public final class IslandService {
         return new ArrayList<>(bySlot.values());
     }
 
-    /** Darf der Spieler hier bauen? Mitglieder auf ihrer Insel, Admins überall; außerhalb von Inseln niemand sonst. */
+    /** Darf der Spieler hier bauen? (Recht BAUEN) */
     public boolean canBuild(Player p, Location l) {
+        return can(p, l, Right.BAUEN);
+    }
+
+    public Role role(Island i, UUID id) {
+        if (i == null || id == null) return Role.BESUCHER;
+        if (id.equals(i.owner)) return Role.BESITZER;
+        if (i.coOwners.contains(id)) return Role.CO_BESITZER;
+        if (i.members.contains(id)) return Role.MITGLIED;
+        if (i.trusted.contains(id)) return Role.GAST;
+        return Role.BESUCHER;
+    }
+
+    public boolean has(Island i, UUID id, Right r) {
+        Role role = role(i, id);
+        if (role == Role.BESITZER || role == Role.CO_BESITZER) return true;
+        java.util.EnumSet<Right> set = i.rights.get(role);
+        return set != null && set.contains(r);
+    }
+
+    /** Darf der Spieler an dieser Stelle das? Admins überall; außerhalb von Inseln niemand sonst; während Neustart niemand. */
+    public boolean can(Player p, Location l, Right r) {
         if (p.hasPermission("kuby.admin")) return true;
         Island i = islandAt(l);
-        return i != null && i.isMember(p.getUniqueId()) && !busy.contains(i.slot);
+        return i != null && !busy.contains(i.slot) && has(i, p.getUniqueId(), r);
+    }
+
+    /** Besitzer und Co-Besitzer verwalten die Insel. */
+    public boolean canManage(Island i, UUID id) {
+        Role r = role(i, id);
+        return r == Role.BESITZER || r == Role.CO_BESITZER;
+    }
+
+    /** Darf der Spieler die Insel betreten? Gesperrte nie; geschlossene Inseln nur Mitglieder und Gäste. */
+    public boolean mayEnter(Player p, Island i) {
+        if (i == null || p.hasPermission("kuby.admin")) return true;
+        UUID id = p.getUniqueId();
+        if (i.banned.contains(id)) return false;
+        return i.open || role(i, id) != Role.BESUCHER;
+    }
+
+    // ---------- Rollen, Gäste, Sperren ----------
+
+    private Island managed(Player p) {
+        Island i = islandOf(p.getUniqueId());
+        return i != null && canManage(i, p.getUniqueId()) ? i : null;
+    }
+
+    /** Mitglied zum Co-Besitzer machen oder zurückstufen (nur der Besitzer). */
+    public String setCoOwner(Player p, UUID target, boolean co) {
+        Island i = islandOf(p.getUniqueId());
+        if (i == null) return "Du hast keine Insel.";
+        if (!p.getUniqueId().equals(i.owner)) return "Nur der Besitzer vergibt Co-Besitzer.";
+        if (!i.members.contains(target)) return "Das geht nur mit Mitgliedern.";
+        if (co) i.coOwners.add(target);
+        else i.coOwners.remove(target);
+        dirty = true;
+        Player t = Bukkit.getPlayer(target);
+        if (t != null) Msg.send(t, "<#9AD8FF>Du bist auf " + Msg.escape(i.name) + " jetzt <white>" + (co ? "Co-Besitzer" : "Mitglied") + "<#9AD8FF>.");
+        return null;
+    }
+
+    public String trust(Player p, UUID target, boolean add) {
+        Island i = managed(p);
+        if (i == null) return "Das dürfen nur Besitzer und Co-Besitzer.";
+        if (i.isMember(target)) return "Mitglieder brauchen keinen Gast-Platz.";
+        if (add) {
+            if (i.trusted.size() >= 20) return "Höchstens 20 Gäste.";
+            i.banned.remove(target);
+            i.trusted.add(target);
+        } else {
+            i.trusted.remove(target);
+        }
+        dirty = true;
+        return null;
+    }
+
+    /** Sperren (wirft auch gleich raus) oder entsperren. */
+    public String ban(Player p, UUID target, boolean add) {
+        Island i = managed(p);
+        if (i == null) return "Das dürfen nur Besitzer und Co-Besitzer.";
+        if (add) {
+            if (i.isMember(target)) return "Mitglieder kannst du nicht sperren. Entferne sie erst.";
+            Player t = Bukkit.getPlayer(target);
+            if (t != null && t.hasPermission("kuby.admin")) return "Admins kannst du nicht sperren.";
+            i.trusted.remove(target);
+            i.banned.add(target);
+            if (t != null && islandAt(t.getLocation()) == i) {
+                t.teleportAsync(core.modes().spawnOf(ModeService.SKYBLOCK));
+                Msg.send(t, "<red>Du bist auf der Insel " + Msg.escape(i.name) + " gesperrt.");
+            }
+        } else {
+            i.banned.remove(target);
+        }
+        dirty = true;
+        return null;
+    }
+
+    /** Besucher von der Insel werfen (zum Spawn). */
+    public String expel(Player p, UUID target) {
+        Island i = managed(p);
+        if (i == null) return "Das dürfen nur Besitzer und Co-Besitzer.";
+        if (i.isMember(target)) return "Mitglieder kannst du nicht rauswerfen.";
+        Player t = Bukkit.getPlayer(target);
+        if (t == null || islandAt(t.getLocation()) != i) return "Der Spieler ist gerade nicht auf deiner Insel.";
+        if (t.hasPermission("kuby.admin")) return "Admins kannst du nicht rauswerfen.";
+        t.teleportAsync(core.modes().spawnOf(ModeService.SKYBLOCK));
+        Msg.send(t, "<red>Du wurdest von der Insel " + Msg.escape(i.name) + " geworfen.");
+        return null;
+    }
+
+    public String toggleRight(Player p, Role role, Right right) {
+        Island i = managed(p);
+        if (i == null) return "Das dürfen nur Besitzer und Co-Besitzer.";
+        if (!EDITABLE.contains(role)) return "Diese Rolle darf schon alles.";
+        java.util.EnumSet<Right> set = i.rights.computeIfAbsent(role, k -> java.util.EnumSet.noneOf(Right.class));
+        if (!set.remove(right)) set.add(right);
+        dirty = true;
+        return null;
+    }
+
+    /** Spieler, die gerade auf der Insel sind und nicht dazugehören. */
+    public List<Player> visitors(Island i) {
+        List<Player> out = new ArrayList<>();
+        World w = world();
+        if (w == null || i == null) return out;
+        for (Player v : w.getPlayers()) if (!i.isMember(v.getUniqueId()) && islandAt(v.getLocation()) == i) out.add(v);
+        return out;
     }
 
     /** Für alte Aufrufer: liegt die Stelle auf der Insel des Spielers? */
@@ -317,6 +480,7 @@ public final class IslandService {
     public String setHome(Player p) {
         Island i = islandOf(p.getUniqueId());
         if (i == null) return "Du hast keine Insel.";
+        if (!canManage(i, p.getUniqueId())) return "Das dürfen nur Besitzer und Co-Besitzer.";
         if (islandAt(p.getLocation()) != i) return "Stell dich dafür auf deine Insel.";
         Location l = p.getLocation();
         i.home = new double[]{l.getX(), l.getY(), l.getZ(), l.getYaw(), l.getPitch()};
@@ -329,7 +493,8 @@ public final class IslandService {
         OfflinePlayer op = Bukkit.getOfflinePlayerIfCached(target);
         Island i = op == null ? null : islandOf(op.getUniqueId());
         if (i == null) return "Dieser Spieler hat keine Insel.";
-        if (!i.open && !i.isMember(p.getUniqueId()) && !p.hasPermission("kuby.admin")) return "Diese Insel ist für Besucher geschlossen.";
+        if (i.banned.contains(p.getUniqueId()) && !p.hasPermission("kuby.admin")) return "Du bist auf dieser Insel gesperrt.";
+        if (!mayEnter(p, i)) return "Diese Insel ist für Besucher geschlossen.";
         home(p, i);
         Msg.send(p, "<gray>Du besuchst <white>" + Msg.escape(i.name) + "<gray>.");
         if (!i.isMember(p.getUniqueId())) core.questProgress(p, "insel_besuch", null, 1);
@@ -339,12 +504,12 @@ public final class IslandService {
     public String toggleOpen(Player p) {
         Island i = islandOf(p.getUniqueId());
         if (i == null) return "Du hast keine Insel.";
-        if (!p.getUniqueId().equals(i.owner)) return "Nur der Besitzer kann das ändern.";
+        if (!canManage(i, p.getUniqueId())) return "Das dürfen nur Besitzer und Co-Besitzer.";
         i.open = !i.open;
         dirty = true;
         if (!i.open) {
             for (Player v : world().getPlayers()) {
-                if (!i.isMember(v.getUniqueId()) && islandAt(v.getLocation()) == i && !v.hasPermission("kuby.admin")) {
+                if (role(i, v.getUniqueId()) == Role.BESUCHER && islandAt(v.getLocation()) == i && !v.hasPermission("kuby.admin")) {
                     v.teleportAsync(core.modes().spawnOf(ModeService.SKYBLOCK));
                     Msg.send(v, "<gray>Die Insel wurde für Besucher geschlossen.");
                 }
@@ -356,7 +521,7 @@ public final class IslandService {
     public String rename(Player p, String name) {
         Island i = islandOf(p.getUniqueId());
         if (i == null) return "Du hast keine Insel.";
-        if (!p.getUniqueId().equals(i.owner)) return "Nur der Besitzer kann die Insel umbenennen.";
+        if (!canManage(i, p.getUniqueId())) return "Das dürfen nur Besitzer und Co-Besitzer.";
         String n = name.trim();
         if (n.isEmpty() || n.length() > 32) return "Der Name braucht 1 bis 32 Zeichen.";
         i.name = n;
@@ -382,7 +547,7 @@ public final class IslandService {
     public String invite(Player p, Player target) {
         Island i = islandOf(p.getUniqueId());
         if (i == null) return "Du hast keine Insel.";
-        if (!p.getUniqueId().equals(i.owner)) return "Nur der Besitzer kann einladen.";
+        if (!has(i, p.getUniqueId(), Right.EINLADEN)) return "Einladen dürfen nur Besitzer, Co-Besitzer und Mitglieder mit dem Recht dazu.";
         if (target.equals(p)) return "Du bist schon auf deiner Insel.";
         if (i.isMember(target.getUniqueId())) return target.getName() + " ist schon Mitglied.";
         if (i.members.size() >= memberLimit(i)) return "Deine Insel ist voll (" + memberLimit(i) + " Mitglieder). Erweitere sie unter Upgrades.";
@@ -421,8 +586,10 @@ public final class IslandService {
     public String kick(Player p, UUID target) {
         Island i = islandOf(p.getUniqueId());
         if (i == null) return "Du hast keine Insel.";
-        if (!p.getUniqueId().equals(i.owner)) return "Nur der Besitzer kann Mitglieder entfernen.";
+        if (!canManage(i, p.getUniqueId())) return "Mitglieder entfernen dürfen nur Besitzer und Co-Besitzer.";
+        if (i.coOwners.contains(target) && !p.getUniqueId().equals(i.owner)) return "Co-Besitzer kann nur der Besitzer entfernen.";
         if (!i.members.remove(target)) return "Dieser Spieler ist kein Mitglied.";
+        i.coOwners.remove(target);
         byPlayer.remove(target);
         dirty = true;
         Player t = Bukkit.getPlayer(target);
@@ -453,6 +620,7 @@ public final class IslandService {
         if (!i.members.isEmpty()) {
             UUID heir = i.members.iterator().next();
             i.members.remove(heir);
+            i.coOwners.remove(heir);
             i.owner = heir;
             byPlayer.remove(p.getUniqueId());
             dirty = true;
@@ -576,6 +744,7 @@ public final class IslandService {
     public String upgrade(Player p, Upgrade u) {
         Island i = islandOf(p.getUniqueId());
         if (i == null) return "Du hast keine Insel.";
+        if (!has(i, p.getUniqueId(), Right.UPGRADES)) return "Upgrades kaufen dürfen nur Besitzer, Co-Besitzer und Mitglieder mit dem Recht dazu.";
         long price = price(i, u);
         if (price < 0) return "Das ist schon die höchste Stufe.";
         if (!core.economy().withdraw(p.getUniqueId(), price)) return "Dafür brauchst du " + Msg.coins(price) + " $.";
@@ -791,6 +960,23 @@ public final class IslandService {
                 String o = s.getString("owner");
                 i.owner = o == null || o.isEmpty() ? null : UUID.fromString(o);
                 for (String m : s.getStringList("members")) i.members.add(UUID.fromString(m));
+                for (String m : s.getStringList("co-owners")) i.coOwners.add(UUID.fromString(m));
+                for (String m : s.getStringList("trusted")) i.trusted.add(UUID.fromString(m));
+                for (String m : s.getStringList("banned")) i.banned.add(UUID.fromString(m));
+                ConfigurationSection rs = s.getConfigurationSection("rights");
+                if (rs != null) {
+                    for (Role role : EDITABLE) {
+                        if (!rs.contains(role.name().toLowerCase(Locale.ROOT))) continue;
+                        java.util.EnumSet<Right> set = java.util.EnumSet.noneOf(Right.class);
+                        for (String r : rs.getStringList(role.name().toLowerCase(Locale.ROOT))) {
+                            try {
+                                set.add(Right.valueOf(r.toUpperCase(Locale.ROOT)));
+                            } catch (IllegalArgumentException ignored) {
+                            }
+                        }
+                        i.rights.put(role, set);
+                    }
+                }
                 i.name = s.getString("name", "Insel");
                 i.template = s.getString("template", "");
                 i.open = s.getBoolean("open", true);
@@ -832,6 +1018,13 @@ public final class IslandService {
             List<String> m = new ArrayList<>();
             for (UUID u : i.members) m.add(u.toString());
             out.set(b + "members", m);
+            out.set(b + "co-owners", i.coOwners.stream().map(UUID::toString).toList());
+            out.set(b + "trusted", i.trusted.stream().map(UUID::toString).toList());
+            out.set(b + "banned", i.banned.stream().map(UUID::toString).toList());
+            for (Role role : EDITABLE) {
+                out.set(b + "rights." + role.name().toLowerCase(Locale.ROOT), i.rights.getOrDefault(role, java.util.EnumSet.noneOf(Right.class))
+                        .stream().map(r -> r.name().toLowerCase(Locale.ROOT)).toList());
+            }
             out.set(b + "name", i.name);
             out.set(b + "template", i.template);
             out.set(b + "open", i.open);

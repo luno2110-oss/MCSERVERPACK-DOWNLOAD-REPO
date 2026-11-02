@@ -59,7 +59,8 @@ public final class GeneratorListener implements Listener {
         e.setCancelled(true);
         Player p = e.getPlayer();
         var isl = addon.islands().bySlot(g.island);
-        if (isl == null || !isl.isMember(p.getUniqueId()) && !p.hasPermission("kuby.admin")) {
+        if (isl == null || !addon.islands().has(isl, p.getUniqueId(), de.kuby.kubyskyblock.service.IslandService.Right.GENERATOREN)
+                && !p.hasPermission("kuby.admin")) {
             Msg.send(p, "<gray>Das ist ein Generator von " + (isl == null ? "?" : de.kuby.kubyskyblock.service.IslandService.nameOf(isl.owner)) + ".");
             return;
         }

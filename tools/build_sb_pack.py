@@ -286,12 +286,20 @@ SMALL = {
     "H": ["XXX....XXX"] * 3 + ["XXXXXXXXXX"] * 2 + ["XXX....XXX"] * 3,
     "B": ["XXXXXXXXX.", "XXXXXXXXXX", "XXX....XXX", "XXXXXXXXX.", "XXXXXXXXXX", "XXX....XXX", "XXXXXXXXXX",
           "XXXXXXXXX."],
-    # für SKYBLOCK
-    "K": ["XXX...XXX.", "XXX..XXX..", "XXX.XXX...", "XXXXXX....", "XXXXXX....", "XXX.XXX...", "XXX..XXX..", "XXX...XXX."],
-    "Y": ["XXX...XXX", "XXX...XXX", ".XXX.XXX.", "..XXXXX..", "...XXX...", "...XXX...", "...XXX...", "...XXX..."],
-    "O": [".XXXXXXXX.", "XXXXXXXXXX", "XXX....XXX", "XXX....XXX", "XXX....XXX", "XXX....XXX", "XXXXXXXXXX", ".XXXXXXXX."],
-    "C": [".XXXXXXXXX", "XXXXXXXXXX", "XXX.......", "XXX.......", "XXX.......", "XXX.......", "XXXXXXXXXX", ".XXXXXXXXX"],
 }
+# Schmale Buchstaben nur für SKYBLOCK (8 Zeilen, je 8 breit, L 7): gleich breit und gleich weit auseinander,
+# damit das längere Wort genauso ruhig wirkt wie SURVIVAL
+NARROW = {
+    "S": [".XXXXXXX", "XXXXXXXX", "XXX.....", "XXXXXXX.", ".XXXXXXX", ".....XXX", "XXXXXXXX", "XXXXXXX."],
+    "K": ["XXX..XXX", "XXX.XXX.", "XXXXXX..", "XXXXX...", "XXXXX...", "XXXXXX..", "XXX.XXX.", "XXX..XXX"],
+    "Y": [".XX..XX.", ".XX..XX.", ".XXXXXX.", "..XXXX..", "..XXXX..", "..XXXX..", "..XXXX..", "..XXXX.."],
+    "B": ["XXXXXXX.", "XXXXXXXX", "XXX..XXX", "XXXXXXX.", "XXXXXXXX", "XXX..XXX", "XXXXXXXX", "XXXXXXX."],
+    "L": ["XXX...."] * 6 + ["XXXXXXX"] * 2,
+    "O": [".XXXXXX.", "XXXXXXXX", "XXX..XXX", "XXX..XXX", "XXX..XXX", "XXX..XXX", "XXXXXXXX", ".XXXXXX."],
+    "C": [".XXXXXXX", "XXXXXXXX", "XXX.....", "XXX.....", "XXX.....", "XXX.....", "XXXXXXXX", ".XXXXXXX"],
+}
+# Unterschneidung (Pixel) für Paare, die sonst zu weit auseinander wirken
+KERN = {("K", "Y"): -1, ("Y", "B"): -1}
 GOLD_PAL = {"up": rgb("E4B104"), "lo": rgb("F7DD2D"), "top_up": rgb("FAD830"), "top_lo": rgb("FFF4BE"),
             "left_up": rgb("F5CC24"), "left_lo": rgb("FFF0AA"), "cream": rgb("FFF6D4"),
             "ext": [rgb("8A3604"), rgb("702A02"), rgb("561E00")], "out": rgb("100600")}
@@ -306,7 +314,9 @@ def block_word(word, font, pal):
     height = len(font[word[0]])
     depth = len(pal["ext"])
     letters, x0 = [], 0
-    for c in word:
+    for k, c in enumerate(word):
+        if k > 0 and font is NARROW:
+            x0 += KERN.get((word[k - 1], c), 0)
         letters.append({(x0 + x, y) for y, row in enumerate(font[c]) for x, v in enumerate(row) if v == "X"})
         x0 += len(font[c][0]) + 1
     w, h = x0 - 1 + 2, height + depth + 2
@@ -420,7 +430,7 @@ def ry(rel):
     return rel + LOGO_TOP
 
 
-def logo(word, arrows=False):
+def logo(word, arrows=False, font=None):
     w, h = TEX_W, LOGO_H
     img = new(w, h)
     if arrows:
@@ -428,7 +438,7 @@ def logo(word, arrows=False):
     text = new(w, h)
     big = block_word("KUBY", BIG, GOLD_PAL)
     text.alpha_composite(big, (M + (FRAME_W - big.width) // 2, ry(0) - big.height + 1))
-    small = block_word(word, SMALL, SILVER_PAL)
+    small = block_word(word, font or SMALL, SILVER_PAL)
     text.alpha_composite(small, (M + (FRAME_W - small.width) // 2, ry(-2)))
     img.alpha_composite(drop_shadow(text))
     img.load()[w - 1, h - 1] = (0, 0, 0, 1)
@@ -664,7 +674,7 @@ def build(out, spaces):
     for i, (mode, word) in enumerate([("smp", "SMP"), ("survival", "SURVIVAL"), ("hub", "HUB")]):
         save(logo(word, arrows=(mode == "smp")), "logo_" + mode, LOGO_H, LOGO_H - 1, chr(0xE050 + i))
     # 0xE053 ist das Casino-Logo (build_sb_casino.py)
-    save(logo("SKYBLOCK"), "logo_skyblock", LOGO_H, LOGO_H - 1, chr(0xE054))
+    save(logo("SKYBLOCK", font=NARROW), "logo_skyblock", LOGO_H, LOGO_H - 1, chr(0xE054))
     for i, name in enumerate(ICON_ORDER):
         save(icon(name), "sb_" + name, 8, 7, chr(0xE010 + i))
     ICONS.update(SKY_ICONS)
