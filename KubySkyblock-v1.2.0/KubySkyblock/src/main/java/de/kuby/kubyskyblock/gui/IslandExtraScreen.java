@@ -2,7 +2,6 @@ package de.kuby.kubyskyblock.gui;
 
 import de.kuby.kubyplugins.service.KitService;
 import de.kuby.kubyplugins.ui.Canvas;
-import de.kuby.kubyplugins.ui.Icons;
 import de.kuby.kubyplugins.ui.KitData;
 import de.kuby.kubyplugins.ui.UiDialog;
 import de.kuby.kubyplugins.util.Msg;
@@ -15,7 +14,6 @@ import de.kuby.kubyskyblock.service.IslandService.Island;
 import de.kuby.kubyskyblock.service.LimitService;
 import de.kuby.kubyskyblock.service.TopRewardService;
 import net.kyori.adventure.text.format.TextColor;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -77,12 +75,13 @@ public final class IslandExtraScreen {
     public record VisitView(int tab, List<Row> rows, int page, int pages, String empty, Consumer<Player> tab0, Consumer<Player> tab1,
                             Consumer<Player> prev, Consumer<Player> next, Consumer<Player> random, Consumer<Player> back) {}
 
-    private static final Map<String, Material> BIOME_ICON = Map.ofEntries(
-            Map.entry("jungle", Material.JUNGLE_SAPLING), Map.entry("desert", Material.CACTUS), Map.entry("mushroom_fields", Material.RED_MUSHROOM),
-            Map.entry("cherry_grove", Material.CHERRY_SAPLING), Map.entry("swamp", Material.LILY_PAD), Map.entry("snowy_taiga", Material.SPRUCE_SAPLING),
-            Map.entry("savanna", Material.ACACIA_SAPLING), Map.entry("mangrove_swamp", Material.MANGROVE_PROPAGULE),
-            Map.entry("dark_forest", Material.DARK_OAK_SAPLING), Map.entry("badlands", Material.RED_SAND), Map.entry("flower_forest", Material.ALLIUM),
-            Map.entry("bamboo_jungle", Material.BAMBOO), Map.entry("pale_garden", Material.PALE_OAK_SAPLING));
+    /** Bild je Biom: das typische Tier (Spawn-Ei), dafür baut man die Biom-Inseln ja. */
+    private static final Map<String, KitData.Icon> BIOME_ICON = Map.ofEntries(
+            Map.entry("jungle", KitData.Icon.EGG_PARROT), Map.entry("desert", KitData.Icon.EGG_CAMEL), Map.entry("mushroom_fields", KitData.Icon.EGG_COW),
+            Map.entry("cherry_grove", KitData.Icon.P_CHERRY_LEAVES), Map.entry("swamp", KitData.Icon.EGG_FROG), Map.entry("snowy_taiga", KitData.Icon.EGG_FOX),
+            Map.entry("savanna", KitData.Icon.EGG_HORSE), Map.entry("mangrove_swamp", KitData.Icon.LILY), Map.entry("dark_forest", KitData.Icon.OAK_LOG),
+            Map.entry("badlands", KitData.Icon.EGG_ARMADILLO), Map.entry("flower_forest", KitData.Icon.EGG_BEE), Map.entry("bamboo_jungle", KitData.Icon.EGG_PANDA),
+            Map.entry("pale_garden", KitData.Icon.P_SOUL));
 
     public static void visit(Player p) {
         visit(p, 0, 0);
@@ -154,7 +153,7 @@ public final class IslandExtraScreen {
                         visit(q, 1, pgf);
                     }));
                 }
-                rows.add(new Row(k + 1, Icons.of(BIOME_ICON.getOrDefault(b.biome, Material.GRASS_BLOCK), KitData.Icon.GRASS_BLOCK),
+                rows.add(new Row(k + 1, BIOME_ICON.getOrDefault(b.biome, KitData.Icon.GRASS_BLOCK),
                         BiomeIslandService.label(b.biome) + " #" + b.id, sub + " · " + b.x + " / " + b.z, col, own,
                         "Hin", KitData.Small.DARK, fly, l2, s2, act2));
             }
@@ -315,10 +314,10 @@ public final class IslandExtraScreen {
         for (PrizeRow r : rows) {
             List<String> l = Canvas.wrap(r.text(), w - 40);
             wrapped.add(l.subList(0, Math.min(2, l.size())));
-            h += 12 + 10 * Math.min(2, l.size()) + 4;
+            h += 13 + 10 * Math.min(2, l.size()) + 4;
         }
         if (rows.isEmpty()) h += 14;
-        h += 16 + 10 * Math.max(1, last.size()) + 4;
+        h += 18 + 10 * Math.max(1, last.size()) + 4;
         c.box(x, y, w, h, KitData.Box.CLOUD_CARD);
         c.text(x + 8, y + 7, Canvas.caps(title), SKY, true);
         c.textRight(x + w - 8, y + 7, in, GOLD, false);
