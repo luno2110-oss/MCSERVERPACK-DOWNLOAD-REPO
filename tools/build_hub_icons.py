@@ -837,6 +837,100 @@ def ob_beute():
     return a
 
 
+# ---------------------------------------------------------------- Insel-Extras (premium)
+def is_wachstum():
+    """Wachstum: Keimling mit zwei Blättern auf einem Grasblock, goldener Pfeil nach oben."""
+    a = Art(premium=True)
+    a.rect(3, 21, 22, 30, "9A6438")
+    a.rect(3, 19, 22, 23, "62C040")
+    a.dots([(5, 24), (9, 25), (14, 24), (19, 25)], "58B83C")
+    a.dots([(6, 27), (12, 28), (18, 27)], "7A4C2A")
+    a.line([(12, 19), (12, 9)], "3E9A30", 2)
+    a.poly([(12, 13), (4, 10), (2, 5), (8, 5), (12, 10)], "5CD04A")
+    a.poly([(13, 10), (17, 3), (23, 2), (22, 8), (14, 13)], "48B83A")
+    a.dots([(5, 7), (19, 4)], "C8FFA0")
+    a.poly([(26, 2), (31, 9), (28, 9), (28, 20), (24, 20), (24, 9), (21, 9)], "FFD24A")
+    a.dots([(26, 4), (25, 10), (25, 11)], "FFF6C8")
+    return a
+
+
+def is_spawn():
+    """Spawnrate: zwei Spawn-Eier (vorn groß, hinten klein) mit Flecken."""
+    a = Art(premium=True)
+    a.ellipse(17, 2, 29, 18, "D86A4A")
+    a.dots([(21, 6), (25, 10), (22, 13)], "8A2E2A")
+    a.ellipse(3, 8, 20, 30, "48B8A8")
+    a.ellipse(7, 12, 11, 16, "2E6E5A", mode="soft", edge=False)
+    a.ellipse(13, 18, 17, 22, "2E6E5A", mode="soft", edge=False)
+    a.ellipse(7, 23, 10, 26, "2E6E5A", mode="soft", edge=False)
+    a.dots([(7, 10), (8, 10)], "D8FFF4")
+    a.sparkle(28, 25, 2, "FFF6C8")
+    return a
+
+
+def is_limits():
+    """Limits: Trichter mit rotem Grenze-Zeichen."""
+    a = Art(premium=True)
+    a.rect(2, 3, 27, 9, "6E727C")
+    a.rect(5, 5, 24, 7, "34363C", mode="flat", edge=False)
+    a.poly([(4, 10), (25, 10), (20, 19), (9, 19)], "8A8E98")
+    a.rect(11, 19, 18, 23, "6E727C")
+    a.rect(13, 23, 16, 27, "5A5E66")
+    a.dots([(4, 4), (5, 4), (6, 11), (7, 11)], "C8CCD6")
+    a.ellipse(19, 18, 31, 30, "E83A3A")
+    a.rect(21, 23, 29, 25, "FFFFFF", mode="flat", edge=False)
+    return a
+
+
+def is_pokal():
+    """Pokal: goldener Pokal mit Henkeln, Sockel und Stern."""
+    a = Art(premium=True)
+    a.ellipse(1, 5, 9, 15, "E8A82A")
+    a.erase(lambda d: d.ellipse((4, 8, 7, 12), fill=255))
+    a.ellipse(22, 5, 30, 15, "E8A82A")
+    a.erase(lambda d: d.ellipse((24, 8, 27, 12), fill=255))
+    a.poly([(6, 2), (25, 2), (24, 10), (20, 17), (11, 17), (7, 10)], "FFD24A")
+    a.rect(13, 17, 18, 22, "E8A82A")
+    a.rect(8, 22, 23, 25, "C8841E")
+    a.rect(6, 26, 25, 30, "8A5A2E")
+    a.poly([(15, 5), (17, 9), (21, 9), (18, 12), (19, 15), (15, 13), (12, 15), (13, 12), (10, 9), (14, 9)], "FFF6C8", mode="soft")
+    a.dots([(8, 4), (9, 4)], "FFFFFF")
+    return a
+
+
+def is_besuch():
+    """Besuchen: Wegweiser aus Holz mit zwei Pfeilschildern."""
+    a = Art(premium=True)
+    a.rect(14, 2, 17, 30, "8A5A2E")
+    a.poly([(4, 5), (24, 5), (29, 10), (24, 15), (4, 15)], "D8A060")
+    a.poly([(27, 17), (8, 17), (3, 22), (8, 27), (27, 27)], "C08848")
+    a.line([(7, 9), (20, 9)], "8A5A2E", 1, mode="flat", edge=False)
+    a.line([(7, 11), (17, 11)], "8A5A2E", 1, mode="flat", edge=False)
+    a.line([(11, 21), (24, 21)], "7A4C26", 1, mode="flat", edge=False)
+    a.line([(14, 23), (24, 23)], "7A4C26", 1, mode="flat", edge=False)
+    a.rect(12, 29, 19, 31, "6CC048")
+    a.dots([(5, 6), (6, 6)], "FFE8C0")
+    return a
+
+
+def is_biom():
+    """Biom-Insel: schwebende Insel, links Gras mit Kirschbaum, rechts Sand mit Kaktus."""
+    a = Art(premium=True)
+    a.poly([(3, 18), (29, 18), (23, 24), (17, 31), (14, 31), (8, 24)], "8A5A32")
+    a.poly([(10, 22), (14, 22), (13, 27)], "7A7A86", mode="soft", edge=False)
+    a.rect(2, 15, 15, 19, "62C040")
+    a.rect(16, 15, 29, 19, "F2D88A")
+    a.dots([(18, 17), (23, 16), (27, 18)], "D8B86A")
+    a.rect(8, 8, 9, 15, "6A3A2A")
+    a.ellipse(1, 0, 15, 10, "F28AB8")
+    a.dots([(4, 2), (6, 1), (10, 3)], "FFD0E4")
+    a.rect(21, 5, 24, 15, "4A9A3A")
+    a.rect(18, 8, 20, 11, "4A9A3A")
+    a.rect(25, 9, 27, 12, "4A9A3A")
+    a.dots([(22, 6), (22, 9), (23, 12)], "8AD870")
+    return a
+
+
 # ---------------------------------------------------------------- Knöpfe (16 px)
 def s_wildnis():
     a = Art(16)
@@ -1000,7 +1094,9 @@ TILES = [("menu", i_menu), ("angeln", i_angeln), ("jobs", i_jobs), ("grundstueck
          ("s_wildnis", s_wildnis), ("s_homes", s_homes), ("s_enderchest", s_enderchest),
          ("alert", s_alert), ("alert_s", s_alert_small),
          ("c_bloecke", c_bloecke), ("c_essen", c_essen), ("c_redstone", c_redstone), ("c_deko", c_deko), ("c_suche", c_suche),
-         ("c_daily", c_daily), ("trade", i_trade)]
+         ("c_daily", c_daily), ("trade", i_trade),
+         ("is_wachstum", is_wachstum), ("is_spawn", is_spawn), ("is_limits", is_limits), ("is_pokal", is_pokal),
+         ("is_besuch", is_besuch), ("is_biom", is_biom)]
 
 
 def trim(img):

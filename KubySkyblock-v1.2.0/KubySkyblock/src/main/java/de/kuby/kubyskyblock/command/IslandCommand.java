@@ -26,7 +26,7 @@ import java.util.Locale;
 public final class IslandCommand implements TabExecutor {
 
     private static final List<String> SUBS = List.of("home", "sethome", "einladen", "annehmen", "entfernen", "verlassen", "besuchen",
-            "top", "level", "name", "besucher", "upgrade", "neustart", "aufgeben", "rechte", "gast", "sperren", "entsperren", "rauswerfen", "co", "shop");
+            "top", "level", "name", "besucher", "upgrade", "neustart", "aufgeben", "rechte", "gast", "sperren", "entsperren", "rauswerfen", "co", "shop", "biom", "limits", "preise");
 
     private final KubySkyblock addon;
     private final KubyPlugins core;
@@ -83,7 +83,7 @@ public final class IslandCommand implements TabExecutor {
             case "verlassen", "leave" -> result(p, is.leave(p), "Insel verlassen.");
             case "besuchen", "visit" -> {
                 if (args.length < 2) {
-                    Msg.send(p, "<red>/insel besuchen <Spieler>");
+                    de.kuby.kubyskyblock.gui.IslandExtraScreen.visit(p);
                     return true;
                 }
                 String err = is.visit(p, args[1]);
@@ -116,9 +116,12 @@ public final class IslandCommand implements TabExecutor {
                     case "groesse", "größe", "size" -> IslandService.Upgrade.SIZE;
                     case "mitglieder", "members" -> IslandService.Upgrade.SLOTS;
                     case "generator" -> IslandService.Upgrade.GENERATOR;
+                    case "wachstum", "growth" -> IslandService.Upgrade.GROWTH;
+                    case "spawnrate", "spawn" -> IslandService.Upgrade.SPAWN;
+                    case "limits", "limit" -> IslandService.Upgrade.LIMIT;
                     default -> null;
                 };
-                if (u == null) Msg.send(p, "<red>/insel upgrade <groesse|mitglieder|generator>");
+                if (u == null) Msg.send(p, "<red>/insel upgrade <groesse|mitglieder|generator|wachstum|spawnrate|limits>");
                 else result(p, is.upgrade(p, u), "Upgrade gekauft.");
             }
             case "neustart", "reset" -> {
@@ -135,6 +138,25 @@ public final class IslandCommand implements TabExecutor {
                     }
                 }
                 de.kuby.kubyskyblock.gui.SkyShopScreen.open(p, t, 0);
+            }
+            case "limits", "limit" -> de.kuby.kubyskyblock.gui.IslandExtraScreen.limits(p);
+            case "preise", "belohnungen" -> de.kuby.kubyskyblock.gui.IslandExtraScreen.prizes(p);
+            case "biom", "biome", "biominsel" -> {
+                String act = args.length > 1 ? args[1].toLowerCase(Locale.ROOT) : "";
+                int id = -1;
+                if (args.length > 2) {
+                    try {
+                        id = Integer.parseInt(args[2]);
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+                var bs = addon.biomes();
+                switch (act) {
+                    case "hin", "tp" -> result(p, bs.teleport(p, id), "");
+                    case "beanspruchen", "claim" -> result(p, bs.claim(p, id), "Biom-Insel beansprucht.");
+                    case "freigeben", "release" -> result(p, bs.release(p, id), "Biom-Insel freigegeben.");
+                    default -> de.kuby.kubyskyblock.gui.IslandExtraScreen.visit(p, 1, 0);
+                }
             }
             case "rechte", "rollen" -> {
                 if (i == null || !is.canManage(i, p.getUniqueId())) result(p, "Das dürfen nur Besitzer und Co-Besitzer.", "");
@@ -175,7 +197,7 @@ public final class IslandCommand implements TabExecutor {
             }
             default -> {
                 Msg.send(p, "<#9AD8FF><b>/insel</b> <gray>Menü · <white>home · sethome · einladen <Spieler> · annehmen · entfernen <Spieler> · "
-                        + "verlassen · besuchen <Spieler> · top · level · name <Name> · besucher · upgrade <Art> · neustart · aufgeben · rechte · "
+                        + "verlassen · besuchen [Spieler] · top · preise · biom · limits · level · name <Name> · besucher · upgrade <Art> · neustart · aufgeben · rechte · "
                         + "gast <Spieler> · sperren <Spieler> · entsperren <Spieler> · rauswerfen <Spieler> · co <Spieler>");
             }
         }
@@ -190,7 +212,9 @@ public final class IslandCommand implements TabExecutor {
         } else if (args.length == 2) {
             String sub = args[0].toLowerCase(Locale.ROOT);
             if (sub.equals("upgrade")) {
-                for (String s : List.of("groesse", "mitglieder", "generator")) if (s.startsWith(args[1].toLowerCase(Locale.ROOT))) out.add(s);
+                for (String s : List.of("groesse", "mitglieder", "generator", "wachstum", "spawnrate", "limits")) if (s.startsWith(args[1].toLowerCase(Locale.ROOT))) out.add(s);
+            } else if (sub.startsWith("biom")) {
+                for (String s : List.of("hin", "beanspruchen", "freigeben")) if (s.startsWith(args[1].toLowerCase(Locale.ROOT))) out.add(s);
             } else if (List.of("einladen", "besuchen", "entfernen", "gast", "sperren", "entsperren", "rauswerfen", "co").contains(sub)) {
                 for (Player p : Bukkit.getOnlinePlayers()) if (p.getName().toLowerCase(Locale.ROOT).startsWith(args[1].toLowerCase(Locale.ROOT))) out.add(p.getName());
             }

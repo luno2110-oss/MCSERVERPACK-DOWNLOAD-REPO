@@ -10,6 +10,9 @@ insel:
   upgrades:
     groesse: [0, 25000, 75000, 200000, 500000]   # Preis für Stufe 1, 2, ... (Index 0 = Start)
     mitglieder: [0, 10000, 40000, 100000]
+    wachstum: [0, 15000, 50000, 150000, 400000]    # Pflanzen wachsen schneller (wachstum.bonus-je-stufe)
+    spawnrate: [0, 20000, 60000, 180000, 450000]   # mehr Tiere und Monster (spawnrate.bonus-je-stufe)
+    limits: [0, 25000, 75000, 200000, 500000]      # höhere Lag-Grenzen (limits.bonus-je-stufe)
   besucher-standard: true       # neue Inseln offen für Besucher
   pvp: true                     # Kampf zwischen Spielern in der Skyblock-Welt (nicht am Spawn)
   pvp-spawn-radius: 40
@@ -150,6 +153,61 @@ generatoren:
 
 # Skyblock-Shop (/shop, /sell, Shop-Kachel; auch /insel shop): "MATERIAL;Menge;Kaufpreis;Verkaufspreis je Stück;Name".
 # Kaufpreis 0 = nur verkaufen, Verkaufspreis 0 = nur kaufen. Die Verkaufspreise gelten auch für Generator-Ertrag.
+# Upgrade Wachstum: Chance je Stufe, dass eine Pflanze beim Wachsen gleich eine Stufe mehr wächst
+wachstum:
+  bonus-je-stufe: 0.25
+# Upgrade Spawnrate: Chance je Stufe auf ein zweites Wesen beim natürlichen Spawnen (und aus echten Spawnern)
+spawnrate:
+  bonus-je-stufe: 0.20
+
+# Lag-Grenzen je Insel (mit ihren Biom-Inseln). Das Upgrade „Limits“ hebt alle Grenzen um bonus-je-stufe an.
+limits:
+  aktiv: true
+  bonus-je-stufe: 0.25
+  bloecke:
+    trichter: {name: Trichter, max: 48, items: [HOPPER]}
+    kolben: {name: Kolben, max: 32, items: [PISTON, STICKY_PISTON]}
+    beobachter: {name: Beobachter, max: 24, items: [OBSERVER]}
+    werfer: {name: Werfer & Spender, max: 24, items: [DISPENSER, DROPPER]}
+    redstone: {name: Verstärker & Komparatoren, max: 64, items: [REPEATER, COMPARATOR]}
+  wesen:
+    tiere: 60
+    monster: 50
+    dorfbewohner: 20
+    golems: 4
+
+# Biom-Inseln: kleine leere Inseln mit eigenem Biom auf der Map verteilt (an den Ecken zwischen den Spieler-Inseln).
+# Dort spawnen die Tiere des Bioms. Eine Insel kann eine davon beanspruchen, dann gehört sie dazu.
+biom-inseln:
+  anzahl: 13                  # so viele baut /kp skyblock einrichten
+  abstand-vom-spawn: 1500
+  radius: 9
+  preis: 75000
+  je-insel: 1
+  inaktiv-tage: 14            # war so lange kein Mitglied online, wird sie wieder frei
+  biome: [jungle, desert, mushroom_fields, cherry_grove, swamp, snowy_taiga, savanna, mangrove_swamp, dark_forest, badlands,
+    flower_forest, bamboo_jungle, pale_garden]
+
+# Preise für die besten Inseln (nach Insel-Level). Coins und Juwelen bekommt jedes Mitglied, der Booster gilt für die
+# Generatoren der Insel. Woche: am Tag um die Stunde (Serverzeit), Monat: am letzten Tag des Monats um die Stunde.
+top-belohnungen:
+  aktiv: true
+  woche:
+    tag: SUNDAY
+    stunde: 20
+    plaetze:
+      "1": {coins: 250000, juwelen: 25, booster: 2.0, booster-minuten: 120}
+      "2": {coins: 150000, juwelen: 15, booster: 2.0, booster-minuten: 60}
+      "3": {coins: 100000, juwelen: 10, booster: 2.0, booster-minuten: 30}
+      "4-10": {coins: 25000, juwelen: 3}
+  monat:
+    stunde: 20
+    plaetze:
+      "1": {coins: 1500000, juwelen: 100, booster: 3.0, booster-minuten: 180}
+      "2": {coins: 900000, juwelen: 60, booster: 2.0, booster-minuten: 180}
+      "3": {coins: 600000, juwelen: 40, booster: 2.0, booster-minuten: 120}
+      "4-10": {coins: 150000, juwelen: 10}
+
 shop:
   bereiche:
     natur:

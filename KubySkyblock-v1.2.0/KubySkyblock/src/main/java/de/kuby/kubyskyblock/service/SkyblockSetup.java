@@ -22,7 +22,7 @@ import java.util.Random;
 
 /**
  * Skyblock in einem Befehl einrichten (/kp skyblock einrichten): Welt anlegen (leer), Weltgrenze, Spawn-Insel mit Platz,
- * Laternen und Bäumen, Brücke zu den One-Block-Plattformen, Spawn setzen, One-Block-Plattformen und Loot-Inseln (in
+ * Laternen und Bäumen, Brücke zu den One-Block-Plattformen, Spawn setzen, One-Block-Plattformen, Biom-Inseln und Loot-Inseln (in
  * kleinen Portionen, damit der Server nicht hängt). Schritte, die schon erledigt sind, werden übersprungen.
  */
 public final class SkyblockSetup {
@@ -74,6 +74,15 @@ public final class SkyblockSetup {
         Msg.send(p, "<green>✔ Spawn gesetzt <gray>(0, " + (TOP + 1) + ", 0).");
         int ob = addon.oneblock().setup(w);
         Msg.send(p, "<green>✔ " + ob + " One-Block-Plattformen.");
+        int bio = Math.max(0, addon.getConfig().getInt("biom-inseln.anzahl", 13) - addon.biomes().all().size());
+        if (bio > 0) {
+            Msg.send(p, "<yellow>… baue " + bio + " Biom-Inseln (eine je Tick).");
+            addon.biomes().generate(bio, () -> {
+                if (p.isOnline()) Msg.send(p, "<green>✔ " + bio + " Biom-Inseln <gray>(Dschungel, Wüste, Pilzland, Kirschhain …).");
+            });
+        } else {
+            Msg.send(p, "<gray>✔ Biom-Inseln gibt es schon (" + addon.biomes().all().size() + ").");
+        }
         int want = Math.max(0, addon.getConfig().getInt("loot.einrichten-anzahl", 40) - addon.loot().all().size());
         if (want <= 0) {
             Msg.send(p, "<gray>✔ Loot-Inseln gibt es schon (" + addon.loot().all().size() + ").");

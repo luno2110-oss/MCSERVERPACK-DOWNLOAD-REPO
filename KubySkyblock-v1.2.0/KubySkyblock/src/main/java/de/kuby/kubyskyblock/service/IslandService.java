@@ -81,7 +81,7 @@ public final class IslandService {
         public String name = "Insel";
         public String template = "";
         public boolean open = true;
-        public int size, slots, generator;
+        public int size, slots, generator, growth, spawn, limit;
         public long points;
         public long created, lastReset, lastLevel;
         /** Zuhause: Welt-Koordinaten x, y, z, yaw, pitch (null = Spawn der Vorlage). */
@@ -197,8 +197,16 @@ public final class IslandService {
         return radius(i.size);
     }
 
-    /** Insel an dieser Stelle (innerhalb ihres Radius), sonst null. */
+    /** Insel an dieser Stelle (innerhalb ihres Radius oder auf einer beanspruchten Biom-Insel), sonst null. */
     public Island islandAt(Location l) {
+        Island i = mainIslandAt(l);
+        if (i != null || l == null || addon.biomes() == null) return i;
+        BiomeIslandService.BIsland b = addon.biomes().at(l);
+        return b == null || b.owner <= 0 ? null : bySlot.get(b.owner);
+    }
+
+    /** Nur die Insel selbst (ohne Biom-Inseln), z. B. für die Punkte. */
+    public Island mainIslandAt(Location l) {
         if (l == null || l.getWorld() == null || !l.getWorld().getName().equals(core.modes().worldOf(ModeService.SKYBLOCK))) return null;
         for (Island i : legacy) {
             int r = radius(i);
@@ -449,6 +457,8 @@ public final class IslandService {
             byCell.remove(key(c[0], c[1]));
         }
         for (UUID u : i.everyone()) if (byPlayer.get(u) == i) byPlayer.remove(u);
+        if (addon.biomes() != null) addon.biomes().releaseAll(i.slot);
+        if (addon.limits() != null) addon.limits().forget(i.slot);
     }
 
     /** Ohne Vorlage: 5 x 5 Erde mit Gras und Kiste. */
@@ -493,6 +503,30 @@ public final class IslandService {
         OfflinePlayer op = Bukkit.getOfflinePlayerIfCached(target);
         Island i = op == null ? null : islandOf(op.getUniqueId());
         if (i == null) return "Dieser Spieler hat keine Insel.";
+        return visit(p, i);
+    }
+
+    /** Offene Inseln zum Besuchen (ohne die eigene und gesperrte), beste zuerst. */
+    public List<Island> openIslands(Player p) {
+        List<Island> l = new ArrayList<>();
+        for (Island i : bySlot.values()) {
+            if (i.owner == null || !i.open || busy.contains(i.slot) || i.isMember(p.getUniqueId()) || i.banned.contains(p.getUniqueId())) continue;
+            l.add(i);
+        }
+        l.sort(Comparator.comparingLong((Island i) -> i.points).reversed());
+        return l;
+    }
+
+    /** Wie viele Mitglieder der Insel sind online? */
+    public int online(Island i) {
+        int n = 0;
+        for (UUID u : i.everyone()) if (Bukkit.getPlayer(u) != null) n++;
+        return n;
+    }
+
+    public String visit(Player p, Island i) {
+        if (i == null || bySlot.get(i.slot) != i) return "Diese Insel gibt es nicht mehr.";
+        if (busy.contains(i.slot)) return "Die Insel wird gerade neu gebaut.";
         if (i.banned.contains(p.getUniqueId()) && !p.hasPermission("kuby.admin")) return "Du bist auf dieser Insel gesperrt.";
         if (!mayEnter(p, i)) return "Diese Insel ist für Besucher geschlossen.";
         home(p, i);
@@ -665,6 +699,7 @@ public final class IslandService {
         Msg.send(p, "<gray>Deine Insel wird geleert und neu gebaut ...");
         clear(i, () -> {
             busy.remove(i.slot);
+            if (addon.limits() != null) addon.limits().forget(i.slot);
             TemplateService.Template t = addon.templates().get(templateId != null ? templateId : i.template);
             i.template = t == null ? "" : t.id();
             if (t != null) addon.templates().build(t, center(i));
@@ -713,13 +748,37 @@ public final class IslandService {
     // Upgrades
     // =================================================================================================================
 
-    public enum Upgrade { SIZE, SLOTS, GENERATOR }
+    /** Größe, Mitglieder, Bruchstein-Generator, Wachstum (Pflanzen), Spawnrate (Tiere und Monster), Limits (Lag-Grenzen). */
+    public enum Upgrade { SIZE, SLOTS, GENERATOR, GROWTH, SPAWN, LIMIT }
 
     public int level(Island i, Upgrade u) {
         return switch (u) {
             case SIZE -> i.size;
             case SLOTS -> i.slots;
             case GENERATOR -> i.generator;
+            case GROWTH -> i.growth;
+            case SPAWN -> i.spawn;
+            case LIMIT -> i.limit;
+        };
+    }
+
+    /** Preisliste aus der config (Index 0 = Start). */
+    private List<Long> prices(Upgrade u) {
+        String key = switch (u) {
+            case SIZE -> "groesse";
+            case SLOTS -> "mitglieder";
+            case GROWTH -> "wachstum";
+            case SPAWN -> "spawnrate";
+            default -> "limits";
+        };
+        List<Long> l = addon.getConfig().getLongList("insel.upgrades." + key);
+        if (!l.isEmpty()) return l;
+        return switch (u) {
+            case SIZE -> List.of(0L, 25_000L, 75_000L, 200_000L, 500_000L);
+            case SLOTS -> List.of(0L, 10_000L, 40_000L, 100_000L);
+            case GROWTH -> List.of(0L, 15_000L, 50_000L, 150_000L, 400_000L);
+            case SPAWN -> List.of(0L, 20_000L, 60_000L, 180_000L, 450_000L);
+            default -> List.of(0L, 25_000L, 75_000L, 200_000L, 500_000L);
         };
     }
 
@@ -728,6 +787,7 @@ public final class IslandService {
             case SIZE -> maxSize();
             case SLOTS -> maxSlots();
             case GENERATOR -> Math.max(0, generatorLevels().size() - 1);
+            default -> prices(u).size() - 1;
         };
     }
 
@@ -736,9 +796,18 @@ public final class IslandService {
         int next = level(i, u) + 1;
         if (next > maxLevel(u)) return -1;
         if (u == Upgrade.GENERATOR) return generatorLevels().get(next).cost();
-        List<Long> l = addon.getConfig().getLongList(u == Upgrade.SIZE ? "insel.upgrades.groesse" : "insel.upgrades.mitglieder");
-        if (l.isEmpty()) l = u == Upgrade.SIZE ? List.of(0L, 25_000L, 75_000L, 200_000L, 500_000L) : List.of(0L, 10_000L, 40_000L, 100_000L);
+        List<Long> l = prices(u);
         return l.get(Math.min(next, l.size() - 1));
+    }
+
+    /** Bonus des Wachstums-Upgrades: Chance, dass eine Pflanze gleich eine Stufe mehr wächst (0 bis 1). */
+    public double growthChance(Island i) {
+        return i == null ? 0 : Math.min(1.0, i.growth * addon.getConfig().getDouble("wachstum.bonus-je-stufe", 0.25));
+    }
+
+    /** Bonus des Spawnrate-Upgrades: Chance auf ein zweites Wesen beim natürlichen Spawnen (0 bis 1). */
+    public double spawnChance(Island i) {
+        return i == null ? 0 : Math.min(1.0, i.spawn * addon.getConfig().getDouble("spawnrate.bonus-je-stufe", 0.2));
     }
 
     public String upgrade(Player p, Upgrade u) {
@@ -752,6 +821,9 @@ public final class IslandService {
             case SIZE -> i.size++;
             case SLOTS -> i.slots++;
             case GENERATOR -> i.generator++;
+            case GROWTH -> i.growth++;
+            case SPAWN -> i.spawn++;
+            case LIMIT -> i.limit++;
         }
         dirty = true;
         core.questProgress(p, "insel_upgrade", u.name().toLowerCase(), 1);
@@ -761,6 +833,9 @@ public final class IslandService {
                 case SIZE -> "Größe " + (2 * radius(i) + 1) + " x " + (2 * radius(i) + 1);
                 case SLOTS -> memberLimit(i) + " Mitglieder";
                 case GENERATOR -> "Generator Stufe " + (i.generator + 1);
+                case GROWTH -> "Wachstum +" + Math.round(growthChance(i) * 100) + " %";
+                case SPAWN -> "Spawnrate +" + Math.round(spawnChance(i) * 100) + " %";
+                case LIMIT -> "Limits +" + Math.round(addon.limits().bonus(i) * 100) + " %";
             });
         }
         Sfx.play(core, p, Sfx.Kind.LEVEL_UP);
@@ -836,7 +911,7 @@ public final class IslandService {
 
     /** Gesetzter oder abgebauter Block auf einer Insel. */
     public void addPoints(Location l, Material m, int sign) {
-        Island i = islandAt(l);
+        Island i = mainIslandAt(l);
         if (i == null) return;
         long v = value(m);
         if (v == 0) return;
@@ -983,6 +1058,9 @@ public final class IslandService {
                 i.size = s.getInt("size");
                 i.slots = s.getInt("slots");
                 i.generator = s.getInt("generator");
+                i.growth = s.getInt("growth");
+                i.spawn = s.getInt("spawn");
+                i.limit = s.getInt("limit");
                 i.points = s.getLong("points");
                 i.created = s.getLong("created");
                 i.lastReset = s.getLong("reset");
@@ -1031,6 +1109,9 @@ public final class IslandService {
             out.set(b + "size", i.size);
             out.set(b + "slots", i.slots);
             out.set(b + "generator", i.generator);
+            out.set(b + "growth", i.growth);
+            out.set(b + "spawn", i.spawn);
+            out.set(b + "limit", i.limit);
             out.set(b + "points", i.points);
             out.set(b + "created", i.created);
             out.set(b + "reset", i.lastReset);

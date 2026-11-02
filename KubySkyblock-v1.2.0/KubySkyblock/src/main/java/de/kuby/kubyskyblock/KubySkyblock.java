@@ -46,6 +46,12 @@ public final class KubySkyblock extends JavaPlugin {
     public OneBlockService oneblock() { return oneblock; }
     private de.kuby.kubyskyblock.service.SkyShopService shop;
     public de.kuby.kubyskyblock.service.SkyShopService shop() { return shop; }
+    private de.kuby.kubyskyblock.service.BiomeIslandService biomes;
+    private de.kuby.kubyskyblock.service.LimitService limits;
+    private de.kuby.kubyskyblock.service.TopRewardService rewards;
+    public de.kuby.kubyskyblock.service.BiomeIslandService biomes() { return biomes; }
+    public de.kuby.kubyskyblock.service.LimitService limits() { return limits; }
+    public de.kuby.kubyskyblock.service.TopRewardService rewards() { return rewards; }
     public ProgressService progress() { return progress; }
     public de.kuby.kubyskyblock.service.GeneratorService generators() { return generators; }
     public SkyblockCommand command() { return command; }
@@ -74,8 +80,12 @@ public final class KubySkyblock extends JavaPlugin {
         de.kuby.kubyskyblock.gui.GeneratorScreen.samples(core::registerSelfTestCanvas);
         de.kuby.kubyskyblock.gui.OneBlockScreen.samples(core::registerSelfTestCanvas);
         de.kuby.kubyskyblock.gui.SkyShopScreen.samples(core::registerSelfTestCanvas);
+        de.kuby.kubyskyblock.gui.IslandExtraScreen.samples(core::registerSelfTestCanvas);
         saveDefaultConfig();
         islands = new IslandService(this, core);
+        biomes = new de.kuby.kubyskyblock.service.BiomeIslandService(this, core);
+        limits = new de.kuby.kubyskyblock.service.LimitService(this);
+        rewards = new de.kuby.kubyskyblock.service.TopRewardService(this, core);
         streaks = new StreakService(this, core);
         templates = new TemplateService(this);
         loot = new LootService(this, core);
@@ -138,6 +148,8 @@ public final class KubySkyblock extends JavaPlugin {
                 "Zuhause, Mitglieder, Upgrades und Level", de.kuby.kubyskyblock.gui.IslandScreen::open));
         core.registerMainEntry(ModeService.SKYBLOCK, new KubyPlugins.MainEntry(org.bukkit.Material.GOLD_INGOT, "Top-Inseln",
                 "Die besten Inseln nach Level", de.kuby.kubyskyblock.gui.IslandScreen::top));
+        core.registerMainEntry(ModeService.SKYBLOCK, new KubyPlugins.MainEntry(org.bukkit.Material.OAK_SIGN, "Besuchen",
+                "Offene Inseln anderer Spieler und Biom-Inseln", de.kuby.kubyskyblock.gui.IslandExtraScreen::visit));
         core.registerMainEntry(ModeService.SKYBLOCK, new KubyPlugins.MainEntry(org.bukkit.Material.BOOK, "Checkliste",
                 "Alle Items sammeln, Erfolge und Meilensteine", pl -> new de.kuby.kubyskyblock.gui.SkyScreen(core).open(pl)));
         core.registerMainEntry(ModeService.SKYBLOCK, new KubyPlugins.MainEntry(org.bukkit.Material.BLAST_FURNACE, "Generatoren",
@@ -149,6 +161,7 @@ public final class KubySkyblock extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new de.kuby.kubyskyblock.listener.IslandListener(this, core), this);
         getServer().getPluginManager().registerEvents(new de.kuby.kubyskyblock.gui.LootEditMenu.Events(), this);
         getServer().getPluginManager().registerEvents(new de.kuby.kubyskyblock.listener.GeneratorListener(this), this);
+        getServer().getPluginManager().registerEvents(new de.kuby.kubyskyblock.listener.LimitListener(this, core), this);
         core.registerJewelShop(ModeService.SKYBLOCK, new KubyPlugins.JewelShopHook() {
             @Override
             public boolean open(org.bukkit.entity.Player p, String sub) {
@@ -176,6 +189,9 @@ public final class KubySkyblock extends JavaPlugin {
             insel.setTabCompleter(ic);
         }
         getServer().getScheduler().runTaskTimer(this, islands::saveIfDirty, 6000L, 6000L);
+        // Preise der Top-Inseln alle 5 Minuten prüfen, Biom-Inseln stündlich (inaktive freigeben)
+        getServer().getScheduler().runTaskTimer(this, rewards::tick, 1200L, 6000L);
+        getServer().getScheduler().runTaskTimer(this, biomes::tick, 2400L, 72_000L);
         getLogger().info("KubySkyblock aktiv.");
     }
 
@@ -183,6 +199,8 @@ public final class KubySkyblock extends JavaPlugin {
     public void onDisable() {
         if (streaks != null) streaks.save();
         if (islands != null) islands.save();
+        if (biomes != null) biomes.save();
+        if (rewards != null) rewards.save();
         if (loot != null) loot.save();
         if (progress != null) progress.save();
         if (generators != null) {

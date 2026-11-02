@@ -57,13 +57,22 @@ public final class IslandScreen {
                        List<Up> ups, List<Member> members, int limit, Consumer<Player> home, Consumer<Player> setHome,
                        Consumer<Player> toggle, Consumer<Player> top, Consumer<Player> invite, Consumer<Player> leave,
                        Consumer<Player> recalc, Consumer<Player> progress, Consumer<Player> reset, Consumer<Player> abandon,
-                       String resetHint, Consumer<Player> access) {
+                       String resetHint, Consumer<Player> access, Consumer<Player> limits) {
+        public View(String name, long level, int rank, long points, long nextLevel, boolean open, boolean isOwner, long coins,
+                    List<Up> ups, List<Member> members, int limit, Consumer<Player> home, Consumer<Player> setHome,
+                    Consumer<Player> toggle, Consumer<Player> top, Consumer<Player> invite, Consumer<Player> leave,
+                    Consumer<Player> recalc, Consumer<Player> progress, Consumer<Player> reset, Consumer<Player> abandon, String resetHint,
+                    Consumer<Player> access) {
+            this(name, level, rank, points, nextLevel, open, isOwner, coins, ups, members, limit, home, setHome, toggle, top, invite, leave,
+                    recalc, progress, reset, abandon, resetHint, access, null);
+        }
+
         public View(String name, long level, int rank, long points, long nextLevel, boolean open, boolean isOwner, long coins,
                     List<Up> ups, List<Member> members, int limit, Consumer<Player> home, Consumer<Player> setHome,
                     Consumer<Player> toggle, Consumer<Player> top, Consumer<Player> invite, Consumer<Player> leave,
                     Consumer<Player> recalc, Consumer<Player> progress, Consumer<Player> reset, Consumer<Player> abandon, String resetHint) {
             this(name, level, rank, points, nextLevel, open, isOwner, coins, ups, members, limit, home, setHome, toggle, top, invite, leave,
-                    recalc, progress, reset, abandon, resetHint, null);
+                    recalc, progress, reset, abandon, resetHint, null, null);
         }
     }
 
@@ -133,11 +142,32 @@ public final class IslandScreen {
                     probe.slots--;
                     next = price < 0 ? null : nl + " Plätze";
                 }
-                default -> {
+                case GENERATOR -> {
                     name = "Generator";
                     icon = KitData.Sprite.HB_GENERATOR;
                     now = "Stufe " + (i.generator + 1);
                     next = price < 0 ? null : "Stufe " + (i.generator + 2) + ": " + newOres(is, i.generator + 1);
+                }
+                case GROWTH -> {
+                    name = "Wachstum";
+                    icon = KitData.Sprite.HB_IS_WACHSTUM;
+                    double per = sb().getConfig().getDouble("wachstum.bonus-je-stufe", 0.25);
+                    now = i.growth == 0 ? "normal" : "+" + Math.round(is.growthChance(i) * 100) + " % Pflanzen";
+                    next = price < 0 ? null : "+" + Math.round(Math.min(1, (i.growth + 1) * per) * 100) + " % schneller wachsen";
+                }
+                case SPAWN -> {
+                    name = "Spawnrate";
+                    icon = KitData.Sprite.HB_IS_SPAWN;
+                    double per = sb().getConfig().getDouble("spawnrate.bonus-je-stufe", 0.2);
+                    now = i.spawn == 0 ? "normal" : "+" + Math.round(is.spawnChance(i) * 100) + " % Wesen";
+                    next = price < 0 ? null : "+" + Math.round(Math.min(1, (i.spawn + 1) * per) * 100) + " % Tiere und Monster";
+                }
+                default -> {
+                    name = "Limits";
+                    icon = KitData.Sprite.HB_IS_LIMITS;
+                    double per = sb().getConfig().getDouble("limits.bonus-je-stufe", 0.25);
+                    now = i.limit == 0 ? "Grundwerte" : "+" + Math.round(sb().limits().bonus(i) * 100) + " %";
+                    next = price < 0 ? null : "+" + Math.round((i.limit + 1) * per * 100) + " % Trichter, Tiere …";
                 }
             }
             ups.add(new Up(name, icon, now, next, Math.max(0, price), price >= 0 && coins >= price, price < 0 ? null : run(pl -> {
@@ -191,7 +221,7 @@ public final class IslandScreen {
                         : "Die Insel geht an " + IslandService.nameOf(i.members.iterator().next()) + ". Wirklich aufgeben?", "Aufgeben", q ->
                         feedback(q, is.abandon(q)))) : null,
                 owner && left > 0 ? "Neustart in " + de.kuby.kubyplugins.service.KitService.format(left) : null,
-                manage ? run(IslandScreen::access) : null)), 330);
+                manage ? run(IslandScreen::access) : null, run(IslandExtraScreen::limits))), 330);
     }
 
     /** Welche Blöcke ab dieser Generator-Stufe neu dazukommen (kurz). */
@@ -240,7 +270,7 @@ public final class IslandScreen {
                     + t.level());
             return;
         }
-        UiDialog.show(p, top(rows, own, run(IslandScreen::open)), 330);
+        UiDialog.show(p, top(rows, own, run(IslandScreen::open), run(IslandExtraScreen::prizes), run(IslandExtraScreen::visit)), 330);
     }
 
     /** Wahl der Insel-Vorlage (erste Insel). */
@@ -537,24 +567,25 @@ public final class IslandScreen {
         int cw = (W - 8) / 3, ch = 82;
         for (int k = 0; k < v.ups().size(); k++) {
             Up u = v.ups().get(k);
-            int x = k * (cw + 4);
-            c.box(x, y, cw, ch, KitData.Box.CLOUD_CARD);
-            c.sprite(x + 6 + (32 - u.icon().width) / 2, y + 6 + (32 - u.icon().height) / 2, u.icon());
-            c.text(x + 42, y + 8, Canvas.fit(u.name(), true, cw - 48), CLOUD, true);
-            c.text(x + 42, y + 20, Canvas.fit(u.now(), false, cw - 48), MIST, false);
+            int x = (k % 3) * (cw + 4);
+            int cy = y + (k / 3) * (ch + 4);
+            c.box(x, cy, cw, ch, KitData.Box.CLOUD_CARD);
+            c.sprite(x + 6 + (32 - u.icon().width) / 2, cy + 6 + (32 - u.icon().height) / 2, u.icon());
+            c.text(x + 42, cy + 8, Canvas.fit(u.name(), true, cw - 48), CLOUD, true);
+            c.text(x + 42, cy + 20, Canvas.fit(u.now(), false, cw - 48), MIST, false);
             if (u.next() == null) {
-                c.text(x + 8, y + 46, Canvas.caps("Höchste Stufe"), GREEN, false);
+                c.text(x + 8, cy + 46, Canvas.caps("Höchste Stufe"), GREEN, false);
             } else {
                 List<String> nl = Canvas.wrap("→ " + u.next(), cw - 16);
-                for (int l = 0; l < Math.min(2, nl.size()); l++) c.text(x + 8, y + 42 + 10 * l, nl.get(l), GREEN, false);
-                c.text(x + 8, y + ch - 14, Msg.coins(u.price()) + " $", u.affordable() ? GOLD : RED, true);
-                int bw = 52;
-                c.smallButton(x + cw - 6 - bw, y + ch - 20, bw, u.affordable() ? KitData.Small.GOLD : KitData.Small.DARK, "Kaufen",
+                for (int l = 0; l < Math.min(2, nl.size()); l++) c.text(x + 8, cy + 42 + 10 * l, nl.get(l), GREEN, false);
+                int bw = 46;
+                c.text(x + 8, cy + ch - 14, Canvas.fit(Msg.coins(u.price()) + " $", false, cw - 16 - bw - 4), u.affordable() ? GOLD : RED, false);
+                c.smallButton(x + cw - 6 - bw, cy + ch - 20, bw, u.affordable() ? KitData.Small.GOLD : KitData.Small.DARK, "Kaufen",
                         u.affordable() ? GOLD : DIM, true);
-                if (u.buy() != null && u.affordable()) c.action(x + cw - 6 - bw, y + ch - 20, bw, KitData.SMALL_H, u.buy(), u.name() + " verbessern");
+                if (u.buy() != null && u.affordable()) c.action(x + cw - 6 - bw, cy + ch - 20, bw, KitData.SMALL_H, u.buy(), u.name() + " verbessern");
             }
         }
-        y += ch + 10;
+        y += ((v.ups().size() + 2) / 3) * (ch + 4) + 6;
 
         // Mitglieder
         y = section(c, y, "Mitglieder", v.members().size() + "/" + v.limit());
@@ -592,21 +623,25 @@ public final class IslandScreen {
 
         // Insel
         y = section(c, y, "Insel", v.resetHint());
-        int bw = (W - 9) / 4;
-        String[] labels = {"Level zählen", "Generatoren", "Neu starten", "Aufgeben"};
+        int bw = (W - 12) / 5;
+        String[] labels = {"Level zählen", "Generatoren", "Limits", "Neu starten", "Aufgeben"};
         @SuppressWarnings("unchecked")
-        Consumer<Player>[] acts = new Consumer[]{v.recalc(), v.progress(), v.reset(), v.abandon()};
-        for (int k = 0; k < 4; k++) {
+        Consumer<Player>[] acts = new Consumer[]{v.recalc(), v.progress(), v.limits(), v.reset(), v.abandon()};
+        for (int k = 0; k < 5; k++) {
             int x = k * (bw + 3);
             boolean on = acts[k] != null;
-            KitData.Small st = !on ? KitData.Small.DARK : k >= 2 ? KitData.Small.DARK : KitData.Small.GOLD;
-            c.smallButton(x, y, bw, st, labels[k], !on ? DIM : k >= 2 ? RED : GOLD, on && k < 2);
+            KitData.Small st = !on ? KitData.Small.DARK : k >= 3 ? KitData.Small.DARK : KitData.Small.GOLD;
+            c.smallButton(x, y, bw, st, labels[k], !on ? DIM : k >= 3 ? RED : GOLD, false);
             if (on) c.action(x, y, bw, KitData.SMALL_H, acts[k], labels[k]);
         }
         return c;
     }
 
     public static Canvas top(List<TopRow> rows, TopRow own, Consumer<Player> back) {
+        return top(rows, own, back, null, null);
+    }
+
+    public static Canvas top(List<TopRow> rows, TopRow own, Consumer<Player> back, Consumer<Player> prizes, Consumer<Player> visit) {
         Canvas c = new Canvas(W).heading("Top-Inseln", SKY);
         c.box(0, 0, W, 54, KitData.Box.CLOUD);
         c.sprite(10 + (32 - KitData.Sprite.QU_RANK_HEAD.width) / 2, 11 + (32 - KitData.Sprite.QU_RANK_HEAD.height) / 2, KitData.Sprite.QU_RANK_HEAD);
@@ -615,6 +650,14 @@ public final class IslandScreen {
         c.smallButton(W - 8 - 70, 18, 70, KitData.Small.DARK, "Zurück", CLOUD, false);
         c.action(W - 8 - 70, 18, 70, KitData.SMALL_H, back, "Zurück");
         int y = 60;
+        if (prizes != null || visit != null) {
+            int bw = (W - 4) / 2;
+            c.smallButton(0, y, bw, KitData.Small.GOLD, "Preise & Gewinner", GOLD, true);
+            if (prizes != null) c.action(0, y, bw, KitData.SMALL_H, prizes, "Wochen- und Monatspreise der besten Inseln");
+            c.smallButton(bw + 4, y, bw, KitData.Small.GREEN, "Inseln besuchen", CLOUD, true);
+            if (visit != null) c.action(bw + 4, y, bw, KitData.SMALL_H, visit, "Offene Inseln und Biom-Inseln");
+            y += KitData.SMALL_H + 6;
+        }
         KitData.Sprite[] medals = {KitData.Sprite.QU_M_GOLD, KitData.Sprite.QU_M_SILVER, KitData.Sprite.QU_M_BRONZE};
         for (TopRow t : rows) y = topRow(c, y, t, medals);
         if (rows.isEmpty()) {
@@ -671,7 +714,10 @@ public final class IslandScreen {
         String w = "W".repeat(40);
         List<Up> ups = List.of(new Up("Größe", KitData.Sprite.HB_GROESSE, "999 x 999", "999 x 999", 999_999_999L, true, no),
                 new Up("Mitglieder", KitData.Sprite.HB_MITGLIEDER, "99 Plätze", "99 Plätze", 999_999_999L, false, no),
-                new Up("Generator", KitData.Sprite.HB_GENERATOR, "Stufe 99", "Stufe 99: Diamant, Smaragd, Antiker Schrott, Lapis", 1, true, no));
+                new Up("Generator", KitData.Sprite.HB_GENERATOR, "Stufe 99", "Stufe 99: Diamant, Smaragd, Antiker Schrott, Lapis", 1, true, no),
+                new Up("Wachstum", KitData.Sprite.HB_IS_WACHSTUM, "+100 % Pflanzen", "+100 % schneller wachsen", 999_999_999L, true, no),
+                new Up("Spawnrate", KitData.Sprite.HB_IS_SPAWN, "+100 % Wesen", "+100 % Tiere und Monster", 999_999_999L, false, no),
+                new Up("Limits", KitData.Sprite.HB_IS_LIMITS, "+999 %", null, 0, false, null));
         List<Member> ms = new ArrayList<>();
         for (int k = 0; k < 11; k++) ms.add(new Member("W".repeat(16), k == 0, k % 2 == 0, k == 0 ? null : no));
         reg.accept("Insel", () -> canvas(new View(w, 999_999L, 99_999, 999_999_999L, 999_999_999L, true, true, 999_999_999L, ups, ms, 11,
@@ -684,7 +730,7 @@ public final class IslandScreen {
                 no, no, null, no, null, no, no, no, null, null, null)));
         List<TopRow> rows = new ArrayList<>();
         for (int k = 1; k <= 10; k++) rows.add(new TopRow(k, w, "W".repeat(16), 999_999_999L, 999_999_999L, k == 4));
-        reg.accept("Insel Top", () -> top(rows, new TopRow(99_999, w, "W".repeat(16), 1, 1, true), no));
+        reg.accept("Insel Top", () -> top(rows, new TopRow(99_999, w, "W".repeat(16), 1, 1, true), no, no, no));
         reg.accept("Insel Top leer", () -> top(List.of(), null, no));
         List<Member> roles = new ArrayList<>();
         roles.add(new Member("W".repeat(16), true, true, null, "Besitzer", null, null));

@@ -74,11 +74,17 @@ public final class IslandMenu extends GuiMenu {
                 case SIZE -> Material.GRASS_BLOCK;
                 case SLOTS -> Material.PLAYER_HEAD;
                 case GENERATOR -> Material.COBBLESTONE;
+                case GROWTH -> Material.WHEAT;
+                case SPAWN -> Material.ZOMBIE_SPAWN_EGG;
+                case LIMIT -> Material.HOPPER;
             };
             String name = switch (u) {
                 case SIZE -> "Größe";
                 case SLOTS -> "Mitglieder";
                 case GENERATOR -> "Generator";
+                case GROWTH -> "Wachstum";
+                case SPAWN -> "Spawnrate";
+                case LIMIT -> "Limits";
             };
             set(slot++, Items.make(m, "<gold>" + name + " <gray>Stufe " + (is.level(i, u) + 1), List.of(price < 0 ? "<green>Höchste Stufe"
                     : "<gray>Nächste Stufe: <gold>" + Msg.coins(price) + " $", "<yellow>Klick: kaufen")), e -> {
@@ -86,9 +92,9 @@ public final class IslandMenu extends GuiMenu {
                 refresh(p);
             });
         }
-        int ms = 23;
+        int ms = 28;
         for (UUID m : i.everyone()) {
-            if (ms > 25) break;
+            if (ms > 30) break;
             boolean isOwner = m.equals(i.owner);
             List<String> lore = new ArrayList<>();
             lore.add(isOwner ? "<gold>Besitzer" : "<gray>Mitglied");

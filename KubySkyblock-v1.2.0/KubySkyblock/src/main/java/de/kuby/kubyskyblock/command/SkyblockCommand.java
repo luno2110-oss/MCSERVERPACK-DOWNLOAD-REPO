@@ -116,8 +116,32 @@ public final class SkyblockCommand implements BiConsumer<Player, String[]> {
                 int made = addon.oneblock().setup(p.getWorld());
                 Msg.send(p, "<green>" + made + " One-Block-Plattformen aufgebaut.");
             }
+            case "biominseln", "biome" -> {
+                int n = addon.getConfig().getInt("biom-inseln.anzahl", 13);
+                if (args.length > 2) {
+                    try {
+                        n = Math.max(1, Math.min(100, Integer.parseInt(args[2])));
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+                int want = n;
+                Msg.send(p, "<yellow>… baue " + want + " Biom-Inseln (eine je Tick).");
+                addon.biomes().generate(want, () -> {
+                    if (p.isOnline()) Msg.send(p, "<green>✔ " + want + " Biom-Inseln gebaut <gray>(jetzt " + addon.biomes().all().size() + ").");
+                });
+            }
+            case "preise" -> {
+                String per = args.length > 2 ? args[2].toLowerCase(Locale.ROOT) : "";
+                if (!per.equals(de.kuby.kubyskyblock.service.TopRewardService.WEEK) && !per.equals(de.kuby.kubyskyblock.service.TopRewardService.MONTH)) {
+                    Msg.send(p, "<red>/kp skyblock preise <woche|monat> <gray>(zahlt jetzt sofort aus)");
+                    return;
+                }
+                addon.rewards().payout(per);
+                Msg.send(p, "<green>Preise (" + per + ") ausgezahlt.");
+            }
             case "list" -> Msg.send(p, "<gray>Loot-Inseln: <white>" + addon.loot().all().size()
-                    + " <dark_gray>| <gray>Inseln der Spieler: <white>" + addon.islands().count());
+                    + " <dark_gray>| <gray>Inseln der Spieler: <white>" + addon.islands().count()
+                    + " <dark_gray>| <gray>Biom-Inseln: <white>" + addon.biomes().all().size());
             default -> help(p);
         }
     }
@@ -131,6 +155,8 @@ public final class SkyblockCommand implements BiConsumer<Player, String[]> {
         Msg.send(p, "<gold>/kp skyblock loot generate [anzahl] <dark_gray>- <gray>Loot-Inseln erzeugen");
         Msg.send(p, "<gold>/kp skyblock loot edit <stufe> <dark_gray>- <gray>Loot-Tabelle im Spiel bearbeiten");
         Msg.send(p, "<gold>/kp skyblock oneblock setup <dark_gray>- <gray>One-Block-Plattformen aufbauen");
+        Msg.send(p, "<gold>/kp skyblock biominseln [anzahl] <dark_gray>- <gray>Weitere Biom-Inseln bauen");
+        Msg.send(p, "<gold>/kp skyblock preise <woche|monat> <dark_gray>- <gray>Preise der Top-Inseln jetzt auszahlen");
         Msg.send(p, "<gold>/kp skyblock list <dark_gray>- <gray>Übersicht");
     }
 }
