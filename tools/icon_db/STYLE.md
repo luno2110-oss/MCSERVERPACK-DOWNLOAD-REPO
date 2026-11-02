@@ -35,6 +35,27 @@ Erzeugt von `tools/icon_db/build_icon_db.py` aus 800 Bildern der Referenz-Sätze
 6. Muster wiederholen (Nieten, Bretter, Streifen) mit gleichem Abstand, dann einmal brechen (ein Riss, ein Fleck).
 7. Kein Dithering, keine Kantenglättung mit Zwischenfarben, keine verwaisten Einzelpixel ohne Zweck.
 
+## Lieblingsstil des Besitzers: Generator-Grafiken
+
+Vom Besitzer ausdrücklich als Lieblingsstil genannt (`tools/build_generator_art.py`, `art(kind, q)`, 32 px, Iso-Käfig).
+Was ihn ausmacht, als Vorlage für neue Icons:
+
+1. Ebenen von hinten nach vorn: Bodenschatten (Ellipse, Schwarz mit Alpha 80), dunkles Inneres (nach unten dunkler),
+   hintere Kanten dünn und dunkel, Innengitter durchscheinend (Alpha ~150), das Motiv in der Mitte, vorne der Rahmen.
+2. Licht von innen: das Glühen in der Farbe der Art strahlt von der Mitte aus (weicher Verlauf, höchstens 85 %) und
+   färbt Stäbe nahe der Mitte mit (bis 35 %), so wirkt das Licht, als fiele es durch das Gitter.
+3. Durchscheinen statt Verdecken: wo der vordere Rahmen über dem Motiv liegt, ist er halb durchsichtig (Alpha ~110),
+   das Motiv bleibt lesbar und liegt sichtbar „im“ Käfig.
+4. Rahmen mit Fase: Außenkanten doppelt (zweite Linie innen, etwas dunkler), Oberkanten hell, Unterkanten dunkel.
+5. Nieten an den Ecken (heller Punkt mit Kreuz aus Mischfarben), Material je Qualität (Eisen, Silber, Gold, Diamant).
+6. Kontur fast schwarz, in der Rahmenfarbe getönt (88 % Richtung Tinte).
+7. Leben darüber: einzelne Funken in der Glühfarbe mit Alpha über dem Käfig, Funkeln je Qualität (weißer Kern,
+   farbiges Kreuz, äußere Arme Alpha 170).
+8. Farben gedeckt und tief (dunkles Blau-Schwarz innen, gesättigtes Glühen nur in der Mitte), nicht flach und bunt.
+
+Hinweis: Dieser Stil nutzt bewusst Alpha-Ebenen und weiche Verläufe (Glühen, Schatten, Durchscheinen). Die Regel
+„keine weichen Zwischenfarben“ unten gilt für Flächen und Kanten, nicht für Licht- und Tiefen-Effekte wie hier.
+
 ## Hex-Verhalten (Kanäle Schritt für Schritt)
 
 So bewegen sich die Hex-Werte in typischen Referenz-Rampen (dunkel -> hell):

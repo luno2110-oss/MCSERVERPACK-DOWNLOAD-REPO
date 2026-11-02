@@ -22,6 +22,11 @@ Stil-Regeln (vom Besitzer, dazu die Messwerte in STYLE.md):
 4. Symmetrie ist wichtig, ebenso das Brechen der Symmetrie (Form symmetrisch, Licht und ein Detail asymmetrisch).
 5. Professionell wirken lassen: klare Silhouette, lesbar auch in 16 px, vor dem Abgeben mit den Referenzen auf einem
    Kontaktbogen vergleichen.
+6. **Lieblingsstil des Besitzers** („DIESEN ARTSTYLE LIEBE ICH!!!“): die Skyblock-Generator-Grafiken
+   (`tools/build_generator_art.py`, Bilder in `tools/assets/generators/`). Neue Icons, wo es passt, daran ausrichten:
+   Tiefe durch Ebenen (hinten dunkel, Motiv in der Mitte, vorne Rahmen), Glühen aus dem Inneren, das die Teile nahe der
+   Mitte einfärbt, durchscheinende Stäbe oder Teile vor dem Motiv, weicher Bodenschatten, Funken und Funkeln darüber,
+   Nieten an den Ecken, gedeckte tiefe Farben statt flacher Sättigung. Details in `tools/icon_db/STYLE.md`.
 
 ## Arbeitsablauf
 
