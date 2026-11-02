@@ -70,6 +70,7 @@ public final class MainScreen {
             case "Checkliste" -> KitData.Sprite.QU_T_SIDE;
             case "Generatoren" -> KitData.Sprite.GN_GELD_GOLD;
             case "One-Block" -> KitData.Sprite.HB_ONEBLOCK;
+            case "Cookie Clicker" -> KitData.Sprite.CK_COOKIE;
             // SMP
             case "Duelle" -> KitData.Sprite.HB_DUELLE;
             case "Turnier" -> KitData.Sprite.HB_TURNIER;

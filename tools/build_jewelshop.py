@@ -36,10 +36,12 @@ ASSETS_HUB = os.path.join(HERE, "assets", "hub")
 ASSETS_EVENTS = os.path.join(HERE, "assets", "events")
 # Skyblock-Generatoren (build_generator_art.py): Präfix gn_
 ASSETS_GENERATORS = os.path.join(HERE, "assets", "generators")
+# Cookie Clicker (build_cookie_art.py): Präfix ck_
+ASSETS_COOKIE = os.path.join(HERE, "assets", "cookie")
 SETS = ((ASSETS, "js_"), (ASSETS_SURVIVAL, "jss_"), (ASSETS_PLAYTIME, "pt_"), (ASSETS_RULES, "rg_"),
         (ASSETS_FRIENDS, "fr_"), (ASSETS_SUPPORT, "su_"), (ASSETS_INFOBAR, "ib_"), (ASSETS_PROFILE, "pf_"),
         (ASSETS_PWARPS, "pw_"), (ASSETS_QUESTS, "qu_"), (ASSETS_HUB, "hb_"),
-        (ASSETS_EVENTS, "ev_"), (ASSETS_GENERATORS, "gn_"))
+        (ASSETS_EVENTS, "ev_"), (ASSETS_GENERATORS, "gn_"), (ASSETS_COOKIE, "ck_"))
 
 
 def available():

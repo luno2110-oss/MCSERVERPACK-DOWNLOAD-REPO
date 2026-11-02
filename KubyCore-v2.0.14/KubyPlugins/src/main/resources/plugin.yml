@@ -176,6 +176,12 @@ commands:
     description: "Ancient Debris gegen End-Kristalle tauschen"
   investments:
     description: "Anteile an Shop-Items kaufen und verkaufen"
+  cookie:
+    description: "Cookie Clicker: Kekse backen, Gebäude, Upgrades, Glückskekse, Aufstieg"
+    usage: "/cookie [gebaeude|upgrades|erfolge|aufstieg|rangliste|statistik|hilfe|station|kaufen]"
+    aliases: [keks, kekse, cookieclicker]
+  cookiehilfe:
+    description: "Hilfe zum Cookie Clicker"
   quizvote:
     description: "Abstimmung über die Quiz-Kategorie der Woche"
   totenkiste:

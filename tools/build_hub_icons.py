@@ -32,12 +32,33 @@ def dark(c, f):
     return mix(c, (0, 0, 0), f)
 
 
+# Premium-Schattierung wie die Referenz-Icons: Licht warm (gelblich-weiß), Schatten kühl (violett-dunkel), satte Farben
+WARM = (255, 244, 206)
+COOL = (46, 24, 72)
+
+
+def saturate(c, f):
+    import colorsys
+    h, s, v = colorsys.rgb_to_hsv(*(x / 255 for x in c))
+    r, g, b = colorsys.hsv_to_rgb(h, min(1.0, s * f), v)
+    return round(r * 255), round(g * 255), round(b * 255)
+
+
+def hl(c, f):
+    return mix(c, WARM, f)
+
+
+def sh(c, f):
+    return mix(c, COOL, f)
+
+
 class Art:
     """Zeichenfläche aus Bereichen: jede Form ist ein Bereich mit Grundfarbe; spätere Formen liegen oben.
     render() schattiert jeden Bereich (Kanten oben/links hell, unten/rechts dunkel, leichter Verlauf) und legt einen
     dunklen Umriss um alles."""
 
-    def __init__(self, size=32):
+    def __init__(self, size=32, premium=False):
+        self.premium = premium
         self.w = self.h = size
         self.rid = [[0] * size for _ in range(size)]
         self.regions = {}
@@ -105,6 +126,8 @@ class Art:
         self.shadow = (x0, y0, x1, y1, a)
 
     def render(self):
+        if self.premium:
+            return self._render_premium()
         w, h = self.w, self.h
         img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
         if self.shadow:
@@ -194,6 +217,99 @@ class Art:
                         px[x, y] = c + (a,)
                     else:
                         px[x, y] = mix(o[:3], c, a / 255) + (255,)
+        return img
+
+
+    def _render_premium(self):
+        """Wie die Referenz-Icons: satte Grundfarbe, oben/links warmes Licht, unten/rechts kühler Schatten, Glanzfleck,
+        dunkle Trennlinie dort, wo ein Teil über einem anderen liegt, und eine fast schwarze Outline außen."""
+        w, h = self.w, self.h
+        img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+        if self.shadow:
+            x0, y0, x1, y1, a = self.shadow
+            m = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+            ImageDraw.Draw(m).ellipse((x0, y0, x1, y1), fill=(0, 0, 0, a))
+            img.alpha_composite(m)
+        px = img.load()
+        rid = self.rid
+        span = {}
+        for y in range(h):
+            for x in range(w):
+                r = rid[y][x]
+                if r:
+                    lo, hi = span.get(r, (y, y))
+                    span[r] = (min(lo, y), max(hi, y))
+
+        def at(x, y):
+            return rid[y][x] if 0 <= x < w and 0 <= y < h else 0
+
+        base_of = {r: saturate(v[0], 1.18) for r, v in self.regions.items()}
+        for y in range(h):
+            for x in range(w):
+                r = rid[y][x]
+                if not r:
+                    continue
+                base, mode, edge = base_of[r], self.regions[r][1], self.regions[r][2]
+                if mode == "flat":
+                    px[x, y] = base + (255,)
+                    continue
+                lo, hi_ = span[r]
+                t = (y - lo) / max(1, hi_ - lo)
+                c = mix(hl(base, 0.22), sh(base, 0.30), t)
+                if mode == "full":
+                    if at(x, y - 1) != r:
+                        c = hl(base, 0.62)
+                    elif at(x - 1, y) != r:
+                        c = hl(base, 0.34)
+                    if at(x, y + 1) != r:
+                        c = sh(dark(base, 0.25), 0.45)
+                    elif at(x + 1, y) != r:
+                        c = sh(base, 0.42)
+                    # Trennlinie: ein späteres Teil mit Kante liegt direkt daneben
+                    for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                        o = at(x + dx, y + dy)
+                        if o > r and self.regions[o][2] and self.regions[o][1] != "flat":
+                            c = mix(sh(base, 0.5), INK, 0.62)
+                            break
+                px[x, y] = c + (255,)
+        # Glanzfleck oben links in größeren Flächen
+        cells = {}
+        for y in range(h):
+            for x in range(w):
+                r = rid[y][x]
+                if r and self.regions[r][1] == "full":
+                    cells.setdefault(r, []).append((x, y))
+        for r, pts in cells.items():
+            if len(pts) < 24:
+                continue
+            base = base_of[r]
+            inner = [(x, y) for x, y in pts if all(at(x + dx, y + dy) == r for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1), (-1, -1), (1, 1)))]
+            if not inner:
+                continue
+            gx, gy = min(inner, key=lambda q: (q[1] + q[0] * 0.8))
+            for dx, dy, f in ((0, 0, 0.85), (1, 0, 0.6), (0, 1, 0.5), (2, 0, 0.35)):
+                if at(gx + dx, gy + dy) == r:
+                    px[gx + dx, gy + dy] = hl(base, f) + (255,)
+        # Outline außen: fast schwarz
+        out = []
+        for y in range(h):
+            for x in range(w):
+                if rid[y][x]:
+                    continue
+                for dx, dy in ((0, 1), (0, -1), (1, 0), (-1, 0)):
+                    o = at(x + dx, y + dy)
+                    if o and self.regions[o][2]:
+                        out.append((x, y, mix(sh(base_of[o], 0.6), INK, 0.88)))
+                        break
+        for x, y, c in out:
+            px[x, y] = c + (255,)
+        for x, y, c, a in self.details + self.after:
+            if 0 <= x < w and 0 <= y < h:
+                if a >= 255:
+                    px[x, y] = c + (255,)
+                else:
+                    o = px[x, y]
+                    px[x, y] = (c + (a,)) if o[3] == 0 else (mix(o[:3], c, a / 255) + (255,))
         return img
 
 
@@ -609,93 +725,115 @@ def i_mitglieder():
 
 
 def i_oneblock():
-    """Schwebender Grasblock (One-Block) mit Erz-Funken und Spitzhacke."""
-    a = Art()
-    a.ground_shadow(6, 27, 26, 31, 60)
-    a.poly([(4, 10), (16, 16), (16, 29), (4, 23)], "8A5A32")
-    a.poly([(16, 16), (28, 10), (28, 23), (16, 29)], "6E4626")
-    a.poly([(4, 10), (16, 16), (16, 19), (4, 13)], "5CB040", mode="soft")
-    a.poly([(16, 16), (28, 10), (28, 13), (16, 19)], "4A9634", mode="soft")
-    a.poly([(16, 4), (28, 10), (16, 16), (4, 10)], "6CC048")
-    a.dots([(12, 8), (17, 7), (21, 10), (14, 11)], "A2E070")
-    a.rect(8, 18, 9, 19, "62D6E0", mode="flat", edge=False)
-    a.rect(20, 21, 21, 22, "F2C443", mode="flat", edge=False)
-    a.rect(11, 23, 12, 24, "C8C8D0", mode="flat", edge=False)
-    a.line([(23, 0), (30, 7)], "C8D2E0", 2)
-    a.line([(26, 3), (21, 8)], WOOD, 2)
-    a.sparkle(5, 3, 2, "E0F4FF")
-    a.sparkle(30, 17, 1)
+    """One-Block: großer Grasblock in Iso-Ansicht mit Erzen an den Seiten."""
+    a = Art(premium=True)
+    a.poly([(2, 9), (16, 16), (16, 31), (2, 24)], "9A6438")
+    a.poly([(16, 16), (30, 9), (30, 24), (16, 31)], "6E4426")
+    a.poly([(2, 9), (16, 16), (16, 20), (13, 19), (11, 21), (8, 18), (5, 18), (2, 14)], "58B83C", mode="soft")
+    a.poly([(16, 16), (30, 9), (30, 14), (27, 16), (25, 15), (22, 18), (19, 17), (16, 20)], "48A030", mode="soft")
+    a.poly([(16, 1), (30, 9), (16, 16), (2, 9)], "72D04A")
+    a.dots([(9, 8), (13, 6), (18, 5), (22, 8), (15, 10), (19, 12), (11, 11), (24, 10)], "A8EC74")
+    a.dots([(12, 9), (17, 8), (21, 11), (14, 13)], "4E9E34")
+    a.rect(6, 22, 8, 24, "62E0F0")
+    a.dot(6, 22, "E8FFFF")
+    a.rect(11, 25, 12, 26, "C8C8D0", mode="flat", edge=False)
+    a.rect(21, 22, 23, 24, "FFD24A")
+    a.dot(21, 22, "FFF6C0")
+    a.rect(25, 18, 26, 19, "E85A4A", mode="flat", edge=False)
     return a
 
 
 def ob_glueck():
-    a = Art()
-    for cx, cy in ((11, 9), (21, 9), (11, 19), (21, 19)):
-        a.ellipse(cx - 6, cy - 6, cx + 6, cy + 6, "4CC858")
-    a.ellipse(12, 10, 20, 18, "6CE070", mode="soft", edge=False)
-    a.line([(16, 18), (19, 30)], "3A9A44", 2)
-    a.dots([(9, 6), (19, 6)], "C8FFC0")
-    a.sparkle(28, 4, 2)
+    """Glück: goldenes Medaillon mit vierblättrigem Kleeblatt."""
+    a = Art(premium=True)
+    a.ellipse(1, 1, 30, 30, "E8A82A")
+    a.ellipse(4, 4, 27, 27, "FFD24A")
+    for cx, cy in ((12, 11), (19, 11), (12, 18), (19, 18)):
+        a.ellipse(cx - 5, cy - 5, cx + 4, cy + 4, "3CC650")
+    a.ellipse(13, 12, 18, 17, "2E9E40")
+    a.line([(16, 18), (20, 25)], "2E8A38", 2)
+    a.dots([(9, 8), (17, 8), (9, 15), (17, 15)], "A8F0A0")
+    a.dots([(6, 7), (7, 6)], "FFF8D8")
     return a
 
 
 def ob_cooldown():
-    a = Art()
-    a.rect(7, 2, 24, 5, WOOD)
-    a.rect(7, 26, 24, 29, WOOD)
-    a.poly([(9, 6), (22, 6), (17, 15), (22, 25), (9, 25), (14, 15)], "D8F0FF")
-    a.poly([(11, 8), (20, 8), (16, 13)], "F2C443", mode="soft", edge=False)
-    a.poly([(16, 18), (21, 24), (10, 24)], "F2C443", mode="soft", edge=False)
-    a.dots([(16, 15), (16, 16)], "F2C443")
-    a.sparkle(28, 14, 1, "E0F4FF")
+    """Cooldown: Sanduhr mit Holzrahmen und Säulen, goldener Sand."""
+    a = Art(premium=True)
+    a.rect(3, 1, 28, 5, "A86A34")
+    a.rect(3, 26, 28, 30, "A86A34")
+    a.rect(4, 6, 6, 25, "8A5428")
+    a.rect(25, 6, 27, 25, "8A5428")
+    a.poly([(8, 6), (23, 6), (18, 15), (18, 16), (23, 25), (8, 25), (13, 16), (13, 15)], "CFE8F8")
+    a.poly([(10, 8), (21, 8), (16, 14)], "FFC93A", mode="soft", edge=False)
+    a.poly([(16, 19), (21, 24), (10, 24)], "FFC93A", mode="soft", edge=False)
+    a.rect(15, 15, 16, 19, "FFC93A", mode="flat", edge=False)
+    a.dots([(10, 7), (10, 9), (11, 23)], "FFFFFF")
+    a.dots([(5, 2), (6, 2)], "E8B880")
     return a
 
 
 def ob_tempo():
-    a = Art()
-    a.line([(9, 26), (23, 8)], WOOD, 3)
-    a.poly([(10, 4), (19, 2), (29, 9), (30, 16), (24, 10), (17, 6)], "62D6E0")
-    a.dots([(18, 3), (20, 3)], "E0FFFF")
-    for y in (17, 21, 25):
-        a.line([(1, y), (6, y)], "F2C443", 1, mode="flat", edge=False)
-    a.sparkle(27, 25, 1)
+    """Tempo: Diamant-Spitzhacke mit Blitz."""
+    a = Art(premium=True)
+    a.line([(5, 29), (21, 10)], "8A5A2E", 3)
+    a.poly([(7, 6), (14, 2), (23, 3), (30, 9), (31, 18), (25, 11), (17, 7)], "4ED8E8")
+    a.dots([(13, 3), (15, 3), (23, 4)], "E0FFFF")
+    a.rect(4, 27, 6, 29, "6A4222")
+    a.poly([(26, 17), (20, 25), (24, 25), (21, 31), (29, 22), (25, 22), (28, 17)], "FFD83A")
     return a
 
 
 def ob_xp():
-    a = Art()
-    a.ellipse(5, 5, 27, 27, "6AD83E")
-    a.ellipse(9, 9, 23, 23, "B8FF6A", mode="soft", edge=False)
-    a.ellipse(13, 13, 19, 19, "F2FFC8", mode="flat", edge=False)
-    a.dots([(9, 9), (10, 8)], "FFFFFF")
-    a.sparkle(27, 4, 2, "E0FFB8")
+    """XP-Bonus: große Erfahrungskugel mit Ringen und kleinen Kugeln."""
+    a = Art(premium=True)
+    a.ellipse(3, 3, 26, 26, "4CC832")
+    a.ellipse(6, 6, 23, 23, "8CF04A")
+    a.ellipse(10, 10, 19, 19, "D8FF8A", mode="soft")
+    a.ellipse(12, 12, 16, 16, "FFFFE8", mode="flat", edge=False)
+    a.ellipse(22, 20, 30, 28, "4CC832")
+    a.ellipse(24, 22, 28, 26, "B8FF6A", mode="soft", edge=False)
+    a.ellipse(24, 1, 30, 7, "4CC832")
+    a.dot(26, 3, "E8FFC0")
+    a.dots([(8, 8), (9, 7)], "FFFFFF")
     return a
 
 
 def ob_geld():
-    a = Art()
-    a.ground_shadow(3, 26, 29, 31)
-    for i, (x, y) in enumerate(((3, 18), (3, 14), (3, 10), (15, 20), (15, 16))):
-        a.ellipse(x, y, x + 14, y + 7, GOLD)
-    a.ellipse(12, 3, 29, 15, "FFD84A")
-    a.ellipse(16, 5, 25, 13, "F2B42A", mode="soft", edge=False)
-    a.dots([(20, 7), (20, 8), (20, 9), (20, 10)], "FFF2B0")
-    a.sparkle(4, 4, 2)
+    """Geld-Bonus: Münzstapel mit geprägter Münze davor."""
+    a = Art(premium=True)
+    for y in (24, 20, 16, 12):
+        a.ellipse(2, y, 17, y + 6, "E8A82A")
+    a.ellipse(2, 9, 17, 15, "FFD24A")
+    for y in (25, 21):
+        a.ellipse(17, y, 30, y + 6, "E8A82A")
+    a.ellipse(17, 18, 30, 24, "FFD24A")
+    a.ellipse(12, 2, 30, 20, "E8A82A")
+    a.ellipse(15, 5, 27, 17, "FFD24A")
+    a.rect(20, 7, 22, 15, "C8841E", mode="flat", edge=False)
+    a.rect(18, 8, 24, 9, "C8841E", mode="flat", edge=False)
+    a.rect(18, 13, 24, 14, "C8841E", mode="flat", edge=False)
+    a.dots([(16, 7), (17, 6)], "FFF8D8")
     return a
 
 
 def ob_beute():
-    a = Art()
-    a.ground_shadow(2, 26, 30, 31)
-    a.rect(2, 14, 15, 27, "C88A3A")
-    a.rect(2, 14, 15, 17, "A86A2A")
-    a.rect(7, 16, 9, 19, GOLD, mode="flat")
-    a.rect(16, 9, 29, 22, "C88A3A")
-    a.rect(16, 9, 29, 12, "A86A2A")
-    a.rect(21, 11, 23, 14, GOLD, mode="flat")
-    a.dots([(4, 15), (18, 10)], "E8B070")
-    a.sparkle(26, 3, 2)
-    a.sparkle(6, 6, 1, "F0C8FF")
+    """Doppelte Beute: offene Schatztruhe voller Gold mit Edelsteinen."""
+    a = Art(premium=True)
+    a.poly([(4, 4), (27, 4), (29, 13), (2, 13)], "7A4824")
+    a.rect(3, 13, 28, 29, "9A5E2E")
+    a.ellipse(4, 9, 27, 18, "FFD24A")
+    a.ellipse(7, 7, 14, 13, "FFE070")
+    a.ellipse(16, 6, 24, 12, "FFE070")
+    a.rect(3, 18, 28, 20, "8A94A4")
+    a.rect(14, 18, 17, 24, "C8D2E0")
+    a.rect(3, 13, 5, 29, "8A94A4")
+    a.rect(26, 13, 28, 29, "8A94A4")
+    a.ellipse(20, 8, 25, 13, "3AD86A")
+    a.dot(21, 9, "D8FFE0")
+    a.ellipse(8, 9, 12, 13, "E84848")
+    a.dot(9, 10, "FFC8C8")
+    a.dot(15, 21, "3A3A44")
     return a
 
 

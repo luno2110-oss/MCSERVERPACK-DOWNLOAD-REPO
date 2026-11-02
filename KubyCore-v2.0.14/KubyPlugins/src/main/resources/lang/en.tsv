@@ -6508,3 +6508,137 @@ Upgrades gibt es nur im Team.	Upgrades are only available in a team.
 Zum 	To 
 Zum Block des Teams	To the team's block
 Zur Insel	To the island
+ <gray>Das Menü braucht das Kuby-Ressourcenpaket. <white>/cookie kaufen <Gebäude> [Menge]<gray>, <white>/cookie aufstieg	 <gray>The menu needs the Kuby resource pack. <white>/cookie kaufen <building> [amount]<gray>, <white>/cookie aufstieg
+ <gray>Gebäude: <white>{} <gray>· Upgrades: <white>{} <gray>· Erfolge: <white>{}/	 <gray>Buildings: <white>{} <gray>· Upgrades: <white>{} <gray>· Achievements: <white>{}/
+ <gray>Kekse: <white>{} <gray>· pro Sekunde: <green>+{} <gray>· je Klick: <yellow>+	 <gray>Cookies: <white>{} <gray>· per second: <green>+{} <gray>· per click: <yellow>+
+ <gray>noch <white>	 <gray>left <white>
+ Glückskeks.	 lucky cookie.
+ Glückskekse.	 lucky cookies.
+ Kekse im Keksregen.	 cookies in the cookie rain.
+ frei / 	 free / 
+ gekauft	 bought
+ gekauft · {} noch gesperrt (???: mehr Gebäude, Klicks, Kekse oder Glückskekse)	 bought · {} still locked (???: more buildings, clicks, cookies or lucky cookies)
+ · Stufe 	 · level 
+ · bleibt für immer	 · stays forever
+!Dann kaufst du Gebäude	!Then you buy buildings
+!Gut zu wissen	!Good to know
+!Was sie bringen	!What they give
++{} je Klick	+{} per click
++{}/s je Stück	+{}/s each
+-mal auf.	 times.
+0 gekauft	0 bought
+14 Arten, vom Kochlöffel bis zur Sternenbäckerei.	14 kinds, from the wooden spoon to the star bakery.
+<#F2C443><b>/cookie</b> <gray>Menü · <white>gebaeude · upgrades · erfolge · aufstieg · rangliste · statistik · hilfe · station · kaufen <Gebäude> [Menge|max]	<#F2C443><b>/cookie</b> <gray>menu · <white>gebaeude · upgrades · erfolge · aufstieg · rangliste · statistik · hilfe · station · kaufen <building> [amount|max]
+<#F2C443><b>🍪 Cookie Clicker</b> <gray>– {} · Stufe 	<#F2C443><b>🍪 Cookie Clicker</b> <gray>– {} · level 
+<#F2C443>🍪 Deine Bäckerei hat ohne dich <white>{} Kekse <#F2C443>gebacken. <gray>/cookie	<#F2C443>🍪 Your bakery baked <white>{} cookies <#F2C443>while you were away. <gray>/cookie
+<#F2C443>🍪 Willkommen an der Keks-Station. <gray>Linksklick backt, Rechtsklick öffnet das Menü.	<#F2C443>🍪 Welcome to the cookie station. <gray>Left click bakes, right click opens the menu.
+</b> <dark_gray>· <gray>STUFE <white>	</b> <dark_gray>· <gray>LEVEL <white>
+<gold><b>Aufstieg!</b> <white>Stufe {} <gray>(+{} Backsterne, jetzt +{} % Kekse für immer). <white>Titel: 	<gold><b>Ascension!</b> <white>Level {} <gray>(+{} baking stars, now +{} % cookies forever). <white>Title: 
+<gold><b>Backrausch!</b> <white>Kekse pro Sekunde x5 für {} s	<gold><b>Baking frenzy!</b> <white>Cookies per second x5 for {} s
+<gold><b>KEKSREGEN!</b> <white>20 Sekunden lang regnet es Kekse an der Station. Fang so viele du kannst!	<gold><b>COOKIE RAIN!</b> <white>For 20 seconds it rains cookies at the station. Catch as many as you can!
+<gold><b>KEKSREGEN!</b> <white>Fang die Kekse	<gold><b>COOKIE RAIN!</b> <white>Catch the cookies
+<gold><b>Klickfieber!</b> <white>Klicks x10 für {} s	<gold><b>Click fever!</b> <white>Clicks x10 for {} s
+<gold><b>Zuckerschub!</b> <white>Kekse pro Sekunde x2 für {} s	<gold><b>Sugar rush!</b> <white>Cookies per second x2 for {} s
+<gold><b>✦ GLÜCKSKEKS ✦</b> <white>schnell anklicken!	<gold><b>✦ LUCKY COOKIE ✦</b> <white>click it quickly!
+<green>Gekauft. <gray>Kekse: <white>	<green>Bought. <gray>Cookies: <white>
+<red>/cookie kaufen <Gebäude> [Menge|max]	<red>/cookie kaufen <building> [amount|max]
+<red>Es gibt noch keine Keks-Station.	<red>There is no cookie station yet.
+<red>Nur für Admins.	<red>Admins only.
+<yellow>Linksklick <gray>backt · <yellow>Rechtsklick <gray>öffnet das Menü\n	<yellow>Left click <gray>bakes · <yellow>Right click <gray>opens the menu\n
+??? · nächstes Gebäude ab {} Keksen, wenn du {} hast	??? · next building from {} cookies once you have {}
+Alle 30 Minuten regnet es 20 Sekunden lang Kekse an der Station.	Every 30 minutes it rains cookies at the station for 20 seconds.
+Alle 4 bis 10 Minuten, mit Glücksbringern öfter.	Every 4 to 10 minutes, more often with lucky charms.
+Alle Gebäude backen {} % mehr.	All buildings bake {} % more.
+Aufsteigen: Kekse, Gebäude und Upgrades starten neu.	Ascending: cookies, buildings and upgrades start over.
+Backrausch: Kekse pro Sekunde x5 für 60 s.	Baking frenzy: cookies per second x5 for 60 s.
+Backsterne: {} frei · {} Aufstiege	Baking stars: {} free · {} ascensions
+Beim Aufstieg sind Upgrades weg.	Upgrades are gone after ascending.
+Damit kaufst du den Sternen-Baum: 12 Sterne, bleiben für immer.	You buy the star tree with them: 12 stars, they stay forever.
+Das nächste erscheint, sobald du das vorige hast.	The next one appears once you own the previous one.
+Dein Platz: #	Your place: #
+Dein Stand gilt in allen Modi.	Your progress counts in every mode.
+Der Countdown steht über dem Keks.	The countdown is above the cookie.
+Die Stufe wächst mit allen je gebackenen Keksen.	Your level grows with all cookies ever baked.
+Die besten 10 stehen auch an der Station.	The top 10 are shown at the station too.
+Diesen Stern hast du schon.	You already have this star.
+Dieses Gebäude gibt es nicht.	This building doesn't exist.
+Dieses Gebäude gibt es noch nicht.	This building isn't available yet.
+Dieses Upgrade gibt es nicht (mehr).	This upgrade doesn't exist (anymore).
+Dieses Upgrade ist noch gesperrt.	This upgrade is still locked.
+Dir fehlen noch {} Backsterne.	You still need {} baking stars.
+Dir fehlen noch {} Kekse.	You still need {} cookies.
+Dafür reichen deine Kekse nicht.	You don't have enough cookies for that.
+Ein Aufstieg bringt noch keinen Backstern. Nächste Stufe bei {} Keksen insgesamt.	Ascending wouldn't give a baking star yet. Next level at {} cookies in total.
+Erfolge bleiben für immer, auch nach dem Aufstieg.	Achievements stay forever, even after ascending.
+Erreiche Stufe {}.	Reach level {}.
+Erscheinen neben dem großen Keks, nur für dich, und leuchten golden.	Appear next to the big cookie, only for you, and glow golden.
+Erst den Stern davor kaufen.	Buy the star before it first.
+Gebäude	Buildings
+Gebäude backen von selbst, auch wenn du weg bist.	Buildings bake by themselves, even while you're away.
+Gerade kein Upgrade frei: mehr Gebäude kaufen, klicken oder backen.	No upgrade available right now: buy buildings, click or bake more.
+Glückskekse	Lucky cookies
+Glückskekse gefangen	Lucky cookies caught
+Glückskekse verpasst	Lucky cookies missed
+In dieser Runde	This run
+Je Klick	Per click
+Je Stufe +2 % Kekse pro Sekunde, für immer.	Each level +2 % cookies per second, forever.
+Jede neue Stufe bringt einen Backstern.	Every new level gives a baking star.
+Jeder Erfolg gibt +2 % Kekse pro Sekunde.	Every achievement gives +2 % cookies per second.
+Jeder Erfolg: +2 % Kekse pro Sekunde, für immer.	Every achievement: +2 % cookies per second, forever.
+Jeder Keks bringt 30 Sekunden deiner Produktion.	Every cookie gives 30 seconds of your production.
+Jeder Klick bringt zusätzlich 1 % deiner Kekse pro Sekunde.	Every click also gives 1 % of your cookies per second.
+Jeder kann fangen: einfach drüberlaufen.	Anyone can catch them: just walk over them.
+Jedes Stück 15 % teurer	Each one 15 % more expensive
+Jedes weitere Stück kostet 15 % mehr. Kein Verkauf.	Every further one costs 15 % more. No selling.
+Jetzt aufsteigen	Ascend now
+Kaufen x	Buy x
+Kaufmenge: x1, x10, x100 oder so viele wie möglich.	Amount: x1, x10, x100 or as many as possible.
+Keine Coins, keine XP, keine Items: nur Kekse.	No coins, no XP, no items: just cookies.
+Kekse aller Zeiten, Kekse pro Sekunde, Klicks und Stufe.	Cookies of all time, cookies per second, clicks and level.
+Kekse jetzt	Cookies now
+Kekse, Gebäude und Upgrades starten neu. Du bekommst {} Backsterne und jede Stufe gibt +2 % Kekse für immer. Erfolge, Sternen-Baum und Titel bleiben.	Cookies, buildings and upgrades start over. You get {} baking stars and every level gives +2 % cookies forever. Achievements, star tree and title stay.
+Keksschatz: bis zu 15 Minuten Produktion auf einmal.	Cookie treasure: up to 15 minutes of production at once.
+Klick an der Station mit Linksklick auf den Keks, um zu backen.	At the station, left click the cookie to bake.
+Klick: Handschuhe verdoppeln Klicks, Zuckerfinger geben % deiner Kekse pro Sekunde.	Click: gloves double clicks, sugar fingers give % of your cookies per second.
+Klicke {}-mal auf den Keks.	Click the cookie {} times.
+Klickfieber: Klicks x10 für 15 s.	Click fever: clicks x10 for 15 s.
+Linksklick auf den großen Keks backt Kekse.	Left click on the big cookie bakes cookies.
+Lohnt sich, wenn deine Stufe deutlich gestiegen ist.	Worth it once your level has gone up clearly.
+Mit Klicks gebacken	Baked by clicking
+Mit deinen Keksen: Stufe {} · Nächste bei 	With your cookies: level {} · next at 
+Neu starten mit Backsternen	Start over with baking stars
+Noch kein Platz	No place yet
+Noch kein Stern	No star yet
+Noch niemand in dieser Liste.	Nobody on this list yet.
+Ofen: mehr und länger backen, während du weg bist.	Oven: bake more and longer while you're away.
+Ohne dich	While away
+Ohne dich backt die Bäckerei mit {} % bis zu {} Stunden.	While you're away the bakery bakes at {} % for up to {} hours.
+Platz 	Place 
+Rechtsklick auf den Keks öffnet das Menü (auch /cookie).	Right click on the cookie opens the menu (also /cookie).
+Rezepte: alle Gebäude +5 bis +20 %.	Recipes: all buildings +5 to +20 %.
+Runde läuft seit	Run started
+Schnell klicken baut eine Combo auf: bis x2 je Klick.	Clicking fast builds a combo: up to x2 per click.
+Seite {}/	Page {}/
+Sichtbar 13 Sekunden: schnell anklicken!	Visible for 13 seconds: click quickly!
+So fängst du an	How to start
+Stufe {} · +{} % Kekse für immer	Level {} · +{} % cookies forever
+Stufen: ein Gebäude backt doppelt (ab 1, 10, 25, 50, 100, 150, 200 Stück).	Tiers: a building bakes double (from 1, 10, 25, 50, 100, 150, 200 owned).
+Upgrades und Erfolge machen alles schneller.	Upgrades and achievements make everything faster.
+Während du weg bist, backt die Bäckerei mit {} % bis zu {} Stunden.	While you're away, the bakery bakes at {} % for up to {} hours.
+Zuckerschub: x2 für 3 Minuten.	Sugar rush: x2 for 3 minutes.
+Zum großen Keks teleportieren	Teleport to the big cookie
+Zur Keks-Station	To the cookie station
+Zurück zur Übersicht	Back to the overview
+\n<gray>Noch niemand. Klick den Keks!	\n<gray>Nobody yet. Click the cookie!
+noch ohne Platz	no place yet
+« Übersicht	« Overview
+Jede Runde beginnt mit 1 Mio Keksen.	Every run starts with 1 million cookies.
+Jede Runde beginnt mit 1.000 Keksen.	Every run starts with 1,000 cookies.
+Glückskekse kommen 15 % öfter.	Lucky cookies appear 15 % more often.
+Glückskekse kommen 15 % öfter und wirken 10 % länger.	Lucky cookies appear 15 % more often and last 10 % longer.
+Glückskeks-Effekte halten 25 % länger.	Lucky cookie effects last 25 % longer.
+Kekse aus dem Keksregen bringen doppelt so viel.	Cookies from the cookie rain give twice as much.
+Der Keksschatz aus Glückskeksen ist doppelt so groß.	The cookie treasure from lucky cookies is twice as big.
+Die Combo geht bis x3 statt x2.	The combo goes up to x3 instead of x2.
+Ohne dich backt die Bäckerei 10 % mehr und 4 Stunden länger.	While you're away the bakery bakes 10 % more and 4 hours longer.
+Glücksbringer: Glückskekse öfter und länger.	Lucky charms: lucky cookies more often and longer.

@@ -60,10 +60,14 @@ import build_event_art  # noqa: E402
 build_event_art.build()
 import build_generator_art  # noqa: E402
 build_generator_art.build()
+import build_cookie_art  # noqa: E402
+build_cookie_art.build()
 import build_event_items  # noqa: E402
 build_event_items.build(OUT)
 # Generatoren: 3D-Spawner-Käfige je Art und Qualität, dazu die Symbole, die sich im Spawner-Block drehen
 build_generator_art.write_models(OUT)
+# Cookie Clicker: großer Keks, Glückskeks und Kekse aus dem Keksregen
+build_cookie_art.write_models(OUT)
 
 VANILLA = os.environ.get("KUBY_VANILLA")
 if VANILLA and os.path.isdir(VANILLA):

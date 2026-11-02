@@ -117,6 +117,14 @@ public final class KubyPlugins extends JavaPlugin {
     private HotbarDisplay hotbar;
     private EconomyMarketService investments;
     private de.kuby.kubyplugins.service.TradingService trading;
+    private de.kuby.kubyplugins.cookie.CookieService cookies;
+    private de.kuby.kubyplugins.cookie.CookieStation cookieStation;
+    private static KubyPlugins instance;
+
+    /** Der Kern (für Dialoge ohne eigene Referenz). */
+    public static KubyPlugins get() { return instance; }
+    public de.kuby.kubyplugins.cookie.CookieService cookies() { return cookies; }
+    public de.kuby.kubyplugins.cookie.CookieStation cookieStation() { return cookieStation; }
     private ItemValueService itemValues;
     private TotenkisteService totenkisten;
     private KitService kits;
@@ -218,6 +226,23 @@ public final class KubyPlugins extends JavaPlugin {
         registerStat("kills", id -> (long) stats().get(id).kills);
         registerStat("casino_plus", id -> Math.max(0L, casinoLog.netOf(id)));
         de.kuby.kubyplugins.gui.TradeScreens.samples(this::registerSelfTestCanvas);
+        // Cookie Clicker (alle Modi, eigener Stand ohne Coins und XP)
+        instance = this;
+        cookies = new de.kuby.kubyplugins.cookie.CookieService(this);
+        cookieStation = new de.kuby.kubyplugins.cookie.CookieStation(this, cookies);
+        de.kuby.kubyplugins.cookie.CookieScreen.samples(this::registerSelfTestCanvas);
+        registerMainEntry(new MainEntry(org.bukkit.Material.COOKIE, "Cookie Clicker", "Kekse backen, Gebäude, Upgrades, Glückskekse, Aufstieg",
+                de.kuby.kubyplugins.cookie.CookieScreen::main));
+        {
+            var cc = new de.kuby.kubyplugins.cookie.CookieCommand(this);
+            for (String name : new String[]{"cookie", "cookiehilfe"}) {
+                var cmd = getCommand(name);
+                if (cmd != null) {
+                    cmd.setExecutor(cc);
+                    cmd.setTabCompleter(cc);
+                }
+            }
+        }
         de.kuby.kubyplugins.gui.TradingScreen.samples(this::registerSelfTestCanvas);
         registerMainEntry(new MainEntry(org.bukkit.Material.NETHER_STAR, "Erfolge", "Fortschritt und Belohnungen",
                 p -> new de.kuby.kubyplugins.gui.ProgressScreens(this).achievements(p, 0)));
@@ -466,6 +491,8 @@ public final class KubyPlugins extends JavaPlugin {
         slots.shutdown();
         crash.shutdown();
         casinoHolos.shutdown();
+        if (cookieStation != null) cookieStation.despawn();
+        if (cookies != null) cookies.save();
         poker.shutdown();
         saveAll();
     }

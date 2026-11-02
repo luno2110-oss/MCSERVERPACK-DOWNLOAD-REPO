@@ -535,6 +535,17 @@ totenkiste:
 
 # Ränge von niedrig nach hoch. Erkannt über LuckPerms (group.<rang>) oder kuby.rank.<rang>.
 # Börse als Trading-App (/investments, Kachel Börse): jedes Item der Shop-Bereiche ist ein Wert mit Live-Kurs
+# Cookie Clicker (/cookie): Station mit großem Keks (/cookie admin setzen), eigener Stand je Spieler in allen Modi
+# (keine Coins, keine XP, keine Items), Daten in cookies.yml.
+cookie:
+  station: ""                 # wird mit /cookie admin setzen gefüllt (Welt;x;y;z)
+  keksregen:
+    minuten: 30               # alle so viele Minuten 20 Sekunden Keksregen an der Station
+  glueckskeks:
+    min-minuten: 4            # Abstand zwischen zwei Glückskeksen (je Spieler, nur an der Station)
+    max-minuten: 10
+    sekunden: 13              # so lange ist ein Glückskeks sichtbar
+
 trading:
   tick-sekunden: 20          # Kurs-Schritt
   schwankung: 0.0008         # zufällige Schwankung je Schritt (0.0008 = 0,08 %)
