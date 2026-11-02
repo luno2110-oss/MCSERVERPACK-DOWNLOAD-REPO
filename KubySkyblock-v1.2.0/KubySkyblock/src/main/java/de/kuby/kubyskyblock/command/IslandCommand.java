@@ -26,7 +26,7 @@ import java.util.Locale;
 public final class IslandCommand implements TabExecutor {
 
     private static final List<String> SUBS = List.of("home", "sethome", "einladen", "annehmen", "entfernen", "verlassen", "besuchen",
-            "top", "level", "name", "besucher", "upgrade", "neustart", "aufgeben", "rechte", "gast", "sperren", "entsperren", "rauswerfen", "co");
+            "top", "level", "name", "besucher", "upgrade", "neustart", "aufgeben", "rechte", "gast", "sperren", "entsperren", "rauswerfen", "co", "shop");
 
     private final KubySkyblock addon;
     private final KubyPlugins core;
@@ -125,6 +125,16 @@ public final class IslandCommand implements TabExecutor {
                 if (i == null) result(p, "Du hast keine Insel.", "");
                 else if (core.uiPack().active(p)) IslandScreen.open(p);
                 else new de.kuby.kubyskyblock.gui.TemplateMenu(core, true).open(p);
+            }
+            case "shop" -> {
+                int t = 0;
+                if (args.length >= 2) {
+                    try {
+                        t = Integer.parseInt(args[1]) - 1;
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+                de.kuby.kubyskyblock.gui.SkyShopScreen.open(p, t, 0);
             }
             case "rechte", "rollen" -> {
                 if (i == null || !is.canManage(i, p.getUniqueId())) result(p, "Das dürfen nur Besitzer und Co-Besitzer.", "");

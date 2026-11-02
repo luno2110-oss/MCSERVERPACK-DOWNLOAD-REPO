@@ -240,7 +240,7 @@ public final class QuestService {
 
     /** Bekannte Quest-Typen (für den SelfTest und Tippfehler in den Dateien). */
     public static final Set<String> TYPES = Set.of("break", "kill", "fish", "treasure", "breed", "tame", "shear", "enchant",
-            "craft", "smelt", "eat", "trade", "jobxp", "playtime", "stat", "pvp", "duel", "turnier", "turnier_sieg", "kopfgeld",
+            "craft", "smelt", "eat", "trade", "jobxp", "playtime", "stat", "pvp", "duel", "turnier", "turnier_sieg", "kopfgeld", "verkaufen",
             "abbau", "oneblock", "gen_place", "gen_collect", "gen_geld", "gen_xp", "gen_upgrade", "gen_veredeln",
             "insel_upgrade", "insel_besuch");
 

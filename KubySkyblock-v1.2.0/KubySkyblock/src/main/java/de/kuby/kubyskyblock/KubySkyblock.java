@@ -44,6 +44,8 @@ public final class KubySkyblock extends JavaPlugin {
     public TemplateService templates() { return templates; }
     public LootService loot() { return loot; }
     public OneBlockService oneblock() { return oneblock; }
+    private de.kuby.kubyskyblock.service.SkyShopService shop;
+    public de.kuby.kubyskyblock.service.SkyShopService shop() { return shop; }
     public ProgressService progress() { return progress; }
     public de.kuby.kubyskyblock.service.GeneratorService generators() { return generators; }
     public SkyblockCommand command() { return command; }
@@ -71,6 +73,7 @@ public final class KubySkyblock extends JavaPlugin {
         de.kuby.kubyskyblock.gui.IslandScreen.samples(core::registerSelfTestCanvas);
         de.kuby.kubyskyblock.gui.GeneratorScreen.samples(core::registerSelfTestCanvas);
         de.kuby.kubyskyblock.gui.OneBlockScreen.samples(core::registerSelfTestCanvas);
+        de.kuby.kubyskyblock.gui.SkyShopScreen.samples(core::registerSelfTestCanvas);
         saveDefaultConfig();
         islands = new IslandService(this, core);
         streaks = new StreakService(this, core);
@@ -79,6 +82,18 @@ public final class KubySkyblock extends JavaPlugin {
         oneblock = new OneBlockService(this, core);
         progress = new ProgressService(this, core);
         generators = new de.kuby.kubyskyblock.service.GeneratorService(this, core);
+        shop = new de.kuby.kubyskyblock.service.SkyShopService(this, core);
+        core.registerShop(ModeService.SKYBLOCK, new KubyPlugins.ShopHook() {
+            @Override
+            public void open(org.bukkit.entity.Player p) {
+                de.kuby.kubyskyblock.gui.SkyShopScreen.open(p);
+            }
+
+            @Override
+            public long sellAll(org.bukkit.entity.Player p) {
+                return shop.sellAll(p);
+            }
+        });
         command = new SkyblockCommand(this);
 
         core.modes().onEnter(ModeService.SKYBLOCK, p -> islands.ensureIsland(p));

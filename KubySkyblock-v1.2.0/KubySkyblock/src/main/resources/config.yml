@@ -148,6 +148,113 @@ generatoren:
         6: {AMETHYST_SHARD: 35, LAPIS_LAZULI: 25, EMERALD: 25, DIAMOND: 15}
         10: {AMETHYST_SHARD: 25, LAPIS_LAZULI: 20, EMERALD: 28, DIAMOND: 25, ECHO_SHARD: 2}
 
+# Skyblock-Shop (/shop, /sell, Shop-Kachel; auch /insel shop): "MATERIAL;Menge;Kaufpreis;Verkaufspreis je Stück;Name".
+# Kaufpreis 0 = nur verkaufen, Verkaufspreis 0 = nur kaufen. Die Verkaufspreise gelten auch für Generator-Ertrag.
+shop:
+  bereiche:
+    natur:
+      name: "Start & Natur"
+      icon: OAK_SAPLING
+      items:
+        - "OAK_SAPLING;1;60;0;Eichensetzling"
+        - "BIRCH_SAPLING;1;60;0;Birkensetzling"
+        - "SPRUCE_SAPLING;1;60;0;Fichtensetzling"
+        - "JUNGLE_SAPLING;1;80;0;Tropensetzling"
+        - "ACACIA_SAPLING;1;80;0;Akaziensetzling"
+        - "DARK_OAK_SAPLING;4;300;0;Schwarzeichensetzling"
+        - "CHERRY_SAPLING;1;120;0;Kirschsetzling"
+        - "DIRT;16;80;1;Erde"
+        - "GRASS_BLOCK;1;40;0;Grasblock"
+        - "SAND;16;120;2;Sand"
+        - "GRAVEL;16;100;1;Kies"
+        - "CLAY_BALL;16;160;3;Ton"
+        - "ICE;1;250;0;Eis"
+        - "WATER_BUCKET;1;350;0;Wassereimer"
+        - "LAVA_BUCKET;1;600;0;Lavaeimer"
+        - "BONE_MEAL;16;120;1;Knochenmehl"
+    farm:
+      name: "Farmen"
+      icon: WHEAT
+      items:
+        - "WHEAT_SEEDS;8;40;0;Weizensamen"
+        - "WHEAT;0;0;3;Weizen"
+        - "CARROT;4;60;2;Karotte"
+        - "POTATO;4;60;2;Kartoffel"
+        - "BEETROOT_SEEDS;8;60;0;Rote-Bete-Samen"
+        - "BEETROOT;0;0;2;Rote Bete"
+        - "MELON_SEEDS;1;80;0;Melonensamen"
+        - "MELON_SLICE;0;0;1;Melonenscheibe"
+        - "PUMPKIN_SEEDS;1;80;0;Kürbissamen"
+        - "PUMPKIN;0;0;4;Kürbis"
+        - "SUGAR_CANE;4;100;3;Zuckerrohr"
+        - "CACTUS;2;100;3;Kaktus"
+        - "COCOA_BEANS;4;120;3;Kakaobohnen"
+        - "SWEET_BERRIES;4;80;1;Süßbeeren"
+        - "BAMBOO;4;80;1;Bambus"
+        - "KELP;4;80;1;Seetang"
+        - "EGG;0;0;2;Ei"
+        - "LEATHER;0;0;6;Leder"
+    bloecke:
+      name: "Blöcke"
+      icon: STONE_BRICKS
+      items:
+        - "COBBLESTONE;64;160;1;Bruchstein"
+        - "STONE;64;256;2;Stein"
+        - "OAK_LOG;16;240;6;Eichenstamm"
+        - "OAK_PLANKS;64;320;1;Eichenbretter"
+        - "GLASS;16;240;0;Glas"
+        - "STONE_BRICKS;64;640;0;Steinziegel"
+        - "BRICKS;16;400;0;Ziegel"
+        - "TORCH;16;80;0;Fackel"
+        - "LANTERN;4;200;0;Laterne"
+        - "CHEST;1;60;0;Truhe"
+        - "FURNACE;1;80;0;Ofen"
+        - "HOPPER;1;600;0;Trichter"
+    erze:
+      name: "Erze"
+      icon: DIAMOND
+      items:
+        - "COAL;16;320;4;Kohle"
+        - "RAW_COPPER;0;0;6;Rohkupfer"
+        - "COPPER_INGOT;16;480;7;Kupferbarren"
+        - "RAW_IRON;0;0;10;Roheisen"
+        - "IRON_INGOT;8;480;12;Eisenbarren"
+        - "RAW_GOLD;0;0;16;Rohgold"
+        - "GOLD_INGOT;8;800;20;Goldbarren"
+        - "REDSTONE;16;320;3;Redstone"
+        - "LAPIS_LAZULI;16;400;5;Lapislazuli"
+        - "AMETHYST_SHARD;0;0;8;Amethystscherbe"
+        - "EMERALD;1;300;60;Smaragd"
+        - "DIAMOND;1;400;80;Diamant"
+        - "ANCIENT_DEBRIS;0;0;400;Antiker Schrott"
+        - "NETHERITE_SCRAP;0;0;450;Netheritplatten"
+    mob:
+      name: "Mob-Drops"
+      icon: BONE
+      items:
+        - "ROTTEN_FLESH;0;0;1;Verrottetes Fleisch"
+        - "BONE;16;160;2;Knochen"
+        - "STRING;16;200;3;Faden"
+        - "SPIDER_EYE;0;0;4;Spinnenauge"
+        - "GUNPOWDER;16;320;5;Schwarzpulver"
+        - "SLIME_BALL;8;320;8;Schleimball"
+        - "ENDER_PEARL;4;400;15;Enderperle"
+        - "ARROW;32;160;0;Pfeile"
+    werkzeug:
+      name: "Werkzeug"
+      icon: IRON_PICKAXE
+      items:
+        - "STONE_PICKAXE;1;80;0;Steinspitzhacke"
+        - "IRON_PICKAXE;1;400;0;Eisenspitzhacke"
+        - "IRON_AXE;1;400;0;Eisenaxt"
+        - "IRON_SHOVEL;1;200;0;Eisenschaufel"
+        - "IRON_HOE;1;200;0;Eisenhacke"
+        - "SHEARS;1;150;0;Schere"
+        - "FISHING_ROD;1;150;0;Angel"
+        - "BUCKET;1;150;0;Eimer"
+        - "BREAD;16;160;0;Brot"
+        - "COOKED_BEEF;16;480;0;Steak"
+
 # One-Block: höchstens drei Plattformen (/kp skyblock oneblock setup). Ein Skyblock-Team kann eine beanspruchen
 # (/oneblock): dann bauen nur seine Mitglieder dort ab, jeder Abbau bringt Block-XP fürs Team, Mitglieder können
 # eigene XP einzahlen. Mit Block-XP kauft das Team Upgrades. Daten in oneblock.yml.

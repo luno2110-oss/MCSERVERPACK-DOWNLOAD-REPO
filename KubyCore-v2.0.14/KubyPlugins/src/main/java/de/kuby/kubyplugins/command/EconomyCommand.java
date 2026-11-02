@@ -33,6 +33,17 @@ public final class EconomyCommand implements CommandExecutor {
         }
         switch (command.getName().toLowerCase(Locale.ROOT)) {
             case "sell" -> {
+                var hook = plugin.shopHook(p);
+                if (hook != null) {
+                    if (args.length == 0) {
+                        hook.open(p);
+                        return true;
+                    }
+                    long payout = hook.sellAll(p);
+                    if (payout > 0) Sfx.play(plugin, p, Sfx.Kind.COIN);
+                    Msg.send(p, payout > 0 ? "<green>Verkauft für <gold>" + Msg.coins(payout) + "$" : "<gray>Keine verkaufbaren Items im Inventar.");
+                    return true;
+                }
                 if (args.length == 0) {
                     SellMenu.open(plugin, p);
                     return true;

@@ -495,6 +495,8 @@ public final class GeneratorService {
 
     /** Verkaufswert je Stück (Server-Ankauf, sonst 1). */
     public long sellValue(Material m) {
+        long own = addon.shop() == null ? 0 : addon.shop().sellPrice(m);
+        if (own > 0) return own;
         Long v = core.sell().worth().get(m);
         return v == null || v <= 0 ? 1 : v;
     }

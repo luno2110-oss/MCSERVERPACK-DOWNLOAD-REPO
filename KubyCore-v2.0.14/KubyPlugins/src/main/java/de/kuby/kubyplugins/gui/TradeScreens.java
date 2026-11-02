@@ -54,6 +54,11 @@ public final class TradeScreens {
     // =================================================================================================================
 
     public void shop(Player p) {
+        var hook = plugin.shopHook(p);
+        if (hook != null) {
+            hook.open(p);
+            return;
+        }
         if (!plugin.uiPack().active(p)) {
             new ShopMenu(plugin).open(p);
             return;

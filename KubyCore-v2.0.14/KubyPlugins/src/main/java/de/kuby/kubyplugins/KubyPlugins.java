@@ -786,6 +786,16 @@ public final class KubyPlugins extends JavaPlugin {
             }
         }
     }
+    /** Eigener Shop eines Modus (z. B. Skyblock): /shop, /sell und die Shop-Kachel landen dort statt im Server-Shop. */
+    public interface ShopHook {
+        void open(org.bukkit.entity.Player p);
+
+        /** Alles Verkaufbare aus dem Inventar verkaufen, gibt den Erlös zurück. */
+        long sellAll(org.bukkit.entity.Player p);
+    }
+    private final java.util.Map<String, ShopHook> shopHooks = new java.util.HashMap<>();
+    public void registerShop(String mode, ShopHook h) { shopHooks.put(mode, h); }
+    public ShopHook shopHook(org.bukkit.entity.Player p) { return shopHooks.get(modes().modeOf(p.getUniqueId())); }
     /** Eintrag nur für einen Modus (z. B. ModeService.SURVIVAL). */
     public void registerMainEntry(String mode, MainEntry e) { mainEntries.add(new MainEntry(e.icon(), e.name(), e.desc(), e.action(), mode)); }
     public void registerAdminButton(AdminButton b) { adminButtons.add(b); }
