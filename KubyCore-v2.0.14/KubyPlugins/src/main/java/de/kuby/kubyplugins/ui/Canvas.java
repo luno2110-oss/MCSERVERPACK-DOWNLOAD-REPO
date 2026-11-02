@@ -38,7 +38,7 @@ public final class Canvas {
 
     private static final int LINE = 9;
 
-    private enum Kind { TEXT, BG, ICON, ITEM }
+    private enum Kind { TEXT, BG, ICON, ITEM, HEAD }
 
     private static final class Glyph {
         final Kind kind;
@@ -672,6 +672,82 @@ public final class Canvas {
         return title(x, y, text, true, null);
     }
 
+    // =================================================================================================================
+    // Kategorie-Titel im Stil der GUI-Referenzen (SUPPORT, QUESTS, JUWELENSHOP …)
+    // =================================================================================================================
+
+    /** Farbe des Titels (Index in HeadlineData.PALETTES) zur Akzentfarbe des Dialogs. */
+    public static int headlinePalette(TextColor c) {
+        if (c == null) return 0;
+        float[] hsb = java.awt.Color.RGBtoHSB(c.red(), c.green(), c.blue(), null);
+        float h = hsb[0] * 360, sat = hsb[1], bri = hsb[2];
+        String name;
+        if (sat < 0.2f) name = bri > 0.8f ? "white" : "gray";
+        else if (h < 12 || h >= 345) name = "red";
+        else if (h < 40) name = "orange";
+        else if (h < 65) name = "gold";
+        else if (h < 150) name = "green";
+        else if (h < 185) name = "cyan";
+        else if (h < 215) name = "sky";
+        else if (h < 255) name = "blue";
+        else if (h < 295) name = "purple";
+        else name = "pink";
+        return java.util.Arrays.asList(HeadlineData.PALETTES).indexOf(name);
+    }
+
+    private static String headlineText(String text) {
+        return I18n.ctx(text).toUpperCase(java.util.Locale.GERMAN).replace("ß", "SS");
+    }
+
+    /** Breite eines Titels in Pixeln. */
+    public static int headlineWidth(String text) {
+        String t = headlineText(text).replace("|", "");
+        int w = 0, n = 0;
+        for (char ch : t.toCharArray()) {
+            if (ch == ' ') {
+                w += HeadlineData.SPACE;
+                continue;
+            }
+            int i = HeadlineData.CHARS.indexOf(ch);
+            if (i < 0) continue;
+            w += HeadlineData.ADV[i];
+            n++;
+        }
+        return Math.max(0, w - Math.max(0, n - 1));
+    }
+
+    /**
+     * Großer Kategorie-Titel wie in den Referenzen (dicke Buchstaben, heller Glanz oben, satte Farbe, dunkle Kontur und
+     * Schatten), Oberkante der Großbuchstaben bei y. Die Farbe kommt aus der Akzentfarbe; nach „|“ geht es weiß weiter
+     * (wie JUWELEN|SHOP). Gibt die Breite zurück.
+     */
+    public int headline(int x, int y, String text, TextColor color) {
+        String t = headlineText(text);
+        int pal = Math.max(0, headlinePalette(color)), white = java.util.Arrays.asList(HeadlineData.PALETTES).indexOf("white");
+        StringBuilder chars = new StringBuilder();
+        boolean first = true;
+        for (char ch : t.toCharArray()) {
+            if (ch == '|') {
+                pal = white;
+                continue;
+            }
+            if (ch == ' ') {
+                chars.append(Ui.spaceChars(HeadlineData.SPACE));
+                continue;
+            }
+            int i = HeadlineData.CHARS.indexOf(ch);
+            if (i < 0) continue;
+            if (!first) chars.append(Ui.spaceChars(-1));     // Konturen berühren sich wie in der Referenz
+            chars.append((char) (0xE000 + pal * 0x80 + i));
+            first = false;
+        }
+        int w = headlineWidth(text);
+        int top = y - HeadlineData.TOP;
+        glyphs.add(new Glyph(Kind.HEAD, x, top, w, HeadlineData.CELL_H, w, Z_TEXT, chars.toString(), NamedTextColor.WHITE, false,
+                Math.max(KitData.I_MIN, HeadlineData.MIN_SHIFT), KitData.I_MAX, top, top + HeadlineData.CELL_H));
+        return w;
+    }
+
     /** Small Caps für die Kit-Schriften (ᴀʙᴄ ..., mit eigenen Umlauten ᴀ̈ ᴏ̈ ᴜ̈). */
     public static String caps(String text) {
         text = I18n.ctx(text);
@@ -787,6 +863,7 @@ public final class Canvas {
                 case BG -> "k/b" + shift;
                 case ICON -> "k/i" + shift;
                 case ITEM -> "k/x" + shift;
+                case HEAD -> "k/h" + shift;
             });
             int gap = g.x - cursor;
             if (gap != 0) {

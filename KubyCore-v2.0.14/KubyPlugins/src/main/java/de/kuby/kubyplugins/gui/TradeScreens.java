@@ -93,7 +93,7 @@ public final class TradeScreens {
         Canvas c = new Canvas(W).heading("Shop", EMERALD);
         c.box(0, 0, W, 54, KitData.Box.CLOVER);
         c.sprite(10 + (32 - KitData.Sprite.HB_SHOP.width) / 2, 11 + (32 - KitData.Sprite.HB_SHOP.height) / 2, KitData.Sprite.HB_SHOP);
-        c.title(50, 12, "Shop", false, EMERALD);
+        c.headline(50, 12, "Shop", EMERALD);
         c.text(50, 36, "Preise folgen den Kursen der Börse", MINT, false);
         c.textRight(378, 14, Msg.coins(coins) + " $", GOLD, true);
         c.textRight(378, 26, Canvas.caps("Guthaben"), MINT, false);
@@ -176,7 +176,7 @@ public final class TradeScreens {
         Canvas c = new Canvas(W).heading("Markt", AMBER);
         c.box(0, 0, W, 54, KitData.Box.WOOD);
         c.sprite(10 + (32 - KitData.Sprite.HB_MARKT.width) / 2, 11 + (32 - KitData.Sprite.HB_MARKT.height) / 2, KitData.Sprite.HB_MARKT);
-        c.title(50, 12, "Markt", false, AMBER);
+        c.headline(50, 12, "Markt", AMBER);
         c.text(50, 36, "Spieler handeln untereinander · " + Msg.coins(count) + " Angebote", SAND, false);
         c.textRight(378, 14, Msg.coins(coins) + " $", GOLD, true);
         c.textRight(378, 26, Canvas.caps("Guthaben"), SAND, false);

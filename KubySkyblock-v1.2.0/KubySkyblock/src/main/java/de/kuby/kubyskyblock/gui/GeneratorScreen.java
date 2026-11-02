@@ -265,7 +265,7 @@ public final class GeneratorScreen {
         Canvas c = new Canvas(W).heading("Generatoren", STEEL);
         c.box(0, 0, W, 54, KitData.Box.STEEL);
         c.sprite(10 + (32 - KitData.Sprite.GN_GELD.width) / 2, 11 + (32 - KitData.Sprite.GN_GELD.height) / 2, KitData.Sprite.GN_GELD);
-        c.title(50, 12, "Generatoren", false, STEEL);
+        c.headline(50, 12, "Generatoren", STEEL);
         c.text(50, 36, rows.size() + " von " + slots + " Plätzen · " + (boost == null ? "kein Booster" : boost), boost == null ? DIM : GOLD, false);
         int y = 60;
         for (Row r : rows) {
@@ -343,7 +343,7 @@ public final class GeneratorScreen {
         Canvas c = new Canvas(W).heading(title, GOLD);
         c.box(0, 0, W, 54, KitData.Box.STEEL);
         c.sprite(10 + (32 - KitData.Sprite.GN_ERZ.width) / 2, 11 + (32 - KitData.Sprite.GN_ERZ.height) / 2, KitData.Sprite.GN_ERZ);
-        c.title(50, 12, title, false, GOLD);
+        c.headline(50, 12, title, GOLD);
         c.text(50, 36, "Kaufen, auf die Insel stellen, Lager einsammeln", DIM, false);
         c.textRight(W - 8, 14, balance, balColor, true);
         c.smallButton(W - 8 - 60, 30, 60, KitData.Small.DARK, "Zurück", STEEL, false);

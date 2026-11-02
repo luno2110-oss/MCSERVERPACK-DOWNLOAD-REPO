@@ -171,7 +171,7 @@ public final class ProgressScreens {
     private static void head(Canvas c, KitData.Box box, KitData.Icon icon, String title, TextColor color, String sub, TextColor subColor) {
         c.box(0, 0, W, 54, box);
         c.icon(10, 11, icon, true);
-        c.title(50, 12, title, false, color);
+        c.headline(50, 12, title, color);
         c.text(50, 36, sub, subColor, false);
     }
 

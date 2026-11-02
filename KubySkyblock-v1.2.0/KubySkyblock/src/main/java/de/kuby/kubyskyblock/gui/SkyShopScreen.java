@@ -107,7 +107,7 @@ public final class SkyShopScreen {
         Canvas c = new Canvas(W).heading("Skyblock-Shop", SKY);
         c.box(0, 0, W, 46, KitData.Box.CLOUD);
         c.sprite(10 + (32 - KitData.Sprite.HB_SHOP.width) / 2, 7, KitData.Sprite.HB_SHOP);
-        c.title(50, 6, "Shop", false, SKY);
+        c.headline(50, 6, "Shop", SKY);
         c.text(50, 31, Canvas.fit(v.section(), true, 200), CLOUD, true);
         c.textRight(W - 10, 10, Canvas.caps("Coins"), MIST, false);
         c.textRight(W - 10, 22, Msg.coins(v.coins()) + " $", GOLD, true);

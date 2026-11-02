@@ -64,7 +64,7 @@ public final class SkyScreen {
         Canvas c = new Canvas(W).heading("Skyblock", SKY);
         c.box(0, 0, W, 54, KitData.Box.CLOUD);
         c.icon(10, 11, KitData.Icon.GRASS_BLOCK, true);
-        c.title(50, 12, "Skyblock", false, SKY);
+        c.headline(50, 12, "Skyblock", SKY);
         c.text(50, 36, "Deine Insel, deine Sammlung", MIST, false);
         int done = (int) v.achievements().stream().filter(Ach::done).count();
         c.textRight(378, 12, done + " / " + v.achievements().size(), CLOUD, true);

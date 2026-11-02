@@ -78,7 +78,7 @@ public final class TopListScreen {
         Canvas c = new Canvas(W).heading(v.title(), LILAC);
         c.box(0, 0, W, 54, KitData.Box.ROYAL);
         c.icon(10, 11, v.icon(), true);
-        c.title(50, 12, v.title(), false, LILAC);
+        c.headline(50, 12, v.title(), LILAC);
         c.text(50, 36, v.sub(), MAUVE, false);
         c.icon(352, 11, KitData.Icon.TOTEM, true);
 

@@ -108,7 +108,7 @@ public final class SmpScreens {
         Canvas c = new Canvas(W).heading("Trophäen", FROST);
         c.box(0, 0, W, 54, KitData.Box.FROST);
         c.icon(10, 11, KitData.Icon.STAR, true);
-        c.title(50, 12, "Ligen", false, FROST);
+        c.headline(50, 12, "Ligen", FROST);
         c.text(50, 36, "Kills " + v.kills() + " · Tode " + v.deaths(), MIST, false);
         c.textRight(378, 10, Msg.coins(v.trophies()), ICE, true);
         c.textRight(378, 21, Canvas.caps("Trophäen"), MIST, false);
@@ -179,7 +179,7 @@ public final class SmpScreens {
         Canvas c = new Canvas(W).heading("Duelle", STEELC);
         c.box(0, 0, W, 54, KitData.Box.STEEL);
         c.icon(10, 11, KitData.Icon.IRON_SWORD, true);
-        c.title(50, 12, "Duelle", false, STEELC);
+        c.headline(50, 12, "Duelle", STEELC);
         c.text(50, 36, "Eins gegen eins · mit Einsatz: /duell <Spieler> <Betrag>", SLATE, false);
         int y = 60;
         if (v.challenger() != null) {
@@ -250,7 +250,7 @@ public final class SmpScreens {
         Canvas c = new Canvas(W).heading("Turnier", ROYAL);
         c.box(0, 0, W, 54, KitData.Box.ROYAL);
         c.icon(10, 11, KitData.Icon.TOTEM, true);
-        c.title(50, 12, "Turnier", false, ROYAL);
+        c.headline(50, 12, "Turnier", ROYAL);
         c.text(50, 36, "K.-o.-Turnier · wer verliert, ist raus", MAUVE, false);
         c.textRight(378, 12, v.state(), v.stateColor(), true);
         int y = 60;
@@ -332,7 +332,7 @@ public final class SmpScreens {
         Canvas c = new Canvas(W).heading("Raid-Versicherung", TEAL);
         c.box(0, 0, W, 54, KitData.Box.TEAL);
         c.icon(10, 11, KitData.Icon.IRON_CHESTPLATE, true);
-        c.title(50, 12, "Versicherung", false, TEAL);
+        c.headline(50, 12, "Versicherung", TEAL);
         c.text(50, 36, "Schau auf eine Kiste und tippe /versichern", TEALDIM, false);
         int y = 60, fw = (W - 6) / 3;
         stat(c, 0, y, fw, "Auszahlung", v.payoutPercent() + " %", "des Kistenwerts");
@@ -419,7 +419,7 @@ public final class SmpScreens {
         Canvas c = new Canvas(W).heading("Steckbriefe", RED);
         c.box(0, 0, W, 54, KitData.Box.RED);
         c.icon(10, 11, KitData.Icon.SKULL_BANNER_PATTERN, true);
-        c.title(50, 12, "Gesucht", false, RED);
+        c.headline(50, 12, "Gesucht", RED);
         c.text(50, 36, "Kopfgeld aussetzen: /bounty <Spieler> <Betrag>", TextColor.color(0xC08080), false);
         int y = 60, cols = 2, cw = (W - 4) / cols, ch = 66;
         for (int i = 0; i < list.size(); i++) {

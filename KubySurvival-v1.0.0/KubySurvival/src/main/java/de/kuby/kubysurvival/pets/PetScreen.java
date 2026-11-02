@@ -174,7 +174,7 @@ public final class PetScreen {
         Canvas c = new Canvas(W).heading("Haustiere", PINK);
         c.box(0, 0, W, 54, KitData.Box.PETAL);
         c.icon(10, 11, KitData.Icon.LEAD, true);
-        c.title(50, 12, "Haustiere", false, PINK);
+        c.headline(50, 12, "Haustiere", PINK);
         c.text(50, 36, "Rufen, reiten, umbenennen · ★ = Liebling", ROSE, false);
         c.textRight(378, 12, v.owned() + " / " + v.total(), CREAM, true);
         c.textRight(378, 24, Canvas.caps("gesammelt"), ROSE, false);

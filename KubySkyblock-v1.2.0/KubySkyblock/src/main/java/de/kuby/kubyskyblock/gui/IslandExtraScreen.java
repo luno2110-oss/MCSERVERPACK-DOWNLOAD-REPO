@@ -57,7 +57,7 @@ public final class IslandExtraScreen {
         Canvas c = new Canvas(W).heading(title, SKY);
         c.box(0, 0, W, 54, KitData.Box.CLOUD);
         c.sprite(10 + (32 - icon.width) / 2, 11 + (32 - icon.height) / 2, icon);
-        c.title(50, 12, title, false, SKY);
+        c.headline(50, 12, title, SKY);
         c.text(50, 36, Canvas.fit(sub, false, W - 50 - 90), MIST, false);
         c.smallButton(W - 8 - 70, 18, 70, KitData.Small.DARK, "Zurück", CLOUD, false);
         if (back != null) c.action(W - 8 - 70, 18, 70, KitData.SMALL_H, back, "Zurück");

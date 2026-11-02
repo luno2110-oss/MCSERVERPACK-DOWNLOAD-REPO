@@ -547,7 +547,7 @@ public final class IslandScreen {
         Canvas c = new Canvas(W).heading("Insel", SKY);
         c.box(0, 0, W, 54, KitData.Box.CLOUD);
         c.sprite(10 + (32 - KitData.Sprite.HB_INSEL.width) / 2, 11, KitData.Sprite.HB_INSEL);
-        c.title(50, 9, "Insel", false, SKY);
+        c.headline(50, 9, "Insel", SKY);
         c.text(50, 33, Canvas.fit(Canvas.lit(v.name()), true, 200), CLOUD, true);
         c.text(50, 43, "Level " + Msg.coins(v.level()) + " · " + Msg.coins(v.points()) + " / " + Msg.coins(v.nextLevel()) + " Punkte", MIST, false);
         c.textRight(378, 10, v.rank() > 0 ? "#" + v.rank() : "–", GOLD, true);
@@ -645,7 +645,7 @@ public final class IslandScreen {
         Canvas c = new Canvas(W).heading("Top-Inseln", SKY);
         c.box(0, 0, W, 54, KitData.Box.CLOUD);
         c.sprite(10 + (32 - KitData.Sprite.QU_RANK_HEAD.width) / 2, 11 + (32 - KitData.Sprite.QU_RANK_HEAD.height) / 2, KitData.Sprite.QU_RANK_HEAD);
-        c.title(50, 12, "Top-Inseln", false, SKY);
+        c.headline(50, 12, "Top-Inseln", SKY);
         c.text(50, 36, "Level nach Punkten aller Blöcke", MIST, false);
         c.smallButton(W - 8 - 70, 18, 70, KitData.Small.DARK, "Zurück", CLOUD, false);
         c.action(W - 8 - 70, 18, 70, KitData.SMALL_H, back, "Zurück");
@@ -687,7 +687,7 @@ public final class IslandScreen {
         Canvas c = new Canvas(W).heading(title, SKY);
         c.box(0, 0, W, 54, KitData.Box.CLOUD);
         c.sprite(10 + (32 - KitData.Sprite.HB_INSEL.width) / 2, 11, KitData.Sprite.HB_INSEL);
-        c.title(50, 12, title, false, SKY);
+        c.headline(50, 12, title, SKY);
         c.text(50, 36, sub, MIST, false);
         int y = 60, cw = (W - 4) / 2, ch = 64;
         for (int k = 0; k < choices.size(); k++) {

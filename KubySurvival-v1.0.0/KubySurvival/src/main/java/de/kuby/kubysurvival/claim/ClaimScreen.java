@@ -118,7 +118,7 @@ public final class ClaimScreen {
         // Kopf
         c.box(0, 0, W, 54, KitData.Box.MEADOW);
         c.icon(10, 11, KitData.Icon.GRASS_BLOCK, true);
-        c.title(50, 12, "Land", false, LEAF);
+        c.headline(50, 12, "Land", LEAF);
         c.text(50, 36, v.plots().size() + " / " + v.max() + " Grundstücke", SAGE, false);
         c.textRight(378, 10, Msg.coins(v.free()), CREAM, true);
         c.textRight(378, 21, Canvas.caps("freie Claim-Blöcke"), SAGE, false);

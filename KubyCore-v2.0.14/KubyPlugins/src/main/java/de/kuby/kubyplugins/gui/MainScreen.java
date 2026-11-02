@@ -226,7 +226,7 @@ public final class MainScreen {
         c.box(0, 0, W, 54, KitData.Box.HUB);
         KitData.Sprite head = v.head() != null ? v.head() : KitData.Sprite.HB_MENU;
         c.sprite(10 + (32 - head.width) / 2, 11 + (32 - head.height) / 2, head);
-        c.title(50, 12, "Menü");
+        c.headline(50, 12, "Menü", TextColor.color(0xFBCD01));
         int pw = c.text(50, 36, Canvas.fit(Canvas.lit(v.player()), false, 140) + " · ", GRAY, false);
         c.text(50 + pw, 36, v.mode(), v.modeColor() != null ? v.modeColor() : GRAY, true);
         int nw = c.textRight(372, 14, Msg.coins(v.coins()), COINS, true);

@@ -277,7 +277,7 @@ public final class JobScreen {
     static int frame(Canvas c, Head h, Tab tab, Actions a) {
         c.box(0, 0, W, 54, KitData.Box.WOOD);
         c.icon(10, 11, KitData.Icon.IRON_PICKAXE, true);
-        c.title(50, 12, "Jobs", false, AMBER);
+        c.headline(50, 12, "Jobs", AMBER);
         c.text(50, 36, "Level " + h.level() + " · " + (h.job() == null ? "noch kein Beruf" : h.job()), TAN, false);
         int tw = c.textRight(372, 12, Msg.coins(h.tokens()) + " Tokens", TOKENS, true);
         c.icon(372 - tw - 20, 8, KitData.Icon.AMETHYST, false);

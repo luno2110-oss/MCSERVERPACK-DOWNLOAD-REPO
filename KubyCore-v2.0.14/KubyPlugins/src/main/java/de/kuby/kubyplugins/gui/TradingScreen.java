@@ -365,7 +365,7 @@ public final class TradingScreen {
     private static int top(Canvas c, Head h, Tab active, Map<Tab, Consumer<Player>> tabs) {
         c.box(0, 0, W, 46, KitData.Box.TERMINAL);
         c.sprite(8 + (32 - KitData.Sprite.HB_TRADE.width) / 2, 7 + (32 - KitData.Sprite.HB_TRADE.height) / 2, KitData.Sprite.HB_TRADE);
-        c.title(46, 7, "KubyTrade", false, CYAN);
+        c.headline(46, 7, "KubyTrade", CYAN);
         c.text(46, 31, "● Live", UP, true);
         c.text(46 + Canvas.width("● Live", true) + 4, 31, "Kurse bewegen sich", DIM, false);
         c.textRight(W - 8, 7, Msg.coins(h.cash()) + " $", GOLD, true);

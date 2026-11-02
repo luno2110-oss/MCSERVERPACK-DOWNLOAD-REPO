@@ -128,7 +128,7 @@ public final class TeamScreen {
         c.box(0, 0, W, 54, KitData.Box.INDIGO);
         c.icon(10, 11, KitData.Icon.WHITE_BANNER, true);
         if (v.name() == null) {
-            c.title(50, 12, "Team", false, INDIGO);
+            c.headline(50, 12, "Team", INDIGO);
             c.text(50, 36, "Gemeinsam spielen, Kasse, Lager und Teamhome", LAV, false);
             int y = 60;
             c.box(0, y, W, 72, KitData.Box.INDIGO_CARD);

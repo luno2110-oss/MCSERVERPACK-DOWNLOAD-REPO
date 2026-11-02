@@ -133,7 +133,7 @@ public final class FarmpassScreen {
         Canvas c = new Canvas(W).heading("Farmpass", LIME);
         c.box(0, 0, W, 54, KitData.Box.LIME);
         c.icon(10, 11, KitData.Icon.LILY, true, LEAF);
-        c.title(50, 12, "Farmpass", false, LIME);
+        c.headline(50, 12, "Farmpass", LIME);
         if (v.active()) {
             c.text(50, 36, "Aktiv bis " + v.until() + " · " + v.months() + (v.months() == 1 ? " Monat" : " Monate") + " bezahlt", OLIVE, false);
             c.smallButton(W - 70, 10, 62, KitData.Small.GREEN, "☘ aktiv", WHITE, true);

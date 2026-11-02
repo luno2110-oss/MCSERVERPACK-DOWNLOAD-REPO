@@ -90,7 +90,7 @@ public final class DailyScreens {
         int n = v.rewards().length;
         c.box(0, 0, W, 54, KitData.Box.SKY);
         c.icon(10, 11, KitData.Icon.CLOCK, true);
-        c.title(50, 12, "Täglich", false, SKY);
+        c.headline(50, 12, "Täglich", SKY);
         c.text(50, 36, "Einmal am Tag abholen · jeder 10. Tag mit Juwelen", MIST, false);
         c.textRight(378, 12, v.done() + " / " + n, ICE, true);
         c.textRight(378, 24, Canvas.caps("Tage"), MIST, false);
@@ -141,7 +141,7 @@ public final class DailyScreens {
         Canvas c = new Canvas(W).heading("Tagespot", CLOVER);
         c.box(0, 0, W, 54, KitData.Box.CLOVER);
         c.icon(10, 11, KitData.Icon.GOLD_BLOCK, true);
-        c.title(50, 12, "Tagespot", false, CLOVER);
+        c.headline(50, 12, "Tagespot", CLOVER);
         c.text(50, 36, "Lose kaufen, um " + v.hour() + ":00 Uhr gewinnt ein Los den ganzen Topf", PALE, false);
 
         // großer Topf

@@ -153,7 +153,7 @@ public final class OneBlockScreen {
         Canvas c = new Canvas(W).heading("One-Block", SKY);
         c.box(0, 0, W, 54, KitData.Box.CLOUD);
         c.sprite(10 + (32 - KitData.Sprite.HB_ONEBLOCK.width) / 2, 11 + (32 - KitData.Sprite.HB_ONEBLOCK.height) / 2, KitData.Sprite.HB_ONEBLOCK);
-        c.title(50, 10, "One-Block", false, SKY);
+        c.headline(50, 10, "One-Block", SKY);
         c.text(50, 36, Canvas.fit(v.line(), false, 250), v.team() == null ? MIST : CLOUD, false);
         c.textRight(W - 10, 12, Canvas.caps("Deine XP"), MIST, false);
         c.textRight(W - 10, 24, Msg.coins(v.ownXp()), XPC, true);

@@ -90,7 +90,7 @@ public final class CookieScreen {
     static int head(Canvas c, Head h) {
         c.box(0, 0, W, 52, KitData.Box.WOOD);
         c.sprite(9 + (32 - KitData.Sprite.CK_COOKIE.width) / 2, 10 + (32 - KitData.Sprite.CK_COOKIE.height) / 2, KitData.Sprite.CK_COOKIE);
-        c.title(48, 8, h.area(), false, GOLD);
+        c.headline(48, 8, h.area(), GOLD);
         c.text(48, 35, Canvas.fit(h.title() + " · Stufe " + n(h.level()), false, 170), TAN, false);
         c.textRight(W - 10, 8, Canvas.caps("Kekse"), DIM, false);
         c.textRight(W - 10, 19, n(h.cookies()), CREAM, true);

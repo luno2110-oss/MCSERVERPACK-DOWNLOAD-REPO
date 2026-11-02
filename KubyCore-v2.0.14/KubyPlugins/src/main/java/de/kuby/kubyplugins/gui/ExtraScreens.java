@@ -120,7 +120,7 @@ public final class ExtraScreens {
         Canvas c = new Canvas(W).heading("XP-Shop", XP);
         c.box(0, 0, W, 54, KitData.Box.XP);
         c.icon(10, 11, KitData.Icon.EXPERIENCE, true);
-        c.title(50, 12, "XP-Shop", false, XP);
+        c.headline(50, 12, "XP-Shop", XP);
         c.text(50, 36, "XP aus Kills, Quests und Votes eintauschen", LIME, false);
         c.textRight(378, 14, Msg.coins(xp), XP, true);
         c.textRight(378, 26, Canvas.caps("XP verfügbar"), LIME, false);
@@ -198,7 +198,7 @@ public final class ExtraScreens {
         Canvas c = new Canvas(W).heading("Investments", MINT);
         c.box(0, 0, W, 54, KitData.Box.TERMINAL);
         c.icon(10, 11, KitData.Icon.RAW_GOLD, true);
-        c.title(50, 12, "Börse", false, MINT);
+        c.headline(50, 12, "Börse", MINT);
         c.text(50, 36, "Anteile an Shop-Waren · Kurse schwanken", TEALDIM, false);
         long gain = v.value() - v.invested();
         c.textRight(378, 10, Msg.coins(v.value()) + "$", CREAM, true);
@@ -274,7 +274,7 @@ public final class ExtraScreens {
         Canvas c = new Canvas(W).heading("Duo-RTP", EMBER);
         c.box(0, 0, W, 54, KitData.Box.EMBER);
         c.icon(10, 11, KitData.Icon.FIRE_CHARGE, true);
-        c.title(50, 12, "Duo-RTP", false, EMBER);
+        c.headline(50, 12, "Duo-RTP", EMBER);
         c.text(50, 36, "Zwei Spieler, ein Zufallsort, ein Kampf", ASH, false);
         int y = 60;
         c.box(0, y, W, 80, KitData.Box.EMBER_CARD);
@@ -340,7 +340,7 @@ public final class ExtraScreens {
         Canvas c = new Canvas(W).heading("Quiz-Abstimmung", CHALK);
         c.box(0, 0, W, 54, KitData.Box.CHALK);
         c.icon(10, 11, KitData.Icon.BOOK_PLAIN, true);
-        c.title(50, 12, "Quiz", false, CHALK);
+        c.headline(50, 12, "Quiz", CHALK);
         c.text(50, 36, "Welche Kategorie kommt nächste Woche?", CHALKDIM, false);
         int y = 60;
         c.text(4, y, "Aktuell: " + (v.active() == null ? "alle Kategorien" : cap(v.active())) + " · " + v.questions() + " Fragen · Auswertung montags 00:05",

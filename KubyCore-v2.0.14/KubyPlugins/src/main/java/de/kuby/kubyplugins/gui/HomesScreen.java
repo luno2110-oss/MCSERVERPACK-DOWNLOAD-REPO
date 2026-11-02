@@ -144,7 +144,7 @@ public final class HomesScreen {
         Canvas c = new Canvas(W).heading("Homes", BRICK);
         c.box(0, 0, W, 54, KitData.Box.BRICK);
         c.icon(10, 11, KitData.Icon.RED_BED, true);
-        c.title(50, 12, "Homes", false, BRICK);
+        c.headline(50, 12, "Homes", BRICK);
         c.text(50, 36, "Klick auf ein Home bringt dich hin", ROSE, false);
         String used = v.homes().size() + " / " + v.limit();
         c.textRight(378, 12, used, CREAM, true);
