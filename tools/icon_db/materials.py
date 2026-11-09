@@ -68,6 +68,10 @@ RAMPS = {
     "netherrack": ["#2E0E10", "#411616", "#501B1B", "#652828", "#723232", "#854242", "#A05454"],
     "endstein": ["#7E7A50", "#A8A270", "#C5BE8B", "#D5DA94", "#DEE6A4", "#EEF6B4", "#F6FABD"],
     "endrahmen": ["#03120E", "#132E37", "#24433B", "#2F584E", "#427367", "#99C693", "#EDF2B9"],
+    # Cookie Clicker: Keks-Teig (Vanilla-Keks, nach oben wärmer), Schokolade, Haut (Bäckerlehrling)
+    "keks": ["#5C301A", "#7A4024", "#9B5A2E", "#B97335", "#D9833E", "#E89850", "#F2B36A", "#F8CF8C"],
+    "schoko": ["#24120A", "#341B0C", "#452A13", "#5A3519", "#704425", "#8A5A33"],
+    "haut": ["#7A4E38", "#96664D", "#B07C61", "#C69276", "#D9A98C", "#E8C2A6"],
 }
 
 

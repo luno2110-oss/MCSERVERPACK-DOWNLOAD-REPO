@@ -383,10 +383,22 @@ def build():
         if f.endswith(".png"):
             os.remove(os.path.join(OUT, f))
     names = []
-    for name, fn in [("cookie", c_cookie), ("gold", c_gold)] + [("b_" + n, f) for n, f in BUILDINGS] + [("m_" + n, f) for n, f in MENU]:
+    # Neu gezeichnet mit der Icon-Datenbank (cookie_pixel_icons.py), die alten Zeichnungen hier bleiben nur als Vorlage
+    import cookie_pixel_icons as cp
+    for name, fn in cp.ICONS.items():
         trim(fn().render()).save(os.path.join(OUT, "art_%s.png" % name))
         names.append(name)
     return names
+
+
+def _item(size, gold=False):
+    """Keks als Item-Bild (Station, Glückskeks, Keksregen) im neuen Stil."""
+    import cookie_pixel_icons as cp
+    from hub_pixel_icons import layer
+    if size == 32:
+        return (cp.c_gold() if gold else cp.c_cookie()).render()
+    pix = cp.cookie_pix(8, 8, 6.6, chunks=[(-6, -7, "c"), (5, -4, "c"), (-4, 4, "c"), (5, 6, "c")])
+    return layer(pix, 16)
 
 
 def write_models(out):
@@ -395,7 +407,7 @@ def write_models(out):
     idir = os.path.join(out, "assets/kuby/items/cookie")
     for d in (tdir, mdir, idir):
         os.makedirs(d, exist_ok=True)
-    for name, img in (("big", item_cookie(32).render()), ("gold", item_cookie(32, True).render()), ("regen", item_cookie(16).render())):
+    for name, img in (("big", _item(32)), ("gold", _item(32, True)), ("regen", _item(16))):
         img.save(os.path.join(tdir, name + ".png"))
         with open(os.path.join(mdir, name + ".json"), "w", encoding="utf-8") as f:
             json.dump({"parent": "minecraft:item/generated", "textures": {"layer0": "kuby:item/cookie/" + name}}, f)
