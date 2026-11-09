@@ -74,6 +74,12 @@ public final class AngelScreens {
         Consumer<Player> bait(Bait b, String action);
 
         Consumer<Player> sell(AngelService.SellMode mode);
+
+        /** Angel-Shop: Reiter 0 Coins, 1 Juwelen. */
+        Consumer<Player> shop(int tab);
+
+        /** Angel kaufen ("buy") oder wieder holen ("take"). */
+        Consumer<Player> rodAction(Rod r, String action);
     }
 
     private AngelScreens() {
@@ -163,7 +169,7 @@ public final class AngelScreens {
                            int jobLevel, List<FishSpecies> fishOfDay, boolean golden, long goldenSeconds,
                            double luck, double faster, String activeBait, KitData.Icon activeBaitIcon,
                            int activeBaitCount, long fishValue,
-                           int ordersDone, boolean hasZone) {}
+                           int ordersDone, boolean hasZone, int rodsOwned) {}
 
     public static Canvas main(MainView v, Nav nav) {
         Canvas c = new Canvas(W).heading("Angeln", net.kyori.adventure.text.format.TextColor.color(0x55FCFC));
@@ -192,10 +198,14 @@ public final class AngelScreens {
         c.textRight(380, 163, v.golden ? "Goldene Stunde läuft noch " + AngelText.duration(v.goldenSeconds)
                 : "Goldene Stunde in " + AngelText.duration(v.goldenSeconds), GRAY, false);
         int fx = 11;
-        for (FishSpecies s : v.fishOfDay) {
+        int priceW = Canvas.width("+50 % Preis", false);
+        for (int i = 0; i < v.fishOfDay.size(); i++) {
+            FishSpecies s = v.fishOfDay.get(i);
             c.icon(fx, 172, fishIcon(s, true), false);
-            c.text(fx + 21, 176, s.name(), s.rarity().color(), false);
-            fx += 139;
+            // der letzte Name endet vor „+50 % Preis“
+            int max = i == v.fishOfDay.size() - 1 ? 380 - priceW - 8 - (fx + 21) : 139 - 26;
+            c.text(fx + 21, 176, Canvas.fit(s.name(), false, Math.max(20, max)), s.rarity().color(), false);
+            fx += 128;
         }
         c.textRight(380, 176, "+50 % Preis", GREEN, false);
         c.action(0, 153, W, 52, nav.dealer(), "Fische des Tages: +50 % beim Händler");
@@ -216,13 +226,17 @@ public final class AngelScreens {
                 spans(v.ordersDone + "/3 erledigt", GRAY), true, nav.orders(), "Drei neue Aufträge jeden Tag");
         tile(c, 198, y + 72, Theme.NAVY, KitData.Icon.GOLD_HELMET, "Bestenliste", null,
                 spans("Woche, Ränge und Rekorde", GRAY), true, nav.top("woche"), "Die besten Angler");
+        tile(c, 0, y + 108, Theme.TEAL, Rod.DIAMANT.icon(), "Angel-Shop", null,
+                spans(v.rodsOwned + "/11 Angeln · eigene Vorteile", GRAY), true, nav.shop(0), "Holz- bis Netherite-Angel für Coins");
+        tile(c, 198, y + 108, Theme.PURPLE, Rod.GOETTLICH.icon(), "Juwelen-Angeln", null,
+                spans("Rainbow, Void, Göttlich", GRAY), true, nav.shop(1), "Die stärksten Angeln, nur für Juwelen");
 
         // Knöpfe
         if (v.hasZone) {
-            textButton(c, 0, 330, KitData.Button.TEAL, "Zur Angel-Zone", ON_TEAL, true, nav.toZone(),
+            textButton(c, 0, 366, KitData.Button.TEAL, "Zur Angel-Zone", ON_TEAL, true, nav.toZone(),
                     "Dort beißt es besser: +10 % Glück, Mythen-Fische und Schätze");
         }
-        textButtonRight(c, W, 330, KitData.Button.DARK, "So funktioniert's", TAB, false, nav.help(), "Kurz erklärt");
+        textButtonRight(c, W, 366, KitData.Button.DARK, "So funktioniert's", TAB, false, nav.help(), "Kurz erklärt");
         return c;
     }
 
@@ -362,6 +376,95 @@ public final class AngelScreens {
         textButtonRight(c, W, y, KitData.Button.PURPLE_LINE, "Doppelfang im Token-Shop", TextColor.color(0xD6A4FF), false,
                 nav.tokenShop(), "Chance auf zwei Fische auf einmal");
         return c;
+    }
+
+    // =================================================================================================================
+    // Angel-Shop
+    // =================================================================================================================
+
+    /**
+     * @param owned   gekauft (je Rod.ordinal)
+     * @param carried im Inventar (je Rod.ordinal)
+     * @param inHand  Shop-Angel in der Hand oder null
+     */
+    public record ShopView(int tab, boolean[] owned, boolean[] carried, Rod inHand, long coins, long jewels, String armed) {}
+
+    public static Canvas shop(ShopView v, Nav nav) {
+        Canvas c = new Canvas(W).heading("Angeln", net.kyori.adventure.text.format.TextColor.color(0x55FCFC));
+        boolean jew = v.tab == 1;
+        head(c, jew ? Theme.PURPLE : Theme.TEAL, nav.main(), KitData.Icon.ROD, "Angel-Shop",
+                "Jede Angel hat eigene Vorteile, zusätzlich zu den Upgrades",
+                jew ? List.of(Span.of("Juwelen ", GRAY), Span.bold(AngelText.num(v.jewels), TextColor.color(0x5FE3A0)))
+                        : List.of(Span.of("Coins ", GRAY), Span.bold(AngelText.money(v.coins), GOLD_T)));
+        int y = tabs(c, 56, List.of("Angeln für Coins", "Juwelen-Angeln"), v.tab, List.of(nav.shop(0), nav.shop(1))) + 6;
+        if (!jew) {
+            int i = 0;
+            for (Rod r : Rod.values()) {
+                if (r.jewels) continue;
+                int x = (i % 2) * 198, cy = y + (i / 2) * 52;
+                rodCard(c, x, cy, r, v, nav);
+                i++;
+            }
+            int by = y + 6 * 52 + 2;
+            c.text(4, by, v.inHand == null ? "Nimm eine Shop-Angel in die Hand, dann gelten ihre Vorteile."
+                    : "In der Hand: " + v.inHand.label + " · " + v.inHand.stats(), v.inHand == null ? GRAY : LCYAN, false);
+        } else {
+            int cy = y;
+            for (Rod r : Rod.values()) {
+                if (!r.jewels) continue;
+                premiumCard(c, cy, r, v, nav);
+                cy += 110;
+            }
+        }
+        return c;
+    }
+
+    private static void rodCard(Canvas c, int x, int y, Rod r, ShopView v, Nav nav) {
+        boolean owned = v.owned[r.ordinal()], carried = v.carried[r.ordinal()];
+        boolean hand = r == v.inHand;
+        KitData.Box box = hand ? KitData.Box.GREEN : owned ? KitData.Box.TEAL : KitData.Box.NAVY;
+        c.box(x, y, 192, 50, box);
+        c.icon(x + 8, y + 17, r.icon(), false);
+        boolean armed = ("rod:" + r.id).equals(v.armed);
+        String status = armed ? "Nochmal!" : hand ? "in der Hand" : carried ? "dabei ✓" : owned ? "Holen ›" : AngelText.money(r.price);
+        TextColor sc = armed ? GOLD_T : hand || carried ? GREEN : owned ? AQUA : GOLD_T;
+        int sw = Canvas.width(status, true);
+        c.text(x + 30, y + 7, Canvas.fit(r.label, true, 150 - sw), r.textColor(), true);
+        c.textRight(x + 184, y + 7, status, sc, true);
+        c.text(x + 30, y + 19, Canvas.fit(r.stats(), false, 154), GRAY, false);
+        c.text(x + 30, y + 31, Canvas.fit(r.shortPerk(), false, 154), LIGHT, false);
+        String hover = r.label + ": " + r.stats() + ". " + r.perk + (owned ? (carried ? "" : " Klick: wieder ins Inventar.")
+                : " Zweimal klicken zum Kaufen (" + AngelText.money(r.price) + ").");
+        if (!carried || !owned) c.action(x, y, 192, 50, nav.rodAction(r, owned ? "take" : "buy"), hover);
+        else c.action(x, y, 192, 50, null, hover);
+    }
+
+    private static void premiumCard(Canvas c, int y, Rod r, ShopView v, Nav nav) {
+        boolean owned = v.owned[r.ordinal()], carried = v.carried[r.ordinal()];
+        KitData.Box box = r == Rod.GOETTLICH ? KitData.Box.GOLD : KitData.Box.PURPLE;
+        c.box(0, y, W, 106, box);
+        c.icon(12, y + 14, r.icon(), true);
+        c.text(54, y + 10, r.label, r.textColor(), true);
+        List<String> lines = new ArrayList<>(Canvas.wrap("Glück +" + AngelText.dec(r.luck) + " % · Wartezeit -" + AngelText.dec(r.faster) + " %"
+                + (r.treasure > 0 ? " · Schatz +" + AngelText.dec(r.treasure) + " %" : ""), W - 66));
+        List<String> extra = new ArrayList<>();
+        if (r.weight > 0) extra.add("+" + r.weight + " Gewichtswürfe");
+        if (r.doubleCatch > 0) extra.add(r.doubleCatch + " % Doppelfang");
+        if (r.points > 0) extra.add("+" + r.points + " % Punkte");
+        if (r.coins > 0) extra.add("+" + r.coins + " % Coins je Fang");
+        if (!extra.isEmpty()) lines.addAll(Canvas.wrap(String.join(" · ", extra), W - 66));
+        lines.addAll(Canvas.wrap(r.perk + " Unzerstörbar.", W - 66));
+        for (int i = 0; i < lines.size() && i < 5; i++) c.text(54, y + 24 + 11 * i, lines.get(i), i == 0 ? WHITE : LIGHT, false);
+        int by = y + 80;
+        if (!owned) {
+            boolean armed = ("rod:" + r.id).equals(v.armed);
+            textButtonRight(c, 380, by, KitData.Button.PURPLE, armed ? "Nochmal klicken zum Kaufen!" : "Kaufen · " + AngelText.num(r.price) + " Juwelen",
+                    ON_PURPLE, true, nav.rodAction(r, "buy"), "Zweimal klicken zum Kaufen · Du hast " + AngelText.num(v.jewels) + " Juwelen");
+        } else if (!carried) {
+            textButtonRight(c, 380, by, KitData.Button.TEAL, "Holen", ON_TEAL, true, nav.rodAction(r, "take"), "Wieder ins Inventar");
+        } else {
+            c.textRight(380, by + 7, r == v.inHand ? "In der Hand ✓" : "Dabei ✓", GREEN, true);
+        }
     }
 
     // =================================================================================================================
@@ -566,6 +669,9 @@ public final class AngelScreens {
                 {"Goldene", "Jeden Tag eine Stunde mit +50 % auf alle Fische."},
                 {"Aufträge", "Drei Tagesaufträge, für alle drei gibt es einen Bonus."},
                 {"Fischbuch", "Fang alle 8 Arten einer Seite für eine Belohnung."},
+                {"Angel-Shop", "14 Angeln mit eigenen Vorteilen (Holz bis Netherite für"},
+                {"", "Coins, Rainbow, Void und Göttlich für Juwelen). Sie gelten,"},
+                {"", "solange du mit der Angel fischst, zusätzlich zu Upgrades."},
         };
         c.box(0, 54, W, 12 + parts.length * 11 + 10, KitData.Box.NAVY);
         int y = 64;

@@ -58,7 +58,9 @@ public final class AngelListener implements Listener {
         switch (e.getState()) {
             case FISHING -> {
                 boolean zone = service.zoneAt(hook.getLocation()) != null || service.zoneAt(p.getLocation()) != null;
-                double f = Math.max(0.2, 1.0 - service.faster(p.getUniqueId(), zone) / 100.0);
+                Rod rod = AngelService.rodOf(p);
+                boolean rain = !hook.getWorld().isClearWeather();
+                double f = Math.max(0.15, 1.0 - service.faster(p.getUniqueId(), zone, rod, rain) / 100.0);
                 int min = Math.max(1, (int) (hook.getMinWaitTime() * f));
                 int max = Math.max(min, (int) (hook.getMaxWaitTime() * f));
                 hook.setMinWaitTime(min);
@@ -84,6 +86,7 @@ public final class AngelListener implements Listener {
                     item.teleport(p.getLocation().add(0, 0.3, 0));
                 }
                 fx.caught(p, at, c, fish);
+                rodFx(p, at, c);
                 Rarity r = c.species().rarity();
                 int xp = 4 + 4 * r.ordinal() * r.ordinal();
                 addon.jobs().reward(p, Job.ANGLER, xp, xp);
@@ -91,6 +94,40 @@ public final class AngelListener implements Listener {
                 if (c.treasure() != null) addon.questProgress(p, "treasure", null, 1);
             }
             default -> fx.stop(p);
+        }
+    }
+
+    /** Effekte der besonderen Angeln beim Fang. */
+    private void rodFx(Player p, Location at, AngelService.Catch c) {
+        Rod rod = AngelService.rodOf(p);
+        if (rod == null) return;
+        var w = at.getWorld();
+        switch (rod) {
+            case RAINBOW -> {
+                int[] cols = {0xFF4B4B, 0xFFA43B, 0xFFE44B, 0x5BEA6B, 0x4BB8FF, 0xB46CFF};
+                for (int i = 0; i < cols.length; i++) {
+                    w.spawnParticle(org.bukkit.Particle.DUST, at.clone().add(0, 0.3 + i * 0.25, 0), 4, 0.25, 0.05, 0.25,
+                            new org.bukkit.Particle.DustOptions(org.bukkit.Color.fromRGB(cols[i]), 1.3f));
+                }
+            }
+            case VOID -> {
+                w.spawnParticle(org.bukkit.Particle.PORTAL, at, 40, 0.3, 0.5, 0.3, 0.6);
+                w.spawnParticle(org.bukkit.Particle.REVERSE_PORTAL, at, 15, 0.2, 0.4, 0.2, 0.05);
+            }
+            case GOETTLICH -> {
+                w.spawnParticle(org.bukkit.Particle.END_ROD, at, 12, 0.2, 0.4, 0.2, 0.05);
+                if (c.species().rarity().atLeast(Rarity.EPISCH)) {
+                    // Lichtstrahl aus dem Himmel
+                    for (int y = 0; y < 24; y++) {
+                        w.spawnParticle(org.bukkit.Particle.END_ROD, at.clone().add(0, y * 0.75, 0), 2, 0.05, 0.2, 0.05, 0.0);
+                    }
+                    w.spawnParticle(org.bukkit.Particle.DUST, at, 40, 0.8, 0.3, 0.8,
+                            new org.bukkit.Particle.DustOptions(org.bukkit.Color.fromRGB(0xFFE7A8), 1.8f));
+                    p.playSound(at, "kuby:cine.shing", 0.8f, 1.3f);
+                }
+            }
+            default -> {
+            }
         }
     }
 

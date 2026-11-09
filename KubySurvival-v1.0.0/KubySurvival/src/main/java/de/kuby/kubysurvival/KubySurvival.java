@@ -144,6 +144,20 @@ public final class KubySurvival extends JavaPlugin {
 
     /** /kp selftest: alle Seiten des Survival-Juwelenshops bauen, Kataloge und Bilder prüfen. */
     private void selfTests() {
+        // Angel-Shop: alle gekauft und keine, Juwelen-Seite mit scharfem Kauf-Knopf
+        de.kuby.kubysurvival.angeln.AngelScreens.Nav an = (de.kuby.kubysurvival.angeln.AngelScreens.Nav) java.lang.reflect.Proxy
+                .newProxyInstance(getClass().getClassLoader(), new Class<?>[]{de.kuby.kubysurvival.angeln.AngelScreens.Nav.class},
+                        (o, m, args) -> (java.util.function.Consumer<org.bukkit.entity.Player>) pl -> { });
+        int rn = de.kuby.kubysurvival.angeln.Rod.values().length;
+        boolean[] none = new boolean[rn], all = new boolean[rn];
+        java.util.Arrays.fill(all, true);
+        for (int tab = 0; tab < 2; tab++) {
+            int t = tab;
+            core.registerSelfTestCanvas("Angel-Shop " + tab + " leer", () -> de.kuby.kubysurvival.angeln.AngelScreens.shop(
+                    new de.kuby.kubysurvival.angeln.AngelScreens.ShopView(t, none, none, null, 999_999_999, 999_999, "rod:void"), an));
+            core.registerSelfTestCanvas("Angel-Shop " + tab + " voll", () -> de.kuby.kubysurvival.angeln.AngelScreens.shop(
+                    new de.kuby.kubysurvival.angeln.AngelScreens.ShopView(t, all, all, de.kuby.kubysurvival.angeln.Rod.GOETTLICH, 0, 0, null), an));
+        }
         for (de.kuby.kubysurvival.shop.ShopCanvas.Page pg : de.kuby.kubysurvival.shop.ShopCanvas.Page.values()) {
             core.registerSelfTestCanvas("Survival-Juwelenshop " + pg,
                     () -> de.kuby.kubysurvival.shop.ShopCanvas.canvas(shop.sample(pg), null));

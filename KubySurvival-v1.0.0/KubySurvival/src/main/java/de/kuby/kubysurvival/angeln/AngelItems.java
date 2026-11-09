@@ -74,4 +74,34 @@ public final class AngelItems {
     public static boolean isFish(ItemStack it) {
         return read(it) != null;
     }
+
+    private static final NamespacedKey KEY_ROD = new NamespacedKey("kubysurvival", "angel_rod");
+
+    /** Angel aus dem Angel-Shop: eigenes Modell (eingeholt/ausgeworfen), Name in ihrer Farbe, Vorteile in der Beschreibung. */
+    public static ItemStack rod(Rod r) {
+        ItemStack item = new ItemStack(Material.FISHING_ROD);
+        ItemMeta meta = item.getItemMeta();
+        meta.setItemModel(new NamespacedKey("kuby", "angeln/rod_" + r.id));
+        meta.displayName(Component.text(r.label, r.textColor()).decoration(TextDecoration.ITALIC, false)
+                .decoration(TextDecoration.BOLD, r.jewels));
+        List<Component> lore = new ArrayList<>();
+        lore.add(line("Glück: ", "+" + AngelText.dec(r.luck) + " %", NamedTextColor.GREEN));
+        if (r.faster > 0) lore.add(line("Wartezeit: ", "-" + AngelText.dec(r.faster) + " %", NamedTextColor.GREEN));
+        lore.add(Msg.item("<#F2DA90>✦ " + Msg.escape(r.perk)));
+        lore.add(Component.empty());
+        lore.add(Msg.item("<dark_gray>Vorteile gelten beim Angeln mit dieser Angel · /angeln"));
+        meta.lore(lore);
+        if (r.unbreakable()) meta.setUnbreakable(true);
+        if (r.jewels) meta.setEnchantmentGlintOverride(true);
+        meta.getPersistentDataContainer().set(KEY_ROD, PersistentDataType.STRING, r.id);
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    /** Welche Shop-Angel das Item ist (null = keine). */
+    public static Rod rodOf(ItemStack it) {
+        if (it == null || it.getType() != Material.FISHING_ROD || !it.hasItemMeta()) return null;
+        String id = it.getItemMeta().getPersistentDataContainer().get(KEY_ROD, PersistentDataType.STRING);
+        return id == null ? null : Rod.byId(id);
+    }
 }

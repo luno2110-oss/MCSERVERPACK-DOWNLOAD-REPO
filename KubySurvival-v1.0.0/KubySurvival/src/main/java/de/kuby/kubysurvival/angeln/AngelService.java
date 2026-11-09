@@ -168,10 +168,21 @@ public final class AngelService {
         return t >= 13000 && t <= 23000;
     }
 
+    /** Shop-Angel in der Haupthand (null = normale Angel oder keine). */
+    public static Rod rodOf(Player p) {
+        return AngelItems.rodOf(p.getInventory().getItemInMainHand());
+    }
+
     /** Glück in Prozent: Level, Glückshaken, Köder, Angel-Zone, Angler-Job. */
     public synchronized double luck(UUID id, boolean inZone, boolean night) {
+        return luck(id, inZone, night, null);
+    }
+
+    /** Glück in Prozent mit der Shop-Angel (Quarz nachts zusätzlich). */
+    public synchronized double luck(UUID id, boolean inZone, boolean night, Rod rod) {
         AngelProfile a = profile(id);
         double luck = 0.3 * a.level() + 4 * a.upgrade(Upgrade.GLUECKSHAKEN);
+        if (rod != null) luck += rod.luck + (rod == Rod.QUARZ && night ? 12 : 0);
         if (a.active != null && a.bait(a.active) > 0 && (!a.active.nightLuck || night)) luck += a.active.luck;
         if (inZone) luck += 10;
         luck += Math.max(0, jobBonus(id));
@@ -186,8 +197,14 @@ public final class AngelService {
 
     /** Wartezeit kürzer in Prozent: Schnellspule, Köder, Angel-Zone. */
     public synchronized double faster(UUID id, boolean inZone) {
+        return faster(id, inZone, null, false);
+    }
+
+    /** Wartezeit kürzer in Prozent mit der Shop-Angel (Kupfer bei Regen zusätzlich). */
+    public synchronized double faster(UUID id, boolean inZone, Rod rod, boolean raining) {
         AngelProfile a = profile(id);
         double f = 4 * a.upgrade(Upgrade.SCHNELLSPULE);
+        if (rod != null) f += rod.faster + (rod == Rod.KUPFER && raining ? 10 : 0);
         if (a.active != null && a.bait(a.active) > 0) f += a.active.faster;
         if (inZone) f += 10;
         return f;
@@ -195,8 +212,12 @@ public final class AngelService {
 
     /** Schatzchance in Prozent (Schätze gibt es nur in Angel-Zonen). */
     public synchronized double treasureChance(UUID id) {
+        return treasureChance(id, null);
+    }
+
+    public synchronized double treasureChance(UUID id, Rod rod) {
         AngelProfile a = profile(id);
-        double c = 1.2 + 0.5 * a.upgrade(Upgrade.SCHATZSINN);
+        double c = 1.2 + 0.5 * a.upgrade(Upgrade.SCHATZSINN) + (rod == null ? 0 : rod.treasure);
         if (a.active != null && a.bait(a.active) > 0) c += a.active.treasure;
         return c;
     }
@@ -322,11 +343,12 @@ public final class AngelService {
         boolean inZone = zone != null;
         boolean night = night(hook.getWorld());
         Water water = Water.at(hook);
-        double luck = luck(id, inZone, night);
+        Rod rod = rodOf(p);
+        double luck = luck(id, inZone, night, rod);
 
         // Art: Grundgewicht der Seltenheit, Glück verschiebt nach oben, verteilt auf die Arten der Seltenheit
         List<FishSpecies> pool = new ArrayList<>(FishSpecies.of(water));
-        if (inZone) pool.addAll(FishSpecies.of(Water.MYTHOS));
+        if (inZone || (rod != null && rod.mythosAnywhere())) pool.addAll(FishSpecies.of(Water.MYTHOS));
         Map<Rarity, Integer> perRarity = new EnumMap<>(Rarity.class);
         for (FishSpecies s : pool) perRarity.merge(s.rarity(), 1, Integer::sum);
         double total = 0;
@@ -335,7 +357,7 @@ public final class AngelService {
             FishSpecies s = pool.get(i);
             Rarity r = s.rarity();
             double weight = r.weight * (1 + luck / 100.0 * r.ordinal()) / perRarity.get(r);
-            if (s.night() && night) weight *= 2;
+            if (s.night() && night) weight *= rod == Rod.QUARZ ? 4 : 2;
             w[i] = weight;
             total += weight;
         }
@@ -352,10 +374,11 @@ public final class AngelService {
 
         // Gewicht: kleine häufiger; Großfang-Rolle würfelt öfter und nimmt das Beste
         double q = 0;
-        for (int i = 0; i <= a.upgrade(Upgrade.GROSSFANG); i++) q = Math.max(q, rnd.nextDouble());
+        for (int i = 0; i <= a.upgrade(Upgrade.GROSSFANG) + (rod == null ? 0 : rod.weight); i++) q = Math.max(q, rnd.nextDouble());
         double kg = species.minKg() + (species.maxKg() - species.minKg()) * Math.pow(q, 1.6);
         kg = Math.round(kg * (kg < 10 ? 100 : 10)) / (kg < 10 ? 100.0 : 10.0);
         int stars = q < 0.35 ? 1 : q < 0.6 ? 2 : q < 0.8 ? 3 : q < 0.93 ? 4 : 5;
+        if (rod != null && rod.star > 0 && stars < 5 && rnd.nextDouble() * 100 < rod.star) stars++;
 
         // Statistik
         int levelBefore = a.level();
@@ -364,7 +387,7 @@ public final class AngelService {
         if (kg > previous) a.best.put(species.id(), kg);
         boolean firstOfSpecies = a.caught.getOrDefault(species.id(), 0) == 0;
         int amount = 1;
-        if (a.doubleCatch > 0 && rnd.nextDouble() < 0.05 * a.doubleCatch) amount = 2;
+        if (rnd.nextDouble() < 0.05 * a.doubleCatch + (rod == null ? 0 : rod.doubleCatch / 100.0)) amount = 2;
         a.caught.merge(species.id(), amount, Integer::sum);
         a.catches += amount;
         a.weekCatches += amount;
@@ -372,7 +395,8 @@ public final class AngelService {
         a.streak = now - a.lastCatch <= 120_000 ? a.streak + 1 : 1;
         a.bestStreak = Math.max(a.bestStreak, a.streak);
         a.lastCatch = now;
-        int points = (int) Math.round(species.rarity().points * (0.8 + 0.1 * stars) * (record ? 1.2 : 1.0)) * amount;
+        int points = (int) Math.round(species.rarity().points * (0.8 + 0.1 * stars) * (record ? 1.2 : 1.0)
+                * (1 + (rod == null ? 0 : rod.points) / 100.0)) * amount;
         a.points += points;
 
         // Köder verbrauchen
@@ -388,7 +412,7 @@ public final class AngelService {
 
         // Schatz (nur in Angel-Zonen)
         String treasure = null;
-        if (inZone && rnd.nextDouble() * 100 < treasureChance(id)) {
+        if ((inZone || (rod != null && rod.treasureAnywhere())) && rnd.nextDouble() * 100 < treasureChance(id, rod)) {
             treasure = treasure(p, a);
             a.treasures++;
         }
@@ -424,6 +448,9 @@ public final class AngelService {
         if (a.autoSell && !species.rarity().atLeast(Rarity.SELTEN)) {
             autoSold = sellNow(p, a, species, stars, amount);
         }
+
+        // Goldene Hand: Anteil des Fischwerts sofort als Coins
+        if (rod != null && rod.coins > 0) pay(id, Math.max(1, price(id, species, stars) * amount * rod.coins / 100));
 
         // Turnier
         if (tournamentRunning()) tournament.merge(id, kg * amount, Double::sum);
@@ -601,6 +628,39 @@ public final class AngelService {
         a.upgrades.put(u, level + 1);
         dirty = true;
         return null;
+    }
+
+    /** Angel aus dem Angel-Shop kaufen (Coins oder Juwelen); die Angel kommt ins Inventar. */
+    public synchronized String buyRod(Player p, Rod r) {
+        String err = survivalOnly(p);
+        if (err != null) return err;
+        AngelProfile a = profile(p.getUniqueId());
+        if (a.rods.contains(r)) return "Die " + r.label + " hast du schon. Mit „Holen“ bekommst du sie wieder.";
+        if (r.jewels) {
+            if (!core.jewels().take(p.getUniqueId(), r.price)) return "Dafür fehlen dir Juwelen (" + AngelText.num(r.price) + ").";
+        } else if (!core.economy().withdraw(p.getUniqueId(), r.price)) {
+            return "Dafür fehlen dir Coins (" + AngelText.money(r.price) + ").";
+        }
+        a.rods.add(r);
+        dirty = true;
+        giveRod(p, r);
+        return null;
+    }
+
+    /** Gekaufte Angel wieder ins Inventar (wenn sie gerade nicht dabei ist). */
+    public synchronized String takeRod(Player p, Rod r) {
+        String err = survivalOnly(p);
+        if (err != null) return err;
+        if (!profile(p.getUniqueId()).rods.contains(r)) return "Die " + r.label + " hast du noch nicht.";
+        for (ItemStack it : p.getInventory().getContents()) {
+            if (AngelItems.rodOf(it) == r) return "Die " + r.label + " hast du schon dabei.";
+        }
+        giveRod(p, r);
+        return null;
+    }
+
+    private void giveRod(Player p, Rod r) {
+        for (ItemStack left : p.getInventory().addItem(AngelItems.rod(r)).values()) p.getWorld().dropItem(p.getLocation(), left);
     }
 
     public long autoSellPrice() {
@@ -984,6 +1044,10 @@ public final class AngelService {
                     a.treasures = s.getInt("treasures");
                     a.autoSell = s.getBoolean("auto-sell");
                     a.doubleCatch = s.getInt("double-catch");
+                    for (String r : s.getStringList("rods")) {
+                        Rod rod = Rod.byId(r);
+                        if (rod != null) a.rods.add(rod);
+                    }
                     a.active = Bait.of(s.getString("active"));
                     a.orderDay = s.getString("order-day", "");
                     a.bonusDone = s.getBoolean("bonus-done");
@@ -1092,6 +1156,9 @@ public final class AngelService {
             out.set(base + "treasures", a.treasures);
             out.set(base + "auto-sell", a.autoSell);
             out.set(base + "double-catch", a.doubleCatch);
+            List<String> rodIds = new ArrayList<>();
+            for (Rod r : a.rods) rodIds.add(r.id);
+            out.set(base + "rods", rodIds);
             out.set(base + "active", a.active == null ? null : a.active.name());
             out.set(base + "order-day", a.orderDay);
             out.set(base + "bonus-done", a.bonusDone);

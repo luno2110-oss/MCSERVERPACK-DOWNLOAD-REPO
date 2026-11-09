@@ -90,7 +90,7 @@ public final class AngelMenus implements AngelScreens.Nav {
                 service.luck(id, false, false), service.faster(id, false), bait == null ? null : bait.label,
                 bait == null ? null : bait.icon, bait == null ? 0 : a.bait(bait),
                 service.inventoryValue(p, AngelService.SellMode.ALLES), a.ordersDone(),
-                service.zoneTeleport() != null), this));
+                service.zoneTeleport() != null, a.rods.size()), this));
     }
 
     public void openBook(Player p, Water w) {
@@ -157,6 +157,21 @@ public final class AngelMenus implements AngelScreens.Nav {
     public void openTop(Player p, String tab) {
         List<AngelService.TopEntry> list = service.top(tab);
         show(p, AngelScreens.top(new AngelScreens.TopView(tab, list, 0, null), this));
+    }
+
+    public void openShop(Player p, int tab) {
+        if (!survival(p)) return;
+        UUID id = p.getUniqueId();
+        AngelProfile a = service.profile(id);
+        int n = Rod.values().length;
+        boolean[] owned = new boolean[n], carried = new boolean[n];
+        for (Rod r : a.rods) owned[r.ordinal()] = true;
+        for (org.bukkit.inventory.ItemStack it : p.getInventory().getContents()) {
+            Rod r = AngelItems.rodOf(it);
+            if (r != null) carried[r.ordinal()] = true;
+        }
+        show(p, AngelScreens.shop(new AngelScreens.ShopView(tab, owned, carried, AngelService.rodOf(p), core.economy().balance(id),
+                core.jewels().balance(id), armedFor(p)), this));
     }
 
     public void openHelp(Player p) {
@@ -315,6 +330,36 @@ public final class AngelMenus implements AngelScreens.Nav {
             }
             if (e != null) err(p, e);
             openBaits(p);
+        };
+    }
+
+    @Override
+    public Consumer<Player> shop(int tab) {
+        return nav(p -> openShop(p, tab));
+    }
+
+    @Override
+    public Consumer<Player> rodAction(Rod r, String action) {
+        int tab = r.jewels ? 1 : 0;
+        return p -> {
+            String e;
+            if (action.equals("buy")) {
+                if (!confirm(p, "rod:" + r.id)) {
+                    openShop(p, tab);
+                    return;
+                }
+                e = service.buyRod(p, r);
+                if (e == null) {
+                    Sfx.play(core, p, r.jewels ? Sfx.Kind.SUCCESS_BIG : Sfx.Kind.LEVEL_UP);
+                    Msg.send(p, "<aqua><b>ANGELN</b> <dark_gray>▶ <green>" + r.label + " gekauft! <gray>Sie ist in deinem Inventar. "
+                            + "<#F2DA90>" + Msg.escape(r.perk));
+                }
+            } else {
+                e = service.takeRod(p, r);
+                if (e == null) Sfx.play(core, p, Sfx.Kind.CLICK);
+            }
+            if (e != null) err(p, e);
+            openShop(p, tab);
         };
     }
 

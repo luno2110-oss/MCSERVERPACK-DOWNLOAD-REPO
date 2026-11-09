@@ -58,6 +58,8 @@ public final class AngelProfile {
     /** Händler: Stunde (z. B. 2026-10-23T19) und schon zum vollen Preis verkauft. */
     public String dealerHour = "";
     public long dealerSold;
+    /** Gekaufte Angeln aus dem Angel-Shop. */
+    public final Set<Rod> rods = EnumSet.noneOf(Rod.class);
 
     public int level() {
         return AngelService.levelOf(points);

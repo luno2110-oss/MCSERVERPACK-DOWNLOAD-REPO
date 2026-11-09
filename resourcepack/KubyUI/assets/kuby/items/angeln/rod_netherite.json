@@ -1,0 +1,1 @@
+{"model": {"type": "minecraft:condition", "property": "minecraft:fishing_rod/cast", "on_false": {"type": "minecraft:model", "model": "kuby:item/angeln/rod_netherite"}, "on_true": {"type": "minecraft:model", "model": "kuby:item/angeln/rod_netherite_cast"}}}
