@@ -12,6 +12,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.PortalType;
+import org.bukkit.event.entity.EntityPortalEnterEvent;
 import org.bukkit.event.entity.EntityPortalEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
@@ -39,21 +41,50 @@ public final class StageListener implements Listener {
         this.core = core;
     }
 
+    private final Map<UUID, Long> lastPortal = new HashMap<>();
+
+    /**
+     * Portal betreten (Nether- oder End-Portal) in Skyblock: das Vanilla-Portal läuft nie, wir reisen sofort selbst.
+     * So hängt es nicht an allow-nether/allow-end, an der Vanilla-Zielwelt (world_nether) oder an der Wartezeit im
+     * Portal. Das Ereignis kommt jeden Tick, solange man im Portal steht: 3 Sekunden Sperre je Spieler.
+     */
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onPortalEnter(EntityPortalEnterEvent e) {
+        if (!(e.getEntity() instanceof Player p) || addon.stages() == null || !addon.isSkyblockWorld(p.getWorld())) return;
+        PortalType type = e.getPortalType();
+        if (type != PortalType.NETHER && type != PortalType.ENDER) return;
+        e.setCancelled(true);
+        if (!ready(p)) return;
+        use(p, type == PortalType.ENDER ? Stage.END : Stage.NETHER);
+    }
+
+    /** Rückfall, falls doch ein Vanilla-Portal-Ereignis kommt: nie in die Vanilla-Welten, sondern wie oben. */
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPortal(PlayerPortalEvent e) {
         Player p = e.getPlayer();
         if (!addon.isSkyblockWorld(p.getWorld()) || addon.stages() == null) return;
         e.setCancelled(true);
+        if (!ready(p)) return;
+        use(p, e.getCause() == PlayerTeleportEvent.TeleportCause.END_PORTAL ? Stage.END : Stage.NETHER);
+    }
+
+    private boolean ready(Player p) {
+        long now = System.currentTimeMillis();
+        Long last = lastPortal.get(p.getUniqueId());
+        if (last != null && now - last < 3000) return false;
+        lastPortal.put(p.getUniqueId(), now);
+        return true;
+    }
+
+    /** In einer Stufen-Welt: nach Hause. Auf der Insel: zur Stufen-Insel (gesperrt: Hinweis mit Stand). */
+    private void use(Player p, Stage target) {
         StageService ss = addon.stages();
         IslandService.Island i = addon.islands().islandOf(p.getUniqueId());
-        Stage here = ss.stageOf(p.getWorld());
-        if (here != null) {
-            // aus der Stufe zurück nach Hause
-            if (i != null) addon.islands().home(p, i);
+        if (i == null) return;
+        if (ss.stageOf(p.getWorld()) != null) {
+            addon.islands().home(p, i);
             return;
         }
-        Stage target = e.getCause() == PlayerTeleportEvent.TeleportCause.END_PORTAL ? Stage.END : Stage.NETHER;
-        if (i == null) return;
         if (!ss.unlocked(i, target)) {
             long now = System.currentTimeMillis();
             Long last = lastHint.get(p.getUniqueId());

@@ -233,8 +233,12 @@ public final class StageService {
         World w = world(s, true);
         if (w == null) return "Die Welt der " + s.label + "-Stufe ist nicht geladen.";
         ensureBuilt(i, s);
+        if (p.isInsideVehicle()) p.leaveVehicle();
         p.setFallDistance(0);
-        p.teleportAsync(center(i, s).add(0.5, 0, 0.5));
+        p.setPortalCooldown(Math.max(p.getPortalCooldown(), 60));
+        p.teleportAsync(center(i, s).add(0.5, 0, 0.5)).thenAccept(ok -> {
+            if (!ok) Bukkit.getScheduler().runTask(addon, () -> Msg.send(p, "<red>Die Reise zur " + s.label + "-Insel hat nicht geklappt. Versuch es gleich nochmal."));
+        });
         return null;
     }
 

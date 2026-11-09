@@ -258,8 +258,8 @@ generatoren:
 
 # Stufen: Nether und End als eigene Welten (keine Vanilla-Dimensionen). Jede Insel bekommt dort eine eigene Stufen-Insel an
 # derselben Stelle wie im Skyblock (Start-Insel mit Portal, Truhe und dem Nötigsten). Freischalten mit /insel stufen
-# (Besitzer und Co-Besitzer), hin mit /insel nether, /insel end oder durch ein Portal auf der Insel (Server braucht dafür
-# allow-nether in server.properties und allow-end in bukkit.yml). Bedingungen:
+# (Besitzer und Co-Besitzer), hin mit /insel nether, /insel end oder durch ein Portal auf der Insel (das Plugin reist
+# beim Betreten des Portals selbst, allow-nether und allow-end spielen keine Rolle). Bedingungen:
 #   jede-art: von jeder Generator-Art der vorigen Stufe mindestens einer auf der Insel (Nether: alle normalen Arten,
 #             End: alle Nether-Arten; End braucht außerdem die Nether-Stufe)
 #   alle-max: diese Generatoren alle auf dem höchsten Level (generatoren.max-stufe). Dauert das zu lange: auf false
