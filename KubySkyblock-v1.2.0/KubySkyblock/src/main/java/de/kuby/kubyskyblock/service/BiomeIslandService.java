@@ -504,12 +504,7 @@ public final class BiomeIslandService {
             out.set(p + "since", b.since);
             out.set(p + "active", b.active);
         }
-        try {
-            addon.getDataFolder().mkdirs();
-            out.save(file);
-            dirty = false;
-        } catch (IOException e) {
-            addon.getLogger().warning("biomes.yml konnte nicht gespeichert werden: " + e.getMessage());
-        }
+        DataFiles.save(addon, out, file);
+        dirty = false;
     }
 }

@@ -136,12 +136,7 @@ public final class ProgressService {
         counters.forEach((id, c) -> out.set(id + ".counters", List.of(c[0], c[1], c[2])));
         milestones.forEach((id, s) -> out.set(id + ".milestones", new ArrayList<>(s)));
         achieved.forEach((id, s) -> out.set(id + ".achieved", new ArrayList<>(s)));
-        try {
-            addon.getDataFolder().mkdirs();
-            out.save(file);
-        } catch (IOException e) {
-            addon.getLogger().warning("progress.yml konnte nicht gespeichert werden: " + e.getMessage());
-        }
+        DataFiles.save(addon, out, file);
     }
 
     private void load() {

@@ -62,8 +62,9 @@ public final class LimitService {
     /** Gezählte Blöcke je Insel (Platz → Gruppe → Anzahl). */
     private final Map<Integer, Map<String, Integer>> blocks = new HashMap<>();
     private final Set<Integer> scanning = new HashSet<>();
-    /** Gezählte Wesen je Insel: [Zeit, Tiere, Monster, Dorfbewohner, Golems]. */
-    private final Map<Integer, long[]> mobs = new HashMap<>();
+    /** Gezählte Wesen je Insel und Welt (Schlüssel: Platz * 4 + Welt, 0 = Skyblock, 1 = Nether, 2 = End):
+     *  [Zeit, Tiere, Monster, Dorfbewohner, Golems]. Jede Stufen-Insel hat ihre eigene Grenze. */
+    private final Map<Long, long[]> mobs = new HashMap<>();
 
     public LimitService(KubySkyblock addon) {
         this.addon = addon;
@@ -153,38 +154,82 @@ public final class LimitService {
     /** Insel geleert oder aufgegeben: neu zählen, wenn es wieder gebraucht wird. */
     public void forget(int slot) {
         blocks.remove(slot);
-        mobs.remove(slot);
+        for (int w = 0; w < 4; w++) mobs.remove(slot * 4L + w);
     }
 
-    /** Blöcke der Insel (mit Biom-Inseln) zählen: Schnappschüsse in Portionen, Zählen im Hintergrund. */
+    /** 0 = Skyblock-Welt, 1 = Nether-Stufe, 2 = End-Stufe. */
+    private int worldIndex(World w) {
+        if (w == null || addon.stages() == null) return 0;
+        de.kuby.kubyskyblock.service.StageService.Stage s = addon.stages().stageOf(w);
+        return s == null ? 0 : s.order;
+    }
+
+    /** Nur die Insel selbst (Stufen-Inseln haben keine Biom-Inseln). */
+    private List<int[]> square(Island i) {
+        Location c = addon.islands().center(i);
+        int r = addon.islands().radius(i);
+        return List.of(new int[]{c.getBlockX() - r, c.getBlockZ() - r, c.getBlockX() + r, c.getBlockZ() + r});
+    }
+
+    /** Blöcke der Insel (mit Biom-Inseln und Stufen-Inseln) zählen: Schnappschüsse in Portionen, Zählen im Hintergrund. */
     public void scan(Island i) {
         if (i == null || !scanning.add(i.slot)) return;
-        World w = addon.islands().world();
-        if (w == null) {
+        List<World> worlds = new ArrayList<>();
+        List<List<int[]>> areaList = new ArrayList<>();
+        World main = addon.islands().world();
+        if (main != null) {
+            worlds.add(main);
+            areaList.add(areas(i));
+        }
+        if (addon.stages() != null && i.built != 0) {
+            for (de.kuby.kubyskyblock.service.StageService.Stage s : de.kuby.kubyskyblock.service.StageService.Stage.values()) {
+                if ((i.built & (1 << s.order)) == 0) continue;
+                World sw = addon.stages().world(s, false);
+                if (sw != null) {
+                    worlds.add(sw);
+                    areaList.add(square(i));
+                }
+            }
+        }
+        if (worlds.isEmpty()) {
             scanning.remove(i.slot);
             return;
         }
-        List<long[]> chunks = new ArrayList<>();
-        List<int[]> areas = areas(i);
-        Set<Long> seen = new HashSet<>();
-        for (int[] a : areas) {
-            for (int cx = a[0] >> 4; cx <= a[2] >> 4; cx++) {
-                for (int cz = a[1] >> 4; cz <= a[3] >> 4; cz++) if (seen.add(((long) cx << 32) ^ (cz & 0xffffffffL))) chunks.add(new long[]{cx, cz});
+        // Aufgaben: [Welt-Nummer, cx, cz]
+        List<int[]> chunks = new ArrayList<>();
+        for (int wi = 0; wi < worlds.size(); wi++) {
+            Set<Long> seen = new HashSet<>();
+            for (int[] a : areaList.get(wi)) {
+                for (int cx = a[0] >> 4; cx <= a[2] >> 4; cx++) {
+                    for (int cz = a[1] >> 4; cz <= a[3] >> 4; cz++) {
+                        if (seen.add(((long) cx << 32) ^ (cz & 0xffffffffL))) chunks.add(new int[]{wi, cx, cz});
+                    }
+                }
             }
         }
         List<ChunkSnapshot> snaps = new ArrayList<>();
+        List<Integer> snapWorld = new ArrayList<>();
+        int[] mins = new int[worlds.size()], maxs = new int[worlds.size()];
+        for (int wi = 0; wi < worlds.size(); wi++) {
+            mins[wi] = worlds.get(wi).getMinHeight();
+            maxs[wi] = worlds.get(wi).getMaxHeight();
+        }
         int[] at = {0};
         Bukkit.getScheduler().runTaskTimer(addon, task -> {
             for (int n = 0; n < 8 && at[0] < chunks.size(); n++, at[0]++) {
-                long[] c = chunks.get(at[0]);
-                snaps.add(w.getChunkAt((int) c[0], (int) c[1]).getChunkSnapshot(false, false, false));
+                int[] c = chunks.get(at[0]);
+                snaps.add(worlds.get(c[0]).getChunkAt(c[1], c[2]).getChunkSnapshot(false, false, false));
+                snapWorld.add(c[0]);
             }
             if (at[0] < chunks.size()) return;
             task.cancel();
-            int min = w.getMinHeight(), max = w.getMaxHeight();
             Bukkit.getScheduler().runTaskAsynchronously(addon, () -> {
                 Map<String, Integer> out = new HashMap<>();
-                for (ChunkSnapshot s : snaps) {
+                for (int k = 0; k < snaps.size(); k++) {
+                    ChunkSnapshot s = snaps.get(k);
+                    int wi = snapWorld.get(k);
+                    List<int[]> areas = areaList.get(wi);
+                    int min = mins[wi], max = maxs[wi];
                     int bx = s.getX() << 4, bz = s.getZ() << 4;
                     for (int dx = 0; dx < 16; dx++) {
                         for (int dz = 0; dz < 16; dz++) {
@@ -236,16 +281,24 @@ public final class LimitService {
         return null;
     }
 
-    /** Wie viele Wesen dieser Art sind auf der Insel? Zählt höchstens alle 10 Sekunden neu. */
+    /** Wie viele Wesen dieser Art sind auf der Insel (in der Skyblock-Welt)? */
     public int count(Island i, Kind k) {
-        long[] c = mobs.get(i.slot);
+        return count(i, k, null);
+    }
+
+    /** Wie viele Wesen dieser Art sind auf der Insel in dieser Welt (null = Skyblock-Welt)? Zählt höchstens alle
+     *  10 Sekunden neu, nur in geladenen Chunks der Insel. */
+    public int count(Island i, Kind k, World in) {
+        int wi = worldIndex(in);
+        long key = i.slot * 4L + wi;
+        long[] c = mobs.get(key);
         long now = System.currentTimeMillis();
         if (c == null || now - c[0] > 10_000) {
             c = new long[1 + Kind.values().length];
             c[0] = now;
-            World w = addon.islands().world();
+            World w = wi == 0 ? addon.islands().world() : in;
             if (w != null) {
-                List<int[]> areas = areas(i);
+                List<int[]> areas = wi == 0 ? areas(i) : square(i);
                 Set<Long> seen = new HashSet<>();
                 for (int[] a : areas) {
                     for (int cx = a[0] >> 4; cx <= a[2] >> 4; cx++) {
@@ -261,16 +314,21 @@ public final class LimitService {
                     }
                 }
             }
-            mobs.put(i.slot, c);
+            mobs.put(key, c);
         }
         return (int) c[1 + k.ordinal()];
     }
 
     /** Darf hier noch ein Wesen dieser Art dazukommen? Zählt es gleich mit, wenn ja. */
     public boolean allowSpawn(Island i, Kind k) {
+        return allowSpawn(i, k, null);
+    }
+
+    /** Wie allowSpawn, für die Welt, in der das Wesen erscheint (Stufen-Inseln haben eigene Grenzen). */
+    public boolean allowSpawn(Island i, Kind k, World in) {
         if (!enabled() || i == null || k == null) return true;
-        if (count(i, k) >= max(i, k)) return false;
-        mobs.get(i.slot)[1 + k.ordinal()]++;
+        if (count(i, k, in) >= max(i, k)) return false;
+        mobs.get(i.slot * 4L + worldIndex(in))[1 + k.ordinal()]++;
         return true;
     }
 

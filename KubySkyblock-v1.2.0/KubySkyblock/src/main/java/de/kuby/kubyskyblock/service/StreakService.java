@@ -80,11 +80,6 @@ public final class StreakService {
             out.set(id + ".day", s.day == null ? "" : s.day.toString());
             out.set(id + ".count", s.count);
         });
-        try {
-            addon.getDataFolder().mkdirs();
-            out.save(file);
-        } catch (IOException e) {
-            addon.getLogger().warning("streaks.yml konnte nicht gespeichert werden: " + e.getMessage());
-        }
+        DataFiles.save(addon, out, file);
     }
 }

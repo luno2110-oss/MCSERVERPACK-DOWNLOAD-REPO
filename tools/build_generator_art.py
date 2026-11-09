@@ -130,16 +130,37 @@ def core_edelstein(n=16):
 # ---------------------------------------------------------------- Stufen-Generatoren (Nether- und End-Insel)
 
 def core_lohe(n=16):
+    """Lohenrute wie das Minecraft-Item, nur kräftiger: Stab schräg von unten links nach oben rechts, vier Farbstreifen
+    (Licht oben links, Schatten unten rechts), Kerben in gleichem Abstand (eine fehlt), heller Kopf oben; Glut-Funken
+    frei in der Luft darüber (mit Abstand zum Stab, damit die Kontur sauber bleibt)."""
     a = Art(n)
-    # Lohenrute (schräg wie das Item) vor einer Flamme, Glut-Funken
-    a.poly([(6, 0), (10, 3), (11, 8), (8, 11), (3, 11), (1, 7), (3, 3)], "D8481E")
-    a.poly([(6, 3), (9, 6), (8, 9), (4, 9), (3, 6)], "FF9A2A", mode="soft", edge=False)
-    a.dots([(6, 6), (5, 7)], "FFE070")
-    a.line([(3, 14), (14, 3)], "F2B030", 3, mode="full")
-    a.line([(4, 12), (12, 4)], "FFE68A", 1, mode="flat", edge=False)
-    a.dots([(6, 12), (9, 9), (12, 6)], "C8781A")
-    a.dots([(13, 9), (12, 12)], "FFC23A")
-    a.sparkle(14, 0, 1, "FFE8A0")
+    band = {13: "FAF44A", 14: "F8DE06", 15: "F49D02", 16: "C86600"}
+    notch = {13: "FFFBD8", 14: "F7B804", 15: "E08001", 16: "A14900"}
+    rod = {}
+    for y in range(n):
+        for x in range(n):
+            s, d = x + y, x - y
+            if not (13 <= s <= 16 and -12 <= d <= 11):
+                continue
+            if (d <= -11 or d >= 10) and s in (13, 16):
+                continue  # runde Enden
+            c = band[s]
+            if d in (-7, -6, -3, -2, 5, 6):
+                c = notch[s]  # Kerben alle 4 Schritte, um d = 1 bewusst keine
+            if d <= -9 and s >= 15:
+                c = "A14900"  # unteres Ende dunkler
+            if d >= 9 and s <= 14:
+                c = "FFFBD8"  # glühender Kopf
+            rod[(x, y)] = c
+    for col in set(rod.values()):
+        a.pixels([p for p, c in rod.items() if c == col], col)
+    # Glut-Funken: kleine Flammen (gelb über orange) und einzelne Funken, alle links oben über dem Stab
+    for x, y in ((5, 3), (2, 6), (9, 0)):
+        a.dot(x, y, "FBEB19")
+        a.dot(x, y + 1, "FA7201")
+    a.dots([(4, 0), (1, 3)], "FFC23A", 220)
+    a.dots([(6, 2)], "FA4C01", 200)
+    a.sparkle(12, 12, 1, "FFE8A0")
     return a
 
 

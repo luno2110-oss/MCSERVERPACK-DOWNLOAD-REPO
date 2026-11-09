@@ -667,12 +667,7 @@ public final class OneBlockService {
             y.set(b + "earned", pr.earned);
             for (Map.Entry<Upgrade, Integer> u : pr.levels.entrySet()) y.set(b + "upgrades." + u.getKey().key(), u.getValue());
         }
-        try {
-            addon.getDataFolder().mkdirs();
-            y.save(file);
-            dirty = false;
-        } catch (IOException ex) {
-            addon.getLogger().warning("oneblock.yml: " + ex.getMessage());
-        }
+        DataFiles.save(addon, y, file);
+        dirty = false;
     }
 }

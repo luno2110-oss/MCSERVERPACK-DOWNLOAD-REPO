@@ -54,6 +54,10 @@ public final class ScoreboardService {
     private final Map<UUID, Counter> counters = new HashMap<>();
     private final Map<UUID, String[]> lastLines = new HashMap<>();
     private final Map<UUID, String> lastTitle = new HashMap<>();
+    /** Zeilenzahl beim letzten Setzen der Punkte (Punkte nur bei Änderung neu setzen, sonst Pakete je Zeile). */
+    private final Map<UUID, Integer> lastSize = new HashMap<>();
+    /** Zähler der Ticks (alle 2 Server-Ticks), für die verteilte Aktualisierung einmal pro Sekunde. */
+    private long tickNo;
     /** Spieler im Casino (für die Casino-Ansicht). */
     private int inCasino;
 
@@ -75,6 +79,7 @@ public final class ScoreboardService {
         counters.remove(p.getUniqueId());
         lastLines.remove(p.getUniqueId());
         lastTitle.remove(p.getUniqueId());
+        lastSize.remove(p.getUniqueId());
         // Die Sidebar ist der Normalfall. hud.enabled: true blendet sie aus (HUD-Zeilen über hudLines).
         if (!addon.getConfig().getBoolean("hud.enabled", false)) p.setScoreboard(sb);
     }
@@ -91,19 +96,35 @@ public final class ScoreboardService {
         counters.remove(id);
         lastLines.remove(id);
         lastTitle.remove(id);
+        lastSize.remove(id);
     }
 
+    /**
+     * Alle 2 Ticks: Wer gerade zählt (Kontostand läuft) oder bei wem sich Geld oder Modus geändert hat, bekommt sofort
+     * neue Zeilen. Alle anderen einmal pro Sekunde, über die Spieler verteilt (vorher alle 10-mal pro Sekunde).
+     */
     private void tick() {
-        int n = 0;
-        if (plugin.casinoMusic() != null) {
-            for (Player p : Bukkit.getOnlinePlayers()) {
-                if (ModeService.SURVIVAL.equals(plugin.modes().modeOf(p.getUniqueId())) && plugin.casinoMusic().inCasino(p.getLocation())) n++;
+        tickNo++;
+        if (tickNo % 10 == 1) {
+            int n = 0;
+            if (plugin.casinoMusic() != null) {
+                for (Player p : Bukkit.getOnlinePlayers()) {
+                    if (ModeService.SURVIVAL.equals(plugin.modes().modeOf(p.getUniqueId())) && plugin.casinoMusic().inCasino(p.getLocation())) n++;
+                }
             }
+            inCasino = n;
         }
-        inCasino = n;
         for (Player p : Bukkit.getOnlinePlayers()) {
-            if (!boards.containsKey(p.getUniqueId())) join(p);
-            update(p);
+            UUID id = p.getUniqueId();
+            if (!boards.containsKey(id)) {
+                join(p);
+                update(p);
+                continue;
+            }
+            Counter c = counters.get(id);
+            boolean urgent = c == null || !c.ready || c.animating || c.target != plugin.economy().balance(id)
+                    || !plugin.modes().modeOf(id).equals(c.mode);
+            if (urgent || (tickNo + (id.hashCode() & 0x7fffffff)) % 10 == 0) update(p);
         }
     }
 
@@ -155,13 +176,20 @@ public final class ScoreboardService {
                 if (t != null) t.prefix(Msg.parse(text));
                 prev[i] = text;
             }
-            if (i < lines.size()) {
-                Score sc = obj.getScore(ENTRIES[i]);
-                sc.setScore(lines.size() - i);
-                sc.numberFormat(NumberFormat.blank());
-            } else {
-                sb.resetScores(ENTRIES[i]);
+        }
+        // Punkte (Reihenfolge) hängen nur an der Zahl der Zeilen: nur bei Änderung neu setzen
+        Integer size = lastSize.get(id);
+        if (size == null || size != lines.size()) {
+            for (int i = 0; i < MAX_LINES; i++) {
+                if (i < lines.size()) {
+                    Score sc = obj.getScore(ENTRIES[i]);
+                    sc.setScore(lines.size() - i);
+                    sc.numberFormat(NumberFormat.blank());
+                } else {
+                    sb.resetScores(ENTRIES[i]);
+                }
             }
+            lastSize.put(id, lines.size());
         }
     }
 

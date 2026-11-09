@@ -199,11 +199,6 @@ public final class TopRewardService {
         y.set("paid-monat", paidMonth);
         y.set("last-woche", lastWeek.stream().map(w -> w.rank() + ";" + w.owner() + ";" + w.level() + ";" + w.name()).toList());
         y.set("last-monat", lastMonth.stream().map(w -> w.rank() + ";" + w.owner() + ";" + w.level() + ";" + w.name()).toList());
-        try {
-            addon.getDataFolder().mkdirs();
-            y.save(file);
-        } catch (IOException e) {
-            addon.getLogger().warning("top-rewards.yml konnte nicht gespeichert werden: " + e.getMessage());
-        }
+        DataFiles.save(addon, y, file);
     }
 }

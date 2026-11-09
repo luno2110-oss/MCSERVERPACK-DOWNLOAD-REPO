@@ -63,9 +63,21 @@ public final class KubySkyblock extends JavaPlugin {
     /** Skyblock-Welt oder eine der Stufen-Welten (Nether, End)? */
     public boolean isSkyblockWorld(org.bukkit.World w) {
         if (w == null || core == null) return false;
-        if (w.getName().equals(core.modes().worldOf(ModeService.SKYBLOCK))) return true;
+        // Wird bei sehr vielen Ereignissen gefragt (Blöcke, Wachstum, Bewegung): Name der Skyblock-Welt nur alle
+        // 10 Sekunden aus der config lesen, nicht bei jedem Aufruf
+        long now = System.currentTimeMillis();
+        String sky = skyWorldName;
+        if (sky == null || now - skyWorldAt > 10_000) {
+            sky = core.modes().worldOf(ModeService.SKYBLOCK);
+            skyWorldName = sky;
+            skyWorldAt = now;
+        }
+        if (w.getName().equals(sky)) return true;
         return stages != null && stages.stageOf(w) != null;
     }
+
+    private volatile String skyWorldName;
+    private volatile long skyWorldAt;
     public SkyblockCommand command() { return command; }
 
     /** Ecken, die ein Admin mit dem Werkzeug markiert hat. */
@@ -212,6 +224,11 @@ public final class KubySkyblock extends JavaPlugin {
             insel.setTabCompleter(ic);
         }
         getServer().getScheduler().runTaskTimer(this, islands::saveIfDirty, 6000L, 6000L);
+        // Checkliste und Serien auch zwischendurch sichern (vorher nur beim Abschalten, bei einem Absturz war alles weg)
+        getServer().getScheduler().runTaskTimer(this, () -> {
+            if (progress != null) progress.save();
+            if (streaks != null) streaks.save();
+        }, 6600L, 6000L);
         // Preise der Top-Inseln alle 5 Minuten prüfen, Biom-Inseln stündlich (inaktive freigeben)
         getServer().getScheduler().runTaskTimer(this, rewards::tick, 1200L, 6000L);
         getServer().getScheduler().runTaskTimer(this, biomes::tick, 2400L, 72_000L);
@@ -234,5 +251,6 @@ public final class KubySkyblock extends JavaPlugin {
             oneblock.removeHolograms();
             oneblock.save();
         }
+        de.kuby.kubyskyblock.service.DataFiles.shutdown();
     }
 }

@@ -109,7 +109,7 @@ public final class LimitListener implements Listener {
         IslandService is = addon.islands();
         Island i = is.islandAt(e.getLocation());
         if (i == null) return;
-        if (!addon.limits().allowSpawn(i, k)) {
+        if (!addon.limits().allowSpawn(i, k, e.getLocation().getWorld())) {
             e.setCancelled(true);
             return;
         }
@@ -121,7 +121,7 @@ public final class LimitListener implements Listener {
             boolean baby = e.getEntity() instanceof org.bukkit.entity.Ageable src && !src.isAdult();
             org.bukkit.Bukkit.getScheduler().runTask(addon, () -> {
                 for (int n = 0; n < extras; n++) {
-                    if (!addon.limits().allowSpawn(i, k) || l.getWorld() == null) return;
+                    if (l.getWorld() == null || !addon.limits().allowSpawn(i, k, l.getWorld())) return;
                     Entity extra = l.getWorld().spawnEntity(l, type, SpawnReason.CUSTOM);
                     if (baby && extra instanceof org.bukkit.entity.Ageable a) a.setBaby();
                 }

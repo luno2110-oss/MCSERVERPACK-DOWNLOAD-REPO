@@ -92,6 +92,8 @@ public final class GeneratorService {
         public double money, xp, progress;
         public long last;
         UUID display;
+        /** Zuletzt gesendeter Schild-Text (nur bei Änderung neu senden). */
+        String shown;
         /** Spawner-Käfig schon eingerichtet (seit dem Start)? */
         boolean dressed;
 
@@ -148,7 +150,22 @@ public final class GeneratorService {
     // Arten
     // =================================================================================================================
 
+    /** Zahlen aus generatoren.* (einmal beim Start gelesen, nicht je Generator und Tick). */
+    private double intervalBase, speedPerLevel, yieldPerLevel, storageHours;
+    private List<Integer> storage = List.of();
+
+    private void loadSettings() {
+        var c = addon.getConfig();
+        intervalBase = c.getDouble("generatoren.intervall-sekunden", 30);
+        speedPerLevel = c.getDouble("generatoren.tempo-pro-stufe", 0.12);
+        yieldPerLevel = c.getDouble("generatoren.ertrag-pro-stufe", 0.35);
+        storageHours = c.getDouble("generatoren.lager-stunden", 2);
+        List<Integer> l = c.getIntegerList("generatoren.lager");
+        storage = l.isEmpty() ? List.of(64, 128, 256, 384, 512, 768, 1024, 1536, 2048, 3072) : List.copyOf(l);
+    }
+
     private void loadTypes() {
+        loadSettings();
         types.clear();
         ConfigurationSection s = addon.getConfig().getConfigurationSection("generatoren.typen");
         if (s == null) return;
@@ -207,7 +224,7 @@ public final class GeneratorService {
     // =================================================================================================================
 
     private double levelMult(int level) {
-        return 1 + (level - 1) * addon.getConfig().getDouble("generatoren.ertrag-pro-stufe", 0.35);
+        return 1 + (level - 1) * yieldPerLevel;
     }
 
     /** Geld oder XP je Sekunde (ohne Booster). */
@@ -219,8 +236,8 @@ public final class GeneratorService {
     /** Sekunden je Item (Item-Generatoren, ohne Booster). */
     public double interval(Gen g) {
         Type t = types.get(g.type);
-        double base = addon.getConfig().getDouble("generatoren.intervall-sekunden", 30) * (t == null ? 1 : t.intervalFactor());
-        double speed = 1 + (g.level - 1) * addon.getConfig().getDouble("generatoren.tempo-pro-stufe", 0.12);
+        double base = intervalBase * (t == null ? 1 : t.intervalFactor());
+        double speed = 1 + (g.level - 1) * speedPerLevel;
         return Math.max(1, base / speed / g.quality.output);
     }
 
@@ -228,10 +245,9 @@ public final class GeneratorService {
     public double capacity(Gen g) {
         Type t = types.get(g.type);
         if (t != null && t.kind() != Kind.ITEM) {
-            return perSecond(g) * 3600 * addon.getConfig().getDouble("generatoren.lager-stunden", 2) * g.quality.storage;
+            return perSecond(g) * 3600 * storageHours * g.quality.storage;
         }
-        List<Integer> l = addon.getConfig().getIntegerList("generatoren.lager");
-        if (l.isEmpty()) l = List.of(64, 128, 256, 384, 512, 768, 1024, 1536, 2048, 3072);
+        List<Integer> l = storage;
         return l.get(Math.max(0, Math.min(g.level - 1, l.size() - 1))) * g.quality.storage;
     }
 
@@ -426,7 +442,13 @@ public final class GeneratorService {
         for (Gen g : byPos.values()) {
             produce(g, now, online.computeIfAbsent(g.island, this::islandOnline));
         }
-        for (Gen g : byPos.values()) hologram(g, false);
+        // Spieler-Positionen je Welt einmal sammeln (vorher für jeden Generator alle Spieler der Welt durchgehen)
+        Map<String, List<Location>> players = new HashMap<>();
+        for (Player p : Bukkit.getOnlinePlayers()) players.computeIfAbsent(p.getWorld().getName(), k -> new ArrayList<>()).add(p.getLocation());
+        for (Gen g : byPos.values()) {
+            List<Location> near = players.get(g.world);
+            if (near != null) hologram(g, false, near);
+        }
         dirty = true;
     }
 
@@ -639,18 +661,40 @@ public final class GeneratorService {
     }
 
     private void hologram(Gen g, boolean force) {
+        hologram(g, force, null);
+    }
+
+    /** Schild aktualisieren, wenn ein Spieler in der Nähe ist (players: Positionen in dieser Welt, null = selbst suchen). */
+    private void hologram(Gen g, boolean force, List<Location> players) {
         World w = Bukkit.getWorld(g.world);
         if (w == null || !w.isChunkLoaded(g.x >> 4, g.z >> 4)) return;
         if (!g.dressed) dress(g);
         Location l = new Location(w, g.x + 0.5, g.y + 1.35, g.z + 0.5);
         boolean near = false;
-        for (Player p : w.getPlayers()) if (p.getLocation().distanceSquared(l) < 48 * 48) near = true;
-        if (!near && !force) return;
+        if (!force) {
+            if (players == null) {
+                for (Player p : w.getPlayers()) {
+                    if (p.getLocation().distanceSquared(l) < 48 * 48) {
+                        near = true;
+                        break;
+                    }
+                }
+            } else {
+                for (Location pl : players) {
+                    if (pl.distanceSquared(l) < 48 * 48) {
+                        near = true;
+                        break;
+                    }
+                }
+            }
+            if (!near) return;
+        }
         Entity e = g.display == null ? null : Bukkit.getEntity(g.display);
         TextDisplay td;
         if (e instanceof TextDisplay ok && ok.isValid()) {
             td = ok;
         } else {
+            g.shown = null;
             td = w.spawn(l, TextDisplay.class, d -> {
                 d.setPersistent(false);
                 d.setBillboard(Display.Billboard.CENTER);
@@ -667,8 +711,13 @@ public final class GeneratorService {
             default -> g.quality.autoSell ? "Auto-Verkauf · " + Msg.coins((long) g.money) + " $" : Msg.coins(g.itemCount()) + " / " + Msg.coins((long) capacity(g));
         };
         double[] b = boost(g.island);
-        td.text(Msg.parse("<" + g.quality.color + "><b>⚙ " + Msg.escape(name(t, g.quality)) + "</b>\n<gray>Stufe <white>" + g.level
-                + " <dark_gray>· <white>" + store + (b != null ? "\n<gold>⚡ Booster x" + fmt(b[0]) : "")));
+        String text = "<" + g.quality.color + "><b>⚙ " + Msg.escape(name(t, g.quality)) + "</b>\n<gray>Stufe <white>" + g.level
+                + " <dark_gray>· <white>" + store + (b != null ? "\n<gold>⚡ Booster x" + fmt(b[0]) : "");
+        // nur senden, wenn sich etwas geändert hat (spart Pakete an alle Spieler in der Nähe)
+        if (!text.equals(g.shown)) {
+            td.text(Msg.parse(text));
+            g.shown = text;
+        }
         if (g.quality == Quality.DIAMANT) w.spawnParticle(Particle.END_ROD, l.clone().add(0, -0.6, 0), 2, 0.3, 0.2, 0.3, 0.01);
     }
 
@@ -750,12 +799,7 @@ public final class GeneratorService {
         boosts.forEach((k, v) -> {
             if (v[1] > System.currentTimeMillis()) out.set("boosts." + k, List.of(v[0], v[1]));
         });
-        try {
-            addon.getDataFolder().mkdirs();
-            out.save(file);
-            dirty = false;
-        } catch (IOException e) {
-            addon.getLogger().warning("generators.yml konnte nicht gespeichert werden: " + e.getMessage());
-        }
+        DataFiles.save(addon, out, file);
+        dirty = false;
     }
 }

@@ -1210,12 +1210,7 @@ public final class IslandService {
                     i.home[3], i.home[4]));
             if (i.legacy != null) out.set(b + "legacy", i.legacy[0] + ";" + i.legacy[1]);
         }
-        try {
-            addon.getDataFolder().mkdirs();
-            out.save(file);
-            dirty = false;
-        } catch (IOException e) {
-            addon.getLogger().warning("islands.yml konnte nicht gespeichert werden: " + e.getMessage());
-        }
+        DataFiles.save(addon, out, file);
+        dirty = false;
     }
 }

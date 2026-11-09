@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.33** (ungetestet, nicht kompiliert)
+Stand: **v1.34** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -436,7 +436,15 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Bestehende Server: neue Abschnitte (`stufen`, die vier Generatoren, Shop-Bereich) werden beim ersten Start einmal in die config übernommen (`config-stand: 7`)
   - Für Portale braucht der Server `allow-nether: true` (server.properties) und `allow-end: true` (bukkit.yml); `/insel nether` und `/insel end` gehen immer. Die Stufen-Welten laden sich beim Start selbst
   - Behoben dabei: Generator-Plätze nach der Umstellung auf 50 Level (zählten nach dem neuen Größen-Level und waren dadurch zu hoch); jetzt gleichmäßig zwischen den alten Stufen, ab Level 20 ein Platz mehr je 5 Level
-- [ ] Skyblock-Performance prüfen (Scoreboard-Takt, Speichern, Bewegungs-Prüfung, Zwischenspeicher)
+- [x] Skyblock-Performance geprüft und verbessert (Test im Spiel offen):
+  - Speichern ohne Ruckler: islands.yml, generators.yml, oneblock.yml, progress.yml, streaks.yml, biomes.yml und top-rewards.yml werden auf dem Haupt-Thread nur noch kopiert, das Schreiben läuft im Hintergrund (ein eigener Thread, Reihenfolge bleibt, erst .tmp-Datei, dann umbenennen; beim Abschalten sofort). Gemessen mit 3.000 Generatoren und 1.500 Inseln: vorher ca. 220-250 ms Stillstand beim Speichern (Generatoren jede Minute), jetzt ca. 10-20 ms
+  - Checkliste (progress.yml) und Serien (streaks.yml) wurden nur beim Abschalten gespeichert, bei einem Absturz war der Stand weg: jetzt zusätzlich alle 5 Minuten
+  - Scoreboard: vorher für jeden Spieler 10-mal pro Sekunde alle Zeilen neu gebaut; jetzt sofort nur, wenn der Kontostand zählt oder sich Geld oder Modus ändert, sonst einmal pro Sekunde (über die Spieler verteilt). Punkte der Zeilen werden nur noch gesetzt, wenn sich die Zeilenzahl ändert (vorher jedes Mal ein Paket je Zeile), Casino-Prüfung einmal pro Sekunde
+  - Generatoren: Zahlen aus der config einmal beim Start gelesen (vorher je Generator und Tick mehrmals, Lager-Liste jedes Mal neu angelegt); Spieler-Positionen einmal je Tick gesammelt statt für jeden Generator alle Spieler der Welt durchzugehen; Schild-Text nur senden, wenn er sich ändert (vorher alle 10 Sekunden an alle Spieler in der Nähe)
+  - Welt-Prüfung (bei jedem Block, Wachstum, Spawn und Schritt gefragt): Name der Skyblock-Welt und der Stufen-Welten zwischengespeichert statt jedes Mal aus der config gelesen
+  - Limits in den Stufen-Welten: Wesen werden je Welt gezählt (Nether- und End-Insel haben eigene Grenzen; vorher zählten Spawns dort gegen die Hauptinsel und die Wesen der Stufen-Insel wurden nie gezählt, also keine echte Grenze). Blöcke (Trichter usw.) der Stufen-Inseln werden beim Zählen mitgezählt
+  - Geprüft und in Ordnung: Bewegung (nur bei Blockwechsel, schnelles Nachschlagen), Platz in der Rangliste (Zwischenspeicher 30 s), Generator-Anzahl (Zwischenspeicher), Wesen-Zählung (höchstens alle 10 s), Block-Zählung und Level-Zählung (Schnappschüsse, Zählen im Hintergrund)
+- [x] Lohen-Generator: Symbol neu als Lohenrute wie das Minecraft-Item (kräftiger, vier Farbstreifen, Kerben in gleichem Abstand, eine fehlt, glühender Kopf) mit Glut-Funken frei darüber
 - [ ] Cookie Clicker geparkt (läuft, wird später weitergebaut); Cookie-Icons nochmal neu: wirken noch zu generisch und zu spitz, nicht natürlich, viele Formen schwer zu erkennen
 - [x] Shop-Itemseite als eigene GUI statt Truhe: in Blöcke, Essen, Redstone, Deko, Wochenende, Daily Shop und in der Suche liegen die Items jetzt in Karten 4 x 2 im Stil der Juwelenshop-Referenz: Bild des Items, deutscher Name, Menge, Trend der Börse (24 h), Preis, Knopf „Kaufen“ oder „Dir fehlen …“ (Daily mit Juwelen, Wochenende und Daily „Gekauft“, vom Markt genommene Items „Aufnehmen“). Reiter für alle Bereiche, Seiten, unten Suche, Abholbox, Verkaufen, am Wochenende „Neu würfeln“. Kauf-Logik für Dialog und Truhe gemeinsam (ShopItemScreen.purchase). Ohne Pack bleibt die Truhe
   - [x] Icons für alle Vanilla-Items (`tools/build_item_icons.py`): 1.442 von 1.505 Items in einem Bild, Blöcke in 3D wie im Inventar (Modell mit Inventar-Drehung, Seitenlicht), Items flach mit Ebenen und Einfärbung (Laub, Gras, Leder, Tränke), Shulker-Kisten als Würfel. Eigene Schriften `k/x-24 … k/x8` (je eine Quelle auf dasselbe Bild statt Hunderter Einträge), Tabelle `ui/items.tsv`, im Code `Canvas.item(x, y, Material, groß, Ersatz)`. Truhen, Betten, Banner, Köpfe und Schild nehmen die eigenen Kit-Icons. Der Skyblock-Shop zeigt jetzt auch die echten Item-Bilder

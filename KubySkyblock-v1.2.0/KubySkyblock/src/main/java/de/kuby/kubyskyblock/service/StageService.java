@@ -91,8 +91,11 @@ public final class StageService {
     // Welten
     // =================================================================================================================
 
+    /** Namen der Stufen-Welten (einmal aus der config gelesen; stageOf wird bei sehr vielen Ereignissen gefragt). */
+    private final Map<Stage, String> names = new EnumMap<>(Stage.class);
+
     public String worldName(Stage s) {
-        return addon.getConfig().getString("stufen." + s.key + ".welt", "skyblock_" + s.key);
+        return names.computeIfAbsent(s, k -> addon.getConfig().getString("stufen." + k.key + ".welt", "skyblock_" + k.key));
     }
 
     /** Welt der Stufe (null, wenn noch nicht angelegt und create false). */
@@ -117,7 +120,8 @@ public final class StageService {
     /** Stufe einer Welt (null für alle anderen Welten). */
     public Stage stageOf(World w) {
         if (w == null) return null;
-        for (Stage s : Stage.values()) if (w.getName().equals(worldName(s))) return s;
+        String n = w.getName();
+        for (Stage s : Stage.values()) if (n.equals(worldName(s))) return s;
         return null;
     }
 
