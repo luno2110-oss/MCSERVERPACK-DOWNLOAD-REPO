@@ -1400,6 +1400,7 @@ friends:
     smaragd: 50
     netherit: 75
   jump-cooldown-seconds: 30
+  nearby-radius: 75          # „Hinzufügen“: Spieler in diesem Umkreis (Blöcke); im Menü umschaltbar 50 / 75 / 100
 
 # Support-Tickets (/support): Helfer werden kann, wer so viele Stunden gespielt hat (und Discord verlinkt, wenn
 # DiscordSRV da ist). Team = Permission kuby.support.team. Höchstens max-open offene Tickets je Spieler.

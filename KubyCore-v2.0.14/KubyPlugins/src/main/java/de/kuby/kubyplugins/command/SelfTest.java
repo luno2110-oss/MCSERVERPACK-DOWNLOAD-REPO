@@ -83,7 +83,9 @@ final class SelfTest {
                 canvas.accept("Freunde " + t + (full ? " voll" : " leer"), () -> FriendsScreen.canvas(new FriendsScreen.View(t, full,
                         "Survival", full ? List.of(new FriendsScreen.Row("Test", true, true, "Spawn")) : List.of(),
                         full ? List.of(new FriendsScreen.Req("Test2", true), new FriendsScreen.Req("Test3", false)) : List.of(),
-                        full ? List.of(new FriendsScreen.Near("Test4", 12)) : List.of(), 25, 0, null), fa));
+                        full ? List.of(new FriendsScreen.Near("Test4", 12), new FriendsScreen.Near("WWWWWWWWWWWWWWWW", 99, "angefragt"),
+                                new FriendsScreen.Near("Test6", 51, "fragt dich an"), new FriendsScreen.Near("Test7", 64), new FriendsScreen.Near("Test8", 70),
+                                new FriendsScreen.Near("Test9", 80), new FriendsScreen.Near("Test10", 95)) : List.of(), 25, 0, null, 100), fa));
             }
         }
         canvas.accept("Spielzeit", () -> PlaytimeScreen.canvas(new PlaytimeScreen.View(90, List.of(

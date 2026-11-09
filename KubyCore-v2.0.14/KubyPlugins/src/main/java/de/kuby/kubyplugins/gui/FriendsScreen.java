@@ -47,11 +47,25 @@ public final class FriendsScreen {
     /** Eine Anfrage: an mich (incoming) oder von mir. */
     public record Req(String name, boolean incoming) {}
 
-    /** Ein Spieler in der Nähe (Hinzufügen): Name und Entfernung in Blöcken. */
-    public record Near(String name, int distance) {}
+    /** Ein Spieler in der Nähe (Hinzufügen): Name, Entfernung in Blöcken, Stand ("" = anfragen, "angefragt",
+     *  "fragt dich an"). */
+    public record Near(String name, int distance, String status) {
+        public Near(String name, int distance) {
+            this(name, distance, "");
+        }
+    }
 
+    /** radius: Umkreis für „In der Nähe“ in Blöcken (0 = Standard). */
     public record View(Tab tab, boolean sent, String modeLabel, List<Row> friends, List<Req> requests, List<Near> near,
-                       int limit, int page, String armed) {}
+                       int limit, int page, String armed, int radius) {
+        public View(Tab tab, boolean sent, String modeLabel, List<Row> friends, List<Req> requests, List<Near> near,
+                    int limit, int page, String armed) {
+            this(tab, sent, modeLabel, friends, requests, near, limit, page, armed, 0);
+        }
+    }
+
+    /** Umkreis zur Wahl (Blöcke) für Spieler in der Nähe. */
+    public static final int[] RADII = {50, 75, 100};
 
     public interface Actions {
         Consumer<Player> tab(Tab tab, boolean sent);
@@ -69,11 +83,22 @@ public final class FriendsScreen {
         Consumer<Player> request(String name);
 
         Consumer<Player> page(int page);
+
+        /** Umkreis für Spieler in der Nähe wählen. */
+        default Consumer<Player> radius(int blocks) {
+            return null;
+        }
     }
 
     private final KubyPlugins plugin;
     /** Zweimal klicken zum Entfernen: Spieler -> Freund, der gerade "Sicher?" zeigt. */
     private final Map<UUID, UUID> armed = new HashMap<>();
+    /** Gewählter Umkreis je Spieler (Blöcke). */
+    private static final Map<UUID, Integer> RADIUS = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private int radiusOf(Player p) {
+        return RADIUS.getOrDefault(p.getUniqueId(), Math.max(10, Math.min(200, plugin.getConfig().getInt("friends.nearby-radius", 75))));
+    }
 
     public FriendsScreen(KubyPlugins plugin) {
         this.plugin = plugin;
@@ -140,17 +165,25 @@ public final class FriendsScreen {
             reqs.add(new Req(name(id), false));
             ids.put(name(id), id);
         }
-        // Spieler in der Nähe (gleiche Welt, bis 32 Blöcke), die noch keine Freunde sind
+        // Spieler in der Nähe (gleiche Welt, im gewählten Umkreis 50/75/100 Blöcke), die noch keine Freunde sind;
+        // schon angefragte und solche, die mich angefragt haben, stehen mit ihrem Stand dabei
+        int radius = radiusOf(p);
+        java.util.Set<UUID> outgoing = new java.util.HashSet<>(plugin.friends().outgoingOf(me));
+        java.util.Set<UUID> incomingIds = new java.util.HashSet<>(plugin.friends().requestsOf(me));
         List<Near> near = new ArrayList<>();
+        double r2 = (double) radius * radius;
         for (Player o : p.getWorld().getPlayers()) {
             if (o.equals(p) || !p.canSee(o) || plugin.friends().areFriends(me, o.getUniqueId())) continue;
-            double d = o.getLocation().distance(p.getLocation());
-            if (d <= 32) near.add(new Near(o.getName(), (int) Math.round(d)));
+            double d2 = o.getLocation().distanceSquared(p.getLocation());
+            if (d2 > r2) continue;
+            String status = outgoing.contains(o.getUniqueId()) ? "angefragt" : incomingIds.contains(o.getUniqueId()) ? "fragt dich an" : "";
+            near.add(new Near(o.getName(), (int) Math.round(Math.sqrt(d2)), status));
+            ids.put(o.getName(), o.getUniqueId());
         }
         near.sort((a, b) -> Integer.compare(a.distance(), b.distance()));
         UUID sure = armed.get(me);
         View v = new View(tab, sent, ModeService.label(plugin.modes().modeOf(me)), rows, reqs, near,
-                plugin.friends().limit(p), page, sure == null ? null : name(sure));
+                plugin.friends().limit(p), page, sure == null ? null : name(sure), radius);
         Actions a = actions(ids, tab, sent, page);
         Canvas c = canvas(v, a);
         if (tab != Tab.ADD) {
@@ -233,6 +266,13 @@ public final class FriendsScreen {
 
             public Consumer<Player> page(int n) {
                 return pl -> show(pl, tab, sent, n);
+            }
+
+            public Consumer<Player> radius(int blocks) {
+                return pl -> {
+                    RADIUS.put(pl.getUniqueId(), blocks);
+                    show(pl, tab, sent, 0);
+                };
             }
         };
     }
@@ -422,30 +462,58 @@ public final class FriendsScreen {
         pager(c, y, pg, pages, a);
     }
 
+    private static final int NEAR_PER_PAGE = 6;
+
     private static void add(Canvas c, View v, Actions a) {
         int y = 81;
+        int radius = v.radius() > 0 ? v.radius() : 75;
+        // Kopf der Liste: Umkreis wählen (50 / 75 / 100 Blöcke)
+        int rx = W;
+        for (int i = RADII.length - 1; i >= 0; i--) {
+            int r = RADII[i];
+            String label = String.valueOf(r);
+            int w = Canvas.width(label, true) + 16;
+            rx -= w;
+            if (r == radius) {
+                c.box(rx, y, w, 20, KitData.Box.FR_BTN, Canvas.Z_BUTTON);
+                c.textCenter(rx + w / 2, y + 6, label, ON, true);
+            } else {
+                dark(c, rx, y, label, TEAL, a.radius(r), "Umkreis " + r + " Blöcke");
+            }
+            rx -= 3;
+        }
+        c.text(0, y + 6, "Spieler in deiner Nähe", WHITE, true);
+        c.textRight(rx - 4, y + 6, "Umkreis (Blöcke):", GRAY, false);
+        y += 24;
         if (v.near().isEmpty()) {
             c.box(0, y, W, 33, KitData.Box.FR_CARD);
             c.sprite(12, y + 10, KitData.Sprite.FR_PLANE);
-            c.text(38, y + 7, "Gerade ist niemand in deiner Nähe", WHITE, true);
-            c.text(38, y + 19, "Tipp unten einen Namen ein, auch wenn er offline ist.", BODY, false);
+            c.text(38, y + 7, "Im Umkreis von " + radius + " Blöcken ist gerade niemand", WHITE, true);
+            c.text(38, y + 19, "Größerer Umkreis oder unten einen Namen eintippen (auch offline).", BODY, false);
             return;
         }
-        // Spieler in der Nähe: bis zu 4, je mit „Anfrage“
-        List<Near> near = v.near().subList(0, Math.min(4, v.near().size()));
-        int h = 22 + 20 * near.size() + 4;
+        int pages = (v.near().size() + NEAR_PER_PAGE - 1) / NEAR_PER_PAGE;
+        int pg = Math.max(0, Math.min(v.page(), pages - 1));
+        List<Near> near = v.near().subList(pg * NEAR_PER_PAGE, Math.min(v.near().size(), (pg + 1) * NEAR_PER_PAGE));
+        int h = 6 + 20 * near.size() + 4;
         c.box(0, y, W, h, KitData.Box.FR_CARD);
-        c.sprite(12, y + 6, KitData.Sprite.FR_PLANE);
-        c.text(38, y + 7, "Spieler in deiner Nähe", WHITE, true);
-        c.textRight(380, y + 7, "oder unten einen Namen eintippen", GRAY, false);
         for (int i = 0; i < near.size(); i++) {
             Near n = near.get(i);
-            int ry = y + 22 + 20 * i;
-            int w = Canvas.width("Anfrage", true) + 16;
-            teal(c, 384 - w, ry, "Anfrage", a.request(n.name()), "Anfrage an " + n.name() + " senden");
-            c.text(38, ry + 6, Canvas.fit(n.name(), true, 200), WHITE, true);
+            int ry = y + 6 + 20 * i;
+            int w;
+            if (n.status().isEmpty()) {
+                w = teal(c, 384 - (Canvas.width("Anfrage", true) + 16), ry, "Anfrage", a.request(n.name()), "Anfrage an " + n.name() + " senden");
+            } else if (n.status().equals("fragt dich an")) {
+                w = teal(c, 384 - (Canvas.width("Annehmen", true) + 16), ry, "Annehmen", a.accept(n.name()), "Anfrage von " + n.name() + " annehmen");
+            } else {
+                w = Canvas.width(n.status(), false) + 8;
+                c.textRight(380, ry + 6, n.status(), GOLD, false);
+            }
+            c.sprite(12, ry + 3, KitData.Sprite.FR_PLANE);
+            c.text(38, ry + 6, Canvas.fit(n.name(), true, 180), WHITE, true);
             c.textRight(384 - w - 8, ry + 6, n.distance() + " Blöcke", GRAY, false);
         }
+        pager(c, y + h + 4, pg, pages, a);
     }
 
     // =================================================================================================================
