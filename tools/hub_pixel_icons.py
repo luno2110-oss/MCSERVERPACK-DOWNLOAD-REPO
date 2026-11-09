@@ -873,50 +873,48 @@ def i_oneblock():
     return Img(iso_block(top, side, side, pal, shade=(1.0, 0.84, 0.62)))
 
 
+# Zombie wie das Vanilla-3D-Modell (Kopf, Körper, Arme nach vorn, Beine), um die Y-Achse 45 Grad nach links gedreht und
+# 10 Grad von oben, gerendert mit der Vanilla-Textur und auf Rampen-Stufen gerastert (Vorderseiten hell, Seiten dunkel,
+# Augen schwarz). Buchstaben: a-f Haut (zombie 0-5), g-j Hemd (hemd 0-3), k-n Hose (hose 0-3), o-w Schuhe (eisen 0-8).
+ZOMBIE = [".............ffeefffcccc........",
+          ".............ffffffccccc........",
+          ".............ffffffccccc........",
+          ".............ffffffccccc........",
+          ".............faafaaccccc........",
+          ".............ffffffccccc........",
+          "...........fbeeefffccbbb........",
+          ".......ffffcccbgbbbbbgjjj.......",
+          ".......fffccccbfffffccchh.......",
+          ".......fffccccbffcccccchh.......",
+          ".......fffccccbffcccccchh.......",
+          "...............ffcccccch........",
+          "...............ggggggg..........",
+          "...............jjjjjcc..........",
+          "...............jjjjjhc..........",
+          "...............njjjjhc..........",
+          "...............nnnnjll..........",
+          "...............nnnnnll..........",
+          "...............nnnnnll..........",
+          "...............nnnnnll..........",
+          "...............nnnnnll..........",
+          "...............nnnnnll..........",
+          "...............nnnnnll..........",
+          "...............nnnnnll..........",
+          "...............nnnnnll..........",
+          "...............nnnnnll..........",
+          "...............nnnnnlr..........",
+          "...............tttttrr..........",
+          ".................tttrr.........."]
+
+
 def is_spawn():
-    """Spawnrate: Zombie im Mini-Stil (großer Kopf, kleiner Körper) in Vanilla-Farben: grüne Haut mit dunklem Haar,
-    schwarze Augen, türkises Hemd, Arme nach vorn gestreckt, blaue Hose. Licht von links oben."""
-    pix = {}
-    X0, Y0 = 5, 1          # Kopf 18 x 15
-    for y in range(15):
-        for x in range(18):
-            k = 3
-            if y < 3:
-                k = 1 if (x + 2 * y) % 5 else 2      # Haar: dunkles Muster, gleichmäßig
-            elif y == 3:
-                k = 2 if x % 3 else 1
-            if x == 0 and y >= 3:
-                k = 4                                 # Lichtkante links
-            if x == 17 or y == 14:
-                k = 2                                 # Schattenkante rechts und unten
-            pix[(X0 + x, Y0 + y)] = ("zombie", k)
-    for ex in (3, 11):                                # Augen 3 x 2, schwarz
-        for dx in range(3):
-            for dy in range(2):
-                pix[(X0 + ex + dx + 1, Y0 + 7 + dy)] = ("zombie", 0)
-    for dx in (8, 9):                                 # Nase und Mund dunkler
-        pix[(X0 + dx, Y0 + 9)] = ("zombie", 1)
-    for dx in range(6, 12):
-        pix[(X0 + dx, Y0 + 11)] = ("zombie", 1)
-    for dx in (4, 13):                                # Wangen etwas heller (Licht), Muster
-        pix[(X0 + dx, Y0 + 5)] = ("zombie", 5)
-    # Körper: Hemd 12 breit, Arme nach vorn (Ärmel türkis, Hände grün)
-    for y in range(16, 22):
-        for x in range(8, 20):
-            pix[(x, y)] = ("hemd", 3 if x == 8 else 1 if x == 19 or y == 21 else 2)
-    for y in range(16, 19):
-        for x in list(range(2, 8)) + list(range(20, 26)):
-            hand = x < 4 or x > 23
-            pix[(x, y)] = ("zombie", 4 if y == 16 else 3) if hand else ("hemd", 3 if y == 16 else 1 if y == 18 else 2)
-    # Hose mit Beinen, Schuhe
-    for y in range(22, 29):
-        for x in range(9, 19):
-            if y >= 25 and 13 <= x <= 14:
-                continue
-            pix[(x, y)] = ("hose", 3 if x in (9, 15) else 1 if x in (12, 18) or y == 28 else 2)
-    for x in list(range(9, 13)) + list(range(15, 19)):
-        pix[(x, 29)] = ("eisen", 3)
-    return Img(layer(pix))
+    """Spawnrate: Minecraft-Zombie wie das 3D-Modell, 45 Grad nach links gedreht (Vorderseite links, Seite rechts),
+    Arme nach vorn gestreckt, Vanilla-Farben auf Rampen-Stufen."""
+    mats = {}
+    for mat, letters in (("zombie", "abcdef"), ("hemd", "ghij"), ("hose", "klmn"), ("eisen", "opqrstuvw")):
+        for k, ch in enumerate(letters):
+            mats[ch] = (mat, k)
+    return Img(layer({p: mats[c] for p, c in grid(ZOMBIE, 0, 1).items()}))
 
 
 def ring_rows(d):
@@ -1043,13 +1041,21 @@ RAINBOW = [("rot", {"C": 8, "a": 6, "t": 4}), ("feuer", {"C": 8, "a": 6, "t": 4}
            ("smaragd", {"C": 9, "a": 7, "t": 5}), ("blau", {"C": 9, "a": 6, "t": 4}), ("lila", {"C": 9, "a": 7, "t": 5})]
 
 
-def star_spots(img, n=4, min_dist=9):
-    """Stellen für die Sterne auf der ganzen Kachel: frei mit 1 px Abstand zur Form, aber nah daran (höchstens 8 px),
-    untereinander mindestens min_dist auseinander; zuerst bis zu zwei große, sonst kleine Sterne."""
+# Sterne je Stufe: eigene Anordnung und mehr Sterne, je höher die Stufe (nicht dieselben Stellen in neuer Farbe).
+# Anzahl, Drehung des Musters (Grad) und wie viele große Sterne.
+STAR_LAYOUT = {2: (4, 20, 1), 3: (5, 75, 2), 4: (7, 50, 3)}
+
+
+def star_spots(img, level, min_dist=7):
+    """Stellen für die Sterne einer Stufe: freie Plätze (1 px Abstand zur Form, höchstens 8 px entfernt) rund um das
+    Motiv; die Zielrichtungen sind gleichmäßig verteilt und je Stufe anders gedreht, große Sterne nur, wo Platz ist."""
+    n, phase, n_big = STAR_LAYOUT[min(4, level)]
     a = img.getchannel("A")
     px = a.load()
     W, Hh = img.size
     filled = {(x, y) for y in range(Hh) for x in range(W) if px[x, y]}
+    x0, y0, x1, y1 = a.getbbox()
+    mx, my = (x0 + x1) / 2, (y0 + y1) / 2
 
     def free(cx, cy, r):
         return all(0 <= cx + dx < W and 0 <= cy + dy < Hh and (cx + dx, cy + dy) not in filled
@@ -1060,36 +1066,47 @@ def star_spots(img, n=4, min_dist=9):
             if free(cx, cy, 2):
                 d = min(abs(cx - x) + abs(cy - y) for x, y in filled)
                 if d <= 8:
-                    cands.append((d, cx, cy, free(cx, cy, 3)))
-    cands.sort()
+                    cands.append((cx, cy, d, free(cx, cy, 3), math.atan2(cy - my, cx - mx)))
     chosen = []
-    for d, cx, cy, big_ok in cands:
-        if len(chosen) >= n:
-            break
-        if all(abs(cx - x) + abs(cy - y) >= min_dist for x, y, _ in chosen):
-            big = big_ok and sum(1 for c in chosen if c[2]) < 2
-            chosen.append((cx, cy, big))
+    for k in range(n):
+        target = math.radians(phase) + k * 2 * math.pi / n
+        best = None
+        for cx, cy, d, big_ok, ang in cands:
+            if any(abs(cx - x) + abs(cy - y) < min_dist for x, y, _ in chosen):
+                continue
+            da = abs((ang - target + math.pi) % (2 * math.pi) - math.pi)
+            score = da * 6 + d * 0.35
+            if best is None or score < best[0]:
+                best = (score, cx, cy, big_ok)
+        if best and best[0] < 9:
+            big = best[3] and sum(1 for c in chosen if c[2]) < n_big and k % 2 == 0
+            chosen.append((best[1], best[2], big))
     return chosen
 
 
 def tier(img, level):
     """Icon einer Upgrade-Stufe (1 bis 4) auf einer 32-px-Kachel: ab Stufe 2 Funkel-Sterne um das Motiv (2 gold,
-    3 lila, 4 Regenbogen: jeder Stern eine andere Farbe)."""
+    3 lila, 4 Regenbogen: jeder Stern eine andere Farbe), je Stufe anders angeordnet und mehr Sterne."""
     if level < 2:
         return img
     out = img.copy()
     px = out.load()
-    spots = star_spots(img, n=5 if level >= 4 else 4)
+    spots = star_spots(img, level)
     if len(spots) < 3:
-        # Icon füllt die Kachel: Sterne als Glanz auf die Ecken des Motivs (oben links groß, wie das Licht)
+        # Icon füllt die Kachel: Sterne als Glanz auf die Ecken des Motivs, je Stufe andere Ecken
         x0, y0, x1, y1 = img.getchannel("A").getbbox()
-        spots += [(x0 + 3, y0 + 3, True), (x1 - 4, y0 + 2, False), (x1 - 3, y1 - 4, False)][:3 - len(spots)]
+        corners = [(x0 + 3, y0 + 3, True), (x1 - 4, y0 + 2, False), (x1 - 3, y1 - 4, False), (x0 + 2, y1 - 4, False),
+                   ((x0 + x1) // 2, y0 + 2, False)]
+        shift = {2: 0, 3: 1, 4: 2}[min(4, level)]
+        extra = STAR_LAYOUT[min(4, level)][0] - 1
+        spots += [corners[(shift + i) % len(corners)] for i in range(extra)][:max(0, extra - len(spots))]
     for k, (cx, cy, big) in enumerate(spots):
         mat, idx = RAINBOW[k % len(RAINBOW)] if level >= 4 else STAR_COL[level]
         rows = STAR5 if big else STAR3
         h = len(rows) // 2
         for (x, y), c in grid(rows, cx - h, cy - h).items():
-            px[x, y] = rgb(RAMPS[mat][idx[c]]) + (255,)
+            if 0 <= x < img.width and 0 <= y < img.height:
+                px[x, y] = rgb(RAMPS[mat][idx[c]]) + (255,)
     return out
 
 

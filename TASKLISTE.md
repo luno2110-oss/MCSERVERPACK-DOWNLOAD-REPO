@@ -471,6 +471,9 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Icons Stufe 4: kleine Regenbogen-Sterne (jeder Stern eine Farbe), Text „Stufe 4“ in Regenbogen-Buchstaben, Balken grün, Preis mit Juwelen-Zeichen
   - config: Listen auf 51 Werte (Größe, Mitglieder, Generator), One-Block max 50; Server mit den Standard-Werten der 20-Level-Version werden beim Start automatisch umgestellt
 - [x] Icons: Essen nur noch der saftige Apfel; Limits als Verkehrszeichen 250 „Durchfahrt verboten“ (flach, streng symmetrisch); Spawnrate als Zombie im Mini-Stil (Vanilla-Farben, Rampen `zombie`, `hemd`, `hose`)
+- [x] Spawnrate-Icon: Minecraft-Zombie wie das 3D-Modell, um die Y-Achse 45 Grad nach links gedreht (10 Grad von oben), Arme nach vorn; mit der Vanilla-Textur gerendert und auf Rampen-Stufen gerastert (Vorderseiten hell, Seiten dunkel, Augen schwarz, Trennlinien zwischen den Teilen), im Code als Pixel-Raster
+- [x] Upgrade-Sterne je Stufe anders angeordnet und mit mehr Sternen (Stufe 2: 4, Stufe 3: 5, Stufe 4: 7), Muster je Stufe gedreht, damit es nicht wie dieselbe Grafik in neuer Farbe wirkt
+- [x] Selbsttest-Fehler behoben: Guide-Seite „Insel“ (Skyblock) war nach der Stufen-Erklärung zu lang (23 statt 21 Zeilen)
 
 ## Entscheidungen (Stand: Sitzung mit Claude)
 - Ziel: Paper 1.21.11. SMP = PvP und Action (töten, greifen erlaubt, außer Cheaten, Duplizieren und Bugs ausnutzen). Survival = ruhig, bauen und farmen, Plots geschützt bzw. claimbar.

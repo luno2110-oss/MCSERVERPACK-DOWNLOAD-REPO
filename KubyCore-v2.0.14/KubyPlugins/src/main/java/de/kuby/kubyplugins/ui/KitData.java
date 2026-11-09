@@ -1797,7 +1797,7 @@ public final class KitData {
         HB_IS_LIMITS_T3(32, 32, 1, "\uf288", "P"),
         HB_IS_LIMITS_T4(32, 32, 1, "\uf289", "P"),
         HB_IS_POKAL(32, 30, 1, "\uf28a", "Q"),
-        HB_IS_SPAWN(26, 31, 1, "\uf28b", "K"),
+        HB_IS_SPAWN(20, 31, 1, "\uf28b", "E"),
         HB_IS_SPAWN_T2(32, 32, 1, "\uf28c", "N"),
         HB_IS_SPAWN_T3(32, 32, 1, "\uf28d", "N"),
         HB_IS_SPAWN_T4(32, 32, 1, "\uf28e", "N"),
