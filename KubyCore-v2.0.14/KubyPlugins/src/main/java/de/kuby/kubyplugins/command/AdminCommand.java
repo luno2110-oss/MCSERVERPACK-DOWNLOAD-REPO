@@ -30,7 +30,13 @@ public final class AdminCommand implements CommandExecutor {
             de.kuby.kubyplugins.ui.KitDemo.open(p, 0);
             return true;
         }
-        new AdminMenu(plugin).open(p);
+        if (args.length > 0 && args[0].equalsIgnoreCase("truhe")) {
+            new AdminMenu(plugin).open(p);
+            return true;
+        }
+        // mit Grafik-Pack der Kadmin-Dialog im Team-Bereich, sonst die Truhe
+        if (plugin.staffMenus() != null) plugin.staffMenus().kadmin(p);
+        else new AdminMenu(plugin).open(p);
         return true;
     }
 }

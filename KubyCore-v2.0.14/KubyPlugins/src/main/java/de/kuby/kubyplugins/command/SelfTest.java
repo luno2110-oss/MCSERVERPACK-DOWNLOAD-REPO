@@ -88,6 +88,66 @@ final class SelfTest {
                                 new FriendsScreen.Near("Test9", 80), new FriendsScreen.Near("Test10", 95)) : List.of(), 25, 0, null, 100), fa));
             }
         }
+        // Team-Bereich: alle Seiten mit langen Namen und vollen Listen
+        {
+            de.kuby.kubyplugins.staff.StaffScreen.Nav sn = k -> NO;
+            var red = de.kuby.kubyplugins.staff.StaffScreen.color("#FF5A5A");
+            var sf = new de.kuby.kubyplugins.staff.StaffScreen.Frame("Moderator", red, 12, 120, 99, 7, true, true);
+            String ww = "WWWWWWWWWWWWWWWW";
+            List<de.kuby.kubyplugins.staff.StaffScreen.ChannelRow> chs = new ArrayList<>();
+            for (de.kuby.kubyplugins.staff.StaffService.Channel ch : de.kuby.kubyplugins.staff.StaffService.Channel.values()) {
+                chs.add(new de.kuby.kubyplugins.staff.StaffScreen.ChannelRow(ch.key, ch.desc, 150, true));
+            }
+            List<de.kuby.kubyplugins.staff.StaffScreen.Member> mem = new ArrayList<>();
+            List<de.kuby.kubyplugins.staff.StaffScreen.Feed> feed = new ArrayList<>();
+            List<de.kuby.kubyplugins.staff.StaffScreen.Line> lines = new ArrayList<>();
+            List<de.kuby.kubyplugins.staff.StaffScreen.ReportRow> reps = new ArrayList<>();
+            List<de.kuby.kubyplugins.staff.StaffScreen.TicketRow> tks = new ArrayList<>();
+            List<de.kuby.kubyplugins.staff.StaffScreen.PlayerRow> prs = new ArrayList<>();
+            String longText = "Sehr lange Nachricht ".repeat(14);
+            for (int i = 0; i < 30; i++) {
+                mem.add(new de.kuby.kubyplugins.staff.StaffScreen.Member(ww, "Admin", red, "survival", "akte:x"));
+                feed.add(new de.kuby.kubyplugins.staff.StaffScreen.Feed(i % 2 == 0 ? "meldung" : "strafe", longText, "vor 12 Tagen"));
+                lines.add(new de.kuby.kubyplugins.staff.StaffScreen.Line(ww, red, "vor 12 Tagen", longText));
+                reps.add(new de.kuby.kubyplugins.staff.StaffScreen.ReportRow(9999, ww, ww, longText, "bei " + ww, red, "vor 12 Tagen"));
+                tks.add(new de.kuby.kubyplugins.staff.StaffScreen.TicketRow(9999, longText, "beim Team", red, longText, "vor 12 Tagen"));
+                prs.add(new de.kuby.kubyplugins.staff.StaffScreen.PlayerRow(ww, red, "skyblock", 99, 99, "akte:x"));
+            }
+            List<String[]> facts = new ArrayList<>();
+            for (int i = 0; i < 7; i++) facts.add(new String[]{"Spielzeit", longText});
+            List<String[]> notes = new ArrayList<>();
+            for (int i = 0; i < 5; i++) notes.add(new String[]{longText, "vor 12 Tagen"});
+            canvas.accept("Team-Bereich Übersicht voll", () -> de.kuby.kubyplugins.staff.StaffScreen.home(
+                    new de.kuby.kubyplugins.staff.StaffScreen.Home(sf, chs, 999, 999, 999, 999, mem, feed), sn));
+            canvas.accept("Team-Bereich Übersicht leer", () -> de.kuby.kubyplugins.staff.StaffScreen.home(
+                    new de.kuby.kubyplugins.staff.StaffScreen.Home(new de.kuby.kubyplugins.staff.StaffScreen.Frame("Team", red, 1, 0, 0, 0, false, false),
+                            chs.subList(0, 2), 0, 0, 0, 0, List.of(), List.of()), sn));
+            canvas.accept("Team-Bereich Kanal voll", () -> de.kuby.kubyplugins.staff.StaffScreen.channel(
+                    new de.kuby.kubyplugins.staff.StaffScreen.ChannelView(sf, chs, "ankündigungen", longText, false, true, lines, 5), sn));
+            canvas.accept("Team-Bereich Kanal leer", () -> de.kuby.kubyplugins.staff.StaffScreen.channel(
+                    new de.kuby.kubyplugins.staff.StaffScreen.ChannelView(sf, chs, "allgemein", "", true, false, List.of(), 0), sn));
+            canvas.accept("Team-Bereich Schreiben", () -> de.kuby.kubyplugins.staff.StaffScreen.write("allgemein", longText, lines));
+            canvas.accept("Team-Bereich Meldungen", () -> de.kuby.kubyplugins.staff.StaffScreen.reports(
+                    new de.kuby.kubyplugins.staff.StaffScreen.Reports(sf, false, reps.subList(0, 8), 3, 9, 999, 999, 9999), sn));
+            canvas.accept("Team-Bereich Meldung", () -> de.kuby.kubyplugins.staff.StaffScreen.report(
+                    new de.kuby.kubyplugins.staff.StaffScreen.ReportDetail(sf, 9999, ww, true, "x", ww, "09.11.2026 18:42", "vor 12 Tagen",
+                            "skyblock_nether · -29999999 320 -29999999", longText, "in Arbeit", red, ww, longText, 999, true, true, true), sn));
+            canvas.accept("Team-Bereich Tickets", () -> de.kuby.kubyplugins.staff.StaffScreen.tickets(
+                    new de.kuby.kubyplugins.staff.StaffScreen.Tickets(sf, "arbeit", true, 999, 999, 999, tks.subList(0, 6), 2, 5, mem), sn));
+            canvas.accept("Team-Bereich Spieler", () -> de.kuby.kubyplugins.staff.StaffScreen.players(
+                    new de.kuby.kubyplugins.staff.StaffScreen.Players(sf, prs.subList(0, 22), 0, 3, 999), sn));
+            canvas.accept("Team-Bereich Akte", () -> de.kuby.kubyplugins.staff.StaffScreen.akte(
+                    new de.kuby.kubyplugins.staff.StaffScreen.Akte(sf, ww, "x", false, longText, facts, notes, 999, notes, 999, true, true, false), sn));
+            canvas.accept("Team-Bereich Akte ohne Rechte", () -> de.kuby.kubyplugins.staff.StaffScreen.akte(
+                    new de.kuby.kubyplugins.staff.StaffScreen.Akte(sf, "Test", "x", true, "online", facts.subList(0, 2), List.of(), 0, List.of(), 0,
+                            false, false, true), sn));
+            List<de.kuby.kubyplugins.staff.StaffScreen.Tile> tiles = new ArrayList<>(de.kuby.kubyplugins.staff.StaffScreen.coreTiles());
+            tiles.add(new de.kuby.kubyplugins.staff.StaffScreen.Tile("Verwaltung", org.bukkit.Material.IRON_SWORD, ww, longText, "addon0"));
+            canvas.accept("Kadmin", () -> de.kuby.kubyplugins.staff.StaffScreen.kadmin(
+                    new de.kuby.kubyplugins.staff.StaffScreen.Kadmin(sf, "2.0.14", 999, tiles), sn));
+            canvas.accept("Team-Bereich Eingabe", () -> de.kuby.kubyplugins.staff.StaffScreen.prompt(KitData.Icon.BELL, "VERWARNEN", longText,
+                    List.of(longText)));
+        }
         canvas.accept("Spielzeit", () -> PlaytimeScreen.canvas(new PlaytimeScreen.View(90, List.of(
                 new PlaytimeScreen.Row(1, "Neuling", "grau", 60, List.of(new PlaytimeScreen.Reward("100 Coins",
                         TextColor.color(0xFCD45D), "+100 Coins", "gold")), PlaytimeScreen.State.READY),

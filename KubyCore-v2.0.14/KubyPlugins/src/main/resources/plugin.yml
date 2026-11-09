@@ -135,9 +135,17 @@ commands:
     description: "Münzwurf um Coins"
     usage: "/coinflip <Betrag>"
   kadmin:
-    description: "Admin-Panel öffnen"
+    description: "Admin-Panel öffnen (mit Grafik-Pack als Dialog, /kadmin truhe für die Truhe)"
     permission: kuby.admin
-    usage: "/kadmin"
+    usage: "/kadmin [truhe]"
+  teambereich:
+    description: "Team-Bereich: Kanäle, Meldungen, Tickets, Spieler-Akten, Kadmin"
+    usage: "/tb [kanal|meldungen|tickets|spieler|kadmin]"
+    aliases: [tb, staff]
+  sc:
+    description: "Nachricht in den Team-Kanal (#allgemein oder /sc #kanal Text)"
+    usage: "/sc [#kanal] <Text>"
+    aliases: [teamchat]
   dailypot:
     description: "Tagespot öffnen, Lose kaufen"
   trade:
@@ -215,6 +223,9 @@ commands:
     aliases: [schluessel]
 
 permissions:
+  kuby.staff:
+    description: "Team-Bereich (/tb): Kanäle, Meldungen, Spieler-Akten (Rolle Team)"
+    default: op
   kuby.report.see:
     description: Sieht Meldungen von /report
     default: op

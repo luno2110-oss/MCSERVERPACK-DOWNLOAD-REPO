@@ -181,6 +181,19 @@ public final class SupportService {
         return out;
     }
 
+    /** Alle Tickets mit diesem Stand (älteste zuerst), für den Team-Bereich. */
+    public synchronized List<Ticket> byStatus(Status st) {
+        List<Ticket> out = new ArrayList<>();
+        for (Ticket t : tickets.values()) if (t.status == st) out.add(t);
+        out.sort((a, b) -> Long.compare(a.created, b.created));
+        return out;
+    }
+
+    /** Alle Ingame-Helfer. */
+    public synchronized List<UUID> helpers() {
+        return new ArrayList<>(helpers);
+    }
+
     public synchronized int openCount(UUID author) {
         int n = 0;
         for (Ticket t : tickets.values()) if (t.author.equals(author) && t.status.open()) n++;
@@ -202,6 +215,8 @@ public final class SupportService {
         tickets.put(tk.id, tk);
         lastTicket.put(p.getUniqueId(), tk.created);
         save();
+        if (plugin.staff() != null) plugin.staff().event("ticket", "Neues Ticket #" + tk.id + " von " + p.getName() + ": " + tk.title,
+                "/tb ticket " + tk.id, false);
         for (Player o : Bukkit.getOnlinePlayers()) {
             if (o.equals(p) || !canHelp(o)) continue;
             send(o, "Neues Ticket <white>#" + tk.id + "</white> von <white>" + p.getName() + "</white>: " + Msg.escape(tk.title)
@@ -256,9 +271,15 @@ public final class SupportService {
         t.unread = true;
         save();
         notifyAuthor(t, "Dein Ticket #" + t.id + " liegt jetzt beim Team.");
-        for (Player o : Bukkit.getOnlinePlayers()) {
-            if (isTeam(o) && !o.equals(p)) send(o, "Ticket <white>#" + t.id + "</white> wurde ans Team gegeben: " + Msg.escape(t.title)
-                    + " <click:run_command:'/support ticket " + t.id + "'><#FF6478>[Ansehen]</click>");
+        if (plugin.staff() != null) {
+            // Hinweis an alle Teamler (mit Ton) und in den Feed des Team-Bereichs
+            plugin.staff().event("ticket", "Ticket #" + t.id + " ans Team gegeben von " + p.getName() + ": " + t.title,
+                    "/tb ticket " + t.id, true);
+        } else {
+            for (Player o : Bukkit.getOnlinePlayers()) {
+                if (isTeam(o) && !o.equals(p)) send(o, "Ticket <white>#" + t.id + "</white> wurde ans Team gegeben: " + Msg.escape(t.title)
+                        + " <click:run_command:'/support ticket " + t.id + "'><#FF6478>[Ansehen]</click>");
+            }
         }
         return null;
     }

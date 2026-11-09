@@ -308,9 +308,17 @@ public final class KubyPlugins extends JavaPlugin {
         setAll(new de.kuby.kubyplugins.command.KeysCommand(this), "keys");
         setAll(new de.kuby.kubyplugins.command.CosmeticsCommand(this), "cosmetics");
         support = new de.kuby.kubyplugins.support.SupportService(this);
-        de.kuby.kubyplugins.support.SupportMenus supportMenus = new de.kuby.kubyplugins.support.SupportMenus(this, support);
+        supportMenus = new de.kuby.kubyplugins.support.SupportMenus(this, support);
         setAll(supportMenus, "support", "discord");
         getServer().getPluginManager().registerEvents(supportMenus, this);
+        staff = new de.kuby.kubyplugins.staff.StaffService(this);
+        staffMenus = new de.kuby.kubyplugins.staff.StaffMenus(this, staff);
+        setAll(staffMenus, "teambereich", "sc");
+        for (String c : new String[]{"teambereich", "sc"}) {
+            PluginCommand pc = getCommand(c);
+            if (pc != null) pc.setTabCompleter(staffMenus);
+        }
+        getServer().getPluginManager().registerEvents(staffMenus, this);
         getServer().getPluginManager().registerEvents(discord, this);
         getServer().getPluginManager().registerEvents(discordStatue, this);
         getServer().getPluginManager().registerEvents(friends, this);
@@ -532,6 +540,7 @@ public final class KubyPlugins extends JavaPlugin {
         weekly.save();
         battlepass.save();
         cosmetics.save();
+        if (staff != null) staff.save();
     }
 
     public EconomyService economy() { return economy; }
@@ -851,6 +860,13 @@ public final class KubyPlugins extends JavaPlugin {
     public JewelStoreService jewelStore() { return jewelStore; }
     private de.kuby.kubyplugins.support.SupportService support;
     public de.kuby.kubyplugins.support.SupportService support() { return support; }
+    private de.kuby.kubyplugins.support.SupportMenus supportMenus;
+    public de.kuby.kubyplugins.support.SupportMenus supportMenus() { return supportMenus; }
+    private de.kuby.kubyplugins.staff.StaffService staff;
+    /** Team-Bereich (Kanäle, Meldungen, Verwarnungen); null, solange das Plugin startet. */
+    public de.kuby.kubyplugins.staff.StaffService staff() { return staff; }
+    private de.kuby.kubyplugins.staff.StaffMenus staffMenus;
+    public de.kuby.kubyplugins.staff.StaffMenus staffMenus() { return staffMenus; }
     private final de.kuby.kubyplugins.service.RulesBook rulesBook = new de.kuby.kubyplugins.service.RulesBook(this);
     /** Serverregeln aus regeln.yml (/regeln). */
     public de.kuby.kubyplugins.service.RulesBook rules() { return rulesBook; }

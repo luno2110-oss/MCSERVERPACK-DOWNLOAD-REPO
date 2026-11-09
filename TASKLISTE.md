@@ -300,6 +300,15 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
 - [x] Battlepass, Kosmetik, Kits, Totenkiste, Enderchest, Kristalltausch
 - [x] Daily, Tagespot, Quiz, Wochen-Meta, Booster, Juwelen
 - [x] Raid-Versicherung, Discord-Verknüpfung, Config-Editor, Admin-Panel
+- [x] Team-Bereich (Wunsch des Besitzers, Test im Spiel offen): „Discord im Spiel“ nur für Teamler, `/tb` (auch `/teambereich`, `/staff`), alles als Dialog im Casino-Look (roter Kopf mit Goldrand und Goldschrift, dunkle Karten mit Goldrand, grüne Reiter, goldene Knöpfe). Ohne Grafik-Pack eine Übersicht im Chat mit Klicks
+  - Rollen über Rechte: Admin (`kuby.admin`), Moderator (`kuby.support.team`), Team (`kuby.staff` oder `kuby.report.see`)
+  - Übersicht: Kanäle mit Zähler für neue Nachrichten, „Lage“ (offene Meldungen, in Arbeit, Tickets beim Team, offene Tickets), Team online (Klick öffnet die Akte), Aktivität (neue Meldungen, Tickets ans Team, Verwarnungen, Kicks, Ankündigungen)
+  - Kanäle wie bei Discord: #allgemein (alle), #moderation (ab Moderator), #admin (nur Admins), #ankündigungen (alle lesen, Admins schreiben). Nachrichten mit Name in Rollenfarbe und Zeit, ältere Seiten blättern, Schreiben per Eingabefeld oder `/sc <Text>` bzw. `/sc #kanal <Text>`. Neue Nachrichten kommen bei allen Teamlern im Chat an (mit „[öffnen]“), pro Person abschaltbar („Chat: an/aus“). Speicherung in `staff.yml` (200 Nachrichten je Kanal)
+  - Meldungen: `/report` speichert jede Meldung (mit Ort) im Team-Bereich, alle Teamler bekommen einen Hinweis mit Ton und Link. Liste „Offene“ / „Alle“, Detail mit Übernehmen, Erledigt (mit Notiz), Wieder öffnen, Zum Ort, Zum Spieler, Akte
+  - Tickets: Fragen aus `/support` nach Stand (Beim Team, Offen, In Arbeit), Klick öffnet das Ticket; Helfer online mit Punkten dieser Woche. Ticket ans Team gegeben: Hinweis an alle Teamler und in die Aktivität
+  - Spieler: alle Online-Spieler (offene Meldungen rot, Verwarnungen orange), Suche auch offline. Akte mit Rolle, Modus, Spielzeit, Coins, Juwelen, erstem Join, Meldungen und Verwarnungen. Aktionen: Hin, Herholen, Inventar (Moderator: ansehen, Admin: bearbeiten), Enderkiste ansehen, Verwarnen (Titel und Chat beim Spieler, gespeichert), Kicken mit Grund (nicht bei gleicher oder höherer Rolle), Admin-Werkzeuge
+  - Kadmin (`/kadmin`, auch als Reiter): Kacheln für Speichern, Config neu laden, Ankündigung (Chat, Titel und #ankündigungen), Quiz, Universal-Schlüssel, Einstellungen, Shop, Preisliste, Kits, Battlepass, Casino, Auktionshaus, Spieler, Teams, Config-Editor und die Knöpfe der Addons (SMP: Kampf, Turnier). Die alte Truhe gibt es weiter mit `/kadmin truhe`
+  - Beim Einloggen eines Teamlers: kurze Zusammenfassung (offene Meldungen, Tickets beim Team, neue Nachrichten)
 - [ ] Vault-Brücke (optional, nur für externe Shops)
 
 ## Ordnergruppe 9 – Technik und Qualität

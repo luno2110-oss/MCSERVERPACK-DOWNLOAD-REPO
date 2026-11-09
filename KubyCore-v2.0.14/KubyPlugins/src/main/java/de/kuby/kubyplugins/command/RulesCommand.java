@@ -132,12 +132,18 @@ public final class RulesCommand implements CommandExecutor, TabCompleter {
         String where = p.getWorld().getName() + " " + p.getLocation().getBlockX() + " " + p.getLocation().getBlockY() + " "
                 + p.getLocation().getBlockZ();
         int seen = 0;
-        for (Player staff : Bukkit.getOnlinePlayers()) {
-            if (!staff.hasPermission("kuby.report.see")) continue;
-            staff.sendMessage(Msg.parse("<red><b>Meldung</b> <white>" + Msg.escape(p.getName()) + " <gray>meldet <white>"
-                    + Msg.escape(String.valueOf(target.getName())) + "<gray>: " + Msg.escape(reason)
-                    + " <dark_gray>(" + where + ") <click:run_command:'/tp " + p.getName() + "'><aqua>[Hin]</click>"));
-            seen++;
+        if (plugin.staff() != null) {
+            // speichert die Meldung im Team-Bereich und sagt allen Teamlern online Bescheid (mit Ton und Link)
+            plugin.staff().report(p, target.getUniqueId(), reason);
+            seen = plugin.staff().onlineStaff().size();
+        } else {
+            for (Player staff : Bukkit.getOnlinePlayers()) {
+                if (!staff.hasPermission("kuby.report.see")) continue;
+                staff.sendMessage(Msg.parse("<red><b>Meldung</b> <white>" + Msg.escape(p.getName()) + " <gray>meldet <white>"
+                        + Msg.escape(String.valueOf(target.getName())) + "<gray>: " + Msg.escape(reason)
+                        + " <dark_gray>(" + where + ") <click:run_command:'/tp " + p.getName() + "'><aqua>[Hin]</click>"));
+                seen++;
+            }
         }
         File log = new File(plugin.getDataFolder(), "reports.log");
         try (FileWriter w = new FileWriter(log, true)) {
