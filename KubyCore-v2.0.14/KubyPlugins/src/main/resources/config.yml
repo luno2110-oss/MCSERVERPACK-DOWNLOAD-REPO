@@ -770,6 +770,10 @@ playtime:
 # Doppelte Kosmetik wird durch duplicate-jewels Juwelen ersetzt.
 crates:
   duplicate-jewels: 10
+  # Kino-Szene beim Öffnen (mit Grafik-Pack, mit Schleichen überspringbar) für diese Schlüssel (Juwelen-Kisten)
+  cutscene:
+    aktiv: true
+    schluessel: [episch, legendaer, kosmetik]
   survival:
     vote:
       name: "Vote-Kiste"

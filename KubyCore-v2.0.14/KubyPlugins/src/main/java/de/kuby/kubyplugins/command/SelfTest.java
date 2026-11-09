@@ -483,6 +483,16 @@ final class SelfTest {
         } catch (Throwable t) {
             fails.add("Cutscene Schwert: " + t);
         }
+        for (int tier = 0; tier < 4; tier++) {
+            try {
+                String err = cutsceneCheck(new de.kuby.kubyplugins.cinema.scenes.CrateReveal(new de.kuby.kubyplugins.cinema.V3(0.5, 64, 0.5),
+                        new de.kuby.kubyplugins.cinema.V3(0.5, 64, 0.5), tier, "minecraft:diamond", "W".repeat(22), "0,1 %", 7L));
+                if (err != null) fails.add("Cutscene Kiste " + tier + ": " + err);
+                else ok[0]++;
+            } catch (Throwable t) {
+                fails.add("Cutscene Kiste " + tier + ": " + t);
+            }
+        }
 
         // Prüfungen aus den Addons (z. B. Survival-Juwelenshop, Möbel- und Pet-Katalog)
         for (java.util.Map.Entry<String, Supplier<Canvas>> en : plugin.selfTestCanvases().entrySet()) {

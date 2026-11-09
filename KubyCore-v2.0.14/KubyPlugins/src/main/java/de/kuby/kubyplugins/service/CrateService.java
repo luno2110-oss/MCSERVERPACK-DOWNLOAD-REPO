@@ -335,7 +335,38 @@ public final class CrateService implements Listener {
             announce(p, c, win);
             return;
         }
+        if (cinematic(p, c, win, block)) return;
         animate(p, c, win, block, k);
+    }
+
+    /**
+     * Kino-Szene beim Öffnen (Crates, deren Schlüssel man mit Juwelen kauft; mit Grafik-Pack). Die Belohnung ist
+     * schon vergeben; am Ende kommt die Meldung im Chat. false = normale Animation.
+     */
+    private boolean cinematic(Player p, Crate c, Reward win, Block block) {
+        if (!plugin.getConfig().getBoolean("crates.cutscene.aktiv", true)) return false;
+        List<String> keys = plugin.getConfig().getStringList("crates.cutscene.schluessel");
+        if (keys.isEmpty()) keys = List.of("episch", "legendaer", "kosmetik");
+        if (!keys.contains(c.key()) || plugin.cinema() == null || !plugin.uiPack().active(p) || plugin.cinema().active(p)) return false;
+        double ch = c.chance(win);
+        int tier = ch < 1.5 ? 3 : ch < 5 ? 2 : ch < 15 ? 1 : 0;
+        ItemStack di = displayItem(win);
+        net.kyori.adventure.key.Key mk = di.getData(io.papermc.paper.datacomponent.DataComponentTypes.ITEM_MODEL);
+        String model = mk != null ? mk.asString() : di.getType().getKey().toString();
+        String shortName = win.name().split(" \\(")[0].replace("ß", "SS");
+        if (shortName.length() > 22) shortName = shortName.substring(0, 21) + ".";
+        de.kuby.kubyplugins.cinema.V3 crate = new de.kuby.kubyplugins.cinema.V3(block.getX() + 0.5, block.getY(), block.getZ() + 0.5);
+        Location pl = p.getLocation();
+        de.kuby.kubyplugins.cinema.scenes.CrateReveal s = new de.kuby.kubyplugins.cinema.scenes.CrateReveal(crate,
+                new de.kuby.kubyplugins.cinema.V3(pl.getX(), pl.getY(), pl.getZ()), tier, model, shortName,
+                String.format(Locale.GERMANY, "%.1f %%", ch), ThreadLocalRandom.current().nextLong());
+        de.kuby.kubyplugins.cinema.Cinema.Options o = new de.kuby.kubyplugins.cinema.Cinema.Options();
+        o.anchor = block.getLocation().add(0.5, 0, 0.5);
+        o.skippable = true;
+        o.onEnd = (pp, res) -> {
+            if (pp.isOnline()) announce(pp, c, win);
+        };
+        return plugin.cinema().play(p, s, o);
     }
 
     private Reward roll(Crate c) {
