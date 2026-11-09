@@ -26,7 +26,7 @@ import java.util.Locale;
 public final class IslandCommand implements TabExecutor {
 
     private static final List<String> SUBS = List.of("home", "sethome", "einladen", "annehmen", "entfernen", "verlassen", "besuchen",
-            "top", "level", "name", "besucher", "upgrade", "neustart", "aufgeben", "rechte", "gast", "sperren", "entsperren", "rauswerfen", "co", "shop", "biom", "limits", "preise");
+            "top", "level", "name", "besucher", "upgrade", "neustart", "aufgeben", "rechte", "gast", "sperren", "entsperren", "rauswerfen", "co", "shop", "biom", "limits", "preise", "stufen", "nether", "end", "freischalten");
 
     private final KubySkyblock addon;
     private final KubyPlugins core;
@@ -140,6 +140,23 @@ public final class IslandCommand implements TabExecutor {
                 de.kuby.kubyskyblock.gui.SkyShopScreen.open(p, t, 0);
             }
             case "limits", "limit" -> de.kuby.kubyskyblock.gui.IslandExtraScreen.limits(p);
+            case "stufen", "stufe", "stages" -> de.kuby.kubyskyblock.gui.StageScreen.open(p);
+            case "nether", "end" -> {
+                var st = de.kuby.kubyskyblock.service.StageService.Stage.of(sub);
+                String err = addon.stages().travel(p, st);
+                if (err != null) {
+                    Msg.send(p, "<red>" + err);
+                    de.kuby.kubyskyblock.gui.StageScreen.open(p);
+                }
+            }
+            case "freischalten", "unlock" -> {
+                var st = de.kuby.kubyskyblock.service.StageService.Stage.of(args.length > 1 ? args[1] : "nether");
+                if (st == null) {
+                    Msg.send(p, "<gray>/insel freischalten <nether|end>");
+                    return true;
+                }
+                result(p, addon.stages().unlock(p, st), "");
+            }
             case "preise", "belohnungen" -> de.kuby.kubyskyblock.gui.IslandExtraScreen.prizes(p);
             case "biom", "biome", "biominsel" -> {
                 String act = args.length > 1 ? args[1].toLowerCase(Locale.ROOT) : "";

@@ -308,13 +308,18 @@ public final class GeneratorScreen {
         long coins = sb().core().economy().balance(p.getUniqueId());
         List<Offer> offers = new ArrayList<>();
         for (Type t : s.types()) {
-            boolean unlocked = level >= t.unlockLevel();
+            // Stufen-Generatoren erst, wenn die Stufe der Insel freigeschaltet ist
+            de.kuby.kubyskyblock.service.StageService.Stage st = de.kuby.kubyskyblock.service.StageService.Stage.of(
+                    de.kuby.kubyskyblock.service.StageService.stageKey(t));
+            boolean stageOk = st == null || (sb().stages() != null && sb().stages().unlocked(i, st));
+            boolean unlocked = level >= t.unlockLevel() && stageOk;
+            String lock = !stageOk ? "ab " + st.label + "-Stufe" : "ab Insel-Level " + t.unlockLevel();
             String desc = switch (t.kind()) {
                 case MONEY -> "ab " + GeneratorService.fmt(t.perSecond()) + " $ pro Sekunde";
                 case XP -> "ab " + GeneratorService.fmt(t.perSecond()) + " XP pro Sekunde";
                 default -> ores(t);
             };
-            offers.add(new Offer(art(t.id()), t.name(), desc, t.price(), unlocked ? null : "ab Insel-Level " + t.unlockLevel(),
+            offers.add(new Offer(art(t.id()), t.name(), desc, t.price(), unlocked ? null : lock,
                     unlocked && coins >= t.price(), unlocked ? run(pl -> {
                         if (!sb().core().economy().withdraw(pl.getUniqueId(), t.price())) {
                             feedback(pl, "Dafür brauchst du " + Msg.coins(t.price()) + " $.");

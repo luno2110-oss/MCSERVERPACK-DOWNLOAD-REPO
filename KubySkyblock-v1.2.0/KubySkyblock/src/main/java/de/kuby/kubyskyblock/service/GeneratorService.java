@@ -76,9 +76,9 @@ public final class GeneratorService {
         }
     }
 
-    /** Art eines Generators aus der config. */
+    /** Art eines Generators aus der config; stage: "" = normale Insel, "nether" oder "end" = nur auf der Stufen-Insel. */
     public record Type(String id, Kind kind, String name, Material block, long price, int unlockLevel, double perSecond,
-                       double intervalFactor, TreeMap<Integer, Map<Material, Integer>> yields) {}
+                       double intervalFactor, TreeMap<Integer, Map<Material, Integer>> yields, String stage) {}
 
     public static final class Gen {
         public final int id;
@@ -181,7 +181,7 @@ public final class GeneratorService {
             }
             types.put(id, new Type(id, kind, t.getString("name", id), block == null || !block.isBlock() ? Material.STONE : block,
                     t.getLong("preis", 5000), t.getInt("ab-insel-level", 0), t.getDouble("pro-sekunde", 1.0),
-                    t.getDouble("intervall-faktor", 1.0), yields));
+                    t.getDouble("intervall-faktor", 1.0), yields, t.getString("stufe", "").toLowerCase(Locale.ROOT)));
         }
     }
 
@@ -264,10 +264,24 @@ public final class GeneratorService {
         return e == null ? t.yields().firstEntry().getValue() : e.getValue();
     }
 
+    /** Generator-Plätze je Insel (und je Stufen-Insel). generatoren.plaetze gilt für die alten 5 Größen-Stufen, die jetzt
+     *  auf Level 0, 5, 10, 15 und 20 liegen: dazwischen gleichmäßig, darüber (Stufe 4) ein Platz mehr je 5 Level. */
     public int slots(IslandService.Island i) {
         List<Integer> l = addon.getConfig().getIntegerList("generatoren.plaetze");
         if (l.isEmpty()) l = List.of(3, 5, 8, 12, 16);
-        return l.get(Math.max(0, Math.min(i.size, l.size() - 1)));
+        int last = l.size() - 1;
+        int lvl = Math.max(0, i.size);
+        if (lvl >= last * 5) return l.get(last) + (lvl - last * 5) / 5;
+        int k = lvl / 5;
+        double t = (lvl - k * 5) / 5.0;
+        return (int) Math.round(l.get(k) + (l.get(k + 1) - l.get(k)) * t);
+    }
+
+    /** Generatoren der Insel in einer Welt (Insel oder Stufen-Insel): die Plätze gelten je Welt. */
+    public int onIslandIn(int island, String world) {
+        int n = 0;
+        for (Gen g : byPos.values()) if (g.island == island && g.world.equals(world)) n++;
+        return n;
     }
 
     // =================================================================================================================
@@ -357,8 +371,16 @@ public final class GeneratorService {
     public String place(Player p, Block b, Type t, Quality q, int level) {
         IslandService.Island i = addon.islands().islandAt(b.getLocation());
         if (i == null || !i.isMember(p.getUniqueId())) return "Generatoren stellst du auf deiner Insel auf.";
-        int used = onIsland(i.slot).size();
-        if (used >= slots(i)) return "Deine Insel hat nur " + slots(i) + " Generator-Plätze. Mehr gibt es mit dem Größen-Upgrade.";
+        // Stufen-Generatoren nur auf ihrer Stufen-Insel, die anderen nur auf der normalen Insel
+        StageService.Stage here = addon.stages() == null ? null : addon.stages().stageOf(b.getWorld());
+        String need = t.stage() == null ? "" : t.stage();
+        if (!need.equals(here == null ? "" : here.key)) {
+            StageService.Stage st = StageService.Stage.of(need);
+            return st == null ? "Diesen Generator stellst du auf deiner normalen Insel auf, nicht auf der Stufen-Insel."
+                    : "Diesen Generator gibt es nur auf deiner " + st.label + "-Insel (/insel " + st.key + ").";
+        }
+        int used = onIslandIn(i.slot, b.getWorld().getName());
+        if (used >= slots(i)) return "Hier hat deine Insel nur " + slots(i) + " Generator-Plätze. Mehr gibt es mit dem Größen-Upgrade.";
         IslandService is = addon.islands();
         if (is.levelOf(i) < t.unlockLevel() && !p.hasPermission("kuby.admin")) return "Diesen Generator gibt es ab Insel-Level " + t.unlockLevel() + ".";
         Gen g = new Gen(nextId++, i.slot, b.getWorld().getName(), b.getX(), b.getY(), b.getZ(), t.id(), q, Math.max(1, Math.min(level, maxLevel())));

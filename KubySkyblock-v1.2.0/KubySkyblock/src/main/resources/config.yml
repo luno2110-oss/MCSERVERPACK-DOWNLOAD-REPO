@@ -1,3 +1,5 @@
+# Stand der config (neue Abschnitte werden beim Start in ältere configs übernommen)
+config-stand: 7
 reward:
   money: 2
   xp: 1
@@ -204,6 +206,83 @@ generatoren:
         1: {AMETHYST_SHARD: 50, LAPIS_LAZULI: 30, EMERALD: 15, DIAMOND: 5}
         6: {AMETHYST_SHARD: 35, LAPIS_LAZULI: 25, EMERALD: 25, DIAMOND: 15}
         10: {AMETHYST_SHARD: 25, LAPIS_LAZULI: 20, EMERALD: 28, DIAMOND: 25, ECHO_SHARD: 2}
+    # Stufen-Generatoren (stufe: nether oder end): nur auf der eigenen Nether- oder End-Insel aufstellbar, im Shop erst
+    # nach dem Freischalten der Stufe. Sie zählen für die Bedingungen der nächsten Stufe (End: alle Nether-Generatoren).
+    lohe:
+      art: item
+      name: "Lohen-Generator"
+      block: SHROOMLIGHT
+      stufe: nether
+      preis: 60000
+      ertrag:
+        1: {BLAZE_ROD: 40, MAGMA_CREAM: 30, GLOWSTONE_DUST: 30}
+        5: {BLAZE_ROD: 35, MAGMA_CREAM: 22, GLOWSTONE_DUST: 20, FIRE_CHARGE: 15, GHAST_TEAR: 8}
+        9: {BLAZE_ROD: 30, MAGMA_CREAM: 18, GLOWSTONE_DUST: 15, FIRE_CHARGE: 15, GHAST_TEAR: 14, EXPERIENCE_BOTTLE: 8}
+    netherit:
+      art: item
+      name: "Netherit-Generator"
+      block: ANCIENT_DEBRIS
+      stufe: nether
+      preis: 150000
+      intervall-faktor: 4
+      ertrag:
+        1: {QUARTZ: 50, GOLD_INGOT: 30, GILDED_BLACKSTONE: 15, NETHERITE_SCRAP: 5}
+        5: {QUARTZ: 40, GOLD_INGOT: 28, GILDED_BLACKSTONE: 15, NETHERITE_SCRAP: 12, ANCIENT_DEBRIS: 5}
+        9: {QUARTZ: 30, GOLD_INGOT: 25, GILDED_BLACKSTONE: 15, NETHERITE_SCRAP: 18, ANCIENT_DEBRIS: 9, NETHERITE_UPGRADE_SMITHING_TEMPLATE: 3}
+    ender:
+      art: item
+      name: "Ender-Generator"
+      block: END_STONE_BRICKS
+      stufe: end
+      preis: 250000
+      ertrag:
+        1: {ENDER_PEARL: 50, END_STONE: 30, CHORUS_FRUIT: 20}
+        5: {ENDER_PEARL: 40, END_STONE: 15, CHORUS_FRUIT: 20, POPPED_CHORUS_FRUIT: 13, END_ROD: 12}
+        9: {ENDER_PEARL: 35, CHORUS_FRUIT: 18, POPPED_CHORUS_FRUIT: 15, END_ROD: 12, ENDER_EYE: 14, DRAGON_BREATH: 6}
+    shulker:
+      art: item
+      name: "Shulker-Generator"
+      block: PURPUR_BLOCK
+      stufe: end
+      preis: 500000
+      intervall-faktor: 4
+      ertrag:
+        1: {PURPUR_BLOCK: 50, CHORUS_FRUIT: 40, SHULKER_SHELL: 10}
+        5: {PURPUR_BLOCK: 40, CHORUS_FRUIT: 28, SHULKER_SHELL: 20, PHANTOM_MEMBRANE: 12}
+        9: {PURPUR_BLOCK: 30, CHORUS_FRUIT: 20, SHULKER_SHELL: 30, PHANTOM_MEMBRANE: 12, DRAGON_BREATH: 8}
+
+# Stufen: Nether und End als eigene Welten (keine Vanilla-Dimensionen). Jede Insel bekommt dort eine eigene Stufen-Insel an
+# derselben Stelle wie im Skyblock (Start-Insel mit Portal, Truhe und dem Nötigsten). Freischalten mit /insel stufen
+# (Besitzer und Co-Besitzer), hin mit /insel nether, /insel end oder durch ein Portal auf der Insel (Server braucht dafür
+# allow-nether in server.properties und allow-end in bukkit.yml). Bedingungen:
+#   jede-art: von jeder Generator-Art der vorigen Stufe mindestens einer auf der Insel (Nether: alle normalen Arten,
+#             End: alle Nether-Arten; End braucht außerdem die Nether-Stufe)
+#   alle-max: diese Generatoren alle auf dem höchsten Level (generatoren.max-stufe). Dauert das zu lange: auf false
+#             stellen, dann reicht je Art einer.
+#   insel-level: Mindest-Level der Insel (0 = keine Bedingung)
+# generator: Block-Generator der Stufe. Nether: wo sonst Basalt entsteht (Lava über Seelenerde neben Blaueis), End: wo
+# sonst Bruchstein oder Stein entsteht. Tabelle je Level des Insel-Generator-Upgrades (höchste erreichte Schwelle zählt).
+stufen:
+  nether:
+    welt: skyblock_nether
+    jede-art: true
+    alle-max: true
+    insel-level: 0
+    generator:
+      0: {NETHERRACK: 50, BASALT: 20, BLACKSTONE: 14, MAGMA_BLOCK: 6, NETHER_QUARTZ_ORE: 7, NETHER_GOLD_ORE: 3}
+      10: {NETHERRACK: 40, BASALT: 14, BLACKSTONE: 14, MAGMA_BLOCK: 6, NETHER_QUARTZ_ORE: 12, NETHER_GOLD_ORE: 8, GLOWSTONE: 4, GILDED_BLACKSTONE: 2}
+      20: {NETHERRACK: 32, BASALT: 12, BLACKSTONE: 12, MAGMA_BLOCK: 5, NETHER_QUARTZ_ORE: 15, NETHER_GOLD_ORE: 10, GLOWSTONE: 7, GILDED_BLACKSTONE: 5, ANCIENT_DEBRIS: 2}
+      35: {NETHERRACK: 25, BASALT: 10, BLACKSTONE: 10, MAGMA_BLOCK: 5, NETHER_QUARTZ_ORE: 17, NETHER_GOLD_ORE: 12, GLOWSTONE: 9, GILDED_BLACKSTONE: 8, ANCIENT_DEBRIS: 4}
+  end:
+    welt: skyblock_end
+    jede-art: true
+    alle-max: true
+    insel-level: 0
+    generator:
+      0: {END_STONE: 70, END_STONE_BRICKS: 10, PURPUR_BLOCK: 12, OBSIDIAN: 8}
+      10: {END_STONE: 55, END_STONE_BRICKS: 12, PURPUR_BLOCK: 15, PURPUR_PILLAR: 5, OBSIDIAN: 9, CRYING_OBSIDIAN: 4}
+      20: {END_STONE: 45, END_STONE_BRICKS: 12, PURPUR_BLOCK: 15, PURPUR_PILLAR: 8, OBSIDIAN: 10, CRYING_OBSIDIAN: 6, END_ROD: 4}
+      35: {END_STONE: 38, END_STONE_BRICKS: 12, PURPUR_BLOCK: 15, PURPUR_PILLAR: 8, OBSIDIAN: 10, CRYING_OBSIDIAN: 8, END_ROD: 6, SHULKER_BOX: 1}
 
 # Skyblock-Shop (/shop, /sell, Shop-Kachel; auch /insel shop): "MATERIAL;Menge;Kaufpreis;Verkaufspreis je Stück;Name".
 # Kaufpreis 0 = nur verkaufen, Verkaufspreis 0 = nur kaufen. Die Verkaufspreise gelten auch für Generator-Ertrag.
@@ -371,6 +450,33 @@ shop:
         - "BUCKET;1;150;0;Eimer"
         - "BREAD;16;160;0;Brot"
         - "COOKED_BEEF;16;480;0;Steak"
+    stufen:
+      name: "Stufen"
+      icon: CRYING_OBSIDIAN
+      items:
+        - "OBSIDIAN;1;800;0;Obsidian"
+        - "BLUE_ICE;1;600;0;Blaueis"
+        - "SOUL_SOIL;8;320;0;Seelenerde"
+        - "NETHERRACK;16;160;0;Netherrack"
+        - "NETHER_WART;4;200;2;Netherwarze"
+        - "END_STONE;16;240;1;Endstein"
+        - "BLAZE_ROD;0;0;25;Lohenrute"
+        - "MAGMA_CREAM;0;0;12;Magmacreme"
+        - "GLOWSTONE_DUST;0;0;3;Glowstonestaub"
+        - "FIRE_CHARGE;0;0;8;Feuerkugel"
+        - "GHAST_TEAR;0;0;60;Ghastträne"
+        - "QUARTZ;0;0;4;Netherquarz"
+        - "GILDED_BLACKSTONE;0;0;30;Golddurchzogener Schwarzstein"
+        - "NETHERITE_UPGRADE_SMITHING_TEMPLATE;0;0;1500;Netherit-Aufwertung"
+        - "EXPERIENCE_BOTTLE;0;0;10;Erfahrungsfläschchen"
+        - "CHORUS_FRUIT;0;0;4;Chorusfrucht"
+        - "POPPED_CHORUS_FRUIT;0;0;8;Geplatzte Chorusfrucht"
+        - "END_ROD;0;0;20;Endstab"
+        - "PURPUR_BLOCK;0;0;3;Purpurblock"
+        - "ENDER_EYE;0;0;30;Enderauge"
+        - "DRAGON_BREATH;0;0;120;Drachenatem"
+        - "PHANTOM_MEMBRANE;0;0;20;Phantomhaut"
+        - "SHULKER_SHELL;0;0;250;Shulkerschale"
 
 # One-Block: höchstens drei Plattformen (/kp skyblock oneblock setup). Ein Skyblock-Team kann eine beanspruchen
 # (/oneblock): dann bauen nur seine Mitglieder dort ab, jeder Abbau bringt Block-XP fürs Team, Mitglieder können

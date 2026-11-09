@@ -4,12 +4,14 @@
 #   abbau:<MATERIAL|ores|ores_<erz>|logs|crops|stones|*>   Blöcke auf der Insel abbauen (auch aus dem Bruchstein-
 #                                                           Generator; selbst gesetzte zählen nicht, Pflanzen nur reif)
 #   oneblock[:<MATERIAL>]   den One-Block abbauen
-#   gen_place[:<art>]       Generator aufstellen (art: geld, xp, erz, holz, farm, mob, nether, edelstein)
+#   gen_place[:<art>]       Generator aufstellen (art: geld, xp, erz, holz, farm, mob, nether, edelstein; Stufen:
+#                           lohe, netherit auf der Nether-Insel, ender, shulker auf der End-Insel)
 #   gen_collect[:<art>]     Items aus Generatoren einsammeln      gen_geld[:<art>]  $ mit Generatoren verdienen
 #   gen_xp[:<art>]          XP aus Generatoren einsammeln         gen_upgrade[:<art>]  Generator-Stufe kaufen
 #   gen_veredeln[:<art>]    Generator veredeln (Silber, Gold, Diamant)
 #   insel_upgrade[:size|slots|generator]   Insel-Upgrade kaufen   insel_besuch  fremde Insel besuchen
-#   stat:<Schlüssel>        island_level, island_points, island_members, generators, playtime, quests_done, ...
+#   stat:<Schlüssel>        island_level, island_points, island_members, island_stage (1 Nether, 2 End), generators,
+#                           playtime, quests_done, ...
 # Coins gehen aufs Skyblock-Konto, XP sind Skyblock-XP, Tokens zählen für den Quest-Rang.
 
 daily-count: 4
@@ -72,6 +74,11 @@ story:
   - "s13;Veredelt;Veredle einen Generator (Silber, Gold, Diamant);gen_veredeln;1;3000;3;300"
   - "s14;Insel-Baron;Bringe deine Insel auf Level 10;stat:island_level;10;5000;4;500"
   - "s15;Skyblock-Legende;Bringe deine Insel auf Level 25;stat:island_level;25;10000;5;1000"
+  - "s16;Tor zum Nether;Schalte die Nether-Stufe frei (/insel stufen);stat:island_stage;1;15000;6;1500"
+  - "s17;Lohenfeuer;Stelle einen Lohen-Generator auf deiner Nether-Insel auf;gen_place:lohe;1;8000;4;800"
+  - "s18;Uralter Schatz;Stelle einen Netherit-Generator auf deiner Nether-Insel auf;gen_place:netherit;1;10000;5;1000"
+  - "s19;Das Ende;Schalte die End-Stufe frei (/insel stufen);stat:island_stage;2;25000;8;2500"
+  - "s20;Schalensammler;Stelle einen Shulker-Generator auf deiner End-Insel auf;gen_place:shulker;1;20000;8;2000"
 
 milestones:
   - "m_level;Inselbauer;island_level;2,5,10,25,50;500;2"
@@ -80,6 +87,7 @@ milestones:
   - "m_zeit;Stammgast;playtime;600,3000,12000,30000;400;2"
   - "m_quests;Questmeister;quests_done;10,50,200,500,1000;400;2"
   - "m_serie;Treue;quest_streak_best;7,30,100;600;3"
+  - "m_stufe;Weltenwanderer;island_stage;1,2;1500;5"
 
 # Team-Quests für Skyblock-Teams (/team): eine pro Woche.
 team:
@@ -95,3 +103,4 @@ secret:
   - "x_reisend;Weltenbummler;Besuche 50 fremde Inseln;insel_besuch;50;5000;4;500"
   - "x_endlos;Unendlich;Baue den One-Block 5.000-mal ab;oneblock;5000;8000;6;800"
   - "x_imperium;Insel-Imperium;Bringe deine Insel auf Level 50;stat:island_level;50;15000;10;1500"
+  - "x_leere;Leere Weiten;Baue 1.000 Endstein auf deiner End-Insel ab;abbau:END_STONE;1000;8000;6;800"

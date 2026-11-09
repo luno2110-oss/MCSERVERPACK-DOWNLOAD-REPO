@@ -55,18 +55,31 @@ public final class IslandScreen {
         }
     }
 
+    /** Stufe (Nether, End) im Insel-Menü: Name, Farbe, Bild, freigeschaltet, Stand, Anteil erfüllt, Knopf, Klick. */
+    public record StageRow(String name, TextColor color, KitData.Sprite icon, boolean unlocked, String status, double frac,
+                           String button, Consumer<Player> click) {}
+
     public record View(String name, long level, int rank, long points, long nextLevel, boolean open, boolean isOwner, long coins,
                        List<Up> ups, List<Member> members, int limit, Consumer<Player> home, Consumer<Player> setHome,
                        Consumer<Player> toggle, Consumer<Player> top, Consumer<Player> invite, Consumer<Player> leave,
                        Consumer<Player> recalc, Consumer<Player> progress, Consumer<Player> reset, Consumer<Player> abandon,
-                       String resetHint, Consumer<Player> access, Consumer<Player> limits) {
+                       String resetHint, Consumer<Player> access, Consumer<Player> limits, List<StageRow> stages) {
+        public View(String name, long level, int rank, long points, long nextLevel, boolean open, boolean isOwner, long coins,
+                    List<Up> ups, List<Member> members, int limit, Consumer<Player> home, Consumer<Player> setHome,
+                    Consumer<Player> toggle, Consumer<Player> top, Consumer<Player> invite, Consumer<Player> leave,
+                    Consumer<Player> recalc, Consumer<Player> progress, Consumer<Player> reset, Consumer<Player> abandon, String resetHint,
+                    Consumer<Player> access, Consumer<Player> limits) {
+            this(name, level, rank, points, nextLevel, open, isOwner, coins, ups, members, limit, home, setHome, toggle, top, invite, leave,
+                    recalc, progress, reset, abandon, resetHint, access, limits, null);
+        }
+
         public View(String name, long level, int rank, long points, long nextLevel, boolean open, boolean isOwner, long coins,
                     List<Up> ups, List<Member> members, int limit, Consumer<Player> home, Consumer<Player> setHome,
                     Consumer<Player> toggle, Consumer<Player> top, Consumer<Player> invite, Consumer<Player> leave,
                     Consumer<Player> recalc, Consumer<Player> progress, Consumer<Player> reset, Consumer<Player> abandon, String resetHint,
                     Consumer<Player> access) {
             this(name, level, rank, points, nextLevel, open, isOwner, coins, ups, members, limit, home, setHome, toggle, top, invite, leave,
-                    recalc, progress, reset, abandon, resetHint, access, null);
+                    recalc, progress, reset, abandon, resetHint, access, null, null);
         }
 
         public View(String name, long level, int rank, long points, long nextLevel, boolean open, boolean isOwner, long coins,
@@ -74,7 +87,7 @@ public final class IslandScreen {
                     Consumer<Player> toggle, Consumer<Player> top, Consumer<Player> invite, Consumer<Player> leave,
                     Consumer<Player> recalc, Consumer<Player> progress, Consumer<Player> reset, Consumer<Player> abandon, String resetHint) {
             this(name, level, rank, points, nextLevel, open, isOwner, coins, ups, members, limit, home, setHome, toggle, top, invite, leave,
-                    recalc, progress, reset, abandon, resetHint, null, null);
+                    recalc, progress, reset, abandon, resetHint, null, null, null);
         }
     }
 
@@ -226,7 +239,23 @@ public final class IslandScreen {
                         : "Die Insel geht an " + IslandService.nameOf(i.members.iterator().next()) + ". Wirklich aufgeben?", "Aufgeben", q ->
                         feedback(q, is.abandon(q)))) : null,
                 owner && left > 0 ? "Neustart in " + de.kuby.kubyplugins.service.KitService.format(left) : null,
-                manage ? run(IslandScreen::access) : null, run(IslandExtraScreen::limits))), 330);
+                manage ? run(IslandScreen::access) : null, run(IslandExtraScreen::limits), stageRows(i))), 330);
+    }
+
+    /** Nether- und End-Stufe als kleine Karten (Klick öffnet die Stufen, freigeschaltet: Hinreisen). */
+    private static List<StageRow> stageRows(IslandService.Island i) {
+        de.kuby.kubyskyblock.service.StageService ss = sb().stages();
+        if (ss == null) return null;
+        List<StageRow> out = new ArrayList<>();
+        for (de.kuby.kubyskyblock.service.StageService.Stage s : de.kuby.kubyskyblock.service.StageService.Stage.values()) {
+            boolean un = ss.unlocked(i, s);
+            var reqs = un ? List.<de.kuby.kubyskyblock.service.StageService.Req>of() : ss.requirements(i, s);
+            long done = reqs.stream().filter(de.kuby.kubyskyblock.service.StageService.Req::done).count();
+            double frac = un ? 1 : reqs.isEmpty() ? 0 : (double) done / reqs.size();
+            out.add(new StageRow(s.label + "-Stufe", TextColor.fromHexString(s.color), StageScreen.icon(s), un, ss.progressText(i, s), frac,
+                    un ? "Hinreisen" : "Ansehen", un ? run(pl -> feedback(pl, ss.travel(pl, s))) : run(StageScreen::open)));
+        }
+        return out;
     }
 
     /** Welche Blöcke ab dieser Generator-Stufe neu dazukommen (kurz). */
@@ -599,6 +628,26 @@ public final class IslandScreen {
         }
         y += ((v.ups().size() + 2) / 3) * (ch + 4) + 6;
 
+        // Stufen (Nether, End)
+        if (v.stages() != null && !v.stages().isEmpty()) {
+            long free = v.stages().stream().filter(StageRow::unlocked).count();
+            y = section(c, y, "Stufen", free + "/" + v.stages().size() + " frei");
+            int sw = (W - 4) / 2, sh = 48;
+            for (int k = 0; k < v.stages().size(); k++) {
+                StageRow s = v.stages().get(k);
+                int x = (k % 2) * (sw + 4), sy = y + (k / 2) * (sh + 4);
+                c.box(x, sy, sw, sh, s.unlocked() ? KitData.Box.GOLD : KitData.Box.CLOUD_CARD);
+                c.sprite(x + 6 + (32 - s.icon().width) / 2, sy + 8 + (32 - s.icon().height) / 2, s.icon());
+                c.text(x + 44, sy + 8, Canvas.fit(s.name(), true, sw - 52), s.color(), true);
+                c.text(x + 44, sy + 20, Canvas.fit(s.status(), false, sw - 52), s.unlocked() ? GREEN : MIST, false);
+                int bw = 64, bx = x + sw - 6 - bw, by = sy + sh - KitData.SMALL_H - 5;
+                if (!s.unlocked()) c.barFlat(x + 44, by + 5, bx - x - 44 - 6, s.frac(), KitData.Fill.GOLD);
+                c.smallButton(bx, by, bw, s.unlocked() ? KitData.Small.GREEN : KitData.Small.DARK, s.button(), CLOUD, true);
+                if (s.click() != null) c.action(bx, by, bw, KitData.SMALL_H, s.click(), s.button() + " · " + s.name());
+            }
+            y += ((v.stages().size() + 1) / 2) * (sh + 4) + 6;
+        }
+
         // Mitglieder
         y = section(c, y, "Mitglieder", v.members().size() + "/" + v.limit());
         int rows = v.members().size();
@@ -732,8 +781,11 @@ public final class IslandScreen {
                 new Up("Limits", UpgradeTier.icon(KitData.Sprite.HB_IS_LIMITS, 50), 50, 50, "+999 %", null, 0, false, false, null));
         List<Member> ms = new ArrayList<>();
         for (int k = 0; k < 11; k++) ms.add(new Member("W".repeat(16), k == 0, k % 2 == 0, k == 0 ? null : no));
+        List<StageRow> st = List.of(new StageRow("Nether-Stufe", StageScreen.NETHER, KitData.Sprite.HB_ST_NETHER, true, "Freigeschaltet", 1,
+                        "Hinreisen", no),
+                new StageRow("End-Stufe", StageScreen.END, KitData.Sprite.HB_ST_END, false, "99/99 Bedingungen", 0.6, "Ansehen", no));
         reg.accept("Insel", () -> canvas(new View(w, 999_999L, 99_999, 999_999_999L, 999_999_999L, true, true, 999_999_999L, ups, ms, 11,
-                no, no, no, no, no, null, no, no, no, no, "Neustart in 23h 59m 59s")));
+                no, no, no, no, no, null, no, no, no, no, "Neustart in 23h 59m 59s", no, no, st)));
         reg.accept("Insel Mitglied", () -> canvas(new View("Insel", 0, 0, 0, 100, false, false, 0,
                 List.of(new Up("Größe", KitData.Sprite.HB_GROESSE, 0, 50, "31 x 31", null, 0, false, false, null),
                         new Up("Mitglieder", KitData.Sprite.HB_MITGLIEDER, 0, 50, "2 Plätze", null, 0, false, false, null),

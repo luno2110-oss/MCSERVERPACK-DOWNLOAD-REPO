@@ -957,6 +957,182 @@ def is_besuch():
     return a
 
 
+# ---------------------------------------------------------------------------------------------------------- Stufen (K7)
+def _ramp(m, k):
+    r = RAMPS[m]
+    return rgb(r[max(0, min(len(r) - 1, k))])
+
+
+def _mix(a, b, t):
+    return tuple(round(a[i] + (b[i] - a[i]) * t) for i in range(3))
+
+
+def _glow_finish(pix, glow, center, radius, tint, sparks, sparkle, shadow=(5, 26, 27, 31)):
+    """Lieblingsstil der Generatoren: weicher Bodenschatten, Glühen aus der Mitte färbt nahe Teile, Kontur fast schwarz
+    (leicht getönt), Funken darüber und ein Funkeln."""
+    from PIL import ImageDraw
+    img = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
+    sh = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
+    ImageDraw.Draw(sh).ellipse(shadow, fill=(0, 0, 0, 80))
+    img.alpha_composite(sh)
+    px = img.load()
+    cx, cy = center
+    for (x, y), c in pix.items():
+        d = math.hypot(x - cx, y - cy)
+        if d < radius:
+            c = _mix(c, glow, 0.38 * (1 - d / radius))
+        px[x, y] = c + (255,)
+    ink = _mix(rgb(OUTLINE), tint, 0.18)
+    for y in range(32):
+        for x in range(32):
+            if (x, y) in pix:
+                continue
+            if any((x + dx, y + dy) in pix for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))):
+                px[x, y] = ink + (255,)
+    for x, y, a in sparks:
+        if px[x, y][3] < 255:
+            px[x, y] = glow + (a,)
+    sx, sy, col = sparkle
+    px[sx, sy] = (255, 255, 255, 255)
+    for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+        if px[sx + dx, sy + dy][3] < 255:
+            px[sx + dx, sy + dy] = rgb(col) + (200,)
+    return img
+
+
+def st_nether():
+    """Nether-Stufe: Obsidian-Portal auf einem Stück Netherrack, das Portal glüht violett und färbt die Innenkanten des
+    Rahmens; Nähte zwischen den Blöcken gleichmäßig, ein Block ist weinender Obsidian (gebrochenes Muster)."""
+    pix = {}
+    # Netherrack-Sockel (vorne, Tiefe durch helle Oberkante), unten leicht ausgefranst
+    for y in range(22, 28):
+        for x in range(4, 28):
+            if y == 27 and x in (4, 5, 26, 27):
+                continue
+            if y == 26 and x in (4, 27):
+                continue
+            k = 5 if y == 22 else 4 if y == 23 else 3 if y < 26 else 2
+            if x in (4, 5) and y > 22:
+                k += 1
+            if x >= 25 and y > 22:
+                k -= 1
+            pix[(x, y)] = _ramp("netherrack", k)
+    for q in ((8, 24), (13, 25), (19, 24), (23, 25), (16, 26)):
+        pix[q] = _ramp("netherrack", 1)
+    for q in ((6, 22), (7, 22), (24, 22)):
+        pix[q] = _ramp("rot", 3)
+    # Rahmen: 3 px stark, Pfeiler 5 Blöcke hoch (Nähte), oben und unten 4 Blöcke breit
+    x0, x1, y0, y1 = 8, 23, 1, 23
+    frame = set()
+    for y in range(y0, y1 + 1):
+        for x in range(x0, x1 + 1):
+            if x <= x0 + 2 or x >= x1 - 2 or y <= y0 + 2 or y >= y1 - 2:
+                frame.add((x, y))
+    for (x, y) in frame:
+        k = 3
+        if x == x0 or y == y0:
+            k = 5
+        elif x == x1 or y == y1:
+            k = 1
+        if (x in (x0 + 2,) and y0 + 2 < y < y1 - 2) or (y == y0 + 2 and x0 + 2 < x < x1 - 2):
+            k = 1
+        pix[(x, y)] = _ramp("obsidian", k)
+    for (x, y) in frame:
+        side = x <= x0 + 2 or x >= x1 - 2
+        if side and y in (y0 + 3, y0 + 8, y0 + 13, y0 + 18) and y0 + 2 < y < y1 - 2:
+            pix[(x, y)] = _ramp("obsidian", 0)
+        if not side and x in (x0 + 7, x0 + 8):
+            pix[(x, y)] = _ramp("obsidian", 0) if x == x0 + 7 else pix[(x, y)]
+    # weinender Obsidian rechts unten: lila Tränen
+    for q in ((21, 15), (22, 16), (21, 17)):
+        pix[q] = _ramp("portal", 5)
+    pix[(22, 18)] = _ramp("portal", 3)
+    # Nieten an den vier Ecken des Rahmens (wie am Generator-Käfig), oben links mit Glanz
+    for cx_, cy_ in ((x0 + 1, y0 + 1), (x1 - 1, y0 + 1), (x0 + 1, y1 - 1), (x1 - 1, y1 - 1)):
+        pix[(cx_, cy_)] = _ramp("portal", 6)
+        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            pix[(cx_ + dx, cy_ + dy)] = _mix(_ramp("portal", 4), _ramp("obsidian", 3), 0.5)
+    pix[(x0 + 1, y0 + 1)] = _ramp("portal", 7)
+    # Portal: Bänder schräg, zur Mitte heller
+    pcx, pcy = (x0 + x1) / 2, (y0 + y1) / 2
+    for y in range(y0 + 3, y1 - 2):
+        for x in range(x0 + 3, x1 - 2):
+            d = math.hypot((x - pcx) / 5.0, (y - pcy) / 8.0)
+            band = int(((x - x0) * 1.0 + (y - y0) * 0.55) / 2.6) % 3
+            k = 2 + round(3 * max(0.0, 1 - d)) + (1 if band == 0 else 0)
+            pix[(x, y)] = _ramp("portal", min(7, k))
+    for q in ((15, 10), (16, 11), (17, 13), (14, 14)):
+        pix[q] = _ramp("portal", 7)
+    sparks = [(6, 4, 210), (5, 9, 150), (26, 7, 190), (27, 13, 130), (12, 0, 160)]
+    return Img(_glow_finish(pix, _ramp("portal", 6), (pcx, pcy), 12, _ramp("portal", 1), sparks, (27, 2, "F0D8FF")))
+
+
+def st_end():
+    """End-Stufe: ein End-Portal-Rahmen von schräg oben (wie der Generator-Würfel) mit eingesetztem Enderauge, das
+    türkis aus der Mitte leuchtet und die Oberseite färbt; Seiten aus End-Stein mit türkisem Band, Bodenschatten, Funken."""
+    T, R, B, L = (16, 4), (29, 10), (16, 16), (3, 10)
+    H = 11
+    pix = {}
+
+    def top_uv(x, y):
+        ax, ay = R[0] - T[0], R[1] - T[1]
+        bx, by = L[0] - T[0], L[1] - T[1]
+        px_, py_ = x + 0.5 - T[0], y + 0.5 - T[1]
+        det = ax * by - ay * bx
+        return (px_ * by - py_ * bx) / det, (ax * py_ - ay * px_) / det
+
+    for y in range(32):
+        for x in range(32):
+            u, v = top_uv(x, y)
+            if not (0 <= u < 1 and 0 <= v < 1):
+                continue
+            if u < 0.1 or v < 0.1:
+                c = _ramp("endstein", 6)
+            elif u > 0.9 or v > 0.9:
+                c = _ramp("endstein", 2)
+            elif u < 0.2 or v < 0.2 or u > 0.8 or v > 0.8:
+                c = _ramp("endstein", 4)
+            else:
+                c = _ramp("endrahmen", 4)
+            pix[(x, y)] = c
+    # Seiten: oben 3 px türkises Band, darunter End-Stein; links heller als rechts, Fugen gleichmäßig, eine fehlt
+    for x in range(L[0], R[0] + 1):
+        left = x <= B[0]
+        ytop = L[1] + (x - L[0]) * (B[1] - L[1]) / (B[0] - L[0]) if left else B[1] + (x - B[0]) * (R[1] - B[1]) / (R[0] - B[0])
+        yt = int(math.floor(ytop + 0.5))
+        for y in range(yt, yt + H + 1):
+            if (x, y) in pix:
+                continue
+            dy = y - yt
+            if dy <= 2:
+                c = _ramp("endrahmen", (5 if dy == 0 else 3) if left else (4 if dy == 0 else 2))
+            elif dy == 3:
+                c = _ramp("endrahmen", 1)
+            else:
+                c = _ramp("endstein", 4 if left else 2)
+                if (left and x in (7, 12) and dy in (6, 9)) or (not left and x in (21,) and dy == 7):
+                    c = _ramp("endstein", 2 if left else 0)
+            pix[(x, y)] = c
+    # Enderauge: Kuppel auf der Oberseite, dunkler Ring, grüne Iris, schwarzer Schlitz, Glanz oben links
+    ex, ey = 16, 9
+    for y in range(ey - 5, ey + 4):
+        for x in range(ex - 5, ex + 6):
+            d = math.hypot((x - ex) / 4.6, (y - ey + 0.5) / 3.6)
+            if d > 1:
+                continue
+            c = _ramp("endrahmen", 1) if d > 0.78 else _ramp("smaragd", 4) if d > 0.45 else _ramp("tuerkis", 5)
+            if d <= 0.78 and y - ey < -1:
+                c = _ramp("smaragd", 6) if d > 0.45 else _ramp("tuerkis", 7)
+            pix[(x, y)] = c
+    for q in ((16, 7), (16, 8), (16, 9), (16, 10)):
+        pix[q] = _ramp("endrahmen", 0)
+    pix[(14, 6)] = _ramp("endrahmen", 6)
+    pix[(13, 7)] = _ramp("smaragd", 8)
+    sparks = [(7, 2, 190), (25, 1, 170), (29, 6, 130), (3, 6, 140), (21, 0, 120)]
+    return Img(_glow_finish(pix, rgb("#3AD8A8"), (16, 9), 9, _ramp("endrahmen", 2), sparks, (27, 2, "C8FFE8"),
+                            shadow=(4, 25, 28, 31)))
+
+
 # ---------------------------------------------------------------------------------------------------------- Knöpfe (16 px)
 def s_wildnis():
     a = Icon(16)
@@ -1129,4 +1305,5 @@ TILES = {"menu": i_menu, "angeln": i_angeln, "jobs": i_jobs, "grundstuecke": i_g
          "s_enderchest": s_enderchest, "alert": s_alert, "alert_s": s_alert_small, "c_bloecke": c_bloecke,
          "c_essen": c_essen, "c_redstone": c_redstone, "c_deko": c_deko, "c_suche": c_suche, "c_daily": c_daily,
          "trade": i_trade, "is_wachstum": is_wachstum, "is_spawn": is_spawn, "is_limits": is_limits,
-         "is_pokal": is_pokal, "is_besuch": is_besuch, "is_biom": is_biom}
+         "is_pokal": is_pokal, "is_besuch": is_besuch, "is_biom": is_biom,
+         "st_nether": st_nether, "st_end": st_end}

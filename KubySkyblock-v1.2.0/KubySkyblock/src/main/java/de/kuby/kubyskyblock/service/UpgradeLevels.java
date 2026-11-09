@@ -180,11 +180,33 @@ public final class UpgradeLevels {
                 }
             }
         }
-        if (n > 0) {
-            plugin.saveConfig();
-            plugin.getLogger().info("Upgrades: " + n + " alte Standard-Werte auf 50 Level (4 Stufen) umgestellt.");
+        // Stufen (Nether, End): neue Abschnitte einmal in ältere configs übernehmen (config-stand 7)
+        int added = 0;
+        boolean stamped = false;
+        if (c.getInt("config-stand", 0) < 7) {
+            stamped = true;
+            for (String path : List.of("stufen", "generatoren.typen.lohe", "generatoren.typen.netherit", "generatoren.typen.ender",
+                    "generatoren.typen.shulker", "shop.bereiche.stufen")) {
+                int dot = path.lastIndexOf('.');
+                if (c.isSet(path) || !d.isConfigurationSection(path) || (dot > 0 && !c.isSet(path.substring(0, dot)))) continue;
+                copy(d.getConfigurationSection(path), c.createSection(path));
+                added++;
+            }
+            c.set("config-stand", 7);
         }
-        return n;
+        if (n > 0 || stamped) {
+            plugin.saveConfig();
+            if (n > 0) plugin.getLogger().info("Upgrades: " + n + " alte Standard-Werte auf 50 Level (4 Stufen) umgestellt.");
+            if (added > 0) plugin.getLogger().info("Stufen: " + added + " neue Abschnitte (Nether, End, Stufen-Generatoren, Shop) übernommen.");
+        }
+        return n + added;
+    }
+
+    private static void copy(org.bukkit.configuration.ConfigurationSection from, org.bukkit.configuration.ConfigurationSection to) {
+        for (String k : from.getKeys(false)) {
+            if (from.isConfigurationSection(k)) copy(from.getConfigurationSection(k), to.createSection(k));
+            else to.set(k, from.get(k));
+        }
     }
 
     private static List<Long> numbers(List<?> l) {

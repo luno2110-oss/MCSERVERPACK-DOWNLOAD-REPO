@@ -54,7 +54,7 @@ public final class SkyblockListener implements Listener {
     }
 
     private boolean inSkyblock(org.bukkit.World w) {
-        return w != null && w.getName().equals(core.modes().worldOf(ModeService.SKYBLOCK));
+        return addon.isSkyblockWorld(w);
     }
 
     @EventHandler

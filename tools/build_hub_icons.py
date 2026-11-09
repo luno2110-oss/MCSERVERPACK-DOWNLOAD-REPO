@@ -438,7 +438,7 @@ _ORDER = ["menu", "angeln", "jobs", "grundstuecke", "heiraten", "bank", "duelle"
           "generator", "groesse", "mitglieder", "oneblock", "ob_glueck", "ob_cooldown", "ob_tempo", "ob_xp", "ob_geld",
           "ob_beute", "s_wildnis", "s_homes", "s_enderchest", "alert", "alert_s", "c_bloecke", "c_essen", "c_redstone",
           "c_deko", "c_suche", "c_daily", "trade", "is_wachstum", "is_spawn", "is_limits", "is_pokal", "is_besuch",
-          "is_biom"]
+          "is_biom", "st_nether", "st_end"]
 
 
 def tiles():

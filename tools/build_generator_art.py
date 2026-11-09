@@ -29,7 +29,8 @@ CAGE = {
 }
 # Art -> Farbe des Glühens im Käfig
 GLOW = {"geld": "F8D35A", "xp": "8CF06A", "erz": "FF9A3A", "holz": "9AD860", "farm": "FFE070", "mob": "C86AF0",
-        "nether": "FF5A4A", "edelstein": "5AE6F0"}
+        "nether": "FF5A4A", "edelstein": "5AE6F0", "lohe": "FFB02A", "netherit": "B07AE8", "ender": "3AD8A8",
+        "shulker": "F08AD8"}
 
 
 # ---------------------------------------------------------------- Symbole (16 px)
@@ -126,8 +127,64 @@ def core_edelstein(n=16):
     return a
 
 
+# ---------------------------------------------------------------- Stufen-Generatoren (Nether- und End-Insel)
+
+def core_lohe(n=16):
+    a = Art(n)
+    # Lohenrute (schräg wie das Item) vor einer Flamme, Glut-Funken
+    a.poly([(6, 0), (10, 3), (11, 8), (8, 11), (3, 11), (1, 7), (3, 3)], "D8481E")
+    a.poly([(6, 3), (9, 6), (8, 9), (4, 9), (3, 6)], "FF9A2A", mode="soft", edge=False)
+    a.dots([(6, 6), (5, 7)], "FFE070")
+    a.line([(3, 14), (14, 3)], "F2B030", 3, mode="full")
+    a.line([(4, 12), (12, 4)], "FFE68A", 1, mode="flat", edge=False)
+    a.dots([(6, 12), (9, 9), (12, 6)], "C8781A")
+    a.dots([(13, 9), (12, 12)], "FFC23A")
+    a.sparkle(14, 0, 1, "FFE8A0")
+    return a
+
+
+def core_netherit(n=16):
+    a = Art(n)
+    # Netherit-Barren: Trapez mit heller Oberseite, violetter Schimmer
+    a.poly([(1, 9), (4, 5), (15, 5), (12, 9)], "6E6468")
+    a.poly([(1, 9), (12, 9), (12, 13), (1, 13)], "3E3640")
+    a.poly([(12, 9), (15, 5), (15, 9), (12, 13)], "2A242C")
+    a.line([(5, 6), (13, 6)], "9A8E98", 1, mode="flat", edge=False)
+    a.dots([(5, 6), (6, 6)], "D8C8E0")
+    a.dots([(3, 11), (8, 12)], "6A4E7A")
+    a.sparkle(13, 2, 1, "E0C8FF")
+    return a
+
+
+def core_ender(n=16):
+    a = Art(n)
+    # Enderperle: dunkle Kugel mit grünem Kern
+    a.ellipse(2, 2, 13, 13, "1E5E56")
+    a.ellipse(4, 4, 11, 11, "2E9A84", mode="soft", edge=False)
+    a.ellipse(6, 6, 9, 9, "8CF0C8", mode="flat", edge=False)
+    a.dots([(7, 7)], "E8FFF4")
+    a.dots([(4, 4), (5, 3)], "B8FFE8")
+    a.sparkle(13, 2, 1, "C8FFE8")
+    return a
+
+
+def core_shulker(n=16):
+    a = Art(n)
+    # Shulker: lila Schale, Deckel leicht offen, Kopf schaut heraus
+    a.rect(2, 9, 13, 14, "8A5A9A")
+    a.rect(4, 7, 11, 9, "D8E070", mode="flat")
+    a.dots([(6, 8), (9, 8)], "1A1A20")
+    a.rect(1, 2, 14, 6, "A874B8")
+    a.line([(2, 3), (13, 3)], "C898D4", 1, mode="flat", edge=False)
+    a.line([(3, 11), (12, 11)], "6E4680", 1, mode="flat", edge=False)
+    a.dots([(3, 3), (4, 3)], "F0D8F8")
+    a.sparkle(14, 0, 1, "F8D8FF")
+    return a
+
+
 CORES = {"geld": core_geld, "xp": core_xp, "erz": core_erz, "holz": core_holz, "farm": core_farm, "mob": core_mob,
-         "nether": core_nether, "edelstein": core_edelstein}
+         "nether": core_nether, "edelstein": core_edelstein, "lohe": core_lohe, "netherit": core_netherit, "ender": core_ender,
+         "shulker": core_shulker}
 
 
 # ---------------------------------------------------------------- Käfig-Textur (16 px, für das 3D-Modell)

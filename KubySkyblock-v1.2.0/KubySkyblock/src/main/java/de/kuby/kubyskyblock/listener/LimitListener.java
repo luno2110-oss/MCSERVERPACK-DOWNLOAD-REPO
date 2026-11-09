@@ -47,7 +47,7 @@ public final class LimitListener implements Listener {
     }
 
     private boolean inSkyblock(World w) {
-        return w != null && w.getName().equals(core.modes().worldOf(ModeService.SKYBLOCK));
+        return addon.isSkyblockWorld(w);
     }
 
     // ---------- Blöcke ----------

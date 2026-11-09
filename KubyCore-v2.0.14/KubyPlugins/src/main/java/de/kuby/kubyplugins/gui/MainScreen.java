@@ -69,6 +69,7 @@ public final class MainScreen {
             case "Top-Inseln" -> KitData.Sprite.QU_RANK_HEAD;
             case "Checkliste" -> KitData.Sprite.QU_T_SIDE;
             case "Generatoren" -> KitData.Sprite.GN_EDELSTEIN_GOLD;
+            case "Stufen" -> KitData.Sprite.HB_ST_NETHER;
             case "One-Block" -> KitData.Sprite.HB_ONEBLOCK;
             case "Cookie Clicker" -> KitData.Sprite.CK_COOKIE;
             // SMP

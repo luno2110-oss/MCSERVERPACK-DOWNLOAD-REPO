@@ -54,6 +54,18 @@ public final class KubySkyblock extends JavaPlugin {
     public de.kuby.kubyskyblock.service.TopRewardService rewards() { return rewards; }
     public ProgressService progress() { return progress; }
     public de.kuby.kubyskyblock.service.GeneratorService generators() { return generators; }
+
+    private de.kuby.kubyskyblock.service.StageService stages;
+
+    /** Nether- und End-Stufe (eigene Welten mit Stufen-Inseln). */
+    public de.kuby.kubyskyblock.service.StageService stages() { return stages; }
+
+    /** Skyblock-Welt oder eine der Stufen-Welten (Nether, End)? */
+    public boolean isSkyblockWorld(org.bukkit.World w) {
+        if (w == null || core == null) return false;
+        if (w.getName().equals(core.modes().worldOf(ModeService.SKYBLOCK))) return true;
+        return stages != null && stages.stageOf(w) != null;
+    }
     public SkyblockCommand command() { return command; }
 
     /** Ecken, die ein Admin mit dem Werkzeug markiert hat. */
@@ -81,6 +93,7 @@ public final class KubySkyblock extends JavaPlugin {
         de.kuby.kubyskyblock.gui.OneBlockScreen.samples(core::registerSelfTestCanvas);
         de.kuby.kubyskyblock.gui.SkyShopScreen.samples(core::registerSelfTestCanvas);
         de.kuby.kubyskyblock.gui.IslandExtraScreen.samples(core::registerSelfTestCanvas);
+        de.kuby.kubyskyblock.gui.StageScreen.samples(core::registerSelfTestCanvas);
         saveDefaultConfig();
         // Upgrades mit 20 Level: alte Standard-Werte der config ersetzen, bevor Inseln und One-Block ihre Stände laden
         de.kuby.kubyskyblock.service.UpgradeLevels.updateConfig(this);
@@ -94,6 +107,7 @@ public final class KubySkyblock extends JavaPlugin {
         oneblock = new OneBlockService(this, core);
         progress = new ProgressService(this, core);
         generators = new de.kuby.kubyskyblock.service.GeneratorService(this, core);
+        stages = new de.kuby.kubyskyblock.service.StageService(this, core);
         shop = new de.kuby.kubyskyblock.service.SkyShopService(this, core);
         core.registerShop(ModeService.SKYBLOCK, new KubyPlugins.ShopHook() {
             @Override
@@ -127,6 +141,10 @@ public final class KubySkyblock extends JavaPlugin {
             return i == null || generators == null ? 0L : (long) generators.count(i.slot);
         });
         core.registerStat("island_rank", id -> (long) islands.rank(islands.islandOf(id)));
+        core.registerStat("island_stage", id -> {
+            var i = islands.islandOf(id);
+            return i == null ? 0L : (long) i.stage;
+        });
         core.registerStat("generator_slots", id -> {
             var i = islands.islandOf(id);
             return i == null || generators == null ? 0L : (long) generators.slots(i);
@@ -156,6 +174,8 @@ public final class KubySkyblock extends JavaPlugin {
                 "Alle Items sammeln, Erfolge und Meilensteine", pl -> new de.kuby.kubyskyblock.gui.SkyScreen(core).open(pl)));
         core.registerMainEntry(ModeService.SKYBLOCK, new KubyPlugins.MainEntry(org.bukkit.Material.BLAST_FURNACE, "Generatoren",
                 "Geld, XP und Items von selbst: kaufen, aufstellen, einsammeln", de.kuby.kubyskyblock.gui.GeneratorScreen::island));
+        core.registerMainEntry(ModeService.SKYBLOCK, new KubyPlugins.MainEntry(org.bukkit.Material.CRYING_OBSIDIAN, "Stufen",
+                "Nether- und End-Stufe: eigene Inseln, neue Generatoren", de.kuby.kubyskyblock.gui.StageScreen::open));
         core.registerMainEntry(ModeService.SKYBLOCK, new KubyPlugins.MainEntry(org.bukkit.Material.GRASS_BLOCK, "One-Block",
                 "Block fürs Team beanspruchen, Block-XP sammeln, Glück, Tempo und Bonus verbessern", de.kuby.kubyskyblock.gui.OneBlockScreen::open));
         getServer().getPluginManager().registerEvents(new SkyblockListener(this, core), this);
@@ -164,6 +184,7 @@ public final class KubySkyblock extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new de.kuby.kubyskyblock.gui.LootEditMenu.Events(), this);
         getServer().getPluginManager().registerEvents(new de.kuby.kubyskyblock.listener.GeneratorListener(this), this);
         getServer().getPluginManager().registerEvents(new de.kuby.kubyskyblock.listener.LimitListener(this, core), this);
+        getServer().getPluginManager().registerEvents(new de.kuby.kubyskyblock.listener.StageListener(this, core), this);
         core.registerJewelShop(ModeService.SKYBLOCK, new KubyPlugins.JewelShopHook() {
             @Override
             public boolean open(org.bukkit.entity.Player p, String sub) {

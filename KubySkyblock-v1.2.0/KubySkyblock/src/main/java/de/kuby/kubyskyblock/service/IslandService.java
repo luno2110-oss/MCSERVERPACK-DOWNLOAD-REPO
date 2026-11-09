@@ -93,6 +93,8 @@ public final class IslandService {
         public final Set<UUID> trusted = new LinkedHashSet<>();
         public final Set<UUID> banned = new LinkedHashSet<>();
         public final java.util.EnumMap<Role, java.util.EnumSet<Right>> rights = defaultRights();
+        /** Freigeschaltete Stufe (0 = keine, 1 = Nether, 2 = End) und gebaute Stufen-Inseln (Bit je Stufe). */
+        public int stage, built;
 
         Island(int slot) {
             this.slot = slot;
@@ -113,7 +115,7 @@ public final class IslandService {
     /** Offene Einladung: Insel, wer eingeladen hat, bis wann. */
     public record Invite(int slot, UUID from, long until) {}
 
-    private static final int HEIGHT = 100;
+    static final int HEIGHT = 100;
 
     private final KubySkyblock addon;
     private final KubyPlugins core;
@@ -211,9 +213,12 @@ public final class IslandService {
         return b == null || b.owner <= 0 ? null : bySlot.get(b.owner);
     }
 
-    /** Nur die Insel selbst (ohne Biom-Inseln), z. B. für die Punkte. */
+    /** Nur die Insel selbst (ohne Biom-Inseln), z. B. für die Punkte. In den Stufen-Welten (Nether, End) liegt die
+     *  Stufen-Insel an derselben Stelle wie die Insel im Skyblock. */
     public Island mainIslandAt(Location l) {
-        if (l == null || l.getWorld() == null || !l.getWorld().getName().equals(core.modes().worldOf(ModeService.SKYBLOCK))) return null;
+        if (l == null || l.getWorld() == null) return null;
+        boolean main = l.getWorld().getName().equals(core.modes().worldOf(ModeService.SKYBLOCK));
+        if (!main && (addon.stages() == null || addon.stages().stageOf(l.getWorld()) == null)) return null;
         for (Island i : legacy) {
             int r = radius(i);
             if (Math.abs(l.getBlockX() - i.legacy[0]) <= r && Math.abs(l.getBlockZ() - i.legacy[1]) <= r) return i;
@@ -224,6 +229,11 @@ public final class IslandService {
         if (i == null) return null;
         int r = radius(i);
         return Math.abs(l.getBlockX() - cx * s) <= r && Math.abs(l.getBlockZ() - cz * s) <= r ? i : null;
+    }
+
+    /** Etwas an einer Insel geändert (z. B. Stufe freigeschaltet): beim nächsten Speichern mitschreiben. */
+    public void markDirty() {
+        dirty = true;
     }
 
     public Island islandOf(UUID id) {
@@ -497,6 +507,7 @@ public final class IslandService {
         Island i = islandOf(p.getUniqueId());
         if (i == null) return "Du hast keine Insel.";
         if (!canManage(i, p.getUniqueId())) return "Das dürfen nur Besitzer und Co-Besitzer.";
+        if (addon.stages() != null && addon.stages().stageOf(p.getWorld()) != null) return "Das Zuhause setzt du auf deiner Insel im Skyblock.";
         if (islandAt(p.getLocation()) != i) return "Stell dich dafür auf deine Insel.";
         Location l = p.getLocation();
         i.home = new double[]{l.getX(), l.getY(), l.getZ(), l.getYaw(), l.getPitch()};
@@ -670,6 +681,7 @@ public final class IslandService {
             return null;
         }
         unregister(i);
+        if (addon.stages() != null) addon.stages().clear(i);
         dirty = true;
         busy.add(i.slot);
         if (ModeService.SKYBLOCK.equals(core.modes().modeOf(p.getUniqueId()))) p.teleportAsync(core.modes().spawnOf(ModeService.SKYBLOCK));
@@ -964,8 +976,9 @@ public final class IslandService {
         return sum;
     }
 
-    /** Gesetzter oder abgebauter Block auf einer Insel. */
+    /** Gesetzter oder abgebauter Block auf einer Insel (Stufen-Inseln zählen nicht, wie beim Neu-Zählen). */
     public void addPoints(Location l, Material m, int sign) {
+        if (addon.stages() != null && l != null && addon.stages().stageOf(l.getWorld()) != null) return;
         Island i = mainIslandAt(l);
         if (i == null) return;
         long v = value(m);
@@ -1125,6 +1138,8 @@ public final class IslandService {
                 i.growth = s.getInt("growth");
                 i.spawn = s.getInt("spawn");
                 i.limit = s.getInt("limit");
+                i.stage = s.getInt("stufe");
+                i.built = s.getInt("stufe-gebaut");
                 if (migrate) {
                     i.size = UpgradeLevels.islandSize(i.size);
                     i.slots = UpgradeLevels.islandSlots(i.slots);
@@ -1186,6 +1201,8 @@ public final class IslandService {
             out.set(b + "growth", i.growth);
             out.set(b + "spawn", i.spawn);
             out.set(b + "limit", i.limit);
+            if (i.stage > 0) out.set(b + "stufe", i.stage);
+            if (i.built > 0) out.set(b + "stufe-gebaut", i.built);
             out.set(b + "points", i.points);
             out.set(b + "created", i.created);
             out.set(b + "reset", i.lastReset);

@@ -51,7 +51,7 @@ public final class IslandListener implements Listener {
     }
 
     private boolean inSkyblock(World w) {
-        return w != null && w.getName().equals(core.modes().worldOf(ModeService.SKYBLOCK));
+        return addon.isSkyblockWorld(w);
     }
 
     private void deny(Player p) {
@@ -224,6 +224,12 @@ public final class IslandListener implements Listener {
         if (!addon.getConfig().getBoolean("insel.void-rettung", true)) return;
         e.setCancelled(true);
         p.setFallDistance(0);
+        var stage = addon.stages() == null ? null : addon.stages().stageOf(p.getWorld());
+        if (stage != null) {
+            addon.stages().rescue(p, stage);
+            Msg.send(p, "<gray>Du bist ins Leere gefallen und wieder auf deiner " + stage.label + "-Insel.");
+            return;
+        }
         IslandService.Island i = addon.islands().islandOf(p.getUniqueId());
         if (i != null) addon.islands().home(p, i);
         else {
@@ -233,11 +239,23 @@ public final class IslandListener implements Listener {
         Msg.send(p, "<gray>Du bist ins Leere gefallen und wieder zu Hause.");
     }
 
-    /** Generator: Bruchstein und Stein aus Lava und Wasser werden je Stufe der Insel zu anderen Blöcken. */
+    /** Generator: Bruchstein und Stein aus Lava und Wasser werden je Stufe der Insel zu anderen Blöcken. In der
+     *  Nether-Stufe wird Basalt (Lava, Seelenerde, Blaueis) zu Nether-Blöcken, in der End-Stufe Bruchstein zu End-Blöcken. */
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onForm(BlockFormEvent e) {
         Material m = e.getNewState().getType();
-        if ((m != Material.COBBLESTONE && m != Material.STONE) || !inSkyblock(e.getBlock().getWorld())) return;
+        if (!inSkyblock(e.getBlock().getWorld())) return;
+        var stage = addon.stages() == null ? null : addon.stages().stageOf(e.getBlock().getWorld());
+        if (stage != null) {
+            boolean fits = stage == de.kuby.kubyskyblock.service.StageService.Stage.NETHER ? m == Material.BASALT
+                    : m == Material.COBBLESTONE || m == Material.STONE;
+            if (!fits) return;
+            IslandService.Island i = addon.islands().islandAt(e.getBlock().getLocation());
+            Material out = i == null ? null : addon.stages().generate(i, stage);
+            if (out != null) e.getNewState().setType(out);
+            return;
+        }
+        if (m != Material.COBBLESTONE && m != Material.STONE) return;
         IslandService.Island i = addon.islands().islandAt(e.getBlock().getLocation());
         if (i == null) return;
         Material out = addon.islands().generate(i);
