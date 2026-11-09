@@ -29,6 +29,22 @@ public final class UiDialog {
     private static java.util.UUID clickPlayer;
     private static boolean closeRequested, shown, sounded;
 
+    /** Zähler je Spieler: steigt bei jedem gezeigten oder geschlossenen Dialog (für Menüs, die sich selbst aktualisieren:
+     *  hat sich der Zähler seitdem geändert, ist ein anderes Fenster offen oder der Dialog zu). */
+    private static final java.util.Map<java.util.UUID, Long> GENERATION = new java.util.concurrent.ConcurrentHashMap<>();
+
+    public static long generation(Player p) {
+        return GENERATION.getOrDefault(p.getUniqueId(), 0L);
+    }
+
+    private static void bump(Player p) {
+        GENERATION.merge(p.getUniqueId(), 1L, Long::sum);
+    }
+
+    public static void forget(java.util.UUID id) {
+        GENERATION.remove(id);
+    }
+
     /** Vom Klick-Handler: eine Menü-Aktion dieses Spielers beginnt. */
     static void beginClick(Player p) {
         clickPlayer = p.getUniqueId();
@@ -49,6 +65,7 @@ public final class UiDialog {
             // eine Truhe (oder ein anderes Fenster) hat den Dialog schon ersetzt: dann nicht schließen
             org.bukkit.event.inventory.InventoryType top = p.getOpenInventory().getTopInventory().getType();
             if (top == org.bukkit.event.inventory.InventoryType.CRAFTING || top == org.bukkit.event.inventory.InventoryType.CREATIVE) {
+                bump(p);
                 p.closeDialog();
             }
         }
@@ -65,13 +82,43 @@ public final class UiDialog {
             closeRequested = true;
             return;
         }
+        bump(p);
         p.closeDialog();
     }
 
     /** Dialog zeigen (merkt sich in einer Menü-Aktion, dass ein neues Menü kommt). */
     public static void open(Player p, Dialog dialog) {
         if (inClick(p)) shown = true;
+        bump(p);
         p.showDialog(dialog);
+    }
+
+    /**
+     * Wie show, aber mit Knopf „Schließen“ unten: Esc löst ihn ebenfalls aus, onExit erfährt also, dass der Spieler das
+     * Menü zugemacht hat (für Menüs, die sich selbst aktualisieren).
+     */
+    public static void showWithExit(Player player, Canvas canvas, int minHeight, java.util.function.Consumer<Player> onExit) {
+        Component body = canvas.build(player);
+        int lines = countLines(body);
+        int want = (minHeight + 8) / 9;
+        if (lines < want) {
+            TextComponent.Builder b = Component.text().append(body);
+            for (int i = lines; i < want; i++) b.append(Component.newline()).append(Ui.space(canvas.width()));
+            body = b.build();
+        }
+        DialogBase base = DialogBase.builder(canvas.heading())
+                .canCloseWithEscape(true)
+                .pause(false)
+                .afterAction(DialogBase.DialogAfterAction.NONE)
+                .body(List.of(DialogBody.plainMessage(body, Math.min(1024, canvas.width() + 64))))
+                .build();
+        net.kyori.adventure.text.event.ClickCallback.Options opts = net.kyori.adventure.text.event.ClickCallback.Options.builder()
+                .uses(1).lifetime(java.time.Duration.ofMinutes(5)).build();
+        ActionButton exit = ActionButton.create(Component.text("Schließen", net.kyori.adventure.text.format.NamedTextColor.GRAY), null, 120,
+                io.papermc.paper.registry.data.dialog.action.DialogAction.customClick((response, audience) -> {
+                    if (audience instanceof Player pl) onExit.accept(pl);
+                }, opts));
+        open(player, Dialog.create(b -> b.empty().base(base).type(DialogType.serverLinks(exit, 1, 120))));
     }
 
     /** Von Sfx: in dieser Menü-Aktion lief schon ein Ton. */

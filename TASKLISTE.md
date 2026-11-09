@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.37** (ungetestet, nicht kompiliert)
+Stand: **v1.38** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -208,6 +208,7 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
       - Long und Short: Reihen LONG ▲ und SHORT ▼ (100 $, 1.000 $, 10.000 $, Betrag) und Schließen (25 %, 50 %, alles). Short: Betrag ist die Sicherheit, Gewinn wenn der Kurs fällt; Anzeige mit Ø-Kurs, Gewinn/Verlust und Liquidationskurs; bei 90 % Verlust automatisch geschlossen (Meldung). Long und Short im selben Wert gleichzeitig geht nicht; Stop-Loss/Take-Profit/Limit-Verkauf nur für Long. Shorts im Depot und im Kopf (Depot-Wert, Gewinn)
       - Shop-Käufe und Verkäufe an den Server bewegen den Kurs weiter mit (zählen auch zum Spieler-Druck)
       - Bestehende Server: alte Standard-Werte (Schwankung, Liquidität) werden beim Start umgestellt, `trading.spieler-bewegen` an
+      - Live (Wunsch des Besitzers): das offene Börsen-Menü zeigt nach jedem Kurs-Schritt (10 s) von selbst die neuen Kurse, der Mauszeiger bleibt. Nur solange das Menü wirklich offen ist: Knopf „Schließen“ unten (auch Esc) meldet das Zumachen, jedes andere Fenster (Menü, Eingabefeld, Truhe) und Umsehen beendet die Aktualisierung (`UiDialog.generation`, `UiDialog.showWithExit`). Klicks auf das Menü kurz vor einer Aktualisierung bleiben 3 Sekunden gültig
     - [x] Kurse laufen jetzt von selbst wie an einer echten Börse (simulierter Verlauf), Spieler bewegen sie nicht mehr (`trading.spieler-einfluss: false`, wieder einschaltbar): zufällige Schwankung (je Tag etwa 4,5 %, seltene Items mehr, häufige weniger), Auf- und Abwärtstrends über einige Stunden, ruhige und hektische Phasen, Marktstimmung und Bereiche (alle Werte bzw. Blöcke, Essen, Redstone, Deko laufen zum Teil gemeinsam), seltene Kurssprünge durch Nachrichten (ein Wert oder der ganze Markt, z. B. „Großauftrag eingegangen“, „Börsenbeben“), schwacher Zug zurück zum Grundpreis (Grenzen 35 % bis 300 %). Ein Schritt alle 10 s. Nachrichten unter dem Chart im Reiter Markt; ab 5 % Meldung im Chat an Spieler mit Position. Neue Werte bekommen 60 Tage simulierten Verlauf; bestehende Verläufe werden einmal neu simuliert und enden beim heutigen Kurs (kein Sprung). Schutz: der Shop-Preis fällt nie so tief, dass Kaufen im Shop und Verkaufen an den Server (mit höchstem Verkaufs-Bonus und Wochen-Meta) Gewinn bringt. `trading.yml` wird im Hintergrund gespeichert (vorher jede Minute im Hauptthread). Alle Werte unter `trading.kurs`
     - [x] Shop und Markt mit eigenen Startseiten (Dialog, Item-Listen bleiben Truhen): Shop in Smaragd mit Kategorie-Karten und eigenen Bildern (Blöcke, Essen, Redstone, Dekoration, Wochenende, Daily Shop) und Verkaufen, Suche, Abholbox, Börse; Markt in Holz/Bernstein mit Angeboten, Verkaufen (Preisfeld für das Item in der Hand), meinen Angeboten, Aufträgen, neuesten Angeboten und Abholbox (`TradeScreens`)
     - [x] Icons näher am Stil der Referenz-Grafiken: fast schwarze Umrandung, kräftiges Licht oben links und Schatten unten rechts, Schatten unter überlappenden Teilen, Glanzpunkte (gilt für Menü-, Insel- und Event-Grafiken)

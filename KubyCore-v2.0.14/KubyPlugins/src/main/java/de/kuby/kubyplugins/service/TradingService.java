@@ -470,6 +470,7 @@ public final class TradingService {
             dirty = true;
         }
         notes.forEach(Runnable::run);
+        de.kuby.kubyplugins.gui.TradingScreen.refreshViewers(plugin);
     }
 
     private static final String[] UP = {"Großauftrag eingegangen", "Lieferengpass treibt den Preis", "Händler kaufen alles auf",

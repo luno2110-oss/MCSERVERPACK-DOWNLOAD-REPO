@@ -62,6 +62,36 @@ public final class TradingScreen {
 
     private static final Map<UUID, State> STATES = new HashMap<>();
 
+    /** Offene Börse je Spieler: Dialog-Zähler und Blickrichtung beim Zeigen (für die Live-Aktualisierung). */
+    private record Live(long generation, float yaw, float pitch) {}
+
+    private static final Map<UUID, Live> LIVE = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /**
+     * Nach jedem Kurs-Schritt: offene Börsen-Menüs mit den neuen Kursen neu zeigen. Nur, wenn seitdem kein anderes
+     * Fenster (Menü, Eingabe, Truhe) offen ist, der Spieler nicht „Schließen“/Esc gedrückt und sich nicht umgesehen hat
+     * (bei offenem Menü bewegt sich der Blick nicht). Der Mauszeiger bleibt dabei, wo er ist.
+     */
+    public static void refreshViewers(KubyPlugins plugin) {
+        if (LIVE.isEmpty()) return;
+        for (Map.Entry<UUID, Live> e : new ArrayList<>(LIVE.entrySet())) {
+            Player p = org.bukkit.Bukkit.getPlayer(e.getKey());
+            Live l = e.getValue();
+            if (p == null || !p.isOnline() || l.generation() != UiDialog.generation(p)) {
+                LIVE.remove(e.getKey());
+                continue;
+            }
+            org.bukkit.event.inventory.InventoryType top = p.getOpenInventory().getTopInventory().getType();
+            boolean otherWindow = top != org.bukkit.event.inventory.InventoryType.CRAFTING && top != org.bukkit.event.inventory.InventoryType.CREATIVE;
+            boolean looked = Math.abs(p.getLocation().getYaw() - l.yaw()) > 0.5f || Math.abs(p.getLocation().getPitch() - l.pitch()) > 0.5f;
+            if (otherWindow || looked) {
+                LIVE.remove(e.getKey());
+                continue;
+            }
+            new TradingScreen(plugin).open(p);
+        }
+    }
+
     public enum Tab {
         MARKT("markt", "Markt"), KURSE("kurse", "Kurse"), DEPOT("depot", "Depot"), ORDERS("orders", "Orders"), VERLAUF("verlauf", "Verlauf");
 
@@ -154,7 +184,9 @@ public final class TradingScreen {
             case "verlauf" -> list(head, Tab.VERLAUF, "Deine letzten Trades", rowsHistory(p), 0, tabs(p), null, null);
             default -> market(market(p, all, head), tabs(p));
         };
-        UiDialog.show(p, c, 330);
+        // Live: Kurse aktualisieren sich von selbst, bis der Spieler schließt oder ein anderes Fenster öffnet
+        UiDialog.showWithExit(p, c, 330, pl -> LIVE.remove(pl.getUniqueId()));
+        LIVE.put(p.getUniqueId(), new Live(UiDialog.generation(p), p.getLocation().getYaw(), p.getLocation().getPitch()));
     }
 
     private Consumer<Player> page(Player p, int d) {
@@ -552,8 +584,8 @@ public final class TradingScreen {
             if (on) c.action(bx, y, bw, KitData.SMALL_H, a.get(b[0]), (m.isShort() ? "Short schließen: " : "Verkaufen: ") + b[1]);
             bx += bw + 3;
         }
-        c.smallButton(W - 70, y, 70, KitData.Small.DARK, "↻ Neu", CYAN, false);
-        if (a.get("refresh") != null) c.action(W - 70, y, 70, KitData.SMALL_H, a.get("refresh"), "Kurse aktualisieren");
+        c.smallButton(W - 70, y, 70, KitData.Small.DARK, "↻ Live", CYAN, false);
+        if (a.get("refresh") != null) c.action(W - 70, y, 70, KitData.SMALL_H, a.get("refresh"), "Kurse aktualisieren sich von selbst (Klick: sofort)");
         y += KitData.SMALL_H + 5;
         String[][] ord = {{"limitBuy", "Limit-Kauf"}, {"stop", "Stop-Loss"}, {"tp", "Take-Profit"}, {"limitSell", "Limit-Verkauf"}};
         int ow = (W - 9) / 4;

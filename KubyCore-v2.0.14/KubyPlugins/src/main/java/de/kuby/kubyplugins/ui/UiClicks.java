@@ -28,6 +28,9 @@ public final class UiClicks implements Listener {
     public static final Key KEY = Key.key("kuby", "ui");
     private static final long LIFETIME_MS = 30 * 60 * 1000L;
     private static final Map<UUID, Session> SESSIONS = new ConcurrentHashMap<>();
+    /** Vorige Sitzung je Spieler: bleibt 3 Sekunden gültig, damit ein Klick im Moment einer Aktualisierung nicht verloren geht. */
+    private static final Map<UUID, Session> PREVIOUS = new ConcurrentHashMap<>();
+    private static final Map<UUID, Long> PREVIOUS_UNTIL = new ConcurrentHashMap<>();
     private static final AtomicLong COUNTER = new AtomicLong();
     private static Plugin plugin;
 
@@ -53,7 +56,11 @@ public final class UiClicks implements Listener {
     /** Neues Menü für den Spieler: die Klicks des vorigen gelten nicht mehr. */
     public static Session newSession(Player player) {
         Session s = new Session();
-        SESSIONS.put(player.getUniqueId(), s);
+        Session old = SESSIONS.put(player.getUniqueId(), s);
+        if (old != null) {
+            PREVIOUS.put(player.getUniqueId(), old);
+            PREVIOUS_UNTIL.put(player.getUniqueId(), System.currentTimeMillis() + 3000);
+        }
         return s;
     }
 
@@ -75,16 +82,24 @@ public final class UiClicks implements Listener {
         Session s = SESSIONS.get(player.getUniqueId());
         if (s == null || System.currentTimeMillis() - s.created > LIFETIME_MS) return;
         Consumer<Player> action = s.actions.get(token);
-        if (action == null) return;
+        if (action == null) {
+            // Klick auf das Menü kurz vor einer Aktualisierung (z. B. Börse): noch gültig
+            Session prev = PREVIOUS.get(player.getUniqueId());
+            Long until = PREVIOUS_UNTIL.get(player.getUniqueId());
+            if (prev == null || until == null || System.currentTimeMillis() > until) return;
+            action = prev.actions.get(token);
+            if (action == null) return;
+        }
         long now = System.currentTimeMillis();
         synchronized (s) {
             if (now - s.lastClick < 150) return;
             s.lastClick = now;
         }
+        Consumer<Player> act = action;
         if (Bukkit.isPrimaryThread()) {
-            run(player, action);
+            run(player, act);
         } else {
-            Bukkit.getScheduler().runTask(plugin, () -> run(player, action));
+            Bukkit.getScheduler().runTask(plugin, () -> run(player, act));
         }
     }
 
@@ -108,6 +123,10 @@ public final class UiClicks implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-        SESSIONS.remove(event.getPlayer().getUniqueId());
+        UUID id = event.getPlayer().getUniqueId();
+        SESSIONS.remove(id);
+        PREVIOUS.remove(id);
+        PREVIOUS_UNTIL.remove(id);
+        UiDialog.forget(id);
     }
 }
