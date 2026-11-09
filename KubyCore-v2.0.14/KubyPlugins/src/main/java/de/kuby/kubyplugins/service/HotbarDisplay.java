@@ -48,6 +48,8 @@ public final class HotbarDisplay {
         for (Player p : plugin.getServer().getOnlinePlayers()) {
             UUID id = p.getUniqueId();
             if (plugin.trades().inTrade(id)) continue;
+            // in einer Cutscene gehört die Leiste der Kino-Engine (Kino-Balken)
+            if (de.kuby.kubyplugins.cinema.Cinema.busy(id)) continue;
             Flash f = flashes.get(id);
             if (f != null) {
                 if (f.until() > ticks) {

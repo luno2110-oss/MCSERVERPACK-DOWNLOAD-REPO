@@ -1,0 +1,12 @@
+{
+ "model": {
+  "type": "minecraft:model",
+  "model": "kuby:fx/cloud_1",
+  "tints": [
+   {
+    "type": "minecraft:dye",
+    "default": 16777215
+   }
+  ]
+ }
+}

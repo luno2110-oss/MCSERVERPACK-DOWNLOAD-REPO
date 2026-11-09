@@ -1386,6 +1386,16 @@ graves:
 # Möbel (KubySurvival): Kauf im Juwelenshop (Kategorie Möbel, Preis nach Größe), höchstens so viele je Spieler.
 furniture:
   max: 50
+# Eigene Waffen. Das Heilige Schwert steckt in einem Stein (/schwert setzen, auf den Boden schauen).
+# Wer näher als "radius" Blöcke kommt und es noch nicht hat, sieht die Cutscene "Das Schwert im Stein" und bekommt es.
+waffen:
+  schwert-im-stein:
+    aktiv: false
+    radius: 7
+  heiliges-schwert:
+    # Sternenschlag (Rechtsklick): Abklingzeit in Sekunden und Schaden im Umkreis von 3,5 Blöcken
+    abklingzeit: 40
+    sternenschlag-schaden: 12
 # Freunde (/friends): Plätze in der Liste, mit Rang mehr (Permission kuby.rank.<name> oder LuckPerms group.<name>).
 # Nachspringen (/friend jump) mit der Teleport-Wartezeit der Homes, danach jump-cooldown-seconds Pause.
 friends:

@@ -134,7 +134,8 @@ public final class ScoreboardService {
         if (sb == null) return;
         // Spieler-Einstellung "scoreboard": Sidebar aus- und wieder einblenden.
         Objective side = sb.getObjective(OBJ);
-        boolean wanted = plugin.playerSettings() == null || plugin.playerSettings().get(id, "scoreboard");
+        boolean wanted = (plugin.playerSettings() == null || plugin.playerSettings().get(id, "scoreboard"))
+                && !de.kuby.kubyplugins.cinema.Cinema.busy(id);
         if (side != null) {
             if (!wanted) {
                 if (side.getDisplaySlot() != null) side.setDisplaySlot(null);

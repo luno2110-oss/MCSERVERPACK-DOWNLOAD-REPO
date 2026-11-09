@@ -311,6 +311,13 @@ public final class KubyPlugins extends JavaPlugin {
         supportMenus = new de.kuby.kubyplugins.support.SupportMenus(this, support);
         setAll(supportMenus, "support", "discord");
         getServer().getPluginManager().registerEvents(supportMenus, this);
+        cinema = new de.kuby.kubyplugins.cinema.Cinema(this);
+        weapons = new de.kuby.kubyplugins.weapon.WeaponService(this);
+        setAll(weapons, "schwert", "kino");
+        for (String c : new String[]{"schwert", "kino"}) {
+            PluginCommand pc = getCommand(c);
+            if (pc != null) pc.setTabCompleter(weapons);
+        }
         staff = new de.kuby.kubyplugins.staff.StaffService(this);
         staffMenus = new de.kuby.kubyplugins.staff.StaffMenus(this, staff);
         setAll(staffMenus, "teambereich", "sc");
@@ -494,6 +501,7 @@ public final class KubyPlugins extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (cinema != null) cinema.shutdown();
         if (displaySettings != null) displaySettings.shutdown();
         blackjack.shutdown();
         roulette.shutdown();
@@ -862,6 +870,12 @@ public final class KubyPlugins extends JavaPlugin {
     public de.kuby.kubyplugins.support.SupportService support() { return support; }
     private de.kuby.kubyplugins.support.SupportMenus supportMenus;
     public de.kuby.kubyplugins.support.SupportMenus supportMenus() { return supportMenus; }
+    private de.kuby.kubyplugins.cinema.Cinema cinema;
+    private de.kuby.kubyplugins.weapon.WeaponService weapons;
+    /** Eigene Waffen (Heiliges Schwert, Schwert im Stein). */
+    public de.kuby.kubyplugins.weapon.WeaponService weapons() { return weapons; }
+    /** Kino-Engine für Cutscenes (Kamerafahrten nur für einen Spieler). */
+    public de.kuby.kubyplugins.cinema.Cinema cinema() { return cinema; }
     private de.kuby.kubyplugins.staff.StaffService staff;
     /** Team-Bereich (Kanäle, Meldungen, Verwarnungen); null, solange das Plugin startet. */
     public de.kuby.kubyplugins.staff.StaffService staff() { return staff; }

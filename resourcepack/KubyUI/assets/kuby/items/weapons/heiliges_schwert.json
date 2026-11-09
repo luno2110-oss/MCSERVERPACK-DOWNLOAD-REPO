@@ -1,0 +1,23 @@
+{
+ "model": {
+  "type": "minecraft:select",
+  "property": "minecraft:display_context",
+  "cases": [
+   {
+    "when": [
+     "gui",
+     "fixed",
+     "ground"
+    ],
+    "model": {
+     "type": "minecraft:model",
+     "model": "kuby:item/weapons/heiliges_schwert_icon"
+    }
+   }
+  ],
+  "fallback": {
+   "type": "minecraft:model",
+   "model": "kuby:cine/sword_held"
+  }
+ }
+}

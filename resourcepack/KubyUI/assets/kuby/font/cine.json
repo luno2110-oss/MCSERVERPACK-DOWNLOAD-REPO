@@ -1,0 +1,163 @@
+{
+ "providers": [
+  {
+   "type": "space",
+   "advances": {
+    " ": 4
+   }
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:cine/bar.png",
+   "height": 256,
+   "ascent": 255,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:cine/bar.png",
+   "height": 256,
+   "ascent": -54,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:cine/bar.png",
+   "height": 256,
+   "ascent": 244,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:cine/bar.png",
+   "height": 256,
+   "ascent": -43,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:cine/bar.png",
+   "height": 256,
+   "ascent": 233,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:cine/bar.png",
+   "height": 256,
+   "ascent": -32,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:cine/bar.png",
+   "height": 256,
+   "ascent": 222,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:cine/bar.png",
+   "height": 256,
+   "ascent": -21,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:cine/flash.png",
+   "height": 300,
+   "ascent": 150,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:cine/grade_red.png",
+   "height": 700,
+   "ascent": 560,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:cine/grade_warm.png",
+   "height": 700,
+   "ascent": 560,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:cine/grade_space.png",
+   "height": 700,
+   "ascent": 560,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:cine/grade_dark.png",
+   "height": 700,
+   "ascent": 560,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:cine/grade_gold.png",
+   "height": 700,
+   "ascent": 560,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:cine/grade_white.png",
+   "height": 700,
+   "ascent": 560,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:cine/grade_cold.png",
+   "height": 700,
+   "ascent": 560,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:cine/grade_purple.png",
+   "height": 700,
+   "ascent": 560,
+   "chars": [
+    ""
+   ]
+  }
+ ]
+}

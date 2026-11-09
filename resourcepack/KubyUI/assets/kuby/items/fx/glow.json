@@ -1,0 +1,12 @@
+{
+ "model": {
+  "type": "minecraft:model",
+  "model": "kuby:fx/glow",
+  "tints": [
+   {
+    "type": "minecraft:dye",
+    "default": 16777215
+   }
+  ]
+ }
+}

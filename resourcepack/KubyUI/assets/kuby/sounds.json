@@ -1,0 +1,146 @@
+{
+ "cine.impact": {
+  "sounds": [
+   {
+    "name": "kuby:cine/impact",
+    "stream": false
+   }
+  ]
+ },
+ "cine.impact_small": {
+  "sounds": [
+   {
+    "name": "kuby:cine/impact_small",
+    "stream": false
+   }
+  ]
+ },
+ "cine.rumble": {
+  "sounds": [
+   {
+    "name": "kuby:cine/rumble",
+    "stream": true
+   }
+  ]
+ },
+ "cine.wind": {
+  "sounds": [
+   {
+    "name": "kuby:cine/wind",
+    "stream": true
+   }
+  ]
+ },
+ "cine.drone": {
+  "sounds": [
+   {
+    "name": "kuby:cine/drone",
+    "stream": true
+   }
+  ]
+ },
+ "cine.step": {
+  "sounds": [
+   {
+    "name": "kuby:cine/step",
+    "stream": false
+   }
+  ]
+ },
+ "cine.heartbeat": {
+  "sounds": [
+   {
+    "name": "kuby:cine/heartbeat",
+    "stream": false
+   }
+  ]
+ },
+ "cine.grip": {
+  "sounds": [
+   {
+    "name": "kuby:cine/grip",
+    "stream": false
+   }
+  ]
+ },
+ "cine.tinnitus": {
+  "sounds": [
+   {
+    "name": "kuby:cine/tinnitus",
+    "stream": false
+   }
+  ]
+ },
+ "cine.whoosh": {
+  "sounds": [
+   {
+    "name": "kuby:cine/whoosh",
+    "stream": false
+   }
+  ]
+ },
+ "cine.grind": {
+  "sounds": [
+   {
+    "name": "kuby:cine/grind",
+    "stream": false
+   }
+  ]
+ },
+ "cine.shing": {
+  "sounds": [
+   {
+    "name": "kuby:cine/shing",
+    "stream": false
+   }
+  ]
+ },
+ "cine.ascend": {
+  "sounds": [
+   {
+    "name": "kuby:cine/ascend",
+    "stream": false
+   }
+  ]
+ },
+ "cine.charge": {
+  "sounds": [
+   {
+    "name": "kuby:cine/charge",
+    "stream": false
+   }
+  ]
+ },
+ "cine.beam": {
+  "sounds": [
+   {
+    "name": "kuby:cine/beam",
+    "stream": false
+   }
+  ]
+ },
+ "cine.choir": {
+  "sounds": [
+   {
+    "name": "kuby:cine/choir",
+    "stream": true
+   }
+  ]
+ },
+ "cine.resolve": {
+  "sounds": [
+   {
+    "name": "kuby:cine/resolve",
+    "stream": true
+   }
+  ]
+ },
+ "cine.stinger": {
+  "sounds": [
+   {
+    "name": "kuby:cine/stinger",
+    "stream": false
+   }
+  ]
+ }
+}

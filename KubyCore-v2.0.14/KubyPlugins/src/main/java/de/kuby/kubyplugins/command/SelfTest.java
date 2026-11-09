@@ -474,6 +474,16 @@ final class SelfTest {
                     new de.kuby.kubyplugins.gui.ExtraScreens.Quiz("W".repeat(30), 99_999, qc)));
         }
 
+        // Cutscene „Das Schwert im Stein“: jedes Bild berechnen, Kamera und Teile müssen endliche Werte haben
+        try {
+            String err = cutsceneCheck(new de.kuby.kubyplugins.cinema.scenes.SwordInStone(new de.kuby.kubyplugins.cinema.V3(0.5, 64, 0.5),
+                    new de.kuby.kubyplugins.cinema.V3(0.4, 0, -1), 11, 42L, 30f));
+            if (err != null) fails.add("Cutscene Schwert: " + err);
+            else ok[0]++;
+        } catch (Throwable t) {
+            fails.add("Cutscene Schwert: " + t);
+        }
+
         // Prüfungen aus den Addons (z. B. Survival-Juwelenshop, Möbel- und Pet-Katalog)
         for (java.util.Map.Entry<String, Supplier<Canvas>> en : plugin.selfTestCanvases().entrySet()) {
             canvas.accept(en.getKey(), en.getValue());
@@ -491,5 +501,28 @@ final class SelfTest {
         out.sendMessage("SELFTEST " + ok[0] + " Dialoge gebaut, " + fails.size() + " Fehler");
         for (String f : fails) out.sendMessage("SELFTEST FEHLER " + f);
         plugin.getLogger().info("SELFTEST " + (fails.isEmpty() ? "OK" : "FEHLER (" + fails.size() + ")"));
+    }
+
+    private static boolean bad(double v) {
+        return Double.isNaN(v) || Double.isInfinite(v);
+    }
+
+    /** Spielt ein Drehbuch rechnerisch ab; null = in Ordnung, sonst der erste Fehler. */
+    static String cutsceneCheck(de.kuby.kubyplugins.cinema.Script s) {
+        java.util.Set<String> keys = new java.util.HashSet<>();
+        for (int t = 0; t < s.length(); t++) {
+            de.kuby.kubyplugins.cinema.Frame f = new de.kuby.kubyplugins.cinema.Frame();
+            s.frame(t, f);
+            if (bad(f.cam.x()) || bad(f.cam.y()) || bad(f.cam.z()) || bad(f.camYaw) || bad(f.camPitch)) return "Kamera ungültig bei Tick " + t;
+            if (f.actor != null && (bad(f.actor.x()) || bad(f.actor.y()) || bad(f.headYaw))) return "Figur ungültig bei Tick " + t;
+            keys.clear();
+            for (de.kuby.kubyplugins.cinema.Prop p : f.props) {
+                if (!keys.add(p.id())) return "Teil doppelt: " + p.id() + " bei Tick " + t;
+                if (bad(p.pos().x()) || bad(p.pos().y()) || bad(p.scale().x()) || bad(p.scale().y()) || bad(p.rot()[3])) {
+                    return "Teil " + p.id() + " ungültig bei Tick " + t;
+                }
+            }
+        }
+        return null;
     }
 }

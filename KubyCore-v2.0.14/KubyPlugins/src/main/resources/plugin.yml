@@ -138,6 +138,13 @@ commands:
     description: "Admin-Panel öffnen (mit Grafik-Pack als Dialog, /kadmin truhe für die Truhe)"
     permission: kuby.admin
     usage: "/kadmin [truhe]"
+  schwert:
+    description: "Heiliges Schwert: Infos, Szene ansehen; Admin: setzen, entfernen, testen, geben, zuruecksetzen"
+    usage: "/schwert [ansehen|setzen|entfernen|testen|geben|zuruecksetzen]"
+  kino:
+    description: "Laufende Cutscene beenden (Admin)"
+    permission: kuby.admin
+    usage: "/kino stop"
   teambereich:
     description: "Team-Bereich: Kanäle, Meldungen, Tickets, Spieler-Akten, Kadmin"
     usage: "/tb [kanal|meldungen|tickets|spieler|kadmin]"

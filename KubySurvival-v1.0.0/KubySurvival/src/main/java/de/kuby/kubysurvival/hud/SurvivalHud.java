@@ -87,6 +87,7 @@ public final class SurvivalHud implements Listener {
     /** Leiste nur in Survival und nur mit geladenem Pack (sonst bleibt die Anzeige über der Hotbar). */
     private boolean wants(Player p) {
         UUID id = p.getUniqueId();
+        if (de.kuby.kubyplugins.cinema.Cinema.busy(id)) return false;
         if (!core.getConfig().getBoolean("survival-hud.enabled", true) || !core.infoBar().on(id) || !survival(p)
                 || !core.uiPack().active(p)) return false;
         for (Element e : Element.values()) if (!e.row() && core.infoBar().visible(id, e)) return true;

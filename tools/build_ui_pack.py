@@ -68,6 +68,11 @@ build_event_items.build(OUT)
 build_generator_art.write_models(OUT)
 # Cookie Clicker: großer Keks, Glückskeks und Kekse aus dem Keksregen
 build_cookie_art.write_models(OUT)
+# Kino-Engine und Heiliges Schwert: Schwert, Stein, Effekte, Kino-Schrift (Sounds: tools/build_cine_sounds.py, braucht ffmpeg)
+import build_cinema  # noqa: E402
+build_cinema.OUT = OUT
+build_cinema.A = os.path.join(OUT, "assets/kuby")
+build_cinema.main()
 
 VANILLA = os.environ.get("KUBY_VANILLA")
 if VANILLA and os.path.isdir(VANILLA):
