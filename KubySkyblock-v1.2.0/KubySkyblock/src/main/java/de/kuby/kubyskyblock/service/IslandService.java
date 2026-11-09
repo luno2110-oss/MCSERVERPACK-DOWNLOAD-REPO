@@ -831,8 +831,8 @@ public final class IslandService {
         int next = level(i, u) + 1;
         if (next > maxLevel(u)) return -1;
         if (UpgradeLevels.jewelLevel(next)) {
-            return UpgradeLevels.jewels(next, addon.getConfig().getDouble("insel.juwelen-stufe.basis", 10),
-                    addon.getConfig().getDouble("insel.juwelen-stufe.faktor", 1.1));
+            return UpgradeLevels.jewels(next, addon.getConfig().getDouble("insel.juwelen-stufe.basis", 4),
+                    addon.getConfig().getDouble("insel.juwelen-stufe.faktor", 1.05));
         }
         if (u == Upgrade.GENERATOR) return generatorLevels().get(next).cost();
         List<Long> l = prices(u);

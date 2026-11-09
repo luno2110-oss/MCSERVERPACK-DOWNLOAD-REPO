@@ -94,6 +94,11 @@ public final class GeneratorService {
         UUID display;
         /** Zuletzt gesendeter Schild-Text (nur bei Änderung neu senden). */
         String shown;
+        /** Anzeigen im Block: Käfig in der Farbe der Qualität und das drehende Symbol (nicht gespeichert, beim Laden
+         *  des Chunks neu). cageQuality: Qualität, mit der der Käfig gezeigt wird. */
+        UUID cage, coreDisplay;
+        Quality cageQuality;
+        float spin;
         /** Spawner-Käfig schon eingerichtet (seit dem Start)? */
         boolean dressed;
 
@@ -141,6 +146,11 @@ public final class GeneratorService {
         load();
         long period = Math.max(2, addon.getConfig().getLong("generatoren.tick-sekunden", 10)) * 20L;
         Bukkit.getScheduler().runTaskTimer(addon, this::tick, period, period);
+        // Symbole drehen (weich über 3 Sekunden je Schritt) und beim Start alle schon geladenen Generatoren einrichten
+        Bukkit.getScheduler().runTaskTimer(addon, this::spin, SPIN_TICKS, SPIN_TICKS);
+        Bukkit.getScheduler().runTaskLater(addon, () -> {
+            for (Gen g : new ArrayList<>(byPos.values())) dress(g);
+        }, 40L);
         Bukkit.getScheduler().runTaskTimer(addon, () -> {
             if (dirty) save();
         }, 1200L, 1200L);
@@ -357,7 +367,7 @@ public final class GeneratorService {
         List<net.kyori.adventure.text.Component> lore = new ArrayList<>();
         lore.add(Msg.item("<gray>Auf deine Insel stellen: produziert von selbst."));
         if (q != Quality.NORMAL) lore.add(Msg.item("<" + q.color + ">Premium: x" + fmt(q.output) + " Ertrag, Upgrades -" + Math.round((1 - q.upgrade) * 100) + " %"));
-        lore.add(Msg.item("<dark_gray>Rechtsklick auf den Generator öffnet ihn."));
+        lore.add(Msg.item("<dark_gray>Rechtsklick öffnet ihn, Schleichen + Linksklick baut ab."));
         m.lore(lore);
         if (q != Quality.NORMAL) m.setEnchantmentGlintOverride(true);
         PersistentDataContainer pdc = m.getPersistentDataContainer();
@@ -403,6 +413,7 @@ public final class GeneratorService {
         g.last = System.currentTimeMillis();
         counts = null;
         byPos.put(g.key(), g);
+        index(g, true);
         dirty = true;
         // Käfig einrichten, wenn der Block sicher steht (nach dem Platzieren)
         Bukkit.getScheduler().runTask(addon, () -> dress(g));
@@ -416,7 +427,11 @@ public final class GeneratorService {
         collect(p, g);
         counts = null;
         byPos.remove(g.key());
+        index(g, false);
         removeHologram(g);
+        removeVisuals(g);
+        World gw = Bukkit.getWorld(g.world);
+        if (gw != null && gw.getBlockAt(g.x, g.y, g.z).getType() == Material.BARRIER) gw.getBlockAt(g.x, g.y, g.z).setType(Material.AIR);
         Type t = types.get(g.type);
         if (t != null) p.getInventory().addItem(item(t, g.quality, g.level)).values().forEach(r -> core.abholbox().add(p.getUniqueId(), r));
         dirty = true;
@@ -622,6 +637,7 @@ public final class GeneratorService {
         g.quality = next;
         dirty = true;
         hologram(g, false);
+        visuals(g);
         core.questProgress(p, "gen_veredeln", g.type, 1);
         Sfx.play(core, p, Sfx.Kind.SUCCESS_BIG);
         return null;
@@ -632,32 +648,143 @@ public final class GeneratorService {
     // =================================================================================================================
 
     /**
-     * Im Spiel steht jeder Generator als Spawner-Käfig; innen dreht sich das Symbol der Art (mit Pack das eigene Bild
-     * kuby:generator_core/<art>, ohne Pack Papier). Er spawnt nie etwas: höchstens 0 Wesen in der Nähe, dazu fängt der
-     * GeneratorListener jedes Spawnen ab. Alte Generatoren (andere Blöcke) werden beim Laden umgestellt.
+     * Im Spiel ist jeder Generator ein unsichtbarer Barriere-Block (fest, nicht verschiebbar, explosionssicher). Darin
+     * zeigt eine Anzeige den Käfig wie im Icon in der Farbe der Qualität (kuby:generator_cage/<qualität>), in der Mitte
+     * dreht sich das leuchtende Symbol der Art (kuby:generator_core/<art>). Beim Veredeln wechselt der Käfig die Farbe.
+     * Alte Generatoren (Spawner oder andere Blöcke) werden beim Laden umgestellt.
      */
     public void dress(Gen g) {
         World w = Bukkit.getWorld(g.world);
         if (w == null || !w.isChunkLoaded(g.x >> 4, g.z >> 4) || byPos.get(g.key()) != g) return;
         org.bukkit.block.Block b = w.getBlockAt(g.x, g.y, g.z);
-        if (b.getType() != Material.SPAWNER) b.setType(Material.SPAWNER, false);
+        if (b.getType() != Material.BARRIER) b.setType(Material.BARRIER, false);
         g.dressed = true;
-        if (!(b.getState() instanceof org.bukkit.block.CreatureSpawner cs)) return;
-        try {
-            ItemStack core = new ItemStack(Material.PAPER);
-            ItemMeta cm = core.getItemMeta();
-            cm.setItemModel(NamespacedKey.fromString("kuby:generator_core/" + g.type));
-            core.setItemMeta(cm);
-            cs.setSpawnedItem(core);
-            cs.setMaxNearbyEntities(0);
-            cs.setRequiredPlayerRange(24);
-            cs.setMaxSpawnDelay(400);
-            cs.setMinSpawnDelay(200);
-            cs.setDelay(300);
-            cs.update(true, false);
-        } catch (RuntimeException ex) {
-            addon.getLogger().warning("Generator-Käfig " + g.key() + ": " + ex.getMessage());
+        visuals(g);
+    }
+
+    static final long SPIN_TICKS = 60L;
+
+    private static ItemStack modelItem(String model) {
+        ItemStack it = new ItemStack(Material.PAPER);
+        ItemMeta m = it.getItemMeta();
+        m.setItemModel(NamespacedKey.fromString(model));
+        it.setItemMeta(m);
+        return it;
+    }
+
+    private static String cageModel(Quality q) {
+        return "kuby:generator_cage/" + (q == Quality.NORMAL ? "normal" : q.name().toLowerCase(Locale.ROOT));
+    }
+
+    /** Käfig und Symbol im Block anzeigen (fehlende neu, Käfig bei neuer Qualität umfärben). */
+    public void visuals(Gen g) {
+        World w = Bukkit.getWorld(g.world);
+        if (w == null || !w.isChunkLoaded(g.x >> 4, g.z >> 4) || byPos.get(g.key()) != g) return;
+        Location c = new Location(w, g.x + 0.5, g.y + 0.5, g.z + 0.5);
+        Entity ce = g.cage == null ? null : Bukkit.getEntity(g.cage);
+        if (ce instanceof org.bukkit.entity.ItemDisplay cd && cd.isValid()) {
+            if (g.cageQuality != g.quality) {
+                cd.setItemStack(modelItem(cageModel(g.quality)));
+                g.cageQuality = g.quality;
+            }
+        } else {
+            Quality q = g.quality;
+            org.bukkit.entity.ItemDisplay cd = w.spawn(c, org.bukkit.entity.ItemDisplay.class, d -> {
+                d.setPersistent(false);
+                d.setItemStack(modelItem(cageModel(q)));
+                d.setItemDisplayTransform(org.bukkit.entity.ItemDisplay.ItemDisplayTransform.NONE);
+                // knapp kleiner als der Block: kein Flimmern mit den Flächen der Nachbarblöcke
+                d.setTransformation(new org.bukkit.util.Transformation(new org.joml.Vector3f(), new org.joml.AxisAngle4f(),
+                        new org.joml.Vector3f(0.998f), new org.joml.AxisAngle4f()));
+                d.setShadowRadius(0);
+            });
+            g.cage = cd.getUniqueId();
+            g.cageQuality = q;
         }
+        Entity co = g.coreDisplay == null ? null : Bukkit.getEntity(g.coreDisplay);
+        if (!(co instanceof org.bukkit.entity.ItemDisplay od && od.isValid())) {
+            float a = g.spin;
+            org.bukkit.entity.ItemDisplay od2 = w.spawn(c, org.bukkit.entity.ItemDisplay.class, d -> {
+                d.setPersistent(false);
+                d.setItemStack(modelItem("kuby:generator_core/" + g.type));
+                d.setItemDisplayTransform(org.bukkit.entity.ItemDisplay.ItemDisplayTransform.NONE);
+                d.setTransformation(coreTransform(a));
+                d.setBrightness(new Display.Brightness(15, 15));
+                d.setShadowRadius(0);
+            });
+            g.coreDisplay = od2.getUniqueId();
+        }
+    }
+
+    private static org.bukkit.util.Transformation coreTransform(float angle) {
+        return new org.bukkit.util.Transformation(new org.joml.Vector3f(), new org.joml.AxisAngle4f(angle, 0, 1, 0),
+                new org.joml.Vector3f(0.7f), new org.joml.AxisAngle4f());
+    }
+
+    /** Symbole in der Nähe von Spielern ein Stück weiterdrehen (der Client dreht weich über SPIN_TICKS). */
+    private void spin() {
+        Map<String, List<Location>> players = new HashMap<>();
+        for (Player p : Bukkit.getOnlinePlayers()) players.computeIfAbsent(p.getWorld().getName(), k -> new ArrayList<>()).add(p.getLocation());
+        for (Gen g : byPos.values()) {
+            if (g.coreDisplay == null) continue;
+            List<Location> near = players.get(g.world);
+            if (near == null) continue;
+            boolean close = false;
+            for (Location l : near) {
+                double dx = l.getX() - g.x, dy = l.getY() - g.y, dz = l.getZ() - g.z;
+                if (dx * dx + dy * dy + dz * dz < 48 * 48) {
+                    close = true;
+                    break;
+                }
+            }
+            if (!close) continue;
+            if (!(Bukkit.getEntity(g.coreDisplay) instanceof org.bukkit.entity.ItemDisplay d) || !d.isValid()) continue;
+            g.spin = (float) ((g.spin + Math.PI * 2 / 3) % (Math.PI * 2));
+            d.setInterpolationDelay(0);
+            d.setInterpolationDuration((int) SPIN_TICKS);
+            d.setTransformation(coreTransform(g.spin));
+        }
+    }
+
+    private void removeVisuals(Gen g) {
+        for (UUID id : new UUID[]{g.cage, g.coreDisplay}) {
+            Entity e = id == null ? null : Bukkit.getEntity(id);
+            if (e != null) e.remove();
+        }
+        g.cage = null;
+        g.coreDisplay = null;
+        g.cageQuality = null;
+    }
+
+    // ---------- Generatoren je Chunk (zum Einrichten, wenn ein Chunk lädt) ----------
+
+    private final Map<String, List<Gen>> byChunk = new HashMap<>();
+
+    private static String chunkKey(String world, int cx, int cz) {
+        return world + ";" + cx + ";" + cz;
+    }
+
+    private void index(Gen g, boolean add) {
+        String k = chunkKey(g.world, g.x >> 4, g.z >> 4);
+        if (add) {
+            byChunk.computeIfAbsent(k, x -> new ArrayList<>()).add(g);
+        } else {
+            List<Gen> l = byChunk.get(k);
+            if (l != null) {
+                l.remove(g);
+                if (l.isEmpty()) byChunk.remove(k);
+            }
+        }
+    }
+
+    /** Ein Chunk ist geladen: seine Generatoren im nächsten Tick einrichten (Anzeigen sind nicht gespeichert). */
+    public void chunkLoaded(org.bukkit.Chunk ch) {
+        List<Gen> l = byChunk.get(chunkKey(ch.getWorld().getName(), ch.getX(), ch.getZ()));
+        if (l == null || l.isEmpty()) return;
+        List<Gen> copy = new ArrayList<>(l);
+        Bukkit.getScheduler().runTask(addon, () -> {
+            for (Gen g : copy) dress(g);
+        });
     }
 
     private void hologram(Gen g, boolean force) {
@@ -669,6 +796,7 @@ public final class GeneratorService {
         World w = Bukkit.getWorld(g.world);
         if (w == null || !w.isChunkLoaded(g.x >> 4, g.z >> 4)) return;
         if (!g.dressed) dress(g);
+        else visuals(g);
         Location l = new Location(w, g.x + 0.5, g.y + 1.35, g.z + 0.5);
         boolean near = false;
         if (!force) {
@@ -728,7 +856,10 @@ public final class GeneratorService {
     }
 
     public void removeHolograms() {
-        for (Gen g : byPos.values()) removeHologram(g);
+        for (Gen g : byPos.values()) {
+            removeHologram(g);
+            removeVisuals(g);
+        }
     }
 
     public static String fmt(double v) {
@@ -763,6 +894,7 @@ public final class GeneratorService {
                     }
                     counts = null;
                     byPos.put(g.key(), g);
+                    index(g, true);
                 } catch (RuntimeException ex) {
                     addon.getLogger().warning("generators.yml: Generator " + k + " übersprungen (" + ex.getMessage() + ")");
                 }

@@ -148,8 +148,9 @@ public final class GeneratorScreen {
                 }),
                 run(pl -> IslandScreen.confirm(pl, "Generator abbauen", "Der Generator kommt mit Stufe und Qualität in dein Inventar, das Lager wird ausgezahlt.",
                         "Abbauen", q -> {
-                            var bl = q.getWorld().getBlockAt(g.x, g.y, g.z);
-                            if (s.at(bl) == g) {
+                            var gw = org.bukkit.Bukkit.getWorld(g.world);
+                            var bl = gw == null ? null : gw.getBlockAt(g.x, g.y, g.z);
+                            if (bl != null && s.at(bl) == g) {
                                 bl.setType(Material.AIR);
                                 s.remove(q, g);
                             }

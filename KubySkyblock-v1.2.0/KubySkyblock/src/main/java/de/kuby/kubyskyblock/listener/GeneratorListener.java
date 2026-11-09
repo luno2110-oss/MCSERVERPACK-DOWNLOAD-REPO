@@ -51,9 +51,40 @@ public final class GeneratorListener implements Listener {
         Msg.send(p, "<#9AD8FF>Generator aufgestellt. <gray>Rechtsklick öffnet ihn.");
     }
 
+    /** Anzeigen (Käfig, Symbol) werden nicht gespeichert: beim Laden des Chunks neu einrichten. */
+    @EventHandler
+    public void onChunk(org.bukkit.event.world.ChunkLoadEvent e) {
+        gens().chunkLoaded(e.getChunk());
+    }
+
+    private final java.util.Map<java.util.UUID, Long> lastHint = new java.util.HashMap<>();
+
     @EventHandler(priority = EventPriority.HIGH)
     public void onInteract(PlayerInteractEvent e) {
-        if (e.getHand() != EquipmentSlot.HAND || e.getAction() != Action.RIGHT_CLICK_BLOCK || e.getClickedBlock() == null) return;
+        if (e.getHand() != EquipmentSlot.HAND || e.getClickedBlock() == null) return;
+        if (e.getAction() == Action.LEFT_CLICK_BLOCK) {
+            // Der Block ist eine Barriere (in Survival nicht abbaubar): Schleichen + Linksklick baut ab
+            GeneratorService.Gen g = gens().at(e.getClickedBlock());
+            if (g == null) return;
+            e.setCancelled(true);
+            Player p = e.getPlayer();
+            var isl = addon.islands().bySlot(g.island);
+            if (isl == null || !isl.isMember(p.getUniqueId()) && !p.hasPermission("kuby.admin")) return;
+            if (!p.isSneaking()) {
+                long now = System.currentTimeMillis();
+                Long last = lastHint.get(p.getUniqueId());
+                if (last == null || now - last > 3000) {
+                    lastHint.put(p.getUniqueId(), now);
+                    p.sendActionBar(Msg.parse("<gray>Abbauen: <white>Schleichen + Linksklick</white> oder im Generator-Dialog"));
+                }
+                return;
+            }
+            gens().remove(p, g);
+            Sfx.play(addon.core(), p, Sfx.Kind.SUCCESS);
+            Msg.send(p, "<gray>Generator abgebaut, er liegt mit seiner Stufe in deinem Inventar.");
+            return;
+        }
+        if (e.getAction() != Action.RIGHT_CLICK_BLOCK) return;
         GeneratorService.Gen g = gens().at(e.getClickedBlock());
         if (g == null) return;
         e.setCancelled(true);

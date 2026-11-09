@@ -433,6 +433,20 @@ def write_models(out):
         os.makedirs(d, exist_ok=True)
     for q in QUALITIES:
         cage_texture(q).save(os.path.join(tdir, "cage_%s.png" % q))
+    # Nur der Käfig (für den Generator-Block in der Welt: Anzeige um einen unsichtbaren Block, das Symbol dreht sich
+    # als eigene Anzeige darin): kuby:generator_cage/<qualität>
+    gmdir = os.path.join(out, "assets/kuby/models/item/generator_cage")
+    gidir = os.path.join(out, "assets/kuby/items/generator_cage")
+    for d in (gmdir, gidir):
+        os.makedirs(d, exist_ok=True)
+    for q in QUALITIES:
+        model = {"parent": "minecraft:block/block",
+                 "textures": {"cage": "kuby:item/generator/cage_" + q, "particle": "kuby:item/generator/cage_" + q},
+                 "elements": [_cube("#cage"), _cube("#cage", inner=True)]}
+        with open(os.path.join(gmdir, q + ".json"), "w", encoding="utf-8") as f:
+            json.dump(model, f)
+        with open(os.path.join(gidir, q + ".json"), "w", encoding="utf-8") as f:
+            json.dump({"model": {"type": "minecraft:model", "model": "kuby:item/generator_cage/" + q}}, f)
     names = []
     for kind, fn in CORES.items():
         fn(16).render().save(os.path.join(tdir, "core_%s.png" % kind))

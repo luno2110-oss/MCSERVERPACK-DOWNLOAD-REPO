@@ -342,8 +342,8 @@ public final class OneBlockService {
         int lvl = pr.level(u);
         if (lvl >= max(u)) return -1;
         if (UpgradeLevels.jewelLevel(lvl + 1)) {
-            return UpgradeLevels.jewels(lvl + 1, addon.getConfig().getDouble("oneblock.juwelen-stufe.basis", 8),
-                    addon.getConfig().getDouble("oneblock.juwelen-stufe.faktor", 1.1));
+            return UpgradeLevels.jewels(lvl + 1, addon.getConfig().getDouble("oneblock.juwelen-stufe.basis", 3),
+                    addon.getConfig().getDouble("oneblock.juwelen-stufe.faktor", 1.05));
         }
         long base = addon.getConfig().getLong("oneblock.upgrades." + u.key() + ".basis", u.base);
         double f = addon.getConfig().getDouble("oneblock.upgrades." + u.key() + ".faktor", u.factor);

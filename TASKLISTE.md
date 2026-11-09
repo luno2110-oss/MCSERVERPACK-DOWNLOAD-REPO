@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.34** (ungetestet, nicht kompiliert)
+Stand: **v1.35** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -444,6 +444,10 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Welt-Prüfung (bei jedem Block, Wachstum, Spawn und Schritt gefragt): Name der Skyblock-Welt und der Stufen-Welten zwischengespeichert statt jedes Mal aus der config gelesen
   - Limits in den Stufen-Welten: Wesen werden je Welt gezählt (Nether- und End-Insel haben eigene Grenzen; vorher zählten Spawns dort gegen die Hauptinsel und die Wesen der Stufen-Insel wurden nie gezählt, also keine echte Grenze). Blöcke (Trichter usw.) der Stufen-Inseln werden beim Zählen mitgezählt
   - Geprüft und in Ordnung: Bewegung (nur bei Blockwechsel, schnelles Nachschlagen), Platz in der Rangliste (Zwischenspeicher 30 s), Generator-Anzahl (Zwischenspeicher), Wesen-Zählung (höchstens alle 10 s), Block-Zählung und Level-Zählung (Schnappschüsse, Zählen im Hintergrund)
+- [x] Generator-Blöcke in der Welt wie die Icons (Test im Spiel offen): der Generator ist jetzt ein unsichtbarer Barriere-Block (fest, nicht verschiebbar, explosionssicher), darin zeigt eine Anzeige den Käfig aus dem Item-Modell in der Farbe der Qualität (Normal dunkles Eisen, Silber, Gold, Diamant; neue Modelle `kuby:generator_cage/<qualität>`), in der Mitte dreht sich das leuchtende Symbol der Art (weich, alle 3 Sekunden ein Schritt, nur in der Nähe von Spielern). Beim Veredeln wechselt der Käfig sofort die Farbe. Vorher war es der Vanilla-Spawner (immer dunkel, Qualität nicht zu sehen). Die Anzeigen werden nicht gespeichert, sondern beim Laden des Chunks neu gesetzt; alte Spawner-Generatoren werden beim Laden umgestellt
+  - Abbauen: Schleichen + Linksklick (Linksklick allein zeigt den Hinweis) oder im Generator-Dialog; Admins im Kreativ-Modus auch normal
+  - Behoben: „Abbauen“ im Dialog suchte den Block in der Welt des Spielers statt in der Welt des Generators
+- [x] Juwelen-Preise der Upgrade-Stufe 4 (Level 21-50) gesenkt: Insel 4 x 1,05^(Level - 21) statt 10 x 1,1^(...) (Level 21 bis 50 zusammen 267 statt 1.645 Juwelen je Upgrade), One-Block 3 x 1,05^(...) statt 8 x 1,1^(...) (199 statt 1.317). Server mit den alten Standard-Werten werden beim Start umgestellt
 - [x] Lohen-Generator: Symbol neu als Lohenrute wie das Minecraft-Item (kräftiger, vier Farbstreifen, Kerben in gleichem Abstand, eine fehlt, glühender Kopf) mit Glut-Funken frei darüber
 - [ ] Cookie Clicker geparkt (läuft, wird später weitergebaut); Cookie-Icons nochmal neu: wirken noch zu generisch und zu spitz, nicht natürlich, viele Formen schwer zu erkennen
 - [x] Shop-Itemseite als eigene GUI statt Truhe: in Blöcke, Essen, Redstone, Deko, Wochenende, Daily Shop und in der Suche liegen die Items jetzt in Karten 4 x 2 im Stil der Juwelenshop-Referenz: Bild des Items, deutscher Name, Menge, Trend der Börse (24 h), Preis, Knopf „Kaufen“ oder „Dir fehlen …“ (Daily mit Juwelen, Wochenende und Daily „Gekauft“, vom Markt genommene Items „Aufnehmen“). Reiter für alle Bereiche, Seiten, unten Suche, Abholbox, Verkaufen, am Wochenende „Neu würfeln“. Kauf-Logik für Dialog und Truhe gemeinsam (ShopItemScreen.purchase). Ohne Pack bleibt die Truhe
@@ -487,7 +491,7 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Bestehende Server: unveränderte alte Standard-Werte in der config werden beim Start ersetzt; gespeicherte Stände werden einmal umgerechnet (gleiche Wirkung wie vorher, `upgrade-version: 2` in islands.yml und oneblock.yml). Eigene, geänderte config-Werte bleiben; dann bleiben auch die Stände im alten Format (Warnung im Log)
   - „Block-Stufe“ heißt jetzt „Block-Level“ (Summe aller One-Block-Upgrades), Guide erklärt die 3 Stufen
 - [x] Stufe 4 der Upgrades (Wunsch des Besitzers): Level 21 bis 50, nur mit Juwelen
-  - Insel: Preis in Juwelen = 10 x 1,1^(Level - 21) (`insel.juwelen-stufe`), One-Block: 8 x 1,1^(Level - 21), bezahlt der Spieler, der klickt (`oneblock.juwelen-stufe`)
+  - Insel: Preis in Juwelen = 4 x 1,05^(Level - 21) (`insel.juwelen-stufe`), One-Block: 3 x 1,05^(Level - 21), bezahlt der Spieler, der klickt (`oneblock.juwelen-stufe`; vorher 10 x 1,1 und 8 x 1,1)
   - Wirkung wächst weiter: Wachstum bis 200 % (über 100 % sicher eine Stufe mehr, Rest = Chance auf eine zweite), Spawnrate bis 140 %, Limits +5 % je Level, Mitglieder bis 52, Größe +1 Radius je Level bis zur Grenze des Insel-Abstands (bei 200 Abstand Radius 95 = Level 45, danach endet das Upgrade), Generator mit 30 weiteren Level (mehr Diamant, Smaragd, Antiker Schrott); One-Block: XP/Geld bis +200 %, Doppel-Beute bis 70 %, Cooldown bis -95 %, Eile bis VIII, Glück stärker
   - Icons Stufe 4: kleine Regenbogen-Sterne (jeder Stern eine Farbe), Text „Stufe 4“ in Regenbogen-Buchstaben, Balken grün, Preis mit Juwelen-Zeichen
   - config: Listen auf 51 Werte (Größe, Mitglieder, Generator), One-Block max 50; Server mit den Standard-Werten der 20-Level-Version werden beim Start automatisch umgestellt

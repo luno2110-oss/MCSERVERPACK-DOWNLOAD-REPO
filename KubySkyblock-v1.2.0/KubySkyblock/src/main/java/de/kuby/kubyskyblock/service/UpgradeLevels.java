@@ -167,6 +167,16 @@ public final class UpgradeLevels {
                 n++;
             }
         }
+        // Juwelen-Preise der Stufe 4 gesenkt (Insel 10 x 1,1^n -> 4 x 1,05^n, One-Block 8 x 1,1^n -> 3 x 1,05^n)
+        for (String[] e : new String[][]{{"insel.juwelen-stufe", "10", "1.1"}, {"oneblock.juwelen-stufe", "8", "1.1"}}) {
+            String b = e[0];
+            if (c.isSet(b + ".basis") && Math.abs(c.getDouble(b + ".basis") - Double.parseDouble(e[1])) < 1e-9
+                    && Math.abs(c.getDouble(b + ".faktor") - Double.parseDouble(e[2])) < 1e-9) {
+                c.set(b + ".basis", d.getDouble(b + ".basis"));
+                c.set(b + ".faktor", d.getDouble(b + ".faktor"));
+                n++;
+            }
+        }
         for (Map<String, double[]> old : List.of(OLD_ONEBLOCK, V2_ONEBLOCK)) {
             for (Map.Entry<String, double[]> e : old.entrySet()) {
                 String b = "oneblock.upgrades." + e.getKey() + ".";
