@@ -122,7 +122,7 @@ public final class KubyCommand implements CommandExecutor, TabCompleter {
         io.papermc.paper.registry.data.dialog.ActionButton no = io.papermc.paper.registry.data.dialog.ActionButton.create(
                 Msg.parse("<gray>" + (en ? "Cancel" : "Abbrechen")), null, 100,
                 io.papermc.paper.registry.data.dialog.action.DialogAction.customClick((response, audience) -> { }, once));
-        p.showDialog(io.papermc.paper.dialog.Dialog.create(b -> b.empty().base(base)
+        de.kuby.kubyplugins.ui.UiDialog.open(p, io.papermc.paper.dialog.Dialog.create(b -> b.empty().base(base)
                 .type(io.papermc.paper.registry.data.dialog.type.DialogType.confirmation(yes, no))));
     }
 

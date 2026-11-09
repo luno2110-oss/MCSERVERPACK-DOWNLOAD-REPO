@@ -68,7 +68,7 @@ public final class ClaimScreen {
         for (ClaimService.Claim c : claims.claimsOf(id)) {
             int cx = (c.x1() + c.x2()) / 2, cz = (c.z1() + c.z2()) / 2;
             plots.add(new Plot(n++, worldName(c.world()), c.width(), c.length(), c.area(), cx, cz, pl -> {
-                pl.closeDialog();
+                de.kuby.kubyplugins.ui.UiDialog.close(pl);
                 addon.claimTool().show(pl, c.x1(), c.z1(), c.x2(), c.z2());
                 Msg.send(pl, "<green>Der Rand wird 10 Sekunden angezeigt. <gray>(Mitte " + cx + ", " + cz + ")");
             }));
@@ -95,10 +95,10 @@ public final class ClaimScreen {
         var cfg = addon.core().getConfig();
         return new View(claims.available(id), cfg.getLong("landclaim.blocks-per-hour", 100), cfg.getInt("landclaim.max-claims", 10),
                 plots, friends, flags, pl -> {
-            pl.closeDialog();
+            de.kuby.kubyplugins.ui.UiDialog.close(pl);
             pl.performCommand("claim axt");
         }, pl -> {
-            pl.closeDialog();
+            de.kuby.kubyplugins.ui.UiDialog.close(pl);
             pl.performCommand("hilfe grundstuecke");
         });
     }

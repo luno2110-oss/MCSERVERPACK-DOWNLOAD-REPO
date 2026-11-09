@@ -69,7 +69,7 @@ public final class GeneratorScreen {
 
     private static Consumer<Player> run(Consumer<Player> c) {
         return p -> {
-            p.closeDialog();
+            de.kuby.kubyplugins.ui.UiDialog.close(p);
             c.accept(p);
         };
     }
@@ -162,9 +162,9 @@ public final class GeneratorScreen {
         return Math.round(v * 100) / 100.0;
     }
 
+    /** Deutscher Item-Name (aus der Namensliste des Kerns, z. B. „Rohkupfer“ statt „Raw copper“). */
     static String nice(Material m) {
-        String n = m.name().toLowerCase().replace('_', ' ');
-        return Character.toUpperCase(n.charAt(0)) + n.substring(1);
+        return de.kuby.kubyplugins.ui.ItemNames.de(m);
     }
 
     public static Canvas canvas(View v) {
@@ -270,7 +270,7 @@ public final class GeneratorScreen {
         c.text(50, 36, rows.size() + " von " + slots + " Plätzen · " + (boost == null ? "kein Booster" : boost), boost == null ? DIM : GOLD, false);
         int y = 60;
         for (Row r : rows) {
-            c.box(0, y, W, 38, KitData.Box.STEEL_CARD, Canvas.Z_BUTTON);
+            c.box(0, y, W, 38, KitData.Box.STEEL_CARD);
             c.sprite(6 + (32 - r.art().width) / 2, y + 3 + (32 - r.art().height) / 2, r.art());
             c.text(44, y + 7, Canvas.fit(r.name(), true, 200), r.color(), true);
             c.text(44, y + 19, "Stufe " + r.level(), DIM, false);
@@ -285,7 +285,7 @@ public final class GeneratorScreen {
             y += 34;
         }
         int bw = (W - 12) / 4;
-        c.smallButton(0, y + 2, bw, KitData.Small.GREEN, "Alle einsammeln", STEEL, true);
+        c.smallButton(0, y + 2, bw, KitData.Small.GREEN, "Alle einsammeln", STEEL, false);
         c.action(0, y + 2, bw, KitData.SMALL_H, collectAll, "Alle Lager einsammeln");
         c.smallButton(bw + 4, y + 2, bw, KitData.Small.GOLD, "Shop", GOLD, true);
         c.action(bw + 4, y + 2, bw, KitData.SMALL_H, shop, "Generatoren kaufen");
@@ -354,11 +354,11 @@ public final class GeneratorScreen {
         c.textRight(W - 8, 14, balance, balColor, true);
         c.smallButton(W - 8 - 60, 30, 60, KitData.Small.DARK, "Zurück", STEEL, false);
         c.action(W - 8 - 60, 30, 60, KitData.SMALL_H, back, "Zurück");
-        int y = 60, cw = (W - 4) / 2, ch = 56;
+        int y = 60, cw = (W - 4) / 2, ch = 62;
         for (int i = 0; i < offers.size(); i++) {
             Offer o = offers.get(i);
             int x = (i % 2) * (cw + 4), oy = y + (i / 2) * (ch + 4);
-            c.box(x, oy, cw, ch, o.unlock() != null ? KitData.Box.GRAY : KitData.Box.STEEL_CARD, Canvas.Z_BUTTON);
+            c.box(x, oy, cw, ch, o.unlock() != null ? KitData.Box.GRAY : KitData.Box.STEEL_CARD);
             c.sprite(x + 6 + (32 - o.art().width) / 2, oy + 6 + (32 - o.art().height) / 2, o.art());
             c.text(x + 44, oy + 7, Canvas.fit(o.name(), true, cw - 50), o.unlock() != null ? DIM : STEEL, true);
             List<String> d = Canvas.wrap(o.desc(), cw - 50);

@@ -92,7 +92,7 @@ public final class TeamScreen {
                     money(pl, ts.withdraw(pl, amount), "<green>Abgehoben: <gold>" + Msg.coins(amount) + "$");
                 },
                 pl -> {
-                    pl.closeDialog();
+                    de.kuby.kubyplugins.ui.UiDialog.close(pl);
                     String err = ts.openStorage(pl);
                     if (err != null) Msg.send(pl, "<red>" + err);
                 },
@@ -102,7 +102,7 @@ public final class TeamScreen {
                         Msg.send(pl, "<red>Noch kein Teamhome. „Hier setzen“ setzt eins.");
                         return;
                     }
-                    pl.closeDialog();
+                    de.kuby.kubyplugins.ui.UiDialog.close(pl);
                     Teleports.delayed(plugin, pl, loc, t.name());
                 },
                 pl -> {
@@ -119,7 +119,7 @@ public final class TeamScreen {
                     ARMED.remove(pl.getUniqueId());
                     String err = leader ? ts.disband(pl) : ts.leave(pl.getUniqueId());
                     Msg.send(pl, err == null ? "<gray>Du hast das Team " + (leader ? "aufgelöst." : "verlassen.") : "<red>" + err);
-                    pl.closeDialog();
+                    de.kuby.kubyplugins.ui.UiDialog.close(pl);
                 });
     }
 

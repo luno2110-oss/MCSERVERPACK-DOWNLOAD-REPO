@@ -14,9 +14,13 @@ insel:
     78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100]
   mitglieder: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
     31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52]   # Mitglieder ohne Besitzer
-  # Stufe 4 (Level 21-50): Preis in Juwelen = basis * faktor^(Level - 21), für alle Insel-Upgrades
-  # (4 bis 16 Juwelen je Level, Level 21 bis 50 zusammen 267 je Upgrade)
-  juwelen-stufe: {basis: 4, faktor: 1.05}
+  # Stufe 4 (Level 21-50): Preis in Juwelen = basis * faktor^(Level - 21), basis je Upgrade unter je-upgrade (sonst
+  # basis). Maßstab 1.000 Juwelen = 10 €: Level 21 bis 50 kosten zusammen bei basis 15 ca. 1.000 (10 €), 18 ca. 1.200
+  # (12 €), 22.5 ca. 1.500 (15 €), 30 ca. 2.000 (20 €).
+  juwelen-stufe:
+    basis: 18
+    faktor: 1.05
+    je-upgrade: {groesse: 30, generator: 30, wachstum: 18, spawnrate: 18, mitglieder: 15, limits: 15}
   upgrades:                     # Preis in $ für Level 1 bis 20 (Index 0 = Start), danach Juwelen (juwelen-stufe)
     groesse: [0, 6700, 8200, 10000, 12000, 15000, 18000, 22000, 27000, 33000, 40000, 49000, 60000, 73000, 89000, 110000, 130000, 160000, 200000, 240000, 290000]
     mitglieder: [0, 2900, 3600, 4400, 5300, 6500, 7900, 9700, 12000, 14000, 18000, 21000, 26000, 32000, 39000, 48000, 58000, 71000, 86000, 110000, 130000]
@@ -482,7 +486,15 @@ shop:
 # One-Block: höchstens drei Plattformen (/kp skyblock oneblock setup). Ein Skyblock-Team kann eine beanspruchen
 # (/oneblock): dann bauen nur seine Mitglieder dort ab, jeder Abbau bringt Block-XP fürs Team, Mitglieder können
 # eigene XP einzahlen. Mit Block-XP kauft das Team Upgrades. Daten in oneblock.yml.
+# verteilt: true = die drei One-Blöcke liegen einzeln weit draußen auf der Map (Plätze werden einmal ausgewürfelt und in
+# oneblock.yml gespeichert, abstand-min bis abstand-max Blöcke vom Spawn, in drei Richtungen). Man muss sie erst finden
+# (auf 32 Blöcke heran), das Menü zeigt nur Himmelsrichtung und ungefähre Entfernung. Erst danach: hinreisen und
+# beanspruchen. false = feste Plätze aus positions (am Spawn, mit Brücke).
 oneblock:
+  verteilt: true
+  abstand-min: 6000
+  abstand-max: 20000
+  hoehe: 100
   positions:
     - "-40;100;-60"
     - "0;100;-60"
@@ -506,7 +518,11 @@ oneblock:
     xp: {max: 50, basis: 100, faktor: 1.225}
     geld: {max: 50, basis: 100, faktor: 1.225}
     beute: {max: 50, basis: 150, faktor: 1.245}
-  juwelen-stufe: {basis: 3, faktor: 1.05}   # 3 bis 12 Juwelen je Level, Level 21 bis 50 zusammen 199 je Upgrade
+  # Stufe 4 wie bei der Insel (basis 15 = ca. 10 €, 22.5 = ca. 15 € für Level 21 bis 50), bezahlt der Spieler, der klickt
+  juwelen-stufe:
+    basis: 15
+    faktor: 1.05
+    je-upgrade: {glueck: 22.5, beute: 22.5, geld: 18, xp: 15, cooldown: 15, tempo: 15}
   blocks:             # Block: Gewicht (je kleiner, desto seltener)
     STONE: 14
     DIRT: 8

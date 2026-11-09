@@ -221,7 +221,7 @@ public final class CasinoRules {
                     }), 330);
             return;
         }
-        p.showDialog(plain(page, buttons));
+        de.kuby.kubyplugins.ui.UiDialog.open(p, plain(page, buttons));
     }
 
     /** Platzhalter für Icons ({club} ...) durch Zeichen ersetzen. */

@@ -133,7 +133,7 @@ public final class MainScreen {
     /** Erst den Dialog schließen, dann öffnen (Truhen und andere Dialoge). */
     private static Consumer<Player> go(Consumer<Player> c) {
         return p -> {
-            p.closeDialog();
+            de.kuby.kubyplugins.ui.UiDialog.close(p);
             c.accept(p);
         };
     }

@@ -90,11 +90,19 @@ public final class UiClicks implements Listener {
 
     private static void run(Player player, Consumer<Player> action) {
         if (!player.isOnline()) return;
+        boolean sounded = false;
+        UiDialog.beginClick(player);
         try {
             de.kuby.kubyplugins.util.I18n.as(player, () -> action.accept(player));
         } catch (RuntimeException e) {
             plugin.getLogger().warning("Fehler bei Menü-Klick von " + player.getName() + ": " + e);
             e.printStackTrace();
+        } finally {
+            sounded = UiDialog.endClick(player);
+        }
+        // Jedes Menü klingt beim Klicken: hat die Aktion keinen eigenen Ton gespielt, ein leiser Klick
+        if (!sounded && plugin instanceof de.kuby.kubyplugins.KubyPlugins core) {
+            de.kuby.kubyplugins.util.Sfx.play(core, player, de.kuby.kubyplugins.util.Sfx.Kind.CLICK);
         }
     }
 

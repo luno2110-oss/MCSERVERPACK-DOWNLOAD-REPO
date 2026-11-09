@@ -346,7 +346,7 @@ public final class TradingScreen {
         ActionButton no = ActionButton.create(Msg.parse("<gray>Abbrechen"), null, 100, DialogAction.customClick((response, audience) -> {
             if (audience instanceof Player pl) open(pl);
         }, once));
-        p.showDialog(Dialog.create(b -> b.empty().base(base).type(DialogType.confirmation(ok, no))));
+        de.kuby.kubyplugins.ui.UiDialog.open(p, Dialog.create(b -> b.empty().base(base).type(DialogType.confirmation(ok, no))));
     }
 
     // =================================================================================================================

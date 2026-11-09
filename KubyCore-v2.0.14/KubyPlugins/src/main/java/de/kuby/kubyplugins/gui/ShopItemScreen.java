@@ -60,7 +60,7 @@ public final class ShopItemScreen {
 
     private static Consumer<Player> go(Consumer<Player> c) {
         return p -> {
-            p.closeDialog();
+            de.kuby.kubyplugins.ui.UiDialog.close(p);
             c.accept(p);
         };
     }

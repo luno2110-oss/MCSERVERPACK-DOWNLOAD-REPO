@@ -96,7 +96,7 @@ public final class CrateScreens {
         lines.sort((a, b) -> Double.compare(b.chance(), a.chance()));
         PreviewView v = new PreviewView(c.name(), t == null ? TextColor.color(0xF8D35A) : hex(t.color()), lines, keys, atCrate);
         UiDialog.show(p, preview(v, pl -> {
-            pl.closeDialog();
+            de.kuby.kubyplugins.ui.UiDialog.close(pl);
             plugin.crates().openFromPreview(pl, c);
         }, this::keys), HEIGHT);
     }
@@ -165,7 +165,7 @@ public final class CrateScreens {
             Crate cr = plugin.crates().crate(plugin.modes().modeOf(pl.getUniqueId()), id);
             if (cr != null) preview(pl, cr, false);
         }, pl -> {
-            pl.closeDialog();
+            de.kuby.kubyplugins.ui.UiDialog.close(pl);
             pl.performCommand("spawn");
         }), HEIGHT);
     }

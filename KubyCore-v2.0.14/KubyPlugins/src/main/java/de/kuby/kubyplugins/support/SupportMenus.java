@@ -72,7 +72,7 @@ public final class SupportMenus implements CommandExecutor, Listener {
 
         public Consumer<Player> verify() {
             return pl -> {
-                pl.closeDialog();
+                de.kuby.kubyplugins.ui.UiDialog.close(pl);
                 pl.performCommand("verify");
             };
         }
@@ -337,7 +337,7 @@ public final class SupportMenus implements CommandExecutor, Listener {
                 null, 199, DialogAction.customClick((response, audience) -> {
                     if (audience instanceof Player pl) main(pl);
                 }, ONCE));
-        p.showDialog(UiDialog.dialog(p, SupportScreen.ask(actions), inputs, List.of(send, back), 2));
+        de.kuby.kubyplugins.ui.UiDialog.open(p, UiDialog.dialog(p, SupportScreen.ask(actions), inputs, List.of(send, back), 2));
     }
 
     private void askReply(Player p, int id) {
@@ -362,7 +362,7 @@ public final class SupportMenus implements CommandExecutor, Listener {
                 null, 199, DialogAction.customClick((response, audience) -> {
                     if (audience instanceof Player pl) ticket(pl, id);
                 }, ONCE));
-        p.showDialog(UiDialog.dialog(p, SupportScreen.reply(id, t.title, t.author.equals(p.getUniqueId()), actions),
+        de.kuby.kubyplugins.ui.UiDialog.open(p, UiDialog.dialog(p, SupportScreen.reply(id, t.title, t.author.equals(p.getUniqueId()), actions),
                 List.of(field("text", label, 400, 200, true)), List.of(send, back), 2));
     }
 
@@ -387,7 +387,7 @@ public final class SupportMenus implements CommandExecutor, Listener {
                     if (audience instanceof Player pl) cancel.accept(pl);
                 }, ONCE));
         DialogBase built = base.build();
-        p.showDialog(Dialog.create(b -> b.empty().base(built).type(DialogType.confirmation(ok, no))));
+        de.kuby.kubyplugins.ui.UiDialog.open(p, Dialog.create(b -> b.empty().base(built).type(DialogType.confirmation(ok, no))));
     }
 
     // =================================================================================================================

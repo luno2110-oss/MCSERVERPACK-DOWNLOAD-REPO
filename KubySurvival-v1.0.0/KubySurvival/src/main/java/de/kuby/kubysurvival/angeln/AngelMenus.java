@@ -227,7 +227,7 @@ public final class AngelMenus implements AngelScreens.Nav {
                 err(p, "Es gibt noch keine Angel-Zone.");
                 return;
             }
-            p.closeDialog();
+            de.kuby.kubyplugins.ui.UiDialog.close(p);
             p.teleportAsync(to).thenAccept(ok -> {
                 if (ok) {
                     Sfx.play(core, p, Sfx.Kind.TELEPORT);

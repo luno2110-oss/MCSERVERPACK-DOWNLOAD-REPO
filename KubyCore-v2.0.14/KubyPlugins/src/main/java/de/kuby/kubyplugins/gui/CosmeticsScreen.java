@@ -142,7 +142,7 @@ public final class CosmeticsScreen {
 
             public Consumer<Player> pets() {
                 return pl -> {
-                    pl.closeDialog();
+                    de.kuby.kubyplugins.ui.UiDialog.close(pl);
                     pl.performCommand("pet");
                 };
             }

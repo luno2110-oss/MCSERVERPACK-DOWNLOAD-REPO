@@ -105,7 +105,7 @@ public final class PetScreen {
                 state = Msg.coins(k.jewels()) + " Juwelen";
                 sc = JEWEL;
                 click = pl -> {
-                    pl.closeDialog();
+                    de.kuby.kubyplugins.ui.UiDialog.close(pl);
                     pl.performCommand("juwelenshop pets");
                 };
             } else if (k.price() > 0) {
@@ -133,7 +133,7 @@ public final class PetScreen {
                         open(pl, pg);
                     },
                     !own ? null : pl -> {
-                        pl.closeDialog();
+                        de.kuby.kubyplugins.ui.UiDialog.close(pl);
                         addon.core().prompts().ask(pl, "Neuer Name für " + ps.displayName(pl.getUniqueId(), k) + "?", text -> {
                             String err = ps.rename(pl.getUniqueId(), k, text);
                             Msg.send(pl, err == null ? "<green>Dein Haustier heißt jetzt <gold>" + Msg.escape(text) : "<red>" + err);
@@ -145,7 +145,7 @@ public final class PetScreen {
             PetService.Kind k = ps.kind(activeId);
             if (k != null) {
                 active = new Active(ps.displayName(id, k), k.rideable(), pl -> {
-                    pl.closeDialog();
+                    de.kuby.kubyplugins.ui.UiDialog.close(pl);
                     String err = ps.ride(pl);
                     if (err != null) Msg.send(pl, "<red>" + err);
                 }, pl -> {

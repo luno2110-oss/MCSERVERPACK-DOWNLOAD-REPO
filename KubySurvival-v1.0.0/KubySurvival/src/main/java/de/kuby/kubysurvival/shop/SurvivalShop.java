@@ -644,7 +644,7 @@ public final class SurvivalShop implements Listener {
                 DialogAction.customClick((response, audience) -> {
                     if (audience instanceof Player pl) open(pl, Page.HOME);
                 }, once));
-        p.showDialog(Dialog.create(b -> b.empty().base(base).type(DialogType.confirmation(yes, no))));
+        de.kuby.kubyplugins.ui.UiDialog.open(p, Dialog.create(b -> b.empty().base(base).type(DialogType.confirmation(yes, no))));
     }
 
     @EventHandler

@@ -102,6 +102,8 @@ public final class OneBlockService {
         public long since, active;
         boolean regenerating;
         UUID display;
+        /** Spieler, die diesen One-Block schon gefunden haben (erst dann: hinreisen, beanspruchen). */
+        public final java.util.Set<UUID> found = new java.util.HashSet<>();
 
         Platform(int index, int x, int y, int z) {
             this.index = index;
@@ -136,6 +138,7 @@ public final class OneBlockService {
         loadPlatforms();
         load();
         Bukkit.getScheduler().runTaskTimer(addon, this::tick, 40L, 20L);
+        Bukkit.getScheduler().runTaskLater(addon, this::relocateIfNeeded, 100L);
         Bukkit.getScheduler().runTaskTimer(addon, this::saveIfDirty, 1200L, 1200L);
     }
 
@@ -143,9 +146,71 @@ public final class OneBlockService {
     // Plattformen
     // =================================================================================================================
 
+    /** One-Blöcke weit verteilt auf der Map (müssen erst gefunden werden)? Sonst feste Plätze aus oneblock.positions. */
+    public boolean scattered() {
+        return addon.getConfig().getBoolean("oneblock.verteilt", true);
+    }
+
+    /** Neu ausgewürfelte Plätze, die beim Start noch gebaut werden müssen (alte Plattformen am Spawn werden abgebaut). */
+    private List<int[]> oldPlaces = null;
+
     private void loadPlatforms() {
         platforms.clear();
-        List<String> pos = addon.getConfig().getStringList("oneblock.positions");
+        if (scattered()) {
+            YamlConfiguration y = file.exists() ? YamlConfiguration.loadConfiguration(file) : new YamlConfiguration();
+            List<String> stored = y.getStringList("positions");
+            if (stored.size() < 3) {
+                stored = scatter();
+                oldPlaces = new ArrayList<>();
+                for (String s : addon.getConfig().getStringList("oneblock.positions")) {
+                    String[] q = s.split(";");
+                    try {
+                        oldPlaces.add(new int[]{Integer.parseInt(q[0].trim()), Integer.parseInt(q[1].trim()), Integer.parseInt(q[2].trim())});
+                    } catch (RuntimeException ignored) {
+                        // ungültig
+                    }
+                }
+                dirty = true;
+            }
+            addPlatforms(stored);
+            return;
+        }
+        addPlatforms(addon.getConfig().getStringList("oneblock.positions"));
+    }
+
+    /** Drei Plätze in drei Richtungen (je etwa 120 Grad auseinander), weit draußen, nicht bei Loot-Inseln. */
+    private List<String> scatter() {
+        int min = Math.max(500, addon.getConfig().getInt("oneblock.abstand-min", 6000));
+        int max = Math.max(min + 100, addon.getConfig().getInt("oneblock.abstand-max", 20000));
+        int border = addon.getConfig().getInt("insel.weltgrenze", 50_000) / 2 - 300;
+        max = Math.min(max, border);
+        min = Math.min(min, max - 100);
+        int y = addon.getConfig().getInt("oneblock.hoehe", 100);
+        double base = rnd.nextDouble() * Math.PI * 2;
+        List<String> out = new ArrayList<>();
+        for (int k = 0; k < 3; k++) {
+            int x = 0, z = 0;
+            for (int tries = 0; tries < 20; tries++) {
+                double a = base + k * Math.PI * 2 / 3 + (rnd.nextDouble() - 0.5) * Math.toRadians(50);
+                double d = min + rnd.nextDouble() * (max - min);
+                x = (int) Math.round(Math.cos(a) * d);
+                z = (int) Math.round(Math.sin(a) * d);
+                if (!nearLoot(x, z)) break;
+            }
+            out.add(x + ";" + y + ";" + z);
+        }
+        return out;
+    }
+
+    private boolean nearLoot(int x, int z) {
+        if (addon.loot() == null) return false;
+        for (var li : addon.loot().all().values()) {
+            if (Math.abs(li.x() - x) < 150 && Math.abs(li.z() - z) < 150) return true;
+        }
+        return false;
+    }
+
+    private void addPlatforms(List<String> pos) {
         for (String s : pos) {
             if (platforms.size() >= 3) break;
             String[] p = s.split(";");
@@ -167,17 +232,92 @@ public final class OneBlockService {
         return Bukkit.getWorld(core.modes().worldOf(ModeService.SKYBLOCK));
     }
 
-    /** Erzeugt die Plattformen an den Positionen aus der config. */
+    /** Baut die Plattformen: kleine schwebende Insel (Gras, Erde, Stein nach unten spitz), Laterne, der One-Block in der
+     *  Mitte. Lädt die Chunks dafür (die Plätze liegen weit draußen). */
     public int setup(World w) {
         int made = 0;
         for (Platform pf : platforms) {
-            for (int dx = -2; dx <= 2; dx++) for (int dz = -2; dz <= 2; dz++) {
-                w.getBlockAt(pf.x + dx, pf.y - 1, pf.z + dz).setType(Material.STONE, false);
+            w.getChunkAt(pf.x >> 4, pf.z >> 4);
+            double[] radius = {4.4, 3.6, 2.6, 1.6};
+            for (int layer = 0; layer < radius.length; layer++) {
+                int r = (int) Math.ceil(radius[layer]);
+                for (int dx = -r; dx <= r; dx++) {
+                    for (int dz = -r; dz <= r; dz++) {
+                        if (dx * dx + dz * dz > radius[layer] * radius[layer]) continue;
+                        Material m = layer == 0 ? Material.GRASS_BLOCK : layer == 1 ? Material.DIRT : Material.STONE;
+                        if (layer >= 2 && (dx + dz) % 3 == 0) m = Material.COBBLESTONE;
+                        w.getBlockAt(pf.x + dx, pf.y - 1 - layer, pf.z + dz).setType(m, false);
+                    }
+                }
             }
+            w.getBlockAt(pf.x + 3, pf.y, pf.z - 2).setType(Material.SPRUCE_FENCE, false);
+            w.getBlockAt(pf.x + 3, pf.y + 1, pf.z - 2).setType(Material.LANTERN, false);
             w.getBlockAt(pf.x, pf.y, pf.z).setType(randomBlock(0), false);
             made++;
         }
         return made;
+    }
+
+    /** Beim Start nach dem Auswürfeln: alte Plattformen am Spawn abbauen und die neuen weit draußen bauen. */
+    private void relocateIfNeeded() {
+        if (oldPlaces == null) return;
+        World w = world();
+        if (w == null) return;
+        for (int[] o : oldPlaces) {
+            w.getChunkAt(o[0] >> 4, o[2] >> 4);
+            // nur abbauen, was nach unserer alten Plattform aussieht (5 x 5 Stein unter dem Block)
+            if (w.getBlockAt(o[0], o[1] - 1, o[2]).getType() != Material.STONE) continue;
+            for (int dx = -2; dx <= 2; dx++) {
+                for (int dz = -2; dz <= 2; dz++) {
+                    if (w.getBlockAt(o[0] + dx, o[1] - 1, o[2] + dz).getType() == Material.STONE) w.getBlockAt(o[0] + dx, o[1] - 1, o[2] + dz).setType(Material.AIR, false);
+                }
+            }
+            w.getBlockAt(o[0], o[1], o[2]).setType(Material.AIR, false);
+        }
+        int n = setup(w);
+        oldPlaces = null;
+        dirty = true;
+        save();
+        addon.getLogger().info("One-Block: " + n + " Plattformen weit draußen gebaut (müssen erst gefunden werden): " + positionsText());
+    }
+
+    private String positionsText() {
+        List<String> l = new ArrayList<>();
+        for (Platform pf : platforms) l.add(pf.name() + " " + pf.x + " " + pf.y + " " + pf.z);
+        return String.join(", ", l);
+    }
+
+    // ---------- Finden ----------
+
+    /** Hat der Spieler diesen One-Block schon gefunden (oder ist er nicht verteilt, oder gehört er seinem Team)? */
+    public boolean mayTravel(Player p, Platform pf) {
+        if (!scattered() || p.hasPermission("kuby.admin") || pf.found.contains(p.getUniqueId())) return true;
+        TeamService.Team t = team(p.getUniqueId());
+        return t != null && pf == claimOf(t);
+    }
+
+    /** Hinweis für die Suche: Himmelsrichtung vom Spawn und ungefähre Entfernung, z. B. „Nordosten, ca. 14.000 Blöcke“. */
+    public String hint(Platform pf) {
+        double deg = (Math.toDegrees(Math.atan2(pf.x, -pf.z)) + 360) % 360;
+        String[] dirs = {"Norden", "Nordosten", "Osten", "Südosten", "Süden", "Südwesten", "Westen", "Nordwesten"};
+        String dir = dirs[(int) Math.round(deg / 45) % 8];
+        long dist = Math.round(Math.hypot(pf.x, pf.z) / 1000.0) * 1000;
+        return dir + ", ca. " + Msg.coins(dist) + " Blöcke";
+    }
+
+    /** Jede Sekunde: wer einem One-Block nahe kommt (32 Blöcke), hat ihn gefunden. */
+    private void discover(World w) {
+        if (!scattered()) return;
+        for (Player p : w.getPlayers()) {
+            Location l = p.getLocation();
+            for (Platform pf : platforms) {
+                double dx = l.getX() - pf.x, dz = l.getZ() - pf.z;
+                if (dx * dx + dz * dz > 32 * 32 || !pf.found.add(p.getUniqueId())) continue;
+                dirty = true;
+                Msg.send(p, "<#9AD8FF><b>" + pf.name() + " entdeckt!</b> <gray>Ab jetzt kannst du über <white>/oneblock</white> hinreisen.");
+                Sfx.play(core, p, Sfx.Kind.SUCCESS_BIG);
+            }
+        }
     }
 
     public Platform at(Block b) {
@@ -251,6 +391,7 @@ public final class OneBlockService {
         if (claimOf(t) != null) return "Dein Team hat schon " + claimOf(t).name() + ".";
         Platform pf = platforms.get(index);
         if (pf.claimed()) return pf.name() + " gehört schon Team " + pf.teamName + ".";
+        if (!mayTravel(p, pf)) return pf.name() + " musst du erst finden: " + hint(pf) + " vom Spawn.";
         long price = claimPrice();
         if (price > 0 && !core.economy().withdraw(p.getUniqueId(), price)) return "Dafür brauchst du " + Msg.coins(price) + " $.";
         pf.team = key(t);
@@ -342,8 +483,9 @@ public final class OneBlockService {
         int lvl = pr.level(u);
         if (lvl >= max(u)) return -1;
         if (UpgradeLevels.jewelLevel(lvl + 1)) {
-            return UpgradeLevels.jewels(lvl + 1, addon.getConfig().getDouble("oneblock.juwelen-stufe.basis", 3),
-                    addon.getConfig().getDouble("oneblock.juwelen-stufe.faktor", 1.05));
+            var c = addon.getConfig();
+            return UpgradeLevels.jewels(lvl + 1, c.getDouble("oneblock.juwelen-stufe.je-upgrade." + u.key(), c.getDouble("oneblock.juwelen-stufe.basis", 15)),
+                    c.getDouble("oneblock.juwelen-stufe.faktor", 1.05));
         }
         long base = addon.getConfig().getLong("oneblock.upgrades." + u.key() + ".basis", u.base);
         double f = addon.getConfig().getDouble("oneblock.upgrades." + u.key() + ".faktor", u.factor);
@@ -534,6 +676,7 @@ public final class OneBlockService {
     private void tick() {
         World w = world();
         if (w == null) return;
+        discover(w);
         long now = System.currentTimeMillis();
         for (Platform pf : platforms) {
             if (pf.claimed()) {
@@ -619,6 +762,13 @@ public final class OneBlockService {
             pf.teamName = y.getString(b + "team-name", pf.team);
             pf.since = y.getLong(b + "since");
             pf.active = y.getLong(b + "active", System.currentTimeMillis());
+            for (String u : y.getStringList(b + "found")) {
+                try {
+                    pf.found.add(UUID.fromString(u));
+                } catch (IllegalArgumentException ignored) {
+                    // ungültig
+                }
+            }
         }
         // Upgrade-Stände aus der Zeit mit 5 oder 10 Stufen auf Level 0 bis 20 umrechnen (gleiche Wirkung)
         int stored = y.getInt("upgrade-version", 1);
@@ -651,6 +801,14 @@ public final class OneBlockService {
     public void save() {
         YamlConfiguration y = new YamlConfiguration();
         y.set("upgrade-version", upgradeVersion);
+        if (scattered()) {
+            List<String> pos = new ArrayList<>();
+            for (Platform pf : platforms) pos.add(pf.x + ";" + pf.y + ";" + pf.z);
+            y.set("positions", pos);
+        }
+        for (Platform pf : platforms) {
+            if (!pf.found.isEmpty()) y.set("platforms." + pf.index + ".found", pf.found.stream().map(UUID::toString).toList());
+        }
         for (Platform pf : platforms) {
             if (!pf.claimed()) continue;
             String b = "platforms." + pf.index + ".";

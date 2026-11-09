@@ -44,7 +44,7 @@ public final class TradeScreens {
 
     private static Consumer<Player> go(Consumer<Player> c) {
         return p -> {
-            p.closeDialog();
+            de.kuby.kubyplugins.ui.UiDialog.close(p);
             c.accept(p);
         };
     }

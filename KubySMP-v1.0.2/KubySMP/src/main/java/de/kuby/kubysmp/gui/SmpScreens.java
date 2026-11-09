@@ -171,7 +171,7 @@ public final class SmpScreens {
         UiDialog.show(p, duels(new Duels(from == null ? null : name(from), from == null ? null : pl -> {
             String err = KubySMP.get().duels().accept(pl);
             if (err != null) Msg.send(pl, "<red>" + err);
-            pl.closeDialog();
+            de.kuby.kubyplugins.ui.UiDialog.close(pl);
         }, list)), 300);
     }
 
@@ -241,7 +241,7 @@ public final class SmpScreens {
                     if (err != null) Msg.send(pl, "<red>" + err);
                     tournament(pl);
                 }, p.hasPermission("kuby.admin") ? pl -> {
-                    pl.closeDialog();
+                    de.kuby.kubyplugins.ui.UiDialog.close(pl);
                     new TournamentAdminMenu(plugin).open(pl);
                 } : null)), 300);
     }

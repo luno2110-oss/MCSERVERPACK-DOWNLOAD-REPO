@@ -336,7 +336,7 @@ public final class MarryService implements Listener {
         Player o = Bukkit.getPlayer(other);
         if (o == null) return name(other) + " ist gerade nicht online.";
         if (!survival(o)) return o.getName() + " ist gerade nicht in Survival.";
-        p.closeDialog();
+        de.kuby.kubyplugins.ui.UiDialog.close(p);
         Teleports.delayed(core, p, o.getLocation(), o.getName());
         return null;
     }
@@ -344,7 +344,7 @@ public final class MarryService implements Listener {
     public String toChurch(Player p) {
         if (!survival(p)) return "Die Kirche gibt es nur in Survival.";
         if (church == null) return "Die Kirche ist noch nicht eingerichtet.";
-        p.closeDialog();
+        de.kuby.kubyplugins.ui.UiDialog.close(p);
         Teleports.delayed(core, p, church(), "Kirche");
         return null;
     }

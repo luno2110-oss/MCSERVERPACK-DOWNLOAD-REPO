@@ -63,7 +63,7 @@ public final class SkyblockSetup {
         for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) if (w.getBlockAt(dx, 63, dz).getType() == Material.GLASS) w.getBlockAt(dx, 63, dz).setType(Material.AIR, false);
         if (w.getBlockAt(0, TOP, 0).getType().isAir()) {
             int n = buildSpawn(w, addon);
-            Msg.send(p, "<green>✔ Spawn-Insel gebaut <gray>(" + n + " Blöcke, Brücke zu den One-Blocks).");
+            Msg.send(p, "<green>✔ Spawn-Insel gebaut <gray>(" + n + " Blöcke).");
         } else {
             Msg.send(p, "<gray>✔ Spawn-Insel steht schon.");
         }
@@ -165,8 +165,11 @@ public final class SkyblockSetup {
             } catch (RuntimeException ignored) {
             }
         }
-        for (int z = -R; z >= oz + 2; z--) n += bridge(w, -1, 1, z, z, z % 8 == 0);
-        for (int x = minX + 2; x <= maxX - 2; x++) n += bridge(w, x, x, oz - 1, oz + 1, x % 8 == 0 && Math.abs(x) > 3);
+        // Verteilte One-Blöcke liegen weit draußen und müssen gefunden werden: dann keine Brücke
+        if (!addon.oneblock().scattered()) {
+            for (int z = -R; z >= oz + 2; z--) n += bridge(w, -1, 1, z, z, z % 8 == 0);
+            for (int x = minX + 2; x <= maxX - 2; x++) n += bridge(w, x, x, oz - 1, oz + 1, x % 8 == 0 && Math.abs(x) > 3);
+        }
         return n;
     }
 

@@ -117,7 +117,7 @@ public final class StatsScreen {
             return;
         }
         UiDialog.show(viewer, canvas(v, cmd -> pl -> {
-            pl.closeDialog();
+            de.kuby.kubyplugins.ui.UiDialog.close(pl);
             pl.performCommand(cmd);
         }), HEIGHT);
     }

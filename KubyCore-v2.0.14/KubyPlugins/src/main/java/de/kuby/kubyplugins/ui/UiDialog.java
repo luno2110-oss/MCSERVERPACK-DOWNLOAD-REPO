@@ -21,12 +21,70 @@ public final class UiDialog {
     private UiDialog() {
     }
 
+    // ---------- Klick-Ablauf: Mauszeiger behalten, Klick-Ton ----------
+    // Schließt eine Menü-Aktion erst den Dialog und öffnet dann das nächste Menü, schnappt Minecraft dazwischen die
+    // Maus ein und setzt sie beim neuen Fenster in die Mitte. Darum wird „schließen“ während eines Menü-Klicks nur
+    // vorgemerkt: öffnet die Aktion ein neues Menü (oder eine Truhe), entfällt es, sonst wird am Ende geschlossen.
+
+    private static java.util.UUID clickPlayer;
+    private static boolean closeRequested, shown, sounded;
+
+    /** Vom Klick-Handler: eine Menü-Aktion dieses Spielers beginnt. */
+    static void beginClick(Player p) {
+        clickPlayer = p.getUniqueId();
+        closeRequested = false;
+        shown = false;
+        sounded = false;
+    }
+
+    /** Vom Klick-Handler: Aktion fertig. Gibt zurück, ob schon ein Ton lief (sonst spielt der Handler den Klick). */
+    static boolean endClick(Player p) {
+        boolean s = sounded;
+        boolean close = closeRequested && !shown;
+        clickPlayer = null;
+        closeRequested = false;
+        shown = false;
+        sounded = false;
+        if (close && p.isOnline()) {
+            // eine Truhe (oder ein anderes Fenster) hat den Dialog schon ersetzt: dann nicht schließen
+            org.bukkit.event.inventory.InventoryType top = p.getOpenInventory().getTopInventory().getType();
+            if (top == org.bukkit.event.inventory.InventoryType.CRAFTING || top == org.bukkit.event.inventory.InventoryType.CREATIVE) {
+                p.closeDialog();
+            }
+        }
+        return s;
+    }
+
+    private static boolean inClick(Player p) {
+        return clickPlayer != null && p != null && clickPlayer.equals(p.getUniqueId());
+    }
+
+    /** Dialog schließen (in einer Menü-Aktion erst am Ende und nur, wenn kein neues Menü kommt). */
+    public static void close(Player p) {
+        if (inClick(p)) {
+            closeRequested = true;
+            return;
+        }
+        p.closeDialog();
+    }
+
+    /** Dialog zeigen (merkt sich in einer Menü-Aktion, dass ein neues Menü kommt). */
+    public static void open(Player p, Dialog dialog) {
+        if (inClick(p)) shown = true;
+        p.showDialog(dialog);
+    }
+
+    /** Von Sfx: in dieser Menü-Aktion lief schon ein Ton. */
+    public static void soundPlayed(Player p) {
+        if (inClick(p)) sounded = true;
+    }
+
     /**
      * @param minHeight Mindesthöhe in Pixeln: Menüs einer Familie bekommen dieselbe Höhe, dann steht der Kopf beim
      *                  Blättern immer an derselben Stelle (Minecraft zentriert den Körper senkrecht).
      */
     public static void show(Player player, Canvas canvas, int minHeight) {
-        player.showDialog(dialog(player, canvas, minHeight));
+        open(player, dialog(player, canvas, minHeight));
     }
 
     /** Baut den Dialog (ohne ihn zu zeigen); viewer null = ohne Klicks (Selbsttest). */

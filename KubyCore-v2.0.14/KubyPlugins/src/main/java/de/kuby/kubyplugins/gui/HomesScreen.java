@@ -68,7 +68,7 @@ public final class HomesScreen {
             homes.add(new Home(name, loc.getWorld() == null ? "?" : world(loc.getWorld().getName()), loc.getBlockX(), loc.getBlockY(),
                     loc.getBlockZ(), name.equals(armed), pl -> {
                 ARMED.remove(pl.getUniqueId());
-                pl.closeDialog();
+                de.kuby.kubyplugins.ui.UiDialog.close(pl);
                 Teleports.delayed(plugin, pl, loc, name);
             }, pl -> {
                 if (!name.equals(ARMED.get(pl.getUniqueId()))) {

@@ -78,7 +78,7 @@ public final class GraveCommand implements CommandExecutor {
                     pl.setCompassTarget(l);
                     GraveService.send(pl, "Dein Kompass zeigt jetzt auf das Grab in <white>" + l.getBlockX() + " / " + l.getBlockY()
                             + " / " + l.getBlockZ() + "</white>.");
-                    pl.closeDialog();
+                    de.kuby.kubyplugins.ui.UiDialog.close(pl);
                 }, "Kompass auf dieses Grab ausrichten");
             }
             y += 46;

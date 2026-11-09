@@ -307,7 +307,7 @@ public final class SurvivalHelp {
         buttons.add(button(Msg.parse("<white>< " + Msg.escape(prev.nav())), "Zurück: " + prev.nav(), pl -> show(plugin, pl, i - 1)));
         buttons.add(button(Msg.parse("<b>" + Msg.escape(page.actionLabel()) + "</b>"), page.actionLabel(), pl -> act(plugin, pl, page)));
         buttons.add(button(Msg.parse("<white>" + Msg.escape(next.nav()) + " >"), "Weiter: " + next.nav(), pl -> show(plugin, pl, i + 1)));
-        p.showDialog(plain(page, buttons));
+        de.kuby.kubyplugins.ui.UiDialog.open(p, plain(page, buttons));
     }
 
     private static void overview(KubyPlugins plugin, Player p) {

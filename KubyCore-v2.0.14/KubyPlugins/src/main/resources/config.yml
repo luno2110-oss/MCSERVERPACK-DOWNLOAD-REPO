@@ -1975,7 +1975,8 @@ guide:
           name: "One-Block"
           icon: nav05
           lines:
-            - "Beim Spawn stehen drei One-Blocks. Jeder Abbau gibt Loot, Geld und XP, dann kommt ein neuer Block."
+            - "Drei One-Blocks liegen weit draußen auf der Map. `/oneblock` zeigt Richtung und Entfernung: erst finden, dann hinreisen."
+            - "Jeder Abbau gibt Loot, Geld und XP, dann kommt ein neuer Block."
             - ""
             - "# Fürs Team"
             - "> Ein Team kann einen One-Block beanspruchen: `/oneblock`"
@@ -1988,7 +1989,8 @@ guide:
             - "> Wer 7 Tage nicht abbaut, verliert den Block (Upgrades bleiben)."
           name-en: "One-Block"
           lines-en:
-            - "Three One-Blocks stand near spawn. Every break gives loot, money and XP, then a new block appears."
+            - "Three One-Blocks lie far out on the map. `/oneblock` shows direction and distance: find them first, then travel."
+            - "Every break gives loot, money and XP, then a new block appears."
             - ""
             - "# For your team"
             - "> A team can claim a One-Block: `/oneblock`"

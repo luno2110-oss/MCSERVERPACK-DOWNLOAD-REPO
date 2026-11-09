@@ -56,7 +56,7 @@ public final class CasinoInput {
                 DialogAction.customClick((response, audience) -> {
                     if (audience instanceof Player pl && onCancel != null) onCancel.accept(pl);
                 }, once));
-        p.showDialog(Dialog.create(b -> b.empty().base(base).type(DialogType.confirmation(yes, no))));
+        de.kuby.kubyplugins.ui.UiDialog.open(p, Dialog.create(b -> b.empty().base(base).type(DialogType.confirmation(yes, no))));
     }
 
     /** "1.000", "1000", "1k", "2,5k" -> Zahl; -1 bei ungültiger Eingabe. */

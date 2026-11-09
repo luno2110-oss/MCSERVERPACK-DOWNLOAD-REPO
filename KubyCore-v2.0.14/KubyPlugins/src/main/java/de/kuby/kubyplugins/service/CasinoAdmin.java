@@ -49,7 +49,7 @@ public final class CasinoAdmin {
             Msg.send(p, "<red>Nur Admins.");
             return;
         }
-        p.showDialog(main(plugin));
+        de.kuby.kubyplugins.ui.UiDialog.open(p, main(plugin));
     }
 
     private static Dialog main(KubyPlugins plugin) {
@@ -114,7 +114,7 @@ public final class CasinoAdmin {
             plugin.saveConfig();
             Sfx.play(plugin, pl, Sfx.Kind.SUCCESS);
             Msg.send(pl, "<green>Casino-Einstellungen gespeichert.");
-            pl.showDialog(main(plugin));
+            de.kuby.kubyplugins.ui.UiDialog.open(pl, main(plugin));
         }));
         buttons.add(button(open ? "<red>Casino schließen" : "<green>Casino öffnen",
                 open ? "Keine neuen Runden, Verkaufen geht weiter" : "Spiele wieder freigeben", (pl, response) -> {
@@ -122,7 +122,7 @@ public final class CasinoAdmin {
                     plugin.getConfig().set("casino.open", now);
                     plugin.saveConfig();
                     Msg.send(pl, now ? "<green>Das Casino ist wieder offen." : "<red>Das Casino ist geschlossen.");
-                    pl.showDialog(main(plugin));
+                    de.kuby.kubyplugins.ui.UiDialog.open(pl, main(plugin));
                 }));
         buttons.add(command("Kasse setzen", "casino kasse"));
         buttons.add(command("Blackjack-Tisch hier", "casino blackjack tisch"));
@@ -131,10 +131,10 @@ public final class CasinoAdmin {
         buttons.add(command("Crash-Bildschirm hier", "casino crash bildschirm"));
         buttons.add(command("Poker-Tisch", "casino poker-tisch"));
         buttons.add(button("<white>Barkeeper setzen", "Stellt einen Barkeeper an deine Position", (pl, response) -> pl.performCommand("casino barkeeper")));
-        buttons.add(button("<white>Protokoll", "Die letzten Einträge", (pl, response) -> pl.showDialog(logDialog(plugin))));
+        buttons.add(button("<white>Protokoll", "Die letzten Einträge", (pl, response) -> de.kuby.kubyplugins.ui.UiDialog.open(pl, logDialog(plugin))));
         buttons.add(button("<gold>Jackpot jetzt ziehen", "Zieht sofort unter den aktuellen Teilnehmern", (pl, response) -> {
             plugin.jackpotDraw().drawNow();
-            pl.showDialog(main(plugin));
+            de.kuby.kubyplugins.ui.UiDialog.open(pl, main(plugin));
         }));
 
         DialogBase base = DialogBase.builder(Msg.parse("<red><b>CASINO-ADMIN</b>"))
@@ -155,7 +155,7 @@ public final class CasinoAdmin {
                 .body(List.of(text(sb.toString())))
                 .build();
         List<ActionButton> buttons = List.of(
-                button("<white>< Zurück", "Zum Casino-Admin", (pl, response) -> pl.showDialog(main(plugin))));
+                button("<white>< Zurück", "Zum Casino-Admin", (pl, response) -> de.kuby.kubyplugins.ui.UiDialog.open(pl, main(plugin))));
         return Dialog.create(b -> b.empty().base(base).type(DialogType.multiAction(buttons).columns(1).build()));
     }
 

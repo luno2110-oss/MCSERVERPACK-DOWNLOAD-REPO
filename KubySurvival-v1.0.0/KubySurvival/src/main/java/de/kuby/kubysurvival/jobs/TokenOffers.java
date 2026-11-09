@@ -78,7 +78,7 @@ public final class TokenOffers {
         }));
         if (rows > 0) {
             out.add(new Offer("Rucksack", Material.CHEST, "Rucksack öffnen", "Auch mit /backpack", 0, "gratis", true, p -> {
-                p.closeDialog();
+                de.kuby.kubyplugins.ui.UiDialog.close(p);
                 bp.open(p);
                 return null;
             }));

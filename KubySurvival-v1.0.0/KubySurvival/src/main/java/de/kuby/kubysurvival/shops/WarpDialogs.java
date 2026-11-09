@@ -245,7 +245,7 @@ public final class WarpDialogs {
             list(pl);
         }, ONCE);
         ActionButton ok = ActionButton.create(label("✔", "Übernehmen", OK), null, 149, apply);
-        p.showDialog(UiDialog.dialog(p, WarpScreen.searchHead(), List.of(field("suche", "", s.search, 32)),
+        de.kuby.kubyplugins.ui.UiDialog.open(p, UiDialog.dialog(p, WarpScreen.searchHead(), List.of(field("suche", "", s.search, 32)),
                 List.of(ok, button("⇦", "Zurück", BACK, this::list)), 2));
     }
 
@@ -273,7 +273,7 @@ public final class WarpDialogs {
         }, ONCE);
         String sub = "Platz " + slot + " · " + Msg.coins(price) + " Coins · genau hier, wo du stehst";
         ActionButton ok = ActionButton.create(label("✔", "Kaufen", OK), null, 149, buy);
-        p.showDialog(UiDialog.dialog(p, WarpScreen.formHead(coins, "Warp kaufen", sub),
+        de.kuby.kubyplugins.ui.UiDialog.open(p, UiDialog.dialog(p, WarpScreen.formHead(coins, "Warp kaufen", sub),
                 List.of(field("name", "Name · 3 bis 16 Zeichen: Buchstaben, Zahlen, _ oder -", "", 16)),
                 List.of(ok, button("⇦", "Zurück", BACK, this::mine)), 2));
     }
@@ -327,7 +327,7 @@ public final class WarpDialogs {
         });
         ActionButton delete = button("✖", "Löschen", RED, pl -> askDelete(pl, warp));
         long coins = core.economy().balance(p.getUniqueId());
-        p.showDialog(UiDialog.dialog(p, WarpScreen.formHead(coins, Canvas.lit(w.name), "Ort, Beschreibung, Kategorie und Farbe"), inputs,
+        de.kuby.kubyplugins.ui.UiDialog.open(p, UiDialog.dialog(p, WarpScreen.formHead(coins, Canvas.lit(w.name), "Ort, Beschreibung, Kategorie und Farbe"), inputs,
                 List.of(ok, move, delete, button("⇦", "Zurück", BACK, this::mine)), 2));
     }
 
@@ -347,7 +347,7 @@ public final class WarpDialogs {
             mine(pl);
         });
         long coins = core.economy().balance(p.getUniqueId());
-        p.showDialog(UiDialog.dialog(p, WarpScreen.formHead(coins, "Warp löschen?", "„" + w.name + "“ wirklich löschen? Die Coins gibt es nicht zurück."),
+        de.kuby.kubyplugins.ui.UiDialog.open(p, UiDialog.dialog(p, WarpScreen.formHead(coins, "Warp löschen?", "„" + w.name + "“ wirklich löschen? Die Coins gibt es nicht zurück."),
                 List.of(), List.of(yes, button("⇦", "Zurück", BACK, pl -> askEdit(pl, warp))), 2));
     }
 }

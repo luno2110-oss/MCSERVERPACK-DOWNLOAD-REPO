@@ -190,7 +190,7 @@ public final class PlaytimeScreen {
 
             public Consumer<Player> verify() {
                 return pl -> {
-                    pl.closeDialog();
+                    de.kuby.kubyplugins.ui.UiDialog.close(pl);
                     pl.performCommand("verify");
                 };
             }

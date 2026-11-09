@@ -103,7 +103,7 @@ public final class FarmpassScreen {
             if (err != null) Msg.send(pl, "<red>" + err);
             open(pl, Tab.PERKS);
         }, pl -> {
-            pl.closeDialog();
+            de.kuby.kubyplugins.ui.UiDialog.close(pl);
             pl.openWorkbench(null, true);
         }, pets, picks, t -> pl -> open(pl, t));
         UiDialog.show(p, canvas(v), 330);

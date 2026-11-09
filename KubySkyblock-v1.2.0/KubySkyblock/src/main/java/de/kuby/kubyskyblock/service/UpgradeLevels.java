@@ -167,13 +167,16 @@ public final class UpgradeLevels {
                 n++;
             }
         }
-        // Juwelen-Preise der Stufe 4 gesenkt (Insel 10 x 1,1^n -> 4 x 1,05^n, One-Block 8 x 1,1^n -> 3 x 1,05^n)
-        for (String[] e : new String[][]{{"insel.juwelen-stufe", "10", "1.1"}, {"oneblock.juwelen-stufe", "8", "1.1"}}) {
+        // Juwelen-Preise der Stufe 4 nach Euro-Maßstab (1.000 Juwelen = 10 €): alte Standard-Werte (ohne je-upgrade)
+        // durch den neuen Abschnitt ersetzen (Insel vorher 10 x 1,1^n bzw. 4 x 1,05^n, One-Block 8 x 1,1^n bzw. 3 x 1,05^n)
+        for (String[] e : new String[][]{{"insel.juwelen-stufe", "10", "1.1"}, {"insel.juwelen-stufe", "4", "1.05"},
+                {"oneblock.juwelen-stufe", "8", "1.1"}, {"oneblock.juwelen-stufe", "3", "1.05"}}) {
             String b = e[0];
-            if (c.isSet(b + ".basis") && Math.abs(c.getDouble(b + ".basis") - Double.parseDouble(e[1])) < 1e-9
+            if (c.isSet(b + ".basis") && !c.isSet(b + ".je-upgrade") && d.isConfigurationSection(b)
+                    && Math.abs(c.getDouble(b + ".basis") - Double.parseDouble(e[1])) < 1e-9
                     && Math.abs(c.getDouble(b + ".faktor") - Double.parseDouble(e[2])) < 1e-9) {
-                c.set(b + ".basis", d.getDouble(b + ".basis"));
-                c.set(b + ".faktor", d.getDouble(b + ".faktor"));
+                c.set(b, null);
+                copy(d.getConfigurationSection(b), c.createSection(b));
                 n++;
             }
         }

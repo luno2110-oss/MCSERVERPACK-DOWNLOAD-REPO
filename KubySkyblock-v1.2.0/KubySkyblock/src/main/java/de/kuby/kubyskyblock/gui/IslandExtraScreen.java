@@ -42,7 +42,7 @@ public final class IslandExtraScreen {
 
     private static Consumer<Player> run(Consumer<Player> c) {
         return p -> {
-            p.closeDialog();
+            de.kuby.kubyplugins.ui.UiDialog.close(p);
             c.accept(p);
         };
     }

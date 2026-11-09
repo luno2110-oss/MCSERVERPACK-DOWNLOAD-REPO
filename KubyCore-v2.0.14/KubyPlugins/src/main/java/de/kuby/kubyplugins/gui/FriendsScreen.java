@@ -165,7 +165,7 @@ public final class FriendsScreen {
                     request(pl, n == null ? "" : n.trim());
                     show(pl, Tab.ADD, false, 0);
                 }, once));
-        p.showDialog(UiDialog.dialog(p, c, List.of(DialogInput.text("name", Msg.parse("Spielername"))
+        de.kuby.kubyplugins.ui.UiDialog.open(p, UiDialog.dialog(p, c, List.of(DialogInput.text("name", Msg.parse("Spielername"))
                 .width(258).maxLength(16).initial("").build()), send));
     }
 
@@ -201,7 +201,7 @@ public final class FriendsScreen {
                         Msg.send(pl, "<red>" + err);
                         Sfx.play(plugin, pl, Sfx.Kind.ERROR);
                     } else {
-                        pl.closeDialog();
+                        de.kuby.kubyplugins.ui.UiDialog.close(pl);
                     }
                 };
             }
@@ -469,7 +469,7 @@ public final class FriendsScreen {
                 DialogAction.customClick((response, audience) -> {
                     if (audience instanceof Player pl) show(pl, Tab.FRIENDS, false, page);
                 }, once));
-        p.showDialog(Dialog.create(b -> b.empty().base(base).type(DialogType.confirmation(yes, no))));
+        de.kuby.kubyplugins.ui.UiDialog.open(p, Dialog.create(b -> b.empty().base(base).type(DialogType.confirmation(yes, no))));
     }
 
     /** Anfrage per Name (aus /friend add und dem Menü). */

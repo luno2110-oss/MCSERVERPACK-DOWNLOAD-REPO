@@ -148,6 +148,6 @@ final class HeadMenu extends GuiMenu {
                     if (audience instanceof Player pl) new HeadMenu(heads, plugin, cat, term, page).open(pl);
                 }, once));
         p.closeInventory();
-        p.showDialog(Dialog.create(b -> b.empty().base(base).type(DialogType.confirmation(yes, no))));
+        de.kuby.kubyplugins.ui.UiDialog.open(p, Dialog.create(b -> b.empty().base(base).type(DialogType.confirmation(yes, no))));
     }
 }

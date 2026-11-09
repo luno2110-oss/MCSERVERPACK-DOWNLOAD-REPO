@@ -18,7 +18,7 @@ public final class KitDemo {
         Canvas c = new Canvas(390);
         c.box(0, 0, 390, 52, KitData.Box.NAVY);
         c.back(11, 9);
-        c.action(11, 9, 20, 20, p -> p.closeDialog(), "Zurück");
+        c.action(11, 9, 20, 20, p -> de.kuby.kubyplugins.ui.UiDialog.close(p), "Zurück");
         c.icon(40, 10, KitData.Icon.BOOK, true);
         c.text(78, 12, "FLÜSSE & SEEN", CYAN, true);
         c.text(78, 25, "6/8 gefangen · volle Seite: 3.000$ + 2 Tokens", GRAY, false);

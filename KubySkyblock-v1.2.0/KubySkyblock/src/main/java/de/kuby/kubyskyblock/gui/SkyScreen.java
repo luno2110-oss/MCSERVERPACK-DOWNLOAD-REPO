@@ -55,7 +55,7 @@ public final class SkyScreen {
             list.add(new Ach(a.name(), a.desc(), Math.min(value, a.target()), a.target(), done.contains(a.id()), a.money(), a.xp(), a.jewels()));
         }
         UiDialog.show(p, canvas(new View(prog.percent(id), prog.collected(id).size(), prog.allItems().size(), list, pl -> {
-            pl.closeDialog();
+            de.kuby.kubyplugins.ui.UiDialog.close(pl);
             new ChecklistMenu(core, 0).open(pl);
         })), 330);
     }

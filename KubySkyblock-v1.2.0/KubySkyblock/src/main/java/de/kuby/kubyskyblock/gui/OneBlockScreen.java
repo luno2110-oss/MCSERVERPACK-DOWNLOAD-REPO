@@ -45,7 +45,7 @@ public final class OneBlockScreen {
 
     private static Consumer<Player> run(Consumer<Player> c) {
         return p -> {
-            p.closeDialog();
+            de.kuby.kubyplugins.ui.UiDialog.close(p);
             c.accept(p);
         };
     }
@@ -67,6 +67,10 @@ public final class OneBlockScreen {
     }
 
     public static void teleport(Player p, Platform pf) {
+        if (!ob().mayTravel(p, pf)) {
+            feedback(p, pf.name() + " musst du erst finden: " + ob().hint(pf) + " vom Spawn.");
+            return;
+        }
         Location l = ob().spot(pf);
         if (l == null) {
             feedback(p, "Die Skyblock-Welt ist nicht geladen.");
@@ -104,7 +108,16 @@ public final class OneBlockScreen {
             TextColor sc, bc;
             KitData.Small style;
             Consumer<Player> act;
-            if (!pf.claimed()) {
+            boolean known = s.mayTravel(p, pf);
+            if (!known) {
+                // verteilt auf der Map und noch nicht gefunden: nur ein Hinweis, wo man suchen muss
+                status = (pf.claimed() ? "Team " + pf.teamName + " · " : "Gesucht: ") + s.hint(pf);
+                sc = MIST;
+                button = "Erst finden";
+                style = KitData.Small.DARK;
+                bc = DIM;
+                act = null;
+            } else if (!pf.claimed()) {
                 status = t != null && own == null ? "Frei · Beanspruchen: " + Msg.coins(s.claimPrice()) + " $" : "Frei · für alle zum Abbauen";
                 sc = GREEN;
                 if (t != null && own == null) {
@@ -140,7 +153,7 @@ public final class OneBlockScreen {
                 bc = DIM;
                 act = null;
             }
-            spots.add(new Spot(icon, pf.name(), status, sc, button, style, bc, act, run(pl -> teleport(pl, pf))));
+            spots.add(new Spot(icon, pf.name(), status, sc, button, style, bc, act, known ? run(pl -> teleport(pl, pf)) : null));
         }
         String line = t == null ? "Ohne Team: /team erstellen <Name>, dann einen Block beanspruchen"
                 : own == null ? "Block-XP " + Msg.coins(pr.xp) + " · Block-Level " + pr.total() + " · noch kein Block"
@@ -163,12 +176,16 @@ public final class OneBlockScreen {
             c.box(0, y, W, 44, KitData.Box.CLOUD_CARD);
             c.icon(10, y + 6, s.block(), true);
             c.text(48, y + 9, s.name(), CLOUD, true);
-            c.text(48, y + 23, Canvas.fit(s.status(), false, 180), s.statusColor(), false);
+            c.text(48, y + 23, Canvas.fit(s.status(), false, W - 48 - 136), s.statusColor(), false);
             int bw = 120;
             c.smallButton(W - 10 - bw, y + 6, bw, s.style(), Canvas.fit(s.button(), true, bw - 10), s.buttonColor(), true);
             if (s.action() != null) c.action(W - 10 - bw, y + 6, bw, KitData.SMALL_H, s.action(), s.button());
-            c.smallButton(W - 10 - bw, y + 6 + KitData.SMALL_H + 2, bw, KitData.Small.DARK, "Hinreisen", SKY, false);
-            c.action(W - 10 - bw, y + 6 + KitData.SMALL_H + 2, bw, KitData.SMALL_H, s.travel(), "Zum " + s.name());
+            if (s.travel() != null) {
+                c.smallButton(W - 10 - bw, y + 6 + KitData.SMALL_H + 2, bw, KitData.Small.DARK, "Hinreisen", SKY, false);
+                c.action(W - 10 - bw, y + 6 + KitData.SMALL_H + 2, bw, KitData.SMALL_H, s.travel(), "Zum " + s.name());
+            } else {
+                c.smallButton(W - 10 - bw, y + 6 + KitData.SMALL_H + 2, bw, KitData.Small.DARK, "Hinreisen gesperrt", DIM, false);
+            }
             y += 48;
         }
         if (v.spots().isEmpty()) {
@@ -322,6 +339,10 @@ public final class OneBlockScreen {
         TeamService.Team t = s.team(p.getUniqueId());
         Msg.send(p, "<#9AD8FF><b>One-Block</b>");
         for (Platform pf : s.platforms()) {
+            if (!s.mayTravel(p, pf)) {
+                Msg.send(p, " <white>" + pf.name() + " <dark_gray>· <gray>unentdeckt · " + s.hint(pf) + " vom Spawn");
+                continue;
+            }
             Msg.send(p, " <white>" + pf.name() + " <dark_gray>· " + (pf.claimed() ? "<gold>Team " + Msg.escape(pf.teamName) : "<green>frei")
                     + " <click:run_command:'/oneblock tp " + (pf.index + 1) + "'><aqua>[Hin]</click>"
                     + (!pf.claimed() && t != null ? " <click:run_command:'/oneblock beanspruchen " + (pf.index + 1) + "'><gold>[Beanspruchen]</click>" : ""));
@@ -348,6 +369,10 @@ public final class OneBlockScreen {
                 new Spot(KitData.Icon.GRASS_BLOCK, "One-Block 1", "Frei · Beanspruchen: 25.000 $", GREEN, "Beanspruchen", KitData.Small.GOLD, GOLD, no, no),
                 new Spot(KitData.Icon.DIAMOND, "One-Block 2", "Euer Block · Block-Level 75 · 12.345 abgebaut", GOLD, "Upgrades", KitData.Small.GREEN, CLOUD, no, no),
                 new Spot(KitData.Icon.EMERALD, "One-Block 3", "Team " + w, MIST, "Belegt", KitData.Small.DARK, DIM, null, no)), no, no)));
+        reg.accept("One-Block verteilt", () -> overview(new Overview("Kuby", "Block-XP 120 · Block-Level 0 · noch kein Block", 4210, List.of(
+                new Spot(KitData.Icon.GRASS_BLOCK, "One-Block 1", "Gesucht: Nordwesten, ca. 14.000 Blöcke", MIST, "Erst finden", KitData.Small.DARK, DIM, null, null),
+                new Spot(KitData.Icon.GRASS_BLOCK, "One-Block 2", "Team " + w + " · Südosten, ca. 20.000 Blöcke", MIST, "Erst finden", KitData.Small.DARK, DIM, null, null),
+                new Spot(KitData.Icon.GRASS_BLOCK, "One-Block 3", "Frei · Beanspruchen: 25.000 $", GREEN, "Beanspruchen", KitData.Small.GOLD, GOLD, no, no)), no, no)));
         reg.accept("One-Block leer", () -> overview(new Overview(null, "Ohne Team: /team erstellen <Name>, dann einen Block beanspruchen", 0,
                 List.of(), null, no)));
         List<Card> cards = new ArrayList<>();

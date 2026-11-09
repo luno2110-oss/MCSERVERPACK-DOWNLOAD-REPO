@@ -155,12 +155,12 @@ public final class ProgressScreens {
                 Msg.send(pl, err == null ? "<green>" + kit.name() + " abgeholt!" : "<red>" + err);
                 kits(pl);
             }, pl -> {
-                pl.closeDialog();
+                de.kuby.kubyplugins.ui.UiDialog.close(pl);
                 new KitPreviewMenu(plugin, kit.id()).open(pl);
             }));
         }
         Consumer<Player> edit = p.hasPermission("kuby.admin") ? pl -> {
-            pl.closeDialog();
+            de.kuby.kubyplugins.ui.UiDialog.close(pl);
             new KitAdminMenu(plugin).open(pl);
         } : null;
         UiDialog.show(p, kits(rows, edit), 300);
