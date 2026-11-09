@@ -547,28 +547,37 @@ cookie:
     sekunden: 13              # so lange ist ein Glückskeks sichtbar
 
 trading:
+  modell: 3                  # Stand der Börse (ältere configs werden beim Start einmal umgestellt)
   tick-sekunden: 10          # Kurs-Schritt
-  # Der Kurs läuft von selbst wie an einer echten Börse (simuliert), ohne dass Spieler ihn bewegen.
+  # Der Kurs läuft auch ohne Spieler wie an einer echten Börse: Schwankung, Trends, ruhige und hektische Phasen,
+  # Nachrichten und ab und zu ein Chart-Muster (Bullen-/Bärenflagge, Doppelboden/-top, Schulter-Kopf-Schulter, Dreieck,
+  # Pump & Dump, V-Erholung, Tasse mit Henkel, Seitwärtsphase, Treppen), das über 1 bis 10 Stunden die Form vorgibt.
   kurs:
-    volatilitaet-tag: 0.045  # typische Schwankung an einem Tag (0.045 = 4,5 %)
+    volatilitaet-tag: 0.12   # typische Schwankung an einem Tag (0.12 = 12 %)
     trend-staerke: 0.06      # Auf- und Abwärtstrends (Steigung je Tag)
     trend-dauer-stunden: 8   # so lange hält ein Trend im Schnitt
     unruhe: 0.5              # Wechsel zwischen ruhigen und hektischen Phasen (0 = immer gleich)
     rueckkehr-tag: 0.25      # Zug zurück zum Grundpreis je Tag (hält den Kurs langfristig in der Nähe)
     markt-anteil: 0.3        # alle Werte laufen zum Teil gemeinsam (Marktstimmung)
     sektor-anteil: 0.25      # Werte eines Bereichs (Blöcke, Essen, Redstone, Deko) laufen zum Teil gemeinsam
+    muster-pro-tag: 1.5      # Chart-Muster je Wert und Tag (am Ende eine Nachricht mit dem Muster)
+    muster-staerke: 0.08     # Höhe eines Musters (0.08 = etwa 8 %, seltene Items mehr)
     nachrichten-pro-tag: 0.2 # Kurssprünge durch Nachrichten je Wert und Tag (ab 5 % Meldung an Spieler mit Position)
     nachrichten-staerke: 0.07
     markt-ereignisse-pro-tag: 0.1  # Nachrichten für den ganzen Markt
     untergrenze: 0.35        # Kurs bleibt zwischen 35 % und 300 % des Grundpreises
     obergrenze: 3.0
     seltenheit: {frequent: 0.8, common: 1.0, rare: 1.2, very_rare: 1.4, unique: 1.6}  # seltene Items schwanken mehr
-  spieler-einfluss: false    # true: Shop-Käufe, Verkäufe und große Orders bewegen den Kurs zusätzlich
-  nachfrage-wirkung: 0.02    # (nur mit spieler-einfluss) wie stark Shop-Käufe/-Verkäufe die Nachfrage bewegen
-  nachfrage-abbau: 0.0005    # (nur mit spieler-einfluss) Nachfrage kehrt je Schritt so weit zu 1 zurück
-  liquiditaet: 2000000       # (nur mit spieler-einfluss) große Orders bewegen den Kurs: Betrag / Liquidität (höchstens 5 %)
-  gebuehr-prozent: 0.5       # Gebühr je Kauf und Verkauf
+  # Spieler bewegen den Kurs: Long (kaufen) und Short-Schließen heben ihn, Verkaufen und Short senken ihn, ebenso
+  # Shop-Käufe und Verkäufe an den Server. Ausgeführt wird zum Mittelkurs, schnelles Hin und Her bringt keinen Gewinn.
+  spieler-bewegen: true
+  liquiditaet: 250000        # eine Order bewegt den Kurs um Betrag / Liquidität (höchstens 8 %), 30 % davon bleiben
+  nachfrage-wirkung: 0.02    # wie stark Shop-Käufe/-Verkäufe die Nachfrage bewegen
+  nachfrage-abbau: 0.0005    # Nachfrage kehrt je Schritt so weit zu 1 zurück
+  gebuehr-prozent: 0.5       # Gebühr je Kauf, Verkauf und Short
   max-orders: 10             # offene Orders je Spieler und Modus
+  # Short: der Betrag ist die Sicherheit; Gewinn, wenn der Kurs fällt. Bei 90 % Verlust der Sicherheit wird der Short
+  # automatisch geschlossen (Liquidation). Long und Short im selben Wert gleichzeitig geht nicht.
 
 # Befehle nur in bestimmten Modi (smp, survival, skyblock, hub); in anderen Modi kommt eine Meldung. Admins dürfen überall.
 modus-befehle:

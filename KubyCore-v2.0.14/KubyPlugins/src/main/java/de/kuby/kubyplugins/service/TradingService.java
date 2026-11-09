@@ -81,6 +81,13 @@ public final class TradingService {
         int sector;
         double floor, cap, drift, lv, volMul = 1.0, rvol = 1.0;
         long trendUntil;
+        /** Laufendes Chart-Muster (-1 = keins): Start, Ende, Ausgangskurs (log), Stärke (log), Richtung. */
+        int pat = -1;
+        long patStart, patEnd;
+        double patAnchor, patAmp;
+        int patSign = 1;
+        /** Spieler-Druck: gekaufte und verkaufte Beträge der letzten Stunde (klingt langsam ab). */
+        public double flowBuy, flowSell;
         final EnumMap<Frame, Deque<Candle>> candles = new EnumMap<>(Frame.class);
 
         Ticker(String id, String symbol, String name, Material material, double base) {
@@ -115,19 +122,72 @@ public final class TradingService {
         public double qty, avg;
     }
 
+    /** Short-Position: geliehene Stück (qty), Einstiegskurs (avg), hinterlegte Sicherheit in $ (margin). Gewinn, wenn der
+     *  Kurs fällt: margin + qty * (avg - Kurs). Bei 90 % Verlust der Sicherheit wird sie automatisch geschlossen. */
+    public static final class Short {
+        public double qty, avg;
+        public long margin;
+
+        public long value(double price) {
+            return Math.max(0, Math.round(margin + qty * (avg - price)));
+        }
+
+        /** Kurs, bei dem die Short-Position zwangsweise geschlossen wird. */
+        public double liquidation() {
+            return qty <= 0 ? Double.MAX_VALUE : avg + margin * 0.9 / qty;
+        }
+    }
+
+    // ---------- Chart-Muster: Wegpunkte (Anteil der Dauer, Höhe in Vielfachen der Stärke) ----------
+    static final String[] PAT_NAME = {"Bullenflagge", "Bärenflagge", "Doppelboden", "Doppeltop", "Schulter-Kopf-Schulter",
+            "Umgekehrte Schulter-Kopf-Schulter", "Dreieck", "Pump & Dump", "V-Erholung", "Tasse mit Henkel", "Seitwärtsphase",
+            "Aufwärtstreppe", "Abwärtstreppe"};
+    /** Richtung des Musters: 1 = steigt am Ende, -1 = fällt, 0 = offen (Dreieck: Ausbruch zufällig) oder neutral. */
+    static final int[] PAT_DIR = {1, -1, 1, -1, -1, 1, 0, 0, 0, 1, 0, 1, -1};
+    /** Dauer in Stunden (von, bis). */
+    static final double[][] PAT_HOURS = {{1.5, 4}, {1.5, 4}, {3, 8}, {3, 8}, {4, 10}, {4, 10}, {3, 8}, {1, 3}, {1.5, 4}, {5, 10}, {3, 7}, {3, 8}, {3, 8}};
+    static final double[][][] PAT = {
+            {{0, 0}, {0.3, 1.0}, {0.42, 0.82}, {0.55, 0.92}, {0.68, 0.78}, {1.0, 1.7}},
+            {{0, 0}, {0.3, -1.0}, {0.42, -0.82}, {0.55, -0.92}, {0.68, -0.78}, {1.0, -1.7}},
+            {{0, 0}, {0.2, -0.8}, {0.4, -0.2}, {0.6, -0.8}, {0.8, 0.05}, {1.0, 0.6}},
+            {{0, 0}, {0.2, 0.8}, {0.4, 0.2}, {0.6, 0.8}, {0.8, -0.05}, {1.0, -0.6}},
+            {{0, 0}, {0.15, 0.6}, {0.3, 0.2}, {0.5, 1.0}, {0.7, 0.2}, {0.85, 0.6}, {1.0, -0.5}},
+            {{0, 0}, {0.15, -0.6}, {0.3, -0.2}, {0.5, -1.0}, {0.7, -0.2}, {0.85, -0.6}, {1.0, 0.5}},
+            {{0, 0}, {0.15, 0.8}, {0.3, -0.6}, {0.45, 0.5}, {0.6, -0.35}, {0.72, 0.2}, {0.82, -0.08}, {1.0, 1.1}},
+            {{0, 0}, {0.35, 0.35}, {0.55, 1.4}, {0.63, 1.6}, {0.75, 0.4}, {1.0, 0.05}},
+            {{0, 0}, {0.4, -1.2}, {0.5, -1.3}, {0.8, -0.3}, {1.0, 0.05}},
+            {{0, 0}, {0.2, -0.6}, {0.4, -0.8}, {0.6, -0.1}, {0.7, 0.0}, {0.78, -0.25}, {0.88, -0.1}, {1.0, 0.8}},
+            {{0, 0}, {0.12, 0.5}, {0.25, -0.5}, {0.37, 0.5}, {0.5, -0.5}, {0.62, 0.5}, {0.75, -0.5}, {0.87, 0.5}, {1.0, 0.0}},
+            {{0, 0}, {0.2, 0.6}, {0.3, 0.4}, {0.5, 1.0}, {0.6, 0.8}, {0.8, 1.4}, {0.9, 1.2}, {1.0, 1.8}},
+            {{0, 0}, {0.2, -0.6}, {0.3, -0.4}, {0.5, -1.0}, {0.6, -0.8}, {0.8, -1.4}, {0.9, -1.2}, {1.0, -1.8}}};
+
+    static double patShape(int pat, double f) {
+        double[][] w = PAT[pat];
+        for (int i = 1; i < w.length; i++) {
+            if (f <= w[i][0]) {
+                double a = (f - w[i - 1][0]) / Math.max(1e-9, w[i][0] - w[i - 1][0]);
+                // weich zwischen den Wegpunkten (keine Knicke)
+                a = a * a * (3 - 2 * a);
+                return w[i - 1][1] + (w[i][1] - w[i - 1][1]) * a;
+            }
+        }
+        return w[w.length - 1][1];
+    }
+
     public record Trade(long t, String ticker, String side, double qty, double price, long coins, long pnl) {}
 
     /** Nachricht: Zeit, Symbol (leer = ganzer Markt), Text, Veränderung in Prozent. */
     public record News(long t, String symbol, String text, double pct) {}
 
     /** Version des Kurs-Modells; ältere Verläufe werden beim Laden einmal neu simuliert. */
-    private static final int MODEL = 2;
+    private static final int MODEL = 3;
 
     private final KubyPlugins plugin;
     private final File file;
     private final Random rnd = new Random();
     private final Map<String, Ticker> tickers = new LinkedHashMap<>();
     private final Map<String, Map<UUID, Map<String, Position>>> positions = new HashMap<>();
+    private final Map<String, Map<UUID, Map<String, Short>>> shorts = new HashMap<>();
     private final List<Order> orders = new ArrayList<>();
     private final Map<String, Deque<Trade>> history = new HashMap<>();
     private int nextOrder = 1;
@@ -145,6 +205,7 @@ public final class TradingService {
     public TradingService(KubyPlugins plugin) {
         this.plugin = plugin;
         this.file = new File(plugin.getDataFolder(), "trading.yml");
+        migrateConfig();
         load();
         long period = Math.max(5, plugin.getConfig().getLong("trading.tick-sekunden", 20)) * 20L;
         plugin.getServer().getScheduler().runTaskTimer(plugin, this::tick, 200L, period);
@@ -157,6 +218,17 @@ public final class TradingService {
     // Einstellungen
     // =================================================================================================================
 
+    /** Börse 3 (Muster, Spieler bewegen den Kurs, Short): alte Standard-Werte einmal auf die neuen setzen. */
+    private void migrateConfig() {
+        var c = plugin.getConfig();
+        if (c.getInt("trading.modell", 0) >= 3) return;
+        if (Math.abs(c.getDouble("trading.kurs.volatilitaet-tag", 0.045) - 0.045) < 1e-9) c.set("trading.kurs.volatilitaet-tag", 0.12);
+        if (Math.abs(c.getDouble("trading.liquiditaet", 2_000_000) - 2_000_000) < 1e-9) c.set("trading.liquiditaet", 250_000);
+        if (!c.contains("trading.spieler-bewegen")) c.set("trading.spieler-bewegen", true);
+        c.set("trading.modell", 3);
+        plugin.saveConfig();
+    }
+
     private double cfg(String key, double def) {
         return plugin.getConfig().getDouble("trading." + key, def);
     }
@@ -165,9 +237,9 @@ public final class TradingService {
         return cfg("gebuehr-prozent", 0.5);
     }
 
-    /** Bewegen Spieler den Kurs (Shop, große Orders)? Standard: nein, der Kurs läuft nur simuliert. */
+    /** Bewegen Spieler den Kurs (Käufe, Verkäufe, Shorts, Shop)? Standard: ja. */
     public boolean playerInfluence() {
-        return plugin.getConfig().getBoolean("trading.spieler-einfluss", false);
+        return plugin.getConfig().getBoolean("trading.spieler-bewegen", true);
     }
 
     private double sim(String key, double def) {
@@ -180,13 +252,14 @@ public final class TradingService {
 
     /** Einstellungen der Simulation, einmal je Schritt gelesen (nicht je Wert). */
     private record Params(double sigma, double trend, double hours, double unrest, double kappa, double wm, double ws, double newsRate,
-                          double newsSize, boolean influence) {}
+                          double newsSize, boolean influence, double patRate, double patAmp) {}
 
     private Params params() {
         double wm = Math.max(0, Math.min(0.9, sim("markt-anteil", 0.3)));
-        return new Params(sim("volatilitaet-tag", 0.045), sim("trend-staerke", 0.06), Math.max(0.1, sim("trend-dauer-stunden", 8)),
+        return new Params(sim("volatilitaet-tag", 0.12), sim("trend-staerke", 0.06), Math.max(0.1, sim("trend-dauer-stunden", 8)),
                 sim("unruhe", 0.5), sim("rueckkehr-tag", 0.25), wm, Math.max(0, Math.min(0.9 - wm, sim("sektor-anteil", 0.25))),
-                sim("nachrichten-pro-tag", 0.2), sim("nachrichten-staerke", 0.07), playerInfluence());
+                sim("nachrichten-pro-tag", 0.2), sim("nachrichten-staerke", 0.07), playerInfluence(), sim("muster-pro-tag", 1.5),
+                sim("muster-staerke", 0.08));
     }
 
     /** Wie stark ein Wert schwankt: seltene Items mehr (trading.kurs.seltenheit). */
@@ -274,6 +347,7 @@ public final class TradingService {
         t.drift = 0;
         t.lv = 0;
         t.trendUntil = 0;
+        t.pat = -1;
         long time = now - now % Frame.D1.ms - (Frame.D1.keep - 1) * Frame.D1.ms;
         long[][] plan = {{now - 4 * Frame.D1.ms, Frame.H1.ms}, {now - 8 * 3_600_000L, Frame.M5.ms}, {now, tick}};
         for (long[] stage : plan) {
@@ -365,6 +439,14 @@ public final class TradingService {
                 double decay = cfg("nachfrage-abbau", 0.0005);
                 for (Ticker t : tickers.values()) t.factor += (1.0 - t.factor) * decay;
             }
+            // Spieler-Druck klingt ab (Halbwertszeit etwa eine Stunde)
+            double flowKeep = Math.exp(-elapsed / 3_600_000.0 * Math.log(2));
+            for (Ticker t : tickers.values()) {
+                t.flowBuy *= flowKeep;
+                t.flowSell *= flowKeep;
+            }
+            // Shorts: bei 90 % Verlust der Sicherheit zwangsweise schließen
+            notes.addAll(liquidate());
             for (News n : fresh) {
                 news.addFirst(n);
                 while (news.size() > 40) news.pollLast();
@@ -423,6 +505,15 @@ public final class TradingService {
      * Bereich nur als Zufall mit, ohne Nachrichten.
      */
     private void step(Params pr, Ticker t, long now, double dt, double zm, double zs, double marketJump, List<News> out) {
+        // Chart-Muster: beginnt ab und zu und gibt dann die Form des Verlaufs vor (mit Rauschen darüber)
+        if (t.pat >= 0 && now >= t.patEnd) {
+            if (out != null) {
+                double pct = (t.price / Math.exp(t.patAnchor) - 1) * 100;
+                out.add(new News(now, t.symbol, t.name + ": Chart-Muster abgeschlossen (" + PAT_NAME[t.pat] + ")", pct));
+            }
+            t.pat = -1;
+        }
+        if (t.pat < 0 && rnd.nextDouble() < pr.patRate() * dt) startPattern(pr, t, now);
         if (now >= t.trendUntil) {
             t.drift = rnd.nextGaussian() * pr.trend();
             t.trendUntil = now + (long) (-Math.log(1 - rnd.nextDouble()) * pr.hours() * 3_600_000L);
@@ -436,7 +527,16 @@ public final class TradingService {
         double x = Math.log(t.price / fair);
         double mu = t.drift - pr.kappa() * x + (out == null ? 0 : 0.7 * grpDrift[0] + 0.7 * grpDrift[g]);
         double z = Math.sqrt(pr.wm()) * zm + Math.sqrt(pr.ws()) * zs + Math.sqrt(1 - pr.wm() - pr.ws()) * rnd.nextGaussian();
-        double r = (mu - 0.5 * s * s) * dt + s * Math.sqrt(dt) * z + marketJump;
+        double r;
+        if (t.pat >= 0) {
+            // dem Muster folgen: ein Teil des Abstands zum Musterkurs je Schritt (genau für jede Schrittweite), weniger Rauschen
+            double f = Math.max(0, Math.min(1, (now - t.patStart) / (double) Math.max(1, t.patEnd - t.patStart)));
+            double target = t.patAnchor + t.patSign * t.patAmp * patShape(t.pat, f);
+            double follow = 1 - Math.exp(-150 * dt);
+            r = follow * (target - Math.log(t.price)) + 0.6 * s * Math.sqrt(dt) * z + marketJump;
+        } else {
+            r = (mu - 0.5 * s * s) * dt + s * Math.sqrt(dt) * z + marketJump;
+        }
         if (rnd.nextDouble() < pr.newsRate() * dt) {
             double j = Math.abs(rnd.nextGaussian()) * pr.newsSize() + 0.015;
             // weit über dem Grundpreis eher schlechte Nachrichten, weit darunter eher gute
@@ -450,6 +550,28 @@ public final class TradingService {
         }
         t.price = Math.max(t.floor > 0 ? t.floor : t.base * 0.2, Math.min(t.cap > 0 ? t.cap : t.base * 5.0, t.price * Math.exp(r)));
         candle(t, now, 0);
+    }
+
+    /** Neues Muster: weit über dem Grundpreis eher fallende Muster, weit darunter eher steigende. */
+    private void startPattern(Params pr, Ticker t, long now) {
+        double x = Math.log(t.price / Math.max(0.01, t.base));
+        int p = 0;
+        for (int tries = 0; tries < 6; tries++) {
+            p = rnd.nextInt(PAT.length);
+            int dir = PAT_DIR[p];
+            if (dir == 0 || (x > 0.25 && dir < 0) || (x < -0.25 && dir > 0) || Math.abs(x) <= 0.25) break;
+        }
+        t.pat = p;
+        t.patStart = now;
+        double[] h = PAT_HOURS[p];
+        t.patEnd = now + (long) ((h[0] + rnd.nextDouble() * (h[1] - h[0])) * 3_600_000L);
+        t.patAnchor = Math.log(t.price);
+        t.patAmp = pr.patAmp() * t.rvol * (0.6 + rnd.nextDouble() * 0.8);
+        // Dreieck: Ausbruch in eine zufällige Richtung, Seitwärtsphase/Pump/V gespiegelt nur, wenn es passt
+        t.patSign = PAT_DIR[p] == 0 && p == 6 ? (rnd.nextBoolean() ? 1 : -1) : 1;
+        // Muster dürfen die Grenzen nicht sprengen: Stärke kleiner, wenn der Kurs nahe an Unter- oder Obergrenze ist
+        double room = Math.min(Math.log(Math.max(t.cap, t.price * 1.01) / t.price), Math.log(t.price / Math.max(0.01, Math.min(t.floor, t.price * 0.99))));
+        t.patAmp = Math.min(t.patAmp, Math.max(0.01, room / 1.8));
     }
 
     /** Große Nachrichten (ab 5 %) an Spieler, die den Wert halten; Markt-Nachrichten an alle mit Positionen. */
@@ -517,6 +639,8 @@ public final class TradingService {
             candle(t, System.currentTimeMillis(), units);
             return;
         }
+        if (sign > 0) t.flowBuy += units * t.price;
+        else t.flowSell += units * t.price;
         Material m = t.material;
         long target = Math.max(1, plugin.getConfig().getLong("economy.target." + plugin.investments().rarityOf(m).name().toLowerCase(Locale.ROOT), 100));
         double impact = cfg("nachfrage-wirkung", 0.02) * units / (target / 7.0);
@@ -565,13 +689,30 @@ public final class TradingService {
         while (d.size() > 30) d.pollLast();
     }
 
-    /** Kurs durch eigene Order bewegen (große Beträge mehr). */
-    private void impact(Ticker t, double coins, int sign) {
+    /**
+     * Kurs durch eine Order bewegen (Kauf und Short-Schließen heben, Verkauf und Short senken; große Beträge mehr,
+     * höchstens 8 % je Order). Gibt den Ausführungskurs zurück: die Mitte zwischen altem und neuem Kurs, so bringt
+     * schnelles Hin und Her keinen Gewinn.
+     */
+    private double impact(Ticker t, double coins, int sign) {
+        double before = t.price;
+        if (sign > 0) t.flowBuy += coins;
+        else t.flowSell += coins;
         if (playerInfluence()) {
-            double liq = Math.max(1000, cfg("liquiditaet", 2_000_000));
-            t.price = Math.max(t.floor, Math.min(t.cap, t.price * (1 + sign * Math.min(0.05, coins / liq))));
+            double liq = Math.max(1000, cfg("liquiditaet", 250_000));
+            double move = Math.min(0.08, coins / liq);
+            t.price = Math.max(t.floor, Math.min(t.cap, t.price * (1 + sign * move)));
+            // ein Teil bleibt als Nachfrage (fairer Preis verschiebt sich), der Rest läuft mit der Zeit zurück
+            t.factor = Math.max(0.3, Math.min(3.0, t.factor * (1 + sign * move * 0.3)));
         }
-        candle(t, System.currentTimeMillis(), coins / Math.max(0.01, t.price));
+        candle(t, System.currentTimeMillis(), coins / Math.max(0.01, before));
+        return (before + t.price) / 2;
+    }
+
+    /** Spieler-Druck in Prozent Käufe (0..100) der letzten Stunde, -1 ohne Umsatz. */
+    public synchronized int buyPressure(Ticker t) {
+        double sum = t.flowBuy + t.flowSell;
+        return sum < 1 ? -1 : (int) Math.round(t.flowBuy / sum * 100);
     }
 
     /** Für coins kaufen (Market-Order). Gibt null bei Erfolg zurück. */
@@ -579,20 +720,22 @@ public final class TradingService {
         Ticker t = tickers.get(id);
         if (t == null) return "Diesen Wert gibt es nicht.";
         if (coins < 1) return "Ungültiger Betrag.";
-        if (!plugin.economy().withdraw(p.getUniqueId(), coins)) return "Nicht genug $.";
         String mode = plugin.modes().modeOf(p.getUniqueId());
+        Short sh = shortBook(p.getUniqueId(), mode).get(id);
+        if (sh != null && sh.qty > 1e-9) return "Du bist in " + t.symbol + " Short. Schließ erst den Short.";
+        if (!plugin.economy().withdraw(p.getUniqueId(), coins)) return "Nicht genug $.";
         fill(p.getUniqueId(), mode, t, coins);
         return null;
     }
 
     private double fill(UUID id, String mode, Ticker t, long coins) {
         double fee = coins * feePercent() / 100.0;
-        double qty = (coins - fee) / t.price;
+        double px = impact(t, coins - fee, 1);
+        double qty = (coins - fee) / px;
         Position pos = book(id, mode).computeIfAbsent(t.id, k -> new Position());
-        pos.avg = (pos.avg * pos.qty + t.price * qty) / (pos.qty + qty);
+        pos.avg = (pos.avg * pos.qty + px * qty) / (pos.qty + qty);
         pos.qty += qty;
-        log(id, mode, new Trade(System.currentTimeMillis(), t.symbol, "Kauf", qty, t.price, coins, 0));
-        impact(t, coins, 1);
+        log(id, mode, new Trade(System.currentTimeMillis(), t.symbol, "Long", qty, px, coins, 0));
         dirty = true;
         return qty;
     }
@@ -616,15 +759,101 @@ public final class TradingService {
         Position pos = b.get(t.id);
         if (pos == null) return 0;
         qty = Math.min(qty, pos.qty);
-        double gross = qty * t.price;
+        double px = impact(t, qty * t.price, -1);
+        double gross = qty * px;
         long payout = Math.round(gross * (1 - feePercent() / 100.0));
         long pnl = Math.round(payout - qty * pos.avg);
         pos.qty -= qty;
         if (pos.qty <= 1e-6) b.remove(t.id);
-        log(id, mode, new Trade(System.currentTimeMillis(), t.symbol, side, qty, t.price, payout, pnl));
-        impact(t, gross, -1);
+        log(id, mode, new Trade(System.currentTimeMillis(), t.symbol, side, qty, px, payout, pnl));
         dirty = true;
         return payout;
+    }
+
+    // ---------- Short ----------
+
+    private Map<String, Short> shortBook(UUID id, String mode) {
+        return shorts.computeIfAbsent(mode, k -> new HashMap<>()).computeIfAbsent(id, k -> new LinkedHashMap<>());
+    }
+
+    public synchronized Map<String, Short> shorts(UUID id, String mode) {
+        return new LinkedHashMap<>(shortBook(id, mode));
+    }
+
+    /** Short eröffnen: coins werden als Sicherheit hinterlegt, so viel wird zum Kurs leer verkauft. */
+    public synchronized String openShort(Player p, String id, long coins) {
+        Ticker t = tickers.get(id);
+        if (t == null) return "Diesen Wert gibt es nicht.";
+        if (coins < 1) return "Ungültiger Betrag.";
+        UUID uid = p.getUniqueId();
+        String mode = plugin.modes().modeOf(uid);
+        Position pos = book(uid, mode).get(id);
+        if (pos != null && pos.qty > 1e-9) return "Du bist in " + t.symbol + " Long. Schließ erst die Long-Position.";
+        if (!plugin.economy().withdraw(uid, coins)) return "Nicht genug $.";
+        double fee = coins * feePercent() / 100.0;
+        double px = impact(t, coins - fee, -1);
+        double qty = (coins - fee) / px;
+        Short s = shortBook(uid, mode).computeIfAbsent(id, k -> new Short());
+        s.avg = (s.avg * s.qty + px * qty) / (s.qty + qty);
+        s.qty += qty;
+        s.margin += Math.round(coins - fee);
+        log(uid, mode, new Trade(System.currentTimeMillis(), t.symbol, "Short", qty, px, coins, 0));
+        dirty = true;
+        return null;
+    }
+
+    /** Short (teilweise) schließen: zurückkaufen, Sicherheit plus Gewinn (oder minus Verlust) zurück. */
+    public synchronized String closeShort(Player p, String id, double fraction) {
+        Ticker t = tickers.get(id);
+        if (t == null) return "Diesen Wert gibt es nicht.";
+        String mode = plugin.modes().modeOf(p.getUniqueId());
+        Short s = shortBook(p.getUniqueId(), mode).get(id);
+        if (s == null || s.qty <= 1e-9) return "Du hast keinen Short in " + t.symbol + ".";
+        long payout = closeShortPart(p.getUniqueId(), mode, t, Math.max(0, Math.min(1, fraction)), "Short zu");
+        plugin.economy().deposit(p.getUniqueId(), payout);
+        return null;
+    }
+
+    private long closeShortPart(UUID id, String mode, Ticker t, double fraction, String side) {
+        Map<String, Short> b = shortBook(id, mode);
+        Short s = b.get(t.id);
+        if (s == null) return 0;
+        double qty = s.qty * fraction;
+        long margin = Math.round(s.margin * fraction);
+        double px = impact(t, qty * t.price, 1);
+        double buyBack = qty * px * (1 + feePercent() / 100.0);
+        long payout = Math.max(0, Math.round(margin + qty * s.avg - buyBack));
+        long pnl = payout - margin;
+        s.qty -= qty;
+        s.margin -= margin;
+        if (s.qty <= 1e-6) b.remove(t.id);
+        log(id, mode, new Trade(System.currentTimeMillis(), t.symbol, side, qty, px, payout, pnl));
+        dirty = true;
+        return payout;
+    }
+
+    /** Shorts mit 90 % Verlust der Sicherheit schließen (Rest zurück). Gibt die Meldungen zurück. */
+    private List<Runnable> liquidate() {
+        List<Runnable> out = new ArrayList<>();
+        shorts.forEach((mode, byPlayer) -> byPlayer.forEach((u, book) -> {
+            for (String id : new ArrayList<>(book.keySet())) {
+                Ticker t = tickers.get(id);
+                Short s = book.get(id);
+                if (t == null || s == null || t.price < s.liquidation()) continue;
+                long payout = closeShortPart(u, mode, t, 1.0, "Liquidiert");
+                if (payout > 0) plugin.modes().depositIn(u, mode, payout);
+                String sym = t.symbol;
+                out.add(() -> {
+                    Player p = Bukkit.getPlayer(u);
+                    if (p != null) {
+                        Msg.send(p, "<#64D8FF><b>Börse:</b> <red>Short in " + sym + " liquidiert <gray>(Kurs zu weit gestiegen), zurück: <gold>"
+                                + Msg.coins(payout) + " $");
+                        Sfx.play(plugin, p, Sfx.Kind.ERROR);
+                    }
+                });
+            }
+        }));
+        return out;
     }
 
     /** Order anlegen. LIMIT_BUY reserviert coins, die anderen verkaufen fraction der Position. */
@@ -739,6 +968,26 @@ public final class TradingService {
                     t.trendUntil = Long.parseLong(st[2]);
                 } catch (RuntimeException ignored) {
                 }
+                String[] mu = s.getString("muster", "").split(";");
+                if (mu.length >= 6) {
+                    try {
+                        t.pat = Integer.parseInt(mu[0]);
+                        t.patStart = Long.parseLong(mu[1]);
+                        t.patEnd = Long.parseLong(mu[2]);
+                        t.patAnchor = Double.parseDouble(mu[3]);
+                        t.patAmp = Double.parseDouble(mu[4]);
+                        t.patSign = Integer.parseInt(mu[5]);
+                        if (t.pat >= PAT.length) t.pat = -1;
+                    } catch (RuntimeException e) {
+                        t.pat = -1;
+                    }
+                }
+                String[] dr = s.getString("druck", "0;0").split(";");
+                try {
+                    t.flowBuy = Double.parseDouble(dr[0]);
+                    t.flowSell = Double.parseDouble(dr[1]);
+                } catch (RuntimeException ignored) {
+                }
                 for (Frame f : Frame.values()) {
                     for (String c : s.getStringList("candles." + f.name())) {
                         String[] p = c.split(";");
@@ -768,6 +1017,29 @@ public final class TradingService {
                         pos.qty = Double.parseDouble(p[0]);
                         pos.avg = Double.parseDouble(p[1]);
                         book(UUID.fromString(u), mode).put(id, pos);
+                    }
+                }
+            }
+        }
+        ConfigurationSection ss = y.getConfigurationSection("shorts");
+        if (ss != null) {
+            for (String mode : ss.getKeys(false)) {
+                ConfigurationSection pm = ss.getConfigurationSection(mode);
+                if (pm == null) continue;
+                for (String u : pm.getKeys(false)) {
+                    ConfigurationSection pu = pm.getConfigurationSection(u);
+                    if (pu == null) continue;
+                    for (String id : pu.getKeys(false)) {
+                        String[] p = pu.getString(id, "0;0;0").split(";");
+                        try {
+                            Short s = new Short();
+                            s.qty = Double.parseDouble(p[0]);
+                            s.avg = Double.parseDouble(p[1]);
+                            s.margin = Long.parseLong(p[2]);
+                            shortBook(UUID.fromString(u), mode).put(id, s);
+                        } catch (RuntimeException ignored) {
+                            // kaputter Eintrag
+                        }
                     }
                 }
             }
@@ -851,6 +1123,8 @@ public final class TradingService {
             out.set(b + "price", t.price);
             out.set(b + "factor", t.factor);
             out.set(b + "sim", r4(t.drift) + ";" + r4(t.lv) + ";" + t.trendUntil);
+            if (t.pat >= 0) out.set(b + "muster", t.pat + ";" + t.patStart + ";" + t.patEnd + ";" + r4(t.patAnchor) + ";" + r4(t.patAmp) + ";" + t.patSign);
+            if (t.flowBuy + t.flowSell >= 1) out.set(b + "druck", r4(t.flowBuy) + ";" + r4(t.flowSell));
             for (Frame f : Frame.values()) {
                 List<String> l = new ArrayList<>();
                 for (Candle c : t.candles.get(f)) {
@@ -861,6 +1135,8 @@ public final class TradingService {
         }
         positions.forEach((mode, byPlayer) -> byPlayer.forEach((u, book) -> book.forEach((id, pos) ->
                 out.set("positions." + mode + "." + u + "." + id, r4(pos.qty) + ";" + r4(pos.avg)))));
+        shorts.forEach((mode, byPlayer) -> byPlayer.forEach((u, book) -> book.forEach((id, s) ->
+                out.set("shorts." + mode + "." + u + "." + id, r4(s.qty) + ";" + r4(s.avg) + ";" + s.margin))));
         List<String> os = new ArrayList<>();
         for (Order o : orders) {
             os.add(o.id() + ";" + o.owner() + ";" + o.mode() + ";" + o.ticker() + ";" + o.type().name() + ";" + o.trigger() + ";" + o.qty() + ";"

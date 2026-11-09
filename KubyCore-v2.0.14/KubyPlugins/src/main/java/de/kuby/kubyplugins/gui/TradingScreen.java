@@ -85,7 +85,16 @@ public final class TradingScreen {
     public record Market(Head head, List<Chip> chips, boolean prev, boolean next, Consumer<Player> prevPage, Consumer<Player> nextPage,
                          KitData.Icon icon, String symbol, String name, double price, double change, double hi, double lo, Frame frame,
                          List<Bar> bars, String position, long posPnl, List<String[]> orders, List<Consumer<Player>> cancels,
-                         Map<String, Consumer<Player>> actions, Map<Frame, Consumer<Player>> frames, double fee, List<NewsLine> news) {
+                         Map<String, Consumer<Player>> actions, Map<Frame, Consumer<Player>> frames, double fee, List<NewsLine> news,
+                         int pressure, boolean isShort) {
+        public Market(Head head, List<Chip> chips, boolean prev, boolean next, Consumer<Player> prevPage, Consumer<Player> nextPage,
+                      KitData.Icon icon, String symbol, String name, double price, double change, double hi, double lo, Frame frame,
+                      List<Bar> bars, String position, long posPnl, List<String[]> orders, List<Consumer<Player>> cancels,
+                      Map<String, Consumer<Player>> actions, Map<Frame, Consumer<Player>> frames, double fee, List<NewsLine> news) {
+            this(head, chips, prev, next, prevPage, nextPage, icon, symbol, name, price, change, hi, lo, frame, bars, position, posPnl, orders,
+                    cancels, actions, frames, fee, news, -1, false);
+        }
+
         public Market(Head head, List<Chip> chips, boolean prev, boolean next, Consumer<Player> prevPage, Consumer<Player> nextPage,
                       KitData.Icon icon, String symbol, String name, double price, double change, double hi, double lo, Frame frame,
                       List<Bar> bars, String position, long posPnl, List<String[]> orders, List<Consumer<Player>> cancels,
@@ -169,6 +178,12 @@ public final class TradingScreen {
             value += e.getValue().qty * t.price;
             cost += e.getValue().qty * e.getValue().avg;
         }
+        for (Map.Entry<String, TradingService.Short> e : ts.shorts(id, mode).entrySet()) {
+            Ticker t = ts.ticker(e.getKey());
+            if (t == null) continue;
+            value += e.getValue().value(t.price);
+            cost += e.getValue().margin;
+        }
         return new Head(plugin.economy().balance(id), Math.round(value), Math.round(value - cost), cost <= 0 ? 0 : (value - cost) / cost * 100);
     }
 
@@ -189,14 +204,22 @@ public final class TradingScreen {
         List<Bar> bars = new ArrayList<>();
         for (Candle c : t.candles(st.frame)) bars.add(new Bar(c.o, c.h, c.l, c.c));
         Position pos = ts.positions(id, mode).get(t.id);
+        TradingService.Short sh = ts.shorts(id, mode).get(t.id);
+        boolean isLong = pos != null && pos.qty > 1e-9, isShort = sh != null && sh.qty > 1e-9;
         String posText = null;
         long posPnl = 0;
-        if (pos != null && pos.qty > 1e-9) {
+        if (isLong) {
             double value = pos.qty * t.price;
             posPnl = Math.round(value - pos.qty * pos.avg);
             double pct = pos.avg <= 0 ? 0 : (t.price - pos.avg) / pos.avg * 100;
-            posText = TradingService.fmt(pos.qty) + " " + t.symbol + " · Ø " + TradingService.money(pos.avg) + " · Wert " + Msg.coins(Math.round(value))
+            posText = "LONG " + TradingService.fmt(pos.qty) + " " + t.symbol + " · Ø " + TradingService.money(pos.avg) + " · Wert " + Msg.coins(Math.round(value))
                     + " $ · " + (posPnl >= 0 ? "+" : "") + Msg.coins(posPnl) + " $ (" + String.format(Locale.GERMANY, "%+.1f", pct) + " %)";
+        } else if (isShort) {
+            long value = sh.value(t.price);
+            posPnl = value - sh.margin;
+            double pct = sh.margin <= 0 ? 0 : posPnl * 100.0 / sh.margin;
+            posText = "SHORT " + TradingService.fmt(sh.qty) + " " + t.symbol + " · Ø " + TradingService.money(sh.avg) + " · " + (posPnl >= 0 ? "+" : "")
+                    + Msg.coins(posPnl) + " $ (" + String.format(Locale.GERMANY, "%+.1f", pct) + " %) · Liquidation " + TradingService.money(sh.liquidation());
         }
         List<String[]> ord = new ArrayList<>();
         List<Consumer<Player>> cancels = new ArrayList<>();
@@ -214,26 +237,39 @@ public final class TradingScreen {
             feedback(pl, ts.buy(pl, t.id, Math.round(v)), "Gekauft: " + Msg.coins(Math.round(v)) + " $ in " + t.symbol);
             open(pl);
         }));
-        for (int pct : new int[]{25, 50, 100}) {
-            act.put("sell" + pct, go(pl -> feedback(pl, ts.sell(pl, t.id, pct / 100.0), (pct == 100 ? "Alles" : pct + " %") + " von " + t.symbol
-                    + " verkauft.")));
+        for (long amount : new long[]{100, 1_000, 10_000}) {
+            act.put("short" + amount, go(pl -> feedback(pl, ts.openShort(pl, t.id, amount), "Short: " + Msg.coins(amount) + " $ auf fallende " + t.symbol)));
+        }
+        act.put("shortX", pl -> ask(pl, "Short: " + t.symbol, "Sicherheit in $ (Gewinn, wenn der Kurs fällt)", 1000, v -> {
+            feedback(pl, ts.openShort(pl, t.id, Math.round(v)), "Short: " + Msg.coins(Math.round(v)) + " $ auf fallende " + t.symbol);
+            open(pl);
+        }));
+        if (isLong || isShort) {
+            for (int pct : new int[]{25, 50, 100}) {
+                String what = (pct == 100 ? "Alles" : pct + " %") + " von " + t.symbol;
+                act.put("close" + pct, go(pl -> {
+                    TradingService.Short s2 = ts.shorts(pl.getUniqueId(), plugin.modes().modeOf(pl.getUniqueId())).get(t.id);
+                    if (s2 != null && s2.qty > 1e-9) feedback(pl, ts.closeShort(pl, t.id, pct / 100.0), "Short geschlossen: " + what + ".");
+                    else feedback(pl, ts.sell(pl, t.id, pct / 100.0), what + " verkauft.");
+                }));
+            }
         }
         act.put("limitBuy", pl -> ask(pl, "Limit-Kauf " + t.symbol, "Kaufen, wenn der Kurs fällt auf (aktuell " + TradingService.money(t.price) + ")",
                 t.price * 0.97, trig -> ask(pl, "Limit-Kauf " + t.symbol, "Betrag in $ (wird reserviert)", 1000, coins -> {
                     feedback(pl, ts.place(pl, t.id, OrderType.LIMIT_BUY, trig, Math.round(coins), 1), "Limit-Kauf angelegt.");
                     open(pl);
                 })));
-        act.put("stop", pl -> ask(pl, "Stop-Loss " + t.symbol, "Alles verkaufen, wenn der Kurs fällt auf (aktuell " + TradingService.money(t.price) + ")",
+        if (isLong) act.put("stop", pl -> ask(pl, "Stop-Loss " + t.symbol, "Alles verkaufen, wenn der Kurs fällt auf (aktuell " + TradingService.money(t.price) + ")",
                 t.price * 0.95, trig -> {
                     feedback(pl, ts.place(pl, t.id, OrderType.STOP_LOSS, trig, 0, 1), "Stop-Loss gesetzt.");
                     open(pl);
                 }));
-        act.put("tp", pl -> ask(pl, "Take-Profit " + t.symbol, "Alles verkaufen, wenn der Kurs steigt auf (aktuell " + TradingService.money(t.price) + ")",
+        if (isLong) act.put("tp", pl -> ask(pl, "Take-Profit " + t.symbol, "Alles verkaufen, wenn der Kurs steigt auf (aktuell " + TradingService.money(t.price) + ")",
                 t.price * 1.05, trig -> {
                     feedback(pl, ts.place(pl, t.id, OrderType.TAKE_PROFIT, trig, 0, 1), "Take-Profit gesetzt.");
                     open(pl);
                 }));
-        act.put("limitSell", pl -> ask(pl, "Limit-Verkauf " + t.symbol, "Hälfte verkaufen bei (aktuell " + TradingService.money(t.price) + ")",
+        if (isLong) act.put("limitSell", pl -> ask(pl, "Limit-Verkauf " + t.symbol, "Hälfte verkaufen bei (aktuell " + TradingService.money(t.price) + ")",
                 t.price * 1.03, trig -> {
                     feedback(pl, ts.place(pl, t.id, OrderType.LIMIT_SELL, trig, 0, 0.5), "Limit-Verkauf angelegt.");
                     open(pl);
@@ -244,7 +280,7 @@ public final class TradingScreen {
         double[] range = ts.range24(t);
         return new Market(head, chips, st.page > 0, st.page + 1 < pages, go(pl -> state(pl).page = Math.max(0, state(pl).page - 1)),
                 go(pl -> state(pl).page++), Icons.of(t.material, KitData.Icon.PAPER), t.symbol, t.name, t.price, ts.change24(t), range[0], range[1],
-                st.frame, bars, posText, posPnl, ord, cancels, act, frames, ts.feePercent(), newsLines(ts.news(t.symbol, 3)));
+                st.frame, bars, posText, posPnl, ord, cancels, act, frames, ts.feePercent(), newsLines(ts.news(t.symbol, 3)), ts.buyPressure(t), isShort);
     }
 
     private static List<NewsLine> newsLines(List<TradingService.News> ns) {
@@ -285,6 +321,17 @@ public final class TradingScreen {
                         state(pl).tab = "markt";
                     })));
         }
+        for (Map.Entry<String, TradingService.Short> e : ts.shorts(p.getUniqueId(), mode).entrySet()) {
+            Ticker k = ts.ticker(e.getKey());
+            if (k == null) continue;
+            TradingService.Short s = e.getValue();
+            long value = s.value(k.price);
+            rows.add(new Row(k.symbol, "SHORT " + TradingService.fmt(s.qty) + " · Ø " + TradingService.money(s.avg), k.price, ts.change24(k),
+                    Msg.coins(value) + " $", value - s.margin, go(pl -> {
+                        state(pl).ticker = k.id;
+                        state(pl).tab = "markt";
+                    })));
+        }
         return rows;
     }
 
@@ -308,7 +355,8 @@ public final class TradingScreen {
         List<Row> rows = new ArrayList<>();
         for (Trade tr : ts.history(p.getUniqueId(), mode)) {
             rows.add(new Row(tr.ticker(), tr.side() + " · " + TIME.format(Instant.ofEpochMilli(tr.t())) + " · " + TradingService.fmt(tr.qty()) + " St.",
-                    tr.price(), 0, Msg.coins(tr.coins()) + " $", tr.side().equals("Kauf") ? Long.MIN_VALUE : tr.pnl(), null));
+                    tr.price(), 0, Msg.coins(tr.coins()) + " $", tr.side().equals("Kauf") || tr.side().equals("Long") || tr.side().equals("Short")
+                            ? Long.MIN_VALUE : tr.pnl(), null));
         }
         return rows;
     }
@@ -410,7 +458,12 @@ public final class TradingScreen {
         c.textRight(W - 2, y, TradingService.money(m.price()), TEXT, true);
         c.textRight(W - 2, y + 10, pct(m.change()) + " · 24h", sign(m.change()), false);
         y += 22;
-        c.text(2, y, "Hoch " + TradingService.money(m.hi()) + " · Tief " + TradingService.money(m.lo()), DIM, false);
+        int hx = c.text(2, y, "Hoch " + TradingService.money(m.hi()) + " · Tief " + TradingService.money(m.lo()), DIM, false);
+        if (m.pressure() >= 0) {
+            // Spieler-Druck der letzten Stunde: Anteil Käufe am Umsatz (über 50 % treibt den Kurs nach oben)
+            hx += c.text(2 + hx, y, " · Spieler: ", DIM, false);
+            c.text(2 + hx, y, m.pressure() + " % Kauf", m.pressure() > 55 ? UP : m.pressure() < 45 ? DOWN : DIM, true);
+        }
         int fx = W - 3 * 34;
         for (Frame f : Frame.values()) {
             boolean on = f == m.frame();
@@ -468,23 +521,35 @@ public final class TradingScreen {
         }
         y += 14;
 
-        // Kaufen und Verkaufen
+        // Long (auf steigende Kurse), Short (auf fallende Kurse), Position schließen
         Map<String, Consumer<Player>> a = m.actions();
-        String[][] buy = {{"buy100", "100 $"}, {"buy1000", "1.000 $"}, {"buy10000", "10.000 $"}, {"buyX", "Betrag"}};
-        String[][] sell = {{"sell25", "25 %"}, {"sell50", "50 %"}, {"sell100", "Alles"}};
-        c.text(2, y + 4, "KAUFEN", UP, true);
-        int bx = 58, bw = 54;
-        for (String[] b : buy) {
+        String[][] amounts = {{"100", "100 $"}, {"1000", "1.000 $"}, {"10000", "10.000 $"}, {"X", "Betrag"}};
+        String[][] close = {{"close25", "25 %"}, {"close50", "50 %"}, {"close100", "Alles"}};
+        int bx, bw = 54;
+        c.text(2, y + 4, "LONG ▲", UP, true);
+        bx = 58;
+        for (String[] b : amounts) {
             c.smallButton(bx, y, bw, KitData.Small.GREEN, b[1], TEXT, true);
-            if (a.get(b[0]) != null) c.action(bx, y, bw, KitData.SMALL_H, a.get(b[0]), "Kaufen: " + b[1]);
+            if (a.get("buy" + b[0]) != null) c.action(bx, y, bw, KitData.SMALL_H, a.get("buy" + b[0]), "Long (kaufen): " + b[1]);
             bx += bw + 3;
         }
+        c.text(bx + 4, y + 4, Canvas.fit("steigt: Gewinn", false, W - bx - 6), DIM, false);
         y += KitData.SMALL_H + 3;
-        c.text(2, y + 4, "VERKAUFEN", DOWN, true);
+        c.text(2, y + 4, "SHORT ▼", DOWN, true);
         bx = 58;
-        for (String[] b : sell) {
+        for (String[] b : amounts) {
             c.smallButton(bx, y, bw, KitData.Small.DARK, b[1], DOWN, true);
-            if (m.position() != null && a.get(b[0]) != null) c.action(bx, y, bw, KitData.SMALL_H, a.get(b[0]), "Verkaufen: " + b[1]);
+            if (a.get("short" + b[0]) != null) c.action(bx, y, bw, KitData.SMALL_H, a.get("short" + b[0]), "Short (auf fallende Kurse): " + b[1]);
+            bx += bw + 3;
+        }
+        c.text(bx + 4, y + 4, Canvas.fit("fällt: Gewinn", false, W - bx - 6), DIM, false);
+        y += KitData.SMALL_H + 3;
+        c.text(2, y + 4, "Schließen", m.position() != null ? CYAN : GRID, false);
+        bx = 58;
+        for (String[] b : close) {
+            boolean on = a.get(b[0]) != null;
+            c.smallButton(bx, y, bw, KitData.Small.DARK, b[1], on ? CYAN : GRID, true);
+            if (on) c.action(bx, y, bw, KitData.SMALL_H, a.get(b[0]), (m.isShort() ? "Short schließen: " : "Verkaufen: ") + b[1]);
             bx += bw + 3;
         }
         c.smallButton(W - 70, y, 70, KitData.Small.DARK, "↻ Neu", CYAN, false);
@@ -494,8 +559,7 @@ public final class TradingScreen {
         int ow = (W - 9) / 4;
         bx = 0;
         for (String[] o : ord) {
-            boolean needsPos = !o[0].equals("limitBuy");
-            boolean on = !needsPos || m.position() != null;
+            boolean on = a.get(o[0]) != null;
             c.smallButton(bx, y, ow, KitData.Small.DARK, o[1], on ? CYAN : GRID, false);
             if (on && a.get(o[0]) != null) c.action(bx, y, ow, KitData.SMALL_H, a.get(o[0]), o[1]);
             bx += ow + 3;
@@ -616,6 +680,11 @@ public final class TradingScreen {
                 0.01, Frame.H1, bars, "W".repeat(80), -5, ord, can, act, null, 0.5,
                 List.of(new NewsLine("23:59", "WWWW", "W".repeat(60), -99.9), new NewsLine("00:00", "", "W".repeat(60), 99.9),
                         new NewsLine("12:00", "WWWW", "W".repeat(60), 5.5))), null));
+        Map<String, Consumer<Player>> actS = new HashMap<>();
+        for (String k : new String[]{"buy100", "buy1000", "buy10000", "buyX", "short100", "short1000", "short10000", "shortX", "close25", "close50",
+                "close100", "limitBuy", "refresh"}) actS.put(k, no);
+        reg.accept("Börse Markt Short", () -> market(new Market(h, chips, true, true, no, no, KitData.Icon.DIAMOND, "WWWW", "W".repeat(30), last, -12.3,
+                999_999, 0.01, Frame.M5, bars, "SHORT " + "W".repeat(80), 999_999, List.of(), List.of(), actS, null, 0.5, List.of(), 99, true), null));
         reg.accept("Börse Markt leer", () -> market(new Market(new Head(0, 0, 0, 0), List.of(), false, false, no, no, KitData.Icon.PAPER, "X", "X",
                 1, 0, 1, 1, Frame.M5, List.of(), null, 0, List.of(), List.of(), act, null, 0.5), null));
         List<Row> rows = new ArrayList<>();
