@@ -1,11 +1,12 @@
 # Stand der config (neue Abschnitte werden beim Start in ältere configs übernommen)
-config-stand: 7
+config-stand: 8
 reward:
   money: 2
   xp: 1
 # Inseln der Spieler (/insel). Sie liegen in einer Spirale um den Skyblock-Spawn (0, 0) mit festem Abstand.
 insel:
   abstand: 200                  # Abstand der Insel-Mitten (größte Insel muss kleiner sein)
+  preis-faktor: 0.6             # alle $-Preise der Upgrades (und Bruchstein-Generator) mal diesen Faktor
   weltgrenze: 50000
   # Upgrades: Level 0 bis 50 in vier Stufen (Level 1-10 Stufe 1, 11-15 Stufe 2, 16-20 Stufe 3, 21-50 Stufe 4 nur mit
   # Juwelen). Listen: Index = Level (0 = Start). Alte Inseln (5 Stufen) werden beim Laden auf dieselben Werte umgerechnet.
@@ -94,10 +95,23 @@ generator:
     - {bloecke: {COBBLESTONE: 31, COAL_ORE: 8, IRON_ORE: 12, COPPER_ORE: 5, GOLD_ORE: 8, REDSTONE_ORE: 5, LAPIS_ORE: 5, DIAMOND_ORE: 10, EMERALD_ORE: 9, ANCIENT_DEBRIS: 4}}
     - {bloecke: {COBBLESTONE: 30, COAL_ORE: 8, IRON_ORE: 12, COPPER_ORE: 5, GOLD_ORE: 8, REDSTONE_ORE: 5, LAPIS_ORE: 5, DIAMOND_ORE: 10, EMERALD_ORE: 9, ANCIENT_DEBRIS: 4}}
 
+# Insel-Leiste oben (wie in Survival): Geld, Insel-Level, XP, Generatoren, Ort, Uhrzeit. Spieler stellen Inhalt und
+# Design (Insel, Wolke, Nether, End) in /bossbar ein; nur mit dem Grafik-Pack.
+leiste:
+  aktiv: true
+  # bis zu diesem Abstand vom Skyblock-Spawn steht „Spawn“ als Ort
+  spawn-radius: 48
+
 # Insel-Level: Punkte aller Blöcke auf der Insel (gezählt beim Bauen und mit /insel level)
 level:
   punkte-pro-level: 100
   standard-wert: 1
+  # Inselpunkte zusätzlich zu den Blöcken: je gekauftem Upgrade-Level und je Generator (Grundwert, je Stufe +30 %,
+  # Silber/Gold/Diamant x1,6/x2,2/x2,8, Stufen-Generatoren x1,5). Bleiben beim Neu-Zählen erhalten.
+  bonus:
+    upgrade-level: 40
+    generator: 60
+    generator-je-stufe: 0.3
   werte:
     DIRT: 0
     GRASS_BLOCK: 0
@@ -124,6 +138,12 @@ level:
 # Generatoren (Grundmechanik): kaufen (/insel -> Generatoren -> Shop), auf die Insel stellen, Lager einsammeln.
 # Arten: item (Ertrag je Stufe), geld (pro-sekunde $), xp (pro-sekunde XP). Qualitäten Silber, Gold, Diamant im Juwelenshop.
 generatoren:
+  # Fortschritt: Kaufpreis und Aufwerten günstiger, Ertrag schneller und höher (gelten zusätzlich zu den Werten unten)
+  kauf-faktor: 0.7
+  upgrade-faktor: 0.85
+  tempo-faktor: 1.6                  # Item-Generatoren 60 % schneller
+  geld-faktor: 2.0                   # Geld- und XP-Generatoren doppelter Ertrag
+  lager-faktor: 1.5                  # Lager reicht länger
   max-stufe: 10
   plaetze: [3, 5, 8, 12, 16]         # Generatoren je Insel nach Größen-Stufe
   tick-sekunden: 10
@@ -352,6 +372,7 @@ top-belohnungen:
       "4-10": {coins: 150000, juwelen: 10}
 
 shop:
+  verkauf-faktor: 1.5           # alle Verkaufspreise (auch Generator-Ertrag) mal diesen Faktor
   bereiche:
     natur:
       name: "Start & Natur"

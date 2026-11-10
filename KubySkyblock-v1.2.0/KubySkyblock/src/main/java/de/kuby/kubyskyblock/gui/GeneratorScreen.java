@@ -302,37 +302,144 @@ public final class GeneratorScreen {
 
     public record Offer(KitData.Sprite art, String name, String desc, long price, String unlock, boolean ok, Consumer<Player> buy) {}
 
+    private static final java.util.Map<java.util.UUID, Integer> SHOP_TAB = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final List<String> SHOP_TABS = List.of("Start", "Fortgeschritten", "Nether", "End");
+
+    /** Reiter einer Art: Stufen-Generatoren unter Nether/End, sonst Start (sofort) oder Fortgeschritten (ab Insel-Level). */
+    private static int tabOf(Type t) {
+        String st = de.kuby.kubyskyblock.service.StageService.stageKey(t);
+        if ("end".equals(st)) return 3;
+        if (st != null && !st.isEmpty()) return 2;
+        return t.unlockLevel() > 0 ? 1 : 0;
+    }
+
     public static void shop(Player p) {
+        shop(p, SHOP_TAB.getOrDefault(p.getUniqueId(), 0));
+    }
+
+    public static void shop(Player p, int tab) {
+        SHOP_TAB.put(p.getUniqueId(), tab);
         GeneratorService s = gs();
         IslandService.Island i = sb().islands().islandOf(p.getUniqueId());
         long level = i == null ? 0 : sb().islands().levelOf(i);
         long coins = sb().core().economy().balance(p.getUniqueId());
-        List<Offer> offers = new ArrayList<>();
+        int max = s.maxLevel();
+        List<ShopRow> rows = new ArrayList<>();
+        Map<String, Integer> placed = new java.util.HashMap<>();
+        if (i != null) for (GeneratorService.Gen g : s.onIsland(i.slot)) placed.merge(g.type, 1, Integer::sum);
         for (Type t : s.types()) {
-            // Stufen-Generatoren erst, wenn die Stufe der Insel freigeschaltet ist
+            if (tabOf(t) != tab) continue;
             de.kuby.kubyskyblock.service.StageService.Stage st = de.kuby.kubyskyblock.service.StageService.Stage.of(
                     de.kuby.kubyskyblock.service.StageService.stageKey(t));
             boolean stageOk = st == null || (sb().stages() != null && sb().stages().unlocked(i, st));
             boolean unlocked = level >= t.unlockLevel() && stageOk;
-            String lock = !stageOk ? "ab " + st.label + "-Stufe" : "ab Insel-Level " + t.unlockLevel();
-            String desc = switch (t.kind()) {
-                case MONEY -> "ab " + GeneratorService.fmt(t.perSecond()) + " $ pro Sekunde";
-                case XP -> "ab " + GeneratorService.fmt(t.perSecond()) + " XP pro Sekunde";
-                default -> ores(t);
-            };
-            offers.add(new Offer(art(t.id()), t.name(), desc, t.price(), unlocked ? null : lock,
-                    unlocked && coins >= t.price(), unlocked ? run(pl -> {
+            String lock = unlocked ? null : !stageOk ? "ab " + st.label + "-Stufe" : "ab Insel-Level " + t.unlockLevel();
+            List<Material> products = new ArrayList<>();
+            String rate, speed;
+            if (t.kind() == Kind.ITEM) {
+                Map<Material, Integer> first = t.yields().isEmpty() ? Map.of() : t.yields().firstEntry().getValue();
+                List<Map.Entry<Material, Integer>> sorted = new ArrayList<>(first.entrySet());
+                sorted.sort((a, b) -> b.getValue() - a.getValue());
+                for (Map.Entry<Material, Integer> e : sorted) products.add(e.getKey());
+                Integer more = t.yields().higherKey(t.yields().isEmpty() ? 0 : t.yields().firstKey());
+                rate = more == null ? null : "mehr ab Stufe " + more;
+                speed = "Stufe 1: 1 Item alle " + GeneratorService.fmt(s.intervalOf(t, 1)) + " s · Stufe " + max + ": alle "
+                        + GeneratorService.fmt(s.intervalOf(t, max)) + " s";
+            } else {
+                String unit = t.kind() == Kind.MONEY ? " $" : " XP";
+                rate = GeneratorService.fmt(s.perSecondOf(t, 1)) + unit + " pro Sekunde";
+                speed = "Stufe " + max + ": " + GeneratorService.fmt(s.perSecondOf(t, max)) + unit + " pro Sekunde · Lager für Stunden";
+            }
+            boolean afford = coins >= t.price();
+            rows.add(new ShopRow(art(t.id()), t.name(), t.kind(), products, rate, speed, t.price(), placed.getOrDefault(t.id(), 0), lock,
+                    afford, unlocked ? run(pl -> {
                         if (!sb().core().economy().withdraw(pl.getUniqueId(), t.price())) {
                             feedback(pl, "Dafür brauchst du " + Msg.coins(t.price()) + " $.");
                         } else {
                             pl.getInventory().addItem(s.item(t, Quality.NORMAL, 1)).values().forEach(r -> sb().core().abholbox().add(pl.getUniqueId(), r));
                             feedback(pl, null);
-                            Msg.send(pl, "<green>" + t.name() + " gekauft. <gray>Stell ihn auf deine Insel.");
+                            Msg.send(pl, "<green>" + t.name() + " gekauft. <gray>Stell ihn auf deine Insel (Block setzen), dann sammelt er.");
                         }
-                        shop(pl);
+                        shop(pl, tab);
                     }) : null));
         }
-        UiDialog.show(p, shop(offers, "Generator-Shop", Msg.coins(coins) + " $", GOLD, run(GeneratorScreen::island)), 330);
+        int used = i == null ? 0 : s.count(i.slot);
+        int slots = i == null ? 0 : s.slots(i);
+        List<Consumer<Player>> tabs = new ArrayList<>();
+        for (int k = 0; k < SHOP_TABS.size(); k++) {
+            int kk = k;
+            tabs.add(run(pl -> shop(pl, kk)));
+        }
+        UiDialog.show(p, shopCanvas(new ShopView(tab, rows, coins, used, slots, tabs, run(GeneratorScreen::island), run(GeneratorScreen::jewels))), 330);
+    }
+
+    /** Eine Zeile im Generator-Shop. products: Ertrag (Item-Generatoren), rate: Geld/XP oder „mehr ab Stufe …“. */
+    public record ShopRow(KitData.Sprite art, String name, Kind kind, List<Material> products, String rate, String speed, long price,
+                          int placed, String lock, boolean afford, Consumer<Player> buy) {}
+
+    public record ShopView(int tab, List<ShopRow> rows, long coins, int used, int slots, List<Consumer<Player>> tabs,
+                           Consumer<Player> back, Consumer<Player> premium) {}
+
+    public static Canvas shopCanvas(ShopView v) {
+        Canvas c = new Canvas(W).heading("Generator-Shop", GOLD);
+        c.box(0, 0, W, 54, KitData.Box.STEEL);
+        c.sprite(10 + (32 - KitData.Sprite.GN_ERZ.width) / 2, 11 + (32 - KitData.Sprite.GN_ERZ.height) / 2, KitData.Sprite.GN_ERZ);
+        c.headline(50, 12, "Generator-Shop", GOLD);
+        c.text(50, 36, List.of(Canvas.Span.bold("1 ", GOLD), Canvas.Span.of("Kaufen  ", DIM), Canvas.Span.bold("2 ", GOLD),
+                Canvas.Span.of("Aufstellen  ", DIM), Canvas.Span.bold("3 ", GOLD), Canvas.Span.of("Einsammeln", DIM)));
+        c.textRight(W - 8, 12, Msg.coins(v.coins) + " $", GOLD, true);
+        boolean full = v.slots > 0 && v.used >= v.slots;
+        c.textRight(W - 8, 24, "Plätze " + v.used + "/" + v.slots, full ? RED : GREEN, false);
+        c.smallButton(W - 8 - 60, 33, 60, KitData.Small.DARK, "Zurück", STEEL, false);
+        c.action(W - 8 - 60, 33, 60, KitData.SMALL_H, v.back, "Zurück zu deinen Generatoren");
+        // Reiter
+        int tx = 0, gap = 3;
+        int tw = (W - gap * (SHOP_TABS.size() - 1)) / SHOP_TABS.size();
+        for (int k = 0; k < SHOP_TABS.size(); k++) {
+            boolean on = k == v.tab;
+            boolean bold = on && Canvas.width(SHOP_TABS.get(k), true) <= tw - 8;
+            c.smallButton(tx, 58, tw, on ? KitData.Small.GREEN : KitData.Small.DARK, SHOP_TABS.get(k), on ? TextColor.color(0x06240E) : STEEL, bold);
+            if (!on) c.action(tx, 58, tw, 16, v.tabs.get(k), SHOP_TABS.get(k) + " zeigen");
+            tx += tw + gap;
+        }
+        int y = 78;
+        if (v.rows.isEmpty()) {
+            c.box(0, y, W, 30, KitData.Box.STEEL_CARD);
+            c.text(10, y + 11, "Hier gibt es noch keine Generatoren.", DIM, false);
+            y += 34;
+        }
+        for (ShopRow r : v.rows) {
+            boolean locked = r.lock() != null;
+            c.box(0, y, W, 50, locked ? KitData.Box.GRAY : KitData.Box.STEEL_CARD);
+            c.sprite(8 + (32 - r.art().width) / 2, y + 9 + (32 - r.art().height) / 2, r.art());
+            int nw = c.text(48, y + 7, Canvas.fit(r.name(), true, 170), locked ? DIM : STEEL, true);
+            if (r.placed() > 0) c.text(52 + nw, y + 7, "· " + r.placed() + " aufgestellt", GREEN, false);
+            int px = 48;
+            if (r.kind() == Kind.ITEM) {
+                for (int k = 0; k < r.products().size() && k < 8; k++) {
+                    c.item(px, y + 17, r.products().get(k), false, KitData.Icon.CHEST);
+                    px += 18;
+                }
+                if (r.rate() != null) c.text(px + 3, y + 22, r.rate(), DIM, false);
+            } else {
+                c.icon(px, y + 17, r.kind() == Kind.MONEY ? KitData.Icon.GOLD_NUGGET : KitData.Icon.EXPERIENCE, false);
+                c.text(px + 20, y + 22, r.rate(), r.kind() == Kind.MONEY ? GOLD : XPC, true);
+            }
+            c.text(48, y + 37, Canvas.fit(r.speed(), false, W - 48 - (locked ? 8 + Canvas.width(r.lock(), false) : 80) - 6), DIM, false);
+            c.textRight(W - 10, y + 7, Msg.coins(r.price()) + " $", locked ? DIM : r.afford() ? GOLD : RED, true);
+            if (locked) {
+                c.textRight(W - 10, y + 22, "Gesperrt", RED, true);
+                c.textRight(W - 10, y + 33, r.lock(), RED, false);
+            } else {
+                c.smallButton(W - 10 - 64, y + 27, 64, r.afford() ? KitData.Small.GOLD : KitData.Small.DARK, "Kaufen", r.afford() ? GOLD : DIM, true);
+                if (r.afford()) c.action(0, y, W, 50, r.buy(), r.name() + " für " + Msg.coins(r.price()) + " $ kaufen");
+                else c.action(0, y, W, 50, null, "Dir fehlen noch " + Msg.coins(r.price() - v.coins) + " $");
+            }
+            y += 53;
+        }
+        c.smallButton(0, y + 2, W, KitData.Small.DARK, "Premium-Generatoren und Booster (Juwelen) ›", JEWEL, true);
+        c.action(0, y + 2, W, KitData.SMALL_H, v.premium, "Silber, Gold, Diamant: mehr Ertrag, Auto-Verkauf");
+        return c;
     }
 
     private static String ores(Type t) {
@@ -364,7 +471,7 @@ public final class GeneratorScreen {
             List<String> d = Canvas.wrap(o.desc(), cw - 50);
             for (int l = 0; l < Math.min(2, d.size()); l++) c.text(x + 44, oy + 19 + 10 * l, d.get(l), DIM, false);
             if (o.unlock() != null) {
-                c.text(x + 8, oy + ch - 13, "🔒 " + o.unlock(), RED, false);
+                c.text(x + 8, oy + ch - 13, "Gesperrt: " + o.unlock(), RED, false);
             } else {
                 c.text(x + 8, oy + ch - 13, o.price() > 0 ? Msg.coins(o.price()) + (title.contains("Juwel") ? " Juwelen" : " $") : "", o.ok() ? GOLD : RED, true);
                 c.smallButton(x + cw - 6 - 60, oy + ch - 19, 60, o.ok() ? KitData.Small.GOLD : KitData.Small.DARK, o.price() > 0 ? "Kaufen" : "Öffnen",
@@ -460,7 +567,14 @@ public final class GeneratorScreen {
         reg.accept("Generatoren leer", () -> island(List.of(), 3, null, no, no, no, no));
         List<Offer> offers = new ArrayList<>();
         for (int i = 0; i < 9; i++) offers.add(new Offer(art("mob", Quality.values()[i % 4]), w, w + w, 999_999_999L, i % 3 == 0 ? w : null, i % 2 == 0, no));
-        reg.accept("Generator-Shop", () -> shop(offers, "Generator-Shop", "999.999.999 $", GOLD, no));
+        List<ShopRow> srows = new ArrayList<>();
+        for (int k = 0; k < 5; k++) {
+            srows.add(new ShopRow(art("erz"), w, k == 1 ? Kind.MONEY : Kind.ITEM, List.of(Material.COAL, Material.RAW_IRON, Material.RAW_GOLD,
+                    Material.DIAMOND, Material.EMERALD, Material.REDSTONE, Material.LAPIS_LAZULI, Material.NETHERITE_SCRAP, Material.QUARTZ),
+                    k == 1 ? "999,9 $ pro Sekunde" : "mehr ab Stufe 10", w + w, 999_999_999L, 99, k == 3 ? "ab Insel-Level 999" : null, k % 2 == 0, no));
+        }
+        reg.accept("Generator-Shop", () -> shopCanvas(new ShopView(1, srows, 999_999_999L, 99, 99, List.of(no, no, no, no), no, no)));
+        reg.accept("Generator-Shop leer", () -> shopCanvas(new ShopView(3, List.of(), 0, 0, 3, List.of(no, no, no, no), no, no)));
         reg.accept("Generator-Juwelenshop", () -> shop(offers, "Juwelenshop", "999.999 Juwelen", JEWEL, no));
     }
 }

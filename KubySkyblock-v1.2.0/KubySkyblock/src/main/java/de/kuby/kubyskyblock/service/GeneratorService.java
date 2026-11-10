@@ -161,15 +161,18 @@ public final class GeneratorService {
     // =================================================================================================================
 
     /** Zahlen aus generatoren.* (einmal beim Start gelesen, nicht je Generator und Tick). */
-    private double intervalBase, speedPerLevel, yieldPerLevel, storageHours;
+    private double intervalBase, speedPerLevel, yieldPerLevel, storageHours, moneyFactor;
     private List<Integer> storage = List.of();
 
     private void loadSettings() {
         var c = addon.getConfig();
-        intervalBase = c.getDouble("generatoren.intervall-sekunden", 30);
+        // Faktoren für schnelleren Fortschritt (gelten zusätzlich zu den Werten oben, auch für ältere configs)
+        double tempo = Math.max(0.1, c.getDouble("generatoren.tempo-faktor", 1.6));
+        intervalBase = c.getDouble("generatoren.intervall-sekunden", 30) / tempo;
         speedPerLevel = c.getDouble("generatoren.tempo-pro-stufe", 0.12);
         yieldPerLevel = c.getDouble("generatoren.ertrag-pro-stufe", 0.35);
-        storageHours = c.getDouble("generatoren.lager-stunden", 2);
+        storageHours = c.getDouble("generatoren.lager-stunden", 2) * Math.max(1, c.getDouble("generatoren.lager-faktor", 1.5));
+        moneyFactor = Math.max(0.1, c.getDouble("generatoren.geld-faktor", 2.0));
         List<Integer> l = c.getIntegerList("generatoren.lager");
         storage = l.isEmpty() ? List.of(64, 128, 256, 384, 512, 768, 1024, 1536, 2048, 3072) : List.copyOf(l);
     }
@@ -206,8 +209,9 @@ public final class GeneratorService {
                     }
                 }
             }
+            double buyFactor = Math.max(0.05, addon.getConfig().getDouble("generatoren.kauf-faktor", 0.7));
             types.put(id, new Type(id, kind, t.getString("name", id), block == null || !block.isBlock() ? Material.STONE : block,
-                    t.getLong("preis", 5000), t.getInt("ab-insel-level", 0), t.getDouble("pro-sekunde", 1.0),
+                    Math.max(50, Math.round(t.getLong("preis", 5000) * buyFactor / 50.0) * 50), t.getInt("ab-insel-level", 0), t.getDouble("pro-sekunde", 1.0),
                     t.getDouble("intervall-faktor", 1.0), yields, t.getString("stufe", "").toLowerCase(Locale.ROOT)));
         }
     }
@@ -240,7 +244,7 @@ public final class GeneratorService {
     /** Geld oder XP je Sekunde (ohne Booster). */
     public double perSecond(Gen g) {
         Type t = types.get(g.type);
-        return t == null ? 0 : t.perSecond() * levelMult(g.level) * g.quality.output;
+        return t == null ? 0 : t.perSecond() * moneyFactor * levelMult(g.level) * g.quality.output;
     }
 
     /** Sekunden je Item (Item-Generatoren, ohne Booster). */
@@ -249,6 +253,17 @@ public final class GeneratorService {
         double base = intervalBase * (t == null ? 1 : t.intervalFactor());
         double speed = 1 + (g.level - 1) * speedPerLevel;
         return Math.max(1, base / speed / g.quality.output);
+    }
+
+    /** Sekunden je Item einer Art auf einer Stufe (normale Qualität, für den Shop). */
+    public double intervalOf(Type t, int level) {
+        double base = intervalBase * t.intervalFactor();
+        return Math.max(1, base / (1 + (level - 1) * speedPerLevel));
+    }
+
+    /** Geld oder XP je Sekunde einer Art auf einer Stufe (normale Qualität, für den Shop). */
+    public double perSecondOf(Type t, int level) {
+        return t.perSecond() * moneyFactor * levelMult(level);
     }
 
     /** Lager: Items (Stückzahl) oder Geld/XP (Stunden Ertrag). */
@@ -261,6 +276,23 @@ public final class GeneratorService {
         return l.get(Math.max(0, Math.min(g.level - 1, l.size() - 1))) * g.quality.storage;
     }
 
+    /** Inselpunkte eines Generators: Grundwert, je Stufe mehr, Qualität vervielfacht (Stufen-Generatoren mehr). */
+    public long points(Gen g) {
+        var c = addon.getConfig();
+        Type t = types.get(g.type);
+        double base = c.getDouble("level.bonus.generator", 60) * (t != null && !t.stage().isEmpty() ? 1.5 : 1.0);
+        double lvl = 1 + c.getDouble("level.bonus.generator-je-stufe", 0.3) * (g.level - 1);
+        double q = 1 + 0.6 * g.quality.ordinal();
+        return Math.round(base * lvl * q);
+    }
+
+    /** Inselpunkte aller Generatoren einer Insel (auch auf den Stufen-Inseln). */
+    public long pointsOf(int island) {
+        long sum = 0;
+        for (Gen g : byPos.values()) if (g.island == island) sum += points(g);
+        return sum;
+    }
+
     /** Preis der nächsten Stufe (-1 = höchste). */
     public long upgradePrice(Gen g) {
         if (g.level >= maxLevel()) return -1;
@@ -268,7 +300,8 @@ public final class GeneratorService {
         if (l.isEmpty()) l = List.of(0L, 2_000L, 5_000L, 12_000L, 25_000L, 50_000L, 100_000L, 200_000L, 400_000L, 800_000L);
         Type t = types.get(g.type);
         double typeFactor = t == null ? 1 : Math.max(0.2, t.price() / 5000.0);
-        return Math.round(l.get(Math.min(g.level, l.size() - 1)) * typeFactor * g.quality.upgrade);
+        double factor = Math.max(0.05, addon.getConfig().getDouble("generatoren.upgrade-faktor", 0.85));
+        return Math.max(1, Math.round(l.get(Math.min(g.level, l.size() - 1)) * typeFactor * g.quality.upgrade * factor / 50.0) * 50);
     }
 
     /** Juwelen für Kauf (neu) oder Veredeln auf diese Qualität. */
@@ -419,12 +452,15 @@ public final class GeneratorService {
         Bukkit.getScheduler().runTask(addon, () -> dress(g));
         hologram(g, true);
         core.questProgress(p, "gen_place", t.id(), 1);
+        addon.islands().addBonus(i, points(g));
         return null;
     }
 
     /** Abbauen: Generator als Item zurück, Lager wird ausgezahlt. */
     public void remove(Player p, Gen g) {
         collect(p, g);
+        IslandService.Island isl = addon.islands().bySlot(g.island);
+        if (isl != null) addon.islands().addBonus(isl, -points(g));
         counts = null;
         byPos.remove(g.key());
         index(g, false);
@@ -619,7 +655,10 @@ public final class GeneratorService {
         if (price < 0) return "Das ist schon die höchste Stufe.";
         if (!core.economy().withdraw(p.getUniqueId(), price)) return "Dafür brauchst du " + Msg.coins(price) + " $.";
         produce(g, System.currentTimeMillis(), true);
+        long before = points(g);
         g.level++;
+        IslandService.Island isl = addon.islands().bySlot(g.island);
+        if (isl != null) addon.islands().addBonus(isl, points(g) - before);
         dirty = true;
         hologram(g, false);
         Sfx.play(core, p, Sfx.Kind.LEVEL_UP);
@@ -634,7 +673,10 @@ public final class GeneratorService {
         long cost = jewels(next, true);
         if (!core.jewels().take(p.getUniqueId(), cost)) return "Dafür brauchst du " + cost + " Juwelen.";
         produce(g, System.currentTimeMillis(), true);
+        long before = points(g);
         g.quality = next;
+        IslandService.Island isl = addon.islands().bySlot(g.island);
+        if (isl != null) addon.islands().addBonus(isl, points(g) - before);
         dirty = true;
         hologram(g, false);
         visuals(g);

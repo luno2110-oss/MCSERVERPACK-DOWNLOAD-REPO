@@ -5,7 +5,7 @@ import de.kuby.kubyplugins.service.InfoBar;
 import de.kuby.kubyplugins.service.InfoBar.Design;
 import de.kuby.kubyplugins.service.InfoBar.Element;
 import de.kuby.kubyplugins.service.ModeService;
-import de.kuby.kubyplugins.ui.Ui;
+import de.kuby.kubyplugins.ui.HudBar;
 import de.kuby.kubysurvival.KubySurvival;
 import de.kuby.kubysurvival.claim.ClaimService;
 import de.kuby.kubysurvival.angeln.AngelService;
@@ -14,11 +14,7 @@ import de.kuby.kubysurvival.quests.QuestService;
 import de.kuby.kubysurvival.quests.SideQuestService;
 import de.kuby.kubyplugins.util.Msg;
 import net.kyori.adventure.bossbar.BossBar;
-import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.ShadowColor;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -43,16 +39,6 @@ import java.util.UUID;
  * Muss zu tools/build_sb_pack.py (build_infobar) passen; die Vorschau im Menü (InfoBarScreen) nutzt dieselben Maße.
  */
 public final class SurvivalHud implements Listener {
-
-    private static final Key FONT = Key.key("kubyplugins", "hud");
-    /** Je Design: Mittelstück 1, 2, 4, ..., 64 px ab base, Enden bei base + 8 und base + 9 (siehe build_infobar). */
-    private static final int IB_BASE = 0xE200, IB_STEP = 0x20;
-    private static final int[] TILE_WIDTHS = {64, 32, 16, 8, 4, 2, 1};
-    private static final char I_COIN = '', I_GEM = '', I_ROD = '', DOT = '';
-    /** Kompass und Uhr aus dem Scoreboard (8 x 8, 1 px über der Schrift). */
-    private static final char I_COMPASS = '', I_CLOCK = '';
-    private static final int GAP = 4;                          // Abstand zwischen den Leisten
-    private static final TextColor DOT_COLOR = TextColor.color(0x545454);
 
     private final KubySurvival addon;
     private final KubyPlugins core;
@@ -90,7 +76,7 @@ public final class SurvivalHud implements Listener {
         if (de.kuby.kubyplugins.cinema.Cinema.busy(id)) return false;
         if (!core.getConfig().getBoolean("survival-hud.enabled", true) || !core.infoBar().on(id) || !survival(p)
                 || !core.uiPack().active(p)) return false;
-        for (Element e : Element.values()) if (!e.row() && core.infoBar().visible(id, e)) return true;
+        for (Element e : Element.group(false)) if (!e.row() && core.infoBar().visible(id, e)) return true;
         return false;
     }
 
@@ -227,8 +213,8 @@ public final class SurvivalHud implements Listener {
     public static Component title(Design d, List<Element> order, java.util.function.Predicate<Element> visible, long coins,
                                   long jewels, InfoBar.JobLine j, String place, String time) {
         TextColor value = color(d, 0x493326, 0xFCFCFC), gray = color(d, 0x717171, 0xA8A8A8);
-        Strip s = new Strip(d);
-        List<Part> panel = null;
+        HudBar.Strip s = new HudBar.Strip(d);
+        List<HudBar.Part> panel = null;
         Element last = null;
         for (Element e : order) {
             if (e.row() || !visible.test(e)) continue;
@@ -238,42 +224,42 @@ public final class SurvivalHud implements Listener {
                 if (panel != null) s.panel(panel);
                 panel = new ArrayList<>();
             } else {
-                panel.add(Part.gap(8));
+                panel.add(HudBar.Part.gap(8));
             }
             switch (e) {
                 case COINS -> {
-                    panel.add(Part.icon(I_COIN, 10, 4));
-                    panel.add(Part.text(number(coins), value, d));
+                    panel.add(HudBar.Part.icon(HudBar.I_COIN, 10, 4));
+                    panel.add(HudBar.Part.text(number(coins), value, d));
                 }
                 case JEWELS -> {
-                    panel.add(Part.icon(I_GEM, 8, 5));
-                    panel.add(Part.text(number(jewels), value, d));
+                    panel.add(HudBar.Part.icon(HudBar.I_GEM, 8, 5));
+                    panel.add(HudBar.Part.text(number(jewels), value, d));
                 }
                 case JOB -> {
                     TextColor name = color(d, 0x2E8D8D, 0x54FCFC);
-                    panel.add(Part.icon(I_ROD, 10, 4));
+                    panel.add(HudBar.Part.icon(HudBar.I_ROD, 10, 4));
                     if (j.name() == null) {
-                        panel.add(Part.text("Kein Job", gray, d));
-                        panel.addAll(Part.dot(d));
-                        panel.add(Part.text("/job", name, d));
+                        panel.add(HudBar.Part.text("Kein Job", gray, d));
+                        panel.addAll(HudBar.Part.dot(d));
+                        panel.add(HudBar.Part.text("/job", name, d));
                     } else {
-                        panel.add(Part.text(ascii(j.name()), name, d));
-                        panel.add(Part.text(" Lv ", gray, d));
-                        panel.add(Part.text(String.valueOf(j.level()), value, d));
-                        panel.addAll(Part.dot(d));
-                        panel.add(Part.text(j.percent() + "%", color(d, 0x7B7B28, 0xFCFC54), d));
-                        panel.addAll(Part.dot(d));
-                        panel.add(Part.text(number(j.earned()), color(d, 0x339C33, 0x54FC54), d));
-                        panel.add(Part.text("/" + number(j.cap()), gray, d));
+                        panel.add(HudBar.Part.text(ascii(j.name()), name, d));
+                        panel.add(HudBar.Part.text(" Lv ", gray, d));
+                        panel.add(HudBar.Part.text(String.valueOf(j.level()), value, d));
+                        panel.addAll(HudBar.Part.dot(d));
+                        panel.add(HudBar.Part.text(j.percent() + "%", color(d, 0x7B7B28, 0xFCFC54), d));
+                        panel.addAll(HudBar.Part.dot(d));
+                        panel.add(HudBar.Part.text(number(j.earned()), color(d, 0x339C33, 0x54FC54), d));
+                        panel.add(HudBar.Part.text("/" + number(j.cap()), gray, d));
                     }
                 }
                 case PLACE -> {
-                    panel.add(Part.icon(I_COMPASS, 8, 4));
-                    panel.add(Part.text(place, value, d));
+                    panel.add(HudBar.Part.icon(HudBar.I_COMPASS, 8, 4));
+                    panel.add(HudBar.Part.text(place, value, d));
                 }
                 case TIME -> {
-                    panel.add(Part.icon(I_CLOCK, 8, 4));
-                    panel.add(Part.text(time, value, d));
+                    panel.add(HudBar.Part.icon(HudBar.I_CLOCK, 8, 4));
+                    panel.add(HudBar.Part.text(time, value, d));
                 }
                 default -> {
                 }
@@ -285,7 +271,7 @@ public final class SurvivalHud implements Listener {
     }
 
     private static TextColor color(Design d, int wald, int dark) {
-        return TextColor.color(d.dark ? dark : wald);
+        return HudBar.color(d, wald, dark);
     }
 
     /** Tageszeit in der Welt als HH:MM (Tick 0 = 06:00). */
@@ -316,108 +302,10 @@ public final class SurvivalHud implements Listener {
     }
 
     private static String number(long v) {
-        return String.format(Locale.GERMANY, "%,d", v);
+        return HudBar.number(v);
     }
 
-    /** Die Leisten-Schrift kennt nur ASCII. */
     private static String ascii(String s) {
-        StringBuilder b = new StringBuilder();
-        for (char ch : s.replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("Ä", "Ae")
-                .replace("Ö", "Oe").replace("Ü", "Ue").replace("ß", "ss").toCharArray()) {
-            b.append(ch >= 0x21 && ch <= 0x7E || ch == ' ' ? ch : '?');
-        }
-        return b.toString();
-    }
-
-    // ---------- Aufbau aus Zeichen ----------
-
-    /** Ein Stück Inhalt: Platz im Layout und tatsächlicher Vorschub der Zeichen. */
-    private record Part(Component c, int width, int advance) {
-        /** Grafik width px breit, danach gap px Abstand. */
-        static Part icon(char ch, int width, int gap) {
-            return new Part(glyph(String.valueOf(ch)), width + gap, width + 1);
-        }
-
-        /** Text: im Wald dunkel ohne Schatten, sonst hell mit Schatten (wie Minecraft-Schrift). */
-        static Part text(String s, TextColor color, Design d) {
-            int w = Ui.width(s, false);
-            Component c = Component.text(s, color).font(FONT);
-            return new Part(d.dark ? c : c.shadowColor(ShadowColor.none()), w, w);
-        }
-
-        static Part gap(int px) {
-            return new Part(Component.empty(), px, 0);
-        }
-
-        /** „ · “: Leerzeichen, Punkt (1 px, dunkelgrau), Leerzeichen. */
-        static List<Part> dot(Design d) {
-            Component c = Component.text(String.valueOf(DOT), DOT_COLOR).font(FONT);
-            return List.of(gap(4), new Part(d.dark ? c : c.shadowColor(ShadowColor.none()), 2, 2), gap(4));
-        }
-    }
-
-    private static Component glyph(String s) {
-        return Component.text(s).font(FONT).color(NamedTextColor.WHITE).shadowColor(ShadowColor.none());
-    }
-
-    /**
-     * Setzt die Leisten nebeneinander: linkes Ende (d.cap breit), Mittelstück in Binärstücken, rechtes Ende; der
-     * Inhalt beginnt 1 px nach dem linken Ende und endet am rechten. Der Cursor wird mit Leerzeichen der Schrift gesetzt,
-     * die Gesamtbreite stimmt, damit Minecraft die Leiste richtig mittig setzt.
-     */
-    private static final class Strip {
-        private final TextComponent.Builder out = Component.text();
-        private final Design design;
-        private final int base;
-        private int cursor;
-        private int x;
-
-        Strip(Design d) {
-            this.design = d;
-            this.base = IB_BASE + IB_STEP * d.ordinal();
-        }
-
-        void panel(List<Part> parts) {
-            int content = 0;
-            for (Part p : parts) content += p.width();
-            int body = content + 1;
-            int cap = design.cap;
-            int x0 = x;
-            int pos = x0 + cap;
-            int rest = body;
-            for (int i = 0; i < TILE_WIDTHS.length; i++) {
-                while (rest >= TILE_WIDTHS[i]) {
-                    put(pos, String.valueOf((char) (base + (TILE_WIDTHS.length - 1 - i))), TILE_WIDTHS[i] + 1);
-                    pos += TILE_WIDTHS[i];
-                    rest -= TILE_WIDTHS[i];
-                }
-            }
-            put(x0, String.valueOf((char) (base + 8)), cap + 1);
-            put(x0 + cap + body, String.valueOf((char) (base + 9)), cap + 1);
-            int cx = x0 + cap + 1;
-            for (Part p : parts) {
-                moveTo(cx);
-                out.append(p.c());
-                cursor = cx + p.advance();
-                cx += p.width();
-            }
-            x = x0 + 2 * cap + body + GAP;
-        }
-
-        private void put(int at, String ch, int advance) {
-            moveTo(at);
-            out.append(glyph(ch));
-            cursor = at + advance;
-        }
-
-        private void moveTo(int at) {
-            if (at != cursor) out.append(glyph(Ui.spaceChars(at - cursor)));
-            cursor = at;
-        }
-
-        Component build() {
-            moveTo(x - GAP);
-            return out.build();
-        }
+        return HudBar.ascii(s);
     }
 }

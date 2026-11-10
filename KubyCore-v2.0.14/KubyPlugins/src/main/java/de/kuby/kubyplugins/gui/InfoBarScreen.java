@@ -32,10 +32,19 @@ public final class InfoBarScreen {
             NAV = TextColor.color(0xC0C4CB), ON = TextColor.color(0x201400), DOT = TextColor.color(0x545454);
     private static final int ROW0 = 218, ROW_DY = 18, DESIGN0 = 89, DESIGN_DY = 27;
 
-    /** Werte für die Vorschau: Geld und Juwelen (fertig geschrieben), Job. */
-    public record Sample(String coins, String jewels, InfoBar.JobLine job) {}
+    /** Werte für die Vorschau: Geld und Juwelen (fertig geschrieben), Job, Insel (Skyblock). */
+    public record Sample(String coins, String jewels, InfoBar.JobLine job, InfoBar.IslandLine island) {
+        public Sample(String coins, String jewels, InfoBar.JobLine job) {
+            this(coins, jewels, job, InfoBar.IslandLine.NONE);
+        }
+    }
 
-    public record View(boolean on, Design design, List<Element> order, List<Boolean> visible, Sample sample) {}
+    /** sky: Leiste in Skyblock (eigene Designs und Elemente). */
+    public record View(boolean on, Design design, List<Element> order, List<Boolean> visible, Sample sample, boolean sky) {
+        public View(boolean on, Design design, List<Element> order, List<Boolean> visible, Sample sample) {
+            this(on, design, order, visible, sample, design.sky);
+        }
+    }
 
     public interface Actions {
         Consumer<Player> design(Design d);
@@ -58,15 +67,17 @@ public final class InfoBarScreen {
     public void show(Player p) {
         UUID id = p.getUniqueId();
         InfoBar bar = plugin.infoBar();
-        List<Element> order = bar.order(id);
+        boolean sky = bar.sky(p);
+        List<Element> order = bar.order(id, sky);
         List<Boolean> visible = new ArrayList<>();
-        for (Element e : order) visible.add(bar.visible(id, e));
-        View v = new View(bar.on(id), bar.design(id), order, visible,
-                new Sample(number(plugin.economy().balance(id)), number(plugin.jewels().balance(id)), InfoBar.job(p)));
-        UiDialog.show(p, canvas(v, actions()), HEIGHT);
+        for (Element e : order) visible.add(bar.visible(id, e, sky));
+        View v = new View(bar.on(id), bar.design(id, sky), order, visible,
+                new Sample(number(plugin.economy().balance(id)), number(plugin.jewels().balance(id)), InfoBar.job(p),
+                        sky ? InfoBar.island(p) : InfoBar.IslandLine.NONE), sky);
+        UiDialog.show(p, canvas(v, actions(sky)), HEIGHT);
     }
 
-    private Actions actions() {
+    private Actions actions(boolean sky) {
         InfoBar bar = plugin.infoBar();
         return new Actions() {
             public Consumer<Player> design(Design d) {
@@ -79,7 +90,7 @@ public final class InfoBarScreen {
 
             public Consumer<Player> reset() {
                 return pl -> {
-                    bar.reset(pl.getUniqueId());
+                    bar.reset(pl.getUniqueId(), sky);
                     Sfx.play(plugin, pl, Sfx.Kind.SUCCESS);
                     show(pl);
                 };
@@ -95,7 +106,7 @@ public final class InfoBarScreen {
 
             public Consumer<Player> move(Element e, int dir) {
                 return pl -> {
-                    bar.move(pl.getUniqueId(), e, dir);
+                    bar.move(pl.getUniqueId(), e, dir, sky);
                     Sfx.play(plugin, pl, Sfx.Kind.CLICK);
                     show(pl);
                 };
@@ -103,7 +114,7 @@ public final class InfoBarScreen {
 
             public Consumer<Player> toggle(Element e) {
                 return pl -> {
-                    bar.toggle(pl.getUniqueId(), e);
+                    bar.toggle(pl.getUniqueId(), e, sky);
                     Sfx.play(plugin, pl, Sfx.Kind.CLICK);
                     show(pl);
                 };
@@ -116,7 +127,7 @@ public final class InfoBarScreen {
         // Kopf
         c.box(0, 0, W, 52, KitData.Box.IB_HEAD);
         c.sprite(11, 13, KitData.Sprite.IB_SIGN);
-        c.text(47, 16, upper("Info-Leiste"), BLUE, true);
+        c.text(47, 16, upper(v.sky() ? "Insel-Leiste" : "Info-Leiste"), BLUE, true);
         c.text(47, 29, "Was oben in deiner Leiste steht, und wo.", GRAY, false);
         // „Leiste“ endet 6 px vor „An“ / „Aus“ wie im Original
         String now = v.on() ? (de.kuby.kubyplugins.util.I18n.context() ? "On" : "An") : "Aus";
@@ -134,9 +145,9 @@ public final class InfoBarScreen {
         c.sprite(267, v.on() ? 65 : 66, v.on() ? KitData.Sprite.IB_HIDE : KitData.Sprite.IB_EYE_ON);
         c.text(283, 68, v.on() ? "Leiste ausblenden" : "Leiste einblenden", NAV, false);
         c.action(259, 62, 123, 20, a.toggleBar(), v.on() ? "Info-Leiste aus" : "Info-Leiste an");
-        Design[] ds = Design.values();
-        for (int i = 0; i < ds.length; i++) {
-            Design d = ds[i];
+        List<Design> ds = Design.group(v.sky());
+        for (int i = 0; i < ds.size(); i++) {
+            Design d = ds.get(i);
             int y = DESIGN0 + DESIGN_DY * i;
             boolean sel = d == v.design();
             c.box(10, y, 64, 20, sel ? KitData.Box.IB_BTN_ON : KitData.Box.IB_BTN_OFF, Canvas.Z_BUTTON);
@@ -144,7 +155,7 @@ public final class InfoBarScreen {
             c.text(10 + (64 - Canvas.width(Canvas.clean(label), sel)) / 2, y + 6, label, sel ? ON : WHITE, sel);
             int x = 80;
             x += bar(c, x, y, d, money(v.sample(), d)) + 4;
-            bar(c, x, y, d, job(v.sample().job(), d));
+            bar(c, x, y, d, v.sky() ? island(v.sample().island(), d) : job(v.sample().job(), d));
             c.action(10, y, W - 14, 20, a.design(d), "Design " + label);
         }
 
@@ -180,6 +191,9 @@ public final class InfoBarScreen {
             case PLACE -> KitData.Sprite.IB_EL_PLACE;
             case QUEST -> KitData.Sprite.IB_EL_QUEST;
             case SIDE -> KitData.Sprite.IB_EL_SIDE;
+            case ISLAND -> KitData.Sprite.IBS_EL_ISLAND;
+            case XP -> KitData.Sprite.IBS_EL_XP;
+            case GEN -> KitData.Sprite.IBS_EL_GEN;
         };
     }
 
@@ -202,15 +216,37 @@ public final class InfoBarScreen {
         }
     }
 
-    /** Farben der Schrift: Wald dunkel ohne Schatten, die anderen hell mit Schatten. */
+    /** Farben der Schrift: helle Designs (Wald, Wolke) dunkel ohne Schatten, die anderen hell mit Schatten. */
     private static TextColor col(Design d, int wald, int dark) {
         return TextColor.color(d.dark ? dark : wald);
     }
 
     private static List<Piece> money(Sample s, Design d) {
-        TextColor t = col(d, 0x493326, 0xFCFCFC);
+        TextColor t = col(d, d.sky ? 0x2D3846 : 0x493326, 0xFCFCFC);
         return List.of(Piece.icon(KitData.Sprite.IB_HUD_COIN, 4, 4), Piece.text(s.coins(), t), Piece.gap(8),
                 Piece.icon(KitData.Sprite.IB_HUD_GEM, 4, 5), Piece.text(s.jewels(), t));
+    }
+
+    /** Insel wie in der Skyblock-Leiste (SkyblockHud): Level, Fortschritt, Platz. */
+    private static List<Piece> island(InfoBar.IslandLine i, Design d) {
+        TextColor value = col(d, 0x2D3846, 0xFCFCFC), gray = col(d, 0x5E6B80, 0xA8A8A8);
+        List<Piece> out = new ArrayList<>();
+        out.add(Piece.icon(KitData.Sprite.IBS_HUD_ISLAND, 4, 4));
+        if (!i.has()) {
+            out.add(Piece.text("Keine Insel", gray));
+            out.add(Piece.text(" · ", DOT));
+            out.add(Piece.text("/insel", col(d, 0x2E7D32, 0x7CE36C)));
+            return out;
+        }
+        out.add(Piece.text("Lv ", gray));
+        out.add(Piece.text(number(i.level()), value));
+        out.add(Piece.text(" · ", DOT));
+        out.add(Piece.text(i.percent() + "%", col(d, 0x8A6D00, 0xFCFC54)));
+        if (i.rank() > 0) {
+            out.add(Piece.text(" · ", DOT));
+            out.add(Piece.text("#" + i.rank(), col(d, 0xA0522D, 0xFFB45A)));
+        }
+        return out;
     }
 
     private static List<Piece> job(InfoBar.JobLine j, Design d) {
@@ -260,6 +296,10 @@ public final class InfoBarScreen {
             case KRISTALL -> KitData.Sprite.IB_CAP_L_KRISTALL;
             case KRONE -> KitData.Sprite.IB_CAP_L_KRONE;
             case FROST -> KitData.Sprite.IB_CAP_L_FROST;
+            case INSEL -> KitData.Sprite.IBS_CAP_L_INSEL;
+            case WOLKE -> KitData.Sprite.IBS_CAP_L_WOLKE;
+            case NETHER -> KitData.Sprite.IBS_CAP_L_NETHER;
+            case ENDE -> KitData.Sprite.IBS_CAP_L_ENDE;
         };
     }
 
@@ -269,6 +309,10 @@ public final class InfoBarScreen {
             case KRISTALL -> KitData.Sprite.IB_CAP_R_KRISTALL;
             case KRONE -> KitData.Sprite.IB_CAP_R_KRONE;
             case FROST -> KitData.Sprite.IB_CAP_R_FROST;
+            case INSEL -> KitData.Sprite.IBS_CAP_R_INSEL;
+            case WOLKE -> KitData.Sprite.IBS_CAP_R_WOLKE;
+            case NETHER -> KitData.Sprite.IBS_CAP_R_NETHER;
+            case ENDE -> KitData.Sprite.IBS_CAP_R_ENDE;
         };
     }
 
@@ -278,6 +322,10 @@ public final class InfoBarScreen {
             case KRISTALL -> KitData.Strip.IB_BODY_KRISTALL;
             case KRONE -> KitData.Strip.IB_BODY_KRONE;
             case FROST -> KitData.Strip.IB_BODY_FROST;
+            case INSEL -> KitData.Strip.IBS_BODY_INSEL;
+            case WOLKE -> KitData.Strip.IBS_BODY_WOLKE;
+            case NETHER -> KitData.Strip.IBS_BODY_NETHER;
+            case ENDE -> KitData.Strip.IBS_BODY_ENDE;
         };
     }
 

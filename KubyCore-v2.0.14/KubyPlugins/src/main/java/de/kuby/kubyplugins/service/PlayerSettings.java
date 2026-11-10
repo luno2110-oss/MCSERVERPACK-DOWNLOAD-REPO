@@ -71,6 +71,11 @@ public final class PlayerSettings {
             new Choice("kristall", "Kristall", "Crystal"), new Choice("krone", "Krone", "Crown"),
             new Choice("frost", "Frost", "Frost"));
 
+    /** Designs der Skyblock-Leiste (InfoBar.Design mit sky), das erste ist der Standard. */
+    public static final List<Choice> BAR_SKY_DESIGNS = List.of(new Choice("insel", "Insel", "Island"),
+            new Choice("wolke", "Wolke", "Cloud"), new Choice("nether", "Nether", "Nether"),
+            new Choice("ende", "End", "End"));
+
     public static final List<Choice> AUTO_TPA = List.of(
             new Choice("off", "Aus", "Off"),
             new Choice("friends", "Freunde", "Friends"),
@@ -158,7 +163,7 @@ public final class PlayerSettings {
                 "Teammitglieder durch Wände markiert sehen.", "See team members marked through walls.", true, NOT_SURVIVAL);
         add("infobar", Tab.DISPLAY, "Info-Leiste", "Info bar",
                 "Die Leiste oben am Bildschirm. Inhalt: /bossbar", "The bar at the top of the screen. Content: /bossbar",
-                true, SURVIVAL);
+                true, Set.of(ModeService.SURVIVAL, ModeService.SKYBLOCK));
         add("prices", Tab.DISPLAY, "Preise im Inventar", "Prices in inventory",
                 "Verkaufswert des Gegenstands in der Hand anzeigen.", "Show the sell value of the item in your hand.", true);
         add("npcs", Tab.DISPLAY, "Deko-NPCs", "Decoration NPCs",
@@ -189,6 +194,19 @@ public final class PlayerSettings {
         add("bar.side", null, "Leiste: Nebenquest", "Bar: side quest", "Aktive Nebenquest", "Active side quest", true);
         addChoice("bar.design", null, "Leiste: Design", "Bar: design", "Aussehen der Info-Leiste.", "Look of the info bar.",
                 BAR_DESIGNS, ALL);
+        // Skyblock-Leiste: eigene Schalter (bar.sky.<element>), Uhrzeit standardmäßig aus
+        add("bar.sky.time", null, "Insel-Leiste: Uhrzeit", "Island bar: time", "Tageszeit in der Welt", "Time of day in the world", false);
+        add("bar.sky.coins", null, "Insel-Leiste: Coins", "Island bar: coins", "Dein Kontostand", "Your balance", true);
+        add("bar.sky.jewels", null, "Insel-Leiste: Juwelen", "Island bar: jewels", "Deine Juwelen", "Your jewels", true);
+        add("bar.sky.island", null, "Insel-Leiste: Insel", "Island bar: island", "Level, Fortschritt und Platz",
+                "Level, progress and rank", true);
+        add("bar.sky.xp", null, "Insel-Leiste: XP", "Island bar: XP", "Deine Erfahrung", "Your experience", true);
+        add("bar.sky.gen", null, "Insel-Leiste: Generatoren", "Island bar: generators", "Aufgestellt, Plätze, Booster",
+                "Placed, slots, booster", true);
+        add("bar.sky.place", null, "Insel-Leiste: Ort", "Island bar: place", "Eigene Insel, Besuch, Spawn, Stufe",
+                "Own island, visit, spawn, stage", true);
+        addChoice("bar.sky.design", null, "Insel-Leiste: Design", "Island bar: design", "Aussehen der Insel-Leiste.",
+                "Look of the island bar.", BAR_SKY_DESIGNS, ALL);
         add("translate", null, "Auto-Übersetzen", "Auto-translate",
                 "Übersetzt Nachrichten anderer Spieler.", "Translates messages from other players.", false);
         addChoice("lang", null, "Sprache", "Language", "Sprache der Menüs und Meldungen.",
@@ -346,9 +364,14 @@ public final class PlayerSettings {
 
     /** Setzt alle Schlüssel mit diesem Anfang auf den Standard zurück. */
     public synchronized void reset(UUID id, String prefix) {
+        reset(id, prefix, null);
+    }
+
+    /** Wie {@link #reset(UUID, String)}, aber Schlüssel mit dem Anfang keep bleiben (null: keine). */
+    public synchronized void reset(UUID id, String prefix, String keep) {
         Map<String, Object> m = values.get(id);
         if (m == null) return;
-        m.keySet().removeIf(k -> k.startsWith(prefix));
+        m.keySet().removeIf(k -> k.startsWith(prefix) && (keep == null || !k.startsWith(keep)));
         save();
     }
 

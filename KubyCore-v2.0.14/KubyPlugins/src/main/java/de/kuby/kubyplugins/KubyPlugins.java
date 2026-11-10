@@ -860,7 +860,8 @@ public final class KubyPlugins extends JavaPlugin {
 
     /** Addons können die Geld-/XP-Anzeige über der Hotbar für einzelne Spieler ausblenden (z. B. Survival-Leiste oben). */
     private java.util.function.Predicate<org.bukkit.entity.Player> hotbarHidden = p -> false;
-    public void setHotbarHidden(java.util.function.Predicate<org.bukkit.entity.Player> check) { hotbarHidden = check; }
+    /** Addons mit eigener Leiste oben (Survival, Skyblock) melden hier, wann die Anzeige über der Hotbar entfällt (oder-verknüpft). */
+    public void setHotbarHidden(java.util.function.Predicate<org.bukkit.entity.Player> check) { if (check != null) hotbarHidden = hotbarHidden.or(check); }
     public boolean hotbarHidden(org.bukkit.entity.Player p) { return hotbarHidden.test(p); }
     public EditModeService edit() { return edit; }
     public RegionService regions() { return regions; }

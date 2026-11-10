@@ -847,9 +847,15 @@ public final class IslandService {
         if (UpgradeLevels.jewelLevel(next)) {
             return UpgradeLevels.jewels(next, jewelBase(u), addon.getConfig().getDouble("insel.juwelen-stufe.faktor", 1.05));
         }
-        if (u == Upgrade.GENERATOR) return generatorLevels().get(next).cost();
-        List<Long> l = prices(u);
-        return l.get(Math.min(next, l.size() - 1));
+        // Preis-Faktor für schnelleren Fortschritt (gilt auch für ältere configs)
+        double f = Math.max(0.05, addon.getConfig().getDouble("insel.preis-faktor", 0.6));
+        long base;
+        if (u == Upgrade.GENERATOR) base = generatorLevels().get(next).cost();
+        else {
+            List<Long> l = prices(u);
+            base = l.get(Math.min(next, l.size() - 1));
+        }
+        return base <= 0 ? 0 : Math.max(50, Math.round(base * f / 50.0) * 50);
     }
 
     /** Bonus des Wachstums-Upgrades: Chance auf eine Stufe mehr beim Wachsen (bis 1 bei Level 20, in Stufe 4 bis 2:
@@ -897,6 +903,7 @@ public final class IslandService {
         } else if (!core.economy().withdraw(p.getUniqueId(), price)) {
             return "Dafür brauchst du " + Msg.coins(price) + " $.";
         }
+        addBonus(i, addon.getConfig().getLong("level.bonus.upgrade-level", 40));
         switch (u) {
             case SIZE -> i.size++;
             case SLOTS -> i.slots++;
@@ -971,7 +978,7 @@ public final class IslandService {
 
     /** Punkte eines Blocks (level.werte, sonst level.standard-wert; Luft und Flüssigkeiten 0). */
     public int value(Material m) {
-        if (m == null || m.isAir() || m == Material.WATER || m == Material.LAVA) return 0;
+        if (m == null || m.isAir() || m == Material.WATER || m == Material.LAVA || m == Material.BARRIER) return 0;
         ConfigurationSection s = addon.getConfig().getConfigurationSection("level.werte");
         if (s != null && s.contains(m.name())) return s.getInt(m.name());
         return addon.getConfig().getInt("level.standard-wert", 1);
@@ -987,6 +994,36 @@ public final class IslandService {
             }
         }
         return sum;
+    }
+
+    /** Inselpunkte für gekaufte Upgrades und aufgestellte Generatoren (zählen zusätzlich zu den Blöcken). */
+    public long bonusPoints(Island i) {
+        long per = addon.getConfig().getLong("level.bonus.upgrade-level", 40);
+        long ups = (long) Math.max(0, i.size) + Math.max(0, i.slots) + Math.max(0, i.generator) + Math.max(0, i.growth)
+                + Math.max(0, i.spawn) + Math.max(0, i.limit);
+        return per * ups + (addon.generators() == null ? 0 : addon.generators().pointsOf(i.slot));
+    }
+
+    /** Punkte dazu oder weg (Upgrade, Generator). */
+    public void addBonus(Island i, long points) {
+        if (i == null || points == 0) return;
+        i.points = Math.max(0, i.points + points);
+        dirty = true;
+    }
+
+    /** Einmalig: Bonuspunkte für schon gekaufte Upgrades und aufgestellte Generatoren nachtragen. */
+    public int migrateBonus() {
+        int n = 0;
+        for (Island i : bySlot.values()) {
+            if (i.owner == null) continue;
+            long b = bonusPoints(i);
+            if (b > 0) {
+                i.points += b;
+                n++;
+            }
+        }
+        if (n > 0) dirty = true;
+        return n;
     }
 
     /** Gesetzter oder abgebauter Block auf einer Insel (Stufen-Inseln zählen nicht, wie beim Neu-Zählen). */
@@ -1036,7 +1073,7 @@ public final class IslandService {
             }
             long total = sum;
             Bukkit.getScheduler().runTask(addon, () -> {
-                i.points = total;
+                i.points = total + bonusPoints(i);
                 dirty = true;
                 if (done != null) done.accept(total);
             });

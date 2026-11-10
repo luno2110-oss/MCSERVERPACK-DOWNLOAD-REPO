@@ -858,7 +858,7 @@ TITLE_GOLD, TITLE_WHITE = 0xEE00, 0xEF00
 SMALL_FIRST, SMALL_CELL = 0xED00, 20
 BIG_FIRST = 0xED80          # eigene 32-px-Icons: ED80 + i (32 px), EDC0 + i (16 px)
 SPRITE_FIRST = 0xF000       # Kacheln (32 x 32) großer Grafiken: F000 + i
-STRIP_FIRST = 0xE000        # Balken mit Farbverlauf: je Länge 1..w ein Zeichen, je Verlauf 256 Zeichen ab E000
+STRIP_FIRST = 0xE000        # Balken mit Farbverlauf: je Länge 1..w ein Zeichen (w Zeichen je Verlauf, ab E000)
 # Blöcke für Verläufe: E000-E8FF (ab E900 liegen die Item-Symbole), dann freie Blöcke EB00 und F600
 STRIP_BLOCKS = [STRIP_FIRST + 0x100 * i for i in range(9)] + [0xEB00, 0xF600]
 # Vanilla-Icons: je zwei Zeichen (16 px, 32 px); die ersten 128 ab E900, weitere ab F700 (E900-E9FF ist voll)
@@ -899,6 +899,7 @@ def strip_sheets(strips):
     """Balken mit Farbverlauf: Bild = volle Füllung (w Spalten) und rechts die Endspalte. Zeichen first + n - 1 zeigt
     die ersten n Spalten und dahinter die Endspalte (bei n = w ohne). Gibt [(name, Bogen, Zeilen, w, h, first)]."""
     out = []
+    used = [0] * len(STRIP_BLOCKS)   # belegte Zeichen je Block: gleichförmige Balken (128) teilen sich einen Block
     for k, (name, img) in enumerate(strips):
         # höchstens STRIP_MAX Spalten je Zeichen: Minecraft lädt keine Schrift-Zellen über 256 px (Zelle = w + 1);
         # längere Balken setzt Canvas.strip aus mehreren Stücken zusammen
@@ -909,8 +910,10 @@ def strip_sheets(strips):
             w = min(w, STRIP_MAX)
         assert w <= 255 and h <= 32, name + ": Verlauf zu lang (Zelle > 256 px)"
         end = img.crop((img.width - 1, 0, img.width, h))
-        assert k < len(STRIP_BLOCKS), "zu viele Verläufe"
-        first = STRIP_BLOCKS[k]
+        free = [b for b in range(len(STRIP_BLOCKS)) if 0x100 - used[b] >= w]
+        assert free, "zu viele Verläufe"
+        first = STRIP_BLOCKS[free[0]] + used[free[0]]
+        used[free[0]] += w
         rows = (w + STRIP_COLS - 1) // STRIP_COLS
         sheet = Image.new("RGBA", (STRIP_COLS * (w + 1), rows * h), T)
         for n in range(1, w + 1):

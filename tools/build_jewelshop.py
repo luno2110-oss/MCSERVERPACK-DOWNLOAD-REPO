@@ -38,10 +38,12 @@ ASSETS_EVENTS = os.path.join(HERE, "assets", "events")
 ASSETS_GENERATORS = os.path.join(HERE, "assets", "generators")
 # Cookie Clicker (build_cookie_art.py): Präfix ck_
 ASSETS_COOKIE = os.path.join(HERE, "assets", "cookie")
+# Insel-Leiste in Skyblock (build_infobar_sky.py): Präfix ibs_; die Leisten-Teile nutzt auch build_sb_pack.py
+ASSETS_INFOBAR_SKY = os.path.join(HERE, "assets", "infobar_sky")
 SETS = ((ASSETS, "js_"), (ASSETS_SURVIVAL, "jss_"), (ASSETS_PLAYTIME, "pt_"), (ASSETS_RULES, "rg_"),
         (ASSETS_FRIENDS, "fr_"), (ASSETS_SUPPORT, "su_"), (ASSETS_INFOBAR, "ib_"), (ASSETS_PROFILE, "pf_"),
         (ASSETS_PWARPS, "pw_"), (ASSETS_QUESTS, "qu_"), (ASSETS_HUB, "hb_"),
-        (ASSETS_EVENTS, "ev_"), (ASSETS_GENERATORS, "gn_"), (ASSETS_COOKIE, "ck_"))
+        (ASSETS_EVENTS, "ev_"), (ASSETS_GENERATORS, "gn_"), (ASSETS_COOKIE, "ck_"), (ASSETS_INFOBAR_SKY, "ibs_"))
 
 
 def available():

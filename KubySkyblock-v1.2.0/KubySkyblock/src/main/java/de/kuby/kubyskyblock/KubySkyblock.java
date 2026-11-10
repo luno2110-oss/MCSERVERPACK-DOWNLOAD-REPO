@@ -34,6 +34,7 @@ public final class KubySkyblock extends JavaPlugin {
     private OneBlockService oneblock;
     private ProgressService progress;
     private de.kuby.kubyskyblock.service.GeneratorService generators;
+    private de.kuby.kubyskyblock.hud.SkyblockHud hud;
     private SkyblockCommand command;
     private final Map<UUID, Location[]> corners = new HashMap<>();
 
@@ -119,6 +120,13 @@ public final class KubySkyblock extends JavaPlugin {
         oneblock = new OneBlockService(this, core);
         progress = new ProgressService(this, core);
         generators = new de.kuby.kubyskyblock.service.GeneratorService(this, core);
+        // Inselpunkte für Upgrades und Generatoren (einmalig nachtragen, config-stand 8)
+        if (getConfig().getInt("config-stand", 0) < 8) {
+            int n = islands.migrateBonus();
+            getConfig().set("config-stand", 8);
+            saveConfig();
+            if (n > 0) getLogger().info("Inselpunkte: Upgrades und Generatoren bei " + n + " Inseln nachgetragen.");
+        }
         stages = new de.kuby.kubyskyblock.service.StageService(this, core);
         shop = new de.kuby.kubyskyblock.service.SkyShopService(this, core);
         core.registerShop(ModeService.SKYBLOCK, new KubyPlugins.ShopHook() {
@@ -197,6 +205,9 @@ public final class KubySkyblock extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new de.kuby.kubyskyblock.listener.GeneratorListener(this), this);
         getServer().getPluginManager().registerEvents(new de.kuby.kubyskyblock.listener.LimitListener(this, core), this);
         getServer().getPluginManager().registerEvents(new de.kuby.kubyskyblock.listener.StageListener(this, core), this);
+        // Insel-Leiste oben (wie in Survival, eigene Rahmen und Elemente; Einstellungen in /bossbar)
+        hud = new de.kuby.kubyskyblock.hud.SkyblockHud(this, core);
+        getServer().getPluginManager().registerEvents(hud, this);
         core.registerJewelShop(ModeService.SKYBLOCK, new KubyPlugins.JewelShopHook() {
             @Override
             public boolean open(org.bukkit.entity.Player p, String sub) {
@@ -237,6 +248,7 @@ public final class KubySkyblock extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (hud != null) hud.shutdown();
         if (streaks != null) streaks.save();
         if (islands != null) islands.save();
         if (biomes != null) biomes.save();

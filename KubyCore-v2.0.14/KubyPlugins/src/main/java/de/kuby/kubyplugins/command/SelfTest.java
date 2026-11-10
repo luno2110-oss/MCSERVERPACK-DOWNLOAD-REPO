@@ -365,14 +365,18 @@ final class SelfTest {
                         new Class<?>[]{de.kuby.kubyplugins.gui.InfoBarScreen.Actions.class}, (o, m, args) -> NO);
         for (de.kuby.kubyplugins.service.InfoBar.Design d : de.kuby.kubyplugins.service.InfoBar.Design.values()) {
             boolean on = d.ordinal() % 2 == 0;
-            List<de.kuby.kubyplugins.service.InfoBar.Element> order = new ArrayList<>(List.of(de.kuby.kubyplugins.service.InfoBar.Element.values()));
+            List<de.kuby.kubyplugins.service.InfoBar.Element> order = new ArrayList<>(de.kuby.kubyplugins.service.InfoBar.Element.group(d.sky));
             java.util.Collections.rotate(order, d.ordinal());
             List<Boolean> vis = new ArrayList<>();
             for (int i = 0; i < order.size(); i++) vis.add(i % 3 != 0);
-            canvas.accept("Info-Leiste " + d.label, () -> de.kuby.kubyplugins.gui.InfoBarScreen.canvas(
+            // Skyblock: mit großer Insel (Level, Platz) und ohne Insel
+            de.kuby.kubyplugins.service.InfoBar.IslandLine isl = on
+                    ? new de.kuby.kubyplugins.service.InfoBar.IslandLine(true, 12_345, 87, 104, 12, 12, "x2 59:59")
+                    : de.kuby.kubyplugins.service.InfoBar.IslandLine.NONE;
+            canvas.accept((d.sky ? "Insel-Leiste " : "Info-Leiste ") + d.label, () -> de.kuby.kubyplugins.gui.InfoBarScreen.canvas(
                     new de.kuby.kubyplugins.gui.InfoBarScreen.View(on, d, order, vis, new de.kuby.kubyplugins.gui.InfoBarScreen.Sample(
                             "1.234.567", "320", on ? new de.kuby.kubyplugins.service.InfoBar.JobLine("Holzfäller", 12, 45, 1200, 3060)
-                            : de.kuby.kubyplugins.service.InfoBar.JobLine.NONE)), ia));
+                            : de.kuby.kubyplugins.service.InfoBar.JobLine.NONE, isl)), ia));
         }
 
         // Hauptmenü: lange Namen, große Zahlen, volle Bereiche

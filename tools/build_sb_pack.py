@@ -572,6 +572,11 @@ def hud_cap():
 INFOBAR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "infobar")
 IB_DESIGNS = ("wald", "kristall", "krone", "frost")
 IB_BASE, IB_STEP, IB_ICONS = 0xE200, 0x20, 0xE280
+# Insel-Leiste (Skyblock, tools/build_infobar_sky.py): Designs ab 0xE2A0, Symbole Insel/XP/Generator ab IB_ICONS + 4
+INFOBAR_SKY = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "infobar_sky")
+IB_SKY_DESIGNS = ("insel", "wolke", "nether", "ende")
+IB_SKY_BASE = 0xE2A0
+IB_SKY_ICONS = ("island", "xp", "generator")
 IB_BODY_ASCENT = 12 - HUD_TEXT_SHIFT     # Oberkante des Mittelstücks 5 px über der Schrift
 
 
@@ -601,6 +606,32 @@ def build_infobar(save):
     dot = new(1, 1)
     dot.putpixel((0, 0), (255, 255, 255, 255))
     save(dot, "ib_dot", 1, IB_BODY_ASCENT - 8, chr(IB_ICONS + 3))
+    build_infobar_sky(save)
+
+
+def build_infobar_sky(save):
+    """Skyblock-Leiste: gleicher Aufbau, eigene Designs; Symbole 8 x 8 wie Kompass und Uhr (1 px über der Schrift)."""
+    if not os.path.isdir(INFOBAR_SKY):
+        import build_infobar_sky
+        build_infobar_sky.build(INFOBAR_SKY)
+    with open(os.path.join(INFOBAR_SKY, "art.json"), encoding="utf-8") as f:
+        meta = json.load(f)
+    for i, name in enumerate(IB_SKY_DESIGNS):
+        base = IB_SKY_BASE + IB_STEP * i
+        body = Image.open(os.path.join(INFOBAR_SKY, "strip_body_%s.png" % name)).convert("RGBA")
+        column = body.crop((0, 0, 1, body.height))
+        for k, width in enumerate((1, 2, 4, 8, 16, 32, 64)):
+            tile = new(width, body.height)
+            for x in range(width):
+                tile.paste(column, (x, 0))
+            save(tile, "ibs_%s_%d" % (name, width), body.height, IB_BODY_ASCENT, chr(base + k))
+        up = meta["design"][name]["up"]
+        for side, off in (("l", 8), ("r", 9)):
+            cap = Image.open(os.path.join(INFOBAR_SKY, "art_cap_%s_%s.png" % (side, name))).convert("RGBA")
+            save(cap, "ibs_%s_cap_%s" % (name, side), cap.height, IB_BODY_ASCENT + up, chr(base + off))
+    for k, name in enumerate(IB_SKY_ICONS):
+        img = Image.open(os.path.join(INFOBAR_SKY, "art_hud_%s.png" % name)).convert("RGBA")
+        save(img, "ibs_" + name, 8, 7 - HUD_TEXT_SHIFT + 1, chr(IB_ICONS + 4 + k))
 
 
 def build_hud(out, spaces):

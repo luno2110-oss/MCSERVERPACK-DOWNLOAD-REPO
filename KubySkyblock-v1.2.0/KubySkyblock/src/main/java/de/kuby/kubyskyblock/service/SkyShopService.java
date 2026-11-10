@@ -73,7 +73,10 @@ public final class SkyShopService {
 
     /** Verkaufspreis je Stück (0 = nicht verkaufbar). */
     public long sellPrice(Material m) {
-        return sellPrices.getOrDefault(m, 0L);
+        long base = sellPrices.getOrDefault(m, 0L);
+        if (base <= 0) return 0;
+        // Verkaufs-Faktor für schnelleren Fortschritt (gilt auch für Generator-Ertrag)
+        return Math.max(1, Math.round(base * Math.max(0.1, addon.getConfig().getDouble("shop.verkauf-faktor", 1.5))));
     }
 
     static String nice(Material m) {

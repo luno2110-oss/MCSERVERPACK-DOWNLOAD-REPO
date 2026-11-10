@@ -1,0 +1,45 @@
+{
+ "art": {
+  "hud_generator": {
+   "h": 8,
+   "w": 8,
+   "y": 0
+  },
+  "hud_island": {
+   "h": 8,
+   "w": 8,
+   "y": 0
+  },
+  "hud_xp": {
+   "h": 8,
+   "w": 8,
+   "y": 0
+  }
+ },
+ "design": {
+  "ende": {
+   "cap": 12,
+   "dark": true,
+   "down": 3,
+   "up": 7
+  },
+  "insel": {
+   "cap": 12,
+   "dark": true,
+   "down": 5,
+   "up": 4
+  },
+  "nether": {
+   "cap": 12,
+   "dark": true,
+   "down": 3,
+   "up": 7
+  },
+  "wolke": {
+   "cap": 12,
+   "dark": false,
+   "down": 3,
+   "up": 4
+  }
+ }
+}
