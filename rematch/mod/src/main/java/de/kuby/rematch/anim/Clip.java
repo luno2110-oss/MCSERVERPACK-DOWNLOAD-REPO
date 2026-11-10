@@ -16,8 +16,8 @@ public final class Clip {
 
     /** Zusatzwerte: Priorität, Überblenden, ab wann abbrechbar, Tempo. */
     public record Meta(int priority, double blendIn, double blendOut, Easing easeIn, Easing easeOut,
-                       double cancelAfter, double speed) {
-        public static final Meta DEFAULT = new Meta(50, 0.12, 0.25, Easing.OUT_QUAD, Easing.IN_OUT_CUBIC, -1, 1.0);
+                       double cancelAfter, double speed, double speedAt) {
+        public static final Meta DEFAULT = new Meta(50, 0.12, 0.25, Easing.OUT_QUAD, Easing.IN_OUT_CUBIC, -1, 1.0, 0);
     }
 
     public record Event(double time, String name) { }
@@ -33,7 +33,9 @@ public final class Clip {
 
         Channel(double[] t, double[][] v, int[] ip) { this.t = t; this.v = v; this.ip = ip; }
 
-        void sample(double time, double[] out) {
+        void sample(double time, double[] out) { sample(time, out, false); }
+
+        void sample(double time, double[] out, boolean wrap) {
             int n = t.length;
             if (time <= t[0] || n == 1) { copy(v[0], out); return; }
             if (time >= t[n - 1]) { copy(v[n - 1], out); return; }
@@ -43,7 +45,9 @@ public final class Clip {
             double[] v0 = v[i], v1 = v[i + 1];
             if (ip[i] == STEP) { copy(v0, out); return; }
             if (ip[i] == CATMULL || ip[i + 1] == CATMULL) {
-                double[] vm = i > 0 ? v[i - 1] : v0, vp = i + 2 < n ? v[i + 2] : v1;
+                // Schleife: erste und letzte Taste gleich -> Nachbarn über die Naht nehmen (keine Delle am Übergang)
+                double[] vm = i > 0 ? v[i - 1] : (wrap && n >= 3 ? v[n - 2] : v0);
+                double[] vp = i + 2 < n ? v[i + 2] : (wrap && n >= 3 ? v[1] : v1);
                 double a2 = a * a, a3 = a2 * a;
                 for (int k = 0; k < 3; k++)
                     out[k] = 0.5 * (2 * v0[k] + (-vm[k] + v1[k]) * a + (2 * vm[k] - 5 * v0[k] + 4 * v1[k] - vp[k]) * a2
@@ -75,10 +79,18 @@ public final class Clip {
         for (int b = 0; b < channels.length; b++) {
             Channel[] c = channels[b];
             if (c == null) continue;
-            if (c[ROT] != null) c[ROT].sample(t, out.rot[b]);
-            if (c[POS] != null) c[POS].sample(t, out.pos[b]);
-            if (c[SCL] != null) c[SCL].sample(t, out.scl[b]);
+            boolean w = loop == Loop.LOOP;
+            if (c[ROT] != null) c[ROT].sample(t, out.rot[b], w && seamless(c[ROT]));
+            if (c[POS] != null) c[POS].sample(t, out.pos[b], w && seamless(c[POS]));
+            if (c[SCL] != null) c[SCL].sample(t, out.scl[b], w && seamless(c[SCL]));
         }
+    }
+
+    private boolean seamless(Channel c) {
+        int n = c.t.length;
+        if (n < 3 || Math.abs(c.t[0]) > 1e-4 || Math.abs(c.t[n - 1] - length) > 1e-3) return false;
+        for (int k = 0; k < 3; k++) if (Math.abs(c.v[0][k] - c.v[n - 1][k]) > 1e-3) return false;
+        return true;
     }
 
     /** Ob der Clip Keyframes für diesen Knochen hat. */
@@ -107,7 +119,7 @@ public final class Clip {
             Meta d = Meta.DEFAULT;
             meta = new Meta(num(m, "priority", d.priority()), num(m, "blend_in", d.blendIn()), num(m, "blend_out", d.blendOut()),
                     Easing.parse(str(m, "ease_in"), d.easeIn()), Easing.parse(str(m, "ease_out"), d.easeOut()),
-                    num(m, "cancel_after", d.cancelAfter()), num(m, "speed", d.speed()));
+                    num(m, "cancel_after", d.cancelAfter()), num(m, "speed", d.speed()), num(m, "speed_at", d.speedAt()));
         }
         List<Event> events = new ArrayList<>();
         if (o.has("events"))

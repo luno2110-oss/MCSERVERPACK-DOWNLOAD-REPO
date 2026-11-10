@@ -61,6 +61,9 @@ public final class Animator {
     private Instance action, prevAction;
     private double actionWeight;    // Gewicht der Aktionsebene über der Grundebene / Minecraft
     private final List<Instance> additive = new ArrayList<>();
+    private Locomotion loco;
+    private boolean locoOn;
+    private double locoW;           // Gewicht der Fortbewegung über Minecraft (weich an/aus)
     private final Pose out, a, b;
 
     public Animator(ClipLibrary lib) {
@@ -101,6 +104,14 @@ public final class Animator {
         if (action != null && action.stopping < 0) action.stopping = clock;
     }
 
+    /** Fortbewegung als Grundebene (null = keine). */
+    public void setLocomotion(Locomotion l) { this.loco = l; }
+
+    public Locomotion locomotion() { return loco; }
+
+    /** Fortbewegung zeigen (true) oder weich zur Minecraft-Bewegung zurück (z. B. beim Hocken, Schwimmen). */
+    public void locomotionActive(boolean on) { this.locoOn = on; }
+
     /** Grund-Schleife wechseln (null = normale Minecraft-Bewegung). */
     public void setBase(String name) {
         Clip c = name == null ? null : lib.get(name);
@@ -125,12 +136,12 @@ public final class Animator {
     }
 
     /** Ob die Figur gerade von der Mod bewegt wird. */
-    public boolean active() { return action != null || base != null || weight() > 1e-4; }
+    public boolean active() { return action != null || base != null || weight() > 1e-4 || (loco != null && locoOn); }
 
     /** Wie stark die Mod-Pose die normale Minecraft-Pose ersetzt (0..1). */
     public double weight() {
         double bw = base != null ? 1 : prevBase != null ? 1 - fade(baseSwitch, 0.25) : 0;
-        return Math.max(bw, actionWeight);
+        return Math.max(Math.max(bw, locoW), actionWeight);
     }
 
     private static boolean finished(Instance i) {
@@ -154,6 +165,12 @@ public final class Animator {
                 if (finished(action) && action.stopping < 0) action.stopping = clock;
             }
             if (prevAction != null) prevAction.time += dt * prevAction.speed;
+        }
+        if (loco != null) {
+            loco.update(dt);
+            locoW = locoOn ? Math.min(1, locoW + dt / 0.2) : Math.max(0, locoW - dt / 0.2);
+        } else {
+            locoW = 0;
         }
         if (base != null) base.time += dt;
         if (prevBase != null) {
@@ -200,9 +217,12 @@ public final class Animator {
                 a.lerpTo(out, k);
                 out.copyFrom(a);
             }
+        } else if (loco != null && locoW > 0) {
+            loco.sample(out, rig());
         } else {
             out.reset();
         }
+        boolean hasBase = base != null || (loco != null && locoW > 0);
         // Aktion (mit Überblendung von der vorigen Aktion)
         if (action != null) {
             action.clip.sample(action.sampleTime(), a);
@@ -212,7 +232,7 @@ public final class Animator {
                 a.copyFrom(b);
             }
             // Ohne Grundebene übernimmt weight() das Überblenden mit Minecraft; mit Grundebene hier mischen
-            out.lerpTo(a, base != null ? actionWeight : 1);
+            out.lerpTo(a, hasBase ? actionWeight / Math.max(1e-6, weight()) : 1);
         }
         for (Instance i : additive) {
             i.clip.sample(i.sampleTime(), a);

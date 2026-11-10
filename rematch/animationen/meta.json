@@ -12,5 +12,25 @@
   "blend_in": 0.15,
   "blend_out": 0.45,
   "ease_out": "in_out_quad"
+ },
+ "stehen": {
+  "priority": 0,
+  "speed_at": 0
+ },
+ "gehen": {
+  "priority": 0,
+  "speed_at": 0.685
+ },
+ "laufen": {
+  "priority": 0,
+  "speed_at": 3.444
+ },
+ "sprinten": {
+  "priority": 0,
+  "speed_at": 3.941
+ },
+ "luft": {
+  "priority": 0,
+  "speed_at": 0
  }
 }

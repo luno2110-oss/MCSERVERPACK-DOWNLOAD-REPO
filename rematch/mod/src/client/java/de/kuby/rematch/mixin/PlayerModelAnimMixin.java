@@ -57,13 +57,16 @@ public abstract class PlayerModelAnimMixin {
         layer(parts[PartSolver.Part.RIGHT_SHIN.ordinal()], self.rightPants.visible);
         layer(parts[PartSolver.Part.LEFT_SHIN.ordinal()], self.leftPants.visible);
 
-        Animator a = ClientAnims.animator(state.id);
+        Animator a = ClientAnims.animatorFor(state);
         if (a == null || !a.active()) return;
         double w = a.weight();
         double[][] o = ClientAnims.solver().solve(a.pose());
+        // Schlagen oder Gegenstand benutzen: Arme bleiben bei Minecraft (außer während einer Aktion)
+        boolean armsVanilla = (state.attackTime > 0 || state.isUsingItem) && a.action() == null;
         for (int i = 0; i < parts.length; i++) {
             ModelPart p = parts[i];
             if (p == null) continue;
+            if (armsVanilla && i >= PartSolver.Part.RIGHT_ARM.ordinal() && i <= PartSolver.Part.LEFT_FOREARM.ordinal()) continue;
             double[] v = o[i];
             p.x = (float) (p.x + (v[0] - p.x) * w);
             p.y = (float) (p.y + (v[1] - p.y) * w);

@@ -46,6 +46,7 @@ loom {
             if (project.hasProperty('demo')) {
                 vmArg "-Dkuby.demo=${project.property('demo')}"
                 vmArg "-Dkuby.demo.zeitlupe=${project.findProperty('zeitlupe') ?: '1'}"
+                if (project.hasProperty('lauf')) vmArg "-Dkuby.demo.lauf=1"
             }
             programArgs '--width', '1280', '--height', '720'
         }

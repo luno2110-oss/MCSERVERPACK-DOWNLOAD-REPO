@@ -13,7 +13,8 @@ import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.arg
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 
 /**
- * Testbefehl (nur im eigenen Client): /kanim play <name> [tempo], stop, list, reload, zeitlupe <faktor>, effekte an|aus.
+ * Testbefehl (nur im eigenen Client): /kanim play <name> [tempo], stop, list, reload, zeitlupe <faktor>, effekte an|aus,
+ * fortbewegung an|aus.
  * Zum Anschauen F5 drücken (Ansicht von vorn/hinten).
  */
 public final class KanimCommand {
@@ -44,6 +45,11 @@ public final class KanimCommand {
                 .then(literal("zeitlupe").then(argument("faktor", DoubleArgumentType.doubleArg(0.02, 4)).executes(c -> {
                     ClientAnims.setTimeScale(DoubleArgumentType.getDouble(c, "faktor"));
                     c.getSource().sendFeedback(Component.literal("§7Zeitlupe: " + ClientAnims.timeScale()));
+                    return 1;
+                })))
+                .then(literal("fortbewegung").then(argument("an", StringArgumentType.word()).executes(c -> {
+                    ClientAnims.setLocomotion(!StringArgumentType.getString(c, "an").startsWith("aus"));
+                    c.getSource().sendFeedback(Component.literal("§7Fortbewegung: " + (ClientAnims.locomotion ? "an" : "aus")));
                     return 1;
                 })))
                 .then(literal("effekte").then(argument("an", StringArgumentType.word()).executes(c -> {

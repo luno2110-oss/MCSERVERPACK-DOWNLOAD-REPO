@@ -79,7 +79,8 @@ public final class DemoMode {
                     mc.player.connection.sendCommand("weather clear");
                     mc.player.connection.sendCommand("kill @e[type=minecraft:mannequin]");
                     mc.player.connection.sendCommand("summon minecraft:mannequin -1.5 -60 0.5 {Rotation:[-90f,0f],NoGravity:1b}");
-                    mc.player.connection.sendCommand(System.getProperty("kuby.demo.kamera", "tp @s -2.2 -60 3.7 180 14"));
+                    mc.player.connection.sendCommand(System.getProperty("kuby.demo.lauf") != null ? "tp @s 0.5 -60 0.5 180 12"
+                            : System.getProperty("kuby.demo.kamera", "tp @s -2.2 -60 3.7 180 14"));
                     mc.options.hideGui = true;
                     mc.options.setCameraType(CameraType.FIRST_PERSON);
                     state = 2;
@@ -87,6 +88,13 @@ public final class DemoMode {
                 }
             }
             case 2 -> {
+                if (ticks > 60 && System.getProperty("kuby.demo.lauf") != null) {
+                    mc.options.setCameraType(CameraType.THIRD_PERSON_BACK);
+                    log("bereit lauf");
+                    state = 10;
+                    ticks = 0;
+                    return;
+                }
                 if (ticks > 60) {
                     for (Entity e : mc.level.entitiesForRendering())
                         if (e.getType() == EntityType.MANNEQUIN) target = e.getId();
@@ -123,8 +131,40 @@ public final class DemoMode {
                     finish(mc);
                 }
             }
+            case 10 -> runPath(mc);
             default -> { }
         }
+    }
+
+    // ---- Lauf-Demo: Spieler fährt eine Strecke ab (Tempo in Blöcken/s je Abschnitt) ----
+    private static double px = 0.5, pz = 0.5, yaw = 180, v, vy, py = -60;
+
+    private static void runPath(Minecraft mc) {
+        double t = ticks / 20.0;
+        double target;          // Wunschtempo
+        double turn = 0;        // Grad pro Sekunde
+        if (t < 1.5) target = 0;
+        else if (t < 4.0) target = 4.3;                    // Laufen (normales Gehen in Minecraft)
+        else if (t < 7.5) { target = 5.6; turn = t > 5.5 ? 55 : 0; } // Sprint mit Kurve
+        else if (t < 8.5) target = 5.6;
+        else if (t < 9.6) target = 0;                      // abbremsen
+        else if (t < 11.0) target = 0;
+        else if (t < 13.0) { target = 4.3; if (t < 11.1 && vy == 0) vy = 8.5; } // anlaufen mit Sprung
+        else if (t < 14.5) target = 0;
+        else { finish(mc); return; }
+        if (t >= 1.5 && t < 1.55) log("start lauf");
+        double acc = target > v ? 9 : 14;                // Blöcke/s²
+        v += Math.signum(target - v) * Math.min(Math.abs(target - v), acc / 20.0);
+        yaw += turn / 20.0;
+        double r = Math.toRadians(yaw);
+        px += -Math.sin(r) * v / 20.0;
+        pz += Math.cos(r) * v / 20.0;
+        if (vy != 0 || py > -60) { py += vy / 20.0; vy -= 32 / 20.0; if (py <= -60) { py = -60; vy = 0; } }
+        mc.player.setPos(px, py, pz);
+        mc.player.setOnGround(py <= -60);
+        mc.player.setYRot((float) yaw);
+        mc.player.setXRot(12f);
+        mc.player.setDeltaMovement(0, 0, 0);
     }
 
     private static void finish(Minecraft mc) {

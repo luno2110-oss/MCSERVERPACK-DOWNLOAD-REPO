@@ -50,6 +50,9 @@ public final class ClientAnims {
     private static final Map<Integer, Display.BlockDisplay> balls = new ConcurrentHashMap<>();
     private static double timeScale = 1.0;
     public static boolean effects = true;
+    /** Fortbewegung (Stehen/Laufen/Sprinten der Mod) für alle sichtbaren Spieler. */
+    public static boolean locomotion = true;
+    private static final Map<Integer, double[]> motion = new ConcurrentHashMap<>(); // x, z, bodyRot, nanos
 
     private ClientAnims() { }
 
@@ -83,6 +86,7 @@ public final class ClientAnims {
             lib.replaceAll(rig, clips);
             solver = new PartSolver(rig);
             animators.clear();
+            motion.clear();
             KubyRematch.LOG.info("{} Animationen geladen: {}", clips.size(), lib.names());
             return clips.size();
         } catch (Exception e) {
@@ -125,14 +129,56 @@ public final class ClientAnims {
         return a;
     }
 
-    /** Animator anlegen (falls nötig) und eine Animation starten. */
-    public static boolean play(int entityId, String clip, double speed, boolean force) {
-        Animator a = animators.computeIfAbsent(entityId, id -> {
+    /**
+     * Animator einer Spielerfigur für dieses Bild: legt ihn bei aktiver Fortbewegung an, füttert Tempo, Drehung,
+     * Boden und Blick aus dem Render-Zustand und bringt ihn auf die aktuelle Zeit.
+     */
+    public static Animator animatorFor(net.minecraft.client.renderer.entity.state.AvatarRenderState st) {
+        int id = st.id;
+        Animator a = animators.get(id);
+        if (a == null && locomotion) a = create(id);
+        if (a == null) return null;
+        if (a.locomotion() == null && locomotion) attachLocomotion(a);
+        if (a.locomotion() != null) {
+            long now = System.nanoTime();
+            double[] m = motion.get(id);
+            double speed = 0, turn = 0;
+            if (m != null) {
+                double dt = (now - m[3]) / 1e9;
+                if (dt < 1e-3) { speed = m[4]; turn = m[5]; }
+                else if (dt < 0.5) {
+                    speed = Math.hypot(st.x - m[0], st.z - m[1]) / dt;
+                    turn = Mth.wrapDegrees(st.bodyRot - m[2]) / dt;
+                }
+            }
+            if (m == null || (now - m[3]) / 1e9 >= 1e-3) motion.put(id, new double[]{st.x, st.z, st.bodyRot, now, speed, turn});
+            Minecraft mc = Minecraft.getInstance();
+            Entity e = mc.level == null ? null : mc.level.getEntity(id);
+            boolean grounded = e == null || e.onGround();
+            a.locomotion().input(speed, turn, grounded, st.yRot, st.xRot);
+            a.locomotionActive(locomotion && !st.isCrouching && !st.isVisuallySwimming && !st.isFallFlying
+                    && !st.isPassenger && st.swimAmount < 0.01 && !st.hasPose(net.minecraft.world.entity.Pose.SLEEPING));
+        }
+        return animator(id);
+    }
+
+    private static Animator create(int id) {
+        return animators.computeIfAbsent(id, i -> {
             Animator n = new Animator(library());
-            n.setListener((an, c, ev) -> onEvent(id, an, c, ev));
+            n.setListener((an, c, ev) -> onEvent(i, an, c, ev));
+            if (locomotion) attachLocomotion(n);
             return n;
         });
-        return a.play(clip, speed, force);
+    }
+
+    private static void attachLocomotion(Animator a) {
+        de.kuby.rematch.anim.Locomotion l = new de.kuby.rematch.anim.Locomotion(library(), "stehen", "luft", "gehen", "laufen", "sprinten");
+        if (l.usable()) a.setLocomotion(l);
+    }
+
+    /** Animator anlegen (falls nötig) und eine Animation starten. */
+    public static boolean play(int entityId, String clip, double speed, boolean force) {
+        return create(entityId).play(clip, speed, force);
     }
 
     public static void stop(int entityId) {
@@ -140,7 +186,13 @@ public final class ClientAnims {
         if (a != null) a.stop();
     }
 
+    public static void setLocomotion(boolean on) {
+        locomotion = on;
+        if (!on) animators.values().forEach(a -> a.locomotionActive(false));
+    }
+
     public static void clear() {
+        motion.clear();
         animators.clear();
         lastUpdate.clear();
         balls.values().forEach(Entity::discard);
