@@ -71,6 +71,8 @@ public final class TournamentService {
 
     public synchronized String join(Player p) {
         if (state != State.REGISTRATION) return "Die Anmeldung ist nicht offen.";
+        // nur im SMP (früher aus jedem Modus, das Preisgeld landete dann im falschen Modus)
+        if (!de.kuby.kubyplugins.service.ModeService.SMP.equals(plugin.modes().modeOf(p.getUniqueId()))) return "Turniere gibt es nur im SMP.";
         if (entrants.size() >= plugin.getConfig().getInt("tournament.max-players", 16)) return "Das Turnier ist voll.";
         if (plugin.pvp().isDueling(p.getUniqueId())) return "Du bist gerade im Duell.";
         if (!entrants.add(p.getUniqueId())) return "Du bist schon angemeldet.";
@@ -190,7 +192,7 @@ public final class TournamentService {
         if (champion != null) {
             long reward = plugin.getConfig().getLong("tournament.reward", 5000);
             int bonus = plugin.getConfig().getInt("tournament.trophies-champion", 200);
-            plugin.economy().deposit(champion, reward);
+            plugin.modes().depositIn(champion, de.kuby.kubyplugins.service.ModeService.SMP, reward);
             plugin.stats().get(champion).trophies += bonus;
             String name = Bukkit.getOfflinePlayer(champion).getName();
             announce("<gold>★ Turniersieger: <white>" + (name == null ? "Unbekannt" : name)

@@ -26,7 +26,7 @@ public final class KristalTradeMenu extends GuiMenu {
         for (int i = 0; i < 27; i++) {
             set(i, Items.make(Material.GRAY_STAINED_GLASS_PANE, " ", List.of()), null);
         }
-        int debris = count(p, Material.ANCIENT_DEBRIS);
+        int debris = Items.countPlain(p.getInventory(), Material.ANCIENT_DEBRIS);
         int possible = debris / PRICE;
         set(13, Items.make(Material.END_CRYSTAL, "<light_purple>End-Crystal tauschen", List.of(
                 "<gray>Preis: <white>" + PRICE + "x Ancient Debris",
@@ -41,7 +41,8 @@ public final class KristalTradeMenu extends GuiMenu {
 
     /** amount -1 = so viele wie möglich. */
     private void trade(Player p, int amount) {
-        int debris = count(p, Material.ANCIENT_DEBRIS);
+        // nur unveränderter Schutt (früher zählte auch umbenannter, wurde aber nicht entnommen: Kristalle aus dem Nichts)
+        int debris = Items.countPlain(p.getInventory(), Material.ANCIENT_DEBRIS);
         int crystals = amount < 0 ? debris / PRICE : Math.min(amount, debris / PRICE);
         if (crystals <= 0) {
             Sfx.play(plugin, p, Sfx.Kind.ERROR);
@@ -49,19 +50,16 @@ public final class KristalTradeMenu extends GuiMenu {
             open(p);
             return;
         }
-        p.getInventory().removeItem(new ItemStack(Material.ANCIENT_DEBRIS, crystals * PRICE));
+        if (!Items.takePlain(p.getInventory(), Material.ANCIENT_DEBRIS, crystals * PRICE)) {
+            Sfx.play(plugin, p, Sfx.Kind.ERROR);
+            Msg.send(p, "<red>Der Antike Schutt muss unverändert sein (nicht umbenannt).");
+            open(p);
+            return;
+        }
         Map<Integer, ItemStack> rest = p.getInventory().addItem(new ItemStack(Material.END_CRYSTAL, crystals));
         rest.values().forEach(it -> plugin.abholbox().add(p.getUniqueId(), it));
         Sfx.play(plugin, p, Sfx.Kind.SUCCESS);
         Msg.send(p, "<green>" + crystals + "x End-Crystal erhalten" + (rest.isEmpty() ? "" : " <gray>(Rest in der Abholbox)"));
         open(p);
-    }
-
-    private static int count(Player p, Material m) {
-        int sum = 0;
-        for (ItemStack it : p.getInventory().getStorageContents()) {
-            if (it != null && it.getType() == m) sum += it.getAmount();
-        }
-        return sum;
     }
 }

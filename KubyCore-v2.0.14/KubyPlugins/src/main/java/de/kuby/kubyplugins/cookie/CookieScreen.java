@@ -138,8 +138,7 @@ public final class CookieScreen {
         String hint = d.allTime < 1 ? "Klick an der Station mit Linksklick auf den Keks, um zu backen."
                 : "Ohne dich backt die Bäckerei mit " + Math.round(s.offlineRate(d) * 100) + " % bis zu " + s.offlineHours(d) + " Stunden.";
         UiDialog.show(p, main(new MainView(head(d, "Cookie Clicker"), tiles, hint, st == null ? null : run(q -> {
-            q.teleportAsync(core().cookieStation().spot());
-            Msg.send(q, "<#F2C443>🍪 Willkommen an der Keks-Station. <gray>Linksklick backt, Rechtsklick öffnet das Menü.");
+            de.kuby.kubyplugins.util.Teleports.delayed(core(), q, core().cookieStation().spot(), "Keks-Station");
         }))), 330);
     }
 

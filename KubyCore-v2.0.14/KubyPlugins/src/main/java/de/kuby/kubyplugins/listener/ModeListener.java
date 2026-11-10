@@ -46,7 +46,9 @@ public final class ModeListener implements Listener {
         plugin.markers().applyVisibility(e.getPlayer());
     }
 
-    @EventHandler
+    /** MONITOR: erst speichern, wenn alle anderen Plugins fertig sind (z. B. Kampf-Logout leert das Inventar,
+     *  ein abgebrochenes Duell gibt das eigene Inventar zurück). Sonst wären die Items doppelt. */
+    @EventHandler(priority = org.bukkit.event.EventPriority.MONITOR)
     public void onQuit(PlayerQuitEvent e) {
         plugin.visibility().forget(e.getPlayer());
         plugin.edit().forget(e.getPlayer());

@@ -287,11 +287,11 @@ public final class SideQuestService implements Listener {
         Material m = def.arg() == null ? null : Material.matchMaterial(def.arg());
         if (m == null) return;
         long need = def.amount() - d.run.progress;
-        int have = 0;
-        for (ItemStack it : p.getInventory().getStorageContents()) if (it != null && it.getType() == m) have += it.getAmount();
+        int have = de.kuby.kubyplugins.util.Items.countPlain(p.getInventory(), m);
         int give = (int) Math.min(need, have);
         if (give <= 0) return;
-        p.getInventory().removeItem(new ItemStack(m, give));
+        // nur unveränderte Items (früher zählten auch umbenannte, wurden aber nicht entnommen)
+        if (!de.kuby.kubyplugins.util.Items.takePlain(p.getInventory(), m, give)) return;
         d.run.progress += give;
         Msg.send(p, "<gray>Abgegeben: <white>" + give + "x " + nice(m));
     }

@@ -15,6 +15,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -26,6 +27,12 @@ import java.util.concurrent.ConcurrentHashMap;
  * 1v1-Duelle: Inventar wird gesichert, Kit gegeben, danach zurückgegeben.
  * Einsätze gehen an den Gewinner (abzüglich Steuer). Wer ausloggt, verliert,
  * seine Originalsachen wandern in die Abholbox.
+ * <p>
+ * Sicherheit: Duelle nur zwischen Spielern im selben Modus (duel.modi, Standard nur SMP), Einsätze bleiben in diesem
+ * Modus. Die Originalsachen liegen zusätzlich in duel-backup.yml und kommen nach einem Absturz beim nächsten Login
+ * zurück; beim Abschalten werden laufende Duelle abgebrochen (Inventar und Einsätze zurück). Kit-Items sind markiert
+ * und werden außerhalb eines Duells entfernt. Was im Duell gesperrt ist (Befehle, Wegwerfen, Behälter), regelt der
+ * DuelGuard.
  */
 public final class DuelService {
 
@@ -33,7 +40,7 @@ public final class DuelService {
 
     private record Challenge(UUID from, UUID to, long bet, long createdAt) {}
     private record Snapshot(ItemStack[] contents, Location loc) {}
-    private record Duel(UUID a, UUID b, long bet, Snapshot sa, Snapshot sb) {
+    private record Duel(UUID a, UUID b, long bet, Snapshot sa, Snapshot sb, String mode) {
         Snapshot of(UUID id) { return id.equals(a) ? sa : sb; }
     }
 
@@ -42,8 +49,27 @@ public final class DuelService {
     private final Map<UUID, Duel> duels = new ConcurrentHashMap<>();           // Schlüssel: beide Spieler
     private final Map<UUID, Snapshot> awaitingRespawn = new ConcurrentHashMap<>();
 
+    private final File backupFile;
+    private final org.bukkit.NamespacedKey kitKey;
+
     public DuelService(KubyPlugins plugin) {
         this.plugin = plugin;
+        this.backupFile = new File(plugin.getDataFolder(), "duel-backup.yml");
+        this.kitKey = new org.bukkit.NamespacedKey(plugin, "duel_kit");
+    }
+
+    /** Modi, in denen Duelle erlaubt sind (duel.modi, Standard nur SMP). */
+    private boolean modeAllowed(String mode) {
+        List<String> l = plugin.getConfig().getStringList("duel.modi");
+        return (l.isEmpty() ? List.of("smp") : l).contains(mode);
+    }
+
+    /** Beide im selben, erlaubten Modus? Sonst Fehlermeldung (früher: Einsätze wechselten zwischen den Modi). */
+    private String modeCheck(Player a, Player b) {
+        String ma = plugin.modes().modeOf(a.getUniqueId()), mb = plugin.modes().modeOf(b.getUniqueId());
+        if (!ma.equals(mb)) return "Ihr seid gerade in verschiedenen Modi.";
+        if (!modeAllowed(ma)) return "Duelle gibt es in diesem Modus nicht.";
+        return null;
     }
 
     public UUID pendingChallengerOf(UUID target) {
@@ -67,7 +93,9 @@ public final class DuelService {
             return "Beide Spieler brauchen einen verknüpften Discord-Account.";
         }
         if (from.equals(to)) return "Du kannst dich nicht selbst herausfordern.";
-        if (bet < 0) return "Ungültiger Einsatz.";
+        if (bet < 0 || bet > plugin.getConfig().getLong("duel.max-einsatz", 1_000_000_000L)) return "Ungültiger Einsatz.";
+        String modeErr = modeCheck(from, to);
+        if (modeErr != null) return modeErr;
         if (!plugin.playerSettings().get(to.getUniqueId(), "duel") && !plugin.friends().areFriends(from.getUniqueId(), to.getUniqueId())) {
             return to.getName() + " nimmt gerade keine Duell-Anfragen an.";
         }
@@ -96,6 +124,9 @@ public final class DuelService {
         if (KubySMP.get().combat().inCombat(from.getUniqueId()) || KubySMP.get().combat().inCombat(to.getUniqueId())) {
             return "Einer der beiden ist gerade im Kampf.";
         }
+        String modeErr = modeCheck(from, to);
+        if (modeErr != null) return modeErr;
+        if (plugin.trades().inTrade(from.getUniqueId()) || plugin.trades().inTrade(to.getUniqueId())) return "Einer der beiden handelt gerade.";
         Location aLoc = arena(true);
         Location bLoc = arena(false);
         if (aLoc == null || bLoc == null) return "Die Duellarena ist nicht konfiguriert.";
@@ -109,9 +140,10 @@ public final class DuelService {
             }
         }
 
+        String mode = plugin.modes().modeOf(from.getUniqueId());
         Snapshot sa = snapshot(from);
         Snapshot sb = snapshot(to);
-        Duel d = new Duel(from.getUniqueId(), to.getUniqueId(), bet, sa, sb);
+        Duel d = new Duel(from.getUniqueId(), to.getUniqueId(), bet, sa, sb, mode);
         duels.put(from.getUniqueId(), d);
         duels.put(to.getUniqueId(), d);
         prepare(from, aLoc);
@@ -137,8 +169,8 @@ public final class DuelService {
         duels.remove(d.a());
         duels.remove(d.b());
         if (d.bet() > 0) {
-            plugin.economy().deposit(d.a(), d.bet());
-            plugin.economy().deposit(d.b(), d.bet());
+            plugin.modes().depositIn(d.a(), d.mode(), d.bet());
+            plugin.modes().depositIn(d.b(), d.mode(), d.bet());
         }
         for (UUID u : List.of(d.a(), d.b())) {
             Player p = Bukkit.getPlayer(u);
@@ -147,6 +179,11 @@ public final class DuelService {
                 Msg.send(p, "<gray>Das Duell wurde abgebrochen, deine Einsätze sind zurück.");
             }
         }
+    }
+
+    /** Beim Abschalten: alle laufenden Duelle abbrechen (Inventar und Einsätze zurück). */
+    public synchronized void shutdown() {
+        for (UUID id : new ArrayList<>(duels.keySet())) adminCancel(id);
     }
 
     /** Startet ein Turnier-Match ohne Einsatz und ohne Herausforderung. */
@@ -158,7 +195,7 @@ public final class DuelService {
         if (aLoc == null || bLoc == null) return "Die Duellarena ist nicht konfiguriert.";
         Snapshot sa = snapshot(a);
         Snapshot sb = snapshot(b);
-        Duel d = new Duel(a.getUniqueId(), b.getUniqueId(), 0, sa, sb);
+        Duel d = new Duel(a.getUniqueId(), b.getUniqueId(), 0, sa, sb, plugin.modes().modeOf(a.getUniqueId()));
         duels.put(a.getUniqueId(), d);
         duels.put(b.getUniqueId(), d);
         prepare(a, aLoc);
@@ -197,6 +234,7 @@ public final class DuelService {
             if (it != null && !it.getType().isAir()) plugin.abholbox().add(loser, it);
         }
         p.getInventory().clear();
+        dropBackup(loser);
         endDuel(d, winner, loser);
     }
 
@@ -216,7 +254,7 @@ public final class DuelService {
 
         long pot = d.bet() * 2;
         long tax = pot * plugin.getConfig().getInt("duel.tax-percent", 5) / 100;
-        if (pot > 0) plugin.economy().deposit(winnerId, pot - tax);
+        if (pot > 0) plugin.modes().depositIn(winnerId, d.mode(), pot - tax);
 
         var winStats = plugin.stats().get(winnerId);
         winStats.kills++;
@@ -248,9 +286,75 @@ public final class DuelService {
     }
 
     private Snapshot snapshot(Player p) {
-        Snapshot s = new Snapshot(p.getInventory().getContents().clone(), p.getLocation());
+        ItemStack[] inv = p.getInventory().getContents().clone();
+        for (int i = 0; i < inv.length; i++) if (inv[i] != null) inv[i] = inv[i].clone();
+        Snapshot s = new Snapshot(inv, p.getLocation());
+        saveBackup(p.getUniqueId(), s);
         p.getInventory().clear();
         return s;
+    }
+
+    // ---------- Sicherung auf der Platte (nach einem Absturz beim nächsten Login zurück) ----------
+
+    private synchronized void saveBackup(UUID id, Snapshot s) {
+        org.bukkit.configuration.file.YamlConfiguration y = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(backupFile);
+        y.set(id + ".inv", java.util.Arrays.asList(s.contents()));
+        y.set(id + ".loc", Locs.serialize(s.loc()));
+        try {
+            plugin.getDataFolder().mkdirs();
+            y.save(backupFile);
+        } catch (java.io.IOException e) {
+            plugin.getLogger().warning("duel-backup.yml: " + e.getMessage());
+        }
+    }
+
+    private synchronized void dropBackup(UUID id) {
+        if (!backupFile.exists()) return;
+        org.bukkit.configuration.file.YamlConfiguration y = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(backupFile);
+        if (!y.contains(id.toString())) return;
+        y.set(id.toString(), null);
+        try {
+            y.save(backupFile);
+        } catch (java.io.IOException e) {
+            plugin.getLogger().warning("duel-backup.yml: " + e.getMessage());
+        }
+    }
+
+    /** Beim Login (oder nach einem Neustart): Sachen aus einem unterbrochenen Duell zurückgeben, Kit-Items entfernen. */
+    public synchronized void onJoin(Player p) {
+        if (isDueling(p.getUniqueId())) return;
+        stripKit(p);
+        if (awaitingRespawn.containsKey(p.getUniqueId()) || !backupFile.exists()) return;
+        org.bukkit.configuration.file.YamlConfiguration y = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(backupFile);
+        String k = p.getUniqueId().toString();
+        if (!y.contains(k)) return;
+        List<?> raw = y.getList(k + ".inv", List.of());
+        ItemStack[] inv = new ItemStack[raw.size()];
+        for (int i = 0; i < raw.size(); i++) inv[i] = raw.get(i) instanceof ItemStack it ? it : null;
+        Location loc = Locs.parse(y.getString(k + ".loc"));
+        // einen Tick später, damit der Modus-Wechsel beim Login zuerst sein Inventar setzt
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            if (!p.isOnline() || isDueling(p.getUniqueId())) return;
+            restore(p, new Snapshot(inv, loc != null ? loc : p.getLocation()));
+            Msg.send(p, "<gray>Dein Inventar aus einem unterbrochenen Duell ist zurück.");
+        }, 5L);
+    }
+
+    /** Kit-Items außerhalb eines Duells entfernen (Sicherheitsnetz). */
+    public void stripKit(Player p) {
+        ItemStack[] c = p.getInventory().getContents();
+        boolean changed = false;
+        for (int i = 0; i < c.length; i++) {
+            if (isKit(c[i])) {
+                c[i] = null;
+                changed = true;
+            }
+        }
+        if (changed) p.getInventory().setContents(c);
+    }
+
+    public boolean isKit(ItemStack it) {
+        return it != null && it.hasItemMeta() && it.getItemMeta().getPersistentDataContainer().has(kitKey);
     }
 
     private void prepare(Player p, Location loc) {
@@ -264,6 +368,7 @@ public final class DuelService {
     private void restore(Player p, Snapshot s) {
         p.getInventory().clear();
         p.getInventory().setContents(s.contents());
+        dropBackup(p.getUniqueId());
         var max = p.getAttribute(Attribute.MAX_HEALTH);
         if (max != null) p.setHealth(max.getValue());
         p.teleportAsync(s.loc());
@@ -283,6 +388,7 @@ public final class DuelService {
                 }
             }
             ItemStack stack = new ItemStack(m, amount);
+            stack.editMeta(meta -> meta.getPersistentDataContainer().set(kitKey, org.bukkit.persistence.PersistentDataType.BYTE, (byte) 1));
             String name = m.name();
             if (name.endsWith("_HELMET")) p.getInventory().setHelmet(stack);
             else if (name.endsWith("_CHESTPLATE")) p.getInventory().setChestplate(stack);

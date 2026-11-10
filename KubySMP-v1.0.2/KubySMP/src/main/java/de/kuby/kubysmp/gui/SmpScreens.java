@@ -88,7 +88,9 @@ public final class SmpScreens {
             rungs.add(new Rung(l.label(), color(l.display()), Icons.of(l.icon(), KitData.Icon.STAR), l.min(), l.coins(), l.jewels(),
                     reached, claimed, l == cur, reached && !claimed ? pl -> {
                 StatsService.Stats st = plugin.stats().get(pl.getUniqueId());
-                if (st.trophies >= l.min() && !st.claimed.contains(l.name())) {
+                if (!de.kuby.kubyplugins.service.ModeService.SMP.equals(plugin.modes().modeOf(pl.getUniqueId()))) {
+                    Msg.send(pl, "<red>Liga-Belohnungen holst du im SMP ab.");
+                } else if (st.trophies >= l.min() && !st.claimed.contains(l.name())) {
                     st.claimed.add(l.name());
                     plugin.economy().deposit(pl.getUniqueId(), l.coins());
                     if (l.jewels() > 0) plugin.jewels().add(pl.getUniqueId(), l.jewels());

@@ -63,7 +63,7 @@ public final class SellMenu {
             ItemStack it = inv.getItem(i);
             if (it == null) continue;
             Long price = prices.get(it.getType());
-            if (price == null) continue;
+            if (price == null || de.kuby.kubyplugins.service.SellService.special(it)) continue;
             long unit = plugin.weekly().isMeta(it.getType()) ? price * 125 / 100 : price;
             total += unit * it.getAmount();
         }
@@ -77,7 +77,7 @@ public final class SellMenu {
             ItemStack it = inv.getItem(i);
             if (it == null) continue;
             Long price = prices.get(it.getType());
-            if (price == null) continue;
+            if (price == null || de.kuby.kubyplugins.service.SellService.special(it)) continue;
             long unit = plugin.weekly().isMeta(it.getType()) ? price * 125 / 100 : price;
             total += unit * it.getAmount();
             inv.setItem(i, null);

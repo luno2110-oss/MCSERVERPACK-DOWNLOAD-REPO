@@ -95,7 +95,9 @@ public final class ModeService {
         Location loc = spawnOf(target);
         if (loc == null) return "Der Spawn für diesen Modus ist noch nicht eingerichtet.";
         if (from.equals(target)) {
-            p.teleportAsync(loc);
+            // gleiche Sperren wie beim Wechsel (Kampf, Duell, Handel …) und Teleport mit Wartezeit, sonst Flucht aus dem Kampf
+            if (busy(p)) return "Du kannst gerade nicht teleportieren.";
+            de.kuby.kubyplugins.util.Teleports.delayed(plugin, p, loc, "Spawn");
             return null;
         }
         if (busy(p)) return "Du kannst den Modus gerade nicht wechseln.";

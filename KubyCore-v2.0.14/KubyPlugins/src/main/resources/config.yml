@@ -46,6 +46,10 @@ team:
 market:
   tax-percent: 5
   max-listings: 10
+  max-preis: 1000000000000          # höchster Preis eines Angebots (Schutz vor Rechenüberlauf)
+
+orders:
+  max-preis: 1000000000             # höchster Stückpreis eines Auftrags (/orders add), Gesamtpreis wird auf Überlauf geprüft
 
 worth:
   COBBLESTONE: 1
@@ -69,7 +73,8 @@ sellmulti:
 pvp:
   modi: [smp, skyblock]         # nur hier dürfen Spieler sich schaden (Survival und Lobby: kein PvP)
   newbie-minutes: 30
-  spawn-radius: 30
+  spawn-radius: 30                 # Schutz um den SMP-Spawn
+  kill-sperre-minuten: 10          # derselbe Killer bekommt für dasselbe Opfer höchstens so oft Trophäen/XP (gegen Farmen)
 
 trophies:
   base: 20
@@ -90,6 +95,9 @@ duel:
   tax-percent: 5
   trophies-win: 15
   trophies-loss: 10
+  modi: [smp]                      # Duelle nur zwischen Spielern im selben dieser Modi, Einsatz bleibt im Modus
+  max-einsatz: 1000000000
+  erlaubte-befehle: [msg, tell, w, r, reply, report, regeln, rules]   # alles andere ist im Duell gesperrt
   kit:
     - "IRON_SWORD:1"
     - "BOW:1"
@@ -359,6 +367,8 @@ insurance:
   days: 1
   max-chests: 3
   min-premium: 50
+  max-auszahlung: 50000            # höchstens so viel je Raid (nach dem Inhalt beim Raid, höchstens versicherter Wert)
+  auszahlungen-pro-tag: 1          # je Besitzer; nur selbst gesetzte Kisten, nichts bei Besitzer/Freund/Team/unbekannter Ursache
 
 enderchest:
   slot-xp: 1000
@@ -504,6 +514,7 @@ jobs:
     - "ENCHANTED_GOLDEN_APPLE;1;25"
 
 economy:
+  log-ab: 100000000                # Einzel-Gutschriften ab diesem Betrag stehen im Server-Log (0 = aus)
   tax-percent: 9
   invest-step: 1000
   reactivate-multiplier: 10

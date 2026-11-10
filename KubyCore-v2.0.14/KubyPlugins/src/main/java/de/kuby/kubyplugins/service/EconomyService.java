@@ -35,8 +35,19 @@ public final class EconomyService {
         save();
     }
 
+    /** Gutschrift: nur positive Beträge, ohne Überlauf (sättigt bei Long.MAX_VALUE). Sehr große Einzelbeträge stehen
+     *  im Server-Log (economy.log-ab, Standard 100 Mio.), damit das Team Auffälliges sieht. */
     public synchronized void deposit(UUID id, long amount) {
-        balances.merge(id, amount, Long::sum);
+        if (amount <= 0) return;
+        long cur = balance(id);
+        long next = cur + amount;
+        if (next < cur) next = Long.MAX_VALUE;
+        balances.put(id, next);
+        long warn = plugin.getConfig().getLong("economy.log-ab", 100_000_000L);
+        if (warn > 0 && amount >= warn) {
+            String name = org.bukkit.Bukkit.getOfflinePlayer(id).getName();
+            plugin.getLogger().warning("[Wirtschaft] Große Gutschrift: " + (name == null ? id : name) + " +" + amount + " (neu " + next + ")");
+        }
     }
 
     public synchronized boolean withdraw(UUID id, long amount) {

@@ -66,6 +66,10 @@ public final class MarketMenu extends GuiMenu {
             open(p);
             return;
         }
+        if (!de.kuby.kubyplugins.util.Items.fits(p.getInventory(), l.item())) {
+            Msg.send(p, "<red>Dein Inventar ist zu voll für dieses Angebot.");
+            return;
+        }
         if (!plugin.economy().withdraw(p.getUniqueId(), l.price())) {
             Msg.send(p, "<red>Nicht genug$.");
             return;
@@ -77,18 +81,12 @@ public final class MarketMenu extends GuiMenu {
             open(p);
             return;
         }
+        // Platz wurde vorher geprüft; sollte trotzdem etwas übrig bleiben, kommt es in die Abholbox (nie doppelt)
         Map<Integer, ItemStack> leftover = p.getInventory().addItem(l.item().clone());
-        if (!leftover.isEmpty()) {
-            // Inventar voll: Käufer bekommt alles zurück, Angebot wird neu eingestellt
-            plugin.economy().deposit(p.getUniqueId(), l.price());
-            plugin.market().addIn(l.seller(), l.sellerName(), l.item(), l.price(), modeOfSold);
-            Msg.send(p, "<red>Dein Inventar ist voll.");
-            open(p);
-            return;
-        }
+        leftover.values().forEach(rest -> plugin.abholbox().add(p.getUniqueId(), rest));
 
         int taxPercent = plugin.hasPerk("farmpass", l.seller()) ? 0 : plugin.getConfig().getInt("market.tax-percent", 5);
-        long payout = l.price() - (l.price() * taxPercent / 100);
+        long payout = l.price() - (l.price() / 100 * taxPercent + l.price() % 100 * taxPercent / 100);
         plugin.modes().depositIn(l.seller(), modeOfSold, payout);
 
         Sfx.play(plugin, p, Sfx.Kind.COIN);

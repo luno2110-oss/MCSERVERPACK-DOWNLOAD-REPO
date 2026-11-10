@@ -25,8 +25,14 @@ import java.util.UUID;
 
 /**
  * Raid-Versicherung für Kisten. Der Besitzer zahlt eine Prämie (Anteil am Wert des Inhalts) für eine begrenzte Laufzeit.
- * Wird die Kiste geraidet oder von einer Explosion zerstört, bekommt er eine Auszahlung (Anteil am versicherten Wert).
+ * Wird die Kiste von einem anderen Spieler geraidet (abgebaut oder gesprengt), bekommt er eine Auszahlung.
  * Versicherte Kisten werden mit einem Schutzrahmen aus Partikeln markiert.
+ * <p>
+ * Gegen Versicherungsbetrug: nur selbst aufgestellte Kisten (Besitzer-Markierung beim Setzen), nur im SMP; ausgezahlt
+ * wird nach dem Inhalt beim Raid (höchstens der versicherte Wert, höchstens insurance.max-auszahlung); nichts, wenn
+ * Besitzer, Freunde, Team oder eine unbekannte Ursache die Kiste zerstören; höchstens insurance.auszahlungen-pro-tag
+ * Auszahlungen je Besitzer. Jede Auszahlung steht im Server-Log. Früher zählte der Wert beim Abschluss: Kiste füllen,
+ * versichern, ausräumen, von einem Zweitkonto abbauen lassen oder selbst sprengen = 50 % Auszahlung ohne Verlust.
  */
 public final class RaidInsuranceService {
 
@@ -37,12 +43,27 @@ public final class RaidInsuranceService {
     private final KubyPlugins plugin;
     private final File file;
     private final Map<String, Policy> policies = new HashMap<>();
+    /** Letzte Auszahlungen je Besitzer (Zeitstempel), für die Tagesgrenze. */
+    private final Map<UUID, List<Long>> payouts = new HashMap<>();
+    private final org.bukkit.NamespacedKey ownerKey;
 
     public RaidInsuranceService(KubyPlugins plugin) {
         this.plugin = plugin;
         this.file = new File(plugin.getDataFolder(), "insurance.yml");
+        this.ownerKey = new org.bukkit.NamespacedKey(plugin, "kisten_besitzer");
         YamlConfiguration yml = YamlConfiguration.loadConfiguration(file);
+        org.bukkit.configuration.ConfigurationSection ps = yml.getConfigurationSection("auszahlungen");
+        if (ps != null) {
+            for (String k : ps.getKeys(false)) {
+                try {
+                    payouts.put(UUID.fromString(k), new ArrayList<>(ps.getLongList(k)));
+                } catch (IllegalArgumentException ignored) {
+                    // kaputter Eintrag
+                }
+            }
+        }
         for (String k : yml.getKeys(false)) {
+            if (k.equals("auszahlungen")) continue;
             try {
                 Policy pol = new Policy(UUID.fromString(yml.getString(k + ".owner")),
                         yml.getLong(k + ".expires"), yml.getLong(k + ".value"),
@@ -85,14 +106,35 @@ public final class RaidInsuranceService {
         return Math.round(pol.value() * payoutPercent() / 100.0);
     }
 
-    /** Gibt null bei Erfolg zurück, sonst eine Fehlermeldung. */
+    /** Besitzer-Markierung einer Kiste (beim Aufstellen gesetzt). */
+    public void markOwner(Block b, UUID owner) {
+        if (b.getState() instanceof org.bukkit.block.TileState ts) {
+            ts.getPersistentDataContainer().set(ownerKey, org.bukkit.persistence.PersistentDataType.STRING, owner.toString());
+            ts.update();
+        }
+    }
+
+    private UUID ownerOf(Block b) {
+        if (!(b.getState() instanceof org.bukkit.block.TileState ts)) return null;
+        String s = ts.getPersistentDataContainer().get(ownerKey, org.bukkit.persistence.PersistentDataType.STRING);
+        try {
+            return s == null ? null : UUID.fromString(s);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    /** Gibt null bei Erfolg zurück, sonst eine Fehlermeldung. Versichert wird diese eine Kiste (bei Doppelkisten die
+     *  Hälfte, auf die man schaut), denn nur deren Inhalt fällt beim Abbau heraus. */
     public synchronized String insure(Player p, Block b) {
         if (!(b.getState() instanceof Chest chest)) return "Das ist keine Kiste.";
+        if (!de.kuby.kubyplugins.service.ModeService.SMP.equals(plugin.modes().modeOf(p.getUniqueId()))) return "Versichern geht nur im SMP.";
+        if (!p.getUniqueId().equals(ownerOf(b))) return "Versichern kannst du nur Kisten, die du selbst aufgestellt hast.";
         if (policies.containsKey(keyOf(b))) return "Diese Kiste ist schon versichert.";
         int max = plugin.getConfig().getInt("insurance.max-chests", 3);
         if (ownedBy(p.getUniqueId()).size() >= max) return "Du hast schon " + max + " versicherte Kisten.";
 
-        long value = valueOf(chest.getInventory());
+        long value = valueOf(chest.getBlockInventory());
         long minPremium = plugin.getConfig().getLong("insurance.min-premium", 50);
         long premium = Math.max(minPremium, Math.round(value * premiumPercent() / 100.0));
         if (!plugin.economy().withdraw(p.getUniqueId(), premium)) {
@@ -127,27 +169,52 @@ public final class RaidInsuranceService {
         return sum;
     }
 
-    /** Spieler hat die Kiste zerstört. Der Besitzer selbst bekommt nichts. */
+    /** Spieler hat die Kiste zerstört (oder gesprengt, wenn bekannt ist, wer). Null = unbekannte Ursache: keine Auszahlung. */
     public void onBreak(Block b, Player breaker) {
         claim(b, breaker);
     }
 
-    /** Explosion hat die Kiste zerstört. */
-    public void onExplode(Block b) {
-        claim(b, null);
+    /** Explosion hat die Kiste zerstört; source: wer sie ausgelöst hat (null = unbekannt, dann keine Auszahlung). */
+    public void onExplode(Block b, Player source) {
+        claim(b, source);
     }
 
     private synchronized void claim(Block b, Player breaker) {
         Policy pol = policies.remove(keyOf(b));
         if (pol == null) return;
         save();
-        if (breaker != null && breaker.getUniqueId().equals(pol.owner())) return;
-
-        long amount = payoutOf(pol);
-        plugin.economy().deposit(pol.owner(), amount);
         String where = pol.x() + " / " + pol.y() + " / " + pol.z();
-
         Player owner = Bukkit.getPlayer(pol.owner());
+        String reason = null;
+        if (breaker == null) reason = "Ursache unbekannt";
+        else if (breaker.getUniqueId().equals(pol.owner())) reason = "selbst zerstört";
+        else if (plugin.friends().areFriends(breaker.getUniqueId(), pol.owner())) reason = "von einem Freund zerstört";
+        else {
+            var tb = plugin.teams().of(breaker.getUniqueId());
+            var to = plugin.teams().of(pol.owner());
+            if (tb != null && to != null && tb.name().equals(to.name())) reason = "von einem Teammitglied zerstört";
+        }
+        long now = System.currentTimeMillis();
+        List<Long> recent = payouts.computeIfAbsent(pol.owner(), k -> new ArrayList<>());
+        recent.removeIf(t -> now - t > DAY_MS);
+        int perDay = plugin.getConfig().getInt("insurance.auszahlungen-pro-tag", 1);
+        if (reason == null && perDay > 0 && recent.size() >= perDay) reason = "Tagesgrenze erreicht";
+        // nach dem Inhalt beim Raid, höchstens der versicherte Wert und höchstens die Obergrenze
+        long current = b.getState() instanceof Chest chest ? valueOf(chest.getBlockInventory()) : 0;
+        long amount = Math.min(Math.round(Math.min(pol.value(), current) * payoutPercent() / 100.0),
+                plugin.getConfig().getLong("insurance.max-auszahlung", 50_000));
+        if (reason == null && amount <= 0) reason = "Kiste war leer";
+        if (reason != null) {
+            plugin.getLogger().info("[Versicherung] Keine Auszahlung (" + reason + ") für " + Bukkit.getOfflinePlayer(pol.owner()).getName()
+                    + " bei " + pol.world() + " " + where + (breaker == null ? "" : ", zerstört von " + breaker.getName()));
+            if (owner != null) Msg.send(owner, "<gray>Deine versicherte Kiste bei " + where + " ist zerstört (" + reason + "), keine Auszahlung.");
+            return;
+        }
+        recent.add(now);
+        save();
+        plugin.modes().depositIn(pol.owner(), de.kuby.kubyplugins.service.ModeService.SMP, amount);
+        plugin.getLogger().info("[Versicherung] Auszahlung " + amount + " an " + Bukkit.getOfflinePlayer(pol.owner()).getName()
+                + " (Kiste bei " + pol.world() + " " + where + ", geraidet von " + breaker.getName() + ")");
         if (owner != null) {
             Msg.send(owner, "<red>Deine versicherte Kiste bei " + where + " wurde geraidet! <gold>+"
                     + Msg.coins(amount) + "$ <gray>Auszahlung.");
@@ -214,6 +281,9 @@ public final class RaidInsuranceService {
             out.set(k + ".y", pol.y());
             out.set(k + ".z", pol.z());
         }
+        payouts.forEach((id, l) -> {
+            if (!l.isEmpty()) out.set("auszahlungen." + id, l);
+        });
         try {
             plugin.getDataFolder().mkdirs();
             out.save(file);

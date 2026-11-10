@@ -43,8 +43,9 @@ public final class MarketCommand implements CommandExecutor {
             Msg.send(p, "<red>Ungültiger Preis.");
             return;
         }
-        if (price <= 0) {
-            Msg.send(p, "<red>Der Preis muss größer als 0 sein.");
+        long maxPrice = plugin.getConfig().getLong("market.max-preis", 1_000_000_000_000L);
+        if (price <= 0 || price > maxPrice) {
+            Msg.send(p, "<red>Der Preis muss zwischen 1 und " + Msg.coins(maxPrice) + " liegen.");
             return;
         }
         ItemStack hand = p.getInventory().getItemInMainHand();

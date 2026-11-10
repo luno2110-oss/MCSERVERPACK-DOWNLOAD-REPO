@@ -57,7 +57,7 @@ public final class OrdersMenu extends GuiMenu {
             open(p);
             return;
         }
-        int have = count(p, o.material());
+        int have = Items.countPlain(p.getInventory(), o.material());
         if (have == 0) {
             Msg.send(p, "<red>Du hast kein " + o.material().name().toLowerCase().replace('_', ' ') + " im Inventar.");
             return;
@@ -69,7 +69,12 @@ public final class OrdersMenu extends GuiMenu {
         }
         int n = Math.min(have, o.amount());
         String orderMode = plugin.orders().modeOf(id);
-        p.getInventory().removeItem(new ItemStack(o.material(), n));
+        // nur unveränderte Items (früher zählten auch umbenannte, wurden aber nicht entnommen: Geld ohne Lieferung)
+        if (!Items.takePlain(p.getInventory(), o.material(), n)) {
+            Msg.send(p, "<red>Geliefert werden nur unveränderte Items (nicht umbenannt oder verzaubert).");
+            open(p);
+            return;
+        }
         plugin.orders().fill(id, n);
 
         // Liefern in Stacks, damit die Abholbox saubere Stacks enthält
@@ -78,8 +83,15 @@ public final class OrdersMenu extends GuiMenu {
             plugin.modes().abholboxIn(o.buyer(), orderMode, new ItemStack(o.material(), Math.min(max, left)));
         }
 
-        long gross = (long) n * o.unitPrice();
-        long tax = plugin.hasPerk("farmpass", p.getUniqueId()) ? 0 : gross * plugin.getConfig().getInt("market.tax-percent", 5) / 100;
+        // Stückpreis und Menge sind beim Anlegen begrenzt und vorab bezahlt; trotzdem ohne Überlauf rechnen
+        long gross;
+        try {
+            gross = Math.multiplyExact((long) n, o.unitPrice());
+        } catch (ArithmeticException ex) {
+            gross = Long.MAX_VALUE;
+        }
+        int pct = plugin.hasPerk("farmpass", p.getUniqueId()) ? 0 : plugin.getConfig().getInt("market.tax-percent", 5);
+        long tax = gross / 100 * pct + gross % 100 * pct / 100;
         plugin.economy().deposit(p.getUniqueId(), gross - tax);
         Sfx.play(plugin, p, Sfx.Kind.COIN);
         Msg.send(p, "<green>Geliefert: <white>" + n + "x <green>für <gold>" + Msg.coins(gross - tax) + "$");
@@ -100,13 +112,5 @@ public final class OrdersMenu extends GuiMenu {
             Msg.send(p, "<gray>Order abgebrochen, <gold>" + Msg.coins(o.remainingTotal()) + "$ <gray>zurück.");
         }
         open(p);
-    }
-
-    private static int count(Player p, Material m) {
-        int sum = 0;
-        for (ItemStack it : p.getInventory().getStorageContents()) {
-            if (it != null && it.getType() == m) sum += it.getAmount();
-        }
-        return sum;
     }
 }

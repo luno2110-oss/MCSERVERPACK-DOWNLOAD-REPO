@@ -53,7 +53,7 @@ public final class CookieCommand implements TabExecutor {
             case "laden", "shop" -> CookieScreen.shop(p, args.length > 1 && args[1].toLowerCase().startsWith("i") ? 1 : 0);
             case "station" -> {
                 if (st == null || st.spot() == null) Msg.send(p, "<red>Es gibt noch keine Keks-Station.");
-                else p.teleportAsync(st.spot());
+                else de.kuby.kubyplugins.util.Teleports.delayed(plugin, p, st.spot(), "Keks-Station");
             }
             case "kaufen" -> {
                 if (args.length < 2) {

@@ -24,6 +24,10 @@ public final class Teleports {
             Msg.send(player, "<red>Im Kampf kannst du nicht teleportieren.");
             return;
         }
+        if (plugin.pvp().isDueling(player.getUniqueId())) {
+            Msg.send(player, "<red>Im Duell kannst du nicht teleportieren.");
+            return;
+        }
         int delay = plugin.getConfig().getInt("homes.teleport-delay-seconds", 3);
         Location start = player.getLocation();
         Msg.send(player, "<gray>Teleport zu <white>" + label + " <gray>in <white>" + delay
@@ -31,7 +35,7 @@ public final class Teleports {
 
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             if (!player.isOnline()) return;
-            if (plugin.pvp().inCombat(player.getUniqueId())) {
+            if (plugin.pvp().inCombat(player.getUniqueId()) || plugin.pvp().isDueling(player.getUniqueId())) {
                 Msg.send(player, "<red>Teleport abgebrochen, du bist in einen Kampf geraten.");
                 return;
             }

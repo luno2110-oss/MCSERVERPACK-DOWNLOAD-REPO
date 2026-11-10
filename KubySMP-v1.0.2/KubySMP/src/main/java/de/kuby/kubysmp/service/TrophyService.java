@@ -8,7 +8,7 @@ import de.kuby.kubyplugins.KubyPlugins;
 import java.util.UUID;
 
 /**
- * Trophäen bei Kills: Der Gewinner bekommt, der Verlierer verliert gleich viel.
+ * Trophäen bei Kills: Der Gewinner bekommt, was der Verlierer verliert (Nullsumme, mit 0 Trophäen gibt es nichts).
  * Betrag = Basis + Schritt * (Liga des Opfers - Liga des Killers), begrenzt auf min/max.
  */
 public final class TrophyService {
@@ -33,9 +33,11 @@ public final class TrophyService {
         int max = plugin.getConfig().getInt("trophies.max", 60);
         int amount = Math.max(min, Math.min(max, base + step * (loserLeague - winnerLeague)));
 
-        w.trophies += amount;
-        int lost = Math.min(amount, l.trophies);
+        // Nullsumme: der Gewinner bekommt genau, was der Verlierer abgibt (früher bekam er immer mindestens trophies.min,
+        // auch von einem Opfer mit 0 Trophäen: unendliches Farmen mit einem Zweitkonto)
+        int lost = Math.min(amount, Math.max(0, l.trophies));
         l.trophies -= lost;
-        return new Result(amount, lost);
+        w.trophies += lost;
+        return new Result(lost, lost);
     }
 }

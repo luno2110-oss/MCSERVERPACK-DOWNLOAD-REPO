@@ -94,6 +94,7 @@ public final class SellService {
             if (item == null) continue;
             Long price = prices.get(item.getType());
             if (price == null) continue;
+            if (special(item)) continue;
             long unit = plugin.weekly().isMeta(item.getType()) ? price * 125 / 100 : price;
             sum += unit * item.getAmount();
             items += item.getAmount();
@@ -108,6 +109,20 @@ public final class SellService {
             save();
         }
         return payout;
+    }
+
+    /** Eigene Sonder-Items (eigenes Modell oder Plugin-Daten, z. B. Generatoren, Möbel, Kit-Items) und Behälter mit
+     *  Inhalt werden nie zum Material-Preis verkauft (sonst wären sie oder ihr Inhalt verloren). */
+    public static boolean special(ItemStack item) {
+        if (!item.hasItemMeta()) return false;
+        var meta = item.getItemMeta();
+        if (meta.hasItemModel()) return true;
+        for (org.bukkit.NamespacedKey k : meta.getPersistentDataContainer().getKeys()) {
+            if (!k.getKey().equals("item_value")) return true;   // die Wert-Anzeige (ItemValueService) macht kein Sonder-Item
+        }
+        if (meta instanceof org.bukkit.inventory.meta.BlockStateMeta bsm && bsm.hasBlockState()
+                && bsm.getBlockState() instanceof org.bukkit.block.Container box && !box.getInventory().isEmpty()) return true;
+        return meta instanceof org.bukkit.inventory.meta.BundleMeta bm && bm.hasItems();
     }
 
     public synchronized void save() {

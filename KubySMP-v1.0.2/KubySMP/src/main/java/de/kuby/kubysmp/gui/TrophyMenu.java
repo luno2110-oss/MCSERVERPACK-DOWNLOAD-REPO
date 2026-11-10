@@ -67,6 +67,11 @@ public final class TrophyMenu extends GuiMenu {
 
     private void claim(Player p, League l) {
         StatsService.Stats s = plugin.stats().get(p.getUniqueId());
+        if (!de.kuby.kubyplugins.service.ModeService.SMP.equals(plugin.modes().modeOf(p.getUniqueId()))) {
+            Sfx.play(plugin, p, Sfx.Kind.ERROR);
+            done(p, "<red>Liga-Belohnungen holst du im SMP ab.");
+            return;
+        }
         if (s.trophies < l.min()) {
             Sfx.play(plugin, p, Sfx.Kind.ERROR);
             done(p, "<red>Diese Liga hast du noch nicht erreicht.");

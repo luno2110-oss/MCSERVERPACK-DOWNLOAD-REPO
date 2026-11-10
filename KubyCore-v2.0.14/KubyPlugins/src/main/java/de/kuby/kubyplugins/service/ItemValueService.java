@@ -53,9 +53,15 @@ public final class ItemValueService {
         return plugin.getConfig().getDouble("items.base." + name, fallback);
     }
 
-    /** Wert eines Items oder -1, wenn es nicht bewertet wird. */
+    /**
+     * Wert eines Items oder -1, wenn es nicht bewertet wird. Nur nicht stapelbare Items (Waffen, Rüstung, Werkzeuge,
+     * Elytra …): früher bekamen auch Eisen-, Gold- und Netherite-Barren, Blöcke, Erze und Goldäpfel die Wert-Zeile und
+     * eine Markierung. Dann stapelten sie nicht mehr mit frischen Items, und Verkauf, Aufträge und Lieferungen
+     * erkannten sie nicht mehr als normale Items.
+     */
     public double value(ItemStack it) {
         if (it == null || it.getType().isAir()) return -1;
+        if (it.getType().getMaxStackSize() > 1) return -1;
         double base = base(it.getType());
         if (base <= 0) return -1;
         double durability = 1.0;
@@ -85,7 +91,14 @@ public final class ItemValueService {
                 ItemStack it = p.getInventory().getItem(i);
                 if (it == null) continue;
                 double v = value(it);
-                if (v < 0) continue;
+                if (v < 0) {
+                    // alte Markierung (z. B. an Barren) entfernen, damit das Item wieder ein normales Item ist
+                    if (it.hasItemMeta() && it.getItemMeta().getPersistentDataContainer().has(key)) {
+                        strip(it);
+                        p.getInventory().setItem(i, it);
+                    }
+                    continue;
+                }
                 long rounded = Math.round(v);
                 ItemMeta meta = it.getItemMeta();
                 Long stored = meta.getPersistentDataContainer().get(key, PersistentDataType.LONG);
@@ -94,6 +107,20 @@ public final class ItemValueService {
                 p.getInventory().setItem(i, it);
             }
         }
+    }
+
+    /** Wert-Zeile und Markierung entfernen. */
+    private void strip(ItemStack it) {
+        ItemMeta meta = it.getItemMeta();
+        List<Component> lore = new ArrayList<>();
+        if (meta.lore() != null) {
+            for (Component c : meta.lore()) {
+                if (!PlainTextComponentSerializer.plainText().serialize(c).startsWith("Wert:")) lore.add(c);
+            }
+        }
+        meta.lore(lore.isEmpty() ? null : lore);
+        meta.getPersistentDataContainer().remove(key);
+        it.setItemMeta(meta);
     }
 
     private void update(ItemStack it, long value) {

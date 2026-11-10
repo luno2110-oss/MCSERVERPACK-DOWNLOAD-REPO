@@ -85,11 +85,19 @@ public final class EconomyCommand implements CommandExecutor {
             Msg.send(p, "<red>Menge und Preis müssen Zahlen sein.");
             return;
         }
-        if (amount <= 0 || amount > 2304 || price <= 0) {
-            Msg.send(p, "<red>Menge (1-2304) und Preis (> 0) prüfen.");
+        long maxPrice = plugin.getConfig().getLong("orders.max-preis", 1_000_000_000L);
+        if (amount <= 0 || amount > 2304 || price <= 0 || price > maxPrice) {
+            Msg.send(p, "<red>Menge (1-2304) und Preis (1 bis " + Msg.coins(maxPrice) + ") prüfen.");
             return;
         }
-        long total = amount * price;
+        // früher ohne Überlaufschutz: riesiger Stückpreis ergab einen winzigen Gesamtpreis (Geld aus dem Nichts)
+        long total;
+        try {
+            total = Math.multiplyExact((long) amount, price);
+        } catch (ArithmeticException ex) {
+            Msg.send(p, "<red>Der Gesamtpreis ist zu hoch.");
+            return;
+        }
         if (!plugin.economy().withdraw(p.getUniqueId(), total)) {
             Msg.send(p, "<red>Du brauchst <gold>" + Msg.coins(total) + "$ <red>für diesen Order.");
             return;

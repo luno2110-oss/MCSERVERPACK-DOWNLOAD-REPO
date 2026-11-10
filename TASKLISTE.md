@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.41** (ungetestet, nicht kompiliert)
+Stand: **v1.42** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -495,6 +495,28 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
 ## Fokus: SMP (aktuell)
 - [x] 2a-2d: PvP-Schnittstelle, Verschieben, Menüs (KubySMP 1.0.0)
 - [x] Anti-Farm-XP für Erze (v2.0.7)
+- [x] SMP-Prüfung auf Bugs, Exploits und Sicherheitslücken (v1.42, Wunsch des Besitzers, Test im Spiel offen). Behoben:
+  - Kampf-Logout verdoppelte Items: der Kern speicherte das Inventar beim Ausloggen, bevor der SMP es als „Tod“ fallen ließ (Items am Boden und nach dem Login wieder da). Jetzt speichert der Kern als Letzter. Logout im Kampf zählt als Kill für den letzten Angreifer (Trophäen, Kopfgeld)
+  - Duelle: Originalsachen liegen zusätzlich in `duel-backup.yml` und kommen nach einem Absturz beim Login zurück; beim Abschalten werden laufende Duelle abgebrochen (Inventar und Einsätze zurück). Kit-Items sind markiert und verschwinden außerhalb eines Duells. Im Duell gesperrt: Befehle außer `duel.erlaubte-befehle` (msg, tell, w, r, reply, report, regeln, rules), Wegwerfen, Behälter (Kisten, Enderkiste, Shops). Duelle nur im selben Modus (`duel.modi`, Standard smp), Einsatz bleibt im Modus, höchstens `duel.max-einsatz`, nicht während eines Handels
+  - Kristall-Tausch: umbenannter Antiker Schutt wurde gezählt, aber nicht entnommen (unendlich End-Kristalle). Jetzt zählen und entnehmen nur unveränderte Items, nach derselben Regel
+  - Aufträge (`/orders`): dasselbe Problem (Geld ohne Lieferung), dazu ein Überlauf beim Gesamtpreis (riesiger Stückpreis = winziger Gesamtpreis, Geld aus dem Nichts). Jetzt nur unveränderte Items, Stückpreis höchstens `orders.max-preis`, Gesamtpreis mit Überlaufprüfung. Survival-Nebenquests (Abgeben) ebenso
+  - Markt: bei fast vollem Inventar bekam der Käufer einen Teil der Items und sein Geld zurück, und das Angebot stand wieder drin (Items doppelt). Jetzt wird vorher geprüft, ob alles passt; Reste gehen in die Abholbox. Preis höchstens `market.max-preis`, Steuer ohne Überlauf
+  - Verkaufen (`/sell`, Verkaufs-Menü): eigene Items (Generatoren, Möbel, Kit-Items, eigene Modelle) und volle Shulker oder Bündel gingen zum Materialpreis weg, samt Inhalt. Jetzt werden sie übersprungen
+  - Wert-Anzeige: „Wert: 40“ samt Markierung hing auch an Eisen-, Gold- und Netherite-Barren, Blöcken, Erzen und Goldäpfeln. Folge: kein Stapeln mit frischen Items, der Skyblock-Shop kaufte sie nicht an. Jetzt nur noch Waffen, Rüstung und Werkzeuge; alte Markierungen verschwinden im Inventar von selbst
+  - Raid-Versicherung: zählte der Wert beim Abschluss, brachten Kiste füllen, versichern, ausräumen und dann selbst sprengen oder vom Zweitkonto abbauen lassen 50 % ohne Verlust; auch abgebrochene Abbauten und Explosionen in Schutzgebieten zahlten. Jetzt gilt:
+    - nur selbst aufgestellte Kisten (Markierung beim Setzen, ältere Kisten einmal neu setzen), nur im SMP
+    - Auszahlung nach dem Inhalt beim Raid, höchstens der versicherte Wert und höchstens `insurance.max-auszahlung` (50.000)
+    - nichts, wenn Besitzer, Freund, Team oder eine unbekannte Ursache die Kiste zerstört
+    - höchstens `insurance.auszahlungen-pro-tag` (1) Auszahlungen je Besitzer; jede Auszahlung steht im Server-Log
+    - bei Doppelkisten zählt nur die versicherte Hälfte
+  - Trophäen-Farmen: der Gewinner bekam immer mindestens `trophies.min`, auch von Opfern mit 0 Trophäen (Farmen mit Zweitkonto). Jetzt Nullsumme, dazu eine Kill-Sperre: derselbe Killer bekommt für dasselbe Opfer nur alle `pvp.kill-sperre-minuten` (10) Trophäen, XP, Battle-Pass- und Quest-Fortschritt
+  - Flucht aus dem Kampf: `/spawn` im eigenen Modus, die Keks-Station und der Duo-RTP teleportierten sofort, auch im Kampf oder Duell. Jetzt mit Wartezeit und Kampf- und Duell-Sperre
+  - Schutz umgehen: End-Kristalle, TNT, gezähmte Tiere und alles, was der Server einem Spieler zuschreibt, galten nicht als Angriff. Damit ließen sich Spawn-, Neulings-, Freundes- und Team-Schutz umgehen, und es gab keinen Kampf-Tag. Jetzt erkannt. Spawn-Schutz gilt um den SMP-Spawn statt um den Welt-Spawn
+  - Modus-Grenzen: Duell-Einsätze, Turnier-Preis und Liga-Belohnungen landeten im Modus, in dem man gerade war (SMP-Coins nach Survival schieben). Jetzt immer im SMP; Turnier-Anmeldung und Liga-Abholung nur im SMP
+  - Wirtschaft: Gutschriften nur positiv und ohne Überlauf; Einzelbeträge ab `economy.log-ab` (100 Mio.) stehen im Server-Log
+  - Restrisiken:
+    - Zweitkonten ohne Freundschaft können sich ein Kopfgeld holen oder eine Versicherung auslösen; Tagesgrenze und Obergrenze halten das klein. Abhilfe wäre eine Zweitkonto-Erkennung (Vorschlag)
+    - nach einem Server-Absturz kommt das Inventar vom Duell-Beginn zurück, Welt und Kisten springen auf die letzte Speicherung
 - [ ] Test im Spiel: Kampf, Duell, Turnier, Kopfgeld, Versicherung, Trophäen, Handel, Duo-RTP
 - [x] Kits im Spiel einstellen statt in der config: `/kits bearbeiten` (Admins; auch Knopf „Bearbeiten“ im Kits-Dialog und Buch im Truhen-Menü) zeigt alle Kits, „Neues Kit“ legt eins an. Editor: oben 36 Plätze für echte Items (Verzauberungen, Namen, eigene Modelle bleiben erhalten), unten Name (Textfeld), Icon (Item auf den Mauszeiger nehmen und klicken), Rang (für alle, VIP bis Legend oder Platin bis Netherit), Abklingzeit (±10 Min., mit Shift ±1 Std.), Modi (alle, Survival, SMP, Skyblock, Survival+SMP), Testen, Speichern, Löschen (Shift-Klick). Gespeichert in `kits-config.yml`, beim ersten Start aus `config.yml` übernommen; Spieler sehen nur die Kits ihres Modus
 - [ ] Farmpass und Survival (3b, 3c) warten bis der SMP getestet ist

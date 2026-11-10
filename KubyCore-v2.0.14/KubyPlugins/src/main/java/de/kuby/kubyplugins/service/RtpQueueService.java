@@ -90,6 +90,15 @@ public final class RtpQueueService {
     private void start(UUID a, UUID b) {
         Player pa = Bukkit.getPlayer(a);
         Player pb = Bukkit.getPlayer(b);
+        // beim Warten in einen Kampf oder ein Duell geraten? Dann nicht wegteleportieren (sonst Flucht aus dem Kampf)
+        if (pa != null && (plugin.pvp().inCombat(a) || plugin.pvp().isDueling(a))) {
+            Msg.send(pa, "<gray>Duo-RTP abgebrochen: du bist gerade im Kampf.");
+            pa = null;
+        }
+        if (pb != null && (plugin.pvp().inCombat(b) || plugin.pvp().isDueling(b))) {
+            Msg.send(pb, "<gray>Duo-RTP abgebrochen: du bist gerade im Kampf.");
+            pb = null;
+        }
         if (pa == null || pb == null) {
             if (pa != null) enqueue(a);
             if (pb != null) enqueue(b);

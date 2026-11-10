@@ -90,6 +90,9 @@ public final class KubySMP extends JavaPlugin {
 
         getServer().getPluginManager().registerEvents(new CombatListener(core), this);
         getServer().getPluginManager().registerEvents(new InsuranceListener(core), this);
+        getServer().getPluginManager().registerEvents(new de.kuby.kubysmp.listener.DuelGuard(core), this);
+        // nach einem Neuladen: Sachen aus unterbrochenen Duellen zurück, Kit-Items weg
+        for (org.bukkit.entity.Player online : getServer().getOnlinePlayers()) duels.onJoin(online);
 
         de.kuby.kubysmp.gui.SmpScreens.samples(core::registerSelfTestCanvas);
         core.registerMainEntry(de.kuby.kubyplugins.service.ModeService.SMP, new KubyPlugins.MainEntry(Material.IRON_SWORD, "Duelle", "Duelle starten oder annehmen",
@@ -115,6 +118,8 @@ public final class KubySMP extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        // laufende Duelle abbrechen: Inventar und Einsätze zurück (früher waren die Originalsachen nach einem Neustart weg)
+        if (duels != null) duels.shutdown();
         if (bounties != null) bounties.save();
         if (insurance != null) insurance.save();
     }
