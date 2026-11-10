@@ -395,6 +395,13 @@ public final class ModeNpcService implements Listener {
     }
 
     /** Für den Selbsttest: alle Modus-NPCs. */
+    /** Orte der Figuren: Ort, Modus (für die Kamerafahrt der Einführung). */
+    public List<Map.Entry<Location, String>> spots() {
+        List<Map.Entry<Location, String>> out = new ArrayList<>();
+        for (Npc n : npcs.values()) if (n.at != null && n.mode != null) out.add(Map.entry(n.at.clone(), n.mode));
+        return out;
+    }
+
     public List<String> ids() {
         return new ArrayList<>(npcs.keySet());
     }

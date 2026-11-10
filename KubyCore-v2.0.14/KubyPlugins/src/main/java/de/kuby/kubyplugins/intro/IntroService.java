@@ -175,6 +175,9 @@ public final class IntroService implements Listener {
         Location spawn = plugin.modes().spawnOf(ModeService.HUB);
         boolean inHub = ModeService.HUB.equals(plugin.modes().modeOf(p.getUniqueId()));
         if (flight && inHub && spawn != null && pack(p) && plugin.cinema() != null && !plugin.cinema().active(p)) {
+            // eigene Kamerafahrt (Wegpunkte) geht vor, sonst Rundgang über die wichtigen Orte, sonst Rundflug
+            if (cameraPath(spawn).size() < 2 && playTour(p, ModeService.HUB, "WILLKOMMEN", "<gray>auf <gold><b>" + server()
+                    + "</b></gold> <dark_gray>· <gray>Schleichen zum Überspringen", pl -> showHub(pl, 0))) return;
             Cinema.Options o = new Cinema.Options();
             o.anchor = spawn;
             o.endAt = spawn;
@@ -284,6 +287,329 @@ public final class IntroService implements Listener {
     }
 
     // =================================================================================================================
+    // Rundgang: Kamerafahrt zu den wichtigen Orten eines Modus
+    // =================================================================================================================
+
+    /** Ein wichtiger Ort: Blickziel, Titel, Text (MiniMessage). */
+    public record TourPoint(Location at, String title, String text) {}
+
+    private final List<java.util.function.Function<String, List<TourPoint>>> providers = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+    /** Addons melden hier ihre Orte je Modus an (z. B. eigene NPCs). Liefert die Orte für einen Modus (oder leer). */
+    public void registerPoints(java.util.function.Function<String, List<TourPoint>> provider) {
+        providers.add(provider);
+    }
+
+    /** Vorlagen für /kp einfuehrung punkt add &lt;vorlage&gt;: Titel und Text. */
+    static final Map<String, String[]> PRESETS = presets();
+
+    private static Map<String, String[]> presets() {
+        Map<String, String[]> m = new LinkedHashMap<>();
+        m.put("rtp", new String[]{"RTP-Zone", "<gray>Ab hier geht es in die Wildnis <dark_gray>· <white>/rtp"});
+        m.put("kristall", new String[]{"Kristall-Tausch", "<gray>4 Antiker Schutt gegen 1 End-Kristall <dark_gray>· <white>/kristaltrade"});
+        m.put("kisten", new String[]{"Kisten", "<gray>Schlüssel gibt es für Votes, Quests und im Shop <dark_gray>· <white>/keys"});
+        m.put("shop", new String[]{"Shop", "<gray>Items kaufen und verkaufen <dark_gray>· <white>/shop"});
+        m.put("markt", new String[]{"Markt", "<gray>Handel mit anderen Spielern <dark_gray>· <white>/markt"});
+        m.put("juwelen", new String[]{"Juwelenshop", "<gray>Ränge, Kisten und Pakete <dark_gray>· <white>/juwelenshop"});
+        m.put("duell", new String[]{"Duelle", "<gray>Fordere andere heraus, auch mit Einsatz <dark_gray>· <white>/duell"});
+        m.put("turnier", new String[]{"Turniere", "<gray>K.O.-Turniere mit Preisen <dark_gray>· <white>/turnier"});
+        m.put("kopfgeld", new String[]{"Kopfgelder", "<gray>Steckbriefe und Kopfgelder <dark_gray>· <white>/bounties"});
+        m.put("pvp", new String[]{"PvP-Zone", "<gray>Hier wird gekämpft <dark_gray>· <gray>Kampfsperre beachten"});
+        m.put("battlepass", new String[]{"Battle-Pass", "<gray>Belohnungen für jedes Level <dark_gray>· <white>/battlepass"});
+        m.put("casino", new String[]{"Casino", "<gray>Chips an der Kasse, dann Roulette, Blackjack, Slots <dark_gray>· <white>/casino"});
+        m.put("support", new String[]{"Support", "<gray>Fragen an das Team <dark_gray>· <white>/support"});
+        m.put("discord", new String[]{"Discord", "<gray>Community, Neuigkeiten, Verlinkung <dark_gray>· <white>/discord"});
+        return m;
+    }
+
+    /** Eigene Punkte eines Modus aus der config ("welt;x;y;z;Titel;Text"). */
+    private List<TourPoint> manualPoints(String mode) {
+        List<TourPoint> out = new ArrayList<>();
+        for (String s : plugin.getConfig().getStringList("einfuehrung.punkte." + mode)) {
+            String[] a = s.split(";", 6);
+            if (a.length < 6) continue;
+            org.bukkit.World w = Bukkit.getWorld(a[0]);
+            if (w == null) continue;
+            try {
+                out.add(new TourPoint(new Location(w, Double.parseDouble(a[1]), Double.parseDouble(a[2]), Double.parseDouble(a[3])), a[4], a[5]));
+            } catch (NumberFormatException ignored) {
+                // kaputter Eintrag
+            }
+        }
+        return out;
+    }
+
+    /** Orte, die der Server selbst kennt: Kisten, Modus-Figuren, Keks-Station, Schwert im Stein, Discord-Statue, Casino. */
+    private List<TourPoint> autoPoints(String mode, Location spawn) {
+        List<TourPoint> out = new ArrayList<>();
+        if (plugin.crates() != null) {
+            for (List<Map.Entry<Location, String>> group : cluster(plugin.crates().placedIn(mode), 9)) {
+                List<String> names = new ArrayList<>();
+                for (Map.Entry<Location, String> e : group) if (!names.contains(e.getValue()) && names.size() < 3) names.add(e.getValue());
+                out.add(new TourPoint(center(group), group.size() > 1 ? "Kisten" : "Kiste", "<gold>" + Msg.escape(String.join(", ", names))
+                        + (group.size() > names.size() ? " <gray>und mehr" : "") + " <dark_gray>· <gray>Schlüssel: <white>/keys"));
+            }
+        }
+        if (ModeService.HUB.equals(mode) && plugin.modeNpcs() != null) {
+            for (List<Map.Entry<Location, String>> group : cluster(plugin.modeNpcs().spots(), 8)) {
+                List<String> labels = new ArrayList<>();
+                for (Map.Entry<Location, String> e : group) labels.add(ModeService.label(e.getValue()));
+                out.add(new TourPoint(center(group).add(0, 1, 0), group.size() > 1 ? "Spielmodi" : labels.get(0),
+                        "<white>" + String.join(", ", labels) + " <dark_gray>· <gray>Klick auf eine Figur bringt dich hin"));
+            }
+        }
+        if (plugin.cookieStation() != null && plugin.cookieStation().location() != null) {
+            out.add(new TourPoint(plugin.cookieStation().location(), "Cookie Clicker", "<gray>Kekse backen, Gebäude kaufen, aufsteigen <dark_gray>· <white>/cookie"));
+        }
+        if (plugin.weapons() != null && plugin.weapons().stoneLocation() != null) {
+            out.add(new TourPoint(plugin.weapons().stoneLocation().add(0, 1, 0), "Schwert im Stein",
+                    "<gray>Das Heilige Schwert mit dem Sternenschlag <dark_gray>· <white>/schwert"));
+        }
+        if (plugin.casino() != null && plugin.casino().kasse() != null) {
+            out.add(new TourPoint(plugin.casino().kasse().clone().add(0.5, 1, 0.5), "Casino",
+                    "<gray>Chips an der Kasse, dann Roulette, Blackjack, Slots <dark_gray>· <white>/casino"));
+        }
+        if (plugin.discordStatue() != null && spawn.getWorld() != null) {
+            for (org.bukkit.entity.Entity e : spawn.getWorld().getNearbyEntities(spawn, 80, 40, 80)) {
+                if (plugin.discordStatue().isStatue(e)) {
+                    out.add(new TourPoint(e.getLocation().add(0, 1.5, 0), "Discord", "<gray>Community, Neuigkeiten, Verlinkung <dark_gray>· <white>/discord"));
+                    break;
+                }
+            }
+        }
+        for (java.util.function.Function<String, List<TourPoint>> pr : providers) {
+            try {
+                List<TourPoint> l = pr.apply(mode);
+                if (l != null) out.addAll(l);
+            } catch (RuntimeException ex) {
+                plugin.getLogger().warning("Einführung: Orte (" + mode + "): " + ex);
+            }
+        }
+        return out;
+    }
+
+    /** Nahe beieinander liegende Orte zusammenfassen (z. B. eine Reihe Kisten oder die drei Modus-Figuren). */
+    private static List<List<Map.Entry<Location, String>>> cluster(List<Map.Entry<Location, String>> in, double radius) {
+        List<List<Map.Entry<Location, String>>> out = new ArrayList<>();
+        for (Map.Entry<Location, String> e : in) {
+            List<Map.Entry<Location, String>> hit = null;
+            for (List<Map.Entry<Location, String>> g : out) {
+                Location c = center(g);
+                if (c.getWorld() != null && c.getWorld().equals(e.getKey().getWorld()) && c.distanceSquared(e.getKey()) <= radius * radius) {
+                    hit = g;
+                    break;
+                }
+            }
+            if (hit == null) out.add(hit = new ArrayList<>());
+            hit.add(e);
+        }
+        return out;
+    }
+
+    private static Location center(List<Map.Entry<Location, String>> g) {
+        double x = 0, y = 0, z = 0;
+        for (Map.Entry<Location, String> e : g) {
+            x += e.getKey().getX();
+            y += e.getKey().getY();
+            z += e.getKey().getZ();
+        }
+        int n = Math.max(1, g.size());
+        return new Location(g.get(0).getKey().getWorld(), x / n, y / n, z / n);
+    }
+
+    /** Alle Orte eines Modus in Flugreihenfolge: eigene Punkte zuerst (in ihrer Reihenfolge), dann die gefundenen,
+     *  jeweils zum nächsten; nur in der Welt des Spawns und im Umkreis, höchstens einführung.max-punkte. */
+    List<TourPoint> points(String mode, Location spawn) {
+        double radius = plugin.getConfig().getDouble("einfuehrung.radius", 200);
+        int max = Math.max(1, plugin.getConfig().getInt("einfuehrung.max-punkte", 8));
+        List<TourPoint> out = new ArrayList<>();
+        java.util.function.Predicate<TourPoint> ok = tp -> tp.at() != null && tp.at().getWorld() != null
+                && tp.at().getWorld().equals(spawn.getWorld()) && tp.at().distanceSquared(spawn) <= radius * radius;
+        for (TourPoint tp : manualPoints(mode)) if (ok.test(tp) && out.size() < max) out.add(tp);
+        if (!plugin.getConfig().getBoolean("einfuehrung.auto-punkte", true)) return out;
+        List<TourPoint> auto = new ArrayList<>();
+        for (TourPoint tp : autoPoints(mode, spawn)) {
+            if (!ok.test(tp)) continue;
+            boolean dup = false;
+            for (TourPoint o : out) dup |= o.at().distanceSquared(tp.at()) < 36;
+            for (TourPoint o : auto) dup |= o.at().distanceSquared(tp.at()) < 36;
+            if (!dup) auto.add(tp);
+        }
+        Location from = out.isEmpty() ? spawn : out.get(out.size() - 1).at();
+        while (!auto.isEmpty() && out.size() < max) {
+            TourPoint best = null;
+            for (TourPoint tp : auto) if (best == null || tp.at().distanceSquared(from) < best.at().distanceSquared(from)) best = tp;
+            auto.remove(best);
+            out.add(best);
+            from = best.at();
+        }
+        return out;
+    }
+
+    /** Kameraposition für einen Ort: schräg oben, möglichst von der Spawn-Seite und mit freier Sicht. */
+    V3 viewFor(Location target, Location spawn) {
+        org.bukkit.World w = target.getWorld();
+        org.bukkit.util.Vector toSpawn = spawn.toVector().subtract(target.toVector()).setY(0);
+        double base = toSpawn.lengthSquared() < 1 ? 0 : Math.atan2(toSpawn.getZ(), toSpawn.getX());
+        int[] tries = {0, 30, -30, 60, -60, 90, -90, 135, -135, 180};
+        V3 fallback = null;
+        for (double dist : new double[]{6.5, 5.0, 8.5}) {
+            for (int deg : tries) {
+                double a = base + Math.toRadians(deg);
+                Location cam = target.clone().add(Math.cos(a) * dist, 2.8, Math.sin(a) * dist);
+                V3 v = new V3(cam.getX(), cam.getY(), cam.getZ());
+                if (fallback == null) fallback = v;
+                if (w == null || !w.isChunkLoaded(cam.getBlockX() >> 4, cam.getBlockZ() >> 4)) return fallback;
+                if (cam.getBlock().getType().isOccluding() || cam.clone().add(0, 1, 0).getBlock().getType().isOccluding()) continue;
+                org.bukkit.util.Vector dir = target.toVector().subtract(cam.toVector());
+                double len = dir.length();
+                org.bukkit.util.RayTraceResult hit = w.rayTraceBlocks(cam, dir.normalize(), Math.max(0.1, len - 1.2),
+                        org.bukkit.FluidCollisionMode.NEVER, true);
+                if (hit == null) return v;
+            }
+        }
+        return fallback;
+    }
+
+    /**
+     * Kamerafahrt zu den Orten eines Modus abspielen. after: danach (auch nach Überspringen), nicht nach Abbruch.
+     * false, wenn es nichts zu zeigen gibt (kein Pack, keine Orte, keine Kino-Engine) – dann ruft der Aufrufer selbst weiter.
+     */
+    public boolean playTour(Player p, String mode, String card, String cardSub, java.util.function.Consumer<Player> after) {
+        Location spawn = plugin.modes().spawnOf(mode);
+        if (spawn == null || spawn.getWorld() == null || !pack(p) || plugin.cinema() == null || plugin.cinema().active(p)) return false;
+        List<TourPoint> pts = points(mode, spawn);
+        if (pts.isEmpty()) return false;
+        List<de.kuby.kubyplugins.cinema.scenes.PoiTour.Stop> stops = new ArrayList<>();
+        int i = 0;
+        for (TourPoint tp : pts) {
+            i++;
+            Location target = tp.at().clone().add(0, 0.6, 0);
+            V3 t = new V3(target.getX(), target.getY(), target.getZ());
+            stops.add(new de.kuby.kubyplugins.cinema.scenes.PoiTour.Stop(viewFor(target, spawn), t, cardTitle(tp.title()),
+                    "<dark_gray>" + i + "/" + pts.size() + " · " + tp.text()));
+        }
+        V3 sp = new V3(spawn.getX(), spawn.getY() + 1.6, spawn.getZ());
+        V3 fwd = V3.dir(spawn.getYaw(), 0);
+        V3 overview = clearView(spawn.getWorld(), sp.add(fwd.mul(-11)).up(8), sp);
+        // Endet beim Spieler, wenn er am Spawn steht; sonst am letzten Ort ausblenden (danach zurück zum Spieler)
+        Location eye = p.getEyeLocation();
+        boolean near = eye.getWorld() != null && eye.getWorld().equals(spawn.getWorld()) && eye.distanceSquared(spawn) < 60 * 60;
+        V3 endView = null, endLook = null;
+        if (near) {
+            V3 pe = new V3(eye.getX(), eye.getY(), eye.getZ());
+            V3 pf = V3.dir(eye.getYaw(), 0);
+            endView = pe.add(pf.mul(-2.6)).up(1.2);
+            endLook = pe.add(pf.mul(8));
+        }
+        Cinema.Options o = new Cinema.Options();
+        o.anchor = spawn;
+        o.skippable = true;
+        o.onEnd = (pl, res) -> {
+            if (after != null && res != Cinema.Result.ABORTED && pl.isOnline()) {
+                plugin.getServer().getScheduler().runTaskLater(plugin, () -> after.accept(pl), 6L);
+            }
+        };
+        return plugin.cinema().play(p, new de.kuby.kubyplugins.cinema.scenes.PoiTour(overview, sp, card == null ? null : cardTitle(card), cardSub,
+                stops, endView, endLook), o);
+    }
+
+    /** Überblick: steht die Kamera in einem Block oder ist die Sicht auf den Spawn verdeckt, weiter nach oben. */
+    private static V3 clearView(org.bukkit.World w, V3 cam, V3 target) {
+        if (w == null) return cam;
+        for (int up = 0; up <= 14; up += 2) {
+            V3 c = cam.up(up);
+            Location l = new Location(w, c.x(), c.y(), c.z());
+            if (!w.isChunkLoaded(l.getBlockX() >> 4, l.getBlockZ() >> 4)) return c;
+            if (l.getBlock().getType().isOccluding()) continue;
+            org.bukkit.util.Vector dir = new org.bukkit.util.Vector(target.x() - c.x(), target.y() - c.y(), target.z() - c.z());
+            double len = dir.length();
+            if (len < 0.5 || w.rayTraceBlocks(l, dir.normalize(), len - 1, org.bukkit.FluidCollisionMode.NEVER, true) == null) return c;
+        }
+        return cam.up(14);
+    }
+
+    /** Titel für die große Titelschrift (Großbuchstaben, ß als SS). */
+    static String cardTitle(String s) {
+        return s == null ? null : s.toUpperCase(Locale.ROOT);
+    }
+
+    /** /kp einfuehrung punkt add &lt;vorlage | Titel|Text&gt; · liste · entfernen &lt;Nr&gt; · vorlagen. Modus = dein aktueller Modus. */
+    private void pointsAdmin(Player p, String[] args) {
+        String mode = plugin.modes().modeOf(p.getUniqueId());
+        String key = "einfuehrung.punkte." + mode;
+        List<String> l = new ArrayList<>(plugin.getConfig().getStringList(key));
+        String op = args.length > 2 ? args[2].toLowerCase(Locale.ROOT) : "";
+        switch (op) {
+            case "add", "setzen" -> {
+                String rest = args.length > 3 ? String.join(" ", java.util.Arrays.copyOfRange(args, 3, args.length)).trim() : "";
+                String title, text;
+                String[] pre = PRESETS.get(rest.toLowerCase(Locale.ROOT));
+                if (pre != null) {
+                    title = pre[0];
+                    text = pre[1];
+                } else if (rest.contains("|")) {
+                    String[] a = rest.split("\\|", 2);
+                    title = a[0].trim();
+                    text = "<gray>" + a[1].trim();
+                } else {
+                    Msg.send(p, "<red>Nutzung: /kp einfuehrung punkt add <vorlage> oder <Titel>|<Text>  <gray>(Vorlagen: /kp einfuehrung punkt vorlagen)");
+                    return;
+                }
+                if (title.isBlank() || title.contains(";") || text.contains(";")) {
+                    Msg.send(p, "<red>Titel und Text dürfen kein ; enthalten.");
+                    return;
+                }
+                // Blickziel: der Block, auf den du schaust (bis 30 Blöcke), sonst deine Position
+                org.bukkit.block.Block b = p.getTargetBlockExact(30, org.bukkit.FluidCollisionMode.NEVER);
+                Location at = b != null ? b.getLocation().add(0.5, 1.0, 0.5) : p.getLocation().add(0, 1, 0);
+                l.add(String.format(Locale.ROOT, "%s;%.2f;%.2f;%.2f;%s;%s", at.getWorld().getName(), at.getX(), at.getY(), at.getZ(), title, text));
+                plugin.getConfig().set(key, l);
+                plugin.saveConfig();
+                Msg.send(p, "<green>Punkt " + l.size() + " für " + ModeService.label(mode) + " gesetzt: <white>" + Msg.escape(title)
+                        + " <gray>(Blickziel " + at.getBlockX() + " " + at.getBlockY() + " " + at.getBlockZ() + "). Testen: <white>/kp einfuehrung test");
+            }
+            case "entfernen", "remove", "del" -> {
+                try {
+                    int n = Integer.parseInt(args.length > 3 ? args[3] : "x");
+                    if (n < 1 || n > l.size()) throw new NumberFormatException();
+                    String gone = l.remove(n - 1);
+                    plugin.getConfig().set(key, l);
+                    plugin.saveConfig();
+                    String[] a = gone.split(";", 6);
+                    Msg.send(p, "<green>Punkt " + n + " entfernt" + (a.length >= 5 ? ": " + Msg.escape(a[4]) : "") + ".");
+                } catch (NumberFormatException e) {
+                    Msg.send(p, "<red>Nutzung: /kp einfuehrung punkt entfernen <Nr> <gray>(Nummern: /kp einfuehrung punkt liste)");
+                }
+            }
+            case "vorlagen" -> {
+                StringBuilder sb = new StringBuilder("<gold>Vorlagen <gray>(/kp einfuehrung punkt add <vorlage>):");
+                PRESETS.forEach((k, v) -> sb.append("\n<white>").append(k).append(" <dark_gray>- <gray>").append(v[0]));
+                Msg.send(p, sb.toString());
+            }
+            default -> {
+                Location spawn = plugin.modes().spawnOf(mode);
+                StringBuilder sb = new StringBuilder("<gold>Orte der Kamerafahrt in " + ModeService.label(mode) + ":");
+                int i = 0;
+                for (String s : l) {
+                    String[] a = s.split(";", 6);
+                    if (a.length >= 6) sb.append("\n<white>").append(++i).append(". ").append(Msg.escape(a[4])).append(" <dark_gray>(eigener Punkt)");
+                }
+                if (spawn != null) {
+                    for (TourPoint tp : autoPoints(mode, spawn)) {
+                        if (tp.at() != null && spawn.getWorld().equals(tp.at().getWorld())) {
+                            sb.append("\n<gray>• ").append(Msg.escape(tp.title())).append(" <dark_gray>(automatisch)");
+                        }
+                    }
+                }
+                sb.append("\n<white>/kp einfuehrung punkt add <vorlage | Titel|Text> <gray>Blickziel: der Block, auf den du schaust")
+                        .append("\n<white>/kp einfuehrung punkt entfernen <Nr> <gray>· <white>vorlagen <gray>· <white>/kp einfuehrung test");
+                Msg.send(p, sb.toString());
+            }
+        }
+    }
+
+    // =================================================================================================================
     // Modus-Einführungen
     // =================================================================================================================
 
@@ -370,7 +696,11 @@ public final class IntroService implements Listener {
             if (tries < 60) plugin.getServer().getScheduler().runTaskLater(plugin, () -> autoStart(p, mode, tries + 1), 100L);
             return;
         }
-        startMode(p, mode);
+        // erst die Kamerafahrt zu den wichtigen Orten des Modus, danach die Aufgaben
+        if (!playTour(p, mode, ModeService.label(mode), "<gray>Die wichtigsten Orte <dark_gray>· <gray>Schleichen zum Überspringen",
+                pl -> startMode(pl, mode))) {
+            startMode(p, mode);
+        }
     }
 
     /** Einführung eines Modus starten bzw. den Stand zeigen. */
@@ -554,7 +884,12 @@ public final class IntroService implements Listener {
             }
             case "ueberspringen", "überspringen", "skip" -> skip(p, hubStep.containsKey(p.getUniqueId()) || def(mode) == null ? null : mode,
                     args.length > 1 && args[1].equalsIgnoreCase("alle"));
-            case "tour" -> startHub(p, true);
+            case "tour" -> {
+                if (def(mode) == null) startHub(p, true);
+                else if (!playTour(p, mode, ModeService.label(mode), "<gray>Die wichtigsten Orte <dark_gray>· <gray>Schleichen zum Überspringen", null)) {
+                    Msg.send(p, "<gray>Für " + ModeService.label(mode) + " sind noch keine Orte für die Kamerafahrt eingetragen.");
+                }
+            }
             default -> open(p);
         }
     }
@@ -600,7 +935,14 @@ public final class IntroService implements Listener {
                             + "\n<white>/kp einfuehrung kamera loeschen <gray>alle Punkte weg");
                 }
             }
-            case "test" -> startHub(p, true);
+            case "test" -> {
+                String m = args.length > 2 ? args[2].toLowerCase(Locale.ROOT) : plugin.modes().modeOf(p.getUniqueId());
+                if (ModeService.HUB.equals(m)) startHub(p, true);
+                else if (!playTour(p, m, ModeService.label(m), "<gray>Die wichtigsten Orte", null)) {
+                    Msg.send(p, "<red>Keine Orte für " + ModeService.label(m) + " gefunden (Spawn gesetzt? Punkte mit /kp einfuehrung punkt add).");
+                }
+            }
+            case "punkt", "punkte" -> pointsAdmin(p, args);
             case "reset" -> {
                 Player t = args.length > 2 ? Bukkit.getPlayerExact(args[2]) : p;
                 if (t == null) {
@@ -621,8 +963,9 @@ public final class IntroService implements Listener {
                 dirty = true;
                 Msg.send(p, "<green>Einführung für " + t.getName() + " zurückgesetzt (Belohnungen gibt es nicht doppelt).");
             }
-            default -> Msg.send(p, "<white>/kp einfuehrung kamera <gray>Wegpunkte der Kamerafahrt"
-                    + "\n<white>/kp einfuehrung test <gray>Willkommens-Tour abspielen"
+            default -> Msg.send(p, "<white>/kp einfuehrung punkt <gray>Orte für die Kamerafahrt (Kristall-Tausch, RTP-Zone, NPCs …)"
+                    + "\n<white>/kp einfuehrung kamera <gray>freie Kamerafahrt für den Hub (Wegpunkte)"
+                    + "\n<white>/kp einfuehrung test [modus] <gray>Kamerafahrt abspielen"
                     + "\n<white>/kp einfuehrung reset [Spieler] <gray>Einführung neu (wie beim ersten Join)");
         }
     }

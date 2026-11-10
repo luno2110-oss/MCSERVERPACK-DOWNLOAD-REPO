@@ -1379,13 +1379,26 @@ bauwelt:
   fountain-region: "bauwelt-brunnen"
 # Einführung (/einfuehrung, auch /tutorial): beim ersten Join Kamerafahrt über den Hub und eine Tour in 4 Schritten, beim
 # ersten Betreten von Survival, SMP und Skyblock eine kurze Einführung mit 3 Aufgaben. Überspringen geht jederzeit.
-# kamera: Wegpunkte "x;y;z;yaw;pitch" in der Hub-Welt (/kp einfuehrung kamera add), leer = Rundflug um den Hub-Spawn.
+# Kamerafahrt: fliegt im Hub beim ersten Join und in jedem Modus beim ersten Betreten die wichtigen Orte ab (Name und Text
+# als Titelkarte). Automatisch gefunden: Kisten, Modus-Figuren, Keks-Station, Schwert im Stein, Discord-Statue, Casino,
+# in Survival Priester, Bankier, Angel-Händler. Eigene Orte (Kristall-Tausch, RTP-Zone, NPCs anderer Plugins …) setzt
+# du im Modus mit /kp einfuehrung punkt add <vorlage> oder <Titel>|<Text> (Blickziel: der Block, auf den du schaust).
+# punkte.<modus>: "welt;x;y;z;Titel;Text". radius: nur Orte so weit um den Spawn. max-punkte: höchstens so viele Orte.
+# kamera: freie Fahrt nur für den Hub, "x;y;z;yaw;pitch" (/kp einfuehrung kamera add), geht vor dem Rundgang.
 # belohnungen: Coins je Aufgabe im jeweiligen Modus, bonus für alle drei. juwelen: Willkommensgeschenk am Ende der Tour.
 einfuehrung:
   aktiv: true
   servername: "Kuby"
   juwelen: 25
   kamera: []
+  auto-punkte: true
+  radius: 200
+  max-punkte: 8
+  punkte:
+    hub: []
+    smp: []
+    survival: []
+    skyblock: []
   belohnungen:
     survival: {menu: 150, home: 200, job: 300, bonus: 500}
     smp: {menu: 150, home: 200, battlepass: 300, bonus: 500}

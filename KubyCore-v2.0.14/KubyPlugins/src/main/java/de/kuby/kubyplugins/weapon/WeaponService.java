@@ -267,6 +267,11 @@ public final class WeaponService implements Listener, CommandExecutor, TabComple
     // Schwert im Stein
     // =================================================================================================================
 
+    /** Ort des Schwerts im Stein (null = keins aufgestellt). */
+    public Location stoneLocation() {
+        return stone == null ? null : stone.clone();
+    }
+
     private void load() {
         ConfigurationSection c = plugin.getConfig().getConfigurationSection("waffen.schwert-im-stein");
         if (c == null || !c.getBoolean("aktiv", false)) return;

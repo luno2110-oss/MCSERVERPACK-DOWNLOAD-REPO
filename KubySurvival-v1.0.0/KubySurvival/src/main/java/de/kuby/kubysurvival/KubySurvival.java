@@ -368,6 +368,29 @@ public final class KubySurvival extends JavaPlugin {
         AngelFx angelFx = new AngelFx(this, core, angeln);
         getServer().getPluginManager().registerEvents(new AngelListener(this, core, angeln, angelFx, angelMenus, angelDealer), this);
         AngelCommand angelCommand = new AngelCommand(core, angeln, angelMenus, angelHolo, angelDealer);
+        // Orte für die Kamerafahrt der Einführung (Survival): Priester, Bankier, Angel-Händler am Spawn
+        if (core.intro() != null) {
+            core.intro().registerPoints(mode -> {
+                if (!de.kuby.kubyplugins.service.ModeService.SURVIVAL.equals(mode)) return java.util.List.of();
+                org.bukkit.Location spawn = core.modes().spawnOf(mode);
+                if (spawn == null || spawn.getWorld() == null) return java.util.List.of();
+                java.util.List<de.kuby.kubyplugins.intro.IntroService.TourPoint> out = new java.util.ArrayList<>();
+                org.bukkit.entity.Entity pr = npcs.nearest(spawn, SurvivalNpc.Role.PRIESTER, 200);
+                if (pr != null) out.add(new de.kuby.kubyplugins.intro.IntroService.TourPoint(pr.getLocation().add(0, 1.4, 0), "Priester",
+                        "<gray>Heiraten mit Antrag und Ja-Wort <dark_gray>· <white>/marry"));
+                org.bukkit.entity.Entity bk = npcs.nearest(spawn, SurvivalNpc.Role.BANKIER, 200);
+                if (bk != null) out.add(new de.kuby.kubyplugins.intro.IntroService.TourPoint(bk.getLocation().add(0, 1.4, 0), "Bankier",
+                        "<gray>Ehe- und Freundes-Konten <dark_gray>· <white>/bank"));
+                for (org.bukkit.entity.Entity e : spawn.getWorld().getNearbyEntities(spawn, 200, 60, 200)) {
+                    if (angelDealer.is(e)) {
+                        out.add(new de.kuby.kubyplugins.intro.IntroService.TourPoint(e.getLocation().add(0, 1.4, 0), "Angel-Händler",
+                                "<gray>Angeln, Köder und das Fischbuch <dark_gray>· <white>/angeln"));
+                        break;
+                    }
+                }
+                return out;
+            });
+        }
         getServer().getPluginManager().registerEvents(new ClaimListener(this, core), this);
         getServer().getPluginManager().registerEvents(new JobListener(this, jobs), this);
         hud = new SurvivalHud(this, core);

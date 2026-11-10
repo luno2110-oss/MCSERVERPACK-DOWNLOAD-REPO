@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.40** (ungetestet, nicht kompiliert)
+Stand: **v1.41** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -411,6 +411,10 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Überspringen: in jedem Dialog, Rückfrage „Nur diese“ oder „Alle“. `/einfuehrung` (auch `/intro`, `/tour`, `/tutorial`) startet im Hub die Tour neu und zeigt im Modus den Stand der Aufgaben; Belohnungen gibt es je Aufgabe nur einmal
   - Bestehende Spieler bekommen keine automatische Einführung, können sie aber mit `/einfuehrung` machen. Ohne Grafik-Pack läuft alles im Chat mit klickbaren [Weiter]/[Überspringen] (ohne Kamerafahrt). Admin: `/kp einfuehrung reset [Spieler]`. Daten: `einfuehrung.yml`
   - Technik: neue Quest-Ereignisse `menu`, `home`, `job`, `battlepass` (auch für eigene Quests nutzbar); Modus-Eintritt erlaubt jetzt mehrere Haken je Modus (vorher hätte ein zweiter den von Skyblock ersetzt)
+- [x] Kamerafahrt zu den wichtigen Orten (Wunsch des Besitzers, Test im Spiel offen): im Hub beim ersten Join und in SMP, Survival, Skyblock beim ersten Betreten (vor den Aufgaben) fliegt die Kamera erst einen Überblick über den Spawn (Titelkarte „WILLKOMMEN“ bzw. Modusname), dann nacheinander zu jedem Ort: schräg von oben, von der Spawn-Seite, mit freier Sicht (sucht sich bis zu 30 Blickwinkel), dort gut 3 Sekunden mit leichter Drehung, Name groß und ein Satz mit Befehl darunter (z. B. „KISTEN · Vote, Legendär … · Schlüssel: /keys“). Zwischen den Orten im Bogen nach oben, am Ende zurück hinter den Spieler. Schleichen überspringt. Auch mit `/einfuehrung tour`
+  - Automatisch gefunden: Kisten des Modus (nahe beieinander = ein Ort „Kisten“), Modus-Figuren im Hub („Spielmodi“), Keks-Station, Schwert im Stein, Discord-Statue, Casino-Kasse; in Survival Priester, Bankier, Angel-Händler. Nur Orte in der Welt des Spawns und im Umkreis `einfuehrung.radius` (200), höchstens `max-punkte` (8), in Flugreihenfolge (immer zum nächsten)
+  - Eigene Orte (Kristall-Tausch, RTP-Zone, NPCs anderer Plugins …): im Modus vor den Ort stellen, ihn anschauen, `/kp einfuehrung punkt add <vorlage>` oder `<Titel>|<Text>`. Vorlagen: rtp, kristall, kisten, shop, markt, juwelen, duell, turnier, kopfgeld, pvp, battlepass, casino, support, discord. Eigene Orte kommen zuerst und in ihrer Reihenfolge; `punkt liste` zeigt eigene und automatische, `punkt entfernen <Nr>`, `/kp einfuehrung test [modus]`
+  - Hub: die freie Kamerafahrt per Wegpunkte (`/kp einfuehrung kamera`) geht vor, ohne Orte bleibt der Rundflug
 
 ## Ordnergruppe 9 – Technik und Qualität
 - [x] 9.1 Echter Maven-Build gegen Paper 1.21.11 bei jedem Push (GitHub Actions), Compiler-Fehler als Annotationen, fertige ZIP als Release

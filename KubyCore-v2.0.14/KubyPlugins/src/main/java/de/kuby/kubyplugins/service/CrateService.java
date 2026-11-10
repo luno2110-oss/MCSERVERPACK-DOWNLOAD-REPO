@@ -237,6 +237,19 @@ public final class CrateService implements Listener {
         return new LinkedHashMap<>(places);
     }
 
+    /** Aufgestellte Kisten eines Modus: Mitte des Blocks und Name der Kiste (für die Kamerafahrt der Einführung). */
+    public List<Map.Entry<Location, String>> placedIn(String mode) {
+        List<Map.Entry<Location, String>> out = new java.util.ArrayList<>();
+        for (Map.Entry<String, String> e : places.entrySet()) {
+            String[] p = e.getValue().split(":", 2);
+            if (p.length < 2 || !p[0].equals(mode)) continue;
+            Location c = centerOf(e.getKey());
+            Crate cr = crate(p[0], p[1]);
+            if (c != null && cr != null) out.add(Map.entry(c, cr.name()));
+        }
+        return out;
+    }
+
     private Crate at(Block b) {
         if (b == null) return null;
         String v = places.get(key(b));
