@@ -293,9 +293,13 @@ public final class ModeService {
         p.getInventory().setItem(4, Items.make(Material.COMPASS, "<gold>Modus-Wahl", List.of(
                 "<gray>Klick: <white>Modus wählen")));
         p.getInventory().setItem(8, plugin.visibility().dyeItem(p.getUniqueId()));
-        if (p.hasPermission("kuby.admin")) {
+        // Bearbeitungsmodus nur fürs Team mit eigener Berechtigung (nicht automatisch für alle Ops)
+        if (p.hasPermission("kuby.hub.edit")) {
             p.getInventory().setItem(0, Items.make(Material.NETHER_STAR, "<light_purple>Bearbeitungsmodus", List.of(
                     "<gray>Rechtsklick: Hub bearbeiten")));
+        } else {
+            ItemStack old = p.getInventory().getItem(0);
+            if (old != null && old.getType() == Material.NETHER_STAR) p.getInventory().setItem(0, null);
         }
     }
 

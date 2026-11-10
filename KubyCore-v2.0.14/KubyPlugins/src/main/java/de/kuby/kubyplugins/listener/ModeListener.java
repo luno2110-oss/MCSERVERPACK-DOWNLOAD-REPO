@@ -35,6 +35,11 @@ public final class ModeListener implements Listener {
         return plugin.modes().isHub(p.getWorld()) && !p.hasPermission("kuby.admin") && !plugin.modes().hasActivity(p);
     }
 
+    /** Inventar in der Lobby: für alle gesperrt (auch Admins und Ops), außer im Bearbeitungsmodus oder bei Aktivitäten. */
+    private boolean locked(Player p) {
+        return plugin.modes().isHub(p.getWorld()) && !plugin.edit().isEditing(p.getUniqueId()) && !plugin.modes().hasActivity(p);
+    }
+
     @EventHandler
     public void onJoin(PlayerJoinEvent e) {
         plugin.modes().onJoin(e.getPlayer());
@@ -71,17 +76,27 @@ public final class ModeListener implements Listener {
 
     @EventHandler
     public void onClick(InventoryClickEvent e) {
-        if (e.getWhoClicked() instanceof Player p && lobby(p)) e.setCancelled(true);
+        if (e.getWhoClicked() instanceof Player p && locked(p)) e.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onDrag(org.bukkit.event.inventory.InventoryDragEvent e) {
+        if (e.getWhoClicked() instanceof Player p && locked(p)) e.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onSwap(org.bukkit.event.player.PlayerSwapHandItemsEvent e) {
+        if (locked(e.getPlayer())) e.setCancelled(true);
     }
 
     @EventHandler
     public void onDrop(PlayerDropItemEvent e) {
-        if (lobby(e.getPlayer())) e.setCancelled(true);
+        if (locked(e.getPlayer())) e.setCancelled(true);
     }
 
     @EventHandler
     public void onPickup(EntityPickupItemEvent e) {
-        if (e.getEntity() instanceof Player p && lobby(p)) e.setCancelled(true);
+        if (e.getEntity() instanceof Player p && locked(p)) e.setCancelled(true);
     }
 
     @EventHandler

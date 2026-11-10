@@ -37,7 +37,7 @@ public final class EditListener implements Listener {
 
         if (!plugin.edit().isEditing(p.getUniqueId())) {
             if (hand != null && hand.getType() == Material.NETHER_STAR && right
-                    && p.hasPermission("kuby.admin") && plugin.modes().isHub(p.getWorld())) {
+                    && p.hasPermission("kuby.hub.edit") && plugin.modes().isHub(p.getWorld())) {
                 e.setCancelled(true);
                 String err = plugin.edit().enter(p);
                 if (err != null) Msg.send(p, "<red>" + err);

@@ -334,6 +334,8 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
 - [x] Fehler behoben: XP-Icon über der Hotbar färbte sich grün/rot (bzw. gold), wenn sich der Kontostand änderte. Ursache: die Geld-Anzeige davor setzt ihre Farbe und schließt sie nicht, Minecraft färbt das Icon dann mit. Icons in der Hotbar-Zeile und im Scoreboard sind jetzt fest weiß und behalten ihre Originalfarben
 - [x] Hub (Test im Spiel offen):
   - Fehler behoben: Kompass und Farbstoff fehlten beim Betreten der Lobby (sie wurden vergeben, bevor der Spieler in der Lobby-Welt stand; jetzt zählt der Modus)
+  - Fehler behoben: Lobby-Items ließen sich droppen und im Inventar verschieben (Admins und Ops waren ausgenommen). Jetzt für alle gesperrt (Klicken, Ziehen, Droppen, F-Taste, Aufheben), außer im Bearbeitungsmodus
+  - Bearbeitungsmodus (Stern) nur noch mit der Berechtigung `kuby.hub.edit` (Standard: niemand, auch keine Ops), z. B. `/lp group team permission set kuby.hub.edit true`. `/kp edit` geht für Admins weiterhin
   - Lobby-Scoreboard zeigt die Spieler je Modus (SMP, Survival, Skyblock, Lobby) statt des alten Hinweises
   - Kompass (und „Modus wählen“ im Menü) öffnet einen Dialog mit drei Karten: Bild, kurze Beschreibung, Spieler im Modus, „Betreten“ bzw. „Du bist hier“ (ohne Pack weiter das Truhen-Menü)
   - Modus-NPCs: `/kp modusnpc setzen <smp|survival|skyblock> [skin] [Name]`, anpassbar mit `skin`, `name`, `item` (Gegenstand aus der Hand), `drehen`, `entfernen`, `liste`. Schild darüber mit Modus und Spielerzahl, Klick bringt in den Modus; schaut man eine Figur an, wird sie sanft etwas größer (mit leisem Klang) und wieder kleiner, wenn niemand mehr hinsieht. Gespeichert in der config unter `hub.modus-npcs`
