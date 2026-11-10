@@ -48,6 +48,7 @@ public final class ClientAnims {
     private static final Map<Integer, Animator> animators = new ConcurrentHashMap<>();
     private static final Map<Integer, Long> lastUpdate = new ConcurrentHashMap<>();
     private static final Map<Integer, Display.BlockDisplay> balls = new ConcurrentHashMap<>();
+    private static final Map<Integer, Vec3> ballLast = new ConcurrentHashMap<>();
     private static double timeScale = 1.0;
     public static boolean effects = true;
     /** Fortbewegung (Stehen/Laufen/Sprinten der Mod) für alle sichtbaren Spieler. */
@@ -126,6 +127,7 @@ public final class ClientAnims {
             a.update(dt);
         }
         updateBall(entityId, a);
+        speedlineHint(entityId, a);
         return a;
     }
 
@@ -156,6 +158,7 @@ public final class ClientAnims {
             Entity e = mc.level == null ? null : mc.level.getEntity(id);
             boolean grounded = e == null || e.onGround();
             a.locomotion().input(speed, turn, grounded, st.yRot, st.xRot);
+            if (mc.player != null && id == mc.player.getId() && speed > 5.0) de.kuby.rematch.client.fx.ScreenFx.speedlines(0.25);
             a.locomotionActive(locomotion && !st.isCrouching && !st.isVisuallySwimming && !st.isFallFlying
                     && !st.isPassenger && st.swimAmount < 0.01 && !st.hasPose(net.minecraft.world.entity.Pose.SLEEPING));
         }
@@ -207,23 +210,40 @@ public final class ClientAnims {
         if (mc.level == null) return;
         if (event.equals("kontakt") || event.startsWith("kontakt_")) {
             boolean hard = !event.equals("kontakt_leicht");
-            a.hitStop(hard ? 0.09 : 0.04);
+            double freeze = hard ? 0.09 : 0.04;
+            a.hitStop(freeze);
             Vec3 p = worldPoint(id, a, "ball");
             if (p == null) return;
             mc.level.playLocalSound(p.x, p.y, p.z, SoundEvents.PLAYER_ATTACK_STRONG, SoundSource.PLAYERS, 1.0f, 0.75f, false);
-            if (hard) {
-                mc.level.playLocalSound(p.x, p.y, p.z, SoundEvents.WIND_CHARGE_BURST.value(), SoundSource.PLAYERS, 0.6f, 1.4f, false);
-                mc.level.addParticle(ColorParticleOption.create(ParticleTypes.FLASH, 0xFFFFF4C8), p.x, p.y, p.z, 0, 0, 0);
-                for (int i = 0; i < 14; i++) {
-                    double vx = (Math.random() - 0.5) * 0.9, vy = Math.random() * 0.5, vz = (Math.random() - 0.5) * 0.9;
-                    mc.level.addParticle(ParticleTypes.CRIT, p.x, p.y, p.z, vx, vy, vz);
-                }
-                mc.level.addParticle(ParticleTypes.GUST, p.x, p.y, p.z, 0, 0, 0);
-            }
+            if (hard) mc.level.playLocalSound(p.x, p.y, p.z, SoundEvents.WIND_CHARGE_BURST.value(), SoundSource.PLAYERS, 0.6f, 1.4f, false);
+            de.kuby.rematch.client.fx.Fx.contact(mc, id, p, shotDirection(id), hard);
+            if (hard) de.kuby.rematch.client.fx.ScreenFx.impact(p, 1.0, freeze);
             CameraShake.kick(hard ? 0.6 : 0.25);
         } else if (event.startsWith("sound:")) {
             // Blockbench-Sound-Spuren: Name wie minecraft:entity.player.attack.strong (noch nicht ausgewertet)
         }
+    }
+
+    /** Blickrichtung des Körpers (waagerecht) – Richtung, in die geschossen wird. */
+    static Vec3 shotDirection(int id) {
+        Minecraft mc = Minecraft.getInstance();
+        Entity e = mc.level == null ? null : mc.level.getEntity(id);
+        float yaw = e instanceof LivingEntity le ? le.yBodyRot : 0;
+        double r = Math.toRadians(yaw);
+        return new Vec3(-Math.sin(r), 0, Math.cos(r));
+    }
+
+    /** Speedlines beim Ausholen bis zum Kontakt (nur für Figuren nahe der Kamera). */
+    private static void speedlineHint(int id, Animator a) {
+        if (a.action() == null) return;
+        double e = a.action().clip.eventTime("kontakt");
+        if (e <= 0 || !a.action().clip.name.contains("hart")) return;
+        Minecraft mc = Minecraft.getInstance();
+        Entity ent = mc.level == null ? null : mc.level.getEntity(id);
+        if (ent == null || ent.position().distanceTo(mc.gameRenderer.getMainCamera().position()) > 10) return;
+        double x = a.action().time - e;
+        double v = x < 0 ? de.kuby.rematch.anim.Easing.IN_QUAD.apply(Math.max(0, 1 + x / 0.4)) : Math.max(0, 1 - x / 0.35);
+        de.kuby.rematch.client.fx.ScreenFx.speedlines(0.85 * v);
     }
 
     /** Punkt eines Knochens (Drehpunkt) in Weltkoordinaten. */
@@ -258,6 +278,7 @@ public final class ClientAnims {
         Display.BlockDisplay ball = balls.get(id);
         if (!show) {
             if (ball != null) { ball.discard(); balls.remove(id); }
+            ballLast.remove(id);
             return;
         }
         if (ball == null || ball.isRemoved() || ball.level() != mc.level) {
@@ -280,6 +301,9 @@ public final class ClientAnims {
         float s = 5f / 16f;
         Vector3f center = q.transform(new Vector3f(s / 2, s / 2, s / 2)).negate();
         ball.setTransformation(new Transformation(center, q, new Vector3f(s, s, s), new Quaternionf()));
+        Vec3 prev = ballLast.put(id, p);
+        if (prev != null && prev.distanceTo(p) > 0.12 && a.action().time > a.action().clip.eventTime("kontakt") && !a.frozen())
+            de.kuby.rematch.client.fx.Fx.trail(mc, prev, p);
         ball.setTransformationInterpolationDuration(0);
         ball.snapTo(p.x, p.y, p.z);
     }

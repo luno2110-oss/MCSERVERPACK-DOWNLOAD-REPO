@@ -52,6 +52,11 @@ public final class KanimCommand {
                     c.getSource().sendFeedback(Component.literal("§7Fortbewegung: " + (ClientAnims.locomotion ? "an" : "aus")));
                     return 1;
                 })))
+                .then(literal("shader").then(argument("an", StringArgumentType.word()).executes(c -> {
+                    de.kuby.rematch.client.fx.ScreenFx.enabled = !StringArgumentType.getString(c, "an").startsWith("aus");
+                    c.getSource().sendFeedback(Component.literal("§7Bildeffekte: " + (de.kuby.rematch.client.fx.ScreenFx.enabled ? "an" : "aus")));
+                    return 1;
+                })))
                 .then(literal("effekte").then(argument("an", StringArgumentType.word()).executes(c -> {
                     ClientAnims.effects = !StringArgumentType.getString(c, "an").startsWith("aus");
                     c.getSource().sendFeedback(Component.literal("§7Effekte: " + (ClientAnims.effects ? "an" : "aus")));

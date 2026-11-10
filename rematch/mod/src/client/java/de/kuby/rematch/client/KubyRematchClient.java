@@ -25,6 +25,7 @@ public final class KubyRematchClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         KanimCommand.register();
+        de.kuby.rematch.client.fx.Fx.registerParticles();
         de.kuby.rematch.client.anim.DemoMode.init();
         ClientPlayNetworking.registerGlobalReceiver(WelcomePayload.TYPE, (payload, ctx) -> {
             serverReady = payload.compatible();

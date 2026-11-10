@@ -77,6 +77,8 @@ public final class DemoMode {
                 if (mc.player != null && mc.level != null && ticks > 60) {
                     mc.player.connection.sendCommand("time set noon");
                     mc.player.connection.sendCommand("weather clear");
+                    double z = ClientAnims.timeScale();
+                    mc.player.connection.sendCommand("tick rate " + (z < 1 ? Math.max(1, Math.round(20 * z)) : 20));
                     mc.player.connection.sendCommand("kill @e[type=minecraft:mannequin]");
                     mc.player.connection.sendCommand("summon minecraft:mannequin -1.5 -60 0.5 {Rotation:[-90f,0f],NoGravity:1b}");
                     mc.player.connection.sendCommand(System.getProperty("kuby.demo.lauf") != null ? "tp @s 0.5 -60 0.5 180 12"
@@ -123,7 +125,7 @@ public final class DemoMode {
                     le.yHeadRotO = -90f;
                 }
                 var a = ClientAnims.animator(target);
-                if (a == null || !a.active()) {
+                if (a == null || a.action() == null) {
                     log("ende");
                     state = 3;
                     ticks = 0;

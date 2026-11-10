@@ -6,7 +6,10 @@
   "client": [
     "PlayerModelMeshMixin",
     "PlayerModelAnimMixin",
-    "CameraMixin"
+    "CameraMixin",
+    "GameRendererMixin",
+    "PostChainAccessor",
+    "PostPassAccessor"
   ],
   "injectors": { "defaultRequire": 1 }
 }

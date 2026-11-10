@@ -24,6 +24,7 @@ public final class KubyRematch implements ModInitializer {
     public void onInitialize() {
         PayloadTypeRegistry.playC2S().register(HelloPayload.TYPE, HelloPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(WelcomePayload.TYPE, WelcomePayload.CODEC);
+        FxTypes.init();
         LOG.info("Kuby Rematch {} geladen (Protokoll {})", modVersion(), PROTOCOL);
     }
 }
