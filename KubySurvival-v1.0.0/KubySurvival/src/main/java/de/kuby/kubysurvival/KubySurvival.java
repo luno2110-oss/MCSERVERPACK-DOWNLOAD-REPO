@@ -380,14 +380,11 @@ public final class KubySurvival extends JavaPlugin {
             if (sender instanceof Player p) intro.toBuildWorld(p);
             return true;
         });
+        // /tutorial führt jetzt zur neuen Einführung im Kern (Willkommens-Tour bzw. Einführung des Modus)
         command("tutorial", (sender, cmd, label, args) -> {
             if (!(sender instanceof Player p)) return true;
-            String sub = args.length > 0 ? args[0].toLowerCase() : "";
-            switch (sub) {
-                case "weiter" -> intro.next(p);
-                case "stop" -> intro.stop(p);
-                default -> intro.start(p);
-            }
+            if (core.intro() != null) core.intro().command(p, args);
+            else intro.start(p);
             return true;
         });
         core.registerKpSub("tutorial", (p, args) -> {

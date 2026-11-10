@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.39** (ungetestet, nicht kompiliert)
+Stand: **v1.40** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -74,7 +74,7 @@ Prinzip: Keine GUI. Spiel läuft über physische Dinge am Tisch (Karten, Chips, 
 Reihenfolge wie das Hilfe-Karussell der Referenz. Jede Seite: Titel, Untertitel, „So geht's“, Befehle, Buttons (zurück, Aktion, weiter), eigene Farbe.
 - [~] 4.0 Survival-Hilfe `/hilfe [seite]` (Test im Spiel offen): Dialog-Karussell mit 31 Seiten nach der Referenz, 7 Farbthemen (grün, gold, grau, orange, blau, rot, pink), Icons je Seite, Aktions-Button ruft den passenden Befehl (fehlende Features: „kommt bald“). `/befehle` bleibt die Chat-Übersicht. Jetzt auf dem Dialog-Kit (siehe 5.31): `/hilfe` öffnet zuerst die Übersicht mit allen 31 Themen als Kacheln (Icon, Name, Rahmen in der Themenfarbe, Klick öffnet die Seite)
 - [~] 4.1 Regeln (Build offen): `/regeln` (12 Paragraphen zum Anklicken, Texte in config rules.list), `/regeln <Nummer>`, `/report <Spieler> [Grund]` (an Team mit kuby.report.see, reports.log, 60 s Sperre)
-- [~] 4.2 Einstieg (Build offen): `/bauwelt` (Punkt per `/kp bauwelt setzen`, sonst Zufallsteleport), Brunnen = Region `bauwelt-brunnen`, `/tutorial` mit Stationen (`/kp tutorial add <Titel>|<Text>`), Belohnung beim ersten Abschluss (500 Coins, 3 Tokens)
+- [~] 4.2 Einstieg (Build offen): `/bauwelt` (Punkt per `/kp bauwelt setzen`, sonst Zufallsteleport), Brunnen = Region `bauwelt-brunnen`. Die alte Stationen-Tour ist ersetzt durch die neue Einführung (siehe „Einführung neu“), `/tutorial` führt dorthin
 - [x] 4.3 Grundstücke: Claim-Axt (Linksklick Ecke 1, Rechtsklick Ecke 2, `/claim ok`), Kosten = Fläche (10×10 = 100), Erweitern/Verkleinern: Linksklick auf eine Ecke des eigenen Grundstücks, Rechtsklick auf die neue Position; `/claim` öffnet ein Menü (freie Blöcke, eigene Grundstücke mit Rand anzeigen, vertraute Spieler entfernen, Rechte für Fremde: Türen, Knöpfe/Hebel/Druckplatten, Kisten, Tiere); `/claim axt|ok|zeigen|info|liste|trust|untrust|löschen|hilfe` (alte Befehle gehen weiter)
 - [x] 4.4 Jobs: 8 Berufe (Holzfäller, Miner, Gräber, Farmer, Jäger, Angler, Züchter, Verzauberer), Level 1–100, Stundenlimit für Coins (300 + 15 je Level) und Lohn +1 % je Level, Wechsel jederzeit, danach 30 Min. Sperre (erste Wahl frei), `/job info|waehlen|limit|auftrag|hilfe` mit Tab-Ergänzung, Wochenauftrag (Job-XP im Job zu Wochenbeginn, 3.000 Coins + 3 Tokens), `/tokenshop`; fallender Sand/Kies behält die Markierung „selbst gesetzt“
 - [x] 4.5 Quests (KubySurvival, `quests.yml` frei anpassbar, `/quest reload` für Admins): 3 Tages-Quests aus 17, 3 Wochen-Quests aus 10 (je Spieler zufällig), Geschichte mit 15 Kapiteln nacheinander, 7 Meilensteine mit Stufen, Team-Quest pro Woche für Survival-Teams (jeder holt einmal ab), 7 geheime Quests; Abholen im Menü oder `/quest abholen` (Vergessenes wird am Ende des Tages/der Woche ausgezahlt); Serie: erste Tages-Quest am Tag bringt 25 Coins je Serientag (bis 30) plus Tokens bei 3/7/14/30/60/100 Tagen; verfolgte Quest (sonst aktuelles Kapitel) als grüne Leiste oben unter der Survival-Leiste; `/quest daily|weekly|abholen|streak|top|aus|hilfe`; Belohnungen: Coins, Tokens, Spieler-XP; selbst gesetzte Blöcke und Spawner-Mobs zählen nicht
@@ -399,6 +399,18 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Fehlt Angel, Köder oder Level, bricht der Wurf mit Hinweis ab (auch beim Werfen vom Nachbarsteg); Boni für Glück, Tempo, Fischgröße und Schätze gelten nur im jeweiligen Gewässer
   - `/angeln gewaesser` bzw. Kachel „Angelwelt“ in /angeln: Karten je Gewässer mit Boni und Voraussetzungen (✓/✗), Hinreisen, Spawn; `/angeln welt`. Hologramme an jedem Gewässer, Info-Leiste zeigt das Gewässer als Ort
   - Welt geschützt (nur Admins bauen), keine Monster, kein Fallschaden, wer herunterfällt, landet am Spawn. Werte je Gewässer in der config (`angeln.welt.gewaesser.<id>`)
+
+- [x] Einführung neu (Wunsch des Besitzers, überspringbar, Test im Spiel offen):
+  - Erster Join (nur ganz neue Spieler): Kamerafahrt über den Hub (Kino-Engine, ca. 10 s, Kino-Balken, Titelkarte „WILLKOMMEN auf Kuby“, Schleichen überspringt). Ohne Wegpunkte kreist die Kamera hoch hinter dem Spawn los und senkt sich in einer Spirale bis hinter den Spieler; eigene Fahrt mit `/kp einfuehrung kamera add` (Ort und Blickrichtung, ab 2 Punkten), `loeschen`, `test`
+  - Danach 4 Dialog-Schritte im Hub-Look mit Fortschrittsbalken: Willkommen, Die Spielmodi, Menü und Hilfe, Los geht's. Am Ende öffnet sich die Modus-Wahl und es gibt 25 Juwelen Willkommensgeschenk (einmalig, `einfuehrung.juwelen`)
+  - Erstes Betreten von Survival, SMP, Skyblock: Einführung des Modus (3 Punkte zum Modus) mit 3 Aufgaben, je Aufgabe Coins im Modus, für alle drei ein Bonus (Werte in `einfuehrung.belohnungen`):
+    - Survival: Menü öffnen (150), erstes Home (200), Job wählen (300), Bonus 500
+    - SMP: Menü öffnen (150), erstes Home (200), Battle-Pass ansehen (300), Bonus 500
+    - Skyblock: 20 Blöcke auf der Insel abbauen (200), Generator kaufen (400), Lager einsammeln (300), Bonus 750. Startet erst, wenn die Insel steht (die Insel-Auswahl kommt zuerst)
+  - Aufgabe geschafft: Klang, kurzer Untertitel „✔ Aufgabe geschafft · +x Coins“, Chat mit der nächsten Aufgabe; alles geschafft: Dialog „Geschafft“ mit Tipps für danach. Beim nächsten Betreten des Modus einmal Erinnerung an offene Aufgaben im Chat
+  - Überspringen: in jedem Dialog, Rückfrage „Nur diese“ oder „Alle“. `/einfuehrung` (auch `/intro`, `/tour`, `/tutorial`) startet im Hub die Tour neu und zeigt im Modus den Stand der Aufgaben; Belohnungen gibt es je Aufgabe nur einmal
+  - Bestehende Spieler bekommen keine automatische Einführung, können sie aber mit `/einfuehrung` machen. Ohne Grafik-Pack läuft alles im Chat mit klickbaren [Weiter]/[Überspringen] (ohne Kamerafahrt). Admin: `/kp einfuehrung reset [Spieler]`. Daten: `einfuehrung.yml`
+  - Technik: neue Quest-Ereignisse `menu`, `home`, `job`, `battlepass` (auch für eigene Quests nutzbar); Modus-Eintritt erlaubt jetzt mehrere Haken je Modus (vorher hätte ein zweiter den von Skyblock ersetzt)
 
 ## Ordnergruppe 9 – Technik und Qualität
 - [x] 9.1 Echter Maven-Build gegen Paper 1.21.11 bei jedem Push (GitHub Actions), Compiler-Fehler als Annotationen, fertige ZIP als Release

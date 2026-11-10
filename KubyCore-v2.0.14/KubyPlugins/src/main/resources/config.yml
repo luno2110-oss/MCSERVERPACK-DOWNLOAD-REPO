@@ -1377,7 +1377,20 @@ rules:
 bauwelt:
   location: ""
   fountain-region: "bauwelt-brunnen"
-# /tutorial: Stationen "Ort;Titel;Text", anlegen mit /kp tutorial add <Titel>|<Text>. Belohnung beim ersten Abschluss.
+# Einführung (/einfuehrung, auch /tutorial): beim ersten Join Kamerafahrt über den Hub und eine Tour in 4 Schritten, beim
+# ersten Betreten von Survival, SMP und Skyblock eine kurze Einführung mit 3 Aufgaben. Überspringen geht jederzeit.
+# kamera: Wegpunkte "x;y;z;yaw;pitch" in der Hub-Welt (/kp einfuehrung kamera add), leer = Rundflug um den Hub-Spawn.
+# belohnungen: Coins je Aufgabe im jeweiligen Modus, bonus für alle drei. juwelen: Willkommensgeschenk am Ende der Tour.
+einfuehrung:
+  aktiv: true
+  servername: "Kuby"
+  juwelen: 25
+  kamera: []
+  belohnungen:
+    survival: {menu: 150, home: 200, job: 300, bonus: 500}
+    smp: {menu: 150, home: 200, battlepass: 300, bonus: 500}
+    skyblock: {abbau: 200, generator: 400, einsammeln: 300, bonus: 750}
+# Alte Survival-Tour (ersetzt durch die Einführung oben, /tutorial führt dorthin): Stationen "Ort;Titel;Text".
 tutorial:
   reward-coins: 500
   reward-tokens: 3

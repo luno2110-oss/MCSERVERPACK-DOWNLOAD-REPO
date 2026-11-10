@@ -72,6 +72,7 @@ public final class HomeService implements ModeData {
         Map<String, Location> current = homes(player.getUniqueId());
         if (!current.containsKey(name) && current.size() >= limit(player)) return false;
         yml.set(player.getUniqueId() + "." + name, Locs.serialize(loc));
+        plugin.questProgress(player, "home", name, 1);
         return true;
     }
 

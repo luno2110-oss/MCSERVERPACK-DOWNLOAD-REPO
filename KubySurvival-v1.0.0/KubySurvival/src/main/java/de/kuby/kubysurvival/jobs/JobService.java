@@ -211,6 +211,7 @@ public final class JobService {
         w.job = job;
         w.switchedAt = first ? 0 : System.currentTimeMillis();
         if (w.orderJob == null && !w.orderFinished) newOrder(w);
+        core.questProgress(p, "job", job.name(), 1);
         return null;
     }
 

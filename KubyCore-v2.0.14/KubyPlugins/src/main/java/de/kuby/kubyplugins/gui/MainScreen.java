@@ -123,6 +123,7 @@ public final class MainScreen {
 
     /** /menu: Dialog mit Pack, sonst die Truhe. */
     public void open(Player p) {
+        plugin.questProgress(p, "menu", null, 1);
         if (!plugin.uiPack().active(p)) {
             new MainMenu(plugin).open(p);
             return;

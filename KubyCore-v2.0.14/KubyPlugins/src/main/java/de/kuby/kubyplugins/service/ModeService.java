@@ -131,15 +131,31 @@ public final class ModeService {
     }
 
     /** Hooks für Addons, die beim Betreten eines Modus etwas tun (z. B. Skyblock-Insel anlegen). */
-    private final java.util.Map<String, java.util.function.Consumer<Player>> enterHooks = new java.util.HashMap<>();
+    private final java.util.Map<String, List<java.util.function.Consumer<Player>>> enterHooks = new java.util.HashMap<>();
+    /** Hooks für jeden Modus-Eintritt (Modus, Spieler), z. B. die Einführung. */
+    private final List<java.util.function.BiConsumer<String, Player>> anyEnterHooks = new java.util.concurrent.CopyOnWriteArrayList<>();
 
+    /** Mehrere Hooks je Modus möglich (früher ersetzte ein zweiter den ersten). */
     public void onEnter(String mode, java.util.function.Consumer<Player> hook) {
-        enterHooks.put(mode, hook);
+        enterHooks.computeIfAbsent(mode, k -> new java.util.concurrent.CopyOnWriteArrayList<>()).add(hook);
+    }
+
+    public void onEnterAny(java.util.function.BiConsumer<String, Player> hook) {
+        anyEnterHooks.add(hook);
     }
 
     private void fireEnter(String mode, Player p) {
-        java.util.function.Consumer<Player> hook = enterHooks.get(mode);
-        if (hook != null) hook.accept(p);
+        List<java.util.function.Consumer<Player>> hooks = enterHooks.get(mode);
+        if (hooks != null) {
+            for (java.util.function.Consumer<Player> h : hooks) h.accept(p);
+        }
+        for (java.util.function.BiConsumer<String, Player> h : anyEnterHooks) {
+            try {
+                h.accept(mode, p);
+            } catch (RuntimeException e) {
+                plugin.getLogger().warning("Modus-Eintritt (" + mode + "): " + e);
+            }
+        }
     }
 
     public static String label(String mode) {

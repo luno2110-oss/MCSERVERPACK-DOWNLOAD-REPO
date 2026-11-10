@@ -26,6 +26,10 @@ commands:
     usage: "/report <Spieler> [Grund]"
   menu:
     description: "Hauptmenü als GUI öffnen"
+  einfuehrung:
+    description: "Einführung: im Hub die Willkommens-Tour, im Modus die ersten Aufgaben mit Belohnung"
+    usage: "/einfuehrung [tour|ueberspringen]"
+    aliases: [intro, tour]
   settings:
     description: "Deine Einstellungen: Chat, Anfragen, Mitteilungen, Anzeige, Sonstiges, Sprache"
     usage: "/settings [chat|anfragen|mitteilungen|anzeige|sonstiges|sprache]"

@@ -316,6 +316,17 @@ public final class KubyPlugins extends JavaPlugin {
         setAll(supportMenus, "support", "discord");
         getServer().getPluginManager().registerEvents(supportMenus, this);
         cinema = new de.kuby.kubyplugins.cinema.Cinema(this);
+        // Einführung für neue Spieler (erster Join: Kamerafahrt und Tour, je Modus Aufgaben mit Belohnung)
+        intro = new de.kuby.kubyplugins.intro.IntroService(this);
+        intro.samples(this::registerSelfTestCanvas);
+        {
+            PluginCommand ic = getCommand("einfuehrung");
+            if (ic != null) ic.setExecutor((sender, c, label, args) -> {
+                if (sender instanceof org.bukkit.entity.Player pl) intro.command(pl, args);
+                return true;
+            });
+        }
+        registerKpSub("einfuehrung", (pl, args) -> intro.admin(pl, args));
         weapons = new de.kuby.kubyplugins.weapon.WeaponService(this);
         setAll(weapons, "schwert", "kino");
         for (String c : new String[]{"schwert", "kino"}) {
@@ -515,6 +526,7 @@ public final class KubyPlugins extends JavaPlugin {
         casinoHolos.shutdown();
         if (cookieStation != null) cookieStation.despawn();
         if (cookies != null) cookies.save();
+        if (intro != null) intro.save();
         poker.shutdown();
         saveAll();
     }
@@ -881,6 +893,9 @@ public final class KubyPlugins extends JavaPlugin {
     private de.kuby.kubyplugins.support.SupportMenus supportMenus;
     public de.kuby.kubyplugins.support.SupportMenus supportMenus() { return supportMenus; }
     private de.kuby.kubyplugins.cinema.Cinema cinema;
+    private de.kuby.kubyplugins.intro.IntroService intro;
+    /** Einführung für neue Spieler (Tour beim ersten Join, Aufgaben je Modus). */
+    public de.kuby.kubyplugins.intro.IntroService intro() { return intro; }
     private de.kuby.kubyplugins.weapon.WeaponService weapons;
     /** Eigene Waffen (Heiliges Schwert, Schwert im Stein). */
     public de.kuby.kubyplugins.weapon.WeaponService weapons() { return weapons; }

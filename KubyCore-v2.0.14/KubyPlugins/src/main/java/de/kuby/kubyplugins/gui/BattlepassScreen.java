@@ -98,6 +98,7 @@ public final class BattlepassScreen {
     }
 
     public void open(Player p, Tab tab) {
+        plugin.questProgress(p, "battlepass", tab.name(), 1);
         if (!plugin.uiPack().active(p)) {
             new BattlepassMenu(plugin, 0).open(p);
             return;
