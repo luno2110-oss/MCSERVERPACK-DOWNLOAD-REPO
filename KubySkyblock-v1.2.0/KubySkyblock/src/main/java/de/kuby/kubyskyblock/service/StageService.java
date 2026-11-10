@@ -41,7 +41,7 @@ import java.util.UUID;
  * hat und alle ihre Generatoren auf der höchsten Stufe sind; die End-Stufe danach genauso mit den neuen Nether-
  * Generatoren. Die Bedingungen stehen in der config (stufen.*), damit man sie lockern kann, falls es zu lange dauert.
  * <p>
- * Jede Stufe hat eigene Generator-Arten (nur dort aufstellbar), einen eigenen Block-Generator (Nether: Basalt aus Lava,
+ * Jede Stufe hat eigene Generator-Arten (belegen Plätze im Nether- bzw. End-Bereich), einen eigenen Block-Generator (Nether: Basalt aus Lava,
  * Seelenerde und Blaueis; End: Bruchstein-Generator mit End-Blöcken), eine Start-Insel mit Kiste und ein Rückkehr-
  * Portal. Vanilla-Portale führen von der Insel zur freigeschalteten Stufe und von dort zurück.
  */

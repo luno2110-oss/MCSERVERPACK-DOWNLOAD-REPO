@@ -4,8 +4,8 @@
 #   abbau:<MATERIAL|ores|ores_<erz>|logs|crops|stones|*>   Blöcke auf der Insel abbauen (auch aus dem Bruchstein-
 #                                                           Generator; selbst gesetzte zählen nicht, Pflanzen nur reif)
 #   oneblock[:<MATERIAL>]   den One-Block abbauen
-#   gen_place[:<art>]       Generator aufstellen (art: geld, xp, erz, holz, farm, mob, nether, edelstein; Stufen:
-#                           lohe, netherit auf der Nether-Insel, ender, shulker auf der End-Insel)
+#   gen_place[:<art>]       Generator einsetzen (kaufen oder Item per Rechtsklick) (art: geld, xp, erz, holz, farm, mob, nether, edelstein; Stufen:
+#                           lohe, netherit im Nether-Bereich, ender, shulker im End-Bereich)
 #   gen_collect[:<art>]     Items aus Generatoren einsammeln      gen_geld[:<art>]  $ mit Generatoren verdienen
 #   gen_xp[:<art>]          XP aus Generatoren einsammeln         gen_upgrade[:<art>]  Generator-Stufe kaufen
 #   gen_veredeln[:<art>]    Generator veredeln (Silber, Gold, Diamant)
@@ -61,7 +61,7 @@ weekly:
 story:
   - "s1;Erste Schritte;Baue 64 Blöcke auf deiner Insel ab;abbau;64;300;0;30"
   - "s2;Der Generator;Baue 128 Bruchstein ab;abbau:COBBLESTONE;128;400;0;40"
-  - "s3;Maschinenzeit;Stelle einen Generator auf (/insel → Generatoren);gen_place;1;600;1;60"
+  - "s3;Maschinenzeit;Setze einen Generator ein (/insel → Generatoren → Shop);gen_place;1;600;1;60"
   - "s4;Erster Ertrag;Sammle 200 Items aus Generatoren;gen_collect;200;600;1;60"
   - "s5;Wachstum;Bringe deine Insel auf Level 2;stat:island_level;2;800;1;80"
   - "s6;Ein Block;Baue den One-Block 100-mal ab;oneblock;100;800;1;80"
@@ -75,10 +75,10 @@ story:
   - "s14;Insel-Baron;Bringe deine Insel auf Level 10;stat:island_level;10;5000;4;500"
   - "s15;Skyblock-Legende;Bringe deine Insel auf Level 25;stat:island_level;25;10000;5;1000"
   - "s16;Tor zum Nether;Schalte die Nether-Stufe frei (/insel stufen);stat:island_stage;1;15000;6;1500"
-  - "s17;Lohenfeuer;Stelle einen Lohen-Generator auf deiner Nether-Insel auf;gen_place:lohe;1;8000;4;800"
-  - "s18;Uralter Schatz;Stelle einen Netherit-Generator auf deiner Nether-Insel auf;gen_place:netherit;1;10000;5;1000"
+  - "s17;Lohenfeuer;Setze einen Lohen-Generator im Nether-Bereich ein;gen_place:lohe;1;8000;4;800"
+  - "s18;Uralter Schatz;Setze einen Netherit-Generator im Nether-Bereich ein;gen_place:netherit;1;10000;5;1000"
   - "s19;Das Ende;Schalte die End-Stufe frei (/insel stufen);stat:island_stage;2;25000;8;2500"
-  - "s20;Schalensammler;Stelle einen Shulker-Generator auf deiner End-Insel auf;gen_place:shulker;1;20000;8;2000"
+  - "s20;Schalensammler;Setze einen Shulker-Generator im End-Bereich ein;gen_place:shulker;1;20000;8;2000"
 
 milestones:
   - "m_level;Inselbauer;island_level;2,5,10,25,50;500;2"

@@ -127,6 +127,24 @@ public final class KubySkyblock extends JavaPlugin {
             saveConfig();
             if (n > 0) getLogger().info("Inselpunkte: Upgrades und Generatoren bei " + n + " Inseln nachgetragen.");
         }
+        // Generatoren laufen nur noch in der UI: alte Guide-Zeilen im Kern ersetzen (einmalig, config-stand 9)
+        if (getConfig().getInt("config-stand", 0) < 9) {
+            String base = "guide.modi.skyblock.pages.generatoren.";
+            boolean changed = false;
+            for (String[] r : new String[][]{{"lines", "> Aufstellen auf der Insel, Rechtsklick öffnet ihn", "> Laufen sofort im Menü, kein Block auf der Insel"},
+                    {"lines-en", "> Place them on your island, right click opens them", "> They run right away in the menu, no block needed"}}) {
+                java.util.List<String> l = new java.util.ArrayList<>(core.getConfig().getStringList(base + r[0]));
+                int k = l.indexOf(r[1]);
+                if (k >= 0) {
+                    l.set(k, r[2]);
+                    core.getConfig().set(base + r[0], l);
+                    changed = true;
+                }
+            }
+            if (changed) core.saveConfig();
+            getConfig().set("config-stand", 9);
+            saveConfig();
+        }
         stages = new de.kuby.kubyskyblock.service.StageService(this, core);
         shop = new de.kuby.kubyskyblock.service.SkyShopService(this, core);
         core.registerShop(ModeService.SKYBLOCK, new KubyPlugins.ShopHook() {
@@ -167,7 +185,7 @@ public final class KubySkyblock extends JavaPlugin {
         });
         core.registerStat("generator_slots", id -> {
             var i = islands.islandOf(id);
-            return i == null || generators == null ? 0L : (long) generators.slots(i);
+            return i == null || generators == null ? 0L : (long) generators.totalSlots(i);
         });
         // Texte fürs Scoreboard (schnell: nur Nachschlagen in Maps)
         core.registerText("sb_boost", id -> {
@@ -193,7 +211,7 @@ public final class KubySkyblock extends JavaPlugin {
         core.registerMainEntry(ModeService.SKYBLOCK, new KubyPlugins.MainEntry(org.bukkit.Material.BOOK, "Checkliste",
                 "Alle Items sammeln, Erfolge und Meilensteine", pl -> new de.kuby.kubyskyblock.gui.SkyScreen(core).open(pl)));
         core.registerMainEntry(ModeService.SKYBLOCK, new KubyPlugins.MainEntry(org.bukkit.Material.BLAST_FURNACE, "Generatoren",
-                "Geld, XP und Items von selbst: kaufen, aufstellen, einsammeln", de.kuby.kubyskyblock.gui.GeneratorScreen::island));
+                "Geld, XP und Items von selbst: kaufen, läuft sofort, einsammeln", de.kuby.kubyskyblock.gui.GeneratorScreen::island));
         core.registerMainEntry(ModeService.SKYBLOCK, new KubyPlugins.MainEntry(org.bukkit.Material.CRYING_OBSIDIAN, "Stufen",
                 "Nether- und End-Stufe: eigene Inseln, neue Generatoren", de.kuby.kubyskyblock.gui.StageScreen::open));
         core.registerMainEntry(ModeService.SKYBLOCK, new KubyPlugins.MainEntry(org.bukkit.Material.GRASS_BLOCK, "One-Block",
@@ -256,7 +274,6 @@ public final class KubySkyblock extends JavaPlugin {
         if (loot != null) loot.save();
         if (progress != null) progress.save();
         if (generators != null) {
-            generators.removeHolograms();
             generators.save();
         }
         if (oneblock != null) {

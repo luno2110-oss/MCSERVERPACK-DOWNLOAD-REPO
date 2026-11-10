@@ -71,7 +71,7 @@ public final class InfoBar {
         TIME("time", "Uhrzeit", "Tageszeit in der Welt", 'B'), COINS("coins", "Coins", "Dein Kontostand", 'B'),
         JEWELS("jewels", "Juwelen", "Deine Juwelen", 'B'), JOB("job", "Job", "Beruf und Level", 'S'),
         ISLAND("island", "Insel", "Level, Fortschritt und Platz", 'K'), XP("xp", "XP", "Deine Erfahrung", 'K'),
-        GEN("gen", "Generator", "Aufgestellt, Plätze, Booster", 'K'),
+        GEN("gen", "Generator", "Belegt, Plätze, Booster", 'K'),
         PLACE("place", "Ort", "Wo du gerade bist", 'B'), QUEST("quest", "Quest", "Verfolgte Quest", 'S'),
         SIDE("side", "Nebenquest", "Aktive Nebenquest", 'S');
 

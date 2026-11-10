@@ -135,7 +135,7 @@ level:
     HOPPER: 10
     SPAWNER: 500
 
-# Generatoren (Grundmechanik): kaufen (/insel -> Generatoren -> Shop), auf die Insel stellen, Lager einsammeln.
+# Generatoren (Grundmechanik, nur in der UI): kaufen (/insel -> Generatoren -> Shop), laufen sofort, Lager einsammeln.
 # Arten: item (Ertrag je Stufe), geld (pro-sekunde $), xp (pro-sekunde XP). Qualitäten Silber, Gold, Diamant im Juwelenshop.
 generatoren:
   # Fortschritt: Kaufpreis und Aufwerten günstiger, Ertrag schneller und höher (gelten zusätzlich zu den Werten unten)
@@ -145,7 +145,7 @@ generatoren:
   geld-faktor: 2.0                   # Geld- und XP-Generatoren doppelter Ertrag
   lager-faktor: 1.5                  # Lager reicht länger
   max-stufe: 10
-  plaetze: [3, 5, 8, 12, 16]         # Generatoren je Insel nach Größen-Stufe
+  plaetze: [3, 5, 8, 12, 16]         # Generator-Plätze je Bereich (Insel, Nether, End) nach Größen-Stufe
   tick-sekunden: 10
   intervall-sekunden: 30             # Item-Generatoren: Stufe 1 ein Item alle 30 s
   tempo-pro-stufe: 0.12              # je Stufe 12 % schneller
@@ -231,7 +231,7 @@ generatoren:
         1: {AMETHYST_SHARD: 50, LAPIS_LAZULI: 30, EMERALD: 15, DIAMOND: 5}
         6: {AMETHYST_SHARD: 35, LAPIS_LAZULI: 25, EMERALD: 25, DIAMOND: 15}
         10: {AMETHYST_SHARD: 25, LAPIS_LAZULI: 20, EMERALD: 28, DIAMOND: 25, ECHO_SHARD: 2}
-    # Stufen-Generatoren (stufe: nether oder end): nur auf der eigenen Nether- oder End-Insel aufstellbar, im Shop erst
+    # Stufen-Generatoren (stufe: nether oder end): belegen Plätze im Nether- oder End-Bereich, im Shop erst
     # nach dem Freischalten der Stufe. Sie zählen für die Bedingungen der nächsten Stufe (End: alle Nether-Generatoren).
     lohe:
       art: item

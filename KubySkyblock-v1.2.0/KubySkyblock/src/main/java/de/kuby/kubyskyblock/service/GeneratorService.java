@@ -6,18 +6,12 @@ import de.kuby.kubyplugins.util.Msg;
 import de.kuby.kubyplugins.util.Sfx;
 import de.kuby.kubyskyblock.KubySkyblock;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.Particle;
 import org.bukkit.World;
-import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Display;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.TextDisplay;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -29,6 +23,7 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -38,12 +33,17 @@ import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Generatoren als Grundmechanik von Skyblock. Drei Arten: Item-Generatoren (Erz, Holz, Farm, Mob, Nether, Edelstein),
- * Geld-Generator (ab 0,50 $/s) und XP-Generator (ab 1 XP/s). Generatoren sind Items, die man auf der eigenen Insel
- * aufstellt (Plätze je Inselgröße); sie produzieren ins eigene Lager, das man im Generator-Dialog einsammelt oder
- * verkauft. Stufen 1 bis 10 (schneller, mehr Lager). Qualitäten Normal, Silber, Gold und Diamant (Juwelenshop):
- * mehr Ertrag, günstigere Upgrades, größeres Lager, Offline-Produktion; Gold und Diamant verkaufen Items automatisch,
- * Diamant zahlt Geld und XP direkt aus. Booster je Insel (x2, x3 für eine Zeit). Ohne Spieler der Insel online läuft
- * die Produktion mit dem Offline-Anteil der Qualität. Über jedem Generator steht ein Schild. Daten: generators.yml.
+ * Geld-Generator (ab 0,50 $/s) und XP-Generator (ab 1 XP/s).
+ * <p>
+ * Generatoren laufen nur in der UI (Entscheidung des Besitzers): sie stehen nicht als Block auf der Insel und nehmen
+ * keinen Platz weg. Gekauft wird im Generator-Shop, der Generator läuft sofort; Plätze gibt es je Bereich (Insel, Nether,
+ * End) nach Inselgröße. Ein Generator-Item (Ausbauen, Belohnungen, Handel) wird per Rechtsklick eingesetzt. Sie
+ * produzieren ins eigene Lager, das man im Generator-Dialog einsammelt oder verkauft. Stufen 1 bis 10 (schneller, mehr
+ * Lager). Qualitäten Normal, Silber, Gold und Diamant (Juwelenshop): mehr Ertrag, günstigere Upgrades, größeres Lager,
+ * Offline-Produktion; Gold und Diamant verkaufen Items automatisch, Diamant zahlt Geld und XP direkt aus. Booster je
+ * Insel (x2, x3 für eine Zeit). Ohne Spieler der Insel online läuft die Produktion mit dem Offline-Anteil der Qualität.
+ * Früher aufgestellte Generatoren werden beim Laden übernommen, ihre alten Blöcke beim Laden des Chunks entfernt.
+ * Daten: generators.yml.
  */
 public final class GeneratorService {
 
@@ -83,32 +83,16 @@ public final class GeneratorService {
     public static final class Gen {
         public final int id;
         public final int island;
-        public final String world;
-        public final int x, y, z;
         public final String type;
         public Quality quality;
         public int level;
         public final Map<Material, Long> items = new EnumMap<>(Material.class);
         public double money, xp, progress;
         public long last;
-        UUID display;
-        /** Zuletzt gesendeter Schild-Text (nur bei Änderung neu senden). */
-        String shown;
-        /** Anzeigen im Block: Käfig in der Farbe der Qualität und das drehende Symbol (nicht gespeichert, beim Laden
-         *  des Chunks neu). cageQuality: Qualität, mit der der Käfig gezeigt wird. */
-        UUID cage, coreDisplay;
-        Quality cageQuality;
-        float spin;
-        /** Spawner-Käfig schon eingerichtet (seit dem Start)? */
-        boolean dressed;
 
-        Gen(int id, int island, String world, int x, int y, int z, String type, Quality quality, int level) {
+        Gen(int id, int island, String type, Quality quality, int level) {
             this.id = id;
             this.island = island;
-            this.world = world;
-            this.x = x;
-            this.y = y;
-            this.z = z;
             this.type = type;
             this.quality = quality;
             this.level = level;
@@ -119,10 +103,6 @@ public final class GeneratorService {
             for (long v : items.values()) n += v;
             return n;
         }
-
-        String key() {
-            return world + ";" + x + ";" + y + ";" + z;
-        }
     }
 
     private final KubySkyblock addon;
@@ -130,7 +110,9 @@ public final class GeneratorService {
     private final File file;
     private final NamespacedKey typeKey, qualityKey, levelKey;
     private final Map<String, Type> types = new LinkedHashMap<>();
-    private final Map<String, Gen> byPos = new HashMap<>();
+    private final Map<Integer, Gen> gens = new LinkedHashMap<>();
+    /** Blöcke früher aufgestellter Generatoren (welt;x;y;z): werden beim Laden ihres Chunks entfernt. */
+    private final java.util.Set<String> legacy = new LinkedHashSet<>();
     private final Map<Integer, double[]> boosts = new HashMap<>();
     private int nextId = 1;
     private boolean dirty;
@@ -146,11 +128,8 @@ public final class GeneratorService {
         load();
         long period = Math.max(2, addon.getConfig().getLong("generatoren.tick-sekunden", 10)) * 20L;
         Bukkit.getScheduler().runTaskTimer(addon, this::tick, period, period);
-        // Symbole drehen (weich über 3 Sekunden je Schritt) und beim Start alle schon geladenen Generatoren einrichten
-        Bukkit.getScheduler().runTaskTimer(addon, this::spin, SPIN_TICKS, SPIN_TICKS);
-        Bukkit.getScheduler().runTaskLater(addon, () -> {
-            for (Gen g : new ArrayList<>(byPos.values())) dress(g);
-        }, 40L);
+        // alte Generator-Blöcke in schon geladenen Chunks entfernen
+        Bukkit.getScheduler().runTaskLater(addon, this::cleanLoaded, 40L);
         Bukkit.getScheduler().runTaskTimer(addon, () -> {
             if (dirty) save();
         }, 1200L, 1200L);
@@ -289,7 +268,7 @@ public final class GeneratorService {
     /** Inselpunkte aller Generatoren einer Insel (auch auf den Stufen-Inseln). */
     public long pointsOf(int island) {
         long sum = 0;
-        for (Gen g : byPos.values()) if (g.island == island) sum += points(g);
+        for (Gen g : gens.values()) if (g.island == island) sum += points(g);
         return sum;
     }
 
@@ -336,10 +315,24 @@ public final class GeneratorService {
         return (int) Math.round(l.get(k) + (l.get(k + 1) - l.get(k)) * t);
     }
 
-    /** Generatoren der Insel in einer Welt (Insel oder Stufen-Insel): die Plätze gelten je Welt. */
-    public int onIslandIn(int island, String world) {
+    /** Plätze aller freigeschalteten Bereiche zusammen (Insel, dazu Nether und End nach dem Freischalten). */
+    public int totalSlots(IslandService.Island i) {
+        int areas = 1;
+        if (addon.stages() != null) {
+            for (StageService.Stage st : StageService.Stage.values()) if (addon.stages().unlocked(i, st)) areas++;
+        }
+        return slots(i) * areas;
+    }
+
+    /** Bereich eines Generators: "" = Insel, "nether" oder "end" (Stufen-Generatoren). Die Plätze gelten je Bereich. */
+    public String area(Gen g) {
+        return StageService.stageKey(types.get(g.type));
+    }
+
+    /** Generatoren der Insel in einem Bereich ("" Insel, "nether", "end"). */
+    public int onIslandIn(int island, String area) {
         int n = 0;
-        for (Gen g : byPos.values()) if (g.island == island && g.world.equals(world)) n++;
+        for (Gen g : gens.values()) if (g.island == island && area.equals(area(g))) n++;
         return n;
     }
 
@@ -366,8 +359,8 @@ public final class GeneratorService {
     // Generatoren
     // =================================================================================================================
 
-    public Gen at(Block b) {
-        return byPos.get(b.getWorld().getName() + ";" + b.getX() + ";" + b.getY() + ";" + b.getZ());
+    public Gen byId(int id) {
+        return gens.get(id);
     }
 
     /** Anzahl der Generatoren je Insel (Zwischenspeicher, wird bei jeder Änderung neu gezählt). */
@@ -377,7 +370,7 @@ public final class GeneratorService {
         java.util.Map<Integer, Integer> c = counts;
         if (c == null) {
             c = new HashMap<>();
-            for (Gen g : byPos.values()) c.merge(g.island, 1, Integer::sum);
+            for (Gen g : gens.values()) c.merge(g.island, 1, Integer::sum);
             counts = c;
         }
         return c.getOrDefault(island, 0);
@@ -385,22 +378,22 @@ public final class GeneratorService {
 
     public List<Gen> onIsland(int island) {
         List<Gen> out = new ArrayList<>();
-        for (Gen g : byPos.values()) if (g.island == island) out.add(g);
+        for (Gen g : gens.values()) if (g.island == island) out.add(g);
         out.sort((a, b) -> Integer.compare(a.id, b.id));
         return out;
     }
 
-    /** Generator-Item: ein Spawner (wird als Spawner-Käfig aufgestellt) mit eigenem 3D-Modell je Art und Qualität
-     *  (kuby:generator/<art>[_silber|_gold|_diamant]); Art, Qualität und Stufe stehen im Item. */
+    /** Generator-Item (zum Einsetzen per Rechtsklick, z. B. nach dem Ausbauen oder als Belohnung) mit eigenem 3D-Modell
+     *  je Art und Qualität (kuby:generator/<art>[_silber|_gold|_diamant]); Art, Qualität und Stufe stehen im Item. */
     public ItemStack item(Type t, Quality q, int level) {
         ItemStack it = new ItemStack(Material.SPAWNER);
         ItemMeta m = it.getItemMeta();
         m.setItemModel(NamespacedKey.fromString("kuby:generator/" + t.id() + (q == Quality.NORMAL ? "" : "_" + q.name().toLowerCase(java.util.Locale.ROOT))));
         m.displayName(Msg.item("<" + q.color + "><b>" + name(t, q) + "</b> <gray>Stufe " + level));
         List<net.kyori.adventure.text.Component> lore = new ArrayList<>();
-        lore.add(Msg.item("<gray>Auf deine Insel stellen: produziert von selbst."));
+        lore.add(Msg.item("<gray>Läuft im Generator-Menü deiner Insel, braucht keinen Platz."));
         if (q != Quality.NORMAL) lore.add(Msg.item("<" + q.color + ">Premium: x" + fmt(q.output) + " Ertrag, Upgrades -" + Math.round((1 - q.upgrade) * 100) + " %"));
-        lore.add(Msg.item("<dark_gray>Rechtsklick öffnet ihn, Schleichen + Linksklick baut ab."));
+        lore.add(Msg.item("<dark_gray>Rechtsklick: auf deiner Insel einsetzen."));
         m.lore(lore);
         if (q != Quality.NORMAL) m.setEnchantmentGlintOverride(true);
         PersistentDataContainer pdc = m.getPersistentDataContainer();
@@ -426,48 +419,72 @@ public final class GeneratorService {
         return new Object[]{types.get(t), q, Math.max(1, pdc.getOrDefault(levelKey, PersistentDataType.INTEGER, 1))};
     }
 
-    /** Aufgestellt: auf der eigenen Insel und mit freiem Platz. Gibt null bei Erfolg zurück. */
-    public String place(Player p, Block b, Type t, Quality q, int level) {
-        IslandService.Island i = addon.islands().islandAt(b.getLocation());
-        if (i == null || !i.isMember(p.getUniqueId())) return "Generatoren stellst du auf deiner Insel auf.";
-        // Stufen-Generatoren nur auf ihrer Stufen-Insel, die anderen nur auf der normalen Insel
-        StageService.Stage here = addon.stages() == null ? null : addon.stages().stageOf(b.getWorld());
-        String need = t.stage() == null ? "" : t.stage();
-        if (!need.equals(here == null ? "" : here.key)) {
-            StageService.Stage st = StageService.Stage.of(need);
-            return st == null ? "Diesen Generator stellst du auf deiner normalen Insel auf, nicht auf der Stufen-Insel."
-                    : "Diesen Generator gibt es nur auf deiner " + st.label + "-Insel (/insel " + st.key + ").";
-        }
-        int used = onIslandIn(i.slot, b.getWorld().getName());
-        if (used >= slots(i)) return "Hier hat deine Insel nur " + slots(i) + " Generator-Plätze. Mehr gibt es mit dem Größen-Upgrade.";
+    /** Darf der Spieler diese Art auf seiner Insel einsetzen? Gibt null zurück, wenn ja, sonst den Grund. */
+    public String canInstall(Player p, Type t) {
         IslandService is = addon.islands();
+        IslandService.Island i = is.islandOf(p.getUniqueId());
+        if (i == null) return "Du hast noch keine Insel (/insel).";
+        if (!is.has(i, p.getUniqueId(), IslandService.Right.GENERATOREN) && !p.hasPermission("kuby.admin")) {
+            return "Generatoren darfst du auf dieser Insel nicht verwalten.";
+        }
+        String area = StageService.stageKey(t);
+        StageService.Stage st = StageService.Stage.of(area);
+        if (st != null && (addon.stages() == null || !addon.stages().unlocked(i, st))) {
+            return "Diesen Generator gibt es erst mit der " + st.label + "-Stufe (/insel stufen).";
+        }
         if (is.levelOf(i) < t.unlockLevel() && !p.hasPermission("kuby.admin")) return "Diesen Generator gibt es ab Insel-Level " + t.unlockLevel() + ".";
-        Gen g = new Gen(nextId++, i.slot, b.getWorld().getName(), b.getX(), b.getY(), b.getZ(), t.id(), q, Math.max(1, Math.min(level, maxLevel())));
+        int used = onIslandIn(i.slot, area);
+        if (used >= slots(i)) {
+            return (st == null ? "Deine Insel" : "Dein " + st.label + "-Bereich") + " hat nur " + slots(i)
+                    + " Generator-Plätze. Mehr gibt es mit dem Größen-Upgrade, oder du baust einen aus.";
+        }
+        return null;
+    }
+
+    /** Kurzer Sperr-Grund für Shop-Karten (null = kann eingesetzt werden). */
+    public String lockShort(Player p, Type t) {
+        IslandService is = addon.islands();
+        IslandService.Island i = is.islandOf(p.getUniqueId());
+        if (i == null) return "keine Insel";
+        StageService.Stage st = StageService.Stage.of(StageService.stageKey(t));
+        if (st != null && (addon.stages() == null || !addon.stages().unlocked(i, st))) return "ab " + st.label + "-Stufe";
+        if (is.levelOf(i) < t.unlockLevel() && !p.hasPermission("kuby.admin")) return "ab Insel-Level " + t.unlockLevel();
+        if (onIslandIn(i.slot, StageService.stageKey(t)) >= slots(i)) return "alle Plätze belegt";
+        return null;
+    }
+
+    /** Generator auf der Insel des Spielers einsetzen (läuft sofort). Gibt null bei Erfolg zurück. */
+    public String install(Player p, Type t, Quality q, int level) {
+        String err = canInstall(p, t);
+        if (err != null) return err;
+        IslandService.Island i = addon.islands().islandOf(p.getUniqueId());
+        Gen g = new Gen(nextId++, i.slot, t.id(), q, Math.max(1, Math.min(level, maxLevel())));
         g.last = System.currentTimeMillis();
         counts = null;
-        byPos.put(g.key(), g);
-        index(g, true);
+        gens.put(g.id, g);
         dirty = true;
-        // Käfig einrichten, wenn der Block sicher steht (nach dem Platzieren)
-        Bukkit.getScheduler().runTask(addon, () -> dress(g));
-        hologram(g, true);
         core.questProgress(p, "gen_place", t.id(), 1);
         addon.islands().addBonus(i, points(g));
         return null;
     }
 
-    /** Abbauen: Generator als Item zurück, Lager wird ausgezahlt. */
+    /** Insel aufgegeben (Platz wird frei): ihre Generatoren und ihr Booster verfallen, damit eine neue Insel auf
+     *  demselben Platz sie nicht erbt. */
+    public void forget(int island) {
+        if (gens.values().removeIf(g -> g.island == island) | boosts.remove(island) != null) {
+            counts = null;
+            dirty = true;
+        }
+    }
+
+    /** Ausbauen: Lager wird ausgezahlt, der Generator kommt mit Stufe und Qualität als Item zurück. */
     public void remove(Player p, Gen g) {
+        if (gens.get(g.id) != g) return;
         collect(p, g);
         IslandService.Island isl = addon.islands().bySlot(g.island);
         if (isl != null) addon.islands().addBonus(isl, -points(g));
         counts = null;
-        byPos.remove(g.key());
-        index(g, false);
-        removeHologram(g);
-        removeVisuals(g);
-        World gw = Bukkit.getWorld(g.world);
-        if (gw != null && gw.getBlockAt(g.x, g.y, g.z).getType() == Material.BARRIER) gw.getBlockAt(g.x, g.y, g.z).setType(Material.AIR);
+        gens.remove(g.id);
         Type t = types.get(g.type);
         if (t != null) p.getInventory().addItem(item(t, g.quality, g.level)).values().forEach(r -> core.abholbox().add(p.getUniqueId(), r));
         dirty = true;
@@ -490,15 +507,8 @@ public final class GeneratorService {
     public void tick() {
         long now = System.currentTimeMillis();
         Map<Integer, Boolean> online = new HashMap<>();
-        for (Gen g : byPos.values()) {
+        for (Gen g : gens.values()) {
             produce(g, now, online.computeIfAbsent(g.island, this::islandOnline));
-        }
-        // Spieler-Positionen je Welt einmal sammeln (vorher für jeden Generator alle Spieler der Welt durchgehen)
-        Map<String, List<Location>> players = new HashMap<>();
-        for (Player p : Bukkit.getOnlinePlayers()) players.computeIfAbsent(p.getWorld().getName(), k -> new ArrayList<>()).add(p.getLocation());
-        for (Gen g : byPos.values()) {
-            List<Location> near = players.get(g.world);
-            if (near != null) hologram(g, false, near);
         }
         dirty = true;
     }
@@ -660,7 +670,6 @@ public final class GeneratorService {
         IslandService.Island isl = addon.islands().bySlot(g.island);
         if (isl != null) addon.islands().addBonus(isl, points(g) - before);
         dirty = true;
-        hologram(g, false);
         Sfx.play(core, p, Sfx.Kind.LEVEL_UP);
         core.questProgress(p, "gen_upgrade", g.type, 1);
         return null;
@@ -678,230 +687,67 @@ public final class GeneratorService {
         IslandService.Island isl = addon.islands().bySlot(g.island);
         if (isl != null) addon.islands().addBonus(isl, points(g) - before);
         dirty = true;
-        hologram(g, false);
-        visuals(g);
         core.questProgress(p, "gen_veredeln", g.type, 1);
         Sfx.play(core, p, Sfx.Kind.SUCCESS_BIG);
         return null;
     }
 
     // =================================================================================================================
-    // Schild über dem Generator
+    // Alte Generator-Blöcke (aus der Zeit, als Generatoren auf der Insel standen)
     // =================================================================================================================
 
-    /**
-     * Im Spiel ist jeder Generator ein unsichtbarer Barriere-Block (fest, nicht verschiebbar, explosionssicher). Darin
-     * zeigt eine Anzeige den Käfig wie im Icon in der Farbe der Qualität (kuby:generator_cage/<qualität>), in der Mitte
-     * dreht sich das leuchtende Symbol der Art (kuby:generator_core/<art>). Beim Veredeln wechselt der Käfig die Farbe.
-     * Alte Generatoren (Spawner oder andere Blöcke) werden beim Laden umgestellt.
-     */
-    public void dress(Gen g) {
-        World w = Bukkit.getWorld(g.world);
-        if (w == null || !w.isChunkLoaded(g.x >> 4, g.z >> 4) || byPos.get(g.key()) != g) return;
-        org.bukkit.block.Block b = w.getBlockAt(g.x, g.y, g.z);
-        if (b.getType() != Material.BARRIER) b.setType(Material.BARRIER, false);
-        g.dressed = true;
-        visuals(g);
-    }
-
-    static final long SPIN_TICKS = 60L;
-
-    private static ItemStack modelItem(String model) {
-        ItemStack it = new ItemStack(Material.PAPER);
-        ItemMeta m = it.getItemMeta();
-        m.setItemModel(NamespacedKey.fromString(model));
-        it.setItemMeta(m);
-        return it;
-    }
-
-    private static String cageModel(Quality q) {
-        return "kuby:generator_cage/" + (q == Quality.NORMAL ? "normal" : q.name().toLowerCase(Locale.ROOT));
-    }
-
-    /** Käfig und Symbol im Block anzeigen (fehlende neu, Käfig bei neuer Qualität umfärben). */
-    public void visuals(Gen g) {
-        World w = Bukkit.getWorld(g.world);
-        if (w == null || !w.isChunkLoaded(g.x >> 4, g.z >> 4) || byPos.get(g.key()) != g) return;
-        Location c = new Location(w, g.x + 0.5, g.y + 0.5, g.z + 0.5);
-        Entity ce = g.cage == null ? null : Bukkit.getEntity(g.cage);
-        if (ce instanceof org.bukkit.entity.ItemDisplay cd && cd.isValid()) {
-            if (g.cageQuality != g.quality) {
-                cd.setItemStack(modelItem(cageModel(g.quality)));
-                g.cageQuality = g.quality;
-            }
-        } else {
-            Quality q = g.quality;
-            org.bukkit.entity.ItemDisplay cd = w.spawn(c, org.bukkit.entity.ItemDisplay.class, d -> {
-                d.setPersistent(false);
-                d.setItemStack(modelItem(cageModel(q)));
-                d.setItemDisplayTransform(org.bukkit.entity.ItemDisplay.ItemDisplayTransform.NONE);
-                // knapp kleiner als der Block: kein Flimmern mit den Flächen der Nachbarblöcke
-                d.setTransformation(new org.bukkit.util.Transformation(new org.joml.Vector3f(), new org.joml.AxisAngle4f(),
-                        new org.joml.Vector3f(0.998f), new org.joml.AxisAngle4f()));
-                d.setShadowRadius(0);
-            });
-            g.cage = cd.getUniqueId();
-            g.cageQuality = q;
-        }
-        Entity co = g.coreDisplay == null ? null : Bukkit.getEntity(g.coreDisplay);
-        if (!(co instanceof org.bukkit.entity.ItemDisplay od && od.isValid())) {
-            float a = g.spin;
-            org.bukkit.entity.ItemDisplay od2 = w.spawn(c, org.bukkit.entity.ItemDisplay.class, d -> {
-                d.setPersistent(false);
-                d.setItemStack(modelItem("kuby:generator_core/" + g.type));
-                d.setItemDisplayTransform(org.bukkit.entity.ItemDisplay.ItemDisplayTransform.NONE);
-                d.setTransformation(coreTransform(a));
-                d.setBrightness(new Display.Brightness(15, 15));
-                d.setShadowRadius(0);
-            });
-            g.coreDisplay = od2.getUniqueId();
-        }
-    }
-
-    private static org.bukkit.util.Transformation coreTransform(float angle) {
-        return new org.bukkit.util.Transformation(new org.joml.Vector3f(), new org.joml.AxisAngle4f(angle, 0, 1, 0),
-                new org.joml.Vector3f(0.7f), new org.joml.AxisAngle4f());
-    }
-
-    /** Symbole in der Nähe von Spielern ein Stück weiterdrehen (der Client dreht weich über SPIN_TICKS). */
-    private void spin() {
-        Map<String, List<Location>> players = new HashMap<>();
-        for (Player p : Bukkit.getOnlinePlayers()) players.computeIfAbsent(p.getWorld().getName(), k -> new ArrayList<>()).add(p.getLocation());
-        for (Gen g : byPos.values()) {
-            if (g.coreDisplay == null) continue;
-            List<Location> near = players.get(g.world);
-            if (near == null) continue;
-            boolean close = false;
-            for (Location l : near) {
-                double dx = l.getX() - g.x, dy = l.getY() - g.y, dz = l.getZ() - g.z;
-                if (dx * dx + dy * dy + dz * dz < 48 * 48) {
-                    close = true;
-                    break;
-                }
-            }
-            if (!close) continue;
-            if (!(Bukkit.getEntity(g.coreDisplay) instanceof org.bukkit.entity.ItemDisplay d) || !d.isValid()) continue;
-            g.spin = (float) ((g.spin + Math.PI * 2 / 3) % (Math.PI * 2));
-            d.setInterpolationDelay(0);
-            d.setInterpolationDuration((int) SPIN_TICKS);
-            d.setTransformation(coreTransform(g.spin));
-        }
-    }
-
-    private void removeVisuals(Gen g) {
-        for (UUID id : new UUID[]{g.cage, g.coreDisplay}) {
-            Entity e = id == null ? null : Bukkit.getEntity(id);
-            if (e != null) e.remove();
-        }
-        g.cage = null;
-        g.coreDisplay = null;
-        g.cageQuality = null;
-    }
-
-    // ---------- Generatoren je Chunk (zum Einrichten, wenn ein Chunk lädt) ----------
-
-    private final Map<String, List<Gen>> byChunk = new HashMap<>();
-
-    private static String chunkKey(String world, int cx, int cz) {
-        return world + ";" + cx + ";" + cz;
-    }
-
-    private void index(Gen g, boolean add) {
-        String k = chunkKey(g.world, g.x >> 4, g.z >> 4);
-        if (add) {
-            byChunk.computeIfAbsent(k, x -> new ArrayList<>()).add(g);
-        } else {
-            List<Gen> l = byChunk.get(k);
-            if (l != null) {
-                l.remove(g);
-                if (l.isEmpty()) byChunk.remove(k);
-            }
-        }
-    }
-
-    /** Ein Chunk ist geladen: seine Generatoren im nächsten Tick einrichten (Anzeigen sind nicht gespeichert). */
+    /** Ein Chunk ist geladen: alte Generator-Blöcke darin entfernen (Barriere oder Spawner an der gespeicherten Stelle). */
     public void chunkLoaded(org.bukkit.Chunk ch) {
-        List<Gen> l = byChunk.get(chunkKey(ch.getWorld().getName(), ch.getX(), ch.getZ()));
-        if (l == null || l.isEmpty()) return;
-        List<Gen> copy = new ArrayList<>(l);
+        if (legacy.isEmpty()) return;
+        String w = ch.getWorld().getName();
+        List<String> hit = new ArrayList<>();
+        for (String k : legacy) {
+            String[] a = k.split(";");
+            if (a.length != 4 || !a[0].equals(w)) continue;
+            try {
+                if ((Integer.parseInt(a[1]) >> 4) == ch.getX() && (Integer.parseInt(a[3]) >> 4) == ch.getZ()) hit.add(k);
+            } catch (NumberFormatException e) {
+                hit.add(k);
+            }
+        }
+        if (hit.isEmpty()) return;
         Bukkit.getScheduler().runTask(addon, () -> {
-            for (Gen g : copy) dress(g);
+            for (String k : hit) clearLegacy(k);
         });
     }
 
-    private void hologram(Gen g, boolean force) {
-        hologram(g, force, null);
-    }
-
-    /** Schild aktualisieren, wenn ein Spieler in der Nähe ist (players: Positionen in dieser Welt, null = selbst suchen). */
-    private void hologram(Gen g, boolean force, List<Location> players) {
-        World w = Bukkit.getWorld(g.world);
-        if (w == null || !w.isChunkLoaded(g.x >> 4, g.z >> 4)) return;
-        if (!g.dressed) dress(g);
-        else visuals(g);
-        Location l = new Location(w, g.x + 0.5, g.y + 1.35, g.z + 0.5);
-        boolean near = false;
-        if (!force) {
-            if (players == null) {
-                for (Player p : w.getPlayers()) {
-                    if (p.getLocation().distanceSquared(l) < 48 * 48) {
-                        near = true;
-                        break;
-                    }
-                }
-            } else {
-                for (Location pl : players) {
-                    if (pl.distanceSquared(l) < 48 * 48) {
-                        near = true;
-                        break;
-                    }
-                }
+    private void cleanLoaded() {
+        for (String k : new ArrayList<>(legacy)) {
+            String[] a = k.split(";");
+            World w = a.length == 4 ? Bukkit.getWorld(a[0]) : null;
+            try {
+                if (w != null && w.isChunkLoaded(Integer.parseInt(a[1]) >> 4, Integer.parseInt(a[3]) >> 4)) clearLegacy(k);
+            } catch (NumberFormatException e) {
+                legacy.remove(k);
             }
-            if (!near) return;
         }
-        Entity e = g.display == null ? null : Bukkit.getEntity(g.display);
-        TextDisplay td;
-        if (e instanceof TextDisplay ok && ok.isValid()) {
-            td = ok;
-        } else {
-            g.shown = null;
-            td = w.spawn(l, TextDisplay.class, d -> {
-                d.setPersistent(false);
-                d.setBillboard(Display.Billboard.CENTER);
-                d.setDefaultBackground(false);
-                d.setShadowed(true);
-            });
-            g.display = td.getUniqueId();
-        }
-        Type t = types.get(g.type);
-        if (t == null) return;
-        String store = switch (t.kind()) {
-            case MONEY -> g.quality.autoCollect ? "direkt aufs Konto" : Msg.coins((long) g.money) + " / " + Msg.coins((long) capacity(g)) + " $";
-            case XP -> g.quality.autoCollect ? "direkt zu dir" : Msg.coins((long) g.xp) + " / " + Msg.coins((long) capacity(g)) + " XP";
-            default -> g.quality.autoSell ? "Auto-Verkauf · " + Msg.coins((long) g.money) + " $" : Msg.coins(g.itemCount()) + " / " + Msg.coins((long) capacity(g));
-        };
-        double[] b = boost(g.island);
-        String text = "<" + g.quality.color + "><b>⚙ " + Msg.escape(name(t, g.quality)) + "</b>\n<gray>Stufe <white>" + g.level
-                + " <dark_gray>· <white>" + store + (b != null ? "\n<gold>⚡ Booster x" + fmt(b[0]) : "");
-        // nur senden, wenn sich etwas geändert hat (spart Pakete an alle Spieler in der Nähe)
-        if (!text.equals(g.shown)) {
-            td.text(Msg.parse(text));
-            g.shown = text;
-        }
-        if (g.quality == Quality.DIAMANT) w.spawnParticle(Particle.END_ROD, l.clone().add(0, -0.6, 0), 2, 0.3, 0.2, 0.3, 0.01);
     }
 
-    private void removeHologram(Gen g) {
-        Entity e = g.display == null ? null : Bukkit.getEntity(g.display);
-        if (e != null) e.remove();
-        g.display = null;
+    private void clearLegacy(String k) {
+        if (!legacy.remove(k)) return;
+        dirty = true;
+        String[] a = k.split(";");
+        World w = a.length == 4 ? Bukkit.getWorld(a[0]) : null;
+        if (w == null) return;
+        try {
+            org.bukkit.block.Block b = w.getBlockAt(Integer.parseInt(a[1]), Integer.parseInt(a[2]), Integer.parseInt(a[3]));
+            if (b.getType() == Material.BARRIER || b.getType() == Material.SPAWNER) b.setType(Material.AIR, false);
+            // nicht gespeicherte Anzeigen (Käfig, Symbol, Schild) sind nach dem Neustart ohnehin weg; zur Sicherheit aufräumen
+            for (org.bukkit.entity.Entity e : w.getNearbyEntities(b.getLocation().add(0.5, 0.5, 0.5), 0.6, 1.4, 0.6)) {
+                if (e instanceof org.bukkit.entity.Display && !e.isPersistent()) e.remove();
+            }
+        } catch (NumberFormatException ignored) {
+            // kaputter Eintrag
+        }
     }
 
-    public void removeHolograms() {
-        for (Gen g : byPos.values()) {
-            removeHologram(g);
-            removeVisuals(g);
-        }
+    public boolean isLegacyBlock(org.bukkit.block.Block b) {
+        return !legacy.isEmpty() && legacy.contains(b.getWorld().getName() + ";" + b.getX() + ";" + b.getY() + ";" + b.getZ());
     }
 
     public static String fmt(double v) {
@@ -921,8 +767,10 @@ public final class GeneratorService {
                 ConfigurationSection s = gs.getConfigurationSection(k);
                 if (s == null) continue;
                 try {
-                    Gen g = new Gen(Integer.parseInt(k), s.getInt("island"), s.getString("world"), s.getInt("x"), s.getInt("y"), s.getInt("z"),
-                            s.getString("type"), Quality.valueOf(s.getString("quality", "NORMAL")), s.getInt("level", 1));
+                    Gen g = new Gen(Integer.parseInt(k), s.getInt("island"), s.getString("type"), Quality.valueOf(s.getString("quality", "NORMAL")),
+                            s.getInt("level", 1));
+                    // früher stand der Generator als Block auf der Insel: den Block später entfernen
+                    if (s.contains("world")) legacy.add(s.getString("world") + ";" + s.getInt("x") + ";" + s.getInt("y") + ";" + s.getInt("z"));
                     g.money = s.getDouble("money");
                     g.xp = s.getDouble("xp");
                     g.progress = s.getDouble("progress");
@@ -935,13 +783,14 @@ public final class GeneratorService {
                         }
                     }
                     counts = null;
-                    byPos.put(g.key(), g);
-                    index(g, true);
+                    gens.put(g.id, g);
+                    nextId = Math.max(nextId, g.id + 1);
                 } catch (RuntimeException ex) {
                     addon.getLogger().warning("generators.yml: Generator " + k + " übersprungen (" + ex.getMessage() + ")");
                 }
             }
         }
+        legacy.addAll(y.getStringList("alte-bloecke"));
         ConfigurationSection bs = y.getConfigurationSection("boosts");
         if (bs != null) {
             for (String k : bs.getKeys(false)) {
@@ -954,13 +803,9 @@ public final class GeneratorService {
     public synchronized void save() {
         YamlConfiguration out = new YamlConfiguration();
         out.set("next", nextId);
-        for (Gen g : byPos.values()) {
+        for (Gen g : gens.values()) {
             String b = "gens." + g.id + ".";
             out.set(b + "island", g.island);
-            out.set(b + "world", g.world);
-            out.set(b + "x", g.x);
-            out.set(b + "y", g.y);
-            out.set(b + "z", g.z);
             out.set(b + "type", g.type);
             out.set(b + "quality", g.quality.name());
             out.set(b + "level", g.level);
@@ -970,6 +815,7 @@ public final class GeneratorService {
             out.set(b + "last", g.last);
             g.items.forEach((m, n) -> out.set(b + "items." + m.name(), n));
         }
+        if (!legacy.isEmpty()) out.set("alte-bloecke", new ArrayList<>(legacy));
         boosts.forEach((k, v) -> {
             if (v[1] > System.currentTimeMillis()) out.set("boosts." + k, List.of(v[0], v[1]));
         });

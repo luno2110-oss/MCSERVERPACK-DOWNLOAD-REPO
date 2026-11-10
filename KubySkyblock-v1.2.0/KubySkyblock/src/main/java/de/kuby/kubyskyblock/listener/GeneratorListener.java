@@ -5,24 +5,22 @@ import de.kuby.kubyplugins.util.Sfx;
 import de.kuby.kubyskyblock.KubySkyblock;
 import de.kuby.kubyskyblock.gui.GeneratorScreen;
 import de.kuby.kubyskyblock.service.GeneratorService;
-import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockExplodeEvent;
-import org.bukkit.event.block.BlockPistonExtendEvent;
-import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemStack;
 
-import java.util.List;
-
-/** Generatoren aufstellen, öffnen (Rechtsklick), abbauen (Item mit Stufe zurück) und vor Explosionen und Kolben schützen. */
+/**
+ * Generatoren laufen nur in der UI: ein Generator-Item wird per Rechtsklick auf der eigenen Insel eingesetzt (es wird
+ * nie als Block gesetzt). Alte Generator-Blöcke aus der Zeit vor der Umstellung werden beim Laden des Chunks entfernt.
+ */
 public final class GeneratorListener implements Listener {
 
     private final KubySkyblock addon;
@@ -35,109 +33,50 @@ public final class GeneratorListener implements Listener {
         return addon.generators();
     }
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onPlace(BlockPlaceEvent e) {
-        Object[] info = gens().read(e.getItemInHand());
+    /** Rechtsklick mit einem Generator-Item: einsetzen statt setzen. */
+    @EventHandler(priority = EventPriority.LOW)
+    public void onUse(PlayerInteractEvent e) {
+        if (e.getAction() != Action.RIGHT_CLICK_AIR && e.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+        ItemStack it = e.getItem();
+        Object[] info = gens().read(it);
         if (info == null) return;
-        Player p = e.getPlayer();
-        String err = gens().place(p, e.getBlockPlaced(), (GeneratorService.Type) info[0], (GeneratorService.Quality) info[1], (Integer) info[2]);
+        e.setUseItemInHand(Event.Result.DENY);
+        e.setUseInteractedBlock(Event.Result.DENY);
+        e.setCancelled(true);
+        if (e.getHand() != EquipmentSlot.HAND) return;
+        install(e.getPlayer(), it, info);
+    }
+
+    /** Sicherheitsnetz: ein Generator-Item wird nie als Block gesetzt. */
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onPlace(BlockPlaceEvent e) {
+        if (gens().read(e.getItemInHand()) != null) e.setCancelled(true);
+    }
+
+    private void install(Player p, ItemStack it, Object[] info) {
+        GeneratorService.Type t = (GeneratorService.Type) info[0];
+        GeneratorService.Quality q = (GeneratorService.Quality) info[1];
+        String err = gens().install(p, t, q, (Integer) info[2]);
         if (err != null) {
-            e.setCancelled(true);
             Sfx.play(addon.core(), p, Sfx.Kind.ERROR);
             Msg.send(p, "<red>" + err);
             return;
         }
+        it.setAmount(it.getAmount() - 1);
         Sfx.play(addon.core(), p, Sfx.Kind.SUCCESS);
-        Msg.send(p, "<#9AD8FF>Generator aufgestellt. <gray>Rechtsklick öffnet ihn.");
+        Msg.send(p, "<" + q.color + ">" + Msg.escape(gens().name(t, q)) + " <#9AD8FF>läuft jetzt auf deiner Insel. <gray>Lager und Upgrades: /insel → Generatoren");
+        GeneratorScreen.island(p);
     }
 
-    /** Anzeigen (Käfig, Symbol) werden nicht gespeichert: beim Laden des Chunks neu einrichten. */
+    /** Alte Generator-Blöcke (Barriere/Spawner) beim Laden des Chunks entfernen. */
     @EventHandler
     public void onChunk(org.bukkit.event.world.ChunkLoadEvent e) {
         gens().chunkLoaded(e.getChunk());
     }
 
-    private final java.util.Map<java.util.UUID, Long> lastHint = new java.util.HashMap<>();
-
-    @EventHandler(priority = EventPriority.HIGH)
-    public void onInteract(PlayerInteractEvent e) {
-        if (e.getHand() != EquipmentSlot.HAND || e.getClickedBlock() == null) return;
-        if (e.getAction() == Action.LEFT_CLICK_BLOCK) {
-            // Der Block ist eine Barriere (in Survival nicht abbaubar): Schleichen + Linksklick baut ab
-            GeneratorService.Gen g = gens().at(e.getClickedBlock());
-            if (g == null) return;
-            e.setCancelled(true);
-            Player p = e.getPlayer();
-            var isl = addon.islands().bySlot(g.island);
-            if (isl == null || !isl.isMember(p.getUniqueId()) && !p.hasPermission("kuby.admin")) return;
-            if (!p.isSneaking()) {
-                long now = System.currentTimeMillis();
-                Long last = lastHint.get(p.getUniqueId());
-                if (last == null || now - last > 3000) {
-                    lastHint.put(p.getUniqueId(), now);
-                    p.sendActionBar(Msg.parse("<gray>Abbauen: <white>Schleichen + Linksklick</white> oder im Generator-Dialog"));
-                }
-                return;
-            }
-            gens().remove(p, g);
-            Sfx.play(addon.core(), p, Sfx.Kind.SUCCESS);
-            Msg.send(p, "<gray>Generator abgebaut, er liegt mit seiner Stufe in deinem Inventar.");
-            return;
-        }
-        if (e.getAction() != Action.RIGHT_CLICK_BLOCK) return;
-        GeneratorService.Gen g = gens().at(e.getClickedBlock());
-        if (g == null) return;
-        e.setCancelled(true);
-        Player p = e.getPlayer();
-        var isl = addon.islands().bySlot(g.island);
-        if (isl == null || !addon.islands().has(isl, p.getUniqueId(), de.kuby.kubyskyblock.service.IslandService.Right.GENERATOREN)
-                && !p.hasPermission("kuby.admin")) {
-            Msg.send(p, "<gray>Das ist ein Generator von " + (isl == null ? "?" : de.kuby.kubyskyblock.service.IslandService.nameOf(isl.owner)) + ".");
-            return;
-        }
-        GeneratorScreen.open(p, g);
-    }
-
+    /** Sollte ein alter Generator-Block noch stehen: Abbauen entfernt ihn nur (der Generator läuft im Menü weiter). */
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onBreak(BlockBreakEvent e) {
-        GeneratorService.Gen g = gens().at(e.getBlock());
-        if (g == null) return;
-        e.setCancelled(true);
-        Player p = e.getPlayer();
-        var isl = addon.islands().bySlot(g.island);
-        if (isl == null || !isl.isMember(p.getUniqueId()) && !p.hasPermission("kuby.admin")) return;
-        e.getBlock().setType(org.bukkit.Material.AIR);
-        gens().remove(p, g);
-        Msg.send(p, "<gray>Generator abgebaut, er liegt mit seiner Stufe in deinem Inventar.");
-    }
-
-    /** Generator-Käfige sind Spawner, die nur das Symbol zeigen: sie spawnen nie etwas. */
-    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
-    public void onSpawner(org.bukkit.event.entity.SpawnerSpawnEvent e) {
-        if (e.getSpawner() != null && gens().at(e.getSpawner().getBlock()) != null) e.setCancelled(true);
-    }
-
-    private void protect(List<Block> blocks) {
-        blocks.removeIf(b -> gens().at(b) != null);
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onExplode(EntityExplodeEvent e) {
-        protect(e.blockList());
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onExplode(BlockExplodeEvent e) {
-        protect(e.blockList());
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onPiston(BlockPistonExtendEvent e) {
-        for (Block b : e.getBlocks()) if (gens().at(b) != null) e.setCancelled(true);
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onPiston(BlockPistonRetractEvent e) {
-        for (Block b : e.getBlocks()) if (gens().at(b) != null) e.setCancelled(true);
+        if (gens().isLegacyBlock(e.getBlock())) e.setDropItems(false);
     }
 }

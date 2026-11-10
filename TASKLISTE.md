@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.38** (ungetestet, nicht kompiliert)
+Stand: **v1.39** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -551,7 +551,15 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Welt-Prüfung (bei jedem Block, Wachstum, Spawn und Schritt gefragt): Name der Skyblock-Welt und der Stufen-Welten zwischengespeichert statt jedes Mal aus der config gelesen
   - Limits in den Stufen-Welten: Wesen werden je Welt gezählt (Nether- und End-Insel haben eigene Grenzen; vorher zählten Spawns dort gegen die Hauptinsel und die Wesen der Stufen-Insel wurden nie gezählt, also keine echte Grenze). Blöcke (Trichter usw.) der Stufen-Inseln werden beim Zählen mitgezählt
   - Geprüft und in Ordnung: Bewegung (nur bei Blockwechsel, schnelles Nachschlagen), Platz in der Rangliste (Zwischenspeicher 30 s), Generator-Anzahl (Zwischenspeicher), Wesen-Zählung (höchstens alle 10 s), Block-Zählung und Level-Zählung (Schnappschüsse, Zählen im Hintergrund)
-- [x] Generator-Blöcke in der Welt wie die Icons (Test im Spiel offen): der Generator ist jetzt ein unsichtbarer Barriere-Block (fest, nicht verschiebbar, explosionssicher), darin zeigt eine Anzeige den Käfig aus dem Item-Modell in der Farbe der Qualität (Normal dunkles Eisen, Silber, Gold, Diamant; neue Modelle `kuby:generator_cage/<qualität>`), in der Mitte dreht sich das leuchtende Symbol der Art (weich, alle 3 Sekunden ein Schritt, nur in der Nähe von Spielern). Beim Veredeln wechselt der Käfig sofort die Farbe. Vorher war es der Vanilla-Spawner (immer dunkel, Qualität nicht zu sehen). Die Anzeigen werden nicht gespeichert, sondern beim Laden des Chunks neu gesetzt; alte Spawner-Generatoren werden beim Laden umgestellt
+- [x] Generatoren nur noch in der UI (Entscheidung des Besitzers, Test im Spiel offen): kein Block auf der Insel, sie nehmen keinen Platz weg
+  - Kaufen im Generator-Shop (Coins) oder Premium im Juwelenshop: der Generator läuft sofort auf der Insel, es kommt kein Item mehr ins Inventar. Ist kein Platz frei, wird nichts abgebucht
+  - Plätze je Bereich nach Inselgröße: Insel, dazu Nether- und End-Bereich nach dem Freischalten der Stufe (Stufen-Generatoren belegen ihren Bereich). Shop-Reiter zeigen die Plätze des Bereichs, volle Bereiche sperren den Kaufen-Knopf
+  - `/insel` → Generatoren: Karten in zwei Spalten, freie Plätze als „+ Freier Platz“ (öffnet den Shop), Reiter Insel/Nether/End mit belegt/Plätze, „Alle einsammeln“ und neu „Alle Items verkaufen“ je Bereich
+  - Generator-Dialog: „Ausbauen“ statt „Abbauen“: Lager wird ausgezahlt, der Generator kommt mit Stufe und Qualität als Item zurück (für Handel oder später). Ein Generator-Item wird per Rechtsklick eingesetzt, als Block lässt es sich nicht mehr setzen
+  - Umstellung: schon aufgestellte Generatoren laufen mit Stufe, Qualität und Lager weiter; ihre alten Blöcke (Barriere bzw. Spawner) werden beim Laden des Chunks entfernt (`alte-bloecke` in generators.yml). Schilder, Käfige und drehende Symbole gibt es nicht mehr
+  - Insel aufgeben (ohne Mitglieder): ihre Generatoren und ihr Booster verfallen. Vorher hätte eine neue Insel auf demselben Platz sie geerbt
+  - Info-Leiste und Scoreboard zählen belegt/Plätze über alle freigeschalteten Bereiche. Texte angepasst: Guide-Seite „Generatoren“ (bestehende Server werden einmalig umgestellt, config-stand 9), Quests „Setze einen Generator ein“ (nur neue quests-skyblock.yml), Item-Beschreibung, Menü-Kachel
+- [x] (ersetzt durch „Generatoren nur in der UI“) Generator-Blöcke in der Welt wie die Icons (Test im Spiel offen): der Generator ist jetzt ein unsichtbarer Barriere-Block (fest, nicht verschiebbar, explosionssicher), darin zeigt eine Anzeige den Käfig aus dem Item-Modell in der Farbe der Qualität (Normal dunkles Eisen, Silber, Gold, Diamant; neue Modelle `kuby:generator_cage/<qualität>`), in der Mitte dreht sich das leuchtende Symbol der Art (weich, alle 3 Sekunden ein Schritt, nur in der Nähe von Spielern). Beim Veredeln wechselt der Käfig sofort die Farbe. Vorher war es der Vanilla-Spawner (immer dunkel, Qualität nicht zu sehen). Die Anzeigen werden nicht gespeichert, sondern beim Laden des Chunks neu gesetzt; alte Spawner-Generatoren werden beim Laden umgestellt
   - Abbauen: Schleichen + Linksklick (Linksklick allein zeigt den Hinweis) oder im Generator-Dialog; Admins im Kreativ-Modus auch normal
   - Behoben: „Abbauen“ im Dialog suchte den Block in der Welt des Spielers statt in der Welt des Generators
 - [x] UI-Fehler aus dem Test des Besitzers behoben:

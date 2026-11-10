@@ -201,7 +201,7 @@ public final class PlayerSettings {
         add("bar.sky.island", null, "Insel-Leiste: Insel", "Island bar: island", "Level, Fortschritt und Platz",
                 "Level, progress and rank", true);
         add("bar.sky.xp", null, "Insel-Leiste: XP", "Island bar: XP", "Deine Erfahrung", "Your experience", true);
-        add("bar.sky.gen", null, "Insel-Leiste: Generatoren", "Island bar: generators", "Aufgestellt, Plätze, Booster",
+        add("bar.sky.gen", null, "Insel-Leiste: Generatoren", "Island bar: generators", "Belegt, Plätze, Booster",
                 "Placed, slots, booster", true);
         add("bar.sky.place", null, "Insel-Leiste: Ort", "Island bar: place", "Eigene Insel, Besuch, Spawn, Stufe",
                 "Own island, visit, spawn, stage", true);

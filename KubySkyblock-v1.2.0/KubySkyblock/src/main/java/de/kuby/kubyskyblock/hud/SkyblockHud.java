@@ -30,7 +30,7 @@ import java.util.function.Predicate;
 /**
  * Insel-Leiste oben in Skyblock (Platz der Bossbar), wie die Survival-Leiste, aber mit eigenen Rahmen (Insel, Wolke,
  * Nether, End) und eigenen Elementen: Geld (Coins und Juwelen in einer Leiste), Insel (Level, Fortschritt zum nächsten
- * Level, Platz), XP, Generatoren (aufgestellt / Plätze, Booster), Ort und Uhrzeit. Reihenfolge, Sichtbarkeit und Design
+ * Level, Platz), XP, Generatoren (belegt / Plätze, Booster), Ort und Uhrzeit. Reihenfolge, Sichtbarkeit und Design
  * stellt der Spieler in /bossbar ein (Schlüssel bar.sky.*). Solange die Leiste sichtbar ist, entfällt die Geld-Anzeige
  * über der Hotbar. Gezeichnet mit {@link HudBar} (Zeichen aus tools/build_infobar_sky.py, build_sb_pack.py).
  */
@@ -120,7 +120,7 @@ public final class SkyblockHud implements Listener {
         int percent = (int) Math.min(99, Math.max(0, i.points) % per * 100 / per);
         var gens = addon.generators();
         int count = gens == null ? 0 : gens.count(i.slot);
-        int slots = gens == null ? 0 : gens.slots(i);
+        int slots = gens == null ? 0 : gens.totalSlots(i);
         String boost = "";
         double[] b = gens == null ? null : gens.boost(i.slot);
         if (b != null) {

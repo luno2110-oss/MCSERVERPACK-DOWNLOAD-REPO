@@ -682,6 +682,7 @@ public final class IslandService {
         }
         unregister(i);
         if (addon.stages() != null) addon.stages().clear(i);
+        if (addon.generators() != null) addon.generators().forget(i.slot);
         dirty = true;
         busy.add(i.slot);
         if (ModeService.SKYBLOCK.equals(core.modes().modeOf(p.getUniqueId()))) p.teleportAsync(core.modes().spawnOf(ModeService.SKYBLOCK));
@@ -996,7 +997,7 @@ public final class IslandService {
         return sum;
     }
 
-    /** Inselpunkte für gekaufte Upgrades und aufgestellte Generatoren (zählen zusätzlich zu den Blöcken). */
+    /** Inselpunkte für gekaufte Upgrades und eingesetzte Generatoren (zählen zusätzlich zu den Blöcken). */
     public long bonusPoints(Island i) {
         long per = addon.getConfig().getLong("level.bonus.upgrade-level", 40);
         long ups = (long) Math.max(0, i.size) + Math.max(0, i.slots) + Math.max(0, i.generator) + Math.max(0, i.growth)
@@ -1011,7 +1012,7 @@ public final class IslandService {
         dirty = true;
     }
 
-    /** Einmalig: Bonuspunkte für schon gekaufte Upgrades und aufgestellte Generatoren nachtragen. */
+    /** Einmalig: Bonuspunkte für schon gekaufte Upgrades und eingesetzte Generatoren nachtragen. */
     public int migrateBonus() {
         int n = 0;
         for (Island i : bySlot.values()) {

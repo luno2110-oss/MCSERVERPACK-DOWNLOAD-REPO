@@ -23,8 +23,9 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 /**
- * Dialoge der Generatoren: ein Generator (Lager, Ertrag, Einsammeln, Verkaufen, Upgrade, Veredeln, Abbauen), alle
- * Generatoren der Insel, Generator-Shop (Coins) und der Skyblock-Juwelenshop mit Premium-Generatoren (Silber, Gold,
+ * Dialoge der Generatoren (sie laufen nur in der UI, ohne Block auf der Insel): ein Generator (Lager, Ertrag,
+ * Einsammeln, Verkaufen, Upgrade, Veredeln, Ausbauen), alle Generatoren der Insel als Plätze je Bereich (Insel, Nether,
+ * End), Generator-Shop (Coins, läuft sofort) und der Skyblock-Juwelenshop mit Premium-Generatoren (Silber, Gold,
  * Diamant), Generator-Boostern und dem übrigen Juwelen-Angebot.
  */
 public final class GeneratorScreen {
@@ -93,7 +94,10 @@ public final class GeneratorScreen {
     public static void open(Player p, Gen g) {
         GeneratorService s = gs();
         Type t = s.type(g.type);
-        if (t == null) return;
+        if (t == null || s.byId(g.id) != g) {
+            island(p);
+            return;
+        }
         s.produce(g, System.currentTimeMillis(), true);
         double cap = s.capacity(g);
         String rate, store;
@@ -146,16 +150,13 @@ public final class GeneratorScreen {
                     feedback(pl, s.refine(pl, g));
                     open(pl, g);
                 }),
-                run(pl -> IslandScreen.confirm(pl, "Generator abbauen", "Der Generator kommt mit Stufe und Qualität in dein Inventar, das Lager wird ausgezahlt.",
-                        "Abbauen", q -> {
-                            var gw = org.bukkit.Bukkit.getWorld(g.world);
-                            var bl = gw == null ? null : gw.getBlockAt(g.x, g.y, g.z);
-                            if (bl != null && s.at(bl) == g) {
-                                bl.setType(Material.AIR);
-                                s.remove(q, g);
-                            }
+                run(pl -> IslandScreen.confirm(pl, "Generator ausbauen", "Das Lager wird ausgezahlt und der Platz wird frei. Der Generator kommt mit "
+                        + "Stufe und Qualität als Item in dein Inventar, ein Rechtsklick setzt ihn wieder ein.", "Ausbauen", q -> {
+                            s.remove(q, g);
+                            Sfx.play(sb().core(), q, Sfx.Kind.SUCCESS);
+                            island(q);
                         })),
-                run(GeneratorScreen::island))), 330);
+                run(pl -> island(pl, s.area(g))))), 330);
     }
 
     private static double round2(double v) {
@@ -212,8 +213,8 @@ public final class GeneratorScreen {
             c.smallButton(0, y, 2 * bw + 4, KitData.Small.DARK, "Veredeln: " + v.refineTo() + " · " + v.refine() + " Juwelen", JEWEL, false);
             c.action(0, y, 2 * bw + 4, KitData.SMALL_H, v.doRefine(), "Nächste Qualität (Stufe bleibt)");
         }
-        c.smallButton(2 * (bw + 4), y, bw, KitData.Small.DARK, "Abbauen", RED, false);
-        c.action(2 * (bw + 4), y, bw, KitData.SMALL_H, v.remove(), "Generator abbauen");
+        c.smallButton(2 * (bw + 4), y, bw, KitData.Small.DARK, "Ausbauen", RED, false);
+        c.action(2 * (bw + 4), y, bw, KitData.SMALL_H, v.remove(), "Generator ausbauen (als Item zurück)");
         c.smallButton(3 * (bw + 4), y, bw, KitData.Small.DARK, "Alle", STEEL, false);
         c.action(3 * (bw + 4), y, bw, KitData.SMALL_H, v.back(), "Alle Generatoren der Insel");
         return c;
@@ -225,18 +226,37 @@ public final class GeneratorScreen {
 
     public record Row(KitData.Sprite art, String name, TextColor color, int level, String store, double fill, Consumer<Player> open) {}
 
+    /** Reiter eines Bereichs: Name, belegt, Plätze, aktiv, Klick. */
+    public record Area(String label, int used, int slots, boolean on, Consumer<Player> open) {}
+
+    public record IslandView(List<Row> rows, List<Area> areas, int slots, String boost, Consumer<Player> buySlot,
+                             Consumer<Player> collectAll, Consumer<Player> sellAll, Consumer<Player> shop, Consumer<Player> premium,
+                             Consumer<Player> back) {}
+
+    private static final java.util.Map<java.util.UUID, String> AREA = new java.util.concurrent.ConcurrentHashMap<>();
+
     public static void island(Player p) {
+        island(p, AREA.getOrDefault(p.getUniqueId(), ""));
+    }
+
+    /** Alle Generatoren der Insel in einem Bereich ("" Insel, "nether", "end") mit freien Plätzen. */
+    public static void island(Player p, String area) {
         IslandService.Island i = sb().islands().islandOf(p.getUniqueId());
         if (i == null) {
             IslandScreen.choose(p);
             return;
         }
         GeneratorService s = gs();
+        de.kuby.kubyskyblock.service.StageService.Stage st = de.kuby.kubyskyblock.service.StageService.Stage.of(area);
+        if (st != null && (sb().stages() == null || !sb().stages().unlocked(i, st))) area = "";
+        AREA.put(p.getUniqueId(), area);
         long now = System.currentTimeMillis();
         List<Row> rows = new ArrayList<>();
+        List<Gen> here = new ArrayList<>();
         for (Gen g : s.onIsland(i.slot)) {
             Type t = s.type(g.type);
-            if (t == null) continue;
+            if (t == null || !area.equals(s.area(g))) continue;
+            here.add(g);
             s.produce(g, now, true);
             double cap = s.capacity(g);
             String store = switch (t.kind()) {
@@ -245,54 +265,111 @@ public final class GeneratorScreen {
                 default -> g.quality.autoSell ? Msg.coins((long) g.money) + " $" : Msg.coins(g.itemCount()) + " Items";
             };
             double fill = switch (t.kind()) {
-                case MONEY -> g.money / Math.max(1, cap);
-                case XP -> g.xp / Math.max(1, cap);
-                default -> g.itemCount() / Math.max(1, cap);
+                case MONEY -> g.quality.autoCollect ? 0 : g.money / Math.max(1, cap);
+                case XP -> g.quality.autoCollect ? 0 : g.xp / Math.max(1, cap);
+                default -> g.quality.autoSell ? 0 : g.itemCount() / Math.max(1, cap);
             };
             rows.add(new Row(art(t.id(), g.quality), s.name(t, g.quality), color(g.quality), g.level, store, fill, run(pl -> open(pl, g))));
         }
+        List<Area> areas = new ArrayList<>();
+        boolean any = false;
+        for (de.kuby.kubyskyblock.service.StageService.Stage x : de.kuby.kubyskyblock.service.StageService.Stage.values()) {
+            if (sb().stages() != null && sb().stages().unlocked(i, x)) any = true;
+        }
+        if (any) {
+            areas.add(new Area("Insel", s.onIslandIn(i.slot, ""), s.slots(i), area.isEmpty(), run(pl -> island(pl, ""))));
+            for (de.kuby.kubyskyblock.service.StageService.Stage x : de.kuby.kubyskyblock.service.StageService.Stage.values()) {
+                if (sb().stages() == null || !sb().stages().unlocked(i, x)) continue;
+                areas.add(new Area(x.label, s.onIslandIn(i.slot, x.key), s.slots(i), area.equals(x.key), run(pl -> island(pl, x.key))));
+            }
+        }
         double[] b = s.boost(i.slot);
+        int tab = st == null ? 0 : st == de.kuby.kubyskyblock.service.StageService.Stage.END ? 3 : 2;
+        String a = area;
         Consumer<Player> collectAll = run(pl -> {
-            for (Gen g : s.onIsland(i.slot)) s.collect(pl, g);
-            island(pl);
+            boolean got = false;
+            for (Gen g : new ArrayList<>(here)) got |= s.collect(pl, g) == null;
+            Sfx.play(sb().core(), pl, got ? Sfx.Kind.SUCCESS : Sfx.Kind.ERROR);
+            if (!got) Msg.send(pl, "<gray>Alle Lager sind leer.");
+            island(pl, a);
         });
-        UiDialog.show(p, island(rows, s.slots(i), b == null ? null : "⚡ x" + GeneratorService.fmt(b[0]) + " · "
-                + de.kuby.kubyplugins.service.KitService.format((long) b[1] - now), collectAll, run(GeneratorScreen::shop), run(GeneratorScreen::jewels),
-                run(IslandScreen::open)), 330);
+        Consumer<Player> sellAll = run(pl -> {
+            boolean sold = false;
+            for (Gen g : new ArrayList<>(here)) {
+                Type t = s.type(g.type);
+                if (t != null && t.kind() == Kind.ITEM) sold |= s.sell(pl, g) == null;
+            }
+            Sfx.play(sb().core(), pl, sold ? Sfx.Kind.SUCCESS : Sfx.Kind.ERROR);
+            if (!sold) Msg.send(pl, "<gray>Es gibt nichts zu verkaufen.");
+            island(pl, a);
+        });
+        UiDialog.show(p, island(new IslandView(rows, areas, s.slots(i), b == null ? null : "⚡ x" + GeneratorService.fmt(b[0]) + " · "
+                + de.kuby.kubyplugins.service.KitService.format((long) b[1] - now), run(pl -> shop(pl, tab == 0 && s.types().stream()
+                .noneMatch(t -> tabOf(t) == 0) ? 1 : tab)), collectAll, sellAll, run(GeneratorScreen::shop), run(GeneratorScreen::jewels),
+                run(IslandScreen::open))), 330);
     }
 
-    public static Canvas island(List<Row> rows, int slots, String boost, Consumer<Player> collectAll, Consumer<Player> shop,
-                                Consumer<Player> premium, Consumer<Player> back) {
+    public static Canvas island(IslandView v) {
         Canvas c = new Canvas(W).heading("Generatoren", STEEL);
         c.box(0, 0, W, 54, KitData.Box.STEEL);
         c.sprite(10 + (32 - KitData.Sprite.GN_GELD.width) / 2, 11 + (32 - KitData.Sprite.GN_GELD.height) / 2, KitData.Sprite.GN_GELD);
         c.headline(50, 12, "Generatoren", STEEL);
-        c.text(50, 36, rows.size() + " von " + slots + " Plätzen · " + (boost == null ? "kein Booster" : boost), boost == null ? DIM : GOLD, false);
-        int y = 60;
-        for (Row r : rows) {
-            c.box(0, y, W, 38, KitData.Box.STEEL_CARD);
-            c.sprite(6 + (32 - r.art().width) / 2, y + 3 + (32 - r.art().height) / 2, r.art());
-            c.text(44, y + 7, Canvas.fit(r.name(), true, 200), r.color(), true);
-            c.text(44, y + 19, "Stufe " + r.level(), DIM, false);
-            c.textRight(W - 10, y + 7, r.store(), GOLD, true);
-            c.bar(250, y + 23, W - 260, Math.max(0, Math.min(1, r.fill())), r.fill() >= 0.999 ? KitData.Fill.GOLD : KitData.Fill.CYAN);
-            c.action(0, y, W, 38, r.open(), "Generator öffnen");
-            y += 41;
+        boolean full = v.rows().size() >= v.slots();
+        c.text(50, 36, List.of(Canvas.Span.bold(v.rows().size() + " / " + v.slots(), full ? RED : GREEN), Canvas.Span.of(" Plätze · ", DIM),
+                v.boost() == null ? Canvas.Span.of("kein Booster", DIM) : Canvas.Span.bold(v.boost(), GOLD)));
+        c.textRight(W - 8, 14, "Läuft im Menü,", DIM, false);
+        c.textRight(W - 8, 25, "kein Platz auf der Insel", DIM, false);
+        int y = 58;
+        if (!v.areas().isEmpty()) {
+            int gap = 3, tw = (W - gap * (v.areas().size() - 1)) / v.areas().size(), tx = 0;
+            for (Area a : v.areas()) {
+                String label = a.label() + " " + a.used() + "/" + a.slots();
+                c.smallButton(tx, y, tw, a.on() ? KitData.Small.GREEN : KitData.Small.DARK, label, a.on() ? TextColor.color(0x06240E) : STEEL,
+                        a.on() && Canvas.width(label, true) <= tw - 8);
+                if (!a.on()) c.action(tx, y, tw, KitData.SMALL_H, a.open(), a.label() + "-Generatoren zeigen");
+                tx += tw + gap;
+            }
+            y += KitData.SMALL_H + 4;
         }
-        if (rows.isEmpty()) {
+        int cw = (W - 4) / 2, ch = 40;
+        int cells = Math.max(v.rows().size(), v.slots());
+        for (int k = 0; k < cells; k++) {
+            int x = (k % 2) * (cw + 4), cy = y + (k / 2) * (ch + 4);
+            if (k < v.rows().size()) {
+                Row r = v.rows().get(k);
+                c.box(x, cy, cw, ch, KitData.Box.STEEL_CARD);
+                c.sprite(x + 4 + (32 - r.art().width) / 2, cy + 4 + (32 - r.art().height) / 2, r.art());
+                c.text(x + 40, cy + 6, Canvas.fit(r.name(), true, cw - 46), r.color(), true);
+                c.text(x + 40, cy + 18, "Stufe " + r.level(), DIM, false);
+                c.textRight(x + cw - 6, cy + 18, Canvas.fit(r.store(), true, cw - 100), GOLD, true);
+                c.bar(x + 40, cy + 29, cw - 46, Math.max(0, Math.min(1, r.fill())), r.fill() >= 0.999 ? KitData.Fill.GOLD : KitData.Fill.CYAN);
+                c.action(x, cy, cw, ch, r.open(), "Generator öffnen");
+            } else {
+                c.box(x, cy, cw, ch, KitData.Box.GRAY);
+                c.textCenter(x + cw / 2, cy + 9, "+ Freier Platz", STEEL, true);
+                c.textCenter(x + cw / 2, cy + 22, "Generator kaufen", DIM, false);
+                c.action(x, cy, cw, ch, v.buySlot(), "Generator-Shop öffnen");
+            }
+        }
+        y += ((cells + 1) / 2) * (ch + 4);
+        if (cells == 0) {
             c.box(0, y, W, 30, KitData.Box.STEEL_CARD);
-            c.text(10, y + 11, "Noch keine Generatoren. Kauf einen im Generator-Shop und stell ihn auf deine Insel.", DIM, false);
+            c.text(10, y + 11, "Noch keine Plätze. Mehr gibt es mit dem Größen-Upgrade der Insel.", DIM, false);
             y += 34;
         }
-        int bw = (W - 12) / 4;
-        c.smallButton(0, y + 2, bw, KitData.Small.GREEN, "Alle einsammeln", STEEL, false);
-        c.action(0, y + 2, bw, KitData.SMALL_H, collectAll, "Alle Lager einsammeln");
-        c.smallButton(bw + 4, y + 2, bw, KitData.Small.GOLD, "Shop", GOLD, true);
-        c.action(bw + 4, y + 2, bw, KitData.SMALL_H, shop, "Generatoren kaufen");
-        c.smallButton(2 * (bw + 4), y + 2, bw, KitData.Small.DARK, "Premium", JEWEL, true);
-        c.action(2 * (bw + 4), y + 2, bw, KitData.SMALL_H, premium, "Silber, Gold, Diamant und Booster");
-        c.smallButton(3 * (bw + 4), y + 2, bw, KitData.Small.DARK, "Insel", STEEL, false);
-        c.action(3 * (bw + 4), y + 2, bw, KitData.SMALL_H, back, "Zurück zur Insel");
+        int hw = (W - 4) / 2;
+        c.smallButton(0, y + 2, hw, KitData.Small.GREEN, "Alle einsammeln", STEEL, true);
+        c.action(0, y + 2, hw, KitData.SMALL_H, v.collectAll(), "Alle Lager einsammeln (Items ins Inventar)");
+        c.smallButton(hw + 4, y + 2, hw, KitData.Small.GOLD, "Alle Items verkaufen", GOLD, true);
+        c.action(hw + 4, y + 2, hw, KitData.SMALL_H, v.sellAll(), "Items aller Lager zum Ankaufspreis verkaufen");
+        y += KitData.SMALL_H + 4;
+        int tw = (W - 8) / 3;
+        c.smallButton(0, y + 2, tw, KitData.Small.GOLD, "Shop", GOLD, true);
+        c.action(0, y + 2, tw, KitData.SMALL_H, v.shop(), "Generatoren kaufen");
+        c.smallButton(tw + 4, y + 2, tw, KitData.Small.DARK, "Premium", JEWEL, true);
+        c.action(tw + 4, y + 2, tw, KitData.SMALL_H, v.premium(), "Silber, Gold, Diamant und Booster");
+        c.smallButton(2 * (tw + 4), y + 2, tw, KitData.Small.DARK, "Insel", STEEL, false);
+        c.action(2 * (tw + 4), y + 2, tw, KitData.SMALL_H, v.back(), "Zurück zur Insel");
         return c;
     }
 
@@ -317,6 +394,11 @@ public final class GeneratorScreen {
         shop(p, SHOP_TAB.getOrDefault(p.getUniqueId(), 0));
     }
 
+    /** Bereich eines Shop-Reiters: Start/Fortgeschritten = Insel, dann Nether und End. */
+    private static String areaOfTab(int tab) {
+        return tab == 2 ? "nether" : tab == 3 ? "end" : "";
+    }
+
     public static void shop(Player p, int tab) {
         SHOP_TAB.put(p.getUniqueId(), tab);
         GeneratorService s = gs();
@@ -327,13 +409,16 @@ public final class GeneratorScreen {
         List<ShopRow> rows = new ArrayList<>();
         Map<String, Integer> placed = new java.util.HashMap<>();
         if (i != null) for (GeneratorService.Gen g : s.onIsland(i.slot)) placed.merge(g.type, 1, Integer::sum);
+        int used = i == null ? 0 : s.onIslandIn(i.slot, areaOfTab(tab));
+        int slots = i == null ? 0 : s.slots(i);
+        boolean free = i != null && used < slots;
         for (Type t : s.types()) {
             if (tabOf(t) != tab) continue;
             de.kuby.kubyskyblock.service.StageService.Stage st = de.kuby.kubyskyblock.service.StageService.Stage.of(
                     de.kuby.kubyskyblock.service.StageService.stageKey(t));
             boolean stageOk = st == null || (sb().stages() != null && sb().stages().unlocked(i, st));
             boolean unlocked = level >= t.unlockLevel() && stageOk;
-            String lock = unlocked ? null : !stageOk ? "ab " + st.label + "-Stufe" : "ab Insel-Level " + t.unlockLevel();
+            String lock = i == null ? "keine Insel" : unlocked ? null : !stageOk ? "ab " + st.label + "-Stufe" : "ab Insel-Level " + t.unlockLevel();
             List<Material> products = new ArrayList<>();
             String rate, speed;
             if (t.kind() == Kind.ITEM) {
@@ -350,21 +435,28 @@ public final class GeneratorScreen {
                 rate = GeneratorService.fmt(s.perSecondOf(t, 1)) + unit + " pro Sekunde";
                 speed = "Stufe " + max + ": " + GeneratorService.fmt(s.perSecondOf(t, max)) + unit + " pro Sekunde · Lager für Stunden";
             }
-            boolean afford = coins >= t.price();
+            boolean afford = coins >= t.price() && free;
             rows.add(new ShopRow(art(t.id()), t.name(), t.kind(), products, rate, speed, t.price(), placed.getOrDefault(t.id(), 0), lock,
-                    afford, unlocked ? run(pl -> {
-                        if (!sb().core().economy().withdraw(pl.getUniqueId(), t.price())) {
+                    afford, lock == null ? run(pl -> {
+                        String err = s.canInstall(pl, t);
+                        if (err != null) {
+                            feedback(pl, err);
+                        } else if (!sb().core().economy().withdraw(pl.getUniqueId(), t.price())) {
                             feedback(pl, "Dafür brauchst du " + Msg.coins(t.price()) + " $.");
                         } else {
-                            pl.getInventory().addItem(s.item(t, Quality.NORMAL, 1)).values().forEach(r -> sb().core().abholbox().add(pl.getUniqueId(), r));
-                            feedback(pl, null);
-                            Msg.send(pl, "<green>" + t.name() + " gekauft. <gray>Stell ihn auf deine Insel (Block setzen), dann sammelt er.");
+                            err = s.install(pl, t, Quality.NORMAL, 1);
+                            if (err != null) {
+                                // sollte nicht passieren (eben geprüft): Geld zurück
+                                sb().core().economy().deposit(pl.getUniqueId(), t.price());
+                                feedback(pl, err);
+                            } else {
+                                feedback(pl, null);
+                                Msg.send(pl, "<green>" + t.name() + " gekauft, <#9AD8FF>er läuft schon. <gray>Lager einsammeln: /insel → Generatoren");
+                            }
                         }
                         shop(pl, tab);
                     }) : null));
         }
-        int used = i == null ? 0 : s.count(i.slot);
-        int slots = i == null ? 0 : s.slots(i);
         List<Consumer<Player>> tabs = new ArrayList<>();
         for (int k = 0; k < SHOP_TABS.size(); k++) {
             int kk = k;
@@ -386,7 +478,7 @@ public final class GeneratorScreen {
         c.sprite(10 + (32 - KitData.Sprite.GN_ERZ.width) / 2, 11 + (32 - KitData.Sprite.GN_ERZ.height) / 2, KitData.Sprite.GN_ERZ);
         c.headline(50, 12, "Generator-Shop", GOLD);
         c.text(50, 36, List.of(Canvas.Span.bold("1 ", GOLD), Canvas.Span.of("Kaufen  ", DIM), Canvas.Span.bold("2 ", GOLD),
-                Canvas.Span.of("Aufstellen  ", DIM), Canvas.Span.bold("3 ", GOLD), Canvas.Span.of("Einsammeln", DIM)));
+                Canvas.Span.of("Läuft sofort  ", DIM), Canvas.Span.bold("3 ", GOLD), Canvas.Span.of("Einsammeln", DIM)));
         c.textRight(W - 8, 12, Msg.coins(v.coins) + " $", GOLD, true);
         boolean full = v.slots > 0 && v.used >= v.slots;
         c.textRight(W - 8, 24, "Plätze " + v.used + "/" + v.slots, full ? RED : GREEN, false);
@@ -413,7 +505,7 @@ public final class GeneratorScreen {
             c.box(0, y, W, 50, locked ? KitData.Box.GRAY : KitData.Box.STEEL_CARD);
             c.sprite(8 + (32 - r.art().width) / 2, y + 9 + (32 - r.art().height) / 2, r.art());
             int nw = c.text(48, y + 7, Canvas.fit(r.name(), true, 170), locked ? DIM : STEEL, true);
-            if (r.placed() > 0) c.text(52 + nw, y + 7, "· " + r.placed() + " aufgestellt", GREEN, false);
+            if (r.placed() > 0) c.text(52 + nw, y + 7, "· " + r.placed() + " aktiv", GREEN, false);
             int px = 48;
             if (r.kind() == Kind.ITEM) {
                 for (int k = 0; k < r.products().size() && k < 8; k++) {
@@ -432,7 +524,8 @@ public final class GeneratorScreen {
                 c.textRight(W - 10, y + 33, r.lock(), RED, false);
             } else {
                 c.smallButton(W - 10 - 64, y + 27, 64, r.afford() ? KitData.Small.GOLD : KitData.Small.DARK, "Kaufen", r.afford() ? GOLD : DIM, true);
-                if (r.afford()) c.action(0, y, W, 50, r.buy(), r.name() + " für " + Msg.coins(r.price()) + " $ kaufen");
+                if (r.afford()) c.action(0, y, W, 50, r.buy(), r.name() + " für " + Msg.coins(r.price()) + " $ kaufen, läuft sofort");
+                else if (full) c.action(0, y, W, 50, null, "Alle Plätze belegt: Größen-Upgrade der Insel oder einen Generator ausbauen");
                 else c.action(0, y, W, 50, null, "Dir fehlen noch " + Msg.coins(r.price() - v.coins) + " $");
             }
             y += 53;
@@ -457,7 +550,7 @@ public final class GeneratorScreen {
         c.box(0, 0, W, 54, KitData.Box.STEEL);
         c.sprite(10 + (32 - KitData.Sprite.GN_ERZ.width) / 2, 11 + (32 - KitData.Sprite.GN_ERZ.height) / 2, KitData.Sprite.GN_ERZ);
         c.headline(50, 12, title, GOLD);
-        c.text(50, 36, "Kaufen, auf die Insel stellen, Lager einsammeln", DIM, false);
+        c.text(50, 36, "Kaufen, läuft sofort, Lager einsammeln", DIM, false);
         c.textRight(W - 8, 14, balance, balColor, true);
         c.smallButton(W - 8 - 60, 30, 60, KitData.Small.DARK, "Zurück", STEEL, false);
         c.action(W - 8 - 60, 30, 60, KitData.SMALL_H, back, "Zurück");
@@ -531,15 +624,24 @@ public final class GeneratorScreen {
         long price = s.jewels(q, false);
         List<Offer> offers = new ArrayList<>();
         for (Type t : s.types()) {
+            String lock = s.lockShort(p, t);
             offers.add(new Offer(art(t.id(), q), q.label + "-" + t.name(), t.kind() == Kind.ITEM ? ores(t) : t.kind() == Kind.MONEY
                     ? "ab " + GeneratorService.fmt(t.perSecond() * q.output) + " $ pro Sekunde" : "ab " + GeneratorService.fmt(t.perSecond() * q.output) + " XP pro Sekunde",
-                    price, null, sb().core().jewels().balance(p.getUniqueId()) >= price, run(pl -> {
-                        if (!sb().core().jewels().take(pl.getUniqueId(), price)) {
+                    price, lock, sb().core().jewels().balance(p.getUniqueId()) >= price, run(pl -> {
+                        String err = s.canInstall(pl, t);
+                        if (err != null) {
+                            feedback(pl, err);
+                        } else if (!sb().core().jewels().take(pl.getUniqueId(), price)) {
                             feedback(pl, "Dafür brauchst du " + price + " Juwelen.");
                         } else {
-                            pl.getInventory().addItem(s.item(t, q, 1)).values().forEach(r -> sb().core().abholbox().add(pl.getUniqueId(), r));
-                            feedback(pl, null);
-                            Msg.send(pl, "<" + q.color + ">" + s.name(t, q) + " gekauft! <gray>Stell ihn auf deine Insel.");
+                            err = s.install(pl, t, q, 1);
+                            if (err != null) {
+                                sb().core().jewels().add(pl.getUniqueId(), price);
+                                feedback(pl, err);
+                            } else {
+                                feedback(pl, null);
+                                Msg.send(pl, "<" + q.color + ">" + s.name(t, q) + " gekauft, <#9AD8FF>er läuft schon auf deiner Insel.");
+                            }
                         }
                         jewels(pl);
                     })));
@@ -562,9 +664,11 @@ public final class GeneratorScreen {
         reg.accept("Generator Geld", () -> canvas(new View(KitData.Sprite.GN_GELD, "Geld-Generator", STEEL, 1, 10, "0,5 $ pro Sekunde", 0.3,
                 "1.234 / 3.600 $", List.of(), "Offline 50 %", null, -1, -1, null, false, no, null, no, null, no, no)));
         List<Row> rows = new ArrayList<>();
-        for (int i = 0; i < 16; i++) rows.add(new Row(art("xp", Quality.values()[i % 4]), w, CYAN, 10, "999.999.999 XP", 0.5, no));
-        reg.accept("Generatoren", () -> island(rows, 16, w, no, no, no, no));
-        reg.accept("Generatoren leer", () -> island(List.of(), 3, null, no, no, no, no));
+        for (int i = 0; i < 22; i++) rows.add(new Row(art("xp", Quality.values()[i % 4]), w, CYAN, 10, "999.999.999 XP", 0.5, no));
+        List<Area> areas = List.of(new Area("Insel", 22, 22, true, no), new Area("Nether", 99, 99, false, no), new Area("End", 99, 99, false, no));
+        reg.accept("Generatoren", () -> island(new IslandView(rows, areas, 22, w, no, no, no, no, no, no)));
+        reg.accept("Generatoren frei", () -> island(new IslandView(rows.subList(0, 3), List.of(), 8, null, no, no, no, no, no, no)));
+        reg.accept("Generatoren leer", () -> island(new IslandView(List.of(), List.of(), 0, null, no, no, no, no, no, no)));
         List<Offer> offers = new ArrayList<>();
         for (int i = 0; i < 9; i++) offers.add(new Offer(art("mob", Quality.values()[i % 4]), w, w + w, 999_999_999L, i % 3 == 0 ? w : null, i % 2 == 0, no));
         List<ShopRow> srows = new ArrayList<>();
