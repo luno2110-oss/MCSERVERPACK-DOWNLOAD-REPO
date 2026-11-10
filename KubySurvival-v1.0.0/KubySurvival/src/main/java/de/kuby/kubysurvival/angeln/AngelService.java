@@ -95,6 +95,8 @@ public final class AngelService {
     private final File file;
     private final Map<UUID, AngelProfile> profiles = new HashMap<>();
     private final Map<String, Zone> zones = new LinkedHashMap<>();
+    /** Angelwelt (Gewässer mit eigenen Boni und Voraussetzungen), null wenn aus. */
+    private AngelWorld world;
     private final Map<UUID, Long> pendingMoney = new HashMap<>();
     private final Map<UUID, Double> tournament = new HashMap<>();
     private long tournamentEnds;
@@ -226,6 +228,19 @@ public final class AngelService {
     // Zonen
     // =================================================================================================================
 
+    public void world(AngelWorld w) {
+        this.world = w;
+    }
+
+    public AngelWorld world() {
+        return world;
+    }
+
+    /** Gewässer der Angelwelt am Schwimmer (null außerhalb). */
+    public AngelWorld.Spot spotAt(Location l) {
+        return world == null ? null : world.spotAt(l);
+    }
+
     public synchronized Zone zoneAt(Location l) {
         for (Zone z : zones.values()) if (z.contains(l)) return z;
         return null;
@@ -342,13 +357,19 @@ public final class AngelService {
         Zone zone = zoneAt(hook);
         boolean inZone = zone != null;
         boolean night = night(hook.getWorld());
-        Water water = Water.at(hook);
+        // Gewässer der Angelwelt: eigene Fischarten und Boni
+        AngelWorld.Spot spot = spotAt(hook);
+        Water water = spot != null ? spot.water : Water.at(hook);
         Rod rod = rodOf(p);
-        double luck = luck(id, inZone, night, rod);
+        double luck = luck(id, inZone, night, rod) + (spot == null ? 0 : spot.luck);
 
         // Art: Grundgewicht der Seltenheit, Glück verschiebt nach oben, verteilt auf die Arten der Seltenheit
         List<FishSpecies> pool = new ArrayList<>(FishSpecies.of(water));
-        if (inZone || (rod != null && rod.mythosAnywhere())) pool.addAll(FishSpecies.of(Water.MYTHOS));
+        if (spot != null && spot.mythosOnly) {
+            pool = new ArrayList<>(FishSpecies.of(Water.MYTHOS));
+        } else if (water != Water.MYTHOS && (inZone || (rod != null && rod.mythosAnywhere()))) {
+            pool.addAll(FishSpecies.of(Water.MYTHOS));
+        }
         Map<Rarity, Integer> perRarity = new EnumMap<>(Rarity.class);
         for (FishSpecies s : pool) perRarity.merge(s.rarity(), 1, Integer::sum);
         double total = 0;
@@ -374,7 +395,8 @@ public final class AngelService {
 
         // Gewicht: kleine häufiger; Großfang-Rolle würfelt öfter und nimmt das Beste
         double q = 0;
-        for (int i = 0; i <= a.upgrade(Upgrade.GROSSFANG) + (rod == null ? 0 : rod.weight); i++) q = Math.max(q, rnd.nextDouble());
+        int rolls = a.upgrade(Upgrade.GROSSFANG) + (rod == null ? 0 : rod.weight) + (spot == null ? 0 : spot.weight);
+        for (int i = 0; i <= rolls; i++) q = Math.max(q, rnd.nextDouble());
         double kg = species.minKg() + (species.maxKg() - species.minKg()) * Math.pow(q, 1.6);
         kg = Math.round(kg * (kg < 10 ? 100 : 10)) / (kg < 10 ? 100.0 : 10.0);
         int stars = q < 0.35 ? 1 : q < 0.6 ? 2 : q < 0.8 ? 3 : q < 0.93 ? 4 : 5;
@@ -410,9 +432,10 @@ public final class AngelService {
             }
         }
 
-        // Schatz (nur in Angel-Zonen)
+        // Schatz (in Angel-Zonen und in der Angelwelt)
         String treasure = null;
-        if ((inZone || (rod != null && rod.treasureAnywhere())) && rnd.nextDouble() * 100 < treasureChance(id, rod)) {
+        if ((inZone || spot != null || (rod != null && rod.treasureAnywhere()))
+                && rnd.nextDouble() * 100 < treasureChance(id, rod) + (spot == null ? 0 : spot.treasure)) {
             treasure = treasure(p, a);
             a.treasures++;
         }

@@ -52,7 +52,7 @@ public final class ScoreboardText {
 
     private ScoreboardText() {}
 
-    private static final Pattern ICONS = Pattern.compile("<font:" + Pattern.quote(FONT) + ">[^<]*</font> ?");
+    private static final Pattern ICONS = Pattern.compile("(<white>)?<font:" + Pattern.quote(FONT) + ">[^<]*</font>(</white>)? ?");
 
     /** Entfernt Icons und Abstände aus dem Resource Pack (für Spieler ohne Pack). */
     public static String stripIcons(String mini) {
@@ -68,7 +68,8 @@ public final class ScoreboardText {
 
     /** Ein Icon aus dem Resource Pack, mit Abstand dahinter. */
     public static String icon(String glyph) {
-        return "<font:" + FONT + ">" + glyph + "</font> ";
+        // immer weiß: sonst färbt Minecraft das Icon in der Farbe des Textes davor ein
+        return "<white><font:" + FONT + ">" + glyph + "</font></white> ";
     }
 
     /** Wandelt den sichtbaren Text in Small Caps um. Tags und Icons bleiben unverändert. */

@@ -90,7 +90,8 @@ public final class AngelMenus implements AngelScreens.Nav {
                 service.luck(id, false, false), service.faster(id, false), bait == null ? null : bait.label,
                 bait == null ? null : bait.icon, bait == null ? 0 : a.bait(bait),
                 service.inventoryValue(p, AngelService.SellMode.ALLES), a.ordersDone(),
-                service.zoneTeleport() != null, a.rods.size()), this));
+                service.zoneTeleport() != null, a.rods.size(), service.world() != null && service.world().world() != null),
+                this));
     }
 
     public void openBook(Player p, Water w) {
@@ -232,6 +233,57 @@ public final class AngelMenus implements AngelScreens.Nav {
     @Override
     public Consumer<Player> help() {
         return nav(this::openHelp);
+    }
+
+    /** Angelwelt: alle Gewässer mit Boni und Voraussetzungen (✓/✗ für diesen Spieler). */
+    public void openWorld(Player p) {
+        AngelWorld w = service.world();
+        AngelProfile a = service.profile(p.getUniqueId());
+        List<AngelScreens.SpotCard> cards = new ArrayList<>();
+        AngelWorld.Spot here = w == null ? null : w.islandAt(p.getLocation());
+        if (w != null) {
+            for (AngelWorld.Spot s : w.spots()) {
+                List<AngelScreens.SpotReq> reqs = new ArrayList<>();
+                reqs.add(new AngelScreens.SpotReq(AngelWorld.rodText(s), w.rodOk(p, s)));
+                String second = (s.bait != null ? s.bait.label + " · " : "") + "Level " + s.level;
+                reqs.add(new AngelScreens.SpotReq(second, w.baitOk(p, s) && w.levelOk(p, s)));
+                String water = s.extras().isEmpty() ? s.waterLabel() : s.waterLabel() + " · " + s.extras();
+                cards.add(new AngelScreens.SpotCard(s.id, s.name, s.color, water, FishSpecies.byId(s.iconFish),
+                        s.bonus(), reqs, w.open(p, s), s == here));
+            }
+        }
+        show(p, AngelScreens.world(new AngelScreens.WorldView(cards, a.level(), w != null && w.world() != null), this));
+    }
+
+    @Override
+    public Consumer<Player> world() {
+        return nav(this::openWorld);
+    }
+
+    @Override
+    public Consumer<Player> travel(String spot) {
+        return p -> {
+            AngelWorld w = service.world();
+            if (w == null) {
+                err(p, "Die Angelwelt ist ausgeschaltet.");
+                return;
+            }
+            AngelWorld.Spot s = spot == null ? null : w.spot(spot);
+            if (s != null && !w.open(p, s)) {
+                err(p, "Dafür fehlt dir noch: " + w.missing(p, s));
+                openWorld(p);
+                return;
+            }
+            de.kuby.kubyplugins.ui.UiDialog.close(p);
+            String e = w.travel(p, s);
+            if (e != null) {
+                err(p, e);
+                return;
+            }
+            Sfx.play(core, p, Sfx.Kind.TELEPORT);
+            Msg.send(p, "<aqua><b>ANGELN</b> <dark_gray>▶ <white>" + (s == null ? "Willkommen in der <aqua>Angelwelt<white>! "
+                    + "<gray>Stege führen zu allen Gewässern." : "Am <aqua>" + Msg.escape(s.name) + "<white>. <gray>" + s.allBonus()));
+        };
     }
 
     @Override

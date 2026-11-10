@@ -1026,6 +1026,18 @@ angeln:
   double-catch-tokens: 100
   tournament:
     rewards: [5000, 2500, 1000]
+  # Angelwelt (Unter-Modus von Survival): eigene Welt mit Spawn-Insel und 8 Gewässern, jedes anders gut. Manche
+  # verlangen eine Angel (angel: holz ... netherite, rainbow = nur Juwelen-Angeln), einen aktiven Köder (koeder:
+  # regenwurm, glitzer, nacht, gold) und ein Angel-Level. Hin mit /angeln welt oder /angeln gewaesser.
+  # Admins: /kp angel welt bauen (Welt anlegen und alles neu bauen).
+  welt:
+    aktiv: true
+    name: angelwelt
+    # beim ersten Start automatisch anlegen und bauen
+    auto-erstellen: true
+    # Werte je Gewässer überschreiben (Beispiel, sonst gelten die Vorgaben):
+    # gewaesser:
+    #   tiefsee: {name: "Tiefsee-Graben", angel: diamant, koeder: gold, level: 20, glueck: 12, tempo: 5, gewicht: 2, schatz: 2}
 
 jewelshop:
   survival:

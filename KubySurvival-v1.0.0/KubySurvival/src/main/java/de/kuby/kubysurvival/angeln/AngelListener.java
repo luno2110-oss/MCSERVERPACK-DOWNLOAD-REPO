@@ -1,6 +1,7 @@
 package de.kuby.kubysurvival.angeln;
 
 import de.kuby.kubyplugins.KubyPlugins;
+import de.kuby.kubyplugins.util.Msg;
 import de.kuby.kubysurvival.KubySurvival;
 import de.kuby.kubysurvival.jobs.Job;
 import org.bukkit.Location;
@@ -57,10 +58,15 @@ public final class AngelListener implements Listener {
         FishHook hook = e.getHook();
         switch (e.getState()) {
             case FISHING -> {
+                // Angelwelt: auf der Insel eines Gewässers nur mit passender Angel, Köder und Level
+                AngelWorld world = service.world();
+                AngelWorld.Spot spot = world == null ? null : world.islandAt(p.getLocation());
+                if (spot != null && !allowed(e, p, world, spot)) return;
                 boolean zone = service.zoneAt(hook.getLocation()) != null || service.zoneAt(p.getLocation()) != null;
                 Rod rod = AngelService.rodOf(p);
                 boolean rain = !hook.getWorld().isClearWeather();
-                double f = Math.max(0.15, 1.0 - service.faster(p.getUniqueId(), zone, rod, rain) / 100.0);
+                double f = Math.max(0.15, 1.0 - (service.faster(p.getUniqueId(), zone, rod, rain)
+                        + (spot == null ? 0 : spot.faster)) / 100.0);
                 int min = Math.max(1, (int) (hook.getMinWaitTime() * f));
                 int max = Math.max(min, (int) (hook.getMaxWaitTime() * f));
                 hook.setMinWaitTime(min);
@@ -71,6 +77,13 @@ public final class AngelListener implements Listener {
             case CAUGHT_FISH -> {
                 if (!(e.getCaught() instanceof Item item)) return;
                 Location at = hook.getLocation();
+                // vom Nachbarsteg in ein gesperrtes Gewässer geworfen: kein Fang
+                AngelWorld world = service.world();
+                AngelWorld.Spot spot = world == null ? null : world.spotAt(at);
+                if (spot != null && !allowed(e, p, world, spot)) {
+                    item.remove();
+                    return;
+                }
                 AngelService.Catch c = service.catchFish(p, at);
                 ItemStack fish = AngelItems.fish(c.species(), c.stars(), c.amount());
                 if (c.autoSold() > 0) {
@@ -95,6 +108,17 @@ public final class AngelListener implements Listener {
             }
             default -> fx.stop(p);
         }
+    }
+
+    /** Prüft die Voraussetzungen eines Gewässers; false (und Abbruch mit Hinweis), wenn etwas fehlt. */
+    private boolean allowed(PlayerFishEvent e, Player p, AngelWorld world, AngelWorld.Spot spot) {
+        String miss = world.missing(p, spot);
+        if (miss == null) return true;
+        e.setCancelled(true);
+        Msg.send(p, "<aqua><b>ANGELN</b> <dark_gray>▶ <gray>Am <white>" + Msg.escape(spot.name) + " <gray>fehlt dir noch: <red>"
+                + Msg.escape(miss) + "<gray>. Alle Gewässer: <white>/angeln gewaesser");
+        p.playSound(p.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.6f);
+        return false;
     }
 
     /** Effekte der besonderen Angeln beim Fang. */

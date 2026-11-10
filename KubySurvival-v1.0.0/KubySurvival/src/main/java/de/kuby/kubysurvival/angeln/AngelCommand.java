@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * /angeln [buch|rute|koeder|haendler|auftraege|top|hilfe|zone] für Spieler und /kp angel ... für Admins
+ * /angeln [buch|rute|koeder|haendler|auftraege|top|hilfe|zone|welt|gewaesser] für Spieler und /kp angel ... für Admins
  * (Zonen, Teleport-Punkt, Hologramm, Händler, Turnier).
  */
 public final class AngelCommand implements CommandExecutor, TabCompleter {
@@ -50,6 +50,8 @@ public final class AngelCommand implements CommandExecutor, TabCompleter {
             case "top", "bestenliste" -> menus.openTop(p, "woche");
             case "hilfe" -> menus.openHelp(p);
             case "zone" -> menus.toZone().accept(p);
+            case "welt", "angelwelt" -> menus.travel(args.length > 1 ? args[1].toLowerCase() : null).accept(p);
+            case "gewaesser", "gewässer", "spots" -> menus.openWorld(p);
             default -> menus.open(p);
         }
         return true;
@@ -58,7 +60,7 @@ public final class AngelCommand implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length != 1) return List.of();
-        return List.of("buch", "rute", "koeder", "haendler", "auftraege", "top", "hilfe", "zone").stream()
+        return List.of("buch", "rute", "koeder", "haendler", "auftraege", "top", "hilfe", "zone", "welt", "gewaesser").stream()
                 .filter(s -> s.startsWith(args[0].toLowerCase())).toList();
     }
 
@@ -118,6 +120,23 @@ public final class AngelCommand implements CommandExecutor, TabCompleter {
                 }
                 if (err != null) Msg.send(p, "<red>" + err);
             }
+            case "welt", "angelwelt" -> {
+                AngelWorld w = service.world();
+                String action = args.length > 2 ? args[2].toLowerCase() : "";
+                if (w == null) {
+                    Msg.send(p, "<red>Die Angelwelt ist aus (angeln.welt.aktiv).");
+                } else if (action.equals("bauen") || action.equals("erstellen")) {
+                    w.loadSpots();
+                    Msg.send(p, "<green>" + w.rebuild());
+                } else if (action.equals("tp")) {
+                    org.bukkit.Location to = w.spawn();
+                    if (to == null) Msg.send(p, "<red>Die Angelwelt gibt es noch nicht: /kp angel welt bauen");
+                    else p.teleportAsync(to);
+                } else {
+                    Msg.send(p, "<white>/kp angel welt bauen <gray>Welt anlegen und Spawn-Insel und Gewässer (neu) bauen");
+                    Msg.send(p, "<white>/kp angel welt tp <gray>Zum Spawn der Angelwelt");
+                }
+            }
             case "haendler", "händler" -> {
                 if (args.length > 2 && args[2].equalsIgnoreCase("entfernen")) {
                     Msg.send(p, dealer.removeNear(p) ? "<green>Fischhändler entfernt." : "<red>Kein Fischhändler im Umkreis von 5 Blöcken.");
@@ -135,6 +154,7 @@ public final class AngelCommand implements CommandExecutor, TabCompleter {
                 Msg.send(p, "<white>/kp angel holo [id] [entfernen] <gray>Hologramm an deiner Position");
                 Msg.send(p, "<white>/kp angel haendler [entfernen] <gray>Fischhändler an deiner Position");
                 Msg.send(p, "<white>/kp angel turnier start <Minuten> | stop");
+                Msg.send(p, "<white>/kp angel welt bauen | tp <gray>Angelwelt mit 8 Gewässern");
             }
         }
     }

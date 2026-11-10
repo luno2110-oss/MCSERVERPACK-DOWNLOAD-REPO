@@ -73,6 +73,7 @@ public final class KubySurvival extends JavaPlugin {
     private AngelService angeln;
     private AngelMenus angelMenus;
     private AngelHolo angelHolo;
+    private de.kuby.kubysurvival.angeln.AngelWorld angelWorld;
     private ClaimService claims;
     private ClaimTool claimTool;
     private SurvivalHud hud;
@@ -101,6 +102,8 @@ public final class KubySurvival extends JavaPlugin {
     public KubyPlugins core() { return core; }
     public AngelService angeln() { return angeln; }
     public AngelMenus angelMenus() { return angelMenus; }
+    /** Angelwelt (null, wenn ausgeschaltet). */
+    public de.kuby.kubysurvival.angeln.AngelWorld angelWorld() { return angelWorld; }
     public ClaimService claims() { return claims; }
     public ClaimTool claimTool() { return claimTool; }
     public JobService jobs() { return jobs; }
@@ -157,6 +160,26 @@ public final class KubySurvival extends JavaPlugin {
                     new de.kuby.kubysurvival.angeln.AngelScreens.ShopView(t, none, none, null, 999_999_999, 999_999, "rod:void"), an));
             core.registerSelfTestCanvas("Angel-Shop " + tab + " voll", () -> de.kuby.kubysurvival.angeln.AngelScreens.shop(
                     new de.kuby.kubysurvival.angeln.AngelScreens.ShopView(t, all, all, de.kuby.kubysurvival.angeln.Rod.GOETTLICH, 0, 0, null), an));
+        }
+        // Angelwelt: alle offen (lange Namen), alle gesperrt, nicht eingerichtet
+        for (int k = 0; k < 3; k++) {
+            int mode = k;
+            core.registerSelfTestCanvas("Angelwelt " + (mode == 0 ? "offen" : mode == 1 ? "gesperrt" : "fehlt"), () -> {
+                java.util.List<de.kuby.kubysurvival.angeln.AngelScreens.SpotCard> cards = new java.util.ArrayList<>();
+                String[] fish = {"rotauge", "saibling", "axolotl", "clownfisch", "seeteufel", "groenlandhai", "phoenixfisch", "ur_koi"};
+                for (int i = 0; i < 8; i++) {
+                    boolean open = mode == 0;
+                    cards.add(new de.kuby.kubysurvival.angeln.AngelScreens.SpotCard("s" + i,
+                            i == 3 ? "Sehr lange Korallen-Lagune am Riff" : "Gewässer " + (i + 1), 0x9AD8FF, "Warme Gewässer",
+                            de.kuby.kubysurvival.angeln.FishSpecies.byId(fish[i]),
+                            "Glück +30 % · Tempo +15 % · viel größere Fische · Schätze +3 %",
+                            java.util.List.of(new de.kuby.kubysurvival.angeln.AngelScreens.SpotReq("Ab Netheriteangel", open),
+                                    new de.kuby.kubysurvival.angeln.AngelScreens.SpotReq("Glitzerköder · Level 35", open)),
+                            open, open && i == 0));
+                }
+                return de.kuby.kubysurvival.angeln.AngelScreens.world(
+                        new de.kuby.kubysurvival.angeln.AngelScreens.WorldView(cards, mode == 0 ? 100 : 1, mode != 2), an);
+            });
         }
         for (de.kuby.kubysurvival.shop.ShopCanvas.Page pg : de.kuby.kubysurvival.shop.ShopCanvas.Page.values()) {
             core.registerSelfTestCanvas("Survival-Juwelenshop " + pg,
@@ -334,6 +357,12 @@ public final class KubySurvival extends JavaPlugin {
         getServer().getPluginManager().registerEvents(intro, this);
 
         angelMenus = new AngelMenus(this, core, angeln);
+        // Angelwelt: Unter-Modus mit 8 Gewässern (Boni, manche nur mit Angel, Köder und Level)
+        if (core.getConfig().getBoolean("angeln.welt.aktiv", true)) {
+            angelWorld = new de.kuby.kubysurvival.angeln.AngelWorld(this, core);
+            angeln.world(angelWorld);
+            getServer().getPluginManager().registerEvents(angelWorld, this);
+        }
         angelHolo = new AngelHolo(this);
         AngelDealer angelDealer = new AngelDealer(this);
         AngelFx angelFx = new AngelFx(this, core, angeln);
@@ -641,6 +670,7 @@ public final class KubySurvival extends JavaPlugin {
     @Override
     public void onDisable() {
         if (hud != null) hud.shutdown();
+        if (angelWorld != null) angelWorld.shutdown();
         if (angeln != null) angeln.save();
         if (claims != null) claims.save();
         if (jobs != null) jobs.save();

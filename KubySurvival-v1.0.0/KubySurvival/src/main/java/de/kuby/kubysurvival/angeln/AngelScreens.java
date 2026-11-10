@@ -80,6 +80,12 @@ public final class AngelScreens {
 
         /** Angel kaufen ("buy") oder wieder holen ("take"). */
         Consumer<Player> rodAction(Rod r, String action);
+
+        /** Angelwelt: Übersicht der Gewässer. */
+        Consumer<Player> world();
+
+        /** In die Angelwelt reisen: an ein Gewässer (id) oder zum Spawn (null). */
+        Consumer<Player> travel(String spot);
     }
 
     private AngelScreens() {
@@ -169,7 +175,7 @@ public final class AngelScreens {
                            int jobLevel, List<FishSpecies> fishOfDay, boolean golden, long goldenSeconds,
                            double luck, double faster, String activeBait, KitData.Icon activeBaitIcon,
                            int activeBaitCount, long fishValue,
-                           int ordersDone, boolean hasZone, int rodsOwned) {}
+                           int ordersDone, boolean hasZone, int rodsOwned, boolean worldReady) {}
 
     public static Canvas main(MainView v, Nav nav) {
         Canvas c = new Canvas(W).heading("Angeln", net.kyori.adventure.text.format.TextColor.color(0x55FCFC));
@@ -232,12 +238,16 @@ public final class AngelScreens {
         tile(c, 198, y + 108, Theme.PURPLE, Rod.GOETTLICH.icon(), "Juwelen-Angeln", null,
                 spans("Rainbow, Void, Göttlich", GRAY), true, nav.shop(1), "Die stärksten Angeln, nur für Juwelen");
 
-        // Knöpfe
+        tile(c, 0, y + 144, Theme.TEAL, KitData.Icon.FILLED_MAP, "Angelwelt", null,
+                spans(v.worldReady ? "8 Gewässer mit Boni" : "Noch nicht eingerichtet", GRAY), true, nav.world(),
+                "Eigene Welt zum Angeln: Gewässer mit Boni, manche nur mit Angel, Köder und Level");
         if (v.hasZone) {
-            textButton(c, 0, 366, KitData.Button.TEAL, "Zur Angel-Zone", ON_TEAL, true, nav.toZone(),
-                    "Dort beißt es besser: +10 % Glück, Mythen-Fische und Schätze");
+            tile(c, 198, y + 144, Theme.NAVY, KitData.Icon.COMPASS, "Angel-Zone", null,
+                    spans("+10 % Glück, Mythen, Schätze", GRAY), true, nav.toZone(), "Zur Angel-Zone reisen");
         }
-        textButtonRight(c, W, 366, KitData.Button.DARK, "So funktioniert's", TAB, false, nav.help(), "Kurz erklärt");
+
+        // Knöpfe
+        textButtonRight(c, W, 402, KitData.Button.DARK, "So funktioniert's", TAB, false, nav.help(), "Kurz erklärt");
         return c;
     }
 
@@ -246,6 +256,53 @@ public final class AngelScreens {
         c.textRight(188, y, v1, WHITE, false);
         c.text(202, y, l2, GRAY, false);
         c.textRight(380, y, v2, v2Color, false);
+    }
+
+    // =================================================================================================================
+    // Angelwelt
+    // =================================================================================================================
+
+    /** Voraussetzung eines Gewässers: Text und ob sie erfüllt ist. */
+    public record SpotReq(String text, boolean ok) {}
+
+    public record SpotCard(String id, String name, int color, String water, FishSpecies icon, String bonus,
+                           List<SpotReq> reqs, boolean open, boolean here) {}
+
+    public record WorldView(List<SpotCard> cards, int level, boolean ready) {}
+
+    public static Canvas world(WorldView v, Nav nav) {
+        Canvas c = new Canvas(W).heading("Angeln", net.kyori.adventure.text.format.TextColor.color(0x55FCFC));
+        long open = v.cards.stream().filter(SpotCard::open).count();
+        head(c, Theme.TEAL, nav.main(), KitData.Icon.FILLED_MAP, "ANGELWELT",
+                v.ready ? open + "/" + v.cards.size() + " Gewässer offen · jedes anders gut" : "Noch nicht eingerichtet",
+                List.of(Span.of("Level ", GRAY), Span.bold(String.valueOf(v.level), AQUA)));
+        for (int i = 0; i < v.cards.size(); i++) {
+            SpotCard s = v.cards.get(i);
+            int x = (i % 2) * 198, y = 58 + (i / 2) * 94;
+            c.box(x, y, 192, 90, s.open ? (s.here ? KitData.Box.GOLD : Theme.TEAL.box) : KitData.Box.NAVY);
+            if (s.icon != null) c.icon(x + 8, y + 8, fishIcon(s.icon, true), false);
+            TextColor name = TextColor.color(s.color);
+            c.text(x + 30, y + 7, Canvas.fit(s.name, true, 154), s.open ? name : GRAY, true);
+            c.text(x + 30, y + 18, Canvas.fit(s.water, false, 154), GRAY, false);
+            c.text(x + 8, y + 31, Canvas.fit(s.bonus, false, 176), s.open ? GREEN : LIGHT, false);
+            int ry = y + 43;
+            for (SpotReq r : s.reqs) {
+                c.text(x + 8, ry, Canvas.fit((r.ok ? "✓ " : "✗ ") + r.text, false, 176), r.ok ? GREEN : RED, false);
+                ry += 11;
+            }
+            if (v.ready && s.open) {
+                textButtonRight(c, x + 184, y + 62, KitData.Button.TEAL, s.here ? "Hier" : "Hinreisen", ON_TEAL, true,
+                        nav.travel(s.id), "Zum " + s.name);
+            } else {
+                c.textRight(x + 184, y + 69, v.ready ? "Gesperrt" : "Bald", GRAY, false);
+            }
+        }
+        if (v.ready) {
+            textButton(c, 0, 436, KitData.Button.DARK, "Zum Spawn der Angelwelt", TAB, false, nav.travel(null),
+                    "Spawn-Insel mit Stegen zu allen Gewässern");
+        }
+        textButtonRight(c, W, 436, KitData.Button.DARK, "Zurück", TAB, false, nav.main(), "Zum Angel-Menü");
+        return c;
     }
 
     // =================================================================================================================
@@ -665,7 +722,7 @@ public final class AngelScreens {
                 {"Angeln", "Wirf die Angel ins Wasser. Wenn es zieht, holst du ein."},
                 {"", "Jeder Fang bringt Angel-Punkte für dein Level."},
                 {"Gewässer", "Fluss, Ozean, warm, kalt, Sumpf: je Biom andere Fische."},
-                {"", "Mythen-Fische und Schätze gibt es nur in der Angel-Zone."},
+                {"", "Mythen-Fische und Schätze in der Angel-Zone und Angelwelt."},
                 {"Sterne", "Schwerere Fische haben mehr Sterne und bringen mehr Geld."},
                 {"Glück", "Glück macht seltene Fische häufiger: Level, Glückshaken,"},
                 {"", "Köder, Angel-Zone und der Angler-Job erhöhen es."},
@@ -673,10 +730,12 @@ public final class AngelScreens {
                 {"", "zum vollen Preis, danach weniger. Fische des Tages +50 %."},
                 {"Goldene", "Jeden Tag eine Stunde mit +50 % auf alle Fische."},
                 {"Aufträge", "Drei Tagesaufträge, für alle drei gibt es einen Bonus."},
-                {"Fischbuch", "Fang alle 8 Arten einer Seite für eine Belohnung."},
+                {"Fischbuch", "Fang alle 12 Arten einer Seite für eine Belohnung."},
                 {"Angel-Shop", "14 Angeln mit eigenen Vorteilen (Holz bis Netherite für"},
                 {"", "Coins, Rainbow, Void und Göttlich für Juwelen). Sie gelten,"},
                 {"", "solange du mit der Angel fischst, zusätzlich zu Upgrades."},
+                {"Angelwelt", "Eigene Welt mit 8 Gewässern, jedes anders gut. Die besten"},
+                {"", "verlangen eine Angel, einen aktiven Köder und ein Level."},
         };
         c.box(0, 54, W, 12 + parts.length * 11 + 10, KitData.Box.NAVY);
         int y = 64;

@@ -281,7 +281,7 @@ public final class SurvivalHud implements Listener {
         return String.format(Locale.ROOT, "%02d:%02d", h, m);
     }
 
-    /** Ort: Spawn, eigenes oder fremdes Grundstück, Angelzone oder Wildnis. */
+    /** Ort: Spawn, eigenes oder fremdes Grundstück, Farmwelt, Angelwelt (Gewässer), Angelzone oder Wildnis. */
     private String place(Player p) {
         Location l = p.getLocation();
         Location spawn = core.modes().spawnOf(ModeService.SURVIVAL);
@@ -290,6 +290,11 @@ public final class SurvivalHud implements Listener {
             return "Spawn";
         }
         if (addon.farm() != null && addon.farm().isFarm(l.getWorld())) return "Farmwelt";
+        var aw = addon.angelWorld();
+        if (aw != null && aw.isWorld(l.getWorld())) {
+            var spot = aw.islandAt(l);
+            return spot == null ? "Angelwelt" : spot.name;
+        }
         ClaimService.Claim c = addon.claims().at(l);
         if (c != null) {
             if (c.owner().equals(p.getUniqueId())) return "Dein Grundstueck";

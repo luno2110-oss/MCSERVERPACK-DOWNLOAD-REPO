@@ -72,8 +72,10 @@ public final class HotbarDisplay {
         UUID id = p.getUniqueId();
         // Münz- und XP-Icon aus dem Pack KubyUI, ohne Pack nur Text.
         boolean icons = plugin.uiPack().active(p);
-        String coin = icons ? "<font:kubyplugins:sb></font> " : "";
-        String star = icons ? "<font:kubyplugins:sb></font> " : "<#ff9a1f>XP ";
+        // Icons immer weiß: sonst färbt Minecraft sie in der Farbe des Textes davor (der Kontostand ist beim
+        // Hoch- und Runterzählen grün bzw. rot und schließt seine Farbe nicht), dann wirkte das XP-Icon wie eingefärbt
+        String coin = icons ? "<white><font:kubyplugins:sb></font></white> " : "";
+        String star = icons ? "<white><font:kubyplugins:sb></font></white> " : "<#ff9a1f>XP ";
         String sep = " <dark_gray>|</dark_gray> ";
         boolean en = plugin.playerSettings() != null && plugin.playerSettings().english(id);
         return switch (mode) {
