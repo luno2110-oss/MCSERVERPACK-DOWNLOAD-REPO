@@ -332,6 +332,10 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
 - [ ] Hub: Lobby-Items fehlen beim Betreten; Scoreboard mit Spielerzahl je Modus; Rechtsklick mit dem Kompass öffnet eine Modus-Auswahl als Dialog; frei anpassbare Modus-NPCs, die beim Anvisieren leicht größer werden
 - [ ] UIs: Hover-Hervorhebung von Knöpfen und mehr Animationen, damit alles cleaner und professioneller wirkt
 - [ ] Rematch-artiger Modus (Fußball, Sloclap als Referenz): Machbarkeit und Bedarf klären (Feedback gegeben)
+- [x] Angeln: Fische neu gezeichnet und mehr Arten (Test im Spiel offen): alle Fisch-Icons und Item-Texturen im Stil der Icon-Datenbank neu (Seitenansicht wie das echte Tier, 1 px Kontur, Farbrampen mit Licht oben links, Kiemendeckel, Auge mit Glanzpunkt, Muster der echten Art). 38 handgezeichnete Körperformen (`tools/fish_shapes.py`, Engine `tools/fishart.py`), z. B. Hai mit Kiemenspalten, Schwertfisch, Mondfisch, Rochen von oben, Aal geschwungen, Seepferdchen, Qualle, Anglerfisch mit Leuchtköder, Axolotl
+  - 24 neue Arten, jetzt 72 (12 je Gewässer): Brasse, Äsche, Barbe, Huchen · Sardine, Rotbarsch, Seeteufel, Barrakuda · Riffbarsch, Kaiserfisch, Seepferdchen, Hammerhai · Seehase, Rotlachs, Eisfisch, Heringshai · Rotfeder, Piranha, Axolotl, Schlangenkopf · Kristallqualle, Drachenfisch, Nebelrochen, Abgrundangler
+  - Fischbuch zeigt 12 Arten je Seite und zählt x/72; die Seitenbelohnung gibt es, wenn alle Arten des Gewässers gefangen sind (wer die alte 8er-Seite schon voll hatte, behält die Belohnung)
+- [ ] Angeln als eigener Unter-Modus: Angelwelt, in der jedes Gewässer anders gut ist; manche Gewässer nur mit bestimmter Angel, Köder und Level (in der Overworld weiter normal angeln)
 
 ## Ordnergruppe 9 – Technik und Qualität
 - [x] 9.1 Echter Maven-Build gegen Paper 1.21.11 bei jedem Push (GitHub Actions), Compiler-Fehler als Annotationen, fertige ZIP als Release

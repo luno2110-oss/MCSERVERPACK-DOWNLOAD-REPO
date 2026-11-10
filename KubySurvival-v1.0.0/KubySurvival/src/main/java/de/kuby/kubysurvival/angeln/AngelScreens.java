@@ -186,7 +186,7 @@ public final class AngelScreens {
         c.text(bx + 45, 78, v.level >= 100 ? "Höchstes Level erreicht" : "noch " + AngelText.num(v.nextLevelPoints)
                 + " Punkte bis Level " + (v.level + 1), LIGHT, false);
         row(c, 90, "Fänge", AngelText.num(v.catches), "Diese Woche", AngelText.num(v.weekCatches), WHITE);
-        row(c, 101, "Fischbuch", v.species + "/48", "Verdient", AngelText.money(v.earned), WHITE);
+        row(c, 101, "Fischbuch", v.species + "/" + FishSpecies.ALL.size(), "Verdient", AngelText.money(v.earned), WHITE);
         row(c, 112, "Beste Serie", "x" + v.bestStreak, "Schätze", AngelText.num(v.treasures), WHITE);
         c.text(12, 123, v.jobBonus >= 0
                 ? "Angler-Job aktiv (Level " + v.jobLevel + "): +" + v.jobBonus + " % Glück und Preis"
@@ -213,7 +213,8 @@ public final class AngelScreens {
         // Kacheln
         int y = 216;
         tile(c, 0, y, Theme.NAVY, KitData.Icon.FISH_BOOK, "Fischbuch", null,
-                spans(v.species + "/48 Arten gefangen", GRAY), true, nav.book(Water.FLUSS), "Alle Arten, Rekorde und wo sie beißen");
+                spans(v.species + "/" + FishSpecies.ALL.size() + " Arten gefangen", GRAY), true, nav.book(Water.FLUSS),
+                "Alle Arten, Rekorde und wo sie beißen");
         tile(c, 198, y, Theme.NAVY, KitData.Icon.ROD, "Rute & Upgrades", null,
                 spans("Glück +" + AngelText.dec(Math.round(v.luck)) + " % · Tempo +" + AngelText.dec(Math.round(v.faster)) + " %", GRAY),
                 true, nav.rod(), "Verbessere deine Angel dauerhaft");
@@ -258,10 +259,14 @@ public final class AngelScreens {
 
     public static Canvas book(BookView v, Nav nav) {
         Canvas c = new Canvas(W).heading("Angeln", net.kyori.adventure.text.format.TextColor.color(0x55FCFC));
-        String sub = v.pageCaught + "/8 gefangen · " + (v.pageDone ? "Seite komplett ✓"
+        int pageSize = v.entries.size();
+        boolean full = v.pageCaught >= pageSize;
+        // Belohnung gibt es einmal je Seite; wer sie schon hat (alte, kleinere Seite), sieht nur den Stand
+        String sub = v.pageCaught + "/" + pageSize + " gefangen · " + (full ? "Seite komplett ✓"
+                : v.pageDone ? "Belohnung schon erhalten"
                 : "volle Seite: " + AngelText.money(v.pageCoins) + " + " + v.pageTokens + " Tokens");
         head(c, Theme.NAVY, nav.main(), KitData.Icon.FISH_BOOK, v.water.upper(), sub,
-                List.of(Span.bold(v.total + "/48", AQUA)));
+                List.of(Span.bold(v.total + "/" + FishSpecies.ALL.size(), AQUA)));
         List<String> labels = new ArrayList<>();
         List<Consumer<Player>> clicks = new ArrayList<>();
         for (Water w : Water.values()) {

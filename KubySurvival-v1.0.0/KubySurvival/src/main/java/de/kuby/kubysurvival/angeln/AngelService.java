@@ -36,8 +36,8 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Angeln in Survival (nach den Referenz-Clips): 48 Arten auf 6 Gewässern, Seltenheiten, Sterne nach Gewicht,
- * Angel-Punkte, Level und Ränge, Upgrades, Köder, Tagesaufträge, Fische des Tages, Goldene Stunde, Händler mit
+ * Angeln in Survival (nach den Referenz-Clips): 72 Arten auf 6 Gewässern (12 je Gewässer), Seltenheiten, Sterne nach
+ * Gewicht, Angel-Punkte, Level und Ränge, Upgrades, Köder, Tagesaufträge, Fische des Tages, Goldene Stunde, Händler mit
  * Stundenbudget, Fischbuch mit Seitenbelohnung, Bestenlisten, Angel-Zonen (Bonus, Mythen-Fische, Schätze), Turnier.
  */
 public final class AngelService {
@@ -419,7 +419,8 @@ public final class AngelService {
 
         // Fischbuch-Seite voll?
         Water pageDone = null;
-        if (firstOfSpecies && !a.pagesDone.contains(species.water()) && a.caughtSpecies(species.water()) == 8) {
+        if (firstOfSpecies && !a.pagesDone.contains(species.water())
+                && a.caughtSpecies(species.water()) == FishSpecies.of(species.water()).size()) {
             a.pagesDone.add(species.water());
             pageDone = species.water();
             pay(id, cfg("page-coins", 3000));
