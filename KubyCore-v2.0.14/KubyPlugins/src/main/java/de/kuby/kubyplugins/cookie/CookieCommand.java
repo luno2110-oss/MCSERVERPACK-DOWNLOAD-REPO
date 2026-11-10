@@ -18,7 +18,7 @@ import java.util.Locale;
  */
 public final class CookieCommand implements TabExecutor {
 
-    private static final List<String> SUBS = List.of("gebaeude", "upgrades", "erfolge", "aufstieg", "rangliste", "statistik", "hilfe", "station", "kaufen");
+    private static final List<String> SUBS = List.of("gebaeude", "upgrades", "erfolge", "aufstieg", "rangliste", "statistik", "hilfe", "station", "kaufen", "laden");
 
     private final KubyPlugins plugin;
 
@@ -50,6 +50,7 @@ public final class CookieCommand implements TabExecutor {
             case "rangliste", "top" -> CookieScreen.ranking(p, CookieService.Board.ALLTIME);
             case "statistik", "stats" -> CookieScreen.stats(p);
             case "hilfe", "help" -> CookieScreen.help(p, 0);
+            case "laden", "shop" -> CookieScreen.shop(p, args.length > 1 && args[1].toLowerCase().startsWith("i") ? 1 : 0);
             case "station" -> {
                 if (st == null || st.spot() == null) Msg.send(p, "<red>Es gibt noch keine Keks-Station.");
                 else p.teleportAsync(st.spot());

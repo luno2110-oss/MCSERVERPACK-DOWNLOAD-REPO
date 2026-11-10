@@ -535,10 +535,16 @@ totenkiste:
 
 # Ränge von niedrig nach hoch. Erkannt über LuckPerms (group.<rang>) oder kuby.rank.<rang>.
 # Börse als Trading-App (/investments, Kachel Börse): jedes Item der Shop-Bereiche ist ein Wert mit Live-Kurs
-# Cookie Clicker (/cookie): Station mit großem Keks (/cookie admin setzen), eigener Stand je Spieler in allen Modi
-# (keine Coins, keine XP, keine Items), Daten in cookies.yml.
+# Cookie Clicker (/cookie): Station mit großem Keks (/cookie admin setzen), eigener Stand je Spieler in allen Modi,
+# Daten in cookies.yml. Im Keks-Laden gibt es für Kekse Items und Vorteile (Trank-Effekte, satt, Erfahrung).
 cookie:
   station: ""                 # wird mit /cookie admin setzen gefüllt (Welt;x;y;z)
+  laden:
+    aktiv: true
+    # Preis = Sekunden deiner Produktion je Angebot (mindestens der Grundpreis) mal diesem Faktor
+    preis-faktor: 1.0
+    # Modi, in denen gekauft werden darf (nicht in der Lobby: dort gibt es kein Spiel-Inventar)
+    modi: [smp, survival, skyblock]
   keksregen:
     minuten: 30               # alle so viele Minuten 20 Sekunden Keksregen an der Station
   glueckskeks:

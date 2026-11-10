@@ -9,7 +9,8 @@ import java.util.Locale;
 
 /**
  * Inhalte des Cookie Clickers (eigene Bäckerei-Welt): 14 Gebäude, Upgrades (Stufen je Gebäude, Klick, Rezepte, Ofen,
- * Glück), Erfolge in fünf Bereichen, Titel nach Stufe und der Sternen-Baum für Backsterne aus dem Aufstieg.
+ * Glück), Erfolge in fünf Bereichen, Titel nach Stufe, der Sternen-Baum für Backsterne aus dem Aufstieg und der
+ * Keks-Laden (Items und Vorteile für Kekse).
  */
 public final class CookieContent {
 
@@ -229,6 +230,59 @@ public final class CookieContent {
 
     public static Node node(String id) {
         for (Node n : TREE) if (n.id().equals(id)) return n;
+        return null;
+    }
+
+    // =================================================================================================================
+    // Keks-Laden
+    // =================================================================================================================
+
+    /**
+     * Angebot im Keks-Laden. Preis = so viele Sekunden deiner Produktion (seconds), mindestens minCost; so bleibt der
+     * Laden vom ersten Keks bis zur Sternenbäckerei spannend. daily: höchstens so oft am Tag.
+     * perk: Vorteil (Trank-Effekt oder sofort), sonst Item. effect/level/minutes für Effekte, amount für Items.
+     */
+    public record Offer(String id, String name, String desc, boolean perk, org.bukkit.Material icon, double minCost,
+                        int seconds, int daily, String effect, int level, int minutes, int amount) {}
+
+    public static final List<Offer> OFFERS = List.of(
+            // Vorteile
+            new Offer("satt", "Satt essen", "Hunger und Sättigung voll.", true, org.bukkit.Material.COOKED_BEEF,
+                    1_000, 60, 10, "satt", 0, 0, 0),
+            new Offer("nachtsicht", "Nachtsicht", "20 Min. im Dunkeln sehen.", true, org.bukkit.Material.GOLDEN_CARROT,
+                    3_000, 200, 5, "night_vision", 0, 20, 0),
+            new Offer("tempo", "Tempo", "10 Min. schneller laufen.", true, org.bukkit.Material.SUGAR,
+                    5_000, 300, 5, "speed", 0, 10, 0),
+            new Offer("eile", "Eile", "10 Min. schneller abbauen.", true, org.bukkit.Material.GOLDEN_PICKAXE,
+                    5_000, 300, 5, "haste", 1, 10, 0),
+            new Offer("feuer", "Feuerschutz", "10 Min. Schutz vor Feuer.", true, org.bukkit.Material.MAGMA_CREAM,
+                    6_000, 300, 3, "fire_resistance", 0, 10, 0),
+            new Offer("wasser", "Unterwasser", "10 Min. unter Wasser atmen.", true,
+                    org.bukkit.Material.HEART_OF_THE_SEA, 6_000, 300, 3, "water_breathing", 0, 10, 0),
+            new Offer("glueck", "Glück", "15 Min. bessere Beute.", true, org.bukkit.Material.RABBIT_FOOT,
+                    8_000, 400, 3, "luck", 0, 15, 0),
+            new Offer("level", "Erfahrung", "Sofort 5 Level.", true, org.bukkit.Material.EXPERIENCE_BOTTLE,
+                    20_000, 900, 3, "xp", 5, 0, 0),
+            // Items
+            new Offer("kekse", "Kekse", "16 echte Kekse zum Essen.", false, org.bukkit.Material.COOKIE,
+                    500, 30, 20, null, 0, 0, 16),
+            new Offer("kuchen", "Kuchen", "Ein ganzer Kuchen.", false, org.bukkit.Material.CAKE,
+                    2_000, 120, 5, null, 0, 0, 1),
+            new Offer("karotten", "Goldene Karotten", "8 Goldene Karotten.", false, org.bukkit.Material.GOLDEN_CARROT,
+                    10_000, 600, 3, null, 0, 0, 8),
+            new Offer("feuerwerk", "Feuerwerk", "16 Raketen für Elytren.", false, org.bukkit.Material.FIREWORK_ROCKET,
+                    12_000, 600, 3, null, 0, 0, 16),
+            new Offer("flaschen", "XP-Fläschchen", "8 Fläschchen mit Erfahrung.", false,
+                    org.bukkit.Material.EXPERIENCE_BOTTLE, 15_000, 800, 3, null, 0, 0, 8),
+            new Offer("namensschild", "Namensschild", "Für ein Tier.", false, org.bukkit.Material.NAME_TAG,
+                    20_000, 1_000, 2, null, 0, 0, 1),
+            new Offer("goldapfel", "Goldener Apfel", "Ein Goldener Apfel.", false, org.bukkit.Material.GOLDEN_APPLE,
+                    25_000, 1_200, 2, null, 0, 0, 1),
+            new Offer("diamant", "Diamant", "Ein Diamant.", false, org.bukkit.Material.DIAMOND,
+                    50_000, 2_400, 1, null, 0, 0, 1));
+
+    public static Offer offer(String id) {
+        for (Offer o : OFFERS) if (o.id().equals(id)) return o;
         return null;
     }
 }

@@ -25,8 +25,8 @@ import java.util.function.Consumer;
 
 /**
  * Dialoge des Cookie Clickers im Bäckerei-Look (dunkles Holz, goldene Ränder): Übersicht mit Kacheln, Gebäude (x1, x10,
- * x100, Max), Upgrades nach Preis, Erfolge in fünf Bereichen, Aufstieg mit Sternen-Baum, Ranglisten, Statistik und
- * Hilfe. Ohne Pack eine Zusammenfassung im Chat.
+ * x100, Max), Upgrades nach Preis, Erfolge in fünf Bereichen, Aufstieg mit Sternen-Baum, Keks-Laden (Vorteile und
+ * Items), Ranglisten, Statistik und Hilfe. Ohne Pack eine Zusammenfassung im Chat.
  */
 public final class CookieScreen {
 
@@ -130,7 +130,7 @@ public final class CookieScreen {
                 new Tile(KitData.Sprite.CK_M_UPGRADES, "Upgrades", au > 0 ? au + " kaufbar" : d.upgrades.size() + " gekauft", au > 0, run(q -> upgrades(q, 0))),
                 new Tile(KitData.Sprite.CK_M_ERFOLGE, "Erfolge", d.achievements.size() + "/" + CookieContent.ACHIEVEMENTS.size(), false, run(q -> achievements(q, 0, 0))),
                 new Tile(KitData.Sprite.CK_M_AUFSTIEG, "Aufstieg", stars > 0 ? "+" + n(stars) + " Backsterne" : "Stufe " + n(d.level), d.stars > 0 && s.nodeAffordable(d), run(CookieScreen::prestige)),
-                new Tile(KitData.Sprite.CK_GOLD, "Glückskekse", d.golden + " gefangen", false, run(CookieScreen::stats)),
+                new Tile(KitData.Sprite.CK_M_LADEN, "Keks-Laden", "Items und Vorteile", false, run(q -> shop(q, 0))),
                 new Tile(KitData.Sprite.CK_M_RANGLISTE, "Rangliste", rank > 0 ? "Platz " + rank : "noch ohne Platz", false, run(q -> ranking(q, Board.ALLTIME))),
                 new Tile(KitData.Sprite.CK_M_STATISTIK, "Statistik", n(d.allTime) + " gebacken", false, run(CookieScreen::stats)),
                 new Tile(KitData.Sprite.CK_M_HILFE, "Hilfe", "So geht's", false, run(q -> help(q, 0))));
@@ -323,6 +323,77 @@ public final class CookieScreen {
         c.text(4, y, Canvas.fit(v.footer(), false, W - 8), DIM, false);
         y += 14;
         pager(c, y, v.page(), v.pages(), v.prev(), v.next());
+        back(c, y, v.back());
+        return c;
+    }
+
+    // =================================================================================================================
+    // Keks-Laden
+    // =================================================================================================================
+
+    /** Karte im Laden: Item-Bild, Name, Beschreibung, Preis, heute noch frei / Limit. */
+    public record OCard(org.bukkit.Material icon, String name, String desc, String price, boolean affordable, int left,
+                        int daily, Consumer<Player> buy) {}
+
+    public record ShopView(Head head, int tab, List<OCard> cards, String blocked, Consumer<Player>[] tabs, Consumer<Player> back) {}
+
+    static final List<String> SHOP_TABS = List.of("Vorteile", "Items");
+
+    @SuppressWarnings("unchecked")
+    public static void shop(Player p, int tab) {
+        if (!ui(p)) return;
+        CookieService s = svc();
+        Data d = s.data(p.getUniqueId());
+        List<OCard> cards = new ArrayList<>();
+        for (CookieContent.Offer o : CookieContent.OFFERS) {
+            if (o.perk() != (tab == 0)) continue;
+            double price = s.offerPrice(d, o);
+            int left = Math.max(0, o.daily() - s.boughtToday(d, o.id()));
+            cards.add(new OCard(o.icon(), o.name(), o.desc(), n(price), price <= d.cookies && left > 0, left, o.daily(), run(q -> {
+                String err = s.buyOffer(q, o.id());
+                feedback(q, err);
+                if (err == null) Msg.send(q, "<#F2C443>🍪 <white>" + o.name() + " <gray>gekauft für <white>" + n(price) + " Kekse<gray>.");
+                shop(q, tab);
+            })));
+        }
+        Consumer<Player>[] tabs = new Consumer[SHOP_TABS.size()];
+        for (int i = 0; i < tabs.length; i++) {
+            int t = i;
+            tabs[i] = run(q -> shop(q, t));
+        }
+        UiDialog.show(p, shop(new ShopView(head(d, "Keks-Laden"), tab, cards, s.shopBlocked(p), tabs, run(CookieScreen::main))), 330);
+    }
+
+    public static Canvas shop(ShopView v) {
+        Canvas c = new Canvas(W).heading("Keks-Laden", GOLD);
+        int y = head(c, v.head());
+        int tw = (W - 4) / 2;
+        for (int i = 0; i < SHOP_TABS.size(); i++) {
+            boolean on = i == v.tab();
+            c.smallButton(i * (tw + 4), y, tw, on ? KitData.Small.GOLD_ON : KitData.Small.DARK, SHOP_TABS.get(i), on ? CREAM : TAN, true);
+            if (!on) c.action(i * (tw + 4), y, tw, KitData.SMALL_H, v.tabs()[i], SHOP_TABS.get(i));
+        }
+        y += KitData.SMALL_H + 4;
+        int cw = (W - 4) / 2, ch = 46;
+        for (int i = 0; i < v.cards().size(); i++) {
+            OCard o = v.cards().get(i);
+            int x = (i % 2) * (cw + 4), cy = y + (i / 2) * (ch + 4);
+            boolean ok = o.affordable() && v.blocked() == null;
+            c.box(x, cy, cw, ch, ok ? KitData.Box.WOOD : KitData.Box.WOOD_CARD);
+            c.item(x + 4, cy + 7, o.icon(), true, KitData.Icon.CHEST);
+            c.text(x + 40, cy + 5, Canvas.fit(o.name(), true, cw - 84), ok ? GOLD : CREAM, true);
+            c.textRight(x + cw - 6, cy + 5, o.left() + "/" + o.daily(), o.left() > 0 ? TAN : RED, false);
+            c.text(x + 40, cy + 16, Canvas.fit(o.desc(), false, cw - 46), TAN, false);
+            String label = o.left() <= 0 ? "Heute ausverkauft" : o.price() + " Kekse";
+            c.smallButton(x + 40, cy + ch - KitData.SMALL_H - 4, cw - 46, ok ? KitData.Small.GOLD : KitData.Small.DARK, label,
+                    ok ? GOLD : RED, true);
+            c.action(x + 40, cy + ch - KitData.SMALL_H - 4, cw - 46, KitData.SMALL_H, o.buy(), o.desc());
+        }
+        y += ((v.cards().size() + 1) / 2) * (ch + 4);
+        c.text(4, y, Canvas.fit(v.blocked() != null ? v.blocked()
+                : "Preise wachsen mit deiner Bäckerei. Die Limits gelten je Tag.", false, W - 8),
+                v.blocked() != null ? RED : DIM, false);
+        y += 14;
         back(c, y, v.back());
         return c;
     }
@@ -577,7 +648,7 @@ public final class CookieScreen {
     static final String[][] HELP = {
             {"Grundlagen", "So fängst du an", "Linksklick auf den großen Keks backt Kekse.", "Rechtsklick auf den Keks öffnet das Menü (auch /cookie).",
                     "Schnell klicken baut eine Combo auf: bis x2 je Klick.", "!Dann kaufst du Gebäude", "Gebäude backen von selbst, auch wenn du weg bist.",
-                    "Upgrades und Erfolge machen alles schneller.", "!Gut zu wissen", "Dein Stand gilt in allen Modi.", "Keine Coins, keine XP, keine Items: nur Kekse."},
+                    "Upgrades und Erfolge machen alles schneller.", "!Gut zu wissen", "Dein Stand gilt in allen Modi.", "Im Keks-Laden tauschst du Kekse gegen Items und Vorteile."},
             {"Gebäude", "Gebäude", "14 Arten, vom Kochlöffel bis zur Sternenbäckerei.", "Das nächste erscheint, sobald du das vorige hast.",
                     "Kaufmenge: x1, x10, x100 oder so viele wie möglich.", "Jedes weitere Stück kostet 15 % mehr. Kein Verkauf."},
             {"Upgrades", "Upgrades", "Stufen: ein Gebäude backt doppelt (ab 1, 10, 25, 50, 100, 150, 200 Stück).", "Klick: Handschuhe verdoppeln Klicks, Zuckerfinger geben % deiner Kekse pro Sekunde.",
@@ -670,7 +741,7 @@ public final class CookieScreen {
         Head h0 = new Head("Cookie Clicker", "Krümel", 0, 0, 0, 1, null);
         List<Tile> tiles = new ArrayList<>();
         KitData.Sprite[] arts = {KitData.Sprite.CK_M_GEBAEUDE, KitData.Sprite.CK_M_UPGRADES, KitData.Sprite.CK_M_ERFOLGE, KitData.Sprite.CK_M_AUFSTIEG,
-                KitData.Sprite.CK_GOLD, KitData.Sprite.CK_M_RANGLISTE, KitData.Sprite.CK_M_STATISTIK, KitData.Sprite.CK_M_HILFE};
+                KitData.Sprite.CK_M_LADEN, KitData.Sprite.CK_M_RANGLISTE, KitData.Sprite.CK_M_STATISTIK, KitData.Sprite.CK_M_HILFE};
         for (int i = 0; i < 8; i++) tiles.add(new Tile(arts[i], i == 0 ? "Gebäude" : "Glückskekse", i % 2 == 0 ? "999 kaufbar" : w, i % 2 == 0, no));
         reg.accept("Cookie Übersicht", () -> main(new MainView(h, tiles, w + w, no)));
         reg.accept("Cookie Übersicht leer", () -> main(new MainView(h0, tiles, "Klick an der Station mit Linksklick auf den Keks, um zu backen.", null)));
@@ -696,6 +767,20 @@ public final class CookieScreen {
         @SuppressWarnings("unchecked")
         Consumer<Player>[] fourB = new Consumer[]{no, no, no, no};
         reg.accept("Cookie Rangliste", () -> ranking(new RankView(h, 0, rr, "Dein Platz: #9999 · " + n(9.99e300), fourB, no)));
+        // Keks-Laden: beide Reiter, riesige Preise, ausverkauft, in der Lobby gesperrt
+        @SuppressWarnings("unchecked")
+        Consumer<Player>[] two = new Consumer[]{no, no};
+        for (int t = 0; t < 2; t++) {
+            int tab = t;
+            List<OCard> oc = new ArrayList<>();
+            for (CookieContent.Offer o : CookieContent.OFFERS) {
+                if (o.perk() == (tab == 0)) oc.add(new OCard(o.icon(), o.name() + w, o.desc() + w, n(9.99e300), oc.size() % 3 == 0,
+                        oc.size() % 4, o.daily(), no));
+            }
+            reg.accept("Cookie Laden " + SHOP_TABS.get(tab), () -> shop(new ShopView(h, tab, oc, null, two, no)));
+            reg.accept("Cookie Laden " + SHOP_TABS.get(tab) + " Lobby", () -> shop(new ShopView(h0, tab, oc,
+                    "Einkaufen geht nur in einem Spielmodus (SMP, Survival, Skyblock), nicht in der Lobby.", two, no)));
+        }
         List<String[]> lines = new ArrayList<>();
         for (int i = 0; i < 20; i++) lines.add(new String[]{w, n(9.99e300) + " / " + n(9.99e300)});
         reg.accept("Cookie Statistik", () -> stats(new StatsView(h, lines, no)));

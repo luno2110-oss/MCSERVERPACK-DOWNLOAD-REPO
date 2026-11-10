@@ -30,9 +30,10 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Cookie Clicker: Stand je Spieler (gilt in allen Modi, keine Coins, keine XP, keine Items), Produktion jede Sekunde,
+ * Cookie Clicker: Stand je Spieler (gilt in allen Modi, keine Coins), Produktion jede Sekunde,
  * Klicks mit Combo, Gebäude, Upgrades, Erfolge (+2 % je Erfolg), Glückskeks-Effekte, Keksregen, Backen ohne dich
- * (Ofen), Aufstieg mit Backsternen und Sternen-Baum, Ranglisten. Daten in cookies.yml.
+ * (Ofen), Aufstieg mit Backsternen und Sternen-Baum, Ranglisten, Keks-Laden (Items und Vorteile für Kekse, nur in den
+ * Spielmodi). Daten in cookies.yml.
  */
 public final class CookieService implements Listener {
 
@@ -46,6 +47,9 @@ public final class CookieService implements Listener {
         public final Set<String> upgrades = new HashSet<>();
         public final Set<String> achievements = new HashSet<>();
         public final Set<String> tree = new HashSet<>();
+        /** Keks-Laden: heute gekauft je Angebot (Tag als Datum in Berlin). */
+        public final Map<String, Integer> bought = new java.util.HashMap<>();
+        public long boughtDay;
         /** Stufe beim letzten Aufstieg (bringt +2 % je Stufe), Backsterne frei und insgesamt. */
         public long level, stars, starsTotal;
         public int ascensions;
@@ -337,6 +341,81 @@ public final class CookieService implements Listener {
     }
 
     // =================================================================================================================
+    // Keks-Laden
+    // =================================================================================================================
+
+    private static long today() {
+        return java.time.LocalDate.now(java.time.ZoneId.of("Europe/Berlin")).toEpochDay();
+    }
+
+    /** Preis: so viele Sekunden der eigenen Produktion, mindestens der Grundpreis (aufgerundet auf 2 Stellen). */
+    public double offerPrice(Data d, CookieContent.Offer o) {
+        double p = Math.max(o.minCost(), d.cps * o.seconds() * plugin.getConfig().getDouble("cookie.laden.preis-faktor", 1.0));
+        double mag = Math.pow(10, Math.max(0, Math.floor(Math.log10(p)) - 1));
+        return Math.ceil(p / mag) * mag;
+    }
+
+    public int boughtToday(Data d, String id) {
+        if (d.boughtDay != today()) return 0;
+        return d.bought.getOrDefault(id, 0);
+    }
+
+    /** Darf hier eingekauft werden? null = ja, sonst Grund (z. B. in der Lobby). */
+    public String shopBlocked(Player p) {
+        if (!plugin.getConfig().getBoolean("cookie.laden.aktiv", true)) return "Der Keks-Laden ist geschlossen.";
+        String mode = plugin.modes().modeOf(p.getUniqueId());
+        List<String> modes = plugin.getConfig().getStringList("cookie.laden.modi");
+        if (modes.isEmpty()) {
+            modes = List.of(de.kuby.kubyplugins.service.ModeService.SMP, de.kuby.kubyplugins.service.ModeService.SURVIVAL,
+                    de.kuby.kubyplugins.service.ModeService.SKYBLOCK);
+        }
+        if (!modes.contains(mode)) return "Einkaufen geht nur in einem Spielmodus (SMP, Survival, Skyblock), nicht in der Lobby.";
+        return null;
+    }
+
+    /** Kauft ein Angebot: Kekse ab, Tageslimit, dann Effekt oder Item (volles Inventar: fällt vor die Füße). */
+    public String buyOffer(Player p, String id) {
+        Data d = data(p.getUniqueId());
+        CookieContent.Offer o = CookieContent.offer(id);
+        if (o == null) return "Dieses Angebot gibt es nicht.";
+        String blocked = shopBlocked(p);
+        if (blocked != null) return blocked;
+        if (boughtToday(d, id) >= o.daily()) return "Heute schon " + o.daily() + "x gekauft. Morgen gibt es wieder welche.";
+        double price = offerPrice(d, o);
+        if (price > d.cookies) return "Dir fehlen noch " + fmt(price - d.cookies) + " Kekse.";
+        d.cookies -= price;
+        if (d.boughtDay != today()) {
+            d.bought.clear();
+            d.boughtDay = today();
+        }
+        d.bought.merge(id, 1, Integer::sum);
+        if (o.perk()) {
+            switch (o.effect()) {
+                case "satt" -> {
+                    p.setFoodLevel(20);
+                    p.setSaturation(20f);
+                }
+                case "xp" -> p.giveExpLevels(o.level());
+                default -> {
+                    org.bukkit.potion.PotionEffectType t = org.bukkit.Registry.EFFECT.get(org.bukkit.NamespacedKey.minecraft(o.effect()));
+                    if (t != null) p.addPotionEffect(new org.bukkit.potion.PotionEffect(t, o.minutes() * 60 * 20, o.level(), false, true, true));
+                    if (o.effect().equals("water_breathing")) {
+                        p.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.DOLPHINS_GRACE,
+                                o.minutes() * 60 * 20, 0, false, true, true));
+                    }
+                }
+            }
+        } else {
+            org.bukkit.inventory.ItemStack it = new org.bukkit.inventory.ItemStack(o.icon(), o.amount());
+            for (org.bukkit.inventory.ItemStack rest : p.getInventory().addItem(it).values()) {
+                p.getWorld().dropItemNaturally(p.getLocation(), rest);
+            }
+        }
+        dirty = true;
+        return null;
+    }
+
+    // =================================================================================================================
     // Erfolge
     // =================================================================================================================
 
@@ -617,6 +696,9 @@ public final class CookieService implements Listener {
             d.upgrades.addAll(s.getStringList("upgrades"));
             d.achievements.addAll(s.getStringList("achievements"));
             d.tree.addAll(s.getStringList("tree"));
+            d.boughtDay = s.getLong("bought-day");
+            ConfigurationSection bo = s.getConfigurationSection("bought");
+            if (bo != null) for (String k2 : bo.getKeys(false)) d.bought.put(k2, bo.getInt(k2));
             players.put(id, d);
         }
     }
@@ -651,6 +733,10 @@ public final class CookieService implements Listener {
             y.set(b + "upgrades", new ArrayList<>(d.upgrades));
             y.set(b + "achievements", new ArrayList<>(d.achievements));
             y.set(b + "tree", new ArrayList<>(d.tree));
+            if (!d.bought.isEmpty()) {
+                y.set(b + "bought-day", d.boughtDay);
+                for (Map.Entry<String, Integer> o : d.bought.entrySet()) y.set(b + "bought." + o.getKey(), o.getValue());
+            }
         }
         try {
             plugin.getDataFolder().mkdirs();

@@ -477,11 +477,31 @@ def m_klick():
     return a
 
 
+def m_laden():
+    """Keks-Laden: Marktstand mit rot-weiß gestreifter Markise (gewellter Saum), Holztheke, darauf Kekse und eine Münze."""
+    a = Icon()
+    a.rect(4, 10, 6, 28, "holz", form="cyl", lo=1, hi=-2)
+    a.rect(25, 10, 27, 28, "holz", form="cyl", lo=1, hi=-2)
+    a.poly([(2, 7), (6, 2), (25, 2), (29, 7), (29, 11), (2, 11)], "rot", lo=1, hi=-2)
+    for x in (7, 14, 21):
+        a.poly([(x, 2), (x + 3, 2), (x + 3, 11), (x, 11)], "papier", lo=3, hi=-1, sep=False)
+    for x in range(2, 29, 7):
+        a.ellipse(x, 9, x + 6, 14, "rot" if (x // 7) % 2 == 0 else "papier", form="round", lo=2, hi=-2)
+    a.rect(2, 21, 29, 29, "holz", lo=2, hi=-2)
+    a.rect(2, 21, 29, 22, "holz", lo=4, hi=1, sep=False)
+    mini(a, 7, 15, 15, 22)
+    mini(a, 16, 16, 23, 22, chips=((0.4, 0.4),))
+    a.ellipse(22, 16, 27, 21, "gold", form="round", lo=3, hi=-1)
+    a.px([(9, 3), (8, 4)], "rot", -1)
+    return a
+
+
 ICONS = {"cookie": c_cookie, "gold": c_gold, "b_loeffel": b_loeffel, "b_schuessel": b_schuessel, "b_blech": b_blech, "b_ofen": b_ofen,
          "b_lehrling": b_lehrling, "b_muehle": b_muehle, "b_zucker": b_zucker, "b_schoko": b_schoko, "b_fabrik": b_fabrik,
          "b_zeppelin": b_zeppelin, "b_bank": b_bank, "b_zauber": b_zauber, "b_zeitofen": b_zeitofen, "b_sterne": b_sterne,
          "m_gebaeude": m_gebaeude, "m_upgrades": m_upgrades, "m_erfolge": m_erfolge, "m_aufstieg": m_aufstieg,
-         "m_rangliste": m_rangliste, "m_statistik": m_statistik, "m_hilfe": m_hilfe, "m_regen": m_regen, "m_klick": m_klick}
+         "m_rangliste": m_rangliste, "m_statistik": m_statistik, "m_hilfe": m_hilfe, "m_regen": m_regen, "m_klick": m_klick,
+         "m_laden": m_laden}
 
 if __name__ == "__main__":
     from pixkit import sheet
