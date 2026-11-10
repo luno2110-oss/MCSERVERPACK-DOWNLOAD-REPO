@@ -237,7 +237,7 @@ public final class ClientAnims {
     private static void speedlineHint(int id, Animator a) {
         if (a.action() == null) return;
         double e = a.action().clip.eventTime("kontakt");
-        if (e <= 0 || !a.action().clip.name.contains("hart")) return;
+        if (e <= 0 || a.action().clip.meta.priority() < 80) return; // nur große Schüsse
         Minecraft mc = Minecraft.getInstance();
         Entity ent = mc.level == null ? null : mc.level.getEntity(id);
         if (ent == null || ent.position().distanceTo(mc.gameRenderer.getMainCamera().position()) > 10) return;

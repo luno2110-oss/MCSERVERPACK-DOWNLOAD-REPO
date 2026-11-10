@@ -29,11 +29,13 @@ public final class Pose {
         return this;
     }
 
-    /** this = this + (o - this) * w */
+    /** this = this + (o - this) * w; Drehungen auf dem kürzesten Weg (360° nach einer Rolle = 0°, kein Rückwärtskreiseln). */
     public Pose lerpTo(Pose o, double w) {
         for (int i = 0; i < size(); i++)
             for (int k = 0; k < 3; k++) {
-                rot[i][k] += (o.rot[i][k] - rot[i][k]) * w;
+                double d = o.rot[i][k] - rot[i][k];
+                d -= 360 * Math.floor((d + 180) / 360);
+                rot[i][k] += d * w;
                 pos[i][k] += (o.pos[i][k] - pos[i][k]) * w;
                 scl[i][k] += (o.scl[i][k] - scl[i][k]) * w;
             }

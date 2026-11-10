@@ -163,14 +163,86 @@ def jubel_knieslide(model):
     return c
 
 
+def slideshot(model):
+    """Slideshot wie in Rematch: Ausfallschritt, nach hinten fallen, Schussbein (rechts) gestreckt schräg nach oben
+    in den fallenden Ball (Volley), Landung auf dem Rücken, kurz rutschen, Rolle rückwärts, wieder auf die Füße."""
+    c = K.Clip(model, "slideshot", 34)
+    P = c.pose
+    # Anlauf: rechter Fuß setzt auf
+    P(0, hipR=(28,), kneeR=(-14,), hipL=(-30,), kneeL=(-80,), shR=(-36, 0, 10), elR=(70,), shL=(38, 0, -10),
+      elL=(76,), spine=(-14, 0, 0), torso1=(0, 0, 0), chest=(-2, 0, 0), head=(4, 0, 0), legs=(0, 0, 0),
+      root=(0, 0, 0))
+    P(2, hipR=(-20,), kneeR=(-40,), hipL=(30,), kneeL=(-60,), shR=(20, 0, 14), elR=(60,), shL=(-20, 0, -14),
+      elL=(60,), spine=(-10, 0, 0), head=(0, 0, 0))
+    # Ausfallschritt links: tief, Oberkörper zurück, rechtes Bein holt aus, linker Arm fliegt hoch
+    P(4, hipL=(40, 0, -4), kneeL=(-70,), hipR=(-34, 0, 6), kneeR=(-96,), shL=(130, 0, -36), elL=(20,),
+      shR=(-10, 0, 46), elR=(30,), spine=(12, 0, 4), torso1=(4, 0, 0), chest=(4, 0, 0), head=(-14, 0, 0),
+      root=(8, 0, 0))
+    # Absprung nach hinten: Standbein streckt, Schussbein schwingt hoch
+    P(7, hipL=(16, 0, -4), kneeL=(-46,), hipR=(52, 0, 4), kneeR=(-70,), shL=(150, 0, -40), elL=(16,),
+      shR=(14, 0, 70), elR=(24,), spine=(10, 0, 4), torso1=(4, 0, 0), chest=(4, 0, 0), head=(-26, 0, 0),
+      root=(40, 0, 6))
+    # fast waagerecht, Bein zielt auf den Ball
+    P(9, hipL=(36, 0, -4), kneeL=(-96,), hipR=(78, 0, 2), kneeR=(-34,), shL=(150, 0, -46), elL=(14,),
+      shR=(26, 0, 76), elR=(20,), spine=(6, 0, 2), torso1=(2, 0, 0), chest=(2, 0, 0), head=(-40, 0, 0),
+      root=(68, 0, 6))
+    # Kontakt: Bein gestreckt, schräg nach oben, Kopf schaut zum Fuß
+    P(10, hipL=(42, 0, -4), kneeL=(-104,), hipR=(76, 0, 0), kneeR=(-4,), shL=(140, 0, -54), elL=(12,),
+      shR=(34, 0, 80), elR=(18,), spine=(2, 0, 0), torso1=(0, 0, 0), chest=(0, 0, 0), head=(-44, 0, 0),
+      root=(76, 0, 4))
+    # Durchziehen, Landung auf dem Rücken (Bild 13), Beine bleiben oben
+    P(12, hipL=(64, 0, -4), kneeL=(-80,), hipR=(96, 0, -4), kneeR=(-10,), shL=(110, 0, -70), elL=(20,),
+      shR=(60, 0, 84), elR=(20,), spine=(-4, 0, 0), head=(-30, 0, 0), root=(92, 0, 0))
+    P(14, hipL=(90, 0, -4), kneeL=(-70,), hipR=(108, 0, -2), kneeR=(-30,), shL=(100, 0, -60), elL=(30,),
+      shR=(90, 0, 60), elR=(30,), spine=(-10, 0, 0), head=(-24, 0, 0), root=(100, 0, 0))
+    # Rolle rückwärts: zusammenrollen, Hände neben den Kopf, über die Schulter
+    P(17, hipL=(126, 0, -4), kneeL=(-128,), hipR=(126, 0, 4), kneeR=(-128,), shL=(160, 0, -24), elL=(110,),
+      shR=(160, 0, 24), elR=(110,), spine=(-26, 0, 0), torso1=(-10, 0, 0), chest=(-10, 0, 0), head=(-30, 0, 0),
+      root=(170, 0, 0))
+    P(20, hipL=(120, 0, -4), kneeL=(-132,), hipR=(120, 0, 4), kneeR=(-132,), shL=(120, 0, -20), elL=(90,),
+      shR=(120, 0, 20), elR=(90,), spine=(-24, 0, 0), torso1=(-8, 0, 0), chest=(-8, 0, 0), head=(-20, 0, 0),
+      root=(265, 0, 0))
+    # auf den Füßen in der Hocke (Bild 23), aufrichten und loslaufen
+    P(23, hipL=(98, 0, -6), kneeL=(-134,), hipR=(92, 0, 6), kneeR=(-130,), shL=(50, 0, -20), elL=(40,),
+      shR=(50, 0, 20), elR=(40,), spine=(-30, 0, 0), torso1=(-6, 0, 0), chest=(-6, 0, 0), head=(14, 0, 0),
+      root=(340, 0, 0))
+    P(26, hipL=(60, 0, -4), kneeL=(-100,), hipR=(30, 0, 4), kneeR=(-60,), shL=(20, 0, -12), elL=(50,),
+      shR=(-20, 0, 12), elR=(50,), spine=(-20, 0, 0), torso1=(-2, 0, 0), chest=(-2, 0, 0), head=(10, 0, 0),
+      root=(360, 0, 0))
+    P(30, hipL=(14, 0, -3), kneeL=(-20,), hipR=(-10, 0, 3), kneeR=(-24,), shL=(4, 0, -10), elL=(30,),
+      shR=(-2, 0, 10), elR=(30,), spine=(-8, 0, 0), torso1=(0, 0, 0), chest=(0, 0, 0), head=(4, 0, 0),
+      root=(360, 0, 0))
+    P(34, hipL=(5, 0, -3), kneeL=(-8,), hipR=(-5, 0, 3), kneeR=(-9,), shL=(2, 0, -7), elL=(14,),
+      shR=(3, 0, 7), elR=(14,), spine=(-3, 0, 0), head=(2, 0, 0), legs=(0, 0, 0), root=(360, 0, 0))
+    c.phase(0, 2, "R")
+    c.phase(2, 4, "air", land="L", carry=1.0, g=G)
+    c.phase(4, 7, "L")
+    c.phase(7, 13, "air", land="body", drift=(0, 0, -14), g=G)
+    c.phase(13, 16, "body", drift=(0, 0, -10))
+    c.phase(16, 23, "body", drift=(0, 0, -6))
+    c.phase(23, 34, "LR", anchor="L")
+    c.root_start = np.array([0.0, 0.0, 30.0])
+    c.solve_root()
+    contact = 10
+    c.holds = [(contact, 1)]
+    c.markers = [(contact, 0)]
+    # Ball: fällt von vorn oben herein, Volley trifft ihn am Spann, fliegt steigend und hart weg
+    hit = PS.touch(c, contact, "R", (0.0, 0.6, -1.0), gap=0.1)
+    PS.incoming(c, contact, hit, (2.0, 46.0, -40.0), (-360, 0, 0))
+    PS.outgoing(c, contact, hit, (-20, 330, -1450), 12, (-360, 0, 0), (-1800, 0, 90))
+    return c
+
+
 def build():
     model = R.Model(json.load(open(VORLAGE)))
-    clips = [schuss_hart(model), jubel_knieslide(model)]
+    clips = [schuss_hart(model), jubel_knieslide(model), slideshot(model)]
     data = json.load(open(VORLAGE))
     data["animations"] = [c.to_json() for c in clips]
     json.dump(data, open(ZIEL, "w"), indent=1)
     meta = {"schuss_hart": {"priority": 80, "blend_in": 0.1, "blend_out": 0.3, "ease_in": "out_quad",
                             "ease_out": "in_out_cubic", "cancel_after": 1.0},
+            "slideshot": {"priority": 85, "blend_in": 0.08, "blend_out": 0.3, "ease_in": "out_quad",
+                          "ease_out": "in_out_cubic", "cancel_after": 1.2},
             "jubel_knieslide": {"priority": 60, "blend_in": 0.15, "blend_out": 0.45, "ease_out": "in_out_quad"}}
     meta_path = os.path.join(ROOT, "rematch", "animationen", "meta.json")
     old = json.load(open(meta_path)) if os.path.exists(meta_path) else {}

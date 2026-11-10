@@ -373,7 +373,7 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
     - Jeder Client berechnet das für alle sichtbaren Spieler selbst aus Position und Drehung (kein Netzverkehr nötig): Gangarten nach Tempo gemischt mit gemeinsamer Phase, Schrittlänge gemessen (speed_at in meta.json), Frequenz steigt abgeschwächt mit (Minecraft ist für die Figurgröße sehr schnell), Vorlage beim Beschleunigen, Schräglage in Kurven, Kopf folgt dem Blick
     - Zurück zu Vanilla beim Hocken, Schwimmen, Elytra, Reiten, Schlafen; beim Schlagen/Benutzen bleiben die Arme Vanilla. Schalter: `/kanim fortbewegung an|aus`
     - Schleifen laufen ohne Delle über die Naht (Catmull-Rom über die Nahtstelle)
-    - Offen: Aktionen anderer Spieler übers Netz (Server schickt „Spieler X spielt Y“), Wurzelbewegung der Aktionen an die echte Bewegung koppeln, Slideshot, Rematch-Kamera
+    - Offen: Aktionen anderer Spieler übers Netz (Server schickt „Spieler X spielt Y“), Wurzelbewegung der Aktionen an die echte Bewegung koppeln, Rematch-Kamera
   - [x] Schritt 2c, Effekte in höherer Qualität mit Shader (Test im Spiel: `rematch_effekte_ingame.mp4`):
     - Eigener Nachbearbeitungs-Shader `assets/kubyrematch/post_effect/impact.json` + `shaders/post/impact.fsh`, läuft nach der Welt und vor dem HUD und nur, solange ein Effekt sichtbar ist. Werte (Stärke, Zeit, Treffpunkt auf dem Bildschirm) schreibt die Mod jedes Bild in den Uniform-Block „KubyFx“ (eigener beschreibbarer Puffer, Minecraft legt seine nur lesbar an)
     - Harter Kontakt: Treffer-Bild in gemalten Duoton-Farben (dunkles Blau-Lila, Orange, Creme) für die Dauer des Hit-Stops, Blitz, Schockwelle mit Bildverzerrung vom Treffpunkt aus, radiale Zoom-Unschärfe mit Farbsäumen, Aufglühen heller Stellen, Vignette, Kamera-Wackeln
@@ -381,6 +381,9 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
     - Eigene Partikel (Sprites mit `tools/fx_sprites.py`, Stil der Generator-Grafiken: Glühen von innen, weißer Kern, warme Gold-Rampen): Stern-Blitz, zwei Schockwellen-Ringe, goldene Funken mit Schwerkraft in Schussrichtung, Staubwolken, Ballspur als Leuchtstreifen; dazu Grasbrocken vom Boden unter dem Ball
     - Schalter: `/kanim shader an|aus`, `/kanim effekte an|aus`. Bei einem Shader-Fehler schaltet sich nur der Bildeffekt ab (Log-Eintrag), das Spiel läuft weiter
     - Demo: `-Pzeitlupe` stellt jetzt auch die Spieltakt-Rate herunter (`/tick rate`), damit Partikel in der Zeitlupe mitlaufen
+  - [x] Slideshot (Test im Spiel: `rematch_slideshot_ingame.mp4`), Vorbild Video 3 bei 0:34: Ausfallschritt, nach hinten fallen, Schussbein gestreckt schräg nach oben in den fallenden Ball (Volley), Kontakt mit allen Effekten, Landung auf dem Rücken, kurz rutschen, Rolle rückwärts über die Schulter, Hocke, aufstehen (~1,4 s). In `tools/bbanim/freestyle.py`, Priorität 85
+    - Überblenden mischt Drehungen jetzt auf dem kürzesten Weg (nach einer Rolle auf 360° kein Rückwärtskreiseln)
+    - Speedlines und große Effekte für alle Aktionen ab Priorität 80 (harter Schuss, Slideshot)
   - [x] Erste Skizzen des Besitzers poliert (`rematch/animationen/`): `test_skizze.bbmodel` (Original) → `test_poliert.bbmodel` mit drei neuen Animationen neben den Skizzen, alle schneller als die Skizzen (24 fps, Kontakt nach 0,5–0,8 s):
     - `schuss_normal` (2,0 s, links): Anlauf, langer letzter Schritt, Ausholen mit hoher Ferse, Durchschwung mit Peitsche im Knie, Kontakt mit 2 Bildern Stopp, Ball gestaucht und gestreckt, Durchziehen, Hüpfer, Ausgleichsschritt
     - `sprung_volley` (1,8 s, links, neu, Kontaktpose aus der Skizze): Ausholen in den Knien, Absprung rechts, Körper kippt zur Seite, Kontakt mit Stopp, Landung auf rechtem Fuß und rechter Hand, Hochdrücken
