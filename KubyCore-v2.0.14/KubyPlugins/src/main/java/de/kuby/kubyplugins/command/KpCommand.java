@@ -107,6 +107,7 @@ public final class KpCommand implements CommandExecutor {
             }
             case "homebonus" -> homeBonus(p, args);
             case "deko", "deco" -> deco(p, args);
+            case "modusnpc", "modenpc", "npc" -> plugin.modeNpcs().command(p, args);
             default -> {
                 java.util.function.BiConsumer<Player, String[]> handler = plugin.kpSub(args[0].toLowerCase(Locale.ROOT));
                 if (handler != null) handler.accept(p, args);
@@ -181,6 +182,7 @@ public final class KpCommand implements CommandExecutor {
         Msg.send(p, "<gray>/kp xp <give|take|set> <spieler> <betrag> <dark_gray>- <gray>XP verwalten");
         Msg.send(p, "<gray>/kp homebonus <spieler> <vote|verify> <dark_gray>- <gray>Homebonus vergeben");
         Msg.send(p, "<gray>/kp deko add <skin-spieler> [name] | discord | remove <dark_gray>- <gray>Deko-Figur oder Discord-Statue (Schalter Deko-NPCs)");
+        Msg.send(p, "<gray>/kp modusnpc setzen <modus> [skin] [name] | skin | name | item | drehen | entfernen <dark_gray>- <gray>Modus-NPCs in der Lobby");
     }
 
     /** Deko-Figuren: Mannequin mit dem Skin eines Spielers, ohne Funktion. Wer "Deko-NPCs" ausschaltet, sieht sie nicht. */

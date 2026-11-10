@@ -379,6 +379,21 @@ final class SelfTest {
                             : de.kuby.kubyplugins.service.InfoBar.JobLine.NONE, isl)), ia));
         }
 
+        // Modus-Wahl (Kompass): alle Modi, einer aktiv, viele Spieler, lange Zeilen
+        canvas.accept("Modus-Wahl", () -> {
+            java.util.function.Consumer<org.bukkit.entity.Player> nop = pl -> { };
+            List<de.kuby.kubyplugins.gui.ModeSelectScreen.Card> cards = new ArrayList<>();
+            String[] names = {"SMP", "Survival", "Skyblock"};
+            org.bukkit.Material[] icons = {org.bukkit.Material.IRON_SWORD, org.bukkit.Material.GRASS_BLOCK, org.bukkit.Material.OAK_SAPLING};
+            KitData.Box[] boxes = {KitData.Box.RED, KitData.Box.GREEN, KitData.Box.TEAL};
+            for (int i = 0; i < 3; i++) {
+                cards.add(new de.kuby.kubyplugins.gui.ModeSelectScreen.Card(names[i], icons[i], boxes[i],
+                        net.kyori.adventure.text.format.TextColor.color(0xFF6A5A), List.of("W".repeat(30), "Jobs, Angeln, Farmen", "x"),
+                        i * 999, i == 1, nop));
+            }
+            return de.kuby.kubyplugins.gui.ModeSelectScreen.canvas(new de.kuby.kubyplugins.gui.ModeSelectScreen.View(cards, 1998));
+        });
+
         // Hauptmenü: lange Namen, große Zahlen, volle Bereiche
         {
             List<de.kuby.kubyplugins.gui.MainScreen.Tile> tiles = new ArrayList<>();

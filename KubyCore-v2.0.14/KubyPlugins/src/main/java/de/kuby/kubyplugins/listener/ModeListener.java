@@ -62,7 +62,8 @@ public final class ModeListener implements Listener {
         boolean right = a == Action.RIGHT_CLICK_AIR || a == Action.RIGHT_CLICK_BLOCK;
 
         if (hand.getType() == Material.COMPASS && (left || right)) {
-            new de.kuby.kubyplugins.gui.ModeSelectMenu(plugin).open(p);
+            // Dialog mit Karten je Modus (ohne Pack das Truhen-Menü)
+            de.kuby.kubyplugins.gui.ModeSelectScreen.open(plugin, p);
         } else if (hand.getType().name().endsWith("_DYE") && (left || right)) {
             plugin.visibility().cycle(p);
         }

@@ -287,7 +287,9 @@ public final class ModeService {
     }
 
     public void refreshLobby(Player p) {
-        if (!isHub(p.getWorld())) return;
+        // Beim Betreten und beim Wechsel in die Lobby steht der Spieler noch in der alten Welt (Teleport folgt erst),
+        // darum zählt der Modus und nicht die Welt; sonst fehlten Kompass und Farbstoff
+        if (!isHub(p.getWorld()) && !HUB.equals(modeOf(p.getUniqueId()))) return;
         p.getInventory().setItem(4, Items.make(Material.COMPASS, "<gold>Modus-Wahl", List.of(
                 "<gray>Klick: <white>Modus wählen")));
         p.getInventory().setItem(8, plugin.visibility().dyeItem(p.getUniqueId()));

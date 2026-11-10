@@ -166,7 +166,7 @@ public final class MainScreen {
             quick.add(new Quick("Homes", KitData.Icon.RED_BED, KitData.Button.PURPLE, go(pl -> new HomesScreen(plugin).open(pl))));
         } else {
             quick.add(new Quick("Modus wählen", KitData.Icon.COMPASS, KitData.Sprite.QU_COMPASS, KitData.Button.GREEN,
-                    go(pl -> new ModeSelectMenu(plugin).open(pl))));
+                    go(pl -> ModeSelectScreen.open(plugin, pl))));
         }
         if (!hub) quick.add(new Quick("Enderchest", KitData.Icon.ENDER_CHEST, KitData.Button.DARK,
                 go(pl -> pl.openInventory(plugin.enderchests().open(pl)))));

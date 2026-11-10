@@ -190,6 +190,8 @@ public final class KubyPlugins extends JavaPlugin {
         cosmetics = new CosmeticService(this);
         discord = new DiscordLink(this);
         discordStatue = new de.kuby.kubyplugins.service.DiscordStatue(this);
+        // Modus-NPCs in der Lobby (werden beim Anschauen größer, Klick bringt in den Modus)
+        modeNpcs = new de.kuby.kubyplugins.service.ModeNpcService(this);
         shop = new ShopService(this);
         shopStorage = new ShopStorageService(this);
         enderchests = new EnderChestService(this);
@@ -501,6 +503,7 @@ public final class KubyPlugins extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (modeNpcs != null) modeNpcs.shutdown();
         if (cinema != null) cinema.shutdown();
         if (displaySettings != null) displaySettings.shutdown();
         blackjack.shutdown();
@@ -608,6 +611,8 @@ public final class KubyPlugins extends JavaPlugin {
     public DiscordLink discord() { return discord; }
 
     private de.kuby.kubyplugins.service.DiscordStatue discordStatue;
+    private de.kuby.kubyplugins.service.ModeNpcService modeNpcs;
+    public de.kuby.kubyplugins.service.ModeNpcService modeNpcs() { return modeNpcs; }
 
     public de.kuby.kubyplugins.service.DiscordStatue discordStatue() { return discordStatue; }
     public ShopService shop() { return shop; }

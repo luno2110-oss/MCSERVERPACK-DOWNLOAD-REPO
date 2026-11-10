@@ -365,10 +365,13 @@ public final class ScoreboardService {
                 out.add("");
                 out.add(ind.apply(row(ScoreboardText.I_GEM, "JUWELEN", "<light_purple>" + ScoreboardText.number(jewels))));
                 out.add("");
-                out.add(ind.apply("<green>" + SmallCaps.of("MODUS WÄHLEN:")));
-                out.add(ind.apply("<gray>" + SmallCaps.of("LINKS:") + " <white>" + SmallCaps.of("SMP")));
-                out.add(ind.apply("<gray>" + SmallCaps.of("RECHTS:") + " <white>" + SmallCaps.of("SURVIVAL")));
-                out.add(ind.apply("<gray>" + SmallCaps.of("KOMPASS:") + " <white>" + SmallCaps.of("SKYBLOCK")));
+                // Spieler je Modus (Kompass öffnet die Modus-Wahl)
+                Map<String, Integer> counts = modeCounts();
+                out.add(ind.apply("<green>" + SmallCaps.of("SPIELER JE MODUS")));
+                out.add(ind.apply(row(ScoreboardText.I_SWORD, "SMP", "<white>" + counts.getOrDefault(ModeService.SMP, 0))));
+                out.add(ind.apply(row(ScoreboardText.I_CLAIM, "SURVIVAL", "<white>" + counts.getOrDefault(ModeService.SURVIVAL, 0))));
+                out.add(ind.apply(row(ScoreboardText.I_ISLAND, "SKYBLOCK", "<white>" + counts.getOrDefault(ModeService.SKYBLOCK, 0))));
+                out.add(ind.apply(row(ScoreboardText.I_SPAWN, "LOBBY", "<white>" + counts.getOrDefault(ModeService.HUB, 0))));
                 out.add("");
                 out.add(mid.apply(people));
                 out.add(mid.apply(online));
@@ -376,6 +379,20 @@ public final class ScoreboardService {
         }
         if (textured) out.add("");   // Luft über dem unteren Rand
         return out;
+    }
+
+    private Map<String, Integer> counts = Map.of();
+    private long countsAt;
+
+    /** Spieler je Modus, höchstens einmal pro Sekunde gezählt (das Scoreboard fragt für jeden Spieler). */
+    private Map<String, Integer> modeCounts() {
+        long now = System.currentTimeMillis();
+        if (now - countsAt < 1000) return counts;
+        Map<String, Integer> m = new java.util.HashMap<>();
+        for (Player o : Bukkit.getOnlinePlayers()) m.merge(plugin.modes().modeOf(o.getUniqueId()), 1, Integer::sum);
+        counts = m;
+        countsAt = now;
+        return m;
     }
 
     private String rank(Player p) {
