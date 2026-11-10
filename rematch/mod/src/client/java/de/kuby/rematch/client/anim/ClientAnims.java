@@ -1,0 +1,234 @@
+package de.kuby.rematch.client.anim;
+
+import de.kuby.rematch.KubyRematch;
+import de.kuby.rematch.anim.Animator;
+import de.kuby.rematch.anim.Clip;
+import de.kuby.rematch.anim.ClipLibrary;
+import de.kuby.rematch.anim.Mat4;
+import de.kuby.rematch.anim.PartSolver;
+import de.kuby.rematch.anim.Pose;
+import de.kuby.rematch.anim.Rig;
+import com.mojang.math.Transformation;
+import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.particles.ColorParticleOption;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Display;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.Vec3;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
+
+import java.io.IOException;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
+
+/**
+ * Animatoren aller sichtbaren Spieler (nach Entity-ID), Laden der Animationen und Effekte an den Marken.
+ * Animationen kommen aus der Mod (assets/kubyrematch/rematch/anim) und zusätzlich aus dem Ordner
+ * {@code kuby_rematch/anim} im Spielordner (zum Ausprobieren ohne neuen Build, /kanim reload).
+ */
+public final class ClientAnims {
+    private static ClipLibrary lib;
+    private static PartSolver solver;
+    private static final Map<Integer, Animator> animators = new ConcurrentHashMap<>();
+    private static final Map<Integer, Long> lastUpdate = new ConcurrentHashMap<>();
+    private static final Map<Integer, Display.BlockDisplay> balls = new ConcurrentHashMap<>();
+    private static double timeScale = 1.0;
+    public static boolean effects = true;
+
+    private ClientAnims() { }
+
+    public static ClipLibrary library() {
+        if (lib == null) reload();
+        return lib;
+    }
+
+    public static PartSolver solver() {
+        if (solver == null) reload();
+        return solver;
+    }
+
+    public static void setTimeScale(double s) { timeScale = Math.max(0.02, Math.min(4, s)); }
+
+    public static double timeScale() { return timeScale; }
+
+    /** Lädt Gerüst und Animationen neu. Gibt die Anzahl der Animationen zurück. */
+    public static synchronized int reload() {
+        Optional<Path> base = FabricLoader.getInstance().getModContainer(KubyRematch.MOD_ID)
+                .flatMap(c -> c.findPath("assets/kubyrematch/rematch"));
+        try {
+            Rig rig;
+            try (Reader r = Files.newBufferedReader(base.orElseThrow().resolve("rig.json"), StandardCharsets.UTF_8)) {
+                rig = Rig.read(r);
+            }
+            List<Clip> clips = new ArrayList<>();
+            readDir(base.get().resolve("anim"), rig, clips);
+            readDir(FabricLoader.getInstance().getGameDir().resolve("kuby_rematch").resolve("anim"), rig, clips);
+            if (lib == null) lib = new ClipLibrary(rig);
+            lib.replaceAll(rig, clips);
+            solver = new PartSolver(rig);
+            animators.clear();
+            KubyRematch.LOG.info("{} Animationen geladen: {}", clips.size(), lib.names());
+            return clips.size();
+        } catch (Exception e) {
+            KubyRematch.LOG.error("Animationen konnten nicht geladen werden", e);
+            if (lib == null) {
+                lib = new ClipLibrary(new Rig(List.of("full_body"), java.util.Arrays.asList((String) null), List.of(new double[3])));
+                solver = new PartSolver(lib.rig());
+            }
+            return 0;
+        }
+    }
+
+    private static void readDir(Path dir, Rig rig, List<Clip> out) throws IOException {
+        if (!Files.isDirectory(dir)) return;
+        try (Stream<Path> s = Files.list(dir)) {
+            for (Path p : s.filter(f -> f.toString().endsWith(".json")).sorted().toList()) {
+                try (Reader r = Files.newBufferedReader(p, StandardCharsets.UTF_8)) {
+                    Clip c = Clip.read(r, rig);
+                    out.removeIf(o -> o.name.equals(c.name)); // Ordner im Spiel überschreibt die Mod
+                    out.add(c);
+                } catch (Exception e) {
+                    KubyRematch.LOG.warn("Animation {} fehlerhaft: {}", p.getFileName(), e.toString());
+                }
+            }
+        }
+    }
+
+    /** Animator der Figur, auf die aktuelle Zeit gebracht; null, wenn sie keinen hat. */
+    public static Animator animator(int entityId) {
+        Animator a = animators.get(entityId);
+        if (a == null) return null;
+        long now = System.nanoTime();
+        Long last = lastUpdate.put(entityId, now);
+        Minecraft mc = Minecraft.getInstance();
+        if (last != null && !mc.isPaused()) {
+            double dt = Math.min(0.1, (now - last) / 1e9) * timeScale;
+            a.update(dt);
+        }
+        updateBall(entityId, a);
+        return a;
+    }
+
+    /** Animator anlegen (falls nötig) und eine Animation starten. */
+    public static boolean play(int entityId, String clip, double speed, boolean force) {
+        Animator a = animators.computeIfAbsent(entityId, id -> {
+            Animator n = new Animator(library());
+            n.setListener((an, c, ev) -> onEvent(id, an, c, ev));
+            return n;
+        });
+        return a.play(clip, speed, force);
+    }
+
+    public static void stop(int entityId) {
+        Animator a = animators.get(entityId);
+        if (a != null) a.stop();
+    }
+
+    public static void clear() {
+        animators.clear();
+        lastUpdate.clear();
+        balls.values().forEach(Entity::discard);
+        balls.clear();
+    }
+
+    // ---- Effekte ----
+
+    private static void onEvent(int id, Animator a, Clip clip, String event) {
+        if (!effects) return;
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.level == null) return;
+        if (event.equals("kontakt") || event.startsWith("kontakt_")) {
+            boolean hard = !event.equals("kontakt_leicht");
+            a.hitStop(hard ? 0.09 : 0.04);
+            Vec3 p = worldPoint(id, a, "ball");
+            if (p == null) return;
+            mc.level.playLocalSound(p.x, p.y, p.z, SoundEvents.PLAYER_ATTACK_STRONG, SoundSource.PLAYERS, 1.0f, 0.75f, false);
+            if (hard) {
+                mc.level.playLocalSound(p.x, p.y, p.z, SoundEvents.WIND_CHARGE_BURST.value(), SoundSource.PLAYERS, 0.6f, 1.4f, false);
+                mc.level.addParticle(ColorParticleOption.create(ParticleTypes.FLASH, 0xFFFFF4C8), p.x, p.y, p.z, 0, 0, 0);
+                for (int i = 0; i < 14; i++) {
+                    double vx = (Math.random() - 0.5) * 0.9, vy = Math.random() * 0.5, vz = (Math.random() - 0.5) * 0.9;
+                    mc.level.addParticle(ParticleTypes.CRIT, p.x, p.y, p.z, vx, vy, vz);
+                }
+                mc.level.addParticle(ParticleTypes.GUST, p.x, p.y, p.z, 0, 0, 0);
+            }
+            CameraShake.kick(hard ? 0.6 : 0.25);
+        } else if (event.startsWith("sound:")) {
+            // Blockbench-Sound-Spuren: Name wie minecraft:entity.player.attack.strong (noch nicht ausgewertet)
+        }
+    }
+
+    /** Punkt eines Knochens (Drehpunkt) in Weltkoordinaten. */
+    public static Vec3 worldPoint(int entityId, Animator a, String bone) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.level == null) return null;
+        Entity e = mc.level.getEntity(entityId);
+        if (!(e instanceof LivingEntity le)) return null;
+        double[] m = solver().bonePoint(a.pose(), bone);
+        if (m == null) return null;
+        float pt = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+        float yaw = Mth.rotLerp(pt, le.yBodyRotO, le.yBodyRot);
+        return toWorld(le.getPosition(pt), yaw, m[0], m[1], m[2]);
+    }
+
+    /** Minecraft-Modellraum (Pixel, y nach unten, Füße bei 24) → Welt. Wie LivingEntityRenderer. */
+    static Vec3 toWorld(Vec3 pos, float bodyYaw, double x, double y, double z) {
+        double k = 0.9375; // AvatarRenderer.scale
+        double lx = -k * x / 16.0, ly = k * (1.501 - y / 16.0), lz = k * z / 16.0;
+        double r = Math.toRadians(180 - bodyYaw);
+        double c = Math.cos(r), s = Math.sin(r);
+        // Drehung um Y (wie Axis.YP.rotationDegrees)
+        double wx = c * lx + s * lz, wz = -s * lx + c * lz;
+        return new Vec3(pos.x + wx, pos.y + ly, pos.z + wz);
+    }
+
+    // ---- Probeball (Block-Display, folgt dem Knochen "ball", solange die Animation ihn bewegt) ----
+
+    private static void updateBall(int id, Animator a) {
+        Minecraft mc = Minecraft.getInstance();
+        boolean show = mc.level != null && a.active() && a.action() != null && a.action().clip.hasBone(a.rig().index("ball"));
+        Display.BlockDisplay ball = balls.get(id);
+        if (!show) {
+            if (ball != null) { ball.discard(); balls.remove(id); }
+            return;
+        }
+        if (ball == null || ball.isRemoved() || ball.level() != mc.level) {
+            ball = new Display.BlockDisplay(EntityType.BLOCK_DISPLAY, mc.level);
+            ball.setBlockState(Blocks.WHITE_CONCRETE.defaultBlockState());
+            ball.setViewRange(4f);
+            mc.level.addEntity(ball);
+            balls.put(id, ball);
+        }
+        Pose pose = a.pose();
+        Vec3 p = worldPoint(id, a, "ball");
+        if (p == null) return;
+        int bi = a.rig().index("ball");
+        Entity owner = mc.level.getEntity(id);
+        float yaw = owner instanceof LivingEntity le ? Mth.rotLerp(mc.getDeltaTracker().getGameTimeDeltaPartialTick(true), le.yBodyRotO, le.yBodyRot) : 0;
+        // Drehung des Balls: Blockbench-Drehung gespiegelt in den Minecraft-Raum, dann Körperdrehung
+        Quaternionf q = new Quaternionf().rotationY((float) Math.toRadians(180 - yaw))
+                .mul(new Quaternionf().rotationZYX((float) Math.toRadians(pose.rot[bi][2]),
+                        (float) -Math.toRadians(pose.rot[bi][1]), (float) -Math.toRadians(pose.rot[bi][0])));
+        float s = 5f / 16f;
+        Vector3f center = q.transform(new Vector3f(s / 2, s / 2, s / 2)).negate();
+        ball.setTransformation(new Transformation(center, q, new Vector3f(s, s, s), new Quaternionf()));
+        ball.setTransformationInterpolationDuration(0);
+        ball.snapTo(p.x, p.y, p.z);
+    }
+}

@@ -1,0 +1,16 @@
+{
+ "schuss_hart": {
+  "priority": 80,
+  "blend_in": 0.1,
+  "blend_out": 0.3,
+  "ease_in": "out_quad",
+  "ease_out": "in_out_cubic",
+  "cancel_after": 1.0
+ },
+ "jubel_knieslide": {
+  "priority": 60,
+  "blend_in": 0.15,
+  "blend_out": 0.45,
+  "ease_out": "in_out_quad"
+ }
+}

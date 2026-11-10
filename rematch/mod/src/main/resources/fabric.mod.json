@@ -11,6 +11,9 @@
     "main": ["de.kuby.rematch.KubyRematch"],
     "client": ["de.kuby.rematch.client.KubyRematchClient"]
   },
+  "mixins": [
+    { "config": "kubyrematch.client.mixins.json", "environment": "client" }
+  ],
   "depends": {
     "fabricloader": ">=0.17.0",
     "minecraft": "~1.21.11",

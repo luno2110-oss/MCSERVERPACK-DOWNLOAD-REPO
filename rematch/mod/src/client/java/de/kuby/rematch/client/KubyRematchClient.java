@@ -3,6 +3,8 @@ package de.kuby.rematch.client;
 import de.kuby.rematch.KubyRematch;
 import de.kuby.rematch.net.HelloPayload;
 import de.kuby.rematch.net.WelcomePayload;
+import de.kuby.rematch.client.anim.ClientAnims;
+import de.kuby.rematch.client.anim.KanimCommand;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.C2SPlayChannelEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
@@ -22,6 +24,8 @@ public final class KubyRematchClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        KanimCommand.register();
+        de.kuby.rematch.client.anim.DemoMode.init();
         ClientPlayNetworking.registerGlobalReceiver(WelcomePayload.TYPE, (payload, ctx) -> {
             serverReady = payload.compatible();
             KubyRematch.LOG.info("Server antwortet: Protokoll {}, kompatibel {}", payload.protocol(), payload.compatible());
@@ -35,7 +39,7 @@ public final class KubyRematchClient implements ClientModInitializer {
         C2SPlayChannelEvents.REGISTER.register((handler, sender, client, channels) -> {
             if (channels.contains(HelloPayload.TYPE.id())) trySendHello();
         });
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> { serverReady = false; helloSent = false; });
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> { serverReady = false; helloSent = false; ClientAnims.clear(); });
     }
 
     private static void trySendHello() {

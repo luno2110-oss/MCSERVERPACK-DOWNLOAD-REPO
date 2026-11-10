@@ -32,3 +32,22 @@ processResources {
 tasks.withType(JavaCompile).configureEach { it.options.release = 21; it.options.encoding = 'UTF-8' }
 
 java { withSourcesJar(); sourceCompatibility = JavaVersion.VERSION_21; targetCompatibility = JavaVersion.VERSION_21 }
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+test { useJUnitPlatform() }
+
+// Vorführung ohne Bildschirm: ./gradlew runClient -Pdemo=schuss_normal,jubel -Pzeitlupe=0.25
+loom {
+    runs {
+        client {
+            if (project.hasProperty('demo')) {
+                vmArg "-Dkuby.demo=${project.property('demo')}"
+                vmArg "-Dkuby.demo.zeitlupe=${project.findProperty('zeitlupe') ?: '1'}"
+            }
+            programArgs '--width', '1280', '--height', '720'
+        }
+    }
+}

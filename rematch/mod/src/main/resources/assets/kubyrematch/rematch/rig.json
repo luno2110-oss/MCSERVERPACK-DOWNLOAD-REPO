@@ -1,0 +1,202 @@
+{
+ "bones": [
+  {
+   "name": "full_body",
+   "parent": null,
+   "pivot": [
+    0,
+    17,
+    0
+   ]
+  },
+  {
+   "name": "lower_body",
+   "parent": "full_body",
+   "pivot": [
+    0,
+    12,
+    0
+   ]
+  },
+  {
+   "name": "legs",
+   "parent": "lower_body",
+   "pivot": [
+    0,
+    12,
+    0
+   ]
+  },
+  {
+   "name": "right2",
+   "parent": "legs",
+   "pivot": [
+    1.9,
+    12,
+    0
+   ]
+  },
+  {
+   "name": "right_leg",
+   "parent": "right2",
+   "pivot": [
+    1.9,
+    12,
+    0
+   ]
+  },
+  {
+   "name": "right_leg2",
+   "parent": "right2",
+   "pivot": [
+    1.9,
+    6,
+    0
+   ]
+  },
+  {
+   "name": "left2",
+   "parent": "legs",
+   "pivot": [
+    -1.9,
+    12,
+    0
+   ]
+  },
+  {
+   "name": "left_leg",
+   "parent": "left2",
+   "pivot": [
+    -1.9,
+    12,
+    0
+   ]
+  },
+  {
+   "name": "left_lag2",
+   "parent": "left2",
+   "pivot": [
+    -1.9,
+    6,
+    0
+   ]
+  },
+  {
+   "name": "middle_body",
+   "parent": "full_body",
+   "pivot": [
+    0,
+    12,
+    0
+   ]
+  },
+  {
+   "name": "upper_body",
+   "parent": "middle_body",
+   "pivot": [
+    0,
+    12,
+    0
+   ]
+  },
+  {
+   "name": "torso1",
+   "parent": "upper_body",
+   "pivot": [
+    0,
+    12,
+    0
+   ]
+  },
+  {
+   "name": "torso2",
+   "parent": "torso1",
+   "pivot": [
+    0,
+    18,
+    0
+   ]
+  },
+  {
+   "name": "head",
+   "parent": "torso2",
+   "pivot": [
+    0,
+    24,
+    0
+   ]
+  },
+  {
+   "name": "arms",
+   "parent": "torso2",
+   "pivot": [
+    0,
+    22,
+    0
+   ]
+  },
+  {
+   "name": "right",
+   "parent": "arms",
+   "pivot": [
+    5,
+    22,
+    0
+   ]
+  },
+  {
+   "name": "right_arm",
+   "parent": "right",
+   "pivot": [
+    5,
+    22,
+    0
+   ]
+  },
+  {
+   "name": "right_arm2",
+   "parent": "right",
+   "pivot": [
+    6,
+    18,
+    0
+   ]
+  },
+  {
+   "name": "left",
+   "parent": "arms",
+   "pivot": [
+    -5,
+    22,
+    0
+   ]
+  },
+  {
+   "name": "left_arm",
+   "parent": "left",
+   "pivot": [
+    -5,
+    22,
+    0
+   ]
+  },
+  {
+   "name": "left_arm2",
+   "parent": "left",
+   "pivot": [
+    -6,
+    18,
+    0
+   ]
+  },
+  {
+   "name": "ball",
+   "parent": null,
+   "pivot": [
+    0,
+    2.5,
+    -10
+   ]
+  }
+ ]
+}
