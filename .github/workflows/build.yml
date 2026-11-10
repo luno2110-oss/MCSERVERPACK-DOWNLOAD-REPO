@@ -76,6 +76,16 @@ jobs:
           (cd dist && zip -q KubyPlugins.zip *.jar INSTALLATION.txt PLUGINS.md KubyUI-Pack.zip)
           ls -la dist
 
+      # Client-Mod „Kuby Rematch“ (Fabric 1.21.11). Liegt bewusst NICHT in KubyPlugins.zip (die ZIP wandert in den
+      # plugins-Ordner), sondern als eigene Datei KubyRematch.jar im Release (für den mods-Ordner / das Modpack).
+      - name: Rematch-Mod bauen
+        working-directory: rematch/mod
+        run: |
+          chmod +x gradlew
+          ./gradlew build --no-daemon -q
+          cp build/libs/kuby-rematch-*[0-9].jar ../../dist/KubyRematch.jar
+          ls -la ../../dist/KubyRematch.jar
+
       - uses: actions/upload-artifact@v4
         with:
           name: kuby-plugins

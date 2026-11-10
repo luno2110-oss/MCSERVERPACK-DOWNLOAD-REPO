@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "kubyrematch",
+  "version": "${version}",
+  "name": "Kuby Rematch",
+  "description": "Client-Mod für den Rematch-Fußballmodus auf dem Kuby-Netzwerk: Animationen, Kamera, Ball, Steuerung.",
+  "authors": ["Kuby"],
+  "license": "All-Rights-Reserved",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["de.kuby.rematch.KubyRematch"],
+    "client": ["de.kuby.rematch.client.KubyRematchClient"]
+  },
+  "depends": {
+    "fabricloader": ">=0.17.0",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

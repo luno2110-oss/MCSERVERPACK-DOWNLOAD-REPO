@@ -527,6 +527,17 @@ final class SelfTest {
             }
         }
 
+        // Rematch-Mod: Handshake-Kodierung hin und zurück (gleiches Format wie die Fabric-Mod)
+        try {
+            var rm = de.kuby.kubyplugins.rematch.RematchModService.class;
+            var h = de.kuby.kubyplugins.rematch.RematchModService.decodeHello(
+                    de.kuby.kubyplugins.rematch.RematchModService.encodeHello(300, "0.1.0-ä"));
+            if (h.protocol() != 300 || !h.version().equals("0.1.0-ä")) fails.add("Rematch-Handshake: " + h);
+            if (plugin.rematchMod() == null) fails.add("Rematch-Mod-Dienst nicht gestartet (" + rm.getSimpleName() + ")");
+        } catch (Throwable t) {
+            fails.add("Rematch-Handshake: " + t);
+        }
+
         out.sendMessage("SELFTEST " + ok[0] + " Dialoge gebaut, " + fails.size() + " Fehler");
         for (String f : fails) out.sendMessage("SELFTEST FEHLER " + f);
         plugin.getLogger().info("SELFTEST " + (fails.isEmpty() ? "OK" : "FEHLER (" + fails.size() + ")"));

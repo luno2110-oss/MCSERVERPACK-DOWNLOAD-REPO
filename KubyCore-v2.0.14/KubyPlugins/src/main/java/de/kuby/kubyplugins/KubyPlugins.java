@@ -192,6 +192,8 @@ public final class KubyPlugins extends JavaPlugin {
         discordStatue = new de.kuby.kubyplugins.service.DiscordStatue(this);
         // Modus-NPCs in der Lobby (werden beim Anschauen größer, Klick bringt in den Modus)
         modeNpcs = new de.kuby.kubyplugins.service.ModeNpcService(this);
+        // Handshake mit der Client-Mod „Kuby Rematch“ (rematch/mod): wer sie hat, sieht /kp rematchmod
+        rematchMod = new de.kuby.kubyplugins.rematch.RematchModService(this);
         shop = new ShopService(this);
         shopStorage = new ShopStorageService(this);
         enderchests = new EnderChestService(this);
@@ -613,6 +615,8 @@ public final class KubyPlugins extends JavaPlugin {
     private de.kuby.kubyplugins.service.DiscordStatue discordStatue;
     private de.kuby.kubyplugins.service.ModeNpcService modeNpcs;
     public de.kuby.kubyplugins.service.ModeNpcService modeNpcs() { return modeNpcs; }
+    private de.kuby.kubyplugins.rematch.RematchModService rematchMod;
+    public de.kuby.kubyplugins.rematch.RematchModService rematchMod() { return rematchMod; }
 
     public de.kuby.kubyplugins.service.DiscordStatue discordStatue() { return discordStatue; }
     public ShopService shop() { return shop; }
