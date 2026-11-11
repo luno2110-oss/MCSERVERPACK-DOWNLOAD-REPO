@@ -244,7 +244,7 @@ public final class SmpScreens {
                     tournament(pl);
                 }, p.hasPermission("kuby.admin") ? pl -> {
                     de.kuby.kubyplugins.ui.UiDialog.close(pl);
-                    new TournamentAdminMenu(plugin).open(pl);
+                    new SmpAdminScreens(plugin).tournament(pl);
                 } : null)), 300);
     }
 

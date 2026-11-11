@@ -570,6 +570,7 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - fehlgeschlagenes Backup
 - [x] Kadmin neuer Bereich „Sicherheit“: Wirtschaft, Warnungen, Backups (Liste, Jetzt sichern, Wiederherstellen vormerken), Zweitkonten (online mit gleicher IP, Spieler prüfen, Freigeben/Sperren). Direkt: `/kadmin warnungen|wirtschaft|backups|zweitkonten`
 - [x] Kadmin ohne Truhen (mit Grafik-Pack; ohne Pack bleiben die alten Truhen): Einstellungen (Bereiche, Werte mit −/+ und Eingabe), Config-Editor (jeder Wert, Listen mit |), Preisliste (Preis ändern, Item aus der Hand), Shop (Sektionen, Items, Preis/Menge/Name/Beschreibung/Icon, Löschen mit Rückfrage), Battlepass (Belohnungen hinzufügen/entfernen), Auktionshaus (Angebot entfernen → Abholbox), Teams (auflösen), Kits (Liste als Dialog; der Inhalt selbst bleibt eine Truhe, weil man echte Items hineinlegt)
+- [x] SMP im Kadmin als Dialog: Kampf (Kopfgelder entfernen, laufende Duelle abbrechen, mit Rückfrage), Turnier (Anmeldung öffnen, starten, abbrechen, Ankündigung, Preis und Trophäen, Teilnehmer und Matches)
 - [x] Gemeinsamer Listen-Baustein im Kadmin-Stil (Kopf, Knopfleiste, Zeilen mit Icon, Wert und Knöpfen, Seiten, Rückfrage vor dem Löschen), im Selbsttest mit Grenzwerten geprüft
 
 ## Sicherheit: Backups und Zweitkonto-Erkennung (v1.48, Wunsch des Besitzers, Test im Spiel offen)

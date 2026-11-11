@@ -180,7 +180,7 @@ public final class KadminScreens {
                 List.of(), 0, 1, null, null, no, "Keine offenen Warnungen.")));
     }
 
-    private void show(Player p, Page v) {
+    public void show(Player p, Page v) {
         UiDialog.show(p, render(v), HEIGHT);
     }
 
@@ -719,7 +719,7 @@ public final class KadminScreens {
         showAll(p, KitData.Icon.EMERALD, "Shop", "Sektionen und Einstellungen", rows, List.of(), 0, (pl, n) -> shop(pl), this::back);
     }
 
-    private Row numberRow(Player p, Material icon, String label, String hint, String path, long min, long max, Consumer<Player> reopen) {
+    public Row numberRow(Player p, Material icon, String label, String hint, String path, long min, long max, Consumer<Player> reopen) {
         long cur = plugin.getConfig().getLong(path);
         return new Row(icon, label, GOLD_SOFT, hint, Canvas.num(cur), WHITE, List.of(new Btn("Ändern", true, pl -> ask(pl, label,
                 hint + " (" + min + " bis " + Canvas.num(max) + ")", String.valueOf(cur), 15, (q, t) -> {

@@ -109,9 +109,9 @@ public final class KubySMP extends JavaPlugin {
         core.registerMainEntry(de.kuby.kubyplugins.service.ModeService.SMP, new KubyPlugins.MainEntry(Material.SHIELD, "Versicherung", "Raid-Versicherung für Kisten",
                 p -> new de.kuby.kubysmp.gui.SmpScreens(core).insurance(p)));
         core.registerAdminButton(new KubyPlugins.AdminButton(19, Material.IRON_SWORD, "Kampf", "Kopfgelder und laufende Duelle",
-                p -> new AdminCombatMenu(core).open(p)));
+                p -> new de.kuby.kubysmp.gui.SmpAdminScreens(core).combat(p)));
         core.registerAdminButton(new KubyPlugins.AdminButton(21, Material.TOTEM_OF_UNDYING, "Turnier", "Turnier steuern",
-                p -> new TournamentAdminMenu(core).open(p)));
+                p -> new de.kuby.kubysmp.gui.SmpAdminScreens(core).tournament(p)));
 
         getLogger().info("KubySMP aktiv.");
     }
