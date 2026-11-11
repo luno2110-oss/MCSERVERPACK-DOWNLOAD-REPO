@@ -760,10 +760,10 @@ public final class StaffScreen {
 
     public static Canvas kadmin(Kadmin v, Nav nav) {
         Canvas c = base("Kadmin");
-        int bw = width("Truhe");
+        int bw = width("Warnungen");
         head(c, KitData.Icon.COMPARATOR, "KADMIN", "Version " + v.version() + " · " + v.online() + " Spieler online",
                 378 - bw - 8 - 47);
-        dark(c, 380 - bw, 9, "Truhe", nav.go("k:truhe"), "Das alte Admin-Menü als Truhe");
+        gold(c, 380 - bw, 9, "Warnungen", nav.go("k:warnungen"), "Team-Warnungen (Auffälliges)");
         tabs(c, v.f(), Tab.KADMIN, nav);
         Map<String, List<Tile>> sections = new LinkedHashMap<>();
         for (Tile t : v.tiles()) sections.computeIfAbsent(t.section(), s -> new ArrayList<>()).add(t);

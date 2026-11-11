@@ -482,7 +482,7 @@ final class SelfTest {
             canvas.accept("XP-Shop", () -> de.kuby.kubyplugins.gui.ExtraScreens.xpShop(999_999_999L, xo));
             canvas.accept("XP-Shop leer", () -> de.kuby.kubyplugins.gui.ExtraScreens.xpShop(0, List.of()));
             List<de.kuby.kubyplugins.gui.ExtraScreens.Stock> st = new ArrayList<>();
-            for (int i = 0; i < 20; i++) st.add(new de.kuby.kubyplugins.gui.ExtraScreens.Stock(de.kuby.kubyplugins.ui.KitData.Icon.DIAMOND,
+            for (int i = 0; i < 20; i++) st.add(new de.kuby.kubyplugins.gui.ExtraScreens.Stock(org.bukkit.Material.DIAMOND,
                     "W".repeat(30), i % 3 != 0, 999_999_999L, 9999.99, 99999.99, 999_999_999L, i % 2 == 0 ? 999_999_999L : -999_999_999L, NO, NO, NO));
             canvas.accept("Investments", () -> de.kuby.kubyplugins.gui.ExtraScreens.investments(
                     new de.kuby.kubyplugins.gui.ExtraScreens.Portfolio(999_999_999_999L, 1, 1_000_000, st)));

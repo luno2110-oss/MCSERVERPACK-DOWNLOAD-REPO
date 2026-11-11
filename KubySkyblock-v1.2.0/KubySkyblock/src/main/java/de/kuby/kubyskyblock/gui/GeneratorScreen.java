@@ -1,7 +1,6 @@
 package de.kuby.kubyskyblock.gui;
 
 import de.kuby.kubyplugins.ui.Canvas;
-import de.kuby.kubyplugins.ui.Icons;
 import de.kuby.kubyplugins.ui.KitData;
 import de.kuby.kubyplugins.ui.UiDialog;
 import de.kuby.kubyplugins.util.Msg;
@@ -84,7 +83,7 @@ public final class GeneratorScreen {
     // Ein Generator
     // =================================================================================================================
 
-    public record Stock(KitData.Icon icon, String name, long count) {}
+    public record Stock(Material icon, String name, long count) {}
 
     public record View(KitData.Sprite art, String name, TextColor color, int level, int max, String rate, double fill, String store,
                        List<Stock> stock, String premium, String boost, long upgrade, long refine, String refineTo, boolean items,
@@ -119,7 +118,7 @@ public final class GeneratorScreen {
                 fill = g.quality.autoSell ? 1 : g.itemCount() / Math.max(1, cap);
                 store = g.quality.autoSell ? "Auto-Verkauf: " + Msg.coins((long) g.money) + " $ bereit" : Msg.coins(g.itemCount()) + " / " + Msg.coins((long) cap) + " Items";
                 g.items.entrySet().stream().sorted((a, b) -> Long.compare(b.getValue(), a.getValue())).limit(12)
-                        .forEach(e -> stock.add(new Stock(Icons.of(e.getKey(), KitData.Icon.PAPER), nice(e.getKey()), e.getValue())));
+                        .forEach(e -> stock.add(new Stock(e.getKey(), nice(e.getKey()), e.getValue())));
             }
         }
         String premium = switch (g.quality) {
@@ -189,7 +188,7 @@ public final class GeneratorScreen {
                 Stock s = v.stock().get(i);
                 int x = (i % 3) * (cw + 4), sy = y + (i / 3) * 22;
                 c.box(x, sy, cw, 20, KitData.Box.STEEL_CARD);
-                c.icon(x + 3, sy + 2, s.icon(), false);
+                c.item(x + 3, sy + 2, s.icon(), false, KitData.Icon.PAPER);
                 int nw = c.textRight(x + cw - 6, sy + 6, Canvas.num(s.count()), GOLD, true);
                 c.text(x + 22, sy + 6, Canvas.fit(s.name(), false, cw - 28 - nw - 4), STEEL, false);
             }
@@ -659,7 +658,7 @@ public final class GeneratorScreen {
         Consumer<Player> no = p -> { };
         String w = "W".repeat(40);
         List<Stock> stock = new ArrayList<>();
-        for (int i = 0; i < 12; i++) stock.add(new Stock(KitData.Icon.DIAMOND, w, 999_999_999L));
+        for (int i = 0; i < 12; i++) stock.add(new Stock(Material.DIAMOND, w, 999_999_999L));
         reg.accept("Generator", () -> canvas(new View(art("erz", Quality.DIAMANT), w, GOLD, 10, 10, w, 1, w, stock, w + w, w, 999_999_999L, 999_999L, "Diamant",
                 true, no, no, no, no, no, no)));
         reg.accept("Generator Geld", () -> canvas(new View(KitData.Sprite.GN_GELD, "Geld-Generator", STEEL, 1, 10, "0,5 $ pro Sekunde", 0.3,

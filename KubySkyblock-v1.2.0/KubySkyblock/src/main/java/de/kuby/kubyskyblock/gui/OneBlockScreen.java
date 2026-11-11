@@ -2,7 +2,6 @@ package de.kuby.kubyskyblock.gui;
 
 import de.kuby.kubyplugins.service.TeamService;
 import de.kuby.kubyplugins.ui.Canvas;
-import de.kuby.kubyplugins.ui.Icons;
 import de.kuby.kubyplugins.ui.KitData;
 import de.kuby.kubyplugins.ui.UiDialog;
 import de.kuby.kubyplugins.util.Msg;
@@ -85,7 +84,7 @@ public final class OneBlockScreen {
     // =================================================================================================================
 
     /** Eine Plattform: aktueller Block, Name, Zeile, Knopf (Text, Stil, Aktion) und Hinreisen. */
-    public record Spot(KitData.Icon block, String name, String status, TextColor statusColor, String button, KitData.Small style,
+    public record Spot(Material block, String name, String status, TextColor statusColor, String button, KitData.Small style,
                        TextColor buttonColor, Consumer<Player> action, Consumer<Player> travel) {}
 
     public record Overview(String team, String line, long ownXp, List<Spot> spots, Consumer<Player> mine, Consumer<Player> back) {}
@@ -103,7 +102,7 @@ public final class OneBlockScreen {
         List<Spot> spots = new ArrayList<>();
         for (Platform pf : s.platforms()) {
             Material m = w != null && w.isChunkLoaded(pf.x >> 4, pf.z >> 4) ? w.getBlockAt(pf.x, pf.y, pf.z).getType() : Material.GRASS_BLOCK;
-            KitData.Icon icon = Icons.of(m == Material.BEDROCK || m.isAir() ? Material.GRASS_BLOCK : m, KitData.Icon.GRASS_BLOCK);
+            Material icon = m == Material.BEDROCK || m.isAir() ? Material.GRASS_BLOCK : m;
             String status, button;
             TextColor sc, bc;
             KitData.Small style;
@@ -174,7 +173,7 @@ public final class OneBlockScreen {
         int y = 60;
         for (Spot s : v.spots()) {
             c.box(0, y, W, 44, KitData.Box.CLOUD_CARD);
-            c.icon(10, y + 6, s.block(), true);
+            c.item(10, y + 6, s.block(), true, KitData.Icon.GRASS_BLOCK);
             c.text(48, y + 9, s.name(), CLOUD, true);
             c.text(48, y + 23, Canvas.fit(s.status(), false, W - 48 - 136), s.statusColor(), false);
             int bw = 120;
@@ -366,13 +365,13 @@ public final class OneBlockScreen {
         Consumer<Player> no = p -> { };
         String w = "W".repeat(40);
         reg.accept("One-Block", () -> overview(new Overview("Kuby", "One-Block 2 · Block-XP 12.340 · Block-Level 75", 4210, List.of(
-                new Spot(KitData.Icon.GRASS_BLOCK, "One-Block 1", "Frei · Beanspruchen: 25.000 $", GREEN, "Beanspruchen", KitData.Small.GOLD, GOLD, no, no),
-                new Spot(KitData.Icon.DIAMOND, "One-Block 2", "Euer Block · Block-Level 75 · 12.345 abgebaut", GOLD, "Upgrades", KitData.Small.GREEN, CLOUD, no, no),
-                new Spot(KitData.Icon.EMERALD, "One-Block 3", "Team " + w, MIST, "Belegt", KitData.Small.DARK, DIM, null, no)), no, no)));
+                new Spot(Material.GRASS_BLOCK, "One-Block 1", "Frei · Beanspruchen: 25.000 $", GREEN, "Beanspruchen", KitData.Small.GOLD, GOLD, no, no),
+                new Spot(Material.DIAMOND, "One-Block 2", "Euer Block · Block-Level 75 · 12.345 abgebaut", GOLD, "Upgrades", KitData.Small.GREEN, CLOUD, no, no),
+                new Spot(Material.EMERALD, "One-Block 3", "Team " + w, MIST, "Belegt", KitData.Small.DARK, DIM, null, no)), no, no)));
         reg.accept("One-Block verteilt", () -> overview(new Overview("Kuby", "Block-XP 120 · Block-Level 0 · noch kein Block", 4210, List.of(
-                new Spot(KitData.Icon.GRASS_BLOCK, "One-Block 1", "Gesucht: Nordwesten, ca. 14.000 Blöcke", MIST, "Erst finden", KitData.Small.DARK, DIM, null, null),
-                new Spot(KitData.Icon.GRASS_BLOCK, "One-Block 2", "Team " + w + " · Südosten, ca. 20.000 Blöcke", MIST, "Erst finden", KitData.Small.DARK, DIM, null, null),
-                new Spot(KitData.Icon.GRASS_BLOCK, "One-Block 3", "Frei · Beanspruchen: 25.000 $", GREEN, "Beanspruchen", KitData.Small.GOLD, GOLD, no, no)), no, no)));
+                new Spot(Material.GRASS_BLOCK, "One-Block 1", "Gesucht: Nordwesten, ca. 14.000 Blöcke", MIST, "Erst finden", KitData.Small.DARK, DIM, null, null),
+                new Spot(Material.GRASS_BLOCK, "One-Block 2", "Team " + w + " · Südosten, ca. 20.000 Blöcke", MIST, "Erst finden", KitData.Small.DARK, DIM, null, null),
+                new Spot(Material.GRASS_BLOCK, "One-Block 3", "Frei · Beanspruchen: 25.000 $", GREEN, "Beanspruchen", KitData.Small.GOLD, GOLD, no, no)), no, no)));
         reg.accept("One-Block leer", () -> overview(new Overview(null, "Ohne Team: /team erstellen <Name>, dann einen Block beanspruchen", 0,
                 List.of(), null, no)));
         List<Card> cards = new ArrayList<>();

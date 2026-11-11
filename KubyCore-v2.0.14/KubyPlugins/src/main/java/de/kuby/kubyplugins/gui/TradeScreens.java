@@ -5,7 +5,6 @@ import de.kuby.kubyplugins.casino.CasinoInput;
 import de.kuby.kubyplugins.service.MarketService;
 import de.kuby.kubyplugins.service.ShopService;
 import de.kuby.kubyplugins.ui.Canvas;
-import de.kuby.kubyplugins.ui.Icons;
 import de.kuby.kubyplugins.ui.KitData;
 import de.kuby.kubyplugins.ui.UiDialog;
 import de.kuby.kubyplugins.util.Msg;
@@ -34,7 +33,7 @@ public final class TradeScreens {
     public record Card(KitData.Sprite art, String name, String desc, String extra, Consumer<Player> click) {}
 
     /** Kleine Zeile (neueste Angebote): Item, Name, Verkäufer, Preis. */
-    public record Offer(KitData.Icon icon, String name, String seller, long price) {}
+    public record Offer(org.bukkit.Material icon, String name, String seller, long price) {}
 
     private final KubyPlugins plugin;
 
@@ -145,7 +144,7 @@ public final class TradeScreens {
         List<Offer> latest = new ArrayList<>();
         for (int i = all.size() - 1; i >= 0 && latest.size() < 5; i--) {
             MarketService.Listing l = all.get(i);
-            latest.add(new Offer(Icons.of(l.item().getType(), KitData.Icon.PAPER), itemName(l), l.sellerName(), l.price()));
+            latest.add(new Offer(l.item().getType(), itemName(l), l.sellerName(), l.price()));
         }
         UiDialog.show(p, market(plugin.economy().balance(id), all.size(), cards, latest, go(pl -> new MarketMenu(plugin).open(pl)),
                 go(pl -> pl.performCommand("abholbox"))), 330);
@@ -202,7 +201,7 @@ public final class TradeScreens {
         }
         for (Offer o : latest) {
             c.box(0, y, W, 22, KitData.Box.WOOD_CARD);
-            c.icon(5, y + 3, o.icon(), false);
+            c.item(5, y + 3, o.icon(), false, KitData.Icon.PAPER);
             c.text(26, y + 7, Canvas.fit(Canvas.lit(o.name()), true, 200), CREAM, true);
             int pw = c.textRight(W - 8, y + 7, Canvas.num(o.price()) + " $", GOLD, true);
             c.text(232, y + 7, Canvas.fit(Canvas.lit(o.seller()), false, Math.min(80, W - 8 - pw - 232 - 6)), SAND, false);
@@ -229,7 +228,7 @@ public final class TradeScreens {
         List<Card> cards = new ArrayList<>();
         for (int i = 0; i < 4; i++) cards.add(new Card(KitData.Sprite.HB_MARKT, w, w + w, "999.999 Angebote", no));
         List<Offer> offers = new ArrayList<>();
-        for (int i = 0; i < 5; i++) offers.add(new Offer(KitData.Icon.DIAMOND, w + w, "W".repeat(16), 999_999_999L));
+        for (int i = 0; i < 5; i++) offers.add(new Offer(org.bukkit.Material.DIAMOND, w + w, "W".repeat(16), 999_999_999L));
         reg.accept("Markt Start", () -> market(999_999_999L, 999_999, cards, offers, no, no));
         reg.accept("Markt Start leer", () -> market(0, 0, cards, List.of(), no, no));
     }

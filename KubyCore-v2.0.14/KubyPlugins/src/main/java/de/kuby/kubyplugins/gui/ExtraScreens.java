@@ -6,7 +6,6 @@ import de.kuby.kubyplugins.service.QuizService;
 import de.kuby.kubyplugins.service.ShopService;
 import de.kuby.kubyplugins.service.StatsService;
 import de.kuby.kubyplugins.ui.Canvas;
-import de.kuby.kubyplugins.ui.Icons;
 import de.kuby.kubyplugins.ui.KitData;
 import de.kuby.kubyplugins.ui.UiDialog;
 import de.kuby.kubyplugins.util.Msg;
@@ -42,7 +41,7 @@ public final class ExtraScreens {
     public record XpOffer(KitData.Icon icon, String name, TextColor color, long cost, boolean affordable, Consumer<Player> buy) {}
 
     /** Anlage: Icon, Name, aktiv, Shop-Preis, Anteilspreis, eigene Anteile, Wert, Gewinn, Klicks. */
-    public record Stock(KitData.Icon icon, String name, boolean active, long price, double share, double mine, long value,
+    public record Stock(org.bukkit.Material icon, String name, boolean active, long price, double share, double mine, long value,
                         long gain, Consumer<Player> small, Consumer<Player> big, Consumer<Player> sell) {}
 
     public record Portfolio(long value, long invested, long step, List<Stock> stocks) {}
@@ -165,7 +164,7 @@ public final class ExtraScreens {
                 value += v;
                 invested += cost;
                 String name = it.name() != null ? Canvas.clean(it.name()) : nice(it.material());
-                list.add(new Stock(Icons.of(it.material(), KitData.Icon.RAW_GOLD), name, inv.isActive(it.id()), inv.priceOf(it),
+                list.add(new Stock(it.material(), name, inv.isActive(it.id()), inv.priceOf(it),
                         inv.sharePrice(it.id()), inv.sharesOf(id, it.id()), Math.round(v), Math.round(v - cost),
                         pl -> invest(pl, it, step), pl -> invest(pl, it, step * 10), pl -> {
                     String err = plugin.investments().sellShares(pl.getUniqueId(), it.id());
@@ -213,7 +212,7 @@ public final class ExtraScreens {
         y += 11;
         for (Stock s : v.stocks()) {
             c.box(0, y, W, 30, s.active() ? KitData.Box.TERMINAL_ROW : KitData.Box.GRAY);
-            c.icon(7, y + 7, s.icon(), false);
+            c.item(7, y + 7, s.icon(), false, KitData.Icon.RAW_GOLD);
             int pw = c.textRight(176, y + 6, Canvas.num(s.price()) + "$", CREAM, false);
             c.text(30, y + 6, Canvas.fit(Canvas.lit(s.name()), true, Math.min(110, 176 - pw - 30 - 6)), s.active() ? CREAM : CHALKDIM, true);
             c.text(30, y + 17, Canvas.fit(String.format(Locale.GERMANY, "%.2f Anteile", s.mine()), false, 100), TEALDIM, false);

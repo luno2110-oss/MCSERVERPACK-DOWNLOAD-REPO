@@ -510,11 +510,19 @@ public final class QuestDialogs {
             offers.add(new QuestScreen.ShopOffer(offerIcon(o), o.name(), o.price(), owned, candy >= o.price(), owned ? null : pl -> {
                 err(pl, es.buy(pl, o));
                 shop(pl);
-            }));
+            }, offerItem(o)));
         }
         UiDialog.show(p, QuestScreen.eventShop(new QuestScreen.ShopView(e.name(), e.currency(), candy, offers,
                         QuestScreen.Theme.of(e.theme()), e.shopName()),
                 pl -> list(pl, Area.EVENT, -1)), QuestScreen.HEIGHT);
+    }
+
+    /** Gegenstände im Event-Shop als echtes Item-Bild (ItemIcons), sonst null (dann das Kit-Icon). */
+    private static Material offerItem(EventService.Offer o) {
+        return switch (o.kind()) {
+            case "TITLE", "COSMETIC", "KEY", "COINS", "TOKENS" -> null;
+            default -> Material.matchMaterial(o.value());
+        };
     }
 
     private static KitData.Icon offerIcon(EventService.Offer o) {

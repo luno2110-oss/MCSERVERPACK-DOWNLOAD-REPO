@@ -57,7 +57,7 @@ public final class JobScreen {
                        boolean orderDone, long boosterMinutes) {}
 
     /** Angebot im Token-Shop (Darstellung). */
-    public record Offer(String section, KitData.Icon icon, String name, String desc, String price, boolean enabled,
+    public record Offer(String section, Material icon, String name, String desc, String price, boolean enabled,
                         Consumer<Player> click) {}
 
     /** Verzauberung: Name mit Stufe, Icon, Preis, Status, kaufbar. */
@@ -191,7 +191,7 @@ public final class JobScreen {
                 }
                 if (o.icon() != Material.CHEST) open(pl, Tab.SHOP);
             };
-            out.add(new Offer(o.section(), Icons.of(o.icon(), KitData.Icon.PAPER), o.name(), o.desc(), price, o.enabled(), click));
+            out.add(new Offer(o.section(), o.icon(), o.name(), o.desc(), price, o.enabled(), click));
         }
         return out;
     }
@@ -258,7 +258,7 @@ public final class JobScreen {
         reg.accept("Jobs Berufe leer", () -> jobs(new Head(1, 0, 0, null), new Info(0, 0, 0, null, 0, null, true, 0), List.of(), a));
         List<Offer> offers = new ArrayList<>();
         for (int i = 0; i < 15; i++) {
-            offers.add(new Offer("WWWWWWWWWWWWWWWW" + (i / 4), KitData.Icon.GRASS_BLOCK, "W".repeat(30), "W".repeat(40),
+            offers.add(new Offer("WWWWWWWWWWWWWWWW" + (i / 4), Material.GRASS_BLOCK, "W".repeat(30), "W".repeat(40),
                     "999.999 Tokens", i % 3 != 0, i % 3 != 0 ? no : null));
         }
         reg.accept("Jobs Token-Shop", () -> shop(h, offers, a));
@@ -365,7 +365,7 @@ public final class JobScreen {
             }
             int x = (i % 2) * (cw + 4), oy = y + (i / 2) * (ch + 4);
             c.box(x, oy, cw, ch, o.enabled() ? KitData.Box.PURPLE : KitData.Box.WOOD_CARD, Canvas.Z_BUTTON);
-            c.icon(x + 7, oy + 9, o.icon(), false);
+            c.item(x + 7, oy + 9, o.icon(), false, KitData.Icon.PAPER);
             int pw = Canvas.width(o.price(), true);
             c.text(x + 29, oy + 7, Canvas.fit(o.name(), true, cw - 29 - 7), o.enabled() ? CREAM : TAN, true);
             c.textRight(x + cw - 7, oy + 19, o.price(), o.enabled() ? TOKENS : DIM, true);

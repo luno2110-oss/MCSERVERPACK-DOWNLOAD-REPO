@@ -10,7 +10,6 @@ import de.kuby.kubyplugins.service.TradingService.Position;
 import de.kuby.kubyplugins.service.TradingService.Ticker;
 import de.kuby.kubyplugins.service.TradingService.Trade;
 import de.kuby.kubyplugins.ui.Canvas;
-import de.kuby.kubyplugins.ui.Icons;
 import de.kuby.kubyplugins.ui.KitData;
 import de.kuby.kubyplugins.ui.UiDialog;
 import de.kuby.kubyplugins.util.Msg;
@@ -113,12 +112,12 @@ public final class TradingScreen {
 
     /** Markt-Ansicht des gewählten Werts. */
     public record Market(Head head, List<Chip> chips, boolean prev, boolean next, Consumer<Player> prevPage, Consumer<Player> nextPage,
-                         KitData.Icon icon, String symbol, String name, double price, double change, double hi, double lo, Frame frame,
+                         org.bukkit.Material icon, String symbol, String name, double price, double change, double hi, double lo, Frame frame,
                          List<Bar> bars, String position, long posPnl, List<String[]> orders, List<Consumer<Player>> cancels,
                          Map<String, Consumer<Player>> actions, Map<Frame, Consumer<Player>> frames, double fee, List<NewsLine> news,
                          int pressure, boolean isShort) {
         public Market(Head head, List<Chip> chips, boolean prev, boolean next, Consumer<Player> prevPage, Consumer<Player> nextPage,
-                      KitData.Icon icon, String symbol, String name, double price, double change, double hi, double lo, Frame frame,
+                      org.bukkit.Material icon, String symbol, String name, double price, double change, double hi, double lo, Frame frame,
                       List<Bar> bars, String position, long posPnl, List<String[]> orders, List<Consumer<Player>> cancels,
                       Map<String, Consumer<Player>> actions, Map<Frame, Consumer<Player>> frames, double fee, List<NewsLine> news) {
             this(head, chips, prev, next, prevPage, nextPage, icon, symbol, name, price, change, hi, lo, frame, bars, position, posPnl, orders,
@@ -126,7 +125,7 @@ public final class TradingScreen {
         }
 
         public Market(Head head, List<Chip> chips, boolean prev, boolean next, Consumer<Player> prevPage, Consumer<Player> nextPage,
-                      KitData.Icon icon, String symbol, String name, double price, double change, double hi, double lo, Frame frame,
+                      org.bukkit.Material icon, String symbol, String name, double price, double change, double hi, double lo, Frame frame,
                       List<Bar> bars, String position, long posPnl, List<String[]> orders, List<Consumer<Player>> cancels,
                       Map<String, Consumer<Player>> actions, Map<Frame, Consumer<Player>> frames, double fee) {
             this(head, chips, prev, next, prevPage, nextPage, icon, symbol, name, price, change, hi, lo, frame, bars, position, posPnl, orders,
@@ -311,7 +310,7 @@ public final class TradingScreen {
         for (Frame f : Frame.values()) frames.put(f, go(pl -> state(pl).frame = f));
         double[] range = ts.range24(t);
         return new Market(head, chips, st.page > 0, st.page + 1 < pages, go(pl -> state(pl).page = Math.max(0, state(pl).page - 1)),
-                go(pl -> state(pl).page++), Icons.of(t.material, KitData.Icon.PAPER), t.symbol, t.name, t.price, ts.change24(t), range[0], range[1],
+                go(pl -> state(pl).page++), t.material, t.symbol, t.name, t.price, ts.change24(t), range[0], range[1],
                 st.frame, bars, posText, posPnl, ord, cancels, act, frames, ts.feePercent(), newsLines(ts.news(t.symbol, 3)), ts.buyPressure(t), isShort);
     }
 
@@ -484,7 +483,7 @@ public final class TradingScreen {
         y += 28;
 
         // Kurs
-        c.icon(2, y, m.icon(), false);
+        c.item(2, y, m.icon(), false, KitData.Icon.PAPER);
         int nw = c.text(22, y + 4, m.symbol(), CYAN, true);
         c.text(22 + nw + 6, y + 4, Canvas.fit(m.name(), false, 120), DIM, false);
         c.textRight(W - 2, y, TradingService.money(m.price()), TEXT, true);
@@ -712,16 +711,16 @@ public final class TradingScreen {
             ord.add(new String[]{"Take-Profit", "999.999 $", "999.999.999 $"});
             can.add(no);
         }
-        reg.accept("Börse Markt", () -> market(new Market(h, chips, true, true, no, no, KitData.Icon.DIAMOND, "WWWW", "W".repeat(30), last, 12.3, 999_999,
+        reg.accept("Börse Markt", () -> market(new Market(h, chips, true, true, no, no, org.bukkit.Material.DIAMOND, "WWWW", "W".repeat(30), last, 12.3, 999_999,
                 0.01, Frame.H1, bars, "W".repeat(80), -5, ord, can, act, null, 0.5,
                 List.of(new NewsLine("23:59", "WWWW", "W".repeat(60), -99.9), new NewsLine("00:00", "", "W".repeat(60), 99.9),
                         new NewsLine("12:00", "WWWW", "W".repeat(60), 5.5))), null));
         Map<String, Consumer<Player>> actS = new HashMap<>();
         for (String k : new String[]{"buy100", "buy1000", "buy10000", "buyX", "short100", "short1000", "short10000", "shortX", "close25", "close50",
                 "close100", "limitBuy", "refresh"}) actS.put(k, no);
-        reg.accept("Börse Markt Short", () -> market(new Market(h, chips, true, true, no, no, KitData.Icon.DIAMOND, "WWWW", "W".repeat(30), last, -12.3,
+        reg.accept("Börse Markt Short", () -> market(new Market(h, chips, true, true, no, no, org.bukkit.Material.DIAMOND, "WWWW", "W".repeat(30), last, -12.3,
                 999_999, 0.01, Frame.M5, bars, "SHORT " + "W".repeat(80), 999_999, List.of(), List.of(), actS, null, 0.5, List.of(), 99, true), null));
-        reg.accept("Börse Markt leer", () -> market(new Market(new Head(0, 0, 0, 0), List.of(), false, false, no, no, KitData.Icon.PAPER, "X", "X",
+        reg.accept("Börse Markt leer", () -> market(new Market(new Head(0, 0, 0, 0), List.of(), false, false, no, no, org.bukkit.Material.PAPER, "X", "X",
                 1, 0, 1, 1, Frame.M5, List.of(), null, 0, List.of(), List.of(), act, null, 0.5), null));
         List<Row> rows = new ArrayList<>();
         for (int i = 0; i < 40; i++) rows.add(new Row("WWWW", "W".repeat(40), 999_999.99, -99.9, "999.999.999 $", -999_999_999L, no));

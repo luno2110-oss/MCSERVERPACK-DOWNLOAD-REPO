@@ -888,6 +888,111 @@ public final class KadminScreens {
     }
 
     // =================================================================================================================
+    // Admin-Werkzeuge für einen Spieler (aus der Akte)
+    // =================================================================================================================
+
+    public void adminPlayer(Player p, UUID id, String name, Consumer<Player> back) {
+        Consumer<Player> again = pl -> adminPlayer(pl, id, name, back);
+        String who = "Admin " + p.getName();
+        var st = plugin.stats().get(id);
+        var team = plugin.teams().of(id);
+        List<Row> rows = new ArrayList<>();
+        rows.add(new Row(Material.GOLD_INGOT, "Geld", GOLD_SOFT, de.kuby.kubyplugins.service.ModeService.label(plugin.modes().modeOf(id)) + "-Konto",
+                Canvas.num(plugin.economy().balance(id)) + " $", GOLD, List.of(
+                new Btn("+1000", false, pl -> {
+                    EconomyLog.with(who + ": +1000", () -> plugin.economy().deposit(id, 1000));
+                    again.accept(pl);
+                }, "+1.000 $"),
+                new Btn("−1000", false, pl -> {
+                    boolean[] okk = {false};
+                    EconomyLog.with(who + ": −1000", () -> okk[0] = plugin.economy().withdraw(id, 1000));
+                    if (!okk[0]) err(pl, "Nicht genug Geld.");
+                    again.accept(pl);
+                }, "−1.000 $"),
+                new Btn("Setzen", true, pl -> ask(pl, "Kontostand von " + name, "Neuer Stand in $", String.valueOf(plugin.economy().balance(id)), 20, (q, t) -> {
+                    long v = num(t, -1);
+                    if (v < 0) err(q, "Keine gültige Zahl.");
+                    else EconomyLog.with(who + ": Stand gesetzt", () -> plugin.economy().set(id, v));
+                    again.accept(q);
+                }, again), "Kontostand setzen")), null, null));
+        rows.add(new Row(Material.EMERALD, "Juwelen", GOLD_SOFT, null, Canvas.num(plugin.jewels().balance(id)), TextColor.color(0x5FE3A0), List.of(
+                new Btn("+100", false, pl -> {
+                    plugin.jewels().add(id, 100);
+                    plugin.getLogger().info("[Admin] " + p.getName() + " gab " + name + " 100 Juwelen");
+                    again.accept(pl);
+                }, "+100 Juwelen"),
+                new Btn("−100", false, pl -> {
+                    if (!plugin.jewels().take(id, 100)) err(pl, "Nicht genug Juwelen.");
+                    again.accept(pl);
+                }, "−100 Juwelen"),
+                new Btn("Geben", true, pl -> ask(pl, "Juwelen für " + name, "Wie viele hinzufügen?", "", 10, (q, t) -> {
+                    long v = num(t, -1);
+                    if (v <= 0) err(q, "Keine gültige Zahl.");
+                    else {
+                        plugin.jewels().add(id, v);
+                        plugin.getLogger().info("[Admin] " + q.getName() + " gab " + name + " " + v + " Juwelen");
+                    }
+                    again.accept(q);
+                }, again), "Juwelen hinzufügen")), null, null));
+        rows.add(new Row(Material.EXPERIENCE_BOTTLE, "XP", GOLD_SOFT, null, Canvas.num(st.xp), GREEN, List.of(
+                new Btn("Geben", false, pl -> ask(pl, "XP für " + name, "Wie viel XP geben?", "", 12, (q, t) -> {
+                    long v = num(t, -1);
+                    if (v <= 0) err(q, "Keine gültige Zahl.");
+                    else plugin.stats().get(id).xp += v;
+                    again.accept(q);
+                }, again), "XP geben"),
+                new Btn("Setzen", true, pl -> ask(pl, "XP von " + name, "Neuer XP-Stand", String.valueOf(st.xp), 12, (q, t) -> {
+                    long v = num(t, -1);
+                    if (v < 0) err(q, "Keine gültige Zahl.");
+                    else plugin.stats().get(id).xp = v;
+                    again.accept(q);
+                }, again), "XP setzen")), null, null));
+        rows.add(new Row(Material.GOLDEN_APPLE, "Trophäen und Stats", GOLD_SOFT, "Kills " + st.kills + " · Tode " + st.deaths, Canvas.num(st.trophies), GOLD, List.of(
+                new Btn("Trophäen", false, pl -> ask(pl, "Trophäen von " + name, "Neue Trophäenzahl", String.valueOf(st.trophies), 8, (q, t) -> {
+                    long v = num(t, -1);
+                    if (v < 0) err(q, "Keine gültige Zahl.");
+                    else plugin.stats().get(id).trophies = (int) Math.min(Integer.MAX_VALUE, v);
+                    again.accept(q);
+                }, again), "Trophäen setzen"),
+                new Btn("Zurücksetzen", false, pl -> confirm(pl, "Stats zurücksetzen", "Kills, Tode und Trophäen von " + name + " auf 0.", "Zurücksetzen", q -> {
+                    var s2 = plugin.stats().get(id);
+                    s2.kills = 0;
+                    s2.deaths = 0;
+                    s2.trophies = 0;
+                    plugin.stats().save();
+                    ok(q, "Stats zurückgesetzt.");
+                    again.accept(q);
+                }, again), "Kills, Tode, Trophäen auf 0")), null, null));
+        rows.add(new Row(Material.SKELETON_SKULL, "Kopfgeld", GOLD_SOFT, "Kopfgeld auf diesen Spieler verfallen lassen", null, null, List.of(
+                new Btn("Entfernen", false, pl -> {
+                    long amount = plugin.pvp() == null ? 0 : plugin.pvp().claimBounty(id);
+                    Msg.send(pl, amount > 0 ? "<gray>Kopfgeld entfernt (" + Msg.coins(amount) + " $)." : "<gray>Kein Kopfgeld vorhanden.");
+                    again.accept(pl);
+                }, "Kopfgeld entfernen")), null, null));
+        if (team != null) rows.add(new Row(Material.WHITE_BANNER, "Team " + team.name(), GOLD_SOFT, "Spieler aus dem Team nehmen", null, null, List.of(
+                new Btn("Verlassen", false, pl -> {
+                    String e = plugin.teams().leave(id);
+                    if (e != null) err(pl, e);
+                    else ok(pl, name + " hat das Team verlassen.");
+                    again.accept(pl);
+                }, "Team verlassen")), null, null));
+        rows.add(new Row(Material.CHEST, "Abholbox", GOLD_SOFT, "Alle Items darin löschen", null, null, List.of(
+                new Btn("Leeren", false, pl -> confirm(pl, "Abholbox leeren", "Alle Items in der Abholbox von " + name + " werden gelöscht.", "Leeren", q -> {
+                    plugin.abholbox().takeAll(id);
+                    ok(q, "Abholbox geleert.");
+                    again.accept(q);
+                }, again), "Abholbox leeren")), null, null));
+        rows.add(new Row(Material.BOOK, "Buchungen und Zweitkonten", GOLD_SOFT, "Wirtschafts-Protokoll und Konten mit gleicher IP", null, null, List.of(
+                new Btn("Buchungen", false, pl -> {
+                    filters.put(pl.getUniqueId(), new Filter(name, null, 0, 7));
+                    economy(pl, 0);
+                }, "Wirtschafts-Protokoll"),
+                new Btn("Zweitkonten", false, pl -> alts(pl, name), "Konten mit gleicher IP")), null, null));
+        boolean online = Bukkit.getPlayer(id) != null;
+        show(p, new Page(KitData.Icon.NAME_TAG, name, (online ? "online" : "offline") + " · Admin-Werkzeuge", List.of(), rows, 0, 1, null, null, back, null));
+    }
+
+    // =================================================================================================================
     // Kits (Liste als Dialog; der Inhalt bleibt eine Truhe, weil man echte Items hineinlegt)
     // =================================================================================================================
 

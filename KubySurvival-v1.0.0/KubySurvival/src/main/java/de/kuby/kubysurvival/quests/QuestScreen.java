@@ -487,7 +487,12 @@ public final class QuestScreen {
     // =================================================================================================================
 
     /** Angebot: Icon, Name, Preis, gekauft (einmalige Angebote), bezahlbar, Klick. */
-    public record ShopOffer(KitData.Icon icon, String name, long price, boolean owned, boolean affordable, Consumer<Player> buy) {}
+    public record ShopOffer(KitData.Icon icon, String name, long price, boolean owned, boolean affordable, Consumer<Player> buy,
+                            org.bukkit.Material item) {
+        public ShopOffer(KitData.Icon icon, String name, long price, boolean owned, boolean affordable, Consumer<Player> buy) {
+            this(icon, name, price, owned, affordable, buy, null);
+        }
+    }
 
     public record ShopView(String event, String currency, long balance, List<ShopOffer> offers, Theme theme, String name) {
         public ShopView(String event, String currency, long balance, List<ShopOffer> offers) {
@@ -513,7 +518,8 @@ public final class QuestScreen {
             ShopOffer o = v.offers().get(i);
             int x = (i % 2) * (cw + 4), oy = y + (i / 2) * (ch + 4);
             c.box(x, oy, cw, ch, o.owned() ? KitData.Box.QU_CARD_BROWN : o.affordable() ? KitData.Box.QU_CARD_GOLD : KitData.Box.QU_CARD_GRAY);
-            c.icon(x + 8, oy + 8, o.icon(), false);
+            if (o.item() != null) c.item(x + 8, oy + 8, o.item(), false, o.icon());
+            else c.icon(x + 8, oy + 8, o.icon(), false);
             c.text(x + 30, oy + 10, Canvas.fit(o.name(), true, cw - 38), o.owned() ? LIGHT : NAME, true);
             icon(c, x + 8, oy + 27, 16, 14, th.coin());
             c.text(x + 28, oy + 30, n(o.price()), o.affordable() || o.owned() ? th.color() : GRAY, true);

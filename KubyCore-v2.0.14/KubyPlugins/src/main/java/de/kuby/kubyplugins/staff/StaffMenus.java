@@ -551,7 +551,8 @@ public final class StaffMenus implements CommandExecutor, TabCompleter, Listener
             }
             case "adminp" -> {
                 if (mine != Role.ADMIN) return;
-                new de.kuby.kubyplugins.gui.AdminPlayerMenu(plugin, id, name).open(p);
+                if (pack(p)) screens().adminPlayer(p, id, name, pl -> akte(pl, id));
+                else new de.kuby.kubyplugins.gui.AdminPlayerMenu(plugin, id, name).open(p);
             }
             default -> {
             }
