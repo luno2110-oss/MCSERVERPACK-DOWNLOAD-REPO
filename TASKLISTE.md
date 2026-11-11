@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.50** (ungetestet, nicht kompiliert)
+Stand: **v1.51** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -555,6 +555,13 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - große Beträge an engen Stellen jetzt kurz („1,2 Mio.“, „3 Mrd.“)
   - Kern: Info-Leiste (Vorschau der Job-Leiste ragte aus dem Fenster), Kits („alle … Std.“ über „Vorschau“), Bestenliste (Untertitel), Investments (Name über Preis), Quiz-Abstimmung (Zeile zu lang)
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
+
+## Skyblock: Start-Boost und Combo-Tagesrangliste (v1.51, Test im Spiel offen)
+- [x] Start-Boost für neue Spieler: 72 Stunden nach dem ersten Skyblock-Block doppeltes Geld und XP aus Blöcken, Meilensteinen und Belohnungskisten (`belohnungen.start-boost`). Titel und Chat beim ersten Block, „START x2“ in der Combo-Leiste. Nicht für Zweitkonten (gleiche IP) und nicht nachträglich für Spieler, die schon vorher gespielt haben
+- [x] `/combo` (auch /combotop): Tages-Rangliste der besten Combo als Podest (wie /baltop), eigener Bestwert, aktuelle Combo, Restzeit des Start-Boosts, Gewinner von gestern. Ohne Pack als Chat-Liste
+- [x] Um Mitternacht Preise für die ersten drei (50.000 $ + 5 Juwelen, 30.000 $ + 3, 15.000 $ + 1, ab Combo 50, `belohnungen.rangliste`), Ansage an alle in Skyblock, Nachricht an die Gewinner (offline wird gutgeschrieben)
+- [x] Neue Führung ab Combo 100 wird allen in Skyblock gemeldet (höchstens alle 5 Minuten), „[Rangliste]“ in der Nachricht zur neuen Combo-Runde
+- [x] Guide-Seite „Belohnungen“ um Start-Boost und Rangliste ergänzt (de/en)
 
 ## Echte Item-Bilder in weiteren Dialogen, Kadmin-Spielerwerkzeuge (v1.50, Test im Spiel offen)
 - [x] Echte Item-Bilder (Blöcke in 3D wie im Inventar) statt Kit-Icons mit Ersatzbild: Generator-Lager, Börse (Kopf des Markts), Investments, Markt (neueste Angebote), One-Block (der aktuelle Block), Jobs-Token-Shop, Event-Candy-Shop (Item-Angebote). Quest-Ziele bleiben bei den kleinen 8-px-Bildern

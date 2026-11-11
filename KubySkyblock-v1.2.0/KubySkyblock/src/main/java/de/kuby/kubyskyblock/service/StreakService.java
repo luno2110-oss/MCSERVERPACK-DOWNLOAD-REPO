@@ -19,7 +19,9 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
@@ -75,6 +77,15 @@ public final class StreakService {
     private final File file;
     private final Map<UUID, Combo> combos = new HashMap<>();
     private final Map<UUID, Chest> chests = new HashMap<>();
+    /** Beste Combo je Spieler am Tag bestDay (Tages-Rangliste, Preise um Mitternacht). */
+    private final Map<UUID, Integer> best = new HashMap<>();
+    private String bestDay = "";
+    /** Erster Skyblock-Block je Spieler (Start-Boost); 1 = schon vor dem Boost gespielt. */
+    private final Map<UUID, Long> firstSeen = new HashMap<>();
+    /** Gewinner des letzten ausgewerteten Tages (Name und Combo) für die Anzeige. */
+    private final List<String> lastWinners = new ArrayList<>();
+    private UUID leader;
+    private long leaderShout;
 
     public StreakService(KubySkyblock addon, KubyPlugins core) {
         this.addon = addon;
@@ -162,7 +173,8 @@ public final class StreakService {
         long now = System.currentTimeMillis();
         String hour = hourKey();
         if (!hour.equals(c.hour)) {
-            if (c.count >= 20) Msg.send(p, "<#FFD25A>⏰ Neue Combo-Runde! <gray>Letzte Runde: <white>" + c.count + " Blöcke");
+            if (c.count >= 20) Msg.send(p, "<#FFD25A>⏰ Neue Combo-Runde! <gray>Letzte Runde: <white>" + c.count + " Blöcke <dark_gray>· "
+                    + "<gray>Dein Tagesbestwert: <white>" + bestToday(id) + " <click:run_command:'/combo'><yellow>[Rangliste]</click>");
             c.hour = hour;
             c.count = 0;
             c.maxShown = false;
@@ -177,16 +189,20 @@ public final class StreakService {
         }
         c.count++;
         c.last = now;
+        firstSeen.putIfAbsent(id, now);
+        if (firstSeen.get(id) == now && starter(id) > 1.0) welcomeBoost(p);
+        trackBest(p, c.count);
         double m = mult(c.count);
+        double boost = starter(id);
         long baseMoney = addon.getConfig().getLong("reward.money", 2), baseXp = addon.getConfig().getLong("reward.xp", 1);
-        long money = Math.round(baseMoney * m), xp = Math.round(baseXp * m);
+        long money = Math.round(baseMoney * m * boost), xp = Math.round(baseXp * m * boost);
         pay(p, money, xp);
 
         int every = Math.max(5, cfg().getInt("combo.meilenstein", 50));
         boolean milestone = c.count % every == 0;
         double cap = primeTime() ? cfg().getDouble("combo.max-prime", 100.0) : cfg().getDouble("combo.max", 100.0);
         if (milestone) {
-            long bonus = Math.round(baseMoney * m * cfg().getDouble("combo.meilenstein-bonus", 25) * scale(p));
+            long bonus = Math.round(baseMoney * m * cfg().getDouble("combo.meilenstein-bonus", 25) * scale(p) * boost);
             pay(p, bonus, Math.round(baseXp * m * 10));
             float pitch = Math.min(2.0f, 0.8f + 0.1f * (c.count / every));
             Sfx.play(core, p, Sfx.Kind.LEVEL_UP, pitch);
@@ -215,7 +231,8 @@ public final class StreakService {
         int filled = Math.round(10f * into / every);
         StringBuilder bar = new StringBuilder();
         bar.append("<#FFD25A>").append("▮".repeat(filled)).append("<dark_gray>").append("▮".repeat(10 - filled));
-        String prime = primeTime() ? "<#FF8A3D><b>PRIME</b> " : "";
+        String prime = (primeTime() ? "<#FF8A3D><b>PRIME</b> " : "") + (starter(p.getUniqueId()) > 1.0 ? "<#7CF5FF><b>START x"
+                + fmt(starter(p.getUniqueId())) + "</b> " : "");
         p.sendActionBar(Msg.parse(prime + "<#FFE066><b>COMBO " + c.count + "</b> <yellow>x" + fmt(m) + " " + bar
                 + " <green>+" + Msg.coins(money) + "$ <aqua>+" + Msg.coins(xp) + " XP <dark_gray>· <gray>⏰ " + left()));
     }
@@ -360,6 +377,7 @@ public final class StreakService {
     }
 
     private void minute() {
+        rollDay();
         if (!cfg().getBoolean("kiste.aktiv", true)) return;
         int every = Math.max(1, cfg().getInt("kiste.minuten", 10));
         String today = LocalDate.now(ZONE).toString();
@@ -391,8 +409,9 @@ public final class StreakService {
         int k = c.opened;
         int maxSteps = cfg().getInt("kiste.max-stufe", 12);
         double grow = 1.0 + cfg().getDouble("kiste.wachstum", 0.25) * (Math.min(k, maxSteps) - 1);
-        long money = Math.round(cfg().getLong("kiste.geld", 150) * grow * scale(p));
-        long xp = Math.round(cfg().getLong("kiste.xp", 40) * grow);
+        double boost = starter(p.getUniqueId());
+        long money = Math.round(cfg().getLong("kiste.geld", 150) * grow * scale(p) * boost);
+        long xp = Math.round(cfg().getLong("kiste.xp", 40) * grow * boost);
         pay(p, money, xp);
         StringBuilder extra = new StringBuilder();
         if (k % 3 == 0) {
@@ -414,14 +433,178 @@ public final class StreakService {
     }
 
     // =================================================================================================================
+    // Start-Boost für neue Spieler
+    // =================================================================================================================
+
+    /**
+     * Start-Boost: in den ersten start-boost.stunden (72) Stunden nach dem ersten Skyblock-Block gibt es mehr Geld und
+     * XP (start-boost.faktor, Standard x2) aus Blöcken, Meilensteinen und Belohnungskisten. Nicht für Zweitkonten.
+     */
+    public double starter(UUID id) {
+        if (!cfg().getBoolean("start-boost.aktiv", true)) return 1.0;
+        Long t = firstSeen.get(id);
+        if (t == null || t <= 1) return 1.0;
+        if (System.currentTimeMillis() - t > cfg().getLong("start-boost.stunden", 72) * 3_600_000L) return 1.0;
+        if (isAlt(id)) return 1.0;
+        return Math.max(1.0, cfg().getDouble("start-boost.faktor", 2.0));
+    }
+
+    /** Zweitkonto-Prüfung für den Start-Boost, eine Minute zwischengespeichert (läuft sonst bei jedem Block). */
+    private final Map<UUID, long[]> altCache = new HashMap<>();
+
+    private boolean isAlt(UUID id) {
+        if (core.alts() == null) return false;
+        long now = System.currentTimeMillis();
+        long[] c = altCache.get(id);
+        if (c == null || now - c[0] > 60_000L) {
+            c = new long[] {now, core.alts().hasOther(id) ? 1 : 0};
+            altCache.put(id, c);
+        }
+        return c[1] == 1;
+    }
+
+    /** Restzeit des Start-Boosts in Stunden (0 = keiner). */
+    public long starterHoursLeft(UUID id) {
+        if (starter(id) <= 1.0) return 0;
+        long end = firstSeen.get(id) + cfg().getLong("start-boost.stunden", 72) * 3_600_000L;
+        return Math.max(1, (end - System.currentTimeMillis() + 3_599_999L) / 3_600_000L);
+    }
+
+    private void welcomeBoost(Player p) {
+        Sfx.play(core, p, Sfx.Kind.EPIC);
+        p.showTitle(Title.title(Msg.parse("<gradient:#7CF5FF:#FFD25A><b>START-BOOST x" + fmt(starter(p.getUniqueId())) + "</b></gradient>"),
+                Msg.parse("<gray>" + cfg().getLong("start-boost.stunden", 72) + " Stunden mehr Geld und XP"),
+                Title.Times.times(Duration.ofMillis(150), Duration.ofMillis(2200), Duration.ofMillis(400))));
+        Msg.send(p, "<#7CF5FF>🚀 Start-Boost: <white>" + cfg().getLong("start-boost.stunden", 72) + " Stunden lang x"
+                + fmt(starter(p.getUniqueId())) + " Geld und XP <gray>aus Blöcken, Meilensteinen und Belohnungskisten. Bau los!");
+    }
+
+    // =================================================================================================================
+    // Tages-Rangliste (beste Combo des Tages, Preise um Mitternacht)
+    // =================================================================================================================
+
+    private static String today() {
+        return LocalDate.now(ZONE).toString();
+    }
+
+    private void trackBest(Player p, int count) {
+        rollDay();
+        UUID id = p.getUniqueId();
+        if (count <= best.getOrDefault(id, 0)) return;
+        best.put(id, count);
+        if (count < cfg().getInt("rangliste.ansage-ab", 100)) return;
+        UUID top = top(1).isEmpty() ? null : top(1).get(0).getKey();
+        if (id.equals(top) && !id.equals(leader)) {
+            UUID before = leader;
+            leader = id;
+            long now = System.currentTimeMillis();
+            if (before != null && now - leaderShout > 5 * 60_000L) {
+                leaderShout = now;
+                String msg = "<#FFD25A>👑 <white>" + p.getName() + " <gray>führt jetzt die Combo-Rangliste an <dark_gray>(<yellow>" + count
+                        + "</yellow>)<gray>. <click:run_command:'/combo'><yellow>[Rangliste]</click>";
+                for (Player o : Bukkit.getOnlinePlayers()) {
+                    if (ModeService.SKYBLOCK.equals(core.modes().modeOf(o.getUniqueId()))) Msg.send(o, msg);
+                }
+            }
+        }
+    }
+
+    /** Die besten n Spieler des Tages (Combo absteigend). */
+    public List<Map.Entry<UUID, Integer>> top(int n) {
+        rollDay();
+        List<Map.Entry<UUID, Integer>> l = new ArrayList<>(best.entrySet());
+        l.sort((a, b) -> Integer.compare(b.getValue(), a.getValue()));
+        return l.subList(0, Math.min(n, l.size()));
+    }
+
+    public int bestToday(UUID id) {
+        rollDay();
+        return best.getOrDefault(id, 0);
+    }
+
+    /** Gewinner des Vortags („1. Name (Combo)“). */
+    public List<String> lastWinners() {
+        return List.copyOf(lastWinners);
+    }
+
+    /** Preis für Platz place (1-basiert): {Geld, Juwelen} aus belohnungen.rangliste.plaetze. */
+    public long[] prize(int place, UUID id) {
+        ConfigurationSection s = cfg().getConfigurationSection("rangliste.plaetze." + place);
+        long money = s != null ? s.getLong("geld") : place == 1 ? 50_000 : place == 2 ? 30_000 : place == 3 ? 15_000 : 0;
+        long jewels = s != null ? s.getLong("juwelen") : place == 1 ? 5 : place == 2 ? 3 : place == 3 ? 1 : 0;
+        return new long[] {money, jewels};
+    }
+
+    public int prizePlaces() {
+        return Math.max(0, cfg().getInt("rangliste.preise-plaetze", 3));
+    }
+
+    /** Tageswechsel: Rangliste des alten Tages auszahlen und leeren. */
+    private void rollDay() {
+        String t = today();
+        if (t.equals(bestDay)) return;
+        if (!bestDay.isEmpty() && !best.isEmpty() && cfg().getBoolean("rangliste.aktiv", true)) payout();
+        bestDay = t;
+        best.clear();
+        leader = null;
+    }
+
+    private void payout() {
+        List<Map.Entry<UUID, Integer>> l = new ArrayList<>(best.entrySet());
+        l.sort((a, b) -> Integer.compare(b.getValue(), a.getValue()));
+        lastWinners.clear();
+        int min = cfg().getInt("rangliste.mindest-combo", 50);
+        StringBuilder bc = new StringBuilder();
+        for (int i = 0; i < Math.min(prizePlaces(), l.size()); i++) {
+            UUID id = l.get(i).getKey();
+            int count = l.get(i).getValue();
+            if (count < min) break;
+            long[] pr = prize(i + 1, id);
+            if (pr[0] > 0) core.modes().depositIn(id, ModeService.SKYBLOCK, pr[0]);
+            if (pr[1] > 0) core.jewels().add(id, pr[1]);
+            String name = Bukkit.getOfflinePlayer(id).getName();
+            if (name == null) name = "?";
+            lastWinners.add((i + 1) + ". " + name + " (" + count + ")");
+            bc.append(i == 0 ? "" : "<dark_gray>, ").append(i == 0 ? "<#FFD25A>" : "<white>").append(i + 1).append(". ").append(name)
+                    .append(" <gray>(").append(count).append(")");
+            Player p = Bukkit.getPlayer(id);
+            if (p != null) {
+                Sfx.play(core, p, Sfx.Kind.SUCCESS_BIG);
+                Msg.send(p, "<#FFD25A>👑 Combo-Rangliste von gestern: Platz " + (i + 1) + "! <gold>+" + Msg.coins(pr[0]) + " $"
+                        + (pr[1] > 0 ? " <light_purple>+" + pr[1] + " Juwelen" : ""));
+            }
+        }
+        if (!bc.isEmpty()) {
+            core.notifications().send("notify.broadcast", "<#FFD25A>👑 <b>Combo-Rangliste</b> <gray>(gestern): " + bc + "<gray>. Heute neu: <yellow>/combo",
+                    o -> ModeService.SKYBLOCK.equals(core.modes().modeOf(o.getUniqueId())));
+        }
+        save();
+    }
+
+    // =================================================================================================================
     // Speichern
     // =================================================================================================================
 
     private void load() {
         YamlConfiguration y = YamlConfiguration.loadConfiguration(file);
+        bestDay = y.getString("rangliste.tag", "");
+        ConfigurationSection r = y.getConfigurationSection("rangliste.beste");
+        if (r != null) {
+            for (String k : r.getKeys(false)) {
+                try {
+                    best.put(UUID.fromString(k), r.getInt(k));
+                } catch (IllegalArgumentException ignored) {
+                    // kaputter Eintrag
+                }
+            }
+        }
+        lastWinners.addAll(y.getStringList("rangliste.gewinner"));
         for (String k : y.getKeys(false)) {
+            if (k.equals("rangliste")) continue;
             try {
                 UUID id = UUID.fromString(k);
+                // wer schon vor dem Start-Boost gespielt hat, bekommt ihn nicht nachträglich (1 = alt)
+                firstSeen.put(id, y.getLong(k + ".erstes", 1));
                 Combo c = new Combo();
                 c.hour = y.getString(k + ".stunde", "");
                 c.count = y.getInt(k + ".combo");
@@ -444,6 +627,10 @@ public final class StreakService {
             out.set(id + ".stunde", c.hour);
             out.set(id + ".combo", c.count);
         });
+        firstSeen.forEach((id, t) -> out.set(id + ".erstes", t));
+        out.set("rangliste.tag", bestDay);
+        best.forEach((id, n) -> out.set("rangliste.beste." + id, n));
+        out.set("rangliste.gewinner", new ArrayList<>(lastWinners));
         chests.forEach((id, c) -> {
             out.set(id + ".kiste-tag", c.day);
             out.set(id + ".kisten", c.opened);

@@ -39,6 +39,19 @@ belohnungen:
     wachstum: 0.25              # jede Kiste am selben Tag +25 % (bis max-stufe)
     max-stufe: 12
     schluessel: vote            # jede 6. Kiste dieser Schlüssel, jede 3. ein Glücksfund (mindestens selten)
+  start-boost:
+    aktiv: true
+    stunden: 72                 # neue Spieler: 72 Stunden nach dem ersten Block ...
+    faktor: 2.0                 # ... doppeltes Geld und XP aus Blöcken, Meilensteinen und Kisten (nicht für Zweitkonten)
+  rangliste:
+    aktiv: true                 # /combo: beste Combo des Tages, Auszahlung um Mitternacht
+    mindest-combo: 50           # darunter gibt es keinen Preis
+    ansage-ab: 100              # neue Führung ab dieser Combo an alle in Skyblock melden (höchstens alle 5 Min.)
+    preise-plaetze: 3
+    plaetze:
+      "1": {geld: 50000, juwelen: 5}
+      "2": {geld: 30000, juwelen: 3}
+      "3": {geld: 15000, juwelen: 1}
 # Inseln der Spieler (/insel). Sie liegen in einer Spirale um den Skyblock-Spawn (0, 0) mit festem Abstand.
 insel:
   abstand: 200                  # Abstand der Insel-Mitten (größte Insel muss kleiner sein)

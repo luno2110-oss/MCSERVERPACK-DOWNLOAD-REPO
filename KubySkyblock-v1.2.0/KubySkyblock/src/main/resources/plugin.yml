@@ -12,6 +12,10 @@ commands:
     description: "Deine Insel: Zuhause, Mitglieder, Upgrades, Level, Top-Inseln"
     usage: "/insel [home|einladen|annehmen|besuchen|top|level|upgrade|neustart|aufgeben]"
     aliases: [is, island]
+  combo:
+    description: "Combo-Rangliste von heute: beste Combo, Preise für die ersten drei um Mitternacht"
+    usage: "/combo"
+    aliases: [combotop, comborang]
   oneblock:
     description: "One-Block: Plattform fürs Team beanspruchen, Block-XP, Upgrades"
     usage: "/oneblock [beanspruchen <Nr>|freigeben|einzahlen <Menge|alles>|upgrade <Art>|tp <Nr>]"

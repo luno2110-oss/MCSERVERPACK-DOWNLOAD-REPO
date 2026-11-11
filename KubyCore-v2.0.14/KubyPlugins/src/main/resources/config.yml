@@ -2148,6 +2148,9 @@ guide:
             - "> In manchen Blöcken steckt ein Fund: Gewöhnlich bis Legendär."
             - "# Belohnungskiste"
             - "> Alle 10 aktiven Minuten eine Kiste, jede größer als die letzte."
+            - "# Start und Rangliste"
+            - "> Neu in Skyblock: 3 Tage doppeltes Geld und XP."
+            - "> /combo: beste Combo des Tages, Preise für die Top 3."
           name-en: "Rewards"
           lines-en:
             - "Every block pays off."
@@ -2160,6 +2163,9 @@ guide:
             - "> Some blocks hide a find: common to legendary."
             - "# Reward chest"
             - "> A chest every 10 active minutes, each bigger than the last."
+            - "# Start and leaderboard"
+            - "> New to Skyblock: 3 days of double money and XP."
+            - "> /combo: best combo of the day, prizes for the top 3."
         quests:
           name: "Quests"
           icon: nav07

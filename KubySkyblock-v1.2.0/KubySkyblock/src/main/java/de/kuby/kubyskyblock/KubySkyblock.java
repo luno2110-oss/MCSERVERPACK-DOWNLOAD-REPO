@@ -105,6 +105,7 @@ public final class KubySkyblock extends JavaPlugin {
         de.kuby.kubyskyblock.gui.GeneratorScreen.samples(core::registerSelfTestCanvas);
         de.kuby.kubyskyblock.gui.OneBlockScreen.samples(core::registerSelfTestCanvas);
         de.kuby.kubyskyblock.gui.SkyShopScreen.samples(core::registerSelfTestCanvas);
+        de.kuby.kubyskyblock.command.ComboCommand.samples(core::registerSelfTestCanvas);
         de.kuby.kubyskyblock.gui.IslandExtraScreen.samples(core::registerSelfTestCanvas);
         de.kuby.kubyskyblock.gui.StageScreen.samples(core::registerSelfTestCanvas);
         saveDefaultConfig();
@@ -250,6 +251,8 @@ public final class KubySkyblock extends JavaPlugin {
             }
         });
         if (getCommand("skyblock") != null) getCommand("skyblock").setExecutor(new SkyblockPlayerCommand(core));
+        var combo = getCommand("combo");
+        if (combo != null) combo.setExecutor(new de.kuby.kubyskyblock.command.ComboCommand(this, core));
         var obc = getCommand("oneblock");
         if (obc != null) {
             var oc = new de.kuby.kubyskyblock.command.OneBlockCommand(this, core);
