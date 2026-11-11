@@ -121,6 +121,9 @@ casino:
   # 1 Chip = 1 Coin (wie im Referenz-Clip). Alte Stände mit 100 Coins je Chip werden beim Start einmalig umgerechnet.
   cashout-tax-percent: 5        # Steuer beim Rücktausch Chips -> Coins (Farmpass: keine)
   jackpot-start: 10000
+  jackpot-ticker:
+    aktiv: true                 # Jackpot-Hologramm zählt sichtbar hoch, blinkt und zeigt „+N Chips“ beim Wachsen
+    ton: true                   # leiser Münzklang dabei (höchstens alle 2 Sekunden)
   kasse-radius: 5
   jackpot-share: 0.01
   jackpot:
@@ -280,9 +283,11 @@ battlepass:
     - "haendler;Händler|Trader;emerald;TRADE;3;500"
 
 # Kosmetik (/cosmetics): ID;HAT|TRAIL|KILL|TELEPORT;Partikel oder Hut-Modell;Anzeige;Seltenheit;Währung;Preis;BP-Stufe
-# Währung: MONEY, XP, JEWELS, NONE (gratis bzw. Battlepass-Stufe), CRATE (nur aus Kisten: /cosmetics give <Spieler> <ID>).
+# Währung: MONEY, XP, JEWELS, NONE (gratis bzw. Battlepass-Stufe), CRATE (nur aus Kisten: /cosmetics give <Spieler> <ID>),
+# EVENT (nur im Event-Shop oder mit /cosmetics give).
 # Hut-Modelle: zylinder, krone, partyhut, hexenhut, cowboyhut, wikinger, heiligenschein, kochmuetze, strohhut,
-# weihnachtsmuetze, blumenkranz, piratenhut, bauhelm, teufelshoerner, bommelmuetze, katzenohren.
+# weihnachtsmuetze, blumenkranz, piratenhut, bauhelm, teufelshoerner, bommelmuetze, katzenohren; Event-Hüte (Währung
+# EVENT, nur im Event-Shop): rentiergeweih, hasenohren, herzhaarreif, kleeblatt.
 # cosmetics gilt für alle Modi ohne eigene Liste unter cosmetics-modes.
 cosmetics:
   - "hut_bommelmuetze;HAT;bommelmuetze;Bommelmütze;COMMON;JEWELS;30;0"
@@ -301,6 +306,10 @@ cosmetics:
   - "hut_teufelshoerner;HAT;teufelshoerner;Teufelshörner;EPIC;CRATE;0;0"
   - "hut_krone;HAT;krone;Krone;LEGENDARY;CRATE;0;0"
   - "hut_heiligenschein;HAT;heiligenschein;Heiligenschein;LEGENDARY;CRATE;0;0"
+  - "hut_rentiergeweih;HAT;rentiergeweih;Rentiergeweih;EPIC;EVENT;0;0"
+  - "hut_hasenohren;HAT;hasenohren;Hasenohren;RARE;EVENT;0;0"
+  - "hut_herzhaarreif;HAT;herzhaarreif;Herz-Haarreif;RARE;EVENT;0;0"
+  - "hut_kleeblatt;HAT;kleeblatt;Kleeblatt-Haarreif;RARE;EVENT;0;0"
   - "flame;TRAIL;FLAME;Flammenspur;COMMON;MONEY;2500;0"
   - "happy;TRAIL;HAPPY_VILLAGER;Smaragdfunken;COMMON;XP;1500;0"
   - "snow;TRAIL;SNOWFLAKE;Schneefall;RARE;XP;4000;0"
@@ -335,6 +344,10 @@ cosmetics-modes:
     - "hut_teufelshoerner;HAT;teufelshoerner;Teufelshörner;EPIC;CRATE;0;0"
     - "hut_krone;HAT;krone;Krone;LEGENDARY;CRATE;0;0"
     - "hut_heiligenschein;HAT;heiligenschein;Heiligenschein;LEGENDARY;CRATE;0;0"
+    - "hut_rentiergeweih;HAT;rentiergeweih;Rentiergeweih;EPIC;EVENT;0;0"
+    - "hut_hasenohren;HAT;hasenohren;Hasenohren;RARE;EVENT;0;0"
+    - "hut_herzhaarreif;HAT;herzhaarreif;Herz-Haarreif;RARE;EVENT;0;0"
+    - "hut_kleeblatt;HAT;kleeblatt;Kleeblatt-Haarreif;RARE;EVENT;0;0"
     - "s_herz;TRAIL;HEART;Herzchen;COMMON;JEWELS;20;0"
     - "s_noten;TRAIL;NOTE;Musiknoten;COMMON;JEWELS;20;0"
     - "s_funken;TRAIL;HAPPY_VILLAGER;Smaragdfunken;COMMON;JEWELS;20;0"

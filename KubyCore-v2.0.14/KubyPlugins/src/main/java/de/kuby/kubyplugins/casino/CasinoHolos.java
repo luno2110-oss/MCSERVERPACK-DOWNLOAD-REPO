@@ -68,6 +68,12 @@ public final class CasinoHolos implements Listener {
     private final Map<UUID, Boolean> viewer = new HashMap<>();
     private final Map<UUID, Long> greeted = new HashMap<>();
     private int ticks;
+    /** Ticker: angezeigter Betrag (zählt zum echten Jackpot hoch), zuletzt gesehener Jackpot, Blinken, Aufsteiger. */
+    private double tickerShown = -1;
+    private long tickerSeen = -1;
+    private long tickerPending;
+    private int tickerFlash;
+    private long tickerLastFloat, tickerLastSound;
 
     public CasinoHolos(KubyPlugins plugin) {
         this.plugin = plugin;
@@ -79,6 +85,7 @@ public final class CasinoHolos implements Listener {
             if (v != null) places.put(k, v);
         }
         plugin.getServer().getScheduler().runTaskTimer(plugin, this::tick, 40L, 20L);
+        plugin.getServer().getScheduler().runTaskTimer(plugin, this::ticker, 40L, 2L);
     }
 
     private void save() {
@@ -162,6 +169,7 @@ public final class CasinoHolos implements Listener {
                 inLine.setVisibleByDefault(false);
                 outLine.setVisibleByDefault(false);
                 viewer.clear();
+                tickerShown = -1;
                 updateJackpot();
             }
             case "ranking" -> {
@@ -220,14 +228,75 @@ public final class CasinoHolos implements Listener {
         TextDisplay amount = shown.get("jackpot");
         TextDisplay body = shown.get("jackpot_body");
         if (amount == null || !amount.isValid() || body == null || !body.isValid()) return;
-        amount.text(jackpotAmount(plugin.casino().jackpot()));
+        if (tickerShown < 0) amount.text(jackpotAmount(plugin.casino().jackpot()));
         var draw = plugin.jackpotDraw();
         body.text(draw == null ? jackpotBody(null, null, 0, null, 0)
                 : jackpotBody(draw.nextDrawLong(), draw.timeLeft(), draw.participantCount(), draw.lastWinner(), draw.lastAmount()));
     }
 
     public static Component jackpotAmount(long chips) {
-        return Component.text(CasinoText.chips(chips), YELLOW).decorate(TextDecoration.BOLD);
+        return jackpotAmount(chips, YELLOW);
+    }
+
+    public static Component jackpotAmount(long chips, TextColor color) {
+        return Component.text(CasinoText.chips(chips), color).decorate(TextDecoration.BOLD);
+    }
+
+    /**
+     * Jackpot-Ticker (alle 2 Ticks): Die Zahl zählt sichtbar zum echten Jackpot hoch wie ein Automaten-Zähler,
+     * blinkt dabei gold-weiß, darüber steigt „+N Chips“ auf (höchstens einmal je Sekunde, kleinere Zuwächse werden
+     * gesammelt), dazu ein leiser Münzklang in der Nähe. Nach einer Auszahlung springt sie sofort auf den neuen Wert.
+     */
+    private void ticker() {
+        TextDisplay amount = shown.get("jackpot");
+        if (amount == null || !amount.isValid()) return;
+        long target = plugin.casino().jackpot();
+        boolean on = plugin.getConfig().getBoolean("casino.jackpot-ticker.aktiv", true);
+        if (tickerShown < 0 || target < tickerShown || !on) {
+            boolean changed = tickerShown != target;
+            tickerShown = target;
+            tickerSeen = target;
+            tickerPending = 0;
+            tickerFlash = 0;
+            if (changed) amount.text(jackpotAmount(target));
+            return;
+        }
+        if (tickerSeen >= 0 && target > tickerSeen) tickerPending += target - tickerSeen;
+        tickerSeen = target;
+        long now = System.currentTimeMillis();
+        if (tickerPending > 0 && now - tickerLastFloat >= 1000) {
+            floatGain(amount, tickerPending);
+            tickerPending = 0;
+            tickerLastFloat = now;
+        }
+        if (target > tickerShown) {
+            double diff = target - tickerShown;
+            tickerShown = Math.min(target, tickerShown + Math.max(1, Math.ceil(diff / 6)));
+            tickerFlash = 12;
+        } else if (tickerFlash <= 0) {
+            return;
+        }
+        tickerFlash--;
+        TextColor c = tickerFlash <= 0 ? YELLOW : (tickerFlash / 2) % 2 == 0 ? TextColor.color(0xFFF7C8) : ORANGE;
+        amount.text(jackpotAmount((long) tickerShown, c));
+    }
+
+    private void floatGain(TextDisplay amount, long gain) {
+        Location at = amount.getLocation().add(0, 0.42, 0);
+        TextDisplay f = spawn("jackpot", at, Component.text("+" + CasinoText.chips(gain), GREEN).decorate(TextDecoration.BOLD), 0.7f, true, 0);
+        f.setTeleportDuration(20);
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            if (f.isValid()) f.teleport(at.clone().add(0, 0.55, 0));
+        }, 2L);
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            if (f.isValid()) f.setTextOpacity((byte) 110);
+        }, 14L);
+        plugin.getServer().getScheduler().runTaskLater(plugin, f::remove, 24L);
+        long now = System.currentTimeMillis();
+        if (plugin.getConfig().getBoolean("casino.jackpot-ticker.ton", true) && now - tickerLastSound >= 2000) {
+            tickerLastSound = now;
+            at.getWorld().playSound(at, org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.35f, 1.6f);
+        }
     }
 
     public static Component jackpotBody(String next, String left, int players, String winner, long amount) {

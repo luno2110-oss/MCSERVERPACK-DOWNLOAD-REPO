@@ -255,6 +255,103 @@ def hats():
         h.box(cx - 1.6, 7.2, 6.8, cx + 1.6, 10.4, 7.8, "fur", rot=("z", 45, (cx, 8.8, 7.3)))
         h.box(cx - 0.9, 7.9, 6.65, cx + 0.9, 9.7, 6.8, "pink", rot=("z", 45, (cx, 8.8, 7.3)))
     out.append(h)
+
+    # ----- Event-Hüte (eigene Hüte für die Event-Shops) -----
+
+    def band(hat, color, top=None):
+        """Haarreif: schmaler Bügel quer über den Kopf, an den Seiten bis zu den Ohren herunter."""
+        hat.box(3.2, 8.0, 6.7, 12.8, 8.7, 7.9, color, top=top)
+        hat.box(3.0, 5.6, 6.7, 3.7, 8.7, 7.9, color)
+        hat.box(12.3, 5.6, 6.7, 13.0, 8.7, 7.9, color)
+
+    # Weihnachten: Rentiergeweih auf rotem Samtreif, Stechpalme mit Beeren und ein Glöckchen nur auf einer Seite
+    h = Hat("rentiergeweih", "Rentiergeweih", {"antler": "#7E5332", "antlerlight": "#9C6C42", "tip": "#D8C29A",
+                                               "velvet": "#B81D2A", "velvetlight": "#D23A3A", "holly": "#3E7A34",
+                                               "berry": "#E0303C", "gold": "#F2C230"}, seed=59)
+    band(h, "velvet", top="velvetlight")
+    for side in (-1, 1):
+        bx = 8 + side * 2.9
+        h.cube(bx, 9.6, 7.3, 0.6, 1.0, 0.6, "antler")                                  # Ansatz
+        h.cube(bx + side * 0.5, 11.3, 7.3, 0.5, 1.0, 0.5, "antler", rot=("z", side * -22.5, (bx, 10.6, 7.3)))
+        h.cube(bx + side * 1.4, 12.9, 7.3, 0.45, 1.1, 0.45, "antlerlight", rot=("z", side * -22.5, (bx, 10.6, 7.3)))
+        h.cube(bx + side * 2.2, 14.3, 7.3, 0.35, 0.7, 0.35, "tip", rot=("z", side * -22.5, (bx, 10.6, 7.3)))
+        # Sprossen: eine nach innen oben, eine nach vorne
+        h.cube(bx - side * 0.4, 12.6, 7.3, 0.35, 0.9, 0.35, "antlerlight", rot=("z", side * 22.5, (bx, 11.6, 7.3)))
+        h.cube(bx - side * 0.7, 13.6, 7.3, 0.28, 0.4, 0.28, "tip", rot=("z", side * 22.5, (bx, 11.6, 7.3)))
+        h.cube(bx + side * 1.6, 12.2, 6.4, 0.3, 0.3, 0.8, "antlerlight")
+    # Stechpalme links vorne am Reif (bricht die Symmetrie), Glöckchen rechts
+    h.cube(5.4, 8.9, 6.5, 1.0, 0.25, 0.55, "holly", rot=("z", 22.5, (5.4, 8.9, 6.5)))
+    h.cube(6.6, 8.9, 6.5, 0.9, 0.25, 0.5, "holly", rot=("z", -22.5, (6.6, 8.9, 6.5)))
+    h.cube(6.0, 9.25, 6.35, 0.35, 0.35, 0.35, "berry")
+    h.cube(6.5, 9.05, 6.2, 0.3, 0.3, 0.3, "berry")
+    h.cube(12.9, 5.0, 7.3, 0.55, 0.55, 0.55, "gold")
+    out.append(h)
+
+    # Ostern: Hasenohren, außen weiß, innen rosa; das rechte Ohr knickt oben nach vorne ab
+    h = Hat("hasenohren", "Hasenohren", {"fur": "#F2F0EC", "furshade": "#D8D4CE", "pink": "#F2A0B8",
+                                         "pinkdark": "#D97C98", "band": "#F7C6D6"}, seed=61)
+    band(h, "band")
+    h.box(4.2, 8.6, 6.8, 6.6, 13.6, 8.0, "fur", top="furshade")                  # linkes Ohr gerade
+    h.box(4.4, 13.6, 6.9, 6.4, 15.2, 7.9, "fur", top="furshade")
+    h.box(4.8, 9.4, 6.65, 6.0, 14.6, 6.8, "pink")
+    h.box(9.4, 8.6, 6.8, 11.8, 12.6, 8.0, "fur", top="furshade")                 # rechtes Ohr, oben geknickt
+    h.box(10.0, 9.4, 6.65, 11.2, 12.4, 6.8, "pink")
+    h.box(9.6, 12.6, 6.8, 11.6, 15.6, 8.0, "fur", rot=("x", -45, (10.6, 12.6, 7.4)))
+    h.box(10.1, 13.0, 6.65, 11.1, 15.0, 6.8, "pinkdark", rot=("x", -45, (10.6, 12.6, 7.4)))
+    out.append(h)
+
+    def pixels(hat, rows, cx, top, u, colors, depth=0.5, z=7.3):
+        """Flaches Pixel-Motiv aus kleinen Würfeln (u = Kantenlänge), mittig um cx, obere Kante bei top."""
+        w = len(rows[0])
+        x0 = cx - w * u / 2
+        for r, line in enumerate(rows):
+            for c, ch in enumerate(line):
+                if ch == ".":
+                    continue
+                x, y = x0 + c * u, top - (r + 1) * u
+                hat.box(x, y, z - depth / 2, x + u, y + u, z + depth / 2, colors[ch])
+
+    HEART = [".RR.RR.",
+             "RWRRRRR",
+             "RRRRRRR",
+             ".RRRRR.",
+             "..RRR..",
+             "...R..."]
+
+    # Valentinstag: Haarreif mit zwei Herzen auf Federn, links kleiner und rosa, rechts groß und rot
+    h = Hat("herzhaarreif", "Herz-Haarreif", {"red": "#D9283C", "redlight": "#FF8A9A", "pink": "#F58CB0",
+                                              "pinklight": "#FFE0EA", "spring": "#3A3440", "band": "#C21E36"}, seed=67)
+    band(h, "band", top="red")
+    for cx, top, u, col, light in ((5.4, 14.0, 0.5, "pink", "pinklight"), (10.6, 15.4, 0.62, "red", "redlight")):
+        bottom = top - len(HEART) * u
+        h.box(cx - 0.15, 8.7, 7.15, cx + 0.15, bottom + u * 0.5, 7.45, "spring")
+        pixels(h, HEART, cx, top, u, {"R": col, "W": light})
+    out.append(h)
+
+    # Silvester: vierblättriger Glücksklee auf grünem Reif (Blattadern dunkel), daneben ein goldener Stern
+    h = Hat("kleeblatt", "Kleeblatt-Haarreif", {"leaf": "#3FAE4A", "leaflight": "#7BDB6E", "leafdark": "#23692E",
+                                                "stem": "#2E6A2E", "gold": "#F6CC3A", "goldlight": "#FFF0A0",
+                                                "band": "#2F8F3E"}, seed=71)
+    band(h, "band", top="leaf")
+    CLOVER = [".LL.GG.",
+              "LLLvGGG",
+              "LLLvGGG",
+              "vvvvvvv",
+              "GGGvGGG",
+              "GGGvGGG",
+              ".GG.GG."]
+    u = 0.6
+    top = 15.6
+    h.box(10.05, 8.7, 7.15, 10.35, top - len(CLOVER) * u + 0.3, 7.45, "stem")
+    pixels(h, CLOVER, 10.2, top, u, {"L": "leaflight", "G": "leaf", "v": "leafdark"})
+    STAR = ["..S..",
+            ".SSS.",
+            "SSWSS",
+            ".SSS.",
+            ".S.S."]
+    h.box(5.25, 8.7, 7.15, 5.55, 11.0, 7.45, "stem")
+    pixels(h, STAR, 5.4, 13.2, 0.45, {"S": "gold", "W": "goldlight"})
+    out.append(h)
     return out
 
 

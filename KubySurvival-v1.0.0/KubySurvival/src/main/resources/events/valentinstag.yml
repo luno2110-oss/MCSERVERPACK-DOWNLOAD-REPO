@@ -103,6 +103,5 @@ shop:
   - "TOKENS;5;1;5 Tokens;200"
   - "KEY;episch;1;Epischer Schlüssel;350"
   - "TITLE;romantiker;1;Titel „Romantiker“;400"
-  - "COSMETIC;hut_blumenkranz;1;Blumenkranz;500"
   - "TITLE;herzensbrecher;1;Titel „Herzensbrecher“;600"
-  - "COSMETIC;hut_katzenohren;1;Katzenohren;700"
+  - "COSMETIC;hut_herzhaarreif;1;Herz-Haarreif;700"

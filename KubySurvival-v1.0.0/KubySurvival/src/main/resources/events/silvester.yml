@@ -103,7 +103,6 @@ shop:
   - "COINS;5000;1;5.000 Coins;150"
   - "TOKENS;5;1;5 Tokens;200"
   - "KEY;episch;1;Epischer Schlüssel;350"
-  - "COSMETIC;hut_partyhut;1;Partyhut;400"
   - "TITLE;glueckspilz;1;Titel „Glückspilz“;450"
   - "TITLE;feuerwerker;1;Titel „Feuerwerker“;600"
-  - "COSMETIC;hut_zylinder;1;Zylinder;800"
+  - "COSMETIC;hut_kleeblatt;1;Kleeblatt-Haarreif;800"

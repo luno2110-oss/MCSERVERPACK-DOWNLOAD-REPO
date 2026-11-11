@@ -42,7 +42,14 @@ public final class CosmeticService implements ModeData {
         }
     }
 
-    public enum Currency { MONEY, XP, JEWELS, NONE, CRATE }
+    public enum Currency {
+        MONEY, XP, JEWELS, NONE, CRATE, EVENT;
+
+        /** Nicht kaufbar: nur aus Kisten (CRATE) oder aus dem Event-Shop (EVENT). */
+        public boolean special() {
+            return this == CRATE || this == EVENT;
+        }
+    }
 
     /** model: Hut-Modell (kuby:hat/&lt;model&gt;), sonst null; particle: null bei Hüten. */
     public record Item(String id, String kind, Particle particle, String label, Rarity rarity,
@@ -59,6 +66,7 @@ public final class CosmeticService implements ModeData {
 
     public CosmeticService(KubyPlugins plugin) {
         this.plugin = plugin;
+        addEventHats();
         this.file = new File(plugin.getDataFolder(), "cosmetics.yml");
         YamlConfiguration yml = YamlConfiguration.loadConfiguration(file);
         for (String key : yml.getKeys(false)) {
@@ -79,6 +87,31 @@ public final class CosmeticService implements ModeData {
     /** Katalog des Modus, in dem der Spieler gerade ist. */
     public List<Item> catalogue(UUID player) {
         return catalogue(plugin.modes().modeOf(player));
+    }
+
+    /** Event-Hüte (eigene Modelle, nur im Event-Shop): in bestehende Configs einmalig nachtragen. */
+    static final List<String> EVENT_HATS = List.of(
+            "hut_rentiergeweih;HAT;rentiergeweih;Rentiergeweih;EPIC;EVENT;0;0",
+            "hut_hasenohren;HAT;hasenohren;Hasenohren;RARE;EVENT;0;0",
+            "hut_herzhaarreif;HAT;herzhaarreif;Herz-Haarreif;RARE;EVENT;0;0",
+            "hut_kleeblatt;HAT;kleeblatt;Kleeblatt-Haarreif;RARE;EVENT;0;0");
+
+    private void addEventHats() {
+        var cfg = plugin.getConfig();
+        boolean changed = false;
+        for (String path : new String[] {"cosmetics", "cosmetics-modes.survival"}) {
+            if (!cfg.isList(path)) continue;
+            List<String> l = new ArrayList<>(cfg.getStringList(path));
+            for (String raw : EVENT_HATS) {
+                String id = raw.substring(0, raw.indexOf(';'));
+                if (l.stream().noneMatch(x -> x.startsWith(id + ";"))) {
+                    l.add(raw);
+                    changed = true;
+                }
+            }
+            cfg.set(path, l);
+        }
+        if (changed) plugin.saveConfig();
     }
 
     /** Katalog eines Modus (cosmetics-modes.&lt;modus&gt;, sonst cosmetics). */
@@ -153,7 +186,7 @@ public final class CosmeticService implements ModeData {
 
     /** Gratis-Items (ohne Preis und ohne BP-Stufe) gehören jedem. */
     public synchronized boolean owns(UUID id, Item it) {
-        if (it.currency() != Currency.CRATE && it.bpLevel() == 0 && (it.currency() == Currency.NONE || it.price() <= 0)) return true;
+        if (!it.currency().special() && it.bpLevel() == 0 && (it.currency() == Currency.NONE || it.price() <= 0)) return true;
         return owned.getOrDefault(id, Set.of()).contains(it.id());
     }
 
@@ -162,6 +195,7 @@ public final class CosmeticService implements ModeData {
         UUID id = p.getUniqueId();
         if (owns(id, it)) return "Diese Kosmetik gehört dir schon.";
         if (it.currency() == Currency.CRATE) return "Das gibt es nur aus Kisten.";
+        if (it.currency() == Currency.EVENT) return "Das gibt es nur im Event-Shop.";
         if (plugin.battlepass().level(id) < it.bpLevel()) return "Benötigt Battlepass-Stufe " + it.bpLevel() + ".";
         if (it.price() > 0) {
             switch (it.currency()) {

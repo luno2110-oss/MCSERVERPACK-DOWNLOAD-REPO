@@ -86,6 +86,7 @@ public final class CosmeticsScreen {
 
     private static String price(Item it) {
         if (it.currency() == Currency.CRATE) return "nur aus Kisten";
+        if (it.currency() == Currency.EVENT) return "nur im Event-Shop";
         if (it.price() <= 0 || it.currency() == Currency.NONE) return it.bpLevel() > 0 ? "Battlepass Stufe " + it.bpLevel() : "gratis";
         return switch (it.currency()) {
             case MONEY -> Msg.coins(it.price()) + " Coins";
@@ -110,7 +111,7 @@ public final class CosmeticsScreen {
             if (!it.kind().equals(t)) continue;
             boolean own = cs.owns(me, it);
             boolean active = it.id().equals(cs.activeId(me, it.kind()));
-            boolean locked = !own && (it.currency() == Currency.CRATE || plugin.battlepass().level(me) < it.bpLevel());
+            boolean locked = !own && (it.currency().special() || plugin.battlepass().level(me) < it.bpLevel());
             State st = active ? State.ACTIVE : own ? State.OWNED : locked ? State.LOCKED : it.id().equals(sure) ? State.ARMED : State.BUY;
             String status = switch (st) {
                 case ACTIVE -> "angelegt · Klick: ablegen";
@@ -164,6 +165,11 @@ public final class CosmeticsScreen {
             cs.toggle(me, it);
             Sfx.play(plugin, p, Sfx.Kind.CLICK);
             Msg.send(p, "<#FF7AC0>" + it.label() + "</#FF7AC0> <gray>" + (was ? "abgelegt." : "angelegt."));
+            return;
+        }
+        if (it.currency() == Currency.EVENT) {
+            Msg.send(p, "<gray>" + it.label() + " gibt es nur im Event-Shop. <white>/quests");
+            Sfx.play(plugin, p, Sfx.Kind.ERROR);
             return;
         }
         if (it.currency() == Currency.CRATE) {

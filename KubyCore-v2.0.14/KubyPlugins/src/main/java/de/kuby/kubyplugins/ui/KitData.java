@@ -1197,7 +1197,11 @@ public final class KitData {
         HAT_TEUFELSHOERNER('\uedd1', 16, '\ued91', 31, '\u0000', 0),
         HAT_BOMMELMUETZE('\uedd2', 16, '\ued92', 30, '\u0000', 0),
         HAT_KATZENOHREN('\uedd3', 17, '\ued93', 33, '\u0000', 0),
-        SET_GEAR_BIG('\uedd4', 17, '\ued94', 32, '\u0000', 0);
+        HAT_RENTIERGEWEIH('\uedd4', 17, '\ued94', 32, '\u0000', 0),
+        HAT_HASENOHREN('\uedd5', 15, '\ued95', 28, '\u0000', 0),
+        HAT_HERZHAARREIF('\uedd6', 15, '\ued96', 28, '\u0000', 0),
+        HAT_KLEEBLATT('\uedd7', 15, '\ued97', 28, '\u0000', 0),
+        SET_GEAR_BIG('\uedd8', 17, '\ued98', 32, '\u0000', 0);
 
         public final char c16, c32, c8;
         public final int adv16, adv32, adv8;

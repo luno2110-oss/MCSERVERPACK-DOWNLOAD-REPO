@@ -158,7 +158,6 @@ shop:
   - "COINS;5000;1;5.000 Coins;150"
   - "TOKENS;5;1;5 Tokens;200"
   - "KEY;episch;1;Epischer Schlüssel;350"
-  - "COSMETIC;hut_bommelmuetze;1;Bommelmütze;400"
   - "TITLE;weihnachtself;1;Titel „Weihnachtself“;500"
   - "TITLE;schneeflocke;1;Titel „Schneeflocke“;700"
-  - "COSMETIC;hut_weihnachtsmuetze;1;Weihnachtsmütze;900"
+  - "COSMETIC;hut_rentiergeweih;1;Rentiergeweih;900"

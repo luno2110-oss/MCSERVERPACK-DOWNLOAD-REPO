@@ -85,6 +85,8 @@ public final class CosmeticsMenu extends GuiMenu {
             lore.add("<red>✘ Battlepass-Stufe " + it.bpLevel() + " nötig");
         } else if (it.currency() == CosmeticService.Currency.CRATE) {
             lore.add("<light_purple>Nur aus Kisten");
+        } else if (it.currency() == CosmeticService.Currency.EVENT) {
+            lore.add("<light_purple>Nur im Event-Shop");
         } else {
             lore.add("<gold>Kosten: " + priceText(it));
             lore.add("<yellow>Klick: kaufen");

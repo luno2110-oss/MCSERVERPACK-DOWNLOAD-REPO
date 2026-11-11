@@ -116,6 +116,5 @@ shop:
   - "TOKENS;5;1;5 Tokens;200"
   - "KEY;episch;1;Epischer Schlüssel;350"
   - "TITLE;osterhase;1;Titel „Osterhase“;450"
-  - "COSMETIC;hut_blumenkranz;1;Blumenkranz;500"
   - "TITLE;eierkoenig;1;Titel „Eierkönig“;650"
-  - "COSMETIC;hut_katzenohren;1;Katzenohren;700"
+  - "COSMETIC;hut_hasenohren;1;Hasenohren;700"
