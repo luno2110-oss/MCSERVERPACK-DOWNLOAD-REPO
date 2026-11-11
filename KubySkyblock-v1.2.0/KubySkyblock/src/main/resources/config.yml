@@ -8,15 +8,16 @@ belohnungen:
   level-faktor: 0.05            # Glücksfunde und Kisten wachsen mit dem Insel-Level (+5 % je Level, bis Level 200)
   combo:
     schritt: 0.1                # +0,1 je Block
-    max: 10.0                   # höchstens x10 ...
+    max: 100.0                  # höchstens x100 ...
     schritt-prime: 0.2          # Prime Time 18-24 Uhr: doppelt so schnell ...
-    max-prime: 15.0             # ... und bis x15
+    max-prime: 100.0            # ... ebenfalls bis x100
+    fenster-stunden: 2          # alle 2 Stunden (0-2, 2-4, ... Uhr) beginnt eine neue Combo
     pause-sekunden: 60          # länger nichts abgebaut = Combo reißt (0 = nie)
     meilenstein: 50             # alle 50 Blöcke ein Meilenstein mit Bonus und Titel, jeder 5. mit seltenem Fund
     meilenstein-bonus: 25       # Bonus = Blockgeld x Combo x 25
   gluecksfund:
     chance: 0.015               # 1,5 % je Block ...
-    combo-plus: 0.002           # ... plus 0,2 % je Combo-Stufe (bei x10 also 3,3 %)
+    combo-plus: 0.0005          # ... plus 0,05 % je Combo-Stufe (bei x100 also 6,5 %)
     gewichte: {gewoehnlich: 68, selten: 24, episch: 7, legendaer: 1}
     gewoehnlich-min: 20
     gewoehnlich-max: 60

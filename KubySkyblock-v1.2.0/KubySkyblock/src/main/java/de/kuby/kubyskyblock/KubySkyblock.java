@@ -145,6 +145,16 @@ public final class KubySkyblock extends JavaPlugin {
             getConfig().set("config-stand", 9);
             saveConfig();
         }
+        // Combo bis x100 in 2-Stunden-Runden (Wunsch des Besitzers): alte Standardwerte ersetzen (einmalig, config-stand 10)
+        if (getConfig().getInt("config-stand", 0) < 10) {
+            String cb = "belohnungen.combo.";
+            if (getConfig().getDouble(cb + "max", 10.0) == 10.0) getConfig().set(cb + "max", 100.0);
+            if (getConfig().getDouble(cb + "max-prime", 15.0) == 15.0) getConfig().set(cb + "max-prime", 100.0);
+            if (!getConfig().contains(cb + "fenster-stunden")) getConfig().set(cb + "fenster-stunden", 2);
+            if (getConfig().getDouble("belohnungen.gluecksfund.combo-plus", 0.002) == 0.002) getConfig().set("belohnungen.gluecksfund.combo-plus", 0.0005);
+            getConfig().set("config-stand", 10);
+            saveConfig();
+        }
         stages = new de.kuby.kubyskyblock.service.StageService(this, core);
         shop = new de.kuby.kubyskyblock.service.SkyShopService(this, core);
         core.registerShop(ModeService.SKYBLOCK, new KubyPlugins.ShopHook() {

@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.44** (ungetestet, nicht kompiliert)
+Stand: **v1.45** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -568,6 +568,7 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Beträge wachsen mit dem Insel-Level
 - [x] Belohnungskiste: alle 10 aktiven Minuten in Skyblock (AFK zählt nicht). Jede Kiste am selben Tag ist 25 % größer als die vorige (bis zur 12.). Jede 3. bringt einen Glücksfund, jede 6. einen Vote-Schlüssel. Eine Minute vorher kommt ein Hinweis, die nächste Kiste wird angekündigt
 - [x] Guide-Seite „Belohnungen“ für Skyblock (deutsch und englisch). Alle Werte stehen unter `belohnungen.*` in der Skyblock-config
+- [x] v1.45 (Wunsch des Besitzers): Combo bis x100 (auch in der Prime Time, dort doppelt so schnell). Statt stündlich beginnt alle 2 Stunden eine neue Combo-Runde (`belohnungen.combo.fenster-stunden`, Fenster 0-2, 2-4 … Uhr). Restzeit steht über der Hotbar (⏰ 1:23). Glücksfund-Plus je Combo-Stufe auf 0,05 % gesenkt (bei x100 6,5 % statt über 20 %). Bestehende configs werden einmalig umgestellt (config-stand 10)
 
 ## Skyblock (neuer Modus)
 - [x] Etappe 1 Grundgerüst: Modus Skyblock im Kern, Modus-Auswahl als GUI am Kompass, Addon KubySkyblock (Insel pro Spieler beim Betreten, 50.000er Weltgrenze, Multiplikator-Serie 18-24 Uhr)

@@ -19,7 +19,6 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -30,8 +29,9 @@ import java.util.concurrent.ThreadLocalRandom;
  * Die Belohnungsschleifen in Skyblock (schnelle, häufige Belohnungen wie in Roblox-Spielen):
  * <ul>
  *   <li><b>Combo</b>: jeder natürlich abgebaute Block (auch der One-Block) zahlt Geld und XP, der Multiplikator steigt
- *   mit jedem Block um 0,1 (in der Prime Time 18 bis 24 Uhr um 0,2) bis zur Grenze (belohnungen.combo.max, Prime Time
- *   eigene Grenze). Die Combo beginnt jede volle Stunde neu und reißt nach einer Pause. Alle paar Blöcke ein
+ *   mit jedem Block um 0,1 (in der Prime Time 18 bis 24 Uhr um 0,2) bis zur Grenze (belohnungen.combo.max, Standard
+ *   x100). Die Combo beginnt in jedem Zeitfenster (combo.fenster-stunden, Standard 2 Stunden) neu und reißt nach einer
+ *   Pause. Alle paar Blöcke ein
  *   Meilenstein mit Bonus, Klang und Titel. Anzeige über der Hotbar mit Balken bis zum nächsten Meilenstein.</li>
  *   <li><b>Glücksfunde</b>: mit kleiner Chance (steigt mit der Combo) steckt im Block ein Fund: Gewöhnlich, Selten,
  *   Episch oder Legendär (Geld, XP, Generator-Booster, Schlüssel, Juwelen). Legendäre Funde sieht der ganze Server.</li>
@@ -43,7 +43,6 @@ import java.util.concurrent.ThreadLocalRandom;
 public final class StreakService {
 
     private static final ZoneId ZONE = ZoneId.of("Europe/Berlin");
-    private static final DateTimeFormatter HOUR = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH");
 
     /** Seltenheit eines Glücksfunds. */
     public enum Tier {
@@ -101,8 +100,23 @@ public final class StreakService {
         return primeTime();
     }
 
-    private static String hourKey() {
-        return ZonedDateTime.now(ZONE).format(HOUR);
+    /** Länge eines Combo-Zeitfensters in Stunden (belohnungen.combo.fenster-stunden, Standard 2). */
+    private int windowHours() {
+        return Math.max(1, Math.min(24, cfg().getInt("combo.fenster-stunden", 2)));
+    }
+
+    /** Schlüssel des aktuellen Zeitfensters (z. B. 2026-11-11 und Fenster 7 = 14 bis 16 Uhr bei 2 Stunden). */
+    private String hourKey() {
+        ZonedDateTime now = ZonedDateTime.now(ZONE);
+        return now.toLocalDate() + "-" + (now.getHour() / windowHours());
+    }
+
+    /** Minuten bis zum Ende des aktuellen Combo-Fensters. */
+    public int minutesLeft() {
+        ZonedDateTime now = ZonedDateTime.now(ZONE);
+        int w = windowHours();
+        int end = (now.getHour() / w + 1) * w * 60;
+        return Math.max(0, end - (now.getHour() * 60 + now.getMinute()));
     }
 
     private double scale(Player p) {
@@ -131,7 +145,7 @@ public final class StreakService {
     private double mult(int count) {
         boolean prime = primeTime();
         double step = prime ? cfg().getDouble("combo.schritt-prime", 0.2) : cfg().getDouble("combo.schritt", 0.1);
-        double cap = prime ? cfg().getDouble("combo.max-prime", 15.0) : cfg().getDouble("combo.max", 10.0);
+        double cap = prime ? cfg().getDouble("combo.max-prime", 100.0) : cfg().getDouble("combo.max", 100.0);
         return Math.max(1.0, Math.min(cap, 1.0 + step * (count - 1)));
     }
 
@@ -148,7 +162,7 @@ public final class StreakService {
         long now = System.currentTimeMillis();
         String hour = hourKey();
         if (!hour.equals(c.hour)) {
-            if (c.count >= 20) Msg.send(p, "<#FFD25A>⏰ Neue Stunde, neue Combo! <gray>Letzte Stunde: <white>" + c.count + " Blöcke");
+            if (c.count >= 20) Msg.send(p, "<#FFD25A>⏰ Neue Combo-Runde! <gray>Letzte Runde: <white>" + c.count + " Blöcke");
             c.hour = hour;
             c.count = 0;
             c.maxShown = false;
@@ -170,7 +184,7 @@ public final class StreakService {
 
         int every = Math.max(5, cfg().getInt("combo.meilenstein", 50));
         boolean milestone = c.count % every == 0;
-        double cap = primeTime() ? cfg().getDouble("combo.max-prime", 15.0) : cfg().getDouble("combo.max", 10.0);
+        double cap = primeTime() ? cfg().getDouble("combo.max-prime", 100.0) : cfg().getDouble("combo.max", 100.0);
         if (milestone) {
             long bonus = Math.round(baseMoney * m * cfg().getDouble("combo.meilenstein-bonus", 25) * scale(p));
             pay(p, bonus, Math.round(baseXp * m * 10));
@@ -186,13 +200,13 @@ public final class StreakService {
             c.maxShown = true;
             Sfx.play(core, p, Sfx.Kind.EPIC);
             p.showTitle(Title.title(Msg.parse("<gradient:#FF5AE0:#FFD25A><b>MAX COMBO</b></gradient>"),
-                    Msg.parse("<yellow>x" + fmt(m) + " <gray>bis zur vollen Stunde"),
+                    Msg.parse("<yellow>x" + fmt(m) + " <gray>bis zur neuen Runde (" + left() + ")"),
                     Title.Times.times(Duration.ofMillis(100), Duration.ofMillis(1000), Duration.ofMillis(300))));
         }
         actionBar(p, c, m, money, xp, every);
 
         // Glücksfund: Grundchance plus etwas je Combo-Stufe
-        double chance = cfg().getDouble("gluecksfund.chance", 0.015) + (m - 1) * cfg().getDouble("gluecksfund.combo-plus", 0.002);
+        double chance = cfg().getDouble("gluecksfund.chance", 0.015) + (m - 1) * cfg().getDouble("gluecksfund.combo-plus", 0.0005);
         if (ThreadLocalRandom.current().nextDouble() < chance) find(p, b, rollTier(Tier.GEWOEHNLICH));
     }
 
@@ -203,7 +217,13 @@ public final class StreakService {
         bar.append("<#FFD25A>").append("▮".repeat(filled)).append("<dark_gray>").append("▮".repeat(10 - filled));
         String prime = primeTime() ? "<#FF8A3D><b>PRIME</b> " : "";
         p.sendActionBar(Msg.parse(prime + "<#FFE066><b>COMBO " + c.count + "</b> <yellow>x" + fmt(m) + " " + bar
-                + " <green>+" + Msg.coins(money) + "$ <aqua>+" + Msg.coins(xp) + " XP"));
+                + " <green>+" + Msg.coins(money) + "$ <aqua>+" + Msg.coins(xp) + " XP <dark_gray>· <gray>⏰ " + left()));
+    }
+
+    /** Restzeit der Combo-Runde, z. B. „1:23“. */
+    private String left() {
+        int m = minutesLeft();
+        return m / 60 + ":" + String.format("%02d", m % 60);
     }
 
     static String fmt(double v) {
