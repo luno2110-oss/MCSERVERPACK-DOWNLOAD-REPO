@@ -154,7 +154,7 @@ public final class IntroService implements Listener {
         if (finished.add(p.getUniqueId())) {
             long coins = core.getConfig().getLong("tutorial.reward-coins", 500);
             long tokens = core.getConfig().getLong("tutorial.reward-tokens", 3);
-            if (coins > 0) core.economy().deposit(p.getUniqueId(), coins);
+            if (coins > 0) core.modes().depositIn(p.getUniqueId(), de.kuby.kubyplugins.service.ModeService.SURVIVAL, coins);
             if (tokens > 0) addon.jobs().addTokens(p.getUniqueId(), tokens);
             Msg.send(p, "<gold>Belohnung: +" + Msg.coins(coins) + " Coins <light_purple>+" + tokens + " Tokens");
             p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.7f, 1f);

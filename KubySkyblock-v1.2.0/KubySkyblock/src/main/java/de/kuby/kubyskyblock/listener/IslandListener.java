@@ -239,6 +239,34 @@ public final class IslandListener implements Listener {
         Msg.send(p, "<gray>Du bist ins Leere gefallen und wieder zu Hause.");
     }
 
+    /** Gesprengte Blöcke zählen nicht mehr (früher blieben die Punkte, der Block fiel als Item heraus: wieder setzen,
+     *  wieder sprengen = Punkte ohne Ende). */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onExplode(org.bukkit.event.entity.EntityExplodeEvent e) {
+        if (!inSkyblock(e.getLocation().getWorld())) return;
+        for (Block b : e.blockList()) addon.islands().addPoints(b.getLocation(), b.getType(), -1);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onExplode(org.bukkit.event.block.BlockExplodeEvent e) {
+        if (!inSkyblock(e.getBlock().getWorld())) return;
+        for (Block b : e.blockList()) addon.islands().addPoints(b.getLocation(), b.getType(), -1);
+    }
+
+    /** Fallender Sand, Endermen, Wither usw.: alter Block weg, neuer Block dazu. */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onEntityChange(org.bukkit.event.entity.EntityChangeBlockEvent e) {
+        if (e.getEntity() instanceof Player || !inSkyblock(e.getBlock().getWorld())) return;
+        addon.islands().addPoints(e.getBlock().getLocation(), e.getBlock().getType(), -1);
+        addon.islands().addPoints(e.getBlock().getLocation(), e.getTo(), 1);
+    }
+
+    /** Verbrannte Blöcke zählen nicht mehr. */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onBurn(org.bukkit.event.block.BlockBurnEvent e) {
+        if (inSkyblock(e.getBlock().getWorld())) addon.islands().addPoints(e.getBlock().getLocation(), e.getBlock().getType(), -1);
+    }
+
     /** Generator: Bruchstein und Stein aus Lava und Wasser werden je Stufe der Insel zu anderen Blöcken. In der
      *  Nether-Stufe wird Basalt (Lava, Seelenerde, Blaueis) zu Nether-Blöcken, in der End-Stufe Bruchstein zu End-Blöcken. */
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)

@@ -49,6 +49,9 @@ public final class ShopMenu extends GuiMenu {
         meta.lore(lore);
         show.setItemMeta(meta);
         set(13, show, null);
+        // Stand beim Öffnen merken: ändert der Besitzer Preis, Menge oder Ware, während das Menü offen ist, wird
+        // nicht zum neuen Preis gehandelt (früher: Preis kurz vor dem Klick hochsetzen = Kunde zahlt mehr als angezeigt)
+        final ChestShopService.Terms terms = ChestShopService.Terms.of(shop);
 
         if (shop.buyPrice > 0) {
             boolean ok = stock >= shop.amount;
@@ -56,7 +59,7 @@ public final class ShopMenu extends GuiMenu {
                     "<white>" + shop.amount + "x " + ChestShopService.name(shop.item),
                     "<gray>für <gold>" + Msg.coins(shop.buyPrice) + " Coins", "",
                     ok ? "<yellow>Klick zum Kaufen" : "<red>Ausverkauft")), e -> {
-                String err = cs.buy(p, shop);
+                String err = cs.buy(p, shop, terms);
                 if (err != null) Msg.send(p, "<red>" + err);
                 else p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.7f, 1.2f);
                 open(p);
@@ -68,7 +71,7 @@ public final class ShopMenu extends GuiMenu {
                     "<white>" + shop.amount + "x " + ChestShopService.name(shop.item),
                     "<gray>für <gold>" + Msg.coins(shop.sellPrice) + " Coins", "",
                     ok ? "<yellow>Klick zum Verkaufen" : "<red>Ladenkasse leer")), e -> {
-                String err = cs.sell(p, shop);
+                String err = cs.sell(p, shop, terms);
                 if (err != null) Msg.send(p, "<red>" + err);
                 else p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.7f, 1.0f);
                 open(p);

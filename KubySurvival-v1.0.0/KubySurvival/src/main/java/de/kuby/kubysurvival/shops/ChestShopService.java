@@ -301,9 +301,25 @@ public final class ChestShopService implements Listener {
         updateSign(s);
     }
 
+    /** Bedingungen, die der Kunde gesehen hat (Ware, Menge, Preise). */
+    public record Terms(ItemStack item, int amount, long buyPrice, long sellPrice) {
+        public static Terms of(Shop s) {
+            return new Terms(s.item == null ? null : s.item.clone(), s.amount, s.buyPrice, s.sellPrice);
+        }
+
+        boolean matches(Shop s) {
+            return s.item != null && item != null && s.item.isSimilar(item) && s.amount == amount
+                    && s.buyPrice == buyPrice && s.sellPrice == sellPrice;
+        }
+    }
+
+    private static final String CHANGED = "Der Laden wurde gerade geändert. Schau dir die neuen Bedingungen an.";
+
     /** Kunde kauft (Kiste → Kunde). Null bei Erfolg, sonst eine Meldung. */
-    public synchronized String buy(Player p, Shop s) {
+    public synchronized String buy(Player p, Shop s, Terms seen) {
         if (s.buyPrice <= 0 || s.item == null) return "Hier wird nichts verkauft.";
+        if (!seen.matches(s)) return CHANGED;
+        if (!ModeService.SURVIVAL.equals(core.modes().modeOf(p.getUniqueId()))) return "Läden gibt es nur in Survival.";
         Inventory box = inventory(s);
         if (box == null) return "Der Laden ist gerade geschlossen.";
         if (count(box, s.item) < s.amount) return "Ausverkauft.";
@@ -318,8 +334,10 @@ public final class ChestShopService implements Listener {
     }
 
     /** Kunde verkauft (Kunde → Kiste). */
-    public synchronized String sell(Player p, Shop s) {
+    public synchronized String sell(Player p, Shop s, Terms seen) {
         if (s.sellPrice <= 0 || s.item == null) return "Hier wird nichts angekauft.";
+        if (!seen.matches(s)) return CHANGED;
+        if (!ModeService.SURVIVAL.equals(core.modes().modeOf(p.getUniqueId()))) return "Läden gibt es nur in Survival.";
         Inventory box = inventory(s);
         if (box == null) return "Der Laden ist gerade geschlossen.";
         if (count(p.getInventory(), s.item) < s.amount) return "Du hast nicht genug davon.";
@@ -344,7 +362,7 @@ public final class ChestShopService implements Listener {
         long c = s.cash;
         if (c <= 0) return 0;
         s.cash = 0;
-        core.economy().deposit(p.getUniqueId(), c);
+        core.modes().depositIn(p.getUniqueId(), ModeService.SURVIVAL, c);
         save();
         return c;
     }

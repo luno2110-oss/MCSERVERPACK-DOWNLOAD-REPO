@@ -736,11 +736,11 @@ public final class IslandScreen {
         int h = t.rank() <= 3 ? 32 : 22;
         c.box(0, y, W, h, t.mine() ? KitData.Box.GOLD : KitData.Box.CLOUD_CARD);
         if (t.rank() <= 3) c.sprite(8 + (18 - medals[t.rank() - 1].width) / 2, y + (h - medals[t.rank() - 1].height) / 2, medals[t.rank() - 1]);
-        else c.textCenter(17, y + 7, "#" + t.rank(), MIST, true);
-        c.text(34, y + (h == 32 ? 7 : 7), Canvas.fit(Canvas.lit(t.name()), true, 210), t.mine() ? GOLD : CLOUD, true);
+        else c.textCenter(17, y + 7, t.rank() < 1000 ? "#" + t.rank() : String.valueOf(t.rank()), MIST, t.rank() < 1000);
+        int lw = c.textRight(W - 10, y + 7, "Level " + Canvas.num(t.level()), GOLD, true);
+        c.text(34, y + 7, Canvas.fit(Canvas.lit(t.name()), true, Math.min(210, W - 10 - lw - 40)), t.mine() ? GOLD : CLOUD, true);
         if (h == 32) c.text(34, y + 18, Canvas.lit(t.owner()), MIST, false);
-        c.textRight(W - 10, y + (h == 32 ? 7 : 7), "Level " + Msg.coins(t.level()), GOLD, true);
-        if (h == 32) c.textRight(W - 10, y + 18, Msg.coins(t.points()) + " Punkte", MIST, false);
+        if (h == 32) c.textRight(W - 10, y + 18, Canvas.num(t.points()) + " Punkte", MIST, false);
         return y + h + 3;
     }
 

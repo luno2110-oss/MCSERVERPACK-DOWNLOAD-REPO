@@ -90,11 +90,14 @@ public final class SkyScreen {
             c.text(x + 28, ay + 18, Canvas.fit(a.desc(), false, cw - 36), MIST, false);
             double f = a.target() <= 0 ? 1 : a.have() / (double) a.target();
             c.bar(x + 8, ay + 30, cw - 16 - 66, f, a.done() ? KitData.Fill.GREEN : KitData.Fill.CYAN);
-            c.textRight(x + cw - 8, ay + 30, a.done() ? "✔" : Msg.coins(a.have()) + "/" + Msg.coins(a.target()), a.done() ? GREEN : CLOUD, false);
-            int rx = x + 8;
-            if (a.money() > 0) rx += c.text(rx, ay + 41, Msg.coins(a.money()) + "$", a.done() ? DIM : GOLD, false) + 6;
-            if (a.xp() > 0) rx += c.text(rx, ay + 41, Msg.coins(a.xp()) + " XP", a.done() ? DIM : XP, false) + 6;
-            if (a.jewels() > 0) c.text(rx, ay + 41, a.jewels() + " Juwelen", a.done() ? DIM : JEWEL, false);
+            c.textRight(x + cw - 8, ay + 30, a.done() ? "✔" : Canvas.fit(Canvas.num(a.have()) + "/" + Canvas.num(a.target()), false, 62),
+                    a.done() ? GREEN : CLOUD, false);
+            // Belohnung in einer Zeile, kurz geschrieben und auf die Kartenbreite gekürzt (große Werte liefen über den Rand)
+            List<Canvas.Span> rw = new ArrayList<>();
+            if (a.money() > 0) rw.add(Canvas.Span.of(Canvas.num(a.money()) + "$  ", a.done() ? DIM : GOLD));
+            if (a.xp() > 0) rw.add(Canvas.Span.of(Canvas.num(a.xp()) + " XP  ", a.done() ? DIM : XP));
+            if (a.jewels() > 0) rw.add(Canvas.Span.of(Canvas.num(a.jewels()) + " Juwelen", a.done() ? DIM : JEWEL));
+            c.text(x + 8, ay + 41, rw, cw - 16);
         }
         if (v.achievements().isEmpty()) c.text(4, y, "Noch keine Erfolge eingerichtet.", MIST, false);
         return c;

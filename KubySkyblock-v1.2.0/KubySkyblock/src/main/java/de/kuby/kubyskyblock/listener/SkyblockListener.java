@@ -107,8 +107,11 @@ public final class SkyblockListener implements Listener {
             return;
         }
         addon.islands().addPoints(b.getLocation(), b.getType(), -1);
-        if (countsForQuests(b)) core.questProgress(p, "abbau", b.getType(), 1);
-        addon.streaks().reward(p);
+        // Belohnung und Serie nur für Blöcke, die kein Spieler gesetzt hat (früher: Erde setzen und abbauen = Geld)
+        if (countsForQuests(b)) {
+            core.questProgress(p, "abbau", b.getType(), 1);
+            addon.streaks().reward(p);
+        }
         addon.progress().recordBlock(p);
     }
 }

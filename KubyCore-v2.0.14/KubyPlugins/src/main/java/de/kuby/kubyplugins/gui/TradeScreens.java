@@ -204,8 +204,8 @@ public final class TradeScreens {
             c.box(0, y, W, 22, KitData.Box.WOOD_CARD);
             c.icon(5, y + 3, o.icon(), false);
             c.text(26, y + 7, Canvas.fit(Canvas.lit(o.name()), true, 200), CREAM, true);
-            c.text(232, y + 7, Canvas.fit(Canvas.lit(o.seller()), false, 80), SAND, false);
-            c.textRight(W - 8, y + 7, Msg.coins(o.price()) + " $", GOLD, true);
+            int pw = c.textRight(W - 8, y + 7, Canvas.num(o.price()) + " $", GOLD, true);
+            c.text(232, y + 7, Canvas.fit(Canvas.lit(o.seller()), false, Math.min(80, W - 8 - pw - 232 - 6)), SAND, false);
             c.action(0, y, W, 22, browse, "Im Markt ansehen");
             y += 24;
         }

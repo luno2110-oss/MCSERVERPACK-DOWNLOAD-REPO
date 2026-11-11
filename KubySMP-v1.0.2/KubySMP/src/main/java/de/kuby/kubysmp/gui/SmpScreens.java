@@ -129,10 +129,10 @@ public final class SmpScreens {
             Rung r = v.rungs().get(i);
             c.box(0, y, W, 34, r.current() ? KitData.Box.GOLD : r.reached() ? KitData.Box.FROST_CARD : KitData.Box.GRAY);
             c.icon(8, y + 9, r.icon(), false, r.reached() ? NamedTextColor.WHITE : TextColor.color(0x505050));
-            c.text(30, y + 7, r.name(), r.reached() ? r.color() : DIM, true);
-            c.text(30, y + 19, "ab " + Msg.coins(r.min()) + " Trophäen", r.reached() ? MIST : DIM, false);
-            String reward = Msg.coins(r.coins()) + "$" + (r.jewels() > 0 ? " + " + r.jewels() + " Juwelen" : "");
-            c.textRight(270, y + 7, reward, r.reached() ? GOLD : DIM, false);
+            String reward = Canvas.num(r.coins()) + "$" + (r.jewels() > 0 ? " + " + Canvas.num(r.jewels()) + " Juwelen" : "");
+            int rw = c.textRight(270, y + 7, Canvas.fit(reward, false, 150), r.reached() ? GOLD : DIM, false);
+            c.text(30, y + 7, Canvas.fit(r.name(), true, 270 - rw - 36), r.reached() ? r.color() : DIM, true);
+            c.text(30, y + 19, Canvas.fit("ab " + Msg.coins(r.min()) + " Trophäen", false, 160), r.reached() ? MIST : DIM, false);
             if (r.current()) c.textRight(270, y + 19, "✔ deine Liga", GREEN, false);
             if (r.claim() != null) {
                 c.smallButton(280, y + 9, 100, KitData.Small.GREEN, "Abholen!", WHITE, true);
@@ -348,10 +348,11 @@ public final class SmpScreens {
         for (Policy pol : v.policies()) {
             c.box(0, y, W, 32, pol.armed() ? KitData.Box.RED : KitData.Box.TERMINAL_ROW);
             c.icon(8, y + 8, KitData.Icon.CHEST_BLOCK, false);
-            c.text(30, y + 6, "Kiste " + pol.where(), CREAM, true);
-            c.text(30, y + 18, pol.world() + " · läuft ab in " + pol.hours() + " Std.", TEALDIM, false);
-            c.textRight(300, y + 6, "Wert " + Msg.coins(pol.value()) + "$", GOLD, false);
-            c.textRight(300, y + 18, "Auszahlung " + Msg.coins(pol.payout()) + "$", GREEN, false);
+            // rechts zuerst, links auf den Rest gekürzt (lange Koordinaten und Weltnamen liefen in die Werte)
+            int w1 = c.textRight(300, y + 6, "Wert " + Canvas.num(pol.value()) + "$", GOLD, false);
+            int w2 = c.textRight(300, y + 18, "Auszahlung " + Canvas.num(pol.payout()) + "$", GREEN, false);
+            c.text(30, y + 6, Canvas.fit("Kiste " + pol.where(), true, 300 - w1 - 36), CREAM, true);
+            c.text(30, y + 18, Canvas.fit(pol.world() + " · läuft ab in " + pol.hours() + " Std.", false, 300 - w2 - 36), TEALDIM, false);
             String l = pol.armed() ? "Wirklich?" : "Kündigen";
             c.smallButton(W - 76, y + 8, 68, pol.armed() ? KitData.Small.GOLD_ON : KitData.Small.DARK, l,
                     pol.armed() ? TextColor.color(0x3A2A06) : RED, false);
@@ -365,7 +366,7 @@ public final class SmpScreens {
     private static void stat(Canvas c, int x, int y, int w, String label, String value, String sub) {
         c.box(x, y, w, 40, KitData.Box.TERMINAL_ROW);
         c.text(x + 8, y + 6, Canvas.caps(label), TEALDIM, false);
-        c.text(x + 8, y + 17, value, CREAM, true);
+        c.text(x + 8, y + 17, Canvas.fit(value, true, w - 14), CREAM, true);
         c.text(x + 8, y + 28, Canvas.fit(sub, false, w - 14), TEALDIM, false);
     }
 

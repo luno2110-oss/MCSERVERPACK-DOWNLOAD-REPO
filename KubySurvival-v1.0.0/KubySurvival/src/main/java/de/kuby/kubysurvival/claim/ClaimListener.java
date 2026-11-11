@@ -247,7 +247,10 @@ public final class ClaimListener implements Listener {
         if (claims().at(e.getBlock().getLocation()) == null) return;
         if (e.getPlayer() != null) {
             if (deny(e.getPlayer(), e.getBlock().getLocation())) e.setCancelled(true);
-        } else if (e.getCause() == BlockIgniteEvent.IgniteCause.SPREAD || e.getCause() == BlockIgniteEvent.IgniteCause.LAVA) {
+        } else if (e.getIgnitingEntity() instanceof Projectile proj && proj.getShooter() instanceof Player shooter) {
+            // Feuerpfeile und Feuerkugeln von Spielern: wie selbst anzünden
+            if (deny(shooter, e.getBlock().getLocation())) e.setCancelled(true);
+        } else if (e.getCause() != BlockIgniteEvent.IgniteCause.LIGHTNING) {
             e.setCancelled(true);
         }
     }
@@ -279,6 +282,48 @@ public final class ClaimListener implements Listener {
             if (!Objects.equals(home, claims().at(b.getRelative(dir).getLocation()))) return true;
         }
         return false;
+    }
+
+    /** Rüstungsständer: Rüstung und Items nehmen oder tauschen (läuft nicht über PlayerInteractEntityEvent). */
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onArmorStand(org.bukkit.event.player.PlayerArmorStandManipulateEvent e) {
+        if (deny(e.getPlayer(), e.getRightClicked().getLocation())) e.setCancelled(true);
+    }
+
+    /** Trichter (auch Trichterloren) außerhalb dürfen nichts aus Kisten in einem Claim ziehen. */
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onHopper(org.bukkit.event.inventory.InventoryMoveItemEvent e) {
+        Location from = e.getSource().getLocation();
+        if (from == null || from.getWorld() == null) return;
+        ClaimService.Claim c = claims().at(from);
+        if (c == null) return;
+        Location to = e.getDestination().getLocation();
+        if (to == null || !Objects.equals(c, claims().at(to))) e.setCancelled(true);
+    }
+
+    /** Endermen, Verwüster, Wither usw. verändern in Claims keine Blöcke (fallender Sand bleibt erlaubt). */
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onEntityChange(org.bukkit.event.entity.EntityChangeBlockEvent e) {
+        if (e.getEntity() instanceof Player || e.getEntity() instanceof org.bukkit.entity.FallingBlock) return;
+        if (claims().at(e.getBlock().getLocation()) != null) e.setCancelled(true);
+    }
+
+    /** Werfer und Spender von außen: kein Wasser, keine Lava, kein Feuer in einen fremden Claim. */
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onDispense(org.bukkit.event.block.BlockDispenseEvent e) {
+        if (!(e.getBlock().getBlockData() instanceof org.bukkit.block.data.Directional d)) return;
+        ClaimService.Claim target = claims().at(e.getBlock().getRelative(d.getFacing()).getLocation());
+        if (target != null && !Objects.equals(target, claims().at(e.getBlock().getLocation()))) e.setCancelled(true);
+    }
+
+    /** Bäume und Pilze von außen wachsen nicht in einen Claim hinein. */
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onGrow(org.bukkit.event.world.StructureGrowEvent e) {
+        ClaimService.Claim home = claims().at(e.getLocation());
+        e.getBlocks().removeIf(b -> {
+            ClaimService.Claim c = claims().at(b.getLocation());
+            return c != null && !Objects.equals(c, home);
+        });
     }
 
     // ---------- Hinweise ----------

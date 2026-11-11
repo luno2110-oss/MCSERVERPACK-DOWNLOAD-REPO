@@ -33,6 +33,8 @@ public final class TokenOffers {
     }
 
     private static String pay(KubySurvival addon, Player p, long price) {
+        // nur in Survival: sonst landeten gekaufte Items und Verzauberungen im Inventar eines anderen Modus
+        if (!de.kuby.kubyplugins.service.ModeService.SURVIVAL.equals(addon.core().modes().modeOf(p.getUniqueId()))) return "Tokens gibst du in Survival aus.";
         return addon.jobs().takeTokens(p.getUniqueId(), price) ? null : "Dafür brauchst du " + price + " Tokens.";
     }
 

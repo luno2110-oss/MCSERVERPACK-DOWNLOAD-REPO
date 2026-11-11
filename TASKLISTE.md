@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.42** (ungetestet, nicht kompiliert)
+Stand: **v1.43** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -520,6 +520,39 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
 - [ ] Test im Spiel: Kampf, Duell, Turnier, Kopfgeld, Versicherung, Trophäen, Handel, Duo-RTP
 - [x] Kits im Spiel einstellen statt in der config: `/kits bearbeiten` (Admins; auch Knopf „Bearbeiten“ im Kits-Dialog und Buch im Truhen-Menü) zeigt alle Kits, „Neues Kit“ legt eins an. Editor: oben 36 Plätze für echte Items (Verzauberungen, Namen, eigene Modelle bleiben erhalten), unten Name (Textfeld), Icon (Item auf den Mauszeiger nehmen und klicken), Rang (für alle, VIP bis Legend oder Platin bis Netherit), Abklingzeit (±10 Min., mit Shift ±1 Std.), Modi (alle, Survival, SMP, Skyblock, Survival+SMP), Testen, Speichern, Löschen (Shift-Klick). Gespeichert in `kits-config.yml`, beim ersten Start aus `config.yml` übernommen; Spieler sehen nur die Kits ihres Modus
 - [ ] Farmpass und Survival (3b, 3c) warten bis der SMP getestet ist
+
+## Prüfung Survival, Skyblock und aller Menüs (v1.43, Wunsch des Besitzers, Test im Spiel offen)
+- [x] Survival, behoben:
+  - Kistenläden: Preis, Menge oder Ware konnte der Besitzer ändern, während ein Kunde das Kaufmenü offen hatte. Der Kunde zahlte dann den neuen Preis. Jetzt wird nur zu den angezeigten Bedingungen gehandelt, sonst kommt „Der Laden wurde gerade geändert“
+  - Token-Shop und besondere Verzauberungen gingen auch im SMP und in Skyblock: mit Survival-Tokens Schärfe VI oder Schutz V auf PvP-Ausrüstung und Items in einen anderen Modus. Jetzt nur in Survival
+  - Casino: Chips tauschen jetzt nur in Survival, Auszahlung immer aufs Survival-Konto
+  - Grundstücke, neuer Schutz gegen:
+    - Rüstungsständer ausräumen (lief an der Rechteprüfung vorbei)
+    - Trichter und Trichterloren von außen, die Kisten im Grundstück leeren
+    - Endermen, Wither und Verwüster
+    - Werfer und Spender von außen (Wasser, Lava, Feuer)
+    - Bäume, die von außen hineinwachsen
+    - Feuerpfeile und Feuerkugeln von Fremden
+  - Totenkiste: nimmt jetzt die Drops statt des Inventars (Items mit Fluch des Verschwindens kamen sonst trotzdem hinein)
+  - Kasse der Kistenläden und Belohnung der alten Tour: immer aufs Survival-Konto
+- [x] Skyblock, behoben:
+  - Insel aufgeben und sofort neu anlegen ging ohne Wartezeit: Startkiste und Startpunkte immer wieder. Jetzt gilt `insel.neu-abklingzeit-stunden` (24) wie beim Neustart
+  - Abbau-Serie (18 bis 24 Uhr) stieg ohne Grenze (nach 10.000 Blöcken das 1000-fache Geld) und zählte auch selbst gesetzte Blöcke (Erde setzen und abbauen). Jetzt höchstens `reward.serie-max` (x3) und nur natürliche Blöcke
+  - Inselpunkte, die auch für die Top-Insel-Belohnungen zählen, ließen sich farmen: Gesprengte, verbrannte, von Endermen genommene oder herabgefallene Blöcke zogen keine Punkte ab. Fackeln, Teppiche usw. fallen ohne Abbau ab und ließen sich deshalb immer wieder setzen. Jetzt wird abgezogen, nicht feste Blöcke zählen 0 (eigene Werte in `level.werte` gehen weiter)
+  - Generator-Knöpfe prüfen bei jedem Klick neu, ob man noch Mitglied mit dem Recht „Generatoren“ ist. Früher konnte ein gerade entferntes Mitglied über ein offenes Menü noch Lager abholen oder den Generator ausbauen und mitnehmen
+  - Skyblock-Shop nur in Skyblock (Kaufmenge geprüft), Abbau-Belohnung immer aufs Skyblock-Konto
+- [x] Alle Menüs: neue Layout-Prüfung im Selbsttest. Jeder Dialog (auch mit Grenzwerten: lange Namen, Milliarden-Beträge) wird auf drei Fehler geprüft: Text ragt aus dem Fenster, Text läuft über den Rand seines Kastens oder Knopfs, Text überdeckt anderen Text. Der Server-Test meldet das als `SELFTEST LAYOUT`. Behoben:
+  - Skyblock-Erfolge: Belohnungszeile lief aus der Karte
+  - Versicherung: Koordinaten über Wert und Auszahlung
+  - Generator: Name über dem Booster, Lagerliste, Juwelen-Shop „Gesperrt: …“
+  - Insel-Top und Biom-Ranking: Platz ab 1000 ragte links aus dem Fenster
+  - Grundstücke: Größe über „Mitte“
+  - Jobs: Name über „Lv“
+  - Trophäen-Ligen: Name über der Belohnung
+  - Markt: Verkäufer über dem Preis
+  - Börse: Achsenwert unter dem Kursschild, Kurs und Änderung übereinander, Hinweistext zu lang
+  - Cookie-Gebäude: Hinweis über dem Knopf „Max“
+  - große Beträge an engen Stellen jetzt kurz („1,2 Mio.“, „3 Mrd.“)
 
 ## Skyblock (neuer Modus)
 - [x] Etappe 1 Grundgerüst: Modus Skyblock im Kern, Modus-Auswahl als GUI am Kompass, Addon KubySkyblock (Insel pro Spieler beim Betreten, 50.000er Weltgrenze, Multiplikator-Serie 18-24 Uhr)

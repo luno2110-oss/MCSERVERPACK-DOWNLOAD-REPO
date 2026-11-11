@@ -227,7 +227,7 @@ public final class CookieScreen {
             c.smallButton(60 + i * 58, y, 54, on ? KitData.Small.GOLD_ON : KitData.Small.DARK, labels[i], on ? CREAM : TAN, true);
             c.action(60 + i * 58, y, 54, KitData.SMALL_H, v.modes()[i], "Kaufmenge " + labels[i]);
         }
-        c.textRight(W - 4, y + 4, "Jedes Stück 15 % teurer", DIM, false);
+        c.textRight(W - 4, y + 4, "je Stück +15 %", DIM, false);
         y += KitData.SMALL_H + 4;
         for (BRow r : v.rows()) {
             c.box(0, y, W, 38, KitData.Box.WOOD_CARD);

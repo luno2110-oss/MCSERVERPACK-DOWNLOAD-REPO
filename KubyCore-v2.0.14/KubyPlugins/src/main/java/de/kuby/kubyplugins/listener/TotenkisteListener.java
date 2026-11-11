@@ -194,7 +194,9 @@ public final class TotenkisteListener implements Listener {
         if (plugin.pvp().isDueling(p.getUniqueId())) return;
         Box b = plugin.totenkisten().ownedBy(p.getUniqueId());
         if (b == null) return;
-        List<ItemStack> left = plugin.totenkisten().depositDeath(b, p.getInventory().getContents());
+        // die Drops, nicht das Inventar: so fehlen Items mit Fluch des Verschwindens und alles, was andere Plugins
+        // schon entfernt haben (früher kamen diese Items doppelt oder trotz Fluch in die Kiste)
+        List<ItemStack> left = plugin.totenkisten().depositDeath(b, e.getDrops().toArray(new ItemStack[0]));
         e.getDrops().clear();
         e.getDrops().addAll(left);
         Msg.send(p, "<gray>Dein Inventar ist in deiner Totenkiste bei <white>" + b.x + " / " + b.y + " / " + b.z

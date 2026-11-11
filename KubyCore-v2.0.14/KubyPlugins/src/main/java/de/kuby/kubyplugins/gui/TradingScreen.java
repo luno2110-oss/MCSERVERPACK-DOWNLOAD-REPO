@@ -522,11 +522,13 @@ public final class TradingScreen {
         lo -= pad;
         final double H = hi, L = lo;
         java.util.function.DoubleToIntFunction py = v -> top + (int) Math.round((H - v) / (H - L) * plotH);
+        int priceY = py.applyAsInt(m.price());
         for (int g = 0; g <= 3; g++) {
             int gy = top + plotH * g / 3;
             for (int gx = plotX; gx < plotX + plotW; gx += 6) c.line(gx, gy, 3, GRID);
             double v = H - (H - L) * g / 3;
-            c.text(plotX + plotW + 6, gy - 4, TradingService.money(v), DIM, false);
+            // Achsen-Wert ausblenden, wo das Kursschild steht (sonst lagen beide Zahlen übereinander)
+            if (Math.abs(gy - priceY) >= 11) c.text(plotX + plotW + 6, gy - 4, TradingService.money(v), DIM, false);
         }
         for (int i = 0; i < vis.size(); i++) {
             Bar b = vis.get(i);
@@ -657,7 +659,9 @@ public final class TradingScreen {
                 if (r.pnl() != Long.MIN_VALUE && tab != Tab.KURSE) {
                     c.textRight(W - 6, y + 12, (r.pnl() >= 0 ? "+" : "") + Msg.coins(r.pnl()) + " $", sign(r.pnl()), false);
                 } else if (tab == Tab.KURSE) {
-                    c.textRight(W - 6, y + 7, pct(r.change()), sign(r.change()), true);
+                    // mit Zusatzzeile oben: Änderung darunter (sonst lagen beide übereinander)
+                    if (r.extra() != null) c.textRight(W - 6, y + 12, pct(r.change()), sign(r.change()), false);
+                    else c.textRight(W - 6, y + 7, pct(r.change()), sign(r.change()), true);
                 }
                 if (r.click() != null) c.action(0, y, W, 22, r.click(), r.symbol() + " ansehen");
             }
@@ -665,12 +669,12 @@ public final class TradingScreen {
         }
         if (rows.isEmpty()) {
             c.box(0, y, W, 26, KitData.Box.TERMINAL_ROW);
-            c.text(8, y + 9, switch (tab) {
+            c.text(8, y + 9, Canvas.fit(switch (tab) {
                 case DEPOT -> "Noch keine Positionen. Kauf im Reiter Markt deinen ersten Wert.";
-                case ORDERS -> "Keine offenen Orders. Limit, Stop-Loss und Take-Profit setzt du im Reiter Markt.";
+                case ORDERS -> "Keine offenen Orders. Limit und Stop-Loss setzt du im Reiter Markt.";
                 case VERLAUF -> "Noch keine Trades.";
                 default -> "Keine Werte.";
-            }, DIM, false);
+            }, false, W - 16), DIM, false);
             y += 30;
         }
         if (pages > 1) {

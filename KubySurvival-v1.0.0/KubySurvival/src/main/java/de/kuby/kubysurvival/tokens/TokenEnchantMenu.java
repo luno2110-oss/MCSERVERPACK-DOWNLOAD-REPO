@@ -48,6 +48,11 @@ public final class TokenEnchantMenu extends GuiMenu {
     /** Hebt die Verzauberung des Items in der Hand eine Stufe über das Maximum (mit Meldung). true = geklappt. */
     public static boolean apply(KubySurvival addon, Player p, Upgrade u) {
         int max = u.ench().getMaxLevel();
+        // nur in Survival (früher: mit Survival-Tokens Schärfe VI oder Schutz V auf SMP-Ausrüstung)
+        if (!de.kuby.kubyplugins.service.ModeService.SURVIVAL.equals(addon.core().modes().modeOf(p.getUniqueId()))) {
+            Msg.send(p, "<red>Besondere Verzauberungen gibt es nur in Survival.");
+            return false;
+        }
         ItemStack now = p.getInventory().getItemInMainHand();
         if (now.getType().isAir() || now.getEnchantmentLevel(u.ench()) != max) {
             Msg.send(p, "<red>Dein Item in der Hand braucht " + u.name() + " " + roman(max) + ".");

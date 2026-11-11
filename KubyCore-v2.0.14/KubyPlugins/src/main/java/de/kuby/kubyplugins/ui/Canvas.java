@@ -94,6 +94,13 @@ public final class Canvas {
     }
 
     private final int width;
+    /** Kästen und Knöpfe, für die Layout-Prüfung ({@link #lint}). */
+    private record Frame(int x, int y, int w, int h, String kind) {
+        boolean holds(int px, int py) {
+            return px >= x && px < x + w && py >= y && py < y + h;
+        }
+    }
+    private final List<Frame> frames = new ArrayList<>();
     private Component heading = Component.empty();
     private final List<Glyph> glyphs = new ArrayList<>();
     private final List<Region> regions = new ArrayList<>();
@@ -301,6 +308,35 @@ public final class Canvas {
         return cx - x;
     }
 
+    /** Mehrfarbiger Text ab x, höchstens max Pixel breit: was nicht passt, wird mit "..." gekürzt. */
+    public int text(int x, int y, List<Span> spans, int max) {
+        int cx = x;
+        for (Span sp : spans) {
+            int left = x + max - cx;
+            if (left <= rawWidth("...", sp.bold())) break;
+            String t = clean(sp.text());
+            if (rawWidth(t, sp.bold()) > left) {
+                cx += text(cx, y, fit(t, sp.bold(), left), sp.color(), sp.bold());
+                break;
+            }
+            cx += text(cx, y, t, sp.color(), sp.bold());
+        }
+        return cx - x;
+    }
+
+    /** Kurze Zahl für knappe Stellen: 999, 12.345, 1,2 Mio., 3,4 Mrd. */
+    public static String num(long v) {
+        long a = Math.abs(v);
+        String sign = v < 0 ? "-" : "";
+        if (a < 1_000_000) return sign + String.format(java.util.Locale.GERMANY, "%,d", a);
+        boolean mrd = a >= 999_500_000L;   // 999.999.999 wird „1 Mrd.“, nicht „1000 Mio.“
+        double d = mrd ? a / 1e9 : a / 1e6;
+        String unit = mrd ? " Mrd." : " Mio.";
+        String n = d >= 99.95 ? String.format(java.util.Locale.GERMANY, "%,d", Math.round(d))
+                : String.format(java.util.Locale.GERMANY, "%.1f", d).replace(",0", "");
+        return sign + n + unit;
+    }
+
     public int textRight(int right, int y, List<Span> spans) {
         int w = rawWidth(cleanAll(spans));
         return text(right - w, y, spans);
@@ -329,6 +365,7 @@ public final class Canvas {
     public Canvas box(int x, int y, int w, int h, KitData.Box style, int z) {
         w = Math.max(w, style.narrow != null ? 2 * KitData.CAP : 2 * KitData.CAP + KitData.SEG);
         h = Math.max(h, 14);
+        frames.add(new Frame(x, y, w, h, "Kasten"));
         row(x, y, w, style.p[0], style.narrow == null ? null : style.narrow[0], z);
         // Mittelzeilen dürfen in die geraden Teile der oberen und unteren Zeile ragen (ab Zeile style.straight)
         int lo = y + style.straight;
@@ -367,6 +404,7 @@ public final class Canvas {
     /** Knopf (22 px hoch, mindestens 12 breit). */
     public Canvas button(int x, int y, int w, KitData.Button style) {
         w = Math.max(w, 12);
+        frames.add(new Frame(x, y, w, 22, "Knopf"));
         int cap = Math.min(style.l.width(), w / 2);
         piece(x, y, style.l, Z_BUTTON);
         span(x + cap, x + w - cap, y, style.m, style.narrow, Z_BUTTON);
@@ -391,6 +429,7 @@ public final class Canvas {
     /** Kleiner Knopf (16 px hoch, mindestens 10 breit). */
     public Canvas smallButton(int x, int y, int w, KitData.Small style) {
         w = Math.max(w, 10);
+        frames.add(new Frame(x, y, w, 16, "Knopf"));
         int cap = Math.min(style.l.width(), w / 2);
         piece(x, y, style.l, Z_BUTTON);
         span(x + cap, x + w - cap, y, style.m, style.narrow, Z_BUTTON);
@@ -793,6 +832,47 @@ public final class Canvas {
     // =================================================================================================================
 
     /** Zusätzlicher Rand oben in Pixeln (wird auf ganze Zeilen aufgerundet), nach dem Bauen bekannt. */
+    /**
+     * Layout-Prüfung für den Selbsttest: Text, der aus dem Fenster ragt, über den rechten Rand seines Kastens oder Knopfs
+     * läuft oder einen anderen Text überdeckt. Leer = alles in Ordnung.
+     */
+    public List<String> lint() {
+        List<String> out = new ArrayList<>();
+        List<Glyph> texts = new ArrayList<>();
+        for (Glyph g : glyphs) if (g.kind == Kind.TEXT && !g.chars.isBlank()) texts.add(g);
+        for (Glyph g : texts) {
+            int end = g.x + g.w - 1;   // die letzte Spalte ist der Zeichenabstand
+            if (g.x < 0 || end > width) {
+                out.add(quote(g) + " ragt aus dem Fenster (" + g.x + " bis " + end + ", Breite " + width + ")");
+                continue;
+            }
+            Frame in = null;
+            for (Frame f : frames) {
+                if (f.holds(g.x + 1, g.y + 3) && (in == null || (long) f.w * f.h < (long) in.w * in.h)) in = f;
+            }
+            if (in != null && end > in.x + in.w) {
+                out.add(quote(g) + " läuft " + (end - in.x - in.w) + " px über den Rand (" + in.kind + " " + in.x + "," + in.y
+                        + " " + in.w + "x" + in.h + ")");
+            }
+        }
+        for (int i = 0; i < texts.size(); i++) {
+            Glyph a = texts.get(i);
+            for (int j = i + 1; j < texts.size(); j++) {
+                Glyph b = texts.get(j);
+                if (Math.abs(a.y - b.y) >= 7) continue;
+                if (Math.abs(a.x - b.x) <= 1 && Math.abs(a.y - b.y) <= 1) continue;   // Schatten oder Kontur
+                int ov = Math.min(a.x + a.w - 1, b.x + b.w - 1) - Math.max(a.x, b.x);
+                if (ov >= 3) out.add(quote(a) + " und " + quote(b) + " überdecken sich (" + ov + " px)");
+            }
+        }
+        return out;
+    }
+
+    private static String quote(Glyph g) {
+        String t = g.chars.strip();
+        return "\"" + (t.length() > 28 ? t.substring(0, 28) + "..." : t) + "\"";
+    }
+
     public int topMargin() {
         return topMargin;
     }

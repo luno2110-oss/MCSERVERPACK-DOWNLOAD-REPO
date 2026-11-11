@@ -3,6 +3,7 @@ config-stand: 8
 reward:
   money: 2
   xp: 1
+  serie-max: 3.0                # Abbau-Serie 18-24 Uhr: höchstens so viel mal (früher ohne Grenze); nur nicht gesetzte Blöcke
 # Inseln der Spieler (/insel). Sie liegen in einer Spirale um den Skyblock-Spawn (0, 0) mit festem Abstand.
 insel:
   abstand: 200                  # Abstand der Insel-Mitten (größte Insel muss kleiner sein)
@@ -33,6 +34,7 @@ insel:
   pvp-spawn-radius: 40
   void-rettung: true            # wer ins Leere fällt, landet zu Hause statt zu sterben
   neustart-abklingzeit-stunden: 24
+  neu-abklingzeit-stunden: 24   # nach dem Aufgeben erst nach dieser Zeit eine neue Insel (sonst Startkiste immer wieder)
   leeren-spalten-pro-tick: 400  # Neustart/Aufgeben: so viele Spalten je Tick leeren
   eingebaute-vorlagen: true     # Klassisch, Wüste, Schnee anbieten (eigene: /kp skyblock template save <id>)
   start-kiste: ["ICE:2", "LAVA_BUCKET:1", "BONE_MEAL:3", "MELON_SEEDS:1", "PUMPKIN_SEEDS:1", "SUGAR_CANE:1", "RED_MUSHROOM:1",

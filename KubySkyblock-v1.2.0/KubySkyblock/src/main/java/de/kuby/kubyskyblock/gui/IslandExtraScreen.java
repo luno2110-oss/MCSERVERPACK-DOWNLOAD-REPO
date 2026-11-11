@@ -191,7 +191,7 @@ public final class IslandExtraScreen {
             int h = 30;
             c.box(0, y, W, h, r.mine() ? KitData.Box.GOLD : KitData.Box.CLOUD_CARD);
             if (r.icon() != null) c.icon(8, y + 7, r.icon(), false);
-            else c.textCenter(16, y + 11, "#" + r.rank(), r.rank() <= 3 ? GOLD : MIST, true);
+            else c.textCenter(16, y + 11, r.rank() < 1000 ? "#" + r.rank() : String.valueOf(r.rank()), r.rank() <= 3 ? GOLD : MIST, r.rank() < 1000);
             int right = W - 8;
             int bw1 = r.b1() == null ? 0 : Math.max(44, Canvas.width(r.b1(), true) + 16), bw2 = r.b2() == null ? 0 : Math.max(44, Canvas.width(r.b2(), true) + 16);
             int bx2 = right - bw2, bx1 = bx2 - (bw2 > 0 ? 4 : 0) - bw1;

@@ -129,6 +129,8 @@ public final class IslandService {
     private final Set<Integer> busy = new HashSet<>();
     private int next = 1;
     private boolean dirty;
+    /** Wann hat ein Spieler zuletzt eine neue Insel angelegt (gegen Aufgeben + neu anlegen = Startkiste immer wieder). */
+    private final Map<UUID, Long> created = new HashMap<>();
     /** Format der gespeicherten Upgrade-Stände (UpgradeLevels.VERSION = Level 0 bis 20). */
     private int upgradeVersion = UpgradeLevels.VERSION;
 
@@ -404,9 +406,16 @@ public final class IslandService {
             home(p, i);
             return;
         }
+        long wait = createCooldownLeft(p.getUniqueId());
+        if (wait > 0) {
+            Msg.send(p, "<gray>Eine neue Insel kannst du in <white>" + de.kuby.kubyplugins.service.KitService.format(wait)
+                    + "</white> wieder anlegen. Bis dahin: einer Insel beitreten oder andere Inseln besuchen (<white>/insel</white>).");
+            return;
+        }
         List<TemplateService.Template> ts = addon.templates().all();
         if (ts.size() <= 1) {
-            create(p, ts.isEmpty() ? null : ts.get(0).id());
+            String err = create(p, ts.isEmpty() ? null : ts.get(0).id());
+            if (err != null) Msg.send(p, "<red>" + err);
             return;
         }
         Bukkit.getScheduler().runTaskLater(addon, () -> {
@@ -417,6 +426,9 @@ public final class IslandService {
     /** Neue Insel aus der Vorlage anlegen und hinbringen. */
     public synchronized String create(Player p, String templateId) {
         if (islandOf(p.getUniqueId()) != null) return "Du hast schon eine Insel.";
+        long wait = createCooldownLeft(p.getUniqueId());
+        if (wait > 0) return "Eine neue Insel kannst du in " + de.kuby.kubyplugins.service.KitService.format(wait)
+                + " wieder anlegen. Bis dahin kannst du einer Insel beitreten (/insel annehmen).";
         World w = world();
         if (w == null) return "Die Skyblock-Welt ist noch nicht eingerichtet.";
         Island i = new Island(nextFreeSlot());
@@ -427,6 +439,7 @@ public final class IslandService {
         TemplateService.Template t = addon.templates().get(templateId);
         i.template = t == null ? "" : t.id();
         register(i);
+        created.put(p.getUniqueId(), System.currentTimeMillis());
         Location c = center(i);
         if (t != null) {
             addon.templates().build(t, c);
@@ -695,6 +708,15 @@ public final class IslandService {
     // =================================================================================================================
     // Neustart
     // =================================================================================================================
+
+    /** Wartezeit bis zur nächsten neuen Insel (insel.neu-abklingzeit-stunden, Standard wie der Neustart, 24). */
+    public synchronized long createCooldownLeft(UUID id) {
+        Long last = created.get(id);
+        if (last == null) return 0;
+        long cd = addon.getConfig().getLong("insel.neu-abklingzeit-stunden",
+                addon.getConfig().getLong("insel.neustart-abklingzeit-stunden", 24)) * 3_600_000L;
+        return Math.max(0, last + cd - System.currentTimeMillis());
+    }
 
     public long resetCooldownLeft(Island i) {
         long cd = addon.getConfig().getLong("insel.neustart-abklingzeit-stunden", 24) * 3_600_000L;
@@ -982,6 +1004,9 @@ public final class IslandService {
         if (m == null || m.isAir() || m == Material.WATER || m == Material.LAVA || m == Material.BARRIER) return 0;
         ConfigurationSection s = addon.getConfig().getConfigurationSection("level.werte");
         if (s != null && s.contains(m.name())) return s.getInt(m.name());
+        // Fackeln, Leitern, Schienen, Teppiche, Blumen usw. (nicht fest) zählen nicht: sie fallen ohne Abbau-Ereignis ab
+        // (Block darunter weg, Wasser, Kolben), sonst ließen sich Punkte mit einem Item endlos farmen
+        if (!m.isSolid()) return 0;
         return addon.getConfig().getInt("level.standard-wert", 1);
     }
 
@@ -1145,6 +1170,16 @@ public final class IslandService {
             return;
         }
         next = y.getInt("next", 1);
+        ConfigurationSection an = y.getConfigurationSection("angelegt");
+        if (an != null) {
+            for (String k : an.getKeys(false)) {
+                try {
+                    created.put(UUID.fromString(k), an.getLong(k));
+                } catch (IllegalArgumentException ignored) {
+                    // kaputter Eintrag
+                }
+            }
+        }
         // Upgrade-Stände aus der Zeit mit 4 bis 6 Stufen auf Level 0 bis 20 umrechnen (gleiche Wirkung)
         int stored = y.getInt("upgrade-version", 1);
         boolean migrate = stored < UpgradeLevels.VERSION && levelsReady();
@@ -1230,6 +1265,10 @@ public final class IslandService {
         out.set("version", 2);
         out.set("upgrade-version", upgradeVersion);
         out.set("next", next);
+        long keep = System.currentTimeMillis() - 7L * 24 * 3_600_000L;
+        created.forEach((u, t) -> {
+            if (t > keep) out.set("angelegt." + u, t);
+        });
         for (Island i : bySlot.values()) {
             String b = "islands." + i.slot + ".";
             out.set(b + "owner", i.owner == null ? "" : i.owner.toString());

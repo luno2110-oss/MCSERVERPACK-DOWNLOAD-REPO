@@ -477,9 +477,30 @@ public final class GeneratorService {
         }
     }
 
+    /**
+     * Darf p diesen Generator gerade bedienen? Wird bei jedem Klick neu geprüft: früher galt der Stand beim Öffnen des
+     * Menüs, ein gerade entferntes Mitglied konnte über ein offenes Menü noch Lager abholen oder den Generator ausbauen
+     * (und als Item mitnehmen). Null = ja, sonst der Grund.
+     */
+    public String guard(Player p, Gen g) {
+        if (gens.get(g.id) != g) return "Diesen Generator gibt es nicht mehr.";
+        if (!ModeService.SKYBLOCK.equals(core.modes().modeOf(p.getUniqueId()))) return "Generatoren gibt es nur in Skyblock.";
+        IslandService is = addon.islands();
+        IslandService.Island i = is.islandOf(p.getUniqueId());
+        if (i == null || i.slot != g.island) return "Das ist nicht der Generator deiner Insel.";
+        if (!is.has(i, p.getUniqueId(), IslandService.Right.GENERATOREN) && !p.hasPermission("kuby.admin")) {
+            return "Generatoren darfst du auf dieser Insel nicht verwalten.";
+        }
+        return null;
+    }
+
     /** Ausbauen: Lager wird ausgezahlt, der Generator kommt mit Stufe und Qualität als Item zurück. */
     public void remove(Player p, Gen g) {
-        if (gens.get(g.id) != g) return;
+        String err = guard(p, g);
+        if (err != null) {
+            Msg.send(p, "<red>" + err);
+            return;
+        }
         collect(p, g);
         IslandService.Island isl = addon.islands().bySlot(g.island);
         if (isl != null) addon.islands().addBonus(isl, -points(g));
@@ -608,6 +629,8 @@ public final class GeneratorService {
 
     /** Lager einsammeln: Items ins Inventar (Rest in die Abholbox), Geld aufs Konto, XP dazu. */
     public String collect(Player p, Gen g) {
+        String err = guard(p, g);
+        if (err != null) return err;
         produce(g, System.currentTimeMillis(), true);
         long coins = (long) g.money, xp = (long) g.xp, items = 0;
         if (coins > 0) {
@@ -642,6 +665,8 @@ public final class GeneratorService {
 
     /** Items des Lagers zum Ankaufspreis verkaufen. */
     public String sell(Player p, Gen g) {
+        String err = guard(p, g);
+        if (err != null) return err;
         produce(g, System.currentTimeMillis(), true);
         long value = 0, n = 0;
         for (var e : g.items.entrySet()) {
@@ -661,6 +686,8 @@ public final class GeneratorService {
     }
 
     public String upgrade(Player p, Gen g) {
+        String err = guard(p, g);
+        if (err != null) return err;
         long price = upgradePrice(g);
         if (price < 0) return "Das ist schon die höchste Stufe.";
         if (!core.economy().withdraw(p.getUniqueId(), price)) return "Dafür brauchst du " + Msg.coins(price) + " $.";
@@ -677,6 +704,8 @@ public final class GeneratorService {
 
     /** Veredeln: nächste Qualität für Juwelen (Stufe und Lager bleiben). */
     public String refine(Player p, Gen g) {
+        String err = guard(p, g);
+        if (err != null) return err;
         Quality next = g.quality.next();
         if (next == null) return "Das ist schon die beste Qualität.";
         long cost = jewels(next, true);

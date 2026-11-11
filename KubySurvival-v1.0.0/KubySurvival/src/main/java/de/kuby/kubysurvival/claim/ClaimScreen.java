@@ -151,9 +151,9 @@ public final class ClaimScreen {
             c.box(0, y, W, 30, KitData.Box.MOSS);
             sketch(c, 8, y + 5, pl.width(), pl.length());
             c.text(36, y + 6, "Grundstück " + pl.number(), CREAM, true);
+            int mw = c.textRight(300, y + 12, Canvas.fit("Mitte " + pl.cx() + ", " + pl.cz(), false, 110), DIM, false);
             c.text(36, y + 18, Canvas.fit(pl.width() + "×" + pl.length() + " · " + Msg.coins(pl.area()) + " Blöcke"
-                    + (pl.world().isEmpty() ? "" : " · " + pl.world()), false, 200), SAGE, false);
-            c.textRight(300, y + 12, "Mitte " + pl.cx() + ", " + pl.cz(), DIM, false);
+                    + (pl.world().isEmpty() ? "" : " · " + pl.world()), false, 300 - mw - 36 - 6), SAGE, false);
             c.smallButton(310, y + 7, 74, KitData.Small.GREEN, "Rand zeigen", WHITE, false);
             c.action(0, y, W, 30, pl.show(), "Rand 10 Sekunden anzeigen");
             y += 30 + 3;

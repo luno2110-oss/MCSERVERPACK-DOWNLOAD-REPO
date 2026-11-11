@@ -145,6 +145,9 @@ public final class CasinoService {
     public synchronized String buy(Player p, long count) {
         String closed = closedMessage();
         if (closed != null) return closed;
+        // Chips sind Survival-Geld: Tausch nur in Survival (sonst Coins zwischen den Modi verschieben)
+        String mode = checkMode(p);
+        if (mode != null) return mode;
         if (count <= 0) return "Die Anzahl muss größer als 0 sein.";
         long cost = count * CHIP_VALUE;
         if (!plugin.economy().withdraw(p.getUniqueId(), cost)) {
@@ -158,12 +161,14 @@ public final class CasinoService {
 
     /** Verkauft Chips. Gibt null bei Erfolg zurück, sonst eine Meldung. */
     public synchronized String sell(Player p, long count) {
+        String mode = checkMode(p);
+        if (mode != null) return mode;
         if (count <= 0) return "Die Anzahl muss größer als 0 sein.";
         long have = chips(p.getUniqueId());
         if (have < count) return "So viele Chips hast du nicht.";
         chips.put(p.getUniqueId(), have - count);
         long tax = tax(p, count);
-        plugin.economy().deposit(p.getUniqueId(), count * CHIP_VALUE - tax);
+        plugin.modes().depositIn(p.getUniqueId(), SURVIVAL, count * CHIP_VALUE - tax);
         save();
         plugin.casinoLog().exchange(p.getUniqueId(), -count, tax);
         return null;

@@ -60,13 +60,14 @@ public final class StreakService {
         double mult = 1.0;
         if (inWindow()) {
             s.count++;
-            mult = 1.0 + 0.1 * (s.count - 1);
+            // gedeckelt (reward.serie-max, Standard x3): früher stieg die Serie ohne Ende (nach 10.000 Blöcken x1000)
+            mult = Math.min(addon.getConfig().getDouble("reward.serie-max", 3.0), 1.0 + 0.1 * (s.count - 1));
         } else {
             s.count = 0;
         }
         long money = Math.round(baseMoney * mult);
         long xp = Math.round(baseXp * mult);
-        core.economy().deposit(p.getUniqueId(), money);
+        core.modes().depositIn(p.getUniqueId(), de.kuby.kubyplugins.service.ModeService.SKYBLOCK, money);
         core.stats().get(p.getUniqueId()).xp += xp;
         if (inWindow()) {
             p.sendActionBar(Msg.parse("<gold>Serie <white>x" + String.format(Locale.GERMANY, "%.1f", mult)

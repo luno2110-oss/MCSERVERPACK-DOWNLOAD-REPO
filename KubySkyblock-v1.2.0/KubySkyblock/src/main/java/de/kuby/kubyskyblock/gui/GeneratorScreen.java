@@ -172,14 +172,14 @@ public final class GeneratorScreen {
         Canvas c = new Canvas(W).heading("Generator", v.color());
         c.box(0, 0, W, 54, KitData.Box.STEEL);
         c.sprite(10 + (32 - v.art().width) / 2, 11 + (32 - v.art().height) / 2, v.art());
-        c.text(50, 12, Canvas.fit(v.name(), true, 220), v.color(), true);
-        c.text(50, 24, "Stufe " + v.level() + " / " + v.max() + " · " + v.rate(), STEEL, false);
-        c.text(50, 36, Canvas.fit(v.premium(), false, 320), DIM, false);
-        if (v.boost() != null) c.textRight(W - 8, 12, "⚡ " + v.boost(), GOLD, true);
+        int boostW = v.boost() == null ? 0 : c.textRight(W - 8, 12, Canvas.fit("⚡ " + v.boost(), true, 150), GOLD, true) + 8;
+        c.text(50, 12, Canvas.fit(v.name(), true, W - 58 - boostW), v.color(), true);
+        c.text(50, 24, Canvas.fit("Stufe " + v.level() + " / " + v.max() + " · " + v.rate(), false, W - 58), STEEL, false);
+        c.text(50, 36, Canvas.fit(v.premium(), false, W - 58), DIM, false);
         int y = 60;
         c.box(0, y, W, 34, KitData.Box.STEEL_CARD);
         c.text(10, y + 6, Canvas.caps("Lager"), STEEL, true);
-        c.textRight(W - 10, y + 6, v.store(), v.fill() >= 0.999 && !v.store().startsWith("Wird") && !v.store().startsWith("Geht")
+        c.textRight(W - 10, y + 6, Canvas.fit(v.store(), false, W - 80), v.fill() >= 0.999 && !v.store().startsWith("Wird") && !v.store().startsWith("Geht")
                 && !v.store().startsWith("Auto") ? RED : STEEL, false);
         c.bar(10, y + 20, W - 20, Math.max(0, Math.min(1, v.fill())), v.fill() >= 0.999 ? KitData.Fill.GOLD : KitData.Fill.CYAN);
         y += 34 + 6;
@@ -190,8 +190,8 @@ public final class GeneratorScreen {
                 int x = (i % 3) * (cw + 4), sy = y + (i / 3) * 22;
                 c.box(x, sy, cw, 20, KitData.Box.STEEL_CARD);
                 c.icon(x + 3, sy + 2, s.icon(), false);
-                c.text(x + 22, sy + 6, Canvas.fit(s.name(), false, cw - 70), STEEL, false);
-                c.textRight(x + cw - 6, sy + 6, Msg.coins(s.count()), GOLD, true);
+                int nw = c.textRight(x + cw - 6, sy + 6, Canvas.num(s.count()), GOLD, true);
+                c.text(x + 22, sy + 6, Canvas.fit(s.name(), false, cw - 28 - nw - 4), STEEL, false);
             }
             if (v.stock().isEmpty()) {
                 c.text(4, y + 4, "Noch nichts produziert.", DIM, false);
@@ -316,7 +316,7 @@ public final class GeneratorScreen {
         c.headline(50, 12, "Generatoren", STEEL);
         boolean full = v.rows().size() >= v.slots();
         c.text(50, 36, List.of(Canvas.Span.bold(v.rows().size() + " / " + v.slots(), full ? RED : GREEN), Canvas.Span.of(" Plätze · ", DIM),
-                v.boost() == null ? Canvas.Span.of("kein Booster", DIM) : Canvas.Span.bold(v.boost(), GOLD)));
+                v.boost() == null ? Canvas.Span.of("kein Booster", DIM) : Canvas.Span.bold(v.boost(), GOLD)), W - 58);
         c.textRight(W - 8, 14, "Läuft im Menü,", DIM, false);
         c.textRight(W - 8, 25, "kein Platz auf der Insel", DIM, false);
         int y = 58;
@@ -512,16 +512,16 @@ public final class GeneratorScreen {
                     c.item(px, y + 17, r.products().get(k), false, KitData.Icon.CHEST);
                     px += 18;
                 }
-                if (r.rate() != null) c.text(px + 3, y + 22, r.rate(), DIM, false);
+                if (r.rate() != null) c.text(px + 3, y + 22, Canvas.fit(r.rate(), false, W - 90 - px), DIM, false);
             } else {
                 c.icon(px, y + 17, r.kind() == Kind.MONEY ? KitData.Icon.GOLD_NUGGET : KitData.Icon.EXPERIENCE, false);
-                c.text(px + 20, y + 22, r.rate(), r.kind() == Kind.MONEY ? GOLD : XPC, true);
+                c.text(px + 20, y + 22, Canvas.fit(r.rate(), true, W - 110 - px), r.kind() == Kind.MONEY ? GOLD : XPC, true);
             }
-            c.text(48, y + 37, Canvas.fit(r.speed(), false, W - 48 - (locked ? 8 + Canvas.width(r.lock(), false) : 80) - 6), DIM, false);
-            c.textRight(W - 10, y + 7, Msg.coins(r.price()) + " $", locked ? DIM : r.afford() ? GOLD : RED, true);
+            c.text(48, y + 37, Canvas.fit(r.speed(), false, W - 48 - (locked ? 8 + Math.min(140, Canvas.width(r.lock(), false)) : 80) - 6), DIM, false);
+            c.textRight(W - 10, y + 7, Canvas.num(r.price()) + " $", locked ? DIM : r.afford() ? GOLD : RED, true);
             if (locked) {
                 c.textRight(W - 10, y + 22, "Gesperrt", RED, true);
-                c.textRight(W - 10, y + 33, r.lock(), RED, false);
+                c.textRight(W - 10, y + 33, Canvas.fit(r.lock(), false, 140), RED, false);
             } else {
                 c.smallButton(W - 10 - 64, y + 27, 64, r.afford() ? KitData.Small.GOLD : KitData.Small.DARK, "Kaufen", r.afford() ? GOLD : DIM, true);
                 if (r.afford()) c.action(0, y, W, 50, r.buy(), r.name() + " für " + Msg.coins(r.price()) + " $ kaufen, läuft sofort");
@@ -562,11 +562,12 @@ public final class GeneratorScreen {
             c.sprite(x + 6 + (32 - o.art().width) / 2, oy + 6 + (32 - o.art().height) / 2, o.art());
             c.text(x + 44, oy + 7, Canvas.fit(o.name(), true, cw - 50), o.unlock() != null ? DIM : STEEL, true);
             List<String> d = Canvas.wrap(o.desc(), cw - 50);
-            for (int l = 0; l < Math.min(2, d.size()); l++) c.text(x + 44, oy + 19 + 10 * l, d.get(l), DIM, false);
+            for (int l = 0; l < Math.min(2, d.size()); l++) c.text(x + 44, oy + 19 + 10 * l, Canvas.fit(d.get(l), false, cw - 50), DIM, false);
             if (o.unlock() != null) {
-                c.text(x + 8, oy + ch - 13, "Gesperrt: " + o.unlock(), RED, false);
+                c.text(x + 8, oy + ch - 13, Canvas.fit("Gesperrt: " + o.unlock(), false, cw - 16), RED, false);
             } else {
-                c.text(x + 8, oy + ch - 13, o.price() > 0 ? Msg.coins(o.price()) + (title.contains("Juwel") ? " Juwelen" : " $") : "", o.ok() ? GOLD : RED, true);
+                c.text(x + 8, oy + ch - 13, Canvas.fit(o.price() > 0 ? Canvas.num(o.price()) + (title.contains("Juwel") ? " Juwelen" : " $") : "", true, cw - 84),
+                        o.ok() ? GOLD : RED, true);
                 c.smallButton(x + cw - 6 - 60, oy + ch - 19, 60, o.ok() ? KitData.Small.GOLD : KitData.Small.DARK, o.price() > 0 ? "Kaufen" : "Öffnen",
                         o.ok() ? GOLD : DIM, true);
                 if (o.buy() != null && o.ok()) c.action(x, oy, cw, ch, o.buy(), o.name() + " kaufen");

@@ -90,9 +90,16 @@ public final class SkyShopService {
         return !m.hasItemModel() && !m.hasCustomModelData() && !m.hasDisplayName() && m.getPersistentDataContainer().isEmpty();
     }
 
+    /** Nur in Skyblock (sonst landen Skyblock-Preise im Konto eines anderen Modus). */
+    private boolean sky(Player p) {
+        return de.kuby.kubyplugins.service.ModeService.SKYBLOCK.equals(core.modes().modeOf(p.getUniqueId()));
+    }
+
     /** Kaufen: packs mal die Menge des Eintrags. */
     public String buy(Player p, Entry e, int packs) {
         if (e.buy() <= 0) return "Das kann man hier nur verkaufen.";
+        if (!sky(p)) return "Den Skyblock-Shop gibt es nur in Skyblock.";
+        if (packs <= 0 || packs > 64) return "Ungültige Menge.";
         long price = e.buy() * packs;
         if (!core.economy().withdraw(p.getUniqueId(), price)) return "Dafür brauchst du " + Msg.coins(price) + " $.";
         int left = e.amount() * packs;
@@ -107,7 +114,7 @@ public final class SkyShopService {
     /** Ein Item komplett aus dem Inventar verkaufen. Gibt den Erlös zurück (0 = nichts verkauft). */
     public long sell(Player p, Material m) {
         long unit = sellPrice(m);
-        if (unit <= 0) return 0;
+        if (unit <= 0 || !sky(p)) return 0;
         long count = 0;
         ItemStack[] c = p.getInventory().getStorageContents();
         for (int i = 0; i < c.length; i++) {
@@ -126,6 +133,7 @@ public final class SkyShopService {
 
     /** Alles Verkaufbare aus dem Inventar verkaufen. */
     public long sellAll(Player p) {
+        if (!sky(p)) return 0;
         long sum = 0;
         ItemStack[] c = p.getInventory().getStorageContents();
         for (int i = 0; i < c.length; i++) {

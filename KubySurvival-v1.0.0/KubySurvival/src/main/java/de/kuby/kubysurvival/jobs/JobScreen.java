@@ -319,8 +319,8 @@ public final class JobScreen {
             int x = (i % 2) * (cw + 4), cy = y + (i / 2) * (ch + 4);
             c.box(x, cy, cw, ch, k.main() ? KitData.Box.GOLD : k.side() ? KitData.Box.TEAL : KitData.Box.WOOD_CARD);
             c.icon(x + 7, cy + 13, k.icon(), true);
-            c.text(x + 46, cy + 8, Canvas.fit(k.name(), true, cw - 46 - 40), k.color(), true);
-            c.textRight(x + cw - 8, cy + 8, "Lv " + k.level(), CREAM, true);
+            int lv = c.textRight(x + cw - 8, cy + 8, "Lv " + k.level(), CREAM, true);
+            c.text(x + 46, cy + 8, Canvas.fit(k.name(), true, cw - 46 - 8 - lv - 6), k.color(), true);
             c.bar(x + 46, cy + 19, cw - 46 - 8, k.progress(), KitData.Fill.GOLD);
             c.text(x + 46, cy + 30, Canvas.fit(k.desc(), false, cw - 46 - 8), TAN, false);
             int sw = 0;

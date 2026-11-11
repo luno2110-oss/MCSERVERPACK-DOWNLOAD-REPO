@@ -46,10 +46,13 @@ final class SelfTest {
 
     static void run(KubyPlugins plugin, CommandSender out) {
         List<String> fails = new ArrayList<>();
+        List<String> layout = new ArrayList<>();
         int[] ok = {0};
         java.util.function.BiConsumer<String, Supplier<Canvas>> canvas = (name, c) -> {
             try {
-                Dialog d = UiDialog.dialog(null, c.get(), 330);
+                Canvas cv = c.get();
+                for (String issue : cv.lint()) layout.add(name + ": " + issue);
+                Dialog d = UiDialog.dialog(null, cv, 330);
                 if (d == null) throw new IllegalStateException("kein Dialog");
                 ok[0]++;
             } catch (Throwable t) {
@@ -538,6 +541,14 @@ final class SelfTest {
             fails.add("Rematch-Handshake: " + t);
         }
 
+        // Layout: Text außerhalb des Fensters, über einem Kastenrand oder über anderem Text
+        java.util.LinkedHashSet<String> uniq = new java.util.LinkedHashSet<>(layout);
+        out.sendMessage("SELFTEST LAYOUT " + uniq.size() + " Auffälligkeiten");
+        int shown = 0;
+        for (String l : uniq) {
+            if (shown++ >= 600) break;
+            out.sendMessage("SELFTEST LAYOUT " + l);
+        }
         out.sendMessage("SELFTEST " + ok[0] + " Dialoge gebaut, " + fails.size() + " Fehler");
         for (String f : fails) out.sendMessage("SELFTEST FEHLER " + f);
         plugin.getLogger().info("SELFTEST " + (fails.isEmpty() ? "OK" : "FEHLER (" + fails.size() + ")"));

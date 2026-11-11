@@ -28,6 +28,10 @@ public final class TokenShopMenu extends GuiMenu {
     }
 
     private boolean pay(Player p, long price) {
+        if (!de.kuby.kubyplugins.service.ModeService.SURVIVAL.equals(addon.core().modes().modeOf(p.getUniqueId()))) {
+            Msg.send(p, "<red>Tokens gibst du in Survival aus.");
+            return false;
+        }
         if (addon.jobs().takeTokens(p.getUniqueId(), price)) return true;
         Msg.send(p, "<red>Dafür brauchst du " + price + " Tokens.");
         p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.6f, 1f);
