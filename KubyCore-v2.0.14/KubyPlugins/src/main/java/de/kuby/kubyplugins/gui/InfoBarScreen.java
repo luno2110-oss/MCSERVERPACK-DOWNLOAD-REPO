@@ -155,7 +155,7 @@ public final class InfoBarScreen {
             c.text(10 + (64 - Canvas.width(Canvas.clean(label), sel)) / 2, y + 6, label, sel ? ON : WHITE, sel);
             int x = 80;
             x += bar(c, x, y, d, money(v.sample(), d)) + 4;
-            bar(c, x, y, d, v.sky() ? island(v.sample().island(), d) : job(v.sample().job(), d));
+            bar(c, x, y, d, trim(v.sky() ? island(v.sample().island(), d) : job(v.sample().job(), d), d, W - 6 - x));
             c.action(10, y, W - 14, 20, a.design(d), "Design " + label);
         }
 
@@ -267,6 +267,19 @@ public final class InfoBarScreen {
         out.add(Piece.text(" · ", DOT));
         out.add(Piece.text(number(j.earned()), col(d, 0x339C33, 0x54FC54)));
         out.add(Piece.text("/" + number(j.cap()), gray));
+        return out;
+    }
+
+    /** Vorschau: hinten so viele Teile weglassen, bis die Leiste in max Pixel passt (große Werte ragten aus dem Fenster). */
+    private static List<Piece> trim(List<Piece> pieces, Design d, int max) {
+        List<Piece> out = new ArrayList<>(pieces);
+        while (out.size() > 1) {
+            int content = 0;
+            for (Piece p : out) content += p.width();
+            if (2 * d.cap + content + 1 <= max) break;
+            out.remove(out.size() - 1);
+            while (out.size() > 1 && " · ".equals(out.get(out.size() - 1).text())) out.remove(out.size() - 1);
+        }
         return out;
     }
 

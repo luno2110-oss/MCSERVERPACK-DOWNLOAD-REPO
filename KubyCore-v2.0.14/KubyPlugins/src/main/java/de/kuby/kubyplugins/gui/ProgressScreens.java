@@ -191,7 +191,7 @@ public final class ProgressScreens {
             c.text(x + 28, ay + 19, Canvas.fit(a.desc(), false, cw - 28 - 8), TAN, false);
             double f = a.target() <= 0 ? 1 : a.have() / (double) a.target();
             c.bar(x + 8, ay + 32, cw - 16 - 60, f, a.done() ? KitData.Fill.GREEN : KitData.Fill.GOLD);
-            c.textRight(x + cw - 8, ay + 32, a.done() ? "✔" : Msg.coins(a.have()) + "/" + Msg.coins(a.target()), a.done() ? GREEN : CREAM, false);
+            c.textRight(x + cw - 8, ay + 32, a.done() ? "✔" : Canvas.num(a.have()) + "/" + Canvas.num(a.target()), a.done() ? GREEN : CREAM, false);
             if (a.jewels() > 0) c.text(x + 8, ay + 42, "+" + a.jewels() + " Juwelen", a.done() ? DIM : JEWEL, false);
         }
         y += ((v.page().size() + 1) / 2) * (ch + 4);
@@ -260,7 +260,7 @@ public final class ProgressScreens {
             if (k.rank() != null) c.text(48 + Canvas.width(Canvas.fit(k.name(), true, 180), true) + 8, y + 8,
                     "ab " + k.rank(), k.rankOk() ? GREEN : RED, false);
             c.text(48, y + 20, Canvas.fit(k.content(), false, 220), SLATE, false);
-            c.text(48, y + 31, "alle " + k.cooldown() + " · " + k.state(), k.ready() ? GREEN : SLATE, false);
+            c.text(48, y + 31, Canvas.fit("alle " + k.cooldown() + " · " + k.state(), false, W - 8 - 70 - 48 - 6), k.ready() ? GREEN : SLATE, false);
             int bx = W - 8 - 70;
             c.smallButton(bx, y + 6, 70, k.ready() ? KitData.Small.GREEN : KitData.Small.DARK, "Abholen", k.ready() ? WHITE : SLATE, false);
             if (k.ready()) c.action(bx, y + 6, 70, KitData.SMALL_H, k.claim(), "Kit abholen");

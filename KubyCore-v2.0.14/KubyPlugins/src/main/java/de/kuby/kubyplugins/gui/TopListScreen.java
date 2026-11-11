@@ -79,7 +79,7 @@ public final class TopListScreen {
         c.box(0, 0, W, 54, KitData.Box.ROYAL);
         c.icon(10, 11, v.icon(), true);
         c.headline(50, 12, v.title(), LILAC);
-        c.text(50, 36, v.sub(), MAUVE, false);
+        c.text(50, 36, Canvas.fit(v.sub(), false, W - 58), MAUVE, false);
         c.icon(352, 11, KitData.Icon.TOTEM, true);
 
         // Podest: 2 | 1 | 3

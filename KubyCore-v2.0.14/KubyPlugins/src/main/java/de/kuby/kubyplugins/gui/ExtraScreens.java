@@ -214,11 +214,11 @@ public final class ExtraScreens {
         for (Stock s : v.stocks()) {
             c.box(0, y, W, 30, s.active() ? KitData.Box.TERMINAL_ROW : KitData.Box.GRAY);
             c.icon(7, y + 7, s.icon(), false);
-            c.text(30, y + 6, Canvas.fit(Canvas.lit(s.name()), true, 110), s.active() ? CREAM : CHALKDIM, true);
-            c.text(30, y + 17, String.format(Locale.GERMANY, "%.2f Anteile", s.mine()), TEALDIM, false);
-            c.textRight(176, y + 6, Msg.coins(s.price()) + "$", CREAM, false);
+            int pw = c.textRight(176, y + 6, Canvas.num(s.price()) + "$", CREAM, false);
+            c.text(30, y + 6, Canvas.fit(Canvas.lit(s.name()), true, Math.min(110, 176 - pw - 30 - 6)), s.active() ? CREAM : CHALKDIM, true);
+            c.text(30, y + 17, Canvas.fit(String.format(Locale.GERMANY, "%.2f Anteile", s.mine()), false, 100), TEALDIM, false);
             c.textRight(176, y + 17, String.format(Locale.GERMANY, "%.2f", s.share()), TEALDIM, false);
-            c.textRight(244, y + 6, Msg.coins(s.value()) + "$", CREAM, false);
+            c.textRight(244, y + 6, Canvas.num(s.value()) + "$", CREAM, false);
             c.textRight(244, y + 17, signed(s.gain()), s.gain() >= 0 ? GREEN : RED, false);
             int bx = 252;
             String a = "+" + short_(v.step()), b = "+" + short_(v.step() * 10);
@@ -343,8 +343,8 @@ public final class ExtraScreens {
         c.headline(50, 12, "Quiz", CHALK);
         c.text(50, 36, "Welche Kategorie kommt nächste Woche?", CHALKDIM, false);
         int y = 60;
-        c.text(4, y, "Aktuell: " + (v.active() == null ? "alle Kategorien" : cap(v.active())) + " · " + v.questions() + " Fragen · Auswertung montags 00:05",
-                CHALK, false);
+        c.text(4, y, Canvas.fit("Aktuell: " + (v.active() == null ? "alle Kategorien" : cap(v.active())) + " · " + v.questions()
+                + " Fragen · Auswertung montags 00:05", false, W - 8), CHALK, false);
         y += 14;
         int total = 0;
         for (Category cat : v.categories()) total += cat.votes();

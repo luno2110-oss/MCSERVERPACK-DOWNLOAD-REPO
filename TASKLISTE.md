@@ -553,6 +553,8 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Börse: Achsenwert unter dem Kursschild, Kurs und Änderung übereinander, Hinweistext zu lang
   - Cookie-Gebäude: Hinweis über dem Knopf „Max“
   - große Beträge an engen Stellen jetzt kurz („1,2 Mio.“, „3 Mrd.“)
+  - Kern: Info-Leiste (Vorschau der Job-Leiste ragte aus dem Fenster), Kits („alle … Std.“ über „Vorschau“), Bestenliste (Untertitel), Investments (Name über Preis), Quiz-Abstimmung (Zeile zu lang)
+  - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
 ## Skyblock (neuer Modus)
 - [x] Etappe 1 Grundgerüst: Modus Skyblock im Kern, Modus-Auswahl als GUI am Kompass, Addon KubySkyblock (Insel pro Spieler beim Betreten, 50.000er Weltgrenze, Multiplikator-Serie 18-24 Uhr)
