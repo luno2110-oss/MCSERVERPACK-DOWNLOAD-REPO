@@ -114,6 +114,9 @@ public final class AltService implements Listener {
                 + " <gray>teilt die IP mit " + String.join("<gray>, ", names) + "<gray>. <click:run_command:'/kp alts " + p.getName()
                 + "'><yellow>[Details]</click>";
         plugin.getLogger().info("[Zweitkonten] " + p.getName() + " teilt die IP mit " + alts.size() + " Konto/Konten" + (banned ? " (eins gebannt)" : ""));
+        if (banned && plugin.alerts() != null) {
+            plugin.alerts().raise(AlertService.Kind.ZWEITKONTO, p.getUniqueId(), p.getName() + " teilt die IP mit einem gebannten Konto");
+        }
         for (Player o : Bukkit.getOnlinePlayers()) {
             if (!o.equals(p) && (o.hasPermission("kuby.alts.see") || o.hasPermission("kuby.admin"))) Msg.send(o, msg);
         }
@@ -160,6 +163,29 @@ public final class AltService implements Listener {
         else allowed.remove(pair(a, b));
         dirty = true;
         save();
+    }
+
+    /** Ein Konto mit gleicher IP: zuletzt gesehen, freigegeben, noch im Zeitraum. */
+    public record Link(UUID other, long lastSeen, boolean allowed, boolean recent) {}
+
+    /** Alle Konten, die je dieselbe IP hatten (auch freigegebene und alte), zuletzt gesehen zuerst. */
+    public synchronized List<Link> links(UUID id) {
+        Map<UUID, Long> seen = new HashMap<>();
+        for (Map<UUID, Long> m : byIp.values()) {
+            if (!m.containsKey(id)) continue;
+            for (Map.Entry<UUID, Long> e : m.entrySet()) {
+                if (!e.getKey().equals(id)) seen.merge(e.getKey(), e.getValue(), Math::max);
+            }
+        }
+        long since = System.currentTimeMillis() - window();
+        List<Link> out = new ArrayList<>();
+        seen.forEach((u, t) -> out.add(new Link(u, t, allowed.contains(pair(id, u)), t >= since)));
+        out.sort((a, b) -> Long.compare(b.lastSeen(), a.lastSeen()));
+        return out;
+    }
+
+    public synchronized boolean isAllowed(UUID a, UUID b) {
+        return allowed.contains(pair(a, b));
     }
 
     /** Für /kp alts: Zeilen mit Name, zuletzt gesehen, gebannt, freigegeben. */

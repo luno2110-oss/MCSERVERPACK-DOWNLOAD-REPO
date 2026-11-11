@@ -34,6 +34,11 @@ public final class AdminCommand implements CommandExecutor {
             new AdminMenu(plugin).open(p);
             return true;
         }
+        // direkt in einen Bereich, z. B. /kadmin warnungen (Link aus den Team-Warnungen)
+        if (args.length > 0 && plugin.staffMenus() != null) {
+            plugin.staffMenus().kadminOpen(p, args[0].toLowerCase(java.util.Locale.ROOT));
+            return true;
+        }
         // mit Grafik-Pack der Kadmin-Dialog im Team-Bereich, sonst die Truhe
         if (plugin.staffMenus() != null) plugin.staffMenus().kadmin(p);
         else new AdminMenu(plugin).open(p);

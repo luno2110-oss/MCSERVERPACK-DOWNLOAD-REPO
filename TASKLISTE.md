@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.48** (ungetestet, nicht kompiliert)
+Stand: **v1.49** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -555,6 +555,22 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - große Beträge an engen Stellen jetzt kurz („1,2 Mio.“, „3 Mrd.“)
   - Kern: Info-Leiste (Vorschau der Job-Leiste ragte aus dem Fenster), Kits („alle … Std.“ über „Vorschau“), Bestenliste (Untertitel), Investments (Name über Preis), Quiz-Abstimmung (Zeile zu lang)
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
+
+## Kadmin: Warnungen, Wirtschafts-Protokoll, keine Truhen mehr (v1.49, Wunsch des Besitzers, Test im Spiel offen)
+- [x] Wirtschafts-Protokoll: jede Gutschrift und Abbuchung ab 1.000 $ (`wirtschaft.protokoll-ab`) sowie jede Überweisung und Admin-Buchung
+  - je Eintrag: Spieler, Modus, Betrag, neuer Stand und Herkunft (Markt, Aufträge, Verkauf, Casino, Kopfgeld, Duell, Versicherung, Skyblock-Combo, Generator, Job, Quest, Bank, „Überweisung an/von …“, Admin …)
+  - Dateien je Tag in `wirtschaft/` (30 Tage), die letzten 7 Tage durchsuchbar
+  - Kadmin → Wirtschaft: Suche nach Spieler und Herkunft, Mindestbetrag (alle, ab 100.000, ab 1 Mio.), Zeitraum (24 Std., 7 Tage), Summe rein und raus. Klick auf eine Zeile filtert auf den Spieler
+- [x] Team-Warnungen (Team mit `kuby.alerts.see` oder Admin bekommt eine Chat-Zeile mit [Ansehen], Kadmin → Warnungen mit Erledigt und Buchungen):
+  - einzelne Gutschrift ab 1 Mio. (`warnungen.gutschrift-ab`)
+  - mehr als 5 Mio. in 10 Minuten (`warnungen.verdienst-10min`)
+  - `/pay` ab 100.000 (`warnungen.ueberweisung-ab`)
+  - `/pay` zwischen Konten mit gleicher IP
+  - Login mit gebanntem Zweitkonto
+  - fehlgeschlagenes Backup
+- [x] Kadmin neuer Bereich „Sicherheit“: Wirtschaft, Warnungen, Backups (Liste, Jetzt sichern, Wiederherstellen vormerken), Zweitkonten (online mit gleicher IP, Spieler prüfen, Freigeben/Sperren). Direkt: `/kadmin warnungen|wirtschaft|backups|zweitkonten`
+- [x] Kadmin ohne Truhen (mit Grafik-Pack; ohne Pack bleiben die alten Truhen): Einstellungen (Bereiche, Werte mit −/+ und Eingabe), Config-Editor (jeder Wert, Listen mit |), Preisliste (Preis ändern, Item aus der Hand), Shop (Sektionen, Items, Preis/Menge/Name/Beschreibung/Icon, Löschen mit Rückfrage), Battlepass (Belohnungen hinzufügen/entfernen), Auktionshaus (Angebot entfernen → Abholbox), Teams (auflösen), Kits (Liste als Dialog; der Inhalt selbst bleibt eine Truhe, weil man echte Items hineinlegt)
+- [x] Gemeinsamer Listen-Baustein im Kadmin-Stil (Kopf, Knopfleiste, Zeilen mit Icon, Wert und Knöpfen, Seiten, Rückfrage vor dem Löschen), im Selbsttest mit Grenzwerten geprüft
 
 ## Sicherheit: Backups und Zweitkonto-Erkennung (v1.48, Wunsch des Besitzers, Test im Spiel offen)
 - [x] Automatische Backups: alle 60 Minuten (`backup.intervall-minuten`, erstes 10 Min. nach dem Start) ein ZIP in `plugins/KubyPlugins/backups/`

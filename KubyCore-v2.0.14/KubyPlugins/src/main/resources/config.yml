@@ -521,6 +521,18 @@ backup:
   behalten: 48                     # die letzten 48 Backups ...
   tage: 14                         # ... und dazu eines je Tag für 14 Tage
 
+# Wirtschafts-Protokoll (Kadmin → Wirtschaft): Buchungen ab diesem Betrag, Überweisungen und Admin immer. Dateien in wirtschaft/.
+wirtschaft:
+  protokoll-ab: 1000
+  tage: 30
+
+# Team-Warnungen (Kadmin → Warnungen, Chat fürs Team mit kuby.alerts.see oder Admin). 0 = aus.
+warnungen:
+  gutschrift-ab: 1000000           # eine einzelne Gutschrift ab diesem Betrag
+  verdienst-10min: 5000000         # so viel in 10 Minuten (Summe)
+  ueberweisung-ab: 100000          # /pay ab diesem Betrag
+  zweitkonto-ab: 1000              # /pay zwischen Konten mit gleicher IP ab diesem Betrag
+
 # Zweitkonto-Erkennung über die IP (gespeichert nur als Hash). /kp alts <Spieler>, /kp alts erlauben <A> <B> (Geschwister).
 alts:
   tage: 30                         # gleiche IP in den letzten 30 Tagen = verknüpft

@@ -191,6 +191,8 @@ public final class ModeService {
         byMode.put(mode, new Snap(sn.money() + amount, sn.xp(), sn.trophies(), sn.kills(), sn.deaths(), sn.inv(), sn.ec(),
                 sn.ab(), sn.extras()));
         save();
+        // Gutschrift in einem anderen Modus (live läuft sie über das Konto und wird dort protokolliert)
+        if (!live && plugin.economyLog() != null) plugin.economyLog().record(id, mode, amount, sn.money() + amount);
     }
 
     /** Geld eines Spielers in einem Modus: live vom Konto, sonst aus dem gespeicherten Stand (auch offline). */

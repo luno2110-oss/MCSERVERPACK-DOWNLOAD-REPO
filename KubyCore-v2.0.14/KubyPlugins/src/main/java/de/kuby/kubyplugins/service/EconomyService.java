@@ -31,8 +31,19 @@ public final class EconomyService {
 
     /** Admin: Kontostand direkt setzen. */
     public synchronized void set(UUID id, long amount) {
+        long old = balance(id);
         balances.put(id, Math.max(0, amount));
         save();
+        log(id, Math.max(0, amount) - old, Math.max(0, amount), "Admin: Stand gesetzt");
+    }
+
+    /** Ins Wirtschafts-Protokoll (Modus = aktueller Modus des Spielers). */
+    private void log(UUID id, long delta, long balance, String label) {
+        EconomyLog l = plugin.economyLog();
+        if (l == null || delta == 0) return;
+        String mode = plugin.modes() == null ? "?" : plugin.modes().modeOf(id);
+        if (label == null) l.record(id, mode, delta, balance);
+        else EconomyLog.with(label, () -> l.record(id, mode, delta, balance));
     }
 
     /** Gutschrift: nur positive Beträge, ohne Überlauf (sättigt bei Long.MAX_VALUE). Sehr große Einzelbeträge stehen
@@ -43,6 +54,7 @@ public final class EconomyService {
         long next = cur + amount;
         if (next < cur) next = Long.MAX_VALUE;
         balances.put(id, next);
+        log(id, next - cur, next, null);
         long warn = plugin.getConfig().getLong("economy.log-ab", 100_000_000L);
         if (warn > 0 && amount >= warn) {
             String name = org.bukkit.Bukkit.getOfflinePlayer(id).getName();
@@ -54,6 +66,7 @@ public final class EconomyService {
         long current = balance(id);
         if (amount <= 0 || current < amount) return false;
         balances.put(id, current - amount);
+        log(id, -amount, current - amount, null);
         return true;
     }
 

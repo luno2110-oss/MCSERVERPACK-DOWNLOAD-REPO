@@ -167,6 +167,8 @@ public final class KubyPlugins extends JavaPlugin {
         Msg.setPrefix(getConfig().getString("prefix", ""));
 
         economy = new EconomyService(this);
+        economyLog = new de.kuby.kubyplugins.service.EconomyLog(this);
+        alerts = new de.kuby.kubyplugins.service.AlertService(this);
         homes = new HomeService(this);
         daily = new DailyService(this);
         teams = new TeamService(this);
@@ -321,6 +323,7 @@ public final class KubyPlugins extends JavaPlugin {
         // Einführung für neue Spieler (erster Join: Kamerafahrt und Tour, je Modus Aufgaben mit Belohnung)
         intro = new de.kuby.kubyplugins.intro.IntroService(this);
         intro.samples(this::registerSelfTestCanvas);
+        de.kuby.kubyplugins.staff.KadminScreens.samples(this::registerSelfTestCanvas);
         {
             PluginCommand ic = getCommand("einfuehrung");
             if (ic != null) ic.setExecutor((sender, c, label, args) -> {
@@ -548,6 +551,7 @@ public final class KubyPlugins extends JavaPlugin {
         if (hats != null) hats.removeAll();
         if (crates != null) crates.removeLabels();
         saveData();
+        if (economyLog != null) economyLog.shutdown();
     }
 
     /** Alles speichern (Admin-Knopf „Speichern“). */
@@ -610,6 +614,12 @@ public final class KubyPlugins extends JavaPlugin {
         if (staff != null) staff.save();
     }
 
+    private de.kuby.kubyplugins.service.EconomyLog economyLog;
+    private de.kuby.kubyplugins.service.AlertService alerts;
+    /** Wirtschafts-Protokoll (Gutschriften, Abbuchungen, Überweisungen). */
+    public de.kuby.kubyplugins.service.EconomyLog economyLog() { return economyLog; }
+    /** Team-Warnungen bei Auffälligkeiten. */
+    public de.kuby.kubyplugins.service.AlertService alerts() { return alerts; }
     private de.kuby.kubyplugins.service.BackupService backups;
     private de.kuby.kubyplugins.service.AltService alts;
     public de.kuby.kubyplugins.service.BackupService backups() { return backups; }

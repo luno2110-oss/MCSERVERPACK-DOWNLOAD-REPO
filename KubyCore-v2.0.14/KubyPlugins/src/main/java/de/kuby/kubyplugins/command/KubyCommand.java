@@ -127,14 +127,30 @@ public final class KubyCommand implements CommandExecutor, TabCompleter {
     }
 
     private void transfer(Player p, Player target, long amount) {
-        if (!plugin.economy().withdraw(p.getUniqueId(), amount)) {
+        boolean[] ok = {false};
+        de.kuby.kubyplugins.service.EconomyLog.with("Überweisung an " + target.getName(),
+                () -> ok[0] = plugin.economy().withdraw(p.getUniqueId(), amount));
+        if (!ok[0]) {
             Msg.send(p, "<red>Nicht genug$ oder ungültiger Betrag.");
             return;
         }
         // Geld bleibt im Modus des Senders: Wer gerade woanders spielt, bekommt es in diesem Modus gutgeschrieben.
         String mode = plugin.modes().modeOf(p.getUniqueId());
         boolean sameMode = mode.equals(plugin.modes().modeOf(target.getUniqueId()));
-        plugin.modes().depositIn(target.getUniqueId(), mode, amount);
+        de.kuby.kubyplugins.service.EconomyLog.with("Überweisung von " + p.getName(),
+                () -> plugin.modes().depositIn(target.getUniqueId(), mode, amount));
+        // Team-Warnungen: große Überweisung, Geld zwischen Zweitkonten
+        if (plugin.alerts() != null) {
+            long big = plugin.getConfig().getLong("warnungen.ueberweisung-ab", 100_000);
+            boolean alt = plugin.alts() != null && plugin.alts().linked(p.getUniqueId(), target.getUniqueId());
+            if (alt && amount >= plugin.getConfig().getLong("warnungen.zweitkonto-ab", 1_000)) {
+                plugin.alerts().raise(de.kuby.kubyplugins.service.AlertService.Kind.ZWEITKONTO, p.getUniqueId(), p.getName()
+                        + " überwies " + Msg.coins(amount) + " $ an " + target.getName() + " (gleiche IP)");
+            } else if (big > 0 && amount >= big) {
+                plugin.alerts().raise(de.kuby.kubyplugins.service.AlertService.Kind.UEBERWEISUNG, p.getUniqueId(), p.getName()
+                        + " überwies " + Msg.coins(amount) + " $ an " + target.getName());
+            }
+        }
         Msg.send(p, "<gray>Du hast <gold>" + Msg.coins(amount) + "$ <gray>an <white>" + target.getName() + " <gray>gesendet.");
         Msg.send(target, "<gray>Du hast <gold>" + Msg.coins(amount) + "$ <gray>von <white>" + p.getName() + " <gray>erhalten"
                 + (sameMode ? "." : " <dark_gray>(auf dein " + de.kuby.kubyplugins.service.ModeService.label(mode) + "-Konto)."));

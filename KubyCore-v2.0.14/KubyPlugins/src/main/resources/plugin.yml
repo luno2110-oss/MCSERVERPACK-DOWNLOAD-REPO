@@ -242,6 +242,9 @@ commands:
     aliases: [schluessel]
 
 permissions:
+  kuby.alerts.see:
+    description: "Bekommt Team-Warnungen (große Gutschriften, schnelles Geld, Überweisungen, Zweitkonten)"
+    default: op
   kuby.alts.see:
     description: "Sieht beim Login Hinweise auf Zweitkonten (gleiche IP)"
     default: op

@@ -607,9 +607,41 @@ public final class StaffMenus implements CommandExecutor, TabCompleter, Listener
         UiDialog.show(p, StaffScreen.kadmin(v, nav), StaffScreen.HEIGHT);
     }
 
+    private KadminScreens screens;
+
+    /** Kadmin-Seiten als Dialog (statt der alten Truhen). */
+    public KadminScreens screens() {
+        if (screens == null) screens = new KadminScreens(plugin);
+        return screens;
+    }
+
+    /** Öffentlich für /kadmin <bereich>. */
+    public void kadminOpen(Player p, String key) {
+        kadminAction(p, key);
+    }
+
     private void kadminAction(Player p, String key) {
         if (!p.hasPermission("kuby.admin")) return;
+        if (!pack(p)) {
+            // ohne Grafik-Pack weiter die alten Truhen
+            switch (key) {
+                case "einstellungen" -> new de.kuby.kubyplugins.gui.SettingsMenu(plugin, -1).open(p);
+                case "shop" -> new de.kuby.kubyplugins.gui.ShopEditorMenu(plugin).open(p);
+                case "preise" -> new de.kuby.kubyplugins.gui.WorthEditorMenu(plugin).open(p);
+                case "kits" -> new de.kuby.kubyplugins.gui.KitAdminMenu(plugin).open(p);
+                case "battlepass" -> new de.kuby.kubyplugins.gui.BattlepassEditorMenu(plugin, 0).open(p);
+                case "markt" -> new de.kuby.kubyplugins.gui.AdminMarketMenu(plugin).open(p);
+                case "teams" -> new de.kuby.kubyplugins.gui.AdminTeamsMenu(plugin).open(p);
+                case "config" -> new de.kuby.kubyplugins.gui.ConfigEditorMenu(plugin, "", 0).open(p);
+                default -> { }
+            }
+            if (List.of("einstellungen", "shop", "preise", "kits", "battlepass", "markt", "teams", "config").contains(key)) return;
+        }
         switch (key) {
+            case "wirtschaft" -> screens().economy(p, 0);
+            case "warnungen" -> screens().alerts(p, 0, true);
+            case "backups" -> screens().backups(p, 0);
+            case "zweitkonten" -> screens().alts(p, null);
             case "truhe" -> new de.kuby.kubyplugins.gui.AdminMenu(plugin).open(p);
             case "speichern" -> {
                 plugin.saveAll();
@@ -652,16 +684,16 @@ public final class StaffMenus implements CommandExecutor, TabCompleter, Listener
                     kadmin(pl);
                 }, this::kadmin);
             }
-            case "einstellungen" -> new de.kuby.kubyplugins.gui.SettingsMenu(plugin, -1).open(p);
-            case "shop" -> new de.kuby.kubyplugins.gui.ShopEditorMenu(plugin).open(p);
-            case "preise" -> new de.kuby.kubyplugins.gui.WorthEditorMenu(plugin).open(p);
-            case "kits" -> new de.kuby.kubyplugins.gui.ConfigEditorMenu(plugin, "kits", 0).open(p);
-            case "battlepass" -> new de.kuby.kubyplugins.gui.BattlepassEditorMenu(plugin, 0).open(p);
+            case "einstellungen" -> screens().settings(p, -1);
+            case "shop" -> screens().shop(p);
+            case "preise" -> screens().worth(p, 0);
+            case "kits" -> screens().kits(p);
+            case "battlepass" -> screens().battlepass(p);
             case "casino" -> de.kuby.kubyplugins.service.CasinoAdmin.open(plugin, p);
-            case "markt" -> new de.kuby.kubyplugins.gui.AdminMarketMenu(plugin).open(p);
+            case "markt" -> screens().market(p);
             case "spieler" -> players(p, 0);
-            case "teams" -> new de.kuby.kubyplugins.gui.AdminTeamsMenu(plugin).open(p);
-            case "config" -> new de.kuby.kubyplugins.gui.ConfigEditorMenu(plugin, "", 0).open(p);
+            case "teams" -> screens().teams(p);
+            case "config" -> screens().config(p, "", 0);
             default -> {
                 if (key.startsWith("addon")) {
                     int i = num(key.substring(5), -1);

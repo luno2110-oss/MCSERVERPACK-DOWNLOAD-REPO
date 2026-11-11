@@ -43,6 +43,11 @@ public final class SettingsMenu extends GuiMenu {
         return new Setting(path, label, Kind.TEXT, 0, 0, 0, hint);
     }
 
+    /** Alle Kategorien (für den Kadmin-Dialog). */
+    public static List<Category> categories() {
+        return CATEGORIES;
+    }
+
     static final List<Category> CATEGORIES = List.of(
             new Category("Wirtschaft", Material.GOLD_INGOT, List.of(
                     d("sellmulti.step", "Verkaufs-Stufe: Zuschlag", 0, 1, 0.01, "Zuschlag pro Stufe"),

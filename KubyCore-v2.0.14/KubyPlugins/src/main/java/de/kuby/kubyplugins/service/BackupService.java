@@ -120,6 +120,7 @@ public final class BackupService {
             } catch (IOException ex) {
                 msg = "Backup fehlgeschlagen: " + ex.getMessage();
                 plugin.getLogger().warning("[Backup] " + msg);
+                if (plugin.alerts() != null) plugin.alerts().raise(AlertService.Kind.BACKUP, null, msg);
                 target.delete();
             } finally {
                 running = false;

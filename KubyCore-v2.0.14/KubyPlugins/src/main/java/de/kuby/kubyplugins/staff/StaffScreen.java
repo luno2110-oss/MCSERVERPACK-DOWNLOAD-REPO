@@ -804,6 +804,11 @@ public final class StaffScreen {
         l.add(new Tile(i, Material.ENCHANTED_BOOK, "Battlepass", "Free und Premium", "battlepass"));
         l.add(new Tile(i, Material.GOLD_BLOCK, "Casino", "Tische, Limits, Log", "casino"));
         l.add(new Tile(i, Material.CHEST, "Auktionshaus", "Angebote prüfen", "markt"));
+        String sec = "Sicherheit";
+        l.add(new Tile(sec, Material.GOLD_INGOT, "Wirtschaft", "Buchungen, Suche", "wirtschaft"));
+        l.add(new Tile(sec, Material.BELL, "Warnungen", "Auffälliges", "warnungen"));
+        l.add(new Tile(sec, Material.CHEST_MINECART, "Backups", "Sichern, zurück", "backups"));
+        l.add(new Tile(sec, Material.NAME_TAG, "Zweitkonten", "Gleiche IP", "zweitkonten"));
         String v = "Verwaltung";
         l.add(new Tile(v, Material.PLAYER_HEAD, "Spieler", "Akten, Aktionen", "spieler"));
         l.add(new Tile(v, Material.WHITE_BANNER, "Teams", "Teams verwalten", "teams"));

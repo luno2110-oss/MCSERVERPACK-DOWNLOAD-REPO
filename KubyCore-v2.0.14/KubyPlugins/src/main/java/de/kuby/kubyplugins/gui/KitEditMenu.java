@@ -82,14 +82,14 @@ public final class KitEditMenu implements InventoryHolder {
         Sfx.play(plugin, p, Sfx.Kind.OPEN);
     }
 
-    static String minutes(long m) {
+    public static String minutes(long m) {
         if (m <= 0) return "keine";
         if (m % 1440 == 0) return (m / 1440) + (m == 1440 ? " Tag" : " Tage");
         if (m >= 60) return (m / 60) + " Std." + (m % 60 > 0 ? " " + (m % 60) + " Min." : "");
         return m + " Min.";
     }
 
-    static String modesText(Set<String> modes) {
+    public static String modesText(Set<String> modes) {
         if (modes.isEmpty()) return "alle";
         List<String> out = new ArrayList<>();
         for (String m : modes) out.add(switch (m) {
