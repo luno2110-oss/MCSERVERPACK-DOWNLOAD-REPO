@@ -541,6 +541,25 @@ public final class KubySurvival extends JavaPlugin {
         });
 
         command("marry", marryCommand);
+        // vor jedem Backup (und bei „Speichern“ im Admin-Menü) mitspeichern, ohne etwas abzubauen
+        core.registerSaver(() -> {
+            if (angeln != null) angeln.save();
+            if (claims != null) claims.save();
+            if (jobs != null) jobs.save();
+            for (QuestService q : allQuests()) q.save();
+            if (sideQuests != null) sideQuests.save();
+            if (events != null) events.save();
+            if (farm != null) farm.save();
+            if (warps != null) warps.save();
+            if (chestShops != null) chestShops.save();
+            if (tokens != null) tokens.save();
+            if (survivalStats != null) survivalStats.save();
+            if (backpacks != null) backpacks.save();
+            if (intro != null) intro.save();
+            if (marry != null) marry.save();
+            if (bank != null) bank.save();
+            if (graves != null) graves.save();
+        });
         command("bank", marryCommand);
         for (String name : new String[]{"marry", "bank"}) {
             PluginCommand pc = getCommand(name);

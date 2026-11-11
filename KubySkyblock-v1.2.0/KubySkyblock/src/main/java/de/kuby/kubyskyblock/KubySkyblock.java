@@ -263,6 +263,17 @@ public final class KubySkyblock extends JavaPlugin {
             insel.setTabCompleter(ic);
         }
         getServer().getScheduler().runTaskTimer(this, islands::saveIfDirty, 6000L, 6000L);
+        // vor jedem Backup mitspeichern
+        core.registerSaver(() -> {
+            if (streaks != null) streaks.save();
+            if (islands != null) islands.save();
+            if (biomes != null) biomes.save();
+            if (rewards != null) rewards.save();
+            if (loot != null) loot.save();
+            if (progress != null) progress.save();
+            if (generators != null) generators.save();
+            if (oneblock != null) oneblock.save();
+        });
         // Checkliste und Serien auch zwischendurch sichern (vorher nur beim Abschalten, bei einem Absturz war alles weg)
         getServer().getScheduler().runTaskTimer(this, () -> {
             if (progress != null) progress.save();

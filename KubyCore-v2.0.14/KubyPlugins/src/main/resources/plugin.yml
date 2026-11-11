@@ -242,6 +242,9 @@ commands:
     aliases: [schluessel]
 
 permissions:
+  kuby.alts.see:
+    description: "Sieht beim Login Hinweise auf Zweitkonten (gleiche IP)"
+    default: op
   kuby.staff:
     description: "Team-Bereich (/tb): Kanäle, Meldungen, Spieler-Akten (Rolle Team)"
     default: op

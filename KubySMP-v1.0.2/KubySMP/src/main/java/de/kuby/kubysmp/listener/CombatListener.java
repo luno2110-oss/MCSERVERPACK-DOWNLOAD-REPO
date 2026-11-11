@@ -88,6 +88,11 @@ public final class CombatListener implements Listener {
             Msg.send(killer, "<gray>Keine Wertung: Du hast <white>" + victimName + " <gray>gerade erst erledigt.");
         }
 
+        // Kopfgeld nicht über ein Zweitkonto (gleiche IP) einlösen: es bleibt stehen
+        if (plugin.alts() != null && plugin.alts().blocks(killer.getUniqueId(), victimId)) {
+            Sfx.play(plugin, killer, Sfx.Kind.KILL);
+            return;
+        }
         long bounty = KubySMP.get().bounties().claim(victimId);
         if (bounty > 0) {
             plugin.modes().depositIn(killer.getUniqueId(), ModeService.SMP, bounty);

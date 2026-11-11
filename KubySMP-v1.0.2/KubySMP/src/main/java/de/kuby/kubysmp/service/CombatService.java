@@ -56,6 +56,8 @@ public final class CombatService {
      * pvp.kill-sperre-minuten (Standard 10) eine Wertung. Ruft man es auf, wird der Kill gemerkt.
      */
     public boolean countsKill(UUID killer, UUID victim) {
+        // Zweitkonten (gleiche IP) bringen keine Wertung
+        if (plugin.alts() != null && plugin.alts().blocks(killer, victim)) return false;
         long minutes = plugin.getConfig().getLong("pvp.kill-sperre-minuten", 10);
         if (minutes <= 0) return true;
         String k = killer + ";" + victim;

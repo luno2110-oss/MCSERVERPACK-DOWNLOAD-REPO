@@ -189,6 +189,7 @@ public final class RaidInsuranceService {
         if (breaker == null) reason = "Ursache unbekannt";
         else if (breaker.getUniqueId().equals(pol.owner())) reason = "selbst zerstört";
         else if (plugin.friends().areFriends(breaker.getUniqueId(), pol.owner())) reason = "von einem Freund zerstört";
+        else if (plugin.alts() != null && plugin.alts().blocks(breaker.getUniqueId(), pol.owner())) reason = "vom eigenen Zweitkonto (gleiche IP)";
         else {
             var tb = plugin.teams().of(breaker.getUniqueId());
             var to = plugin.teams().of(pol.owner());

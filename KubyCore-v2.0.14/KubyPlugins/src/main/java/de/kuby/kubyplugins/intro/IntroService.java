@@ -276,7 +276,11 @@ public final class IntroService implements Listener {
         r.hub = St.FERTIG;
         hubStep.remove(p.getUniqueId());
         long jewels = plugin.getConfig().getLong("einfuehrung.juwelen", 25);
-        if (!r.hubPaid && jewels > 0) {
+        if (!r.hubPaid && jewels > 0 && plugin.alts() != null && plugin.alts().hasOther(p.getUniqueId())) {
+            // Willkommens-Juwelen nur für das erste Konto einer IP (sonst Juwelen sammeln mit Zweitkonten)
+            r.hubPaid = true;
+            Msg.send(p, "<gray>Das Willkommensgeschenk gibt es einmal je Anschluss, es ging schon an ein anderes Konto.");
+        } else if (!r.hubPaid && jewels > 0) {
             r.hubPaid = true;
             plugin.jewels().add(p.getUniqueId(), jewels);
             Msg.send(p, "<green>Willkommensgeschenk: <#5FE3A0>+" + jewels + " Juwelen<green>!");

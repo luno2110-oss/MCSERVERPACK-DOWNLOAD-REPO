@@ -541,6 +541,15 @@ final class SelfTest {
             fails.add("Rematch-Handshake: " + t);
         }
 
+        // Backup: Packen und Entpacken einmal echt ausprobieren
+        try {
+            String err = de.kuby.kubyplugins.service.BackupService.selfCheck(plugin);
+            if (err != null) fails.add("Backup: " + err);
+            else ok[0]++;
+        } catch (Throwable t) {
+            fails.add("Backup: " + t);
+        }
+
         // Layout: Text außerhalb des Fensters, über einem Kastenrand oder über anderem Text
         java.util.LinkedHashSet<String> uniq = new java.util.LinkedHashSet<>(layout);
         out.sendMessage("SELFTEST LAYOUT " + uniq.size() + " Auffälligkeiten");

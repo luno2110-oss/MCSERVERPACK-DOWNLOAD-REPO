@@ -513,6 +513,20 @@ jobs:
     - "SHULKER_SHELL;2;12"
     - "ENCHANTED_GOLDEN_APPLE;1;25"
 
+# Backups der Spielerdaten (alle Kuby-Plugins + playerdata/stats/advancements der Hauptwelt) als ZIP in backups/.
+# Welten sichert der Hoster. Befehle: /kp backup [jetzt|liste|zurueck <Nr>|abbrechen]. Wiederherstellen beim Neustart.
+backup:
+  aktiv: true
+  intervall-minuten: 60
+  behalten: 48                     # die letzten 48 Backups ...
+  tage: 14                         # ... und dazu eines je Tag für 14 Tage
+
+# Zweitkonto-Erkennung über die IP (gespeichert nur als Hash). /kp alts <Spieler>, /kp alts erlauben <A> <B> (Geschwister).
+alts:
+  tage: 30                         # gleiche IP in den letzten 30 Tagen = verknüpft
+  sperren: true                    # kein Kopfgeld, keine Trophäen/Kill-Wertung, keine Versicherung zwischen verknüpften Konten,
+                                   # Willkommens-Juwelen nur fürs erste Konto einer IP; Team-Hinweis beim Login (kuby.alts.see)
+
 economy:
   log-ab: 100000000                # Einzel-Gutschriften ab diesem Betrag stehen im Server-Log (0 = aus)
   tax-percent: 9

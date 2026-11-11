@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.47** (ungetestet, nicht kompiliert)
+Stand: **v1.48** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -555,6 +555,24 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - große Beträge an engen Stellen jetzt kurz („1,2 Mio.“, „3 Mrd.“)
   - Kern: Info-Leiste (Vorschau der Job-Leiste ragte aus dem Fenster), Kits („alle … Std.“ über „Vorschau“), Bestenliste (Untertitel), Investments (Name über Preis), Quiz-Abstimmung (Zeile zu lang)
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
+
+## Sicherheit: Backups und Zweitkonto-Erkennung (v1.48, Wunsch des Besitzers, Test im Spiel offen)
+- [x] Automatische Backups: alle 60 Minuten (`backup.intervall-minuten`, erstes 10 Min. nach dem Start) ein ZIP in `plugins/KubyPlugins/backups/`
+  - Inhalt: Daten aller Kuby-Plugins und die Spielerdaten der Hauptwelt (playerdata, stats, advancements, also auch Inventar und Position im aktuellen Modus). Welten sind zu groß, die sichert der Hoster
+  - Vorher wird alles gespeichert, auch die Addons (SMP, Survival, Skyblock melden ihr Speichern beim Kern an). Gepackt wird im Hintergrund, kein Lag
+  - Aufbewahrung: die letzten 48 und dazu eines je Tag für 14 Tage (`backup.behalten`, `backup.tage`)
+  - `/kp backup` (Stand), `/kp backup jetzt [Grund]`, `/kp backup liste` (mit Klick auf [zurück])
+  - `/kp backup zurueck <Nr|Name>` mit Bestätigung: Wiederherstellen beim nächsten Neustart, bevor ein Plugin Daten lädt. Der aktuelle Stand wird vorher selbst gesichert („vorwiederherstellung“). `/kp backup abbrechen`
+  - Der Server-Test probiert Packen und Entpacken bei jedem Push echt aus
+  - Nebenbei behoben: „Speichern“ im Admin-Menü baute Hüte und Kisten-Schilder ab (das passiert jetzt nur noch beim Abschalten)
+- [x] Zweitkonto-Erkennung: Konten mit derselben IP in den letzten 30 Tagen gelten als verknüpft (`alts.tage`). Gespeichert wird nur ein Hash der IP mit eigenem Geheimwert, keine IP (`zweitkonten.yml`)
+  - Das Team (`kuby.alts.see` oder Admin) sieht beim Login „⚠ Zweitkonto? X teilt die IP mit A, B“; besonders deutlich, wenn eins davon gebannt ist
+  - Sperren zwischen verknüpften Konten (`alts.sperren`):
+    - kein Kopfgeld (es bleibt stehen)
+    - keine Trophäen- und Kill-Wertung
+    - keine Raid-Versicherung
+    - Willkommens-Juwelen nur fürs erste Konto einer IP
+  - `/kp alts <Spieler>` zeigt verknüpfte Konten (zuletzt gesehen, gebannt, freigegeben). `/kp alts erlauben <A> <B>` für Geschwister am selben Anschluss, `verbieten` macht es rückgängig
 
 ## Modus wechseln per Befehl (v1.47, Wunsch des Besitzers, Test im Spiel offen)
 - [x] `/modus` (auch `/mode`, `/modi`, `/spielmodus`, `/wechseln`, `/server`) öffnet die Modus-Wahl wie der Kompass

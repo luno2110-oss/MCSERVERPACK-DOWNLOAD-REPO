@@ -91,6 +91,11 @@ public final class KubySMP extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new CombatListener(core), this);
         getServer().getPluginManager().registerEvents(new InsuranceListener(core), this);
         getServer().getPluginManager().registerEvents(new de.kuby.kubysmp.listener.DuelGuard(core), this);
+        // vor jedem Backup mitspeichern
+        core.registerSaver(() -> {
+            if (bounties != null) bounties.save();
+            if (insurance != null) insurance.save();
+        });
         // nach einem Neuladen: Sachen aus unterbrochenen Duellen zurück, Kit-Items weg
         for (org.bukkit.entity.Player online : getServer().getOnlinePlayers()) duels.onJoin(online);
 

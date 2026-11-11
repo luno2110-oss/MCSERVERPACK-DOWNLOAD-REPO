@@ -161,6 +161,8 @@ public final class KubyPlugins extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        // vorgemerktes Backup einspielen, bevor irgendein Dienst Daten lädt (/kp backup zurueck)
+        de.kuby.kubyplugins.service.BackupService.applyPending(this);
         saveDefaultConfig();
         Msg.setPrefix(getConfig().getString("prefix", ""));
 
@@ -440,6 +442,11 @@ public final class KubyPlugins extends JavaPlugin {
         setAll(new HelpCommand(this), "befehle", "menu");
         setAll(new ExtraCommand(this), "dailypot", "trade", "tags", "rtpqueue", "meta", "booster", "xpshop", "battlepass", "turnier", "verify", "versichern", "enderchest", "kristaltrade", "investments", "quizvote", "totenkiste", "kits", "hub", "tpa", "tpahere", "tpaccept", "tpadeny", "spielzeit", "playtime");
         setAll(new KpCommand(this), "kp");
+        backups = new de.kuby.kubyplugins.service.BackupService(this);
+        alts = new de.kuby.kubyplugins.service.AltService(this);
+        getServer().getPluginManager().registerEvents(alts, this);
+        registerKpSub("backup", (pl, args) -> new de.kuby.kubyplugins.command.SafetyCommands(this).backup(pl, args));
+        registerKpSub("alts", (pl, args) -> new de.kuby.kubyplugins.command.SafetyCommands(this).alts(pl, args));
         {
             var msc = new de.kuby.kubyplugins.command.ModeSwitchCommand(this);
             for (String name : new String[]{"modus", "smp", "survival"}) {
@@ -538,10 +545,37 @@ public final class KubyPlugins extends JavaPlugin {
         if (cookies != null) cookies.save();
         if (intro != null) intro.save();
         poker.shutdown();
-        saveAll();
+        if (hats != null) hats.removeAll();
+        if (crates != null) crates.removeLabels();
+        saveData();
     }
 
+    /** Alles speichern (Admin-Knopf „Speichern“). */
     public void saveAll() {
+        saveData();
+    }
+
+    private final java.util.List<Runnable> savers = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+    /** Addons melden hier ihr Speichern an (läuft vor jedem Backup und bei „Speichern“). */
+    public void registerSaver(Runnable r) {
+        savers.add(r);
+    }
+
+    /** Alle Daten speichern, ohne etwas abzubauen (früher entfernte saveAll auch Hüte und Kisten-Schilder). */
+    public void saveData() {
+        for (Runnable r : savers) {
+            try {
+                r.run();
+            } catch (RuntimeException ex) {
+                getLogger().warning("Speichern (Addon): " + ex);
+            }
+        }
+        if (alts != null) alts.save();
+        saveCoreData();
+    }
+
+    private void saveCoreData() {
         economy.save();
         homes.save();
         daily.save();
@@ -559,8 +593,6 @@ public final class KubyPlugins extends JavaPlugin {
         totenkisten.saveNow();
         modes.save();
         playtime.save();
-        if (hats != null) hats.removeAll();
-        if (crates != null) crates.removeLabels();
         regions.save();
         casino.save();
         casinoLog.save();
@@ -578,6 +610,11 @@ public final class KubyPlugins extends JavaPlugin {
         if (staff != null) staff.save();
     }
 
+    private de.kuby.kubyplugins.service.BackupService backups;
+    private de.kuby.kubyplugins.service.AltService alts;
+    public de.kuby.kubyplugins.service.BackupService backups() { return backups; }
+    /** Zweitkonto-Erkennung (gleiche IP). */
+    public de.kuby.kubyplugins.service.AltService alts() { return alts; }
     public EconomyService economy() { return economy; }
     public HomeService homes() { return homes; }
     public DailyService daily() { return daily; }
