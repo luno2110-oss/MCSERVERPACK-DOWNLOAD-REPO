@@ -26,6 +26,8 @@ public final class HelpCommand implements CommandExecutor {
 
     private static final List<Page> PAGES = List.of(
             new Page("Start", List.of(
+                    new Entry("/modus", "Modus wählen oder /modus smp|survival|skyblock", null),
+                    new Entry("/smp · /survival · /skyblock", "Direkt in den Modus wechseln", null),
                     new Entry("/rtp", "Zufalls-Teleport in die Wildnis (3 s Wartezeit)", null),
                     new Entry("/spawn", "Zurück zum Spawn", null),
                     new Entry("/sethome <Name>", "Home auf deiner Position setzen", null),
@@ -104,7 +106,7 @@ public final class HelpCommand implements CommandExecutor {
                     new Entry("/quizvote", "Quiz-Kategorie abstimmen", null),
                     new Entry("/totenkiste", "Totenkiste öffnen", null),
                     new Entry("/kits", "Kits abholen", null),
-                    new Entry("/hub", "Zur Lobby wechseln", null),
+                    new Entry("/hub", "Zur Lobby wechseln (auch /lobby)", null),
                     new Entry("/tpa <Spieler>", "Teleport-Anfrage senden", null),
                     new Entry("/tpaccept", "Teleport-Anfrage annehmen", null),
                     new Entry("/tpadeny", "Teleport-Anfrage ablehnen", null),

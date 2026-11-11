@@ -440,6 +440,16 @@ public final class KubyPlugins extends JavaPlugin {
         setAll(new HelpCommand(this), "befehle", "menu");
         setAll(new ExtraCommand(this), "dailypot", "trade", "tags", "rtpqueue", "meta", "booster", "xpshop", "battlepass", "turnier", "verify", "versichern", "enderchest", "kristaltrade", "investments", "quizvote", "totenkiste", "kits", "hub", "tpa", "tpahere", "tpaccept", "tpadeny", "spielzeit", "playtime");
         setAll(new KpCommand(this), "kp");
+        {
+            var msc = new de.kuby.kubyplugins.command.ModeSwitchCommand(this);
+            for (String name : new String[]{"modus", "smp", "survival"}) {
+                PluginCommand pc = getCommand(name);
+                if (pc != null) {
+                    pc.setExecutor(msc);
+                    pc.setTabCompleter(msc);
+                }
+            }
+        }
         getServer().getPluginManager().registerEvents(new TradeListener(this), this);
         getServer().getPluginManager().registerEvents(new QuizListener(this), this);
         getServer().getPluginManager().registerEvents(new de.kuby.kubyplugins.listener.TeamStorageListener(this), this);

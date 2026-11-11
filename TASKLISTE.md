@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.46** (ungetestet, nicht kompiliert)
+Stand: **v1.47** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -555,6 +555,13 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - große Beträge an engen Stellen jetzt kurz („1,2 Mio.“, „3 Mrd.“)
   - Kern: Info-Leiste (Vorschau der Job-Leiste ragte aus dem Fenster), Kits („alle … Std.“ über „Vorschau“), Bestenliste (Untertitel), Investments (Name über Preis), Quiz-Abstimmung (Zeile zu lang)
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
+
+## Modus wechseln per Befehl (v1.47, Wunsch des Besitzers, Test im Spiel offen)
+- [x] `/modus` (auch `/mode`, `/modi`, `/spielmodus`, `/wechseln`, `/server`) öffnet die Modus-Wahl wie der Kompass
+- [x] `/modus smp|survival|skyblock|hub` wechselt direkt (Kurzformen: sv, sb, lobby; Tab-Vervollständigung)
+- [x] Kurzbefehle: `/smp`, `/survival`, `/lobby` (= `/hub`). `/skyblock` wechselt außerhalb von Skyblock in den Modus und öffnet in Skyblock wie bisher Checkliste und Erfolge
+- [x] Gleiche Sperren wie beim Kompass (Kampf, Duell, Handel …); wer schon im Modus ist, bekommt den Hinweis auf `/spawn`
+- [x] Steht in `/befehle` auf der Seite „Start“
 
 ## Hub: Lobby-Items geprüft (v1.46, Wunsch des Besitzers, Test im Spiel offen)
 - [x] Kompass (Modus-Wahl):

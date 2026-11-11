@@ -209,6 +209,14 @@ commands:
     description: "Kits abholen und Vorschau ansehen"
   hub:
     description: "Zur Lobby wechseln"
+    aliases: [lobby]
+  modus:
+    description: "Modus wechseln: ohne Angabe die Auswahl, sonst /modus smp|survival|skyblock|hub"
+    aliases: [mode, modi, spielmodus, wechseln, server]
+  smp:
+    description: "In den SMP wechseln"
+  survival:
+    description: "In Survival wechseln"
   kp:
     description: "Operative Befehle für Admins"
     permission: kuby.admin
