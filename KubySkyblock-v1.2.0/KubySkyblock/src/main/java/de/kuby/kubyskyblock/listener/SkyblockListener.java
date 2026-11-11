@@ -92,7 +92,8 @@ public final class SkyblockListener implements Listener {
         // One-Block: Loot geben, neuer zufälliger Block
         if (addon.oneblock().isOneBlock(b)) {
             e.setCancelled(true);
-            addon.oneblock().harvest(p, b);
+            // Combo und Glücksfunde auch am One-Block (nur, wenn wirklich abgebaut wurde)
+            if (addon.oneblock().harvest(p, b)) addon.streaks().reward(p, b);
             return;
         }
         // Loot-Kisten sind geschützt
@@ -110,7 +111,7 @@ public final class SkyblockListener implements Listener {
         // Belohnung und Serie nur für Blöcke, die kein Spieler gesetzt hat (früher: Erde setzen und abbauen = Geld)
         if (countsForQuests(b)) {
             core.questProgress(p, "abbau", b.getType(), 1);
-            addon.streaks().reward(p);
+            addon.streaks().reward(p, b);
         }
         addon.progress().recordBlock(p);
     }

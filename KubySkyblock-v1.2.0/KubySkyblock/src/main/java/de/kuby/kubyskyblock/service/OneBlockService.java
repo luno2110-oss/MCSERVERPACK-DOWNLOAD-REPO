@@ -587,12 +587,12 @@ public final class OneBlockService {
     // =================================================================================================================
 
     /** Abbau: Loot geben, Geld und XP, Block-XP fürs Team, dann (nach dem Cooldown) ein neuer zufälliger Block. */
-    public void harvest(Player p, Block b) {
+    public boolean harvest(Player p, Block b) {
         Platform pf = at(b);
-        if (pf == null || pf.regenerating) return;
+        if (pf == null || pf.regenerating) return false;
         if (!mayMine(p, pf)) {
             p.sendActionBar(Msg.parse("<red>" + pf.name() + " gehört Team " + Msg.escape(pf.teamName) + ". <gray>/oneblock"));
-            return;
+            return false;
         }
         TeamService.Team t = pf.claimed() ? teamOf(pf) : null;
         Progress pr = t == null ? null : progress(t);
@@ -629,7 +629,7 @@ public final class OneBlockService {
         long ticks = Math.max(0, Math.round(cooldown(pr == null ? 0 : pr.level(Upgrade.COOLDOWN)) * 20));
         if (ticks <= 1) {
             b.setType(randomBlock(luck), false);
-            return;
+            return true;
         }
         pf.regenerating = true;
         b.setType(Material.BEDROCK, false);
@@ -639,6 +639,7 @@ public final class OneBlockService {
             nb.setType(randomBlock(luck), false);
             nb.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, nb.getLocation().add(0.5, 0.8, 0.5), 6, 0.35, 0.3, 0.35, 0);
         }, ticks);
+        return true;
     }
 
     /** Zufälliger Block aus der gewichteten Liste; Glück macht seltene Blöcke häufiger (Gewicht hoch kleiner 1). */

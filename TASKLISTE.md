@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.43** (ungetestet, nicht kompiliert)
+Stand: **v1.44** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -555,6 +555,19 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - große Beträge an engen Stellen jetzt kurz („1,2 Mio.“, „3 Mrd.“)
   - Kern: Info-Leiste (Vorschau der Job-Leiste ragte aus dem Fenster), Kits („alle … Std.“ über „Vorschau“), Bestenliste (Untertitel), Investments (Name über Preis), Quiz-Abstimmung (Zeile zu lang)
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
+
+## Skyblock: Belohnungsschleifen (v1.44, Wunsch des Besitzers: „mehr und schnellere Belohnungen wie ein Roblox-Spiel“, Test im Spiel offen)
+- [x] Combo statt Abend-Serie, jetzt den ganzen Tag: jeder natürlich abgebaute Block (auch am One-Block) zahlt Geld und XP, mit jedem Block +0,1 bis x10. Prime Time 18 bis 24 Uhr: +0,2 je Block, bis x15. Jede volle Stunde beginnt eine neue Combo (stündliche Grenze). 60 Sekunden Pause, dann reißt sie. Anzeige über der Hotbar: COMBO 57 · x6,6 mit Balken bis zum nächsten Meilenstein und dem Ertrag des Blocks
+  - Meilenstein alle 50 Blöcke: Bonus (Blockgeld x Combo x 25), steigender Klang, Titel „COMBO 150!“, Feuerwerk. Jeder 5. Meilenstein bringt einen sicheren Glücksfund (mindestens selten). Bei der Grenze einmal „MAX COMBO“
+  - Selbst gesetzte Blöcke zählen weiter nicht (kein Erde-setzen-und-abbauen)
+- [x] Glücksfunde: 1,5 % je Block, plus 0,2 % je Combo-Stufe (bei x10 3,3 %). Vier Seltenheiten mit eigenem Klang, Partikeln und Titel:
+  - Gewöhnlich: Geld
+  - Selten: mehr Geld und XP
+  - Episch: Generator-Booster x2 für 10 Min., Schlüssel „Selten“ oder viel Geld
+  - Legendär: viel Geld, 3 Juwelen und Schlüssel „Episch“; der ganze Server sieht die Meldung
+  - Beträge wachsen mit dem Insel-Level
+- [x] Belohnungskiste: alle 10 aktiven Minuten in Skyblock (AFK zählt nicht). Jede Kiste am selben Tag ist 25 % größer als die vorige (bis zur 12.). Jede 3. bringt einen Glücksfund, jede 6. einen Vote-Schlüssel. Eine Minute vorher kommt ein Hinweis, die nächste Kiste wird angekündigt
+- [x] Guide-Seite „Belohnungen“ für Skyblock (deutsch und englisch). Alle Werte stehen unter `belohnungen.*` in der Skyblock-config
 
 ## Skyblock (neuer Modus)
 - [x] Etappe 1 Grundgerüst: Modus Skyblock im Kern, Modus-Auswahl als GUI am Kompass, Addon KubySkyblock (Insel pro Spieler beim Betreten, 50.000er Weltgrenze, Multiplikator-Serie 18-24 Uhr)

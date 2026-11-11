@@ -1,9 +1,43 @@
 # Stand der config (neue Abschnitte werden beim Start in ältere configs übernommen)
 config-stand: 8
 reward:
-  money: 2
+  money: 2                      # Geld je natürlich abgebautem Block (mal Combo)
   xp: 1
-  serie-max: 3.0                # Abbau-Serie 18-24 Uhr: höchstens so viel mal (früher ohne Grenze); nur nicht gesetzte Blöcke
+# Belohnungsschleifen (schnelle, häufige Belohnungen): Combo, Glücksfunde, Belohnungskiste. Geld immer aufs Skyblock-Konto.
+belohnungen:
+  level-faktor: 0.05            # Glücksfunde und Kisten wachsen mit dem Insel-Level (+5 % je Level, bis Level 200)
+  combo:
+    schritt: 0.1                # +0,1 je Block
+    max: 10.0                   # höchstens x10 ...
+    schritt-prime: 0.2          # Prime Time 18-24 Uhr: doppelt so schnell ...
+    max-prime: 15.0             # ... und bis x15
+    pause-sekunden: 60          # länger nichts abgebaut = Combo reißt (0 = nie)
+    meilenstein: 50             # alle 50 Blöcke ein Meilenstein mit Bonus und Titel, jeder 5. mit seltenem Fund
+    meilenstein-bonus: 25       # Bonus = Blockgeld x Combo x 25
+  gluecksfund:
+    chance: 0.015               # 1,5 % je Block ...
+    combo-plus: 0.002           # ... plus 0,2 % je Combo-Stufe (bei x10 also 3,3 %)
+    gewichte: {gewoehnlich: 68, selten: 24, episch: 7, legendaer: 1}
+    gewoehnlich-min: 20
+    gewoehnlich-max: 60
+    selten-min: 80
+    selten-max: 200
+    episch-min: 500
+    episch-max: 900
+    episch-schluessel: selten   # Episch: Geld, Generator-Booster x2 oder dieser Schlüssel
+    booster-minuten: 10
+    legendaer-min: 2000
+    legendaer-max: 3500
+    legendaer-juwelen: 3
+    legendaer-schluessel: episch
+  kiste:
+    aktiv: true
+    minuten: 10                 # alle 10 aktiven Minuten eine Belohnungskiste (AFK zählt nicht)
+    geld: 150
+    xp: 40
+    wachstum: 0.25              # jede Kiste am selben Tag +25 % (bis max-stufe)
+    max-stufe: 12
+    schluessel: vote            # jede 6. Kiste dieser Schlüssel, jede 3. ein Glücksfund (mindestens selten)
 # Inseln der Spieler (/insel). Sie liegen in einer Spirale um den Skyblock-Spawn (0, 0) mit festem Abstand.
 insel:
   abstand: 200                  # Abstand der Insel-Mitten (größte Insel muss kleiner sein)
