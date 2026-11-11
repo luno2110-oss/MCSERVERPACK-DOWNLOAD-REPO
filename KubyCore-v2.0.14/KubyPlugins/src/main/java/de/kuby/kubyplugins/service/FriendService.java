@@ -85,6 +85,14 @@ public final class FriendService implements org.bukkit.event.Listener {
         return friends.getOrDefault(fk(mode(a), a), Set.of()).contains(b);
     }
 
+    /** Freunde in irgendeinem Modus (für die Lobby, die selbst keinen Freundeskreis hat). */
+    public synchronized boolean areFriendsAnyMode(UUID a, UUID b) {
+        for (String m : java.util.List.of(ModeService.SURVIVAL, ModeService.SMP, ModeService.SKYBLOCK, ModeService.HUB)) {
+            if (friends.getOrDefault(fk(m, a), Set.of()).contains(b)) return true;
+        }
+        return false;
+    }
+
     public synchronized Set<UUID> friendsOf(UUID id) {
         return new HashSet<>(friends.getOrDefault(fk(mode(id), id), Set.of()));
     }

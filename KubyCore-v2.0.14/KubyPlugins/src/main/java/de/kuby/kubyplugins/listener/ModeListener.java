@@ -68,17 +68,71 @@ public final class ModeListener implements Listener {
         boolean left = a == Action.LEFT_CLICK_AIR || a == Action.LEFT_CLICK_BLOCK;
         boolean right = a == Action.RIGHT_CLICK_AIR || a == Action.RIGHT_CLICK_BLOCK;
 
-        if (hand.getType() == Material.COMPASS && (left || right)) {
-            // Dialog mit Karten je Modus (ohne Pack das Truhen-Menü)
-            de.kuby.kubyplugins.gui.ModeSelectScreen.open(plugin, p);
-        } else if (hand.getType().name().endsWith("_DYE") && (left || right)) {
-            plugin.visibility().cycle(p);
-        }
+        // Kompass: Modus-Wahl (Dialog mit Karten je Modus, ohne Pack das Truhen-Menü); Farbstoff: Sichtbarkeit
+        if ((left || right) && e.getHand() == org.bukkit.inventory.EquipmentSlot.HAND) useLobbyItem(p, hand);
     }
 
-    @EventHandler
+    /** Kurze Sperre gegen doppeltes Auslösen (z. B. Klick auf Block und Luft im selben Moment). */
+    private final java.util.Map<java.util.UUID, Long> lastUse = new java.util.HashMap<>();
+
+    private boolean debounce(Player p) {
+        long now = System.currentTimeMillis();
+        Long last = lastUse.put(p.getUniqueId(), now);
+        return last != null && now - last < 250;
+    }
+
+    private static boolean compass(ItemStack it) {
+        return it != null && it.getType() == Material.COMPASS;
+    }
+
+    private static boolean dye(ItemStack it) {
+        return it != null && it.getType().name().endsWith("_DYE");
+    }
+
+    /** Kompass: Modus-Wahl öffnen. Farbstoff: Sichtbarkeit wechseln. True, wenn eins davon benutzt wurde. */
+    private boolean useLobbyItem(Player p, ItemStack it) {
+        if (!plugin.modes().isHub(p.getWorld()) || plugin.edit().isEditing(p.getUniqueId())) return false;
+        if (compass(it)) {
+            if (!debounce(p)) de.kuby.kubyplugins.gui.ModeSelectScreen.open(plugin, p);
+            return true;
+        }
+        if (dye(it)) {
+            if (!debounce(p)) plugin.visibility().cycle(p);
+            return true;
+        }
+        return false;
+    }
+
+    /** Kompass oder Farbstoff im Inventar anklicken wirkt wie in der Hand. */
+    @EventHandler(priority = org.bukkit.event.EventPriority.LOW)
     public void onClick(InventoryClickEvent e) {
-        if (e.getWhoClicked() instanceof Player p && locked(p)) e.setCancelled(true);
+        if (!(e.getWhoClicked() instanceof Player p)) return;
+        if (locked(p)) e.setCancelled(true);
+        if (!plugin.modes().isHub(p.getWorld()) || plugin.edit().isEditing(p.getUniqueId())) return;
+        if (e.getClickedInventory() == null || e.getClickedInventory() != p.getInventory()) return;
+        ItemStack it = e.getCurrentItem();
+        if (!compass(it) && !dye(it)) return;
+        e.setCancelled(true);
+        // erst das Inventar schließen, dann im nächsten Tick öffnen (sonst bleibt der Dialog hinter dem Inventar)
+        boolean isCompass = compass(it);
+        p.closeInventory();
+        plugin.getServer().getScheduler().runTask(plugin, () -> {
+            if (!p.isOnline()) return;
+            if (isCompass) de.kuby.kubyplugins.gui.ModeSelectScreen.open(plugin, p);
+            else plugin.visibility().cycle(p);
+        });
+    }
+
+    /** Links- oder Rechtsklick auf einen Spieler oder eine Figur mit Kompass/Farbstoff in der Hand. */
+    @EventHandler(priority = org.bukkit.event.EventPriority.LOW)
+    public void onHitEntity(io.papermc.paper.event.player.PrePlayerAttackEntityEvent e) {
+        if (useLobbyItem(e.getPlayer(), e.getPlayer().getInventory().getItemInMainHand())) e.setCancelled(true);
+    }
+
+    @EventHandler(priority = org.bukkit.event.EventPriority.LOW)
+    public void onUseOnPlayer(org.bukkit.event.player.PlayerInteractEntityEvent e) {
+        if (e.getHand() != org.bukkit.inventory.EquipmentSlot.HAND || !(e.getRightClicked() instanceof Player)) return;
+        if (useLobbyItem(e.getPlayer(), e.getPlayer().getInventory().getItemInMainHand())) e.setCancelled(true);
     }
 
     @EventHandler

@@ -129,6 +129,15 @@ public final class TeamService {
         return t.mode + "|" + t.name;
     }
 
+    /** Im selben Team in irgendeinem Modus (für die Lobby). */
+    public boolean sameTeamAnyMode(UUID a, UUID b) {
+        for (String m : java.util.List.of(ModeService.SURVIVAL, ModeService.SMP, ModeService.SKYBLOCK)) {
+            String ta = memberOf.get(m + "|" + a);
+            if (ta != null && ta.equals(memberOf.get(m + "|" + b))) return true;
+        }
+        return false;
+    }
+
     public Team of(UUID id) {
         String tk = memberOf.get(mkey(id));
         return tk == null ? null : teams.get(tk);

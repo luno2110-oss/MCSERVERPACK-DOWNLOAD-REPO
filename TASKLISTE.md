@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.45** (ungetestet, nicht kompiliert)
+Stand: **v1.46** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -555,6 +555,17 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - große Beträge an engen Stellen jetzt kurz („1,2 Mio.“, „3 Mrd.“)
   - Kern: Info-Leiste (Vorschau der Job-Leiste ragte aus dem Fenster), Kits („alle … Std.“ über „Vorschau“), Bestenliste (Untertitel), Investments (Name über Preis), Quiz-Abstimmung (Zeile zu lang)
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
+
+## Hub: Lobby-Items geprüft (v1.46, Wunsch des Besitzers, Test im Spiel offen)
+- [x] Kompass (Modus-Wahl):
+  - in der Hand: Links- oder Rechtsklick in die Luft, auf einen Block oder auf einen Spieler öffnet die Modus-Wahl
+  - im Inventar anklicken: Inventar schließt, die Modus-Wahl öffnet sich (vorher passierte beim Anklicken nichts)
+  - doppeltes Auslösen ist gesperrt
+- [x] Farbstoff (Sichtbarkeit):
+  - Links- oder Rechtsklick in der Hand oder Anklicken im Inventar wechselt der Reihe nach: Alle (grün) · Nur Freunde (pink) · Nur Team (orange) · Niemand (grau)
+  - Fehler behoben: Freunde und Teams gibt es seit der Modus-Trennung nur pro Modus, in der Lobby wurde nach Lobby-Freunden gesucht. „Nur Freunde“ und „Nur Team“ blendeten deshalb alle aus. Jetzt zählen Freunde und Teams aus jedem Modus
+  - nach dem Wechsel steht über der Hotbar, wie viele Spieler in der Lobby man jetzt sieht (z. B. „3 von 12“)
+  - die gewählte Stufe bleibt über Logout und Neustart gespeichert (`sichtbarkeit.yml`)
 
 ## Skyblock: Belohnungsschleifen (v1.44, Wunsch des Besitzers: „mehr und schnellere Belohnungen wie ein Roblox-Spiel“, Test im Spiel offen)
 - [x] Combo statt Abend-Serie, jetzt den ganzen Tag: jeder natürlich abgebaute Block (auch am One-Block) zahlt Geld und XP, mit jedem Block +0,1 bis x10. Prime Time 18 bis 24 Uhr: +0,2 je Block, bis x15. Jede volle Stunde beginnt eine neue Combo (stündliche Grenze). 60 Sekunden Pause, dann reißt sie. Anzeige über der Hotbar: COMBO 57 · x6,6 mit Balken bis zum nächsten Meilenstein und dem Ertrag des Blocks

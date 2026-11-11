@@ -41,9 +41,34 @@ public final class VisibilityService {
     private final Map<UUID, Mode> modes = new HashMap<>();
     private final Map<UUID, Set<UUID>> hidden = new HashMap<>();
 
+    private final java.io.File file;
+
     public VisibilityService(KubyPlugins plugin) {
         this.plugin = plugin;
+        this.file = new java.io.File(plugin.getDataFolder(), "sichtbarkeit.yml");
+        // gewählte Stufe bleibt über Logout und Neustart erhalten
+        var y = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(file);
+        for (String k : y.getKeys(false)) {
+            try {
+                modes.put(UUID.fromString(k), Mode.valueOf(y.getString(k, "ALL")));
+            } catch (IllegalArgumentException ignored) {
+                // kaputter Eintrag
+            }
+        }
         plugin.getServer().getScheduler().runTaskTimer(plugin, this::tick, 20L, 20L);
+    }
+
+    private void save() {
+        var y = new org.bukkit.configuration.file.YamlConfiguration();
+        modes.forEach((id, m) -> {
+            if (m != Mode.ALL) y.set(id.toString(), m.name());
+        });
+        try {
+            plugin.getDataFolder().mkdirs();
+            y.save(file);
+        } catch (java.io.IOException e) {
+            plugin.getLogger().warning("sichtbarkeit.yml: " + e.getMessage());
+        }
     }
 
     public Mode modeOf(UUID id) {
@@ -53,8 +78,8 @@ public final class VisibilityService {
     public ItemStack dyeItem(UUID id) {
         Mode m = modeOf(id);
         return Items.make(m.dye, m.label, List.of(
-                "<gray>Klick: Sichtbarkeit wechseln",
-                "<dark_gray>Grün, Pink, Orange, Grau"));
+                "<gray>Links- oder Rechtsklick: Sichtbarkeit wechseln",
+                "<dark_gray>Alle · Nur Freunde · Nur Team · Niemand"));
     }
 
     public void cycle(Player p) {
@@ -62,10 +87,18 @@ public final class VisibilityService {
         Mode[] all = Mode.values();
         Mode next = all[(current.ordinal() + 1) % all.length];
         modes.put(p.getUniqueId(), next);
+        save();
         p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 0.7f, next.pitch);
-        p.sendActionBar(Msg.parse(next.label));
         plugin.modes().refreshLobby(p);
         tick();
+        // wie viele andere sieht man jetzt? (sofortige Rückmeldung, ob es gewirkt hat)
+        int seen = 0, total = 0;
+        for (Player o : Bukkit.getOnlinePlayers()) {
+            if (o.equals(p) || !plugin.modes().isHub(o.getWorld())) continue;
+            total++;
+            if (visible(p, o)) seen++;
+        }
+        p.sendActionBar(Msg.parse(next.label + " <dark_gray>· <gray>" + seen + " von " + total + " Spielern in der Lobby"));
     }
 
     /** Macht einen Spieler für alle wieder sichtbar, z. B. beim Verlassen der Lobby. */
@@ -81,9 +114,9 @@ public final class VisibilityService {
         }
     }
 
+    /** Beim Ausloggen: Sichtbarkeit zurücksetzen (die gewählte Stufe bleibt gespeichert). */
     public void forget(Player p) {
         clear(p);
-        modes.remove(p.getUniqueId());
     }
 
     private void tick() {
@@ -114,12 +147,12 @@ public final class VisibilityService {
                 return true;
             case NONE:
                 return false;
+            // Freunde und Teams gibt es nur in den Spielmodi: in der Lobby zählen sie aus jedem Modus (früher wurde in
+            // der Lobby nach Lobby-Freunden gesucht, die es nicht gibt, „Nur Freunde“ und „Nur Team“ zeigten niemanden)
             case FRIENDS:
-                return plugin.friends().areFriends(viewer.getUniqueId(), other.getUniqueId());
+                return plugin.friends().areFriendsAnyMode(viewer.getUniqueId(), other.getUniqueId());
             default:
-                var a = plugin.teams().of(viewer.getUniqueId());
-                var b = plugin.teams().of(other.getUniqueId());
-                return a != null && b != null && a.name().equals(b.name());
+                return plugin.teams().sameTeamAnyMode(viewer.getUniqueId(), other.getUniqueId());
         }
     }
 }
