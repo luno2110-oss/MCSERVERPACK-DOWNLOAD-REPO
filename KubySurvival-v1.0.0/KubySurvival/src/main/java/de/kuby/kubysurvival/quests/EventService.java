@@ -822,6 +822,24 @@ public final class EventService {
         }
     }
 
+    /** Belastungstest: das nächste Preset reihum laden und starten (wie /kp event laden), gibt die ID zurück. */
+    public String loadNextForTest() {
+        List<String> ids = new ArrayList<>(events.keySet());
+        if (ids.isEmpty()) return null;
+        String id;
+        synchronized (this) {
+            int i = forced == null ? -1 : ids.indexOf(forced);
+            id = ids.get((i + 1) % ids.size());
+            forced = id;
+            off = false;
+            save();
+        }
+        clearCandy();
+        lastRain = 0;
+        tickCandy();
+        return id;
+    }
+
     public void clearCandy() {
         for (UUID u : candyItems) {
             Entity en = Bukkit.getEntity(u);

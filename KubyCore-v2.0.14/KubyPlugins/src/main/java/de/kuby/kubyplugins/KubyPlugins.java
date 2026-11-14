@@ -450,6 +450,13 @@ public final class KubyPlugins extends JavaPlugin {
         getServer().getPluginManager().registerEvents(alts, this);
         registerKpSub("backup", (pl, args) -> new de.kuby.kubyplugins.command.SafetyCommands(this).backup(pl, args));
         registerKpSub("alts", (pl, args) -> new de.kuby.kubyplugins.command.SafetyCommands(this).alts(pl, args));
+        // Belastungstest: Menü-Klicks simulieren und Events auslösen (nur Konsole und Admins)
+        setAll(new de.kuby.kubyplugins.beta.LoadTestCommand(this), "kubytest");
+        registerTestEvent("Quiz", () -> quiz().ask());
+        registerTestEvent("Tagespot-Ziehung", () -> dailyPot().draw());
+        registerTestEvent("Jackpot-Ziehung", () -> {
+            if (jackpotDraw() != null) jackpotDraw().drawNow();
+        });
         // Beta-Test: Rolle, Feedback-Formular, Bug-Meldungen
         beta = new de.kuby.kubyplugins.beta.BetaService(this);
         feedbackDialog = new de.kuby.kubyplugins.beta.FeedbackDialog(this, beta);
@@ -839,6 +846,13 @@ public final class KubyPlugins extends JavaPlugin {
     public void registerSelfTestCanvas(String name, java.util.function.Supplier<de.kuby.kubyplugins.ui.Canvas> c) { selfTestCanvases.put(name, c); }
 
     public void registerSelfTestCheck(String name, java.util.function.Supplier<String> check) { selfTestChecks.put(name, check); }
+
+    /** Events, die der Belastungstest auslöst (/kubytest events): Name -> Auslöser. Addons tragen ihre ein. */
+    private final java.util.Map<String, Runnable> testEvents = new java.util.LinkedHashMap<>();
+
+    public void registerTestEvent(String name, Runnable trigger) { testEvents.put(name, trigger); }
+
+    public java.util.Map<String, Runnable> testEvents() { return testEvents; }
 
     public java.util.Map<String, java.util.function.Supplier<de.kuby.kubyplugins.ui.Canvas>> selfTestCanvases() { return selfTestCanvases; }
 

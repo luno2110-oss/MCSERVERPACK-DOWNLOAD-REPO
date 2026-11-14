@@ -157,6 +157,22 @@ public final class KubySurvival extends JavaPlugin {
                 (o, m, args) -> (java.util.function.Consumer<org.bukkit.entity.Player>) pl -> { });
     }
 
+    /** Events für den Belastungstest (/kubytest events). */
+    private void testEvents() {
+        core.registerTestEvent("Survival: Event-Kapitel laden", () -> {
+            if (events != null) events.loadNextForTest();
+        });
+        core.registerTestEvent("Survival: Sammel-Regen und Feuerwerk", () -> {
+            if (events == null) return;
+            events.tickCandy();
+            events.rain(events.active(), 15);
+            events.fireworks(4);
+        });
+        core.registerTestEvent("Survival: Angel-Turnier", () -> {
+            if (angeln != null && !angeln.tournamentRunning()) angeln.startTournament(2);
+        });
+    }
+
     /** /kp selftest: alle Seiten des Survival-Juwelenshops bauen, Kataloge und Bilder prüfen. */
     private void selfTests() {
         // Angel-Shop: alle gekauft und keine, Juwelen-Seite mit scharfem Kauf-Knopf
@@ -663,6 +679,7 @@ public final class KubySurvival extends JavaPlugin {
             }
         });
         selfTests();
+        testEvents();
         HeadService heads = new HeadService(this, core);
         command("heads", heads);
         PluginCommand headsCmd = getCommand("heads");

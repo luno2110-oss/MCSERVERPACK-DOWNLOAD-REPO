@@ -92,6 +92,18 @@ public final class KubySMP extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new InsuranceListener(core), this);
         getServer().getPluginManager().registerEvents(new de.kuby.kubysmp.listener.DuelGuard(core), this);
         // vor jedem Backup mitspeichern
+        // Belastungstest: Turnier reihum öffnen, starten, abbrechen
+        core.registerTestEvent("SMP: Turnier", () -> {
+            TournamentService t = tournaments;
+            if (t == null) return;
+            switch (t.state()) {
+                case CLOSED -> t.open();
+                case REGISTRATION -> {
+                    if (t.start() != null) t.cancel();
+                }
+                case RUNNING -> t.cancel();
+            }
+        });
         core.registerSaver(() -> {
             if (bounties != null) bounties.save();
             if (insurance != null) insurance.save();

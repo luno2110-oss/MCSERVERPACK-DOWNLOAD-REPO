@@ -116,6 +116,14 @@ public final class KubySkyblock extends JavaPlugin {
         limits = new de.kuby.kubyskyblock.service.LimitService(this);
         rewards = new de.kuby.kubyskyblock.service.TopRewardService(this, core);
         streaks = new StreakService(this, core);
+        // Belastungstest: Glücksfunde für alle Spieler in Skyblock
+        core.registerTestEvent("Skyblock: Glücksfunde", () -> {
+            for (org.bukkit.entity.Player p : getServer().getOnlinePlayers()) {
+                if (!de.kuby.kubyplugins.service.ModeService.SKYBLOCK.equals(core.modes().modeOf(p.getUniqueId()))) continue;
+                StreakService.Tier[] ts = StreakService.Tier.values();
+                streaks.find(p, null, ts[java.util.concurrent.ThreadLocalRandom.current().nextInt(ts.length)]);
+            }
+        });
         templates = new TemplateService(this);
         loot = new LootService(this, core);
         oneblock = new OneBlockService(this, core);

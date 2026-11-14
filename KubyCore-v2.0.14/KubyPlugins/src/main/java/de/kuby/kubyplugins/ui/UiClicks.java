@@ -103,6 +103,18 @@ public final class UiClicks implements Listener {
         }
     }
 
+    /**
+     * Nur für den Belastungstest (/kubytest klicks): einen zufälligen klickbaren Bereich des zuletzt geöffneten Menüs
+     * auslösen, auf demselben Weg wie ein echter Klick. false = kein Menü offen.
+     */
+    public static boolean randomClick(Player player) {
+        Session s = SESSIONS.get(player.getUniqueId());
+        if (s == null || s.actions.isEmpty() || System.currentTimeMillis() - s.created > LIFETIME_MS) return false;
+        java.util.List<Consumer<Player>> l = new java.util.ArrayList<>(s.actions.values());
+        run(player, l.get(java.util.concurrent.ThreadLocalRandom.current().nextInt(l.size())));
+        return true;
+    }
+
     private static void run(Player player, Consumer<Player> action) {
         if (!player.isOnline()) return;
         boolean sounded = false;

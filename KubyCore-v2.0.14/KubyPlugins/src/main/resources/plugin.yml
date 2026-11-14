@@ -217,6 +217,10 @@ commands:
     description: "In den SMP wechseln"
   survival:
     description: "In Survival wechseln"
+  kubytest:
+    description: "Belastungstest: Menü-Klicks simulieren, Events auslösen (Konsole und Admins)"
+    permission: kuby.admin
+    usage: "/kubytest klicks [n] | events"
   feedback:
     description: "Beta-Feedback-Formular (für Beta-Tester)"
     usage: "/feedback"

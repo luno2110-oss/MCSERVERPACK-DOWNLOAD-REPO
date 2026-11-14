@@ -93,6 +93,8 @@ jobs:
               c["modes"][m]["world"] = "world"
               c["modes"][m]["spawn"] = "world;%d;110;0;0;0" % (i * 300)
           c.setdefault("beta", {})["alle-tester"] = True
+          # Bots laden kein Resource Pack: trotzdem die echten Pack-Dialoge (wie echte Spieler mit Pack)
+          c.setdefault("ui", {})["custom-textures"] = "on"
           yaml.safe_dump(c, open(p, "w", encoding="utf-8"), allow_unicode=True, sort_keys=False)
           print("Config:", p)
           EOF
@@ -111,7 +113,13 @@ jobs:
           sleep 5
           (cd ../tools/loadtest && node bots.js > ../../server/bots.log 2>&1) &
           BOTPID=$!
-          for i in $(seq 1 9); do sleep 30; echo "tps" >&3; echo "mspt" >&3; done
+          # alle 10 s klickt jeder Spieler 3 zufällige Knöpfe im offenen Menü, alle 40 s alle Events, alle 30 s TPS
+          for i in $(seq 1 27); do
+            sleep 10
+            echo "kubytest klicks 3" >&3
+            if [ $((i % 4)) -eq 0 ]; then echo "kubytest events" >&3; fi
+            if [ $((i % 3)) -eq 0 ]; then echo "tps" >&3; echo "mspt" >&3; fi
+          done
           wait $BOTPID || true
           cp ../tools/loadtest/loadtest-result.json . || echo '{}' > loadtest-result.json
           echo "tps" >&3
@@ -129,7 +137,10 @@ jobs:
           log = open("server.log", encoding="utf-8", errors="replace").read()
           tps = [float(x) for x in re.findall(r"TPS from last 1m, 5m, 15m: \D*([\d.]+)", log)]
           probs = []
-          exc = [l for l in log.splitlines() if re.search(r"Exception.*de\.kuby|de\.kuby\..*Exception|at de\.kuby|at Kuby\w*\.jar//|Command exception|Error occurred while enabling|Could not load|Could not pass event", l)]
+          exc = [l for l in log.splitlines() if re.search(r"Exception.*de\.kuby|de\.kuby\..*Exception|at de\.kuby|at Kuby\w*\.jar//|Command exception|Error occurred while enabling|Could not load|Could not pass event|Fehler bei Menü-Klick|Test-Event fehlgeschlagen", l)]
+          clicks = sum(int(x) for x in re.findall(r"\[Belastungstest\] (\d+) Menü-Klicks", log))
+          opened = sum(int(x) for x in re.findall(r"Menü-Klicks, (\d+) Menüs geöffnet", log))
+          evruns = re.findall(r"\[Belastungstest\] Events ausgelöst: (.*)", log)
           n = r.get("bots", 10)
           if r.get("spawned", 0) < n: probs.append("Nur %d von %d Bots sind gespawnt" % (r.get("spawned", 0), n))
           for k in r.get("kicked", []): probs.append("Kick %s: %s" % (k["bot"], k["reason"][:200]))
@@ -137,8 +148,12 @@ jobs:
           for e in r.get("cmdErrors", [])[:40]: probs.append("Befehlsfehler %s bei %s: %s" % (e["bot"], e["cmd"], e["msg"][:150]))
           probs += ["Log: " + l[:250] for l in exc[:40]]
           if tps and min(tps) < 15: probs.append("TPS fiel auf %.1f" % min(tps))
+          if clicks == 0: probs.append("Keine Menü-Klicks ausgeführt")
+          if not evruns: probs.append("Keine Events ausgelöst")
           print("## Belastungstest")
           print("- Bots: %d, Spawns: %d (davon %d Wiederkehrer), Befehle: %d, Chatzeilen: %d" % (n, r.get("spawned", 0), r.get("rejoins", 0), r.get("commands", 0), r.get("chats", 0)))
+          print("- Menü-Klicks (wie echte Klicks, in den Pack-Dialogen): %d, dabei %d Menüs neu geöffnet" % (clicks, opened))
+          print("- Event-Runden: %d (%s)" % (len(evruns), evruns[-1].strip() if evruns else "keine"))
           print("- TPS (1 min) gemessen: %s" % (", ".join("%.1f" % t for t in tps) or "keine Messung"))
           print("- Kicks: %d, Verbindungsfehler: %d, Befehlsfehler: %d, Exceptions im Log: %d" % (len(r.get("kicked", [])), len(r.get("errors", [])), len(r.get("cmdErrors", [])), len(exc)))
           open("problems.txt", "w").write("\n".join(probs) if probs else "keine Probleme")

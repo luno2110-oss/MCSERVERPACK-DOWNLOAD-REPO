@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.58** (ungetestet, nicht kompiliert)
+Stand: **v1.59** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -555,6 +555,12 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - große Beträge an engen Stellen jetzt kurz („1,2 Mio.“, „3 Mrd.“)
   - Kern: Info-Leiste (Vorschau der Job-Leiste ragte aus dem Fenster), Kits („alle … Std.“ über „Vorschau“), Bestenliste (Untertitel), Investments (Name über Preis), Quiz-Abstimmung (Zeile zu lang)
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
+
+## Belastungstest: Menü-Klicks und Events (v1.59)
+- [x] Die Bots bekommen im Test die echten Pack-Dialoge (`ui.custom-textures: on`) statt der Truhen-Ersatzmenüs
+- [x] `/kubytest klicks [n]` (nur Konsole und Admins): für jeden Spieler n zufällige Knöpfe im gerade offenen Menü, auf demselben Weg wie ein echter Klick (danach im Folge-Menü weiter); ist keins offen, öffnet er eines von 32 Menüs. Im Belastungstest alle 10 Sekunden 3 Klicks je Bot
+- [x] `/kubytest events`: löst alle Test-Events aus, die Kern und Addons eintragen (`registerTestEvent`): Quiz, Tagespot-Ziehung, Jackpot-Ziehung, Survival-Event-Kapitel reihum laden, Sammel-Regen und Feuerwerk, Angel-Turnier, SMP-Turnier (öffnen, starten, abbrechen), Skyblock-Glücksfunde. Im Belastungstest alle 40 Sekunden
+- [x] Fehler bei Menü-Klicks oder Events („Fehler bei Menü-Klick“, „Test-Event fehlgeschlagen“) lassen Server- und Belastungstest scheitern; die Zusammenfassung zeigt Klicks, geöffnete Menüs und Event-Runden
 
 ## Angel-Minispiel: Steuerung überarbeitet (v1.58, Rückmeldung: reagierte nicht sauber auf Links-/Rechtsklick)
 - [x] Neu: A/D gedrückt halten steuert den Fangbereich gleichmäßig (`angeln.minispiel.tasten-tempo`); der Spieler steht währenddessen still (Laufgeschwindigkeit 0, danach zurück, auch bei Abbruch und Ausloggen)

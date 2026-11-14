@@ -71,7 +71,7 @@ jobs:
             grep "SELFTEST" server.log | sed 's/^/    /' || echo "    (keine Ausgabe)"
           } >> "$GITHUB_STEP_SUMMARY"
           # Fehler: Plugin lädt/aktiviert nicht, Exceptions aus Kuby-Klassen, Selbsttest-Fehler
-          grep -nE "Could not load|Error occurred while enabling|SELFTEST FEHLER|Exception.*de\.kuby|de\.kuby\..*Exception|at de\.kuby|at KubyCore|at KubySurvival|at KubySMP|at KubySkyblock|at KubyScoreboard|at Kuby[A-Za-z]*\.jar//|Command exception|Could not pass event" server.log > problems.txt || true
+          grep -nE "Could not load|Error occurred while enabling|SELFTEST FEHLER|Exception.*de\.kuby|de\.kuby\..*Exception|at de\.kuby|at KubyCore|at KubySurvival|at KubySMP|at KubySkyblock|at KubyScoreboard|at Kuby[A-Za-z]*\.jar//|Command exception|Could not pass event|Fehler bei Menü-Klick" server.log > problems.txt || true
           if ! grep -q "SELFTEST OK" server.log; then echo "Selbsttest nicht OK oder nicht gelaufen" >> problems.txt; fi
           if [ -s problems.txt ]; then
             { echo; echo "### Probleme"; sed 's/^/    /' problems.txt | head -80; } >> "$GITHUB_STEP_SUMMARY"
