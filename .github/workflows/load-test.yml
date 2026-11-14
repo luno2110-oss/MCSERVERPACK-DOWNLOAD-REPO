@@ -1,0 +1,167 @@
+# Belastungstest für den Beta-Test: echter Paper-1.21.11-Server mit allen Kuby-Jars aus "latest", 10 Bots (mineflayer)
+# joinen nach und nach, wechseln zwischen Hub, SMP, Survival und Skyblock, öffnen Menüs (/menu, /shop, /angeln, /insel,
+# /feedback …), laufen, bauen ab, schicken sich Geld, melden Bugs und loggen einmal aus und wieder ein (4 Minuten).
+# Geprüft: alle Bots kommen rein, keine Kicks, keine Befehlsfehler, keine Exceptions aus Kuby-Klassen, TPS bleibt hoch.
+# Ergebnis als Release "load-test" (server.log, loadtest-result.json, problems.txt).
+name: Belastungstest
+
+on:
+  workflow_run:
+    workflows: ["Build plugins"]
+    types: [completed]
+  workflow_dispatch:
+
+jobs:
+  load:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: tools/loadtest
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Bots installieren und Version wählen
+        working-directory: tools/loadtest
+        run: |
+          npm install --no-audit --no-fund
+          node pick_version.js 1.21.11 > version.txt
+          cat version.txt
+          echo "MC_VERSION=$(sed -n 1p version.txt)" >> "$GITHUB_ENV"
+          echo "NEED_VIA=$(sed -n 2p version.txt)" >> "$GITHUB_ENV"
+
+      - name: Paper und Plugins holen
+        run: |
+          mkdir -p server/plugins
+          cd server
+          UA="KubyPlugins-CI (github.com/${GITHUB_REPOSITORY})"
+          curl -sSf -A "$UA" https://fill.papermc.io/v3/projects/paper/versions/1.21.11/builds -o builds.json
+          URL=$(python3 -c "import json;b=json.load(open('builds.json'));print(b[0]['downloads']['server:default']['url'])")
+          curl -sSfL -A "$UA" "$URL" -o paper.jar
+          curl -sSfL "https://github.com/${GITHUB_REPOSITORY}/releases/download/latest/KubyPlugins.zip" -o kuby.zip
+          unzip -q kuby.zip -d kuby
+          cp kuby/*.jar plugins/
+          if [ "$NEED_VIA" = "via" ]; then
+            for repo in ViaVersion/ViaVersion ViaVersion/ViaBackwards; do
+              J=$(curl -sSf -H "Authorization: Bearer ${{ github.token }}" "https://api.github.com/repos/$repo/releases/latest" \
+                | python3 -c "import json,sys;print([a['browser_download_url'] for a in json.load(sys.stdin)['assets'] if a['name'].endswith('.jar')][0])")
+              echo "Via: $J"
+              curl -sSfL "$J" -o "plugins/$(basename $repo).jar"
+            done
+          fi
+          echo "eula=true" > eula.txt
+          printf "online-mode=false\nspawn-protection=0\nview-distance=5\nsimulation-distance=5\nmax-players=30\n" > server.properties
+          printf "settings:\n  connection-throttle: -1\n" > bukkit.yml
+
+      - name: Erster Start (Configs anlegen)
+        working-directory: server
+        run: |
+          mkfifo console
+          java -Xmx3G -jar paper.jar --nogui < console > first.log 2>&1 &
+          PID=$!
+          exec 3>console
+          for i in $(seq 1 300); do grep -q "Done (" first.log && break; kill -0 $PID 2>/dev/null || break; sleep 1; done
+          sleep 5
+          echo "stop" >&3
+          for i in $(seq 1 60); do kill -0 $PID 2>/dev/null || break; sleep 1; done
+          kill $PID 2>/dev/null || true
+          rm console
+
+      - name: Modi für den Test einrichten
+        working-directory: server
+        run: |
+          python3 - <<'EOF'
+          import yaml, os
+          p = "plugins/KubyCore/config.yml"
+          if not os.path.exists(p):
+              p = [os.path.join(r, f) for r, _, fs in os.walk("plugins") for f in fs if f == "config.yml" and "Kuby" in r and "modes" in open(os.path.join(r, f), encoding="utf-8").read()][0]
+          c = yaml.safe_load(open(p, encoding="utf-8"))
+          c.setdefault("modes", {})
+          for i, m in enumerate(["hub", "smp", "survival", "skyblock"]):
+              c["modes"].setdefault(m, {})
+              c["modes"][m]["world"] = "world"
+              c["modes"][m]["spawn"] = "world;%d;110;0;0;0" % (i * 300)
+          c.setdefault("beta", {})["alle-tester"] = True
+          yaml.safe_dump(c, open(p, "w", encoding="utf-8"), allow_unicode=True, sort_keys=False)
+          print("Config:", p)
+          EOF
+
+      - name: Server starten, Bots spielen lassen, TPS messen
+        working-directory: server
+        env:
+          BOTS: '10'
+          DURATION: '240'
+        run: |
+          mkfifo console
+          java -Xmx3G -jar paper.jar --nogui < console > server.log 2>&1 &
+          PID=$!
+          exec 3>console
+          for i in $(seq 1 300); do grep -q "Done (" server.log && break; kill -0 $PID 2>/dev/null || break; sleep 1; done
+          sleep 5
+          (cd ../tools/loadtest && node bots.js > ../../server/bots.log 2>&1) &
+          BOTPID=$!
+          for i in $(seq 1 9); do sleep 30; echo "tps" >&3; echo "mspt" >&3; done
+          wait $BOTPID || true
+          cp ../tools/loadtest/loadtest-result.json . || echo '{}' > loadtest-result.json
+          echo "tps" >&3
+          sleep 3
+          echo "stop" >&3
+          for i in $(seq 1 90); do kill -0 $PID 2>/dev/null || break; sleep 1; done
+          kill $PID 2>/dev/null || true
+
+      - name: Auswerten
+        working-directory: server
+        run: |
+          python3 - <<'EOF' > summary.md
+          import json, re
+          r = json.load(open("loadtest-result.json"))
+          log = open("server.log", encoding="utf-8", errors="replace").read()
+          tps = [float(x) for x in re.findall(r"TPS from last 1m, 5m, 15m: \D*([\d.]+)", log)]
+          probs = []
+          exc = [l for l in log.splitlines() if re.search(r"Exception.*de\.kuby|de\.kuby\..*Exception|at de\.kuby|Error occurred while enabling|Could not load", l)]
+          n = r.get("bots", 10)
+          if r.get("spawned", 0) < n: probs.append("Nur %d von %d Bots sind gespawnt" % (r.get("spawned", 0), n))
+          for k in r.get("kicked", []): probs.append("Kick %s: %s" % (k["bot"], k["reason"][:200]))
+          for e in r.get("errors", [])[:20]: probs.append("Verbindung %s: %s" % (e["bot"], e["error"][:200]))
+          for e in r.get("cmdErrors", [])[:40]: probs.append("Befehlsfehler %s bei %s: %s" % (e["bot"], e["cmd"], e["msg"][:150]))
+          probs += ["Log: " + l[:250] for l in exc[:40]]
+          if tps and min(tps) < 15: probs.append("TPS fiel auf %.1f" % min(tps))
+          print("## Belastungstest")
+          print("- Bots: %d, Spawns: %d (davon %d Wiederkehrer), Befehle: %d, Chatzeilen: %d" % (n, r.get("spawned", 0), r.get("rejoins", 0), r.get("commands", 0), r.get("chats", 0)))
+          print("- TPS (1 min) gemessen: %s" % (", ".join("%.1f" % t for t in tps) or "keine Messung"))
+          print("- Kicks: %d, Verbindungsfehler: %d, Befehlsfehler: %d, Exceptions im Log: %d" % (len(r.get("kicked", [])), len(r.get("errors", [])), len(r.get("cmdErrors", [])), len(exc)))
+          open("problems.txt", "w").write("\n".join(probs) if probs else "keine Probleme")
+          if probs:
+              print("\n### Probleme")
+              for p in probs[:80]: print("    " + p)
+          EOF
+          cat summary.md >> "$GITHUB_STEP_SUMMARY"
+          cat summary.md
+          if ! grep -q "keine Probleme" problems.txt; then
+            head -20 problems.txt | while IFS= read -r l; do echo "::error::${l:0:300}"; done
+            exit 1
+          fi
+
+      - name: Ergebnis als Release-Datei (load-test)
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        working-directory: server
+        run: |
+          [ -f problems.txt ] || echo "kein Ergebnis" > problems.txt
+          [ -f loadtest-result.json ] || echo '{}' > loadtest-result.json
+          touch bots.log summary.md
+          gh release view load-test -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
+            gh release create load-test -R "$GITHUB_REPOSITORY" --title "Belastungstest" --notes "Ergebnis des letzten Belastungstests" --prerelease
+          gh release upload load-test server.log bots.log loadtest-result.json problems.txt summary.md -R "$GITHUB_REPOSITORY" --clobber

@@ -1,0 +1,8 @@
+{
+  "name": "kuby-loadtest",
+  "private": true,
+  "description": "Belastungstest: 10 Bots wechseln Modi, öffnen Menüs und lösen Events aus (siehe bots.js)",
+  "dependencies": {
+    "mineflayer": "^4.33.0"
+  }
+}
