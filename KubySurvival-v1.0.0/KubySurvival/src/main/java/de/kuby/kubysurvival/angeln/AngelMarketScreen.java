@@ -60,15 +60,17 @@ public final class AngelMarketScreen {
             c.text(x + 30, cy + 18, List.of(Span.of(st, GOLD_T), Span.of(" · " + AngelText.kg(k.kg), LIGHT)));
             c.text(x + 8, cy + 30, Canvas.fit("1 zu " + AngelText.num(Math.round(k.odds)) + (k.mult > 1 ? " · Combo x" + AngelText.dec(k.mult) : ""),
                     false, 176), PINK, false);
-            c.text(x + 8, cy + 46, Canvas.fit("von " + k.seller, false, 80), GRAY, false);
             boolean armed = ("buy:" + k.id).equals(v.armed);
+            int bw;
             if (k.own) {
-                textButtonRight(c, x + 186, cy + 40, KitData.Button.PURPLE_LINE, "Zurücknehmen", TextColor.color(0xD6A4FF), false,
+                bw = textButtonRight(c, x + 186, cy + 40, KitData.Button.PURPLE_LINE, "Zurücknehmen", TextColor.color(0xD6A4FF), false,
                         a.cancel(k.id), "Angebot zurücknehmen, der Fisch kommt ins Inventar");
             } else {
-                textButtonRight(c, x + 186, cy + 40, KitData.Button.PURPLE, armed ? "Nochmal!" : AngelText.num(k.price) + " Juwelen", ON_PURPLE,
-                        true, a.buy(k.id), "Zweimal klicken zum Kaufen · Du hast " + AngelText.num(v.jewels) + " Juwelen");
+                bw = textButtonRight(c, x + 186, cy + 40, KitData.Button.PURPLE, armed ? "Nochmal!" : Canvas.num(k.price) + " Juwelen", ON_PURPLE,
+                        true, a.buy(k.id), "Zweimal klicken zum Kaufen · " + AngelText.num(k.price) + " Juwelen · Du hast "
+                                + AngelText.num(v.jewels));
             }
+            c.text(x + 8, cy + 46, Canvas.fit("von " + k.seller, false, Math.max(20, 186 - bw - 8 - 8)), GRAY, false);
         }
         int py = y + 4 * 66 + 2;
         if (v.page > 0) textButton(c, 0, py, KitData.Button.TEAL_LINE, "‹ Zurück", AQUA, false, a.page(v.page - 1), "Vorige Seite");
