@@ -34,7 +34,15 @@ Stand November 2026 unterstützt Geyser **Bedrock 26.40 bis 26.63** und **Java 2
 
 1. In `plugins/` legen: **Geyser-Spigot.jar**, **floodgate-spigot.jar** (beide von geysermc.org/download) und bei einem
    Server unter 26.3 **ViaVersion.jar**. Server einmal starten und stoppen (Configs entstehen).
-2. **Port**: Bedrock nutzt **UDP 19132**. Beim Hoster/Router UDP 19132 freigeben (Java bleibt TCP 25565).
+2. **Port 19132 für TCP und UDP freigeben** (Hoster-Panel, Router, Firewall). Seit Bedrock 26.50 verbinden sich die
+   Spieler über **NetherNet**: über TCP findet Bedrock den Server (Signaling), über UDP wird gespielt. Nur UDP (wie
+   früher) reicht nicht mehr, dann taucht der Server nicht auf. Der Port darf nicht der Java-Port sein (25565 bleibt
+   Java). In `plugins/Geyser-Spigot/config.yml` unter `bedrock:` steht dafür `port: 19132` und `transport: nethernet`
+   (Standard der aktuellen Geyser-Versionen; `both` nimmt zusätzlich ältere Verbindungen über RakNet an, braucht dann
+   aber einen zweiten UDP-Port, z. B. `webrtc-port: 19133`).
+   - Empfohlen: Signaling über **HTTPS** einrichten (Geyser-Wiki „HTTPS for NetherNet“), sonst fragt Bedrock beim
+     ersten Beitritt „Trust on First Use?“.
+   - Kein offener Port möglich: playit.gg (Ngrok geht nicht, kein UDP).
 3. `plugins/Geyser-Spigot/config.yml`:
    - `auth-type: floodgate` (mit Floodgate der Standard)
    - `enable-custom-content: true` (für unsere eigenen Items)

@@ -115,7 +115,8 @@ jobs:
           DURATION: '100'
         run: |
           mkfifo console
-          java -Xmx3G -jar paper.jar --nogui < console > server.log 2>&1 &
+          # Geyser: RakNet (Port 19132, für den Test-Client) und NetherNet (19133) zugleich
+          java -Xmx3G -DgeyserTransport=both -DgeyserWebrtcPort=19133 -jar paper.jar --nogui < console > server.log 2>&1 &
           PID=$!
           exec 3>console
           for i in $(seq 1 300); do grep -q "Done (" server.log && break; kill -0 $PID 2>/dev/null || break; sleep 1; done
