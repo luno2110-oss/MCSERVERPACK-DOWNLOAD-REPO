@@ -17,7 +17,9 @@ Scoreboard), Kino-Szenen von Kisten und Schwert (Bedrock bekommt den Gewinn dire
 
 ## Versionen: was muss zusammenpassen?
 
-Stand November 2026 unterstützt Geyser **Bedrock 26.40 bis 26.63** und **Java 26.3**.
+Stand November 2026 unterstützt Geyser **Bedrock 26.40 bis 26.63** und **Java 26.3**. So meldet es Geyser selbst im
+automatischen Bedrock-Test (Konsole `geyser version`): „Geyser 2.12.1-b1302 (Java: 26.3, Bedrock: 26.40 - 26.63)“ – mit
+ViaVersion 5.12.2 auf unserem Paper-1.21.11-Server. Den aktuellen Stand zeigt auf deinem Server jederzeit `geyser version`.
 
 - **Bedrock-Spieler** müssen nichts tun: Bedrock aktualisiert sich auf Handy, Konsole und Windows von selbst, und
   Geyser unterstützt immer die aktuellen Bedrock-Versionen. Ältere Bedrock-Versionen lässt Geyser nicht rein.

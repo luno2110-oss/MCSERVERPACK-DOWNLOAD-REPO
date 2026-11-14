@@ -569,7 +569,9 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
 - [x] Ergebnis Bedrock-Test (echter Bedrock-Client 26.60 über Geyser 2.12.1 + Floodgate + ViaVersion auf Paper 1.21.11): Beitritt mit unserem Pack, 41 bis 57 Formulare je Lauf (Hauptmenü, Shop, Einstellungen, Hilfe, Support, Angeln …) mit 248 bis 784 Knöpfen mit Bild, jeder Klick öffnet das richtige Folgemenü, Feedback-Formular als Bedrock-Eingabeformular (Sterne als Auswahl, Text als Feld) ausgefüllt, Scoreboard mit Modus-Logo und Icons („KUBY HUB“, „KUBY SURVIVAL“), Geyser registriert 1.113 eigene Items, 0 Exceptions
 - [x] SELFTEST: 401 Formulare, 3.141 Knöpfe (1.740 mit Bild), 0 Auffälligkeiten
 - [x] Knopf-Schrift dunkel (Bedrock-Knöpfe sind hell), Inhalt hell auf dunklem Grund
-- [ ] Im Spiel mit echtem Handy/Konsole ansehen (Schriftgrößen der Glyphen, Bildschärfe)
+- [x] Darstellung belegt (Bedrock-Test, jeder Build): der Client lädt unser Pack wie ein Gerät (21 Stücke, 5.490.117 Bytes, SHA-256 laut Geyser stimmt, byte-gleich mit KubyBedrock.mcpack); alle 85 Knopf-Bilder und alle 38 Icon-Zeichen (30 im Scoreboard), die der Client in Formularen, Knöpfen und Scoreboard bekommen hat, liegen im Pack und sind sichtbar; Pack-Aufbau geprüft (Manifest, 8 Glyph-Seiten 16 × 16, 764 Item-Texturen, 1.112 Mappings mit Icon)
+- [x] Versionen direkt von Geyser (Konsole im Test): „Geyser 2.12.1-b1302 (Java: 26.3, Bedrock: 26.40 - 26.63)“, läuft mit ViaVersion 5.12.2 auf Paper 1.21.11
+- [ ] Optisch auf einem echten Handy/einer Konsole ansehen (Geschmack: Größe der Glyphen, Farben) – technisch ist alles geprüft
 
 ## Angelpass und Editor-Knöpfe (v1.64)
 - [x] Angelpass: Stufen kaufen kostet immer gleich viel (25 Juwelen je Stufe, `angeln.angelpass.stufe-preis`), statt mit jedem Level 2 Juwelen teurer zu werden. Alte Configs: `stufe-plus` wird nicht mehr gelesen
