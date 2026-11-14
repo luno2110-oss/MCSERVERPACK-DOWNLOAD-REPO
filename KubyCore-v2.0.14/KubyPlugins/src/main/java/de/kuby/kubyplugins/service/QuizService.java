@@ -210,7 +210,7 @@ public final class QuizService {
                 if (plugin.hotbar() != null) plugin.hotbar().flash(pl, bar, 25, 5);
                 else pl.sendActionBar(bar);
             } else if (sec > 0 && sec % step == 0) {
-                Msg.raw(pl, "<dark_gray>⏱ <aqua>Quiz <dark_gray>▶ <" + color + "><b>x" + mult(m) + "</b></" + color
+                Msg.raw(pl, "<dark_gray>» <aqua>Quiz <dark_gray>▶ <" + color + "><b>x" + mult(m) + "</b></" + color
                         + "> <gray>· Gewinn jetzt <gold>" + Msg.coins(prize) + "$ <gray>· noch " + left + " s");
             }
         }
