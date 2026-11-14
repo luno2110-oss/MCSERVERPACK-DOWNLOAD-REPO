@@ -110,16 +110,25 @@ public final class AngelFx {
         stop(p);
         FishSpecies s = c.species();
         Rarity r = s.rarity();
-        Component sub = Component.text().append(Component.text(s.name(), r.color())).append(Component.text(" "))
+        FishVariant v = c.variant() == null ? FishVariant.NORMAL : c.variant();
+        long worth = AngelService.value(s, c.stars(), AngelItems.itemKg(c.kg()), v) * c.amount();
+        Component sub = Component.text().append(Component.text(v.name(s), v.special() ? v.color() : r.color())).append(Component.text(" "))
                 .append(stars(c.stars())).append(Component.text(" · ", NamedTextColor.GRAY))
-                .append(Component.text(AngelText.kg(c.kg()), NamedTextColor.WHITE)).build();
-        p.showTitle(Title.title(Component.text(r.title, r.color(), TextDecoration.BOLD), sub,
-                Title.Times.times(Duration.ofMillis(100), Duration.ofMillis(r.atLeast(Rarity.SELTEN) ? 2200 : 1400),
+                .append(Component.text(AngelText.kg(c.kg()), NamedTextColor.WHITE))
+                .append(Component.text(" · " + AngelText.money(worth), NamedTextColor.GOLD)).build();
+        Component head = v.special()
+                ? Msg.parse("<b><gradient:" + v.hex() + ":" + v.light + ":" + v.hex() + ">" + v.label.toUpperCase(java.util.Locale.ROOT)
+                        + "-FISCH!</gradient></b>")
+                : Component.text(r.title, r.color(), TextDecoration.BOLD);
+        p.showTitle(Title.title(head, sub,
+                Title.Times.times(Duration.ofMillis(100), Duration.ofMillis(v.special() ? 3200 : r.atLeast(Rarity.SELTEN) ? 2200 : 1400),
                         Duration.ofMillis(500))));
+        if (v.special()) variantFx(p, hook, v, s, c, worth);
 
-        TextComponent.Builder bar = Component.text().append(Component.text(s.name(), r.color())).append(Component.text(" "))
+        TextComponent.Builder bar = Component.text().append(Component.text(v.name(s), v.special() ? v.color() : r.color())).append(Component.text(" "))
                 .append(stars(c.stars())).append(Component.text(" · " + AngelText.kg(c.kg()) + " · ", NamedTextColor.GRAY))
-                .append(Component.text("+" + c.points() + " P", CYAN));
+                .append(Component.text("+" + c.points() + " P", CYAN))
+                .append(Component.text(" · Wert " + AngelText.money(worth), NamedTextColor.GOLD));
         if (c.amount() > 1) bar.append(Component.text(" · Doppelfang!", NamedTextColor.LIGHT_PURPLE, TextDecoration.BOLD));
         if (c.autoSold() > 0) bar.append(Component.text(" · verkauft +" + AngelText.money(c.autoSold()), NamedTextColor.GREEN));
         Component barText = bar.build();
@@ -177,7 +186,7 @@ public final class AngelFx {
                         .append(Component.text(" · " + AngelService.rank(lv), NamedTextColor.GRAY)).build());
             }, 45L);
         }
-        if (r.atLeast(Rarity.LEGENDAER)) {
+        if (r.atLeast(Rarity.LEGENDAER) && !v.special()) {
             Component msg = Component.text().append(PREFIX)
                     .append(Component.text(p.getName(), NamedTextColor.WHITE))
                     .append(Component.text(" hat einen ", NamedTextColor.GRAY))
@@ -187,6 +196,39 @@ public final class AngelFx {
                     .append(Component.text(" · " + AngelText.kg(c.kg()), NamedTextColor.WHITE)).build();
             for (Player o : Bukkit.getOnlinePlayers()) {
                 if ("survival".equals(core.modes().modeOf(o.getUniqueId()))) o.sendMessage(msg);
+            }
+        }
+    }
+
+    /**
+     * Varianten-Fang: Funken und Glitzern in der Farbe der Variante, eigener Klang; Gold und Diamant werden allen in
+     * Survival angesagt, Diamant zusätzlich mit Blitz-Effekt (ohne Schaden) und Klang für alle in der Nähe.
+     */
+    private void variantFx(Player p, Location hook, FishVariant v, FishSpecies s, AngelService.Catch c, long worth) {
+        org.bukkit.Color col = org.bukkit.Color.fromRGB(v.rgb);
+        Location at = p.getLocation().add(0, 1.2, 0);
+        p.getWorld().spawnParticle(Particle.DUST, at, 40, 0.6, 0.8, 0.6, 0, new Particle.DustOptions(col, 1.4f));
+        p.getWorld().spawnParticle(Particle.END_ROD, at, v == FishVariant.DIAMANT ? 40 : 15, 0.5, 0.7, 0.5, 0.05);
+        if (v != FishVariant.SILBER) p.getWorld().spawnParticle(Particle.TOTEM_OF_UNDYING, at, v == FishVariant.DIAMANT ? 80 : 30, 0.5, 0.8, 0.5, 0.3);
+        p.playSound(p.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_CHIME, 1.0f, v == FishVariant.DIAMANT ? 0.7f : 1.2f);
+        Bukkit.getScheduler().runTaskLater(addon, () -> Sfx.play(core, p, v == FishVariant.SILBER ? Sfx.Kind.SUCCESS_BIG : Sfx.Kind.EPIC), 8L);
+        if (v == FishVariant.DIAMANT && hook != null && hook.getWorld() != null) {
+            hook.getWorld().strikeLightningEffect(hook);
+            hook.getWorld().playSound(hook, Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.2f, 1.0f);
+        }
+        if (v == FishVariant.SILBER) return;
+        Component msg = Component.text().append(PREFIX)
+                .append(Component.text(p.getName(), NamedTextColor.WHITE))
+                .append(Component.text(" hat einen ", NamedTextColor.GRAY))
+                .append(Msg.parse("<b><gradient:" + v.hex() + ":" + v.light + ":" + v.hex() + ">" + Msg.escape(v.name(s)) + "</gradient></b>"))
+                .append(Component.text(" gefangen! ", NamedTextColor.GRAY))
+                .append(stars(c.stars()))
+                .append(Component.text(" · " + AngelText.kg(c.kg()) + " · ", NamedTextColor.WHITE))
+                .append(Component.text(AngelText.money(worth), NamedTextColor.GOLD)).build();
+        for (Player o : Bukkit.getOnlinePlayers()) {
+            if ("survival".equals(core.modes().modeOf(o.getUniqueId()))) {
+                o.sendMessage(msg);
+                if (o != p && v == FishVariant.DIAMANT) o.playSound(o.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 0.6f, 1.6f);
             }
         }
     }

@@ -69,6 +69,12 @@ public final class AngelScreens {
 
         Consumer<Player> buyAutoSell();
 
+        Consumer<Player> buyAutoSellAll();
+
+        Consumer<Player> toggleAutoSellAll();
+
+        Consumer<Player> buyBoost();
+
         Consumer<Player> tokenShop();
 
         Consumer<Player> bait(Bait b, String action);
@@ -390,7 +396,13 @@ public final class AngelScreens {
     // =================================================================================================================
 
     public record RodView(double luck, double faster, double treasure, int[] levels, boolean autoSell,
-                          long autoSellTokens, String armed, long coins, long tokens) {}
+                          long autoSellTokens, String armed, long coins, long tokens, boolean autoSellAll, boolean autoSellAllOn,
+                          long autoSellAllJewels, long jewels, long boostLeft, long boostTokens, long boostMinutes) {
+        public RodView(double luck, double faster, double treasure, int[] levels, boolean autoSell, long autoSellTokens, String armed,
+                       long coins, long tokens) {
+            this(luck, faster, treasure, levels, autoSell, autoSellTokens, armed, coins, tokens, false, false, 250, 0, 0, 450, 5);
+        }
+    }
 
     public static Canvas rod(RodView v, Nav nav) {
         Canvas c = new Canvas(W).heading("Angeln", net.kyori.adventure.text.format.TextColor.color(0x55FCFC));
@@ -434,6 +446,32 @@ public final class AngelScreens {
             textButtonRight(c, 380, y + 15, KitData.Button.PURPLE, armed ? "Nochmal klicken!" : "Kaufen · " + v.autoSellTokens + " Tokens",
                     ON_PURPLE, true, nav.buyAutoSell(), "Zweimal klicken zum Kaufen · Du hast " + v.tokens + " Tokens");
         }
+        y += 63;
+        // Auto-Verkauf Plus (Juwelen): alle Fische
+        c.box(0, y, W, 52, KitData.Box.NAVY);
+        c.icon(12, y + 18, KitData.Icon.HOPPER, false);
+        c.text(34, y + 8, "Auto-Verkauf Plus", TextColor.color(0x5FE3A0), true);
+        c.text(34, y + 19, "Verkauft alle Fische sofort", LIGHT, false);
+        c.text(34, y + 30, "außer Silber, Gold, Diamant", LIGHT, false);
+        if (v.autoSellAll) {
+            textButtonRight(c, 380, y + 15, v.autoSellAllOn ? KitData.Button.GREEN : KitData.Button.PURPLE,
+                    v.autoSellAllOn ? "An ✓" : "Aus", v.autoSellAllOn ? ON_GREEN : ON_PURPLE, true, nav.toggleAutoSellAll(),
+                    "Klick: an- oder ausschalten");
+        } else {
+            boolean armed = "autosellall".equals(v.armed);
+            textButtonRight(c, 380, y + 15, KitData.Button.PURPLE, armed ? "Nochmal klicken!" : "Kaufen · " + v.autoSellAllJewels + " Juwelen",
+                    ON_PURPLE, true, nav.buyAutoSellAll(), "Zweimal klicken zum Kaufen · Du hast " + AngelText.num(v.jewels) + " Juwelen");
+        }
+        y += 63;
+        // Angelboost (Tokens): +400 % Glück
+        c.box(0, y, W, 52, KitData.Box.NAVY);
+        c.icon(12, y + 18, KitData.Icon.EXPERIENCE, false);
+        c.text(34, y + 8, "Angelboost", GOLD_T, true);
+        c.text(34, y + 19, "+400 % Glück für " + v.boostMinutes + " Minuten", LIGHT, false);
+        c.text(34, y + 30, v.boostLeft > 0 ? "Aktiv: noch " + AngelText.duration(v.boostLeft) : "Nochmal kaufen verlängert", v.boostLeft > 0 ? GREEN : LIGHT, false);
+        boolean armedB = "boost".equals(v.armed);
+        textButtonRight(c, 380, y + 15, KitData.Button.PURPLE, armedB ? "Nochmal klicken!" : "Kaufen · " + v.boostTokens + " Tokens",
+                ON_PURPLE, true, nav.buyBoost(), "Zweimal klicken zum Kaufen · Du hast " + v.tokens + " Tokens");
         y += 60;
         textButtonRight(c, W, y, KitData.Button.PURPLE_LINE, "Doppelfang im Token-Shop", TextColor.color(0xD6A4FF), false,
                 nav.tokenShop(), "Chance auf zwei Fische auf einmal");
@@ -635,6 +673,7 @@ public final class AngelScreens {
             y += 18;
         }
         if (v.lastSale != null) c.textCenter(W / 2, 284, v.lastSale, GREEN, false);
+        else c.textCenter(W / 2, 284, Canvas.fit("Sterne und Gewicht zählen · Silber x3 · Gold x8 · Diamant x25", false, W - 20), GRAY, false);
         return c;
     }
 

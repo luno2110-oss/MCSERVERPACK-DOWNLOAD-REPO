@@ -32,12 +32,12 @@ public enum Rod {
     QUARZ("Quarzangel", "quarz", 0xF4ECE4, false, 60_000, 12, 11, 0, 0, 0, 0, 0, 0, "Nachts +12 % Glück, Nachtfische doppelt so oft."),
     AMETHYST("Amethystangel", "amethyst", 0xC7A0F8, false, 85_000, 13, 12, 0, 0, 8, 0, 0, 0, "Resonanz: 8 % Chance auf Doppelfang."),
     NETHERITE("Netheriteangel", "netherite", 0xA89AA8, false, 125_000, 15, 14, 0, 2, 0, 0, 0, 0, "+2 Gewichtswürfe, unzerstörbar."),
-    RAINBOW("Rainbow-Angel", "rainbow", 0xFF8AD8, true, 1_000, 18, 15, 0, 0, 0, 15, 0, 15,
-            "Regenbogen-Fang: 15 % Chance auf einen Stern mehr, bunte Schnur."),
-    VOID("Void-Angel", "void", 0xB46CFF, true, 1_500, 20, 18, 2, 0, 0, 0, 0, 0,
-            "Mythos-Fische überall, Schätze auch außerhalb der Angel-Zone."),
-    GOETTLICH("Göttliche Angel", "goettlich", 0xFFE7A8, true, 2_000, 25, 22, 3, 2, 10, 30, 20, 10,
-            "Segen: alles vereint, Lichtstrahl bei seltenen Fängen.");
+    RAINBOW("Rainbow-Angel", "rainbow", 0xFF8AD8, true, 1_000, 30, 30, 0, 0, 0, 30, 0, 30,
+            "Regenbogen-Fang: 30 % Chance auf einen Stern mehr, +30 % Angel-Punkte, bunte Schnur."),
+    VOID("Void-Angel", "void", 0xB46CFF, true, 1_500, 40, 35, 4, 1, 15, 0, 0, 0,
+            "Mythos-Fische überall, Schätze überall (+4 %), 15 % Doppelfang."),
+    GOETTLICH("Göttliche Angel", "goettlich", 0xFFE7A8, true, 2_000, 60, 45, 5, 3, 30, 50, 40, 35,
+            "Segen: +60 % Glück, -45 % Wartezeit, 30 % Doppelfang, 35 % Stern mehr, +40 % Fischwert sofort.");
 
     public final String label, id, perk;
     public final int color;
@@ -102,6 +102,9 @@ public enum Rod {
             case QUARZ -> "Nachts +12 % Glück";
             case AMETHYST -> "8 % Doppelfang";
             case NETHERITE -> "+2 Gewichtswürfe";
+            case RAINBOW -> "30 % Stern mehr, +30 % Punkte";
+            case VOID -> "Mythos überall, 15 % Doppelfang";
+            case GOETTLICH -> "Alles: 30 % Doppel, 35 % Stern";
             default -> perk;
         };
     }

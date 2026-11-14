@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.52** (ungetestet, nicht kompiliert)
+Stand: **v1.53** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -555,6 +555,15 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - große Beträge an engen Stellen jetzt kurz („1,2 Mio.“, „3 Mrd.“)
   - Kern: Info-Leiste (Vorschau der Job-Leiste ragte aus dem Fenster), Kits („alle … Std.“ über „Vorschau“), Bestenliste (Untertitel), Investments (Name über Preis), Quiz-Abstimmung (Zeile zu lang)
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
+
+## Angeln: viel mehr Geld, Varianten, stärkere Juwelen-Angeln, Auto-Verkauf Plus, Angelboost (v1.53, Test im Spiel offen)
+- [x] Neue Preise: Grundwert der Seltenheit x Sterne x Gewicht x Variante. Grundwert Gewöhnlich 100, Ungewöhnlich 220, Selten 520, Episch 1.300, Legendär 3.200, Mythisch 7.700; Sterne x1 / x1,6 / x2,5 / x4 / x6,5; Gewicht x0,5 (leichtester der Art) bis x2 (schwerster); Varianten Silber x3, Gold x8, Diamant x25. Ergebnis: 50 $ bis ~2,5 Mio. $ (Diamant-Mythisch, 5 Sterne, Rekordgewicht), dazu Goldene Stunde, Fisch des Tages, Angler-Job
+- [x] Gewicht steht jetzt am Fisch (Lore, gerundet, damit gleiche Fische stapeln) und zählt beim Verkauf; Wert ohne Boni steht ebenfalls in der Lore. Alte Fische ohne Gewicht bekommen ein typisches Gewicht für ihre Sterne
+- [x] Stundenbudget des Händlers (bisher 1.000 $) gilt nur noch für gewöhnliche und ungewöhnliche Fische ohne Variante und liegt bei 150.000 $ (`angeln.dealer.kleinfisch-budget`); seltene Fische und Varianten zahlt er immer voll
+- [x] Silber-, Gold- und Diamant-Varianten jeder Art (Chance 1,2 / 0,3 / 0,04 % je Fang, Glück erhöht leicht, `angeln.varianten`): eigene glänzende Texturen (216 neue, `tools/build_fish.py`), Glitzern am Item, Name im Verlauf, Titel „GOLD-FISCH!“, Partikel und Klang, Gold und Diamant werden allen in Survival angesagt (Diamant mit Blitz-Effekt), nie im Auto-Verkauf, Zähler im Profil
+- [x] Juwelen-Angeln deutlich stärker: Göttliche Angel (2.000 Juwelen) +60 % Glück, -45 % Wartezeit, 30 % Doppelfang, 35 % Stern mehr, +50 % Punkte, +40 % Fischwert sofort, +3 Gewichtswürfe, +5 % Schatz; Void +40 % Glück, -35 %, 15 % Doppelfang, +4 % Schatz; Rainbow +30 % Glück, -30 %, 30 % Stern mehr, +30 % Punkte
+- [x] Auto-Verkauf Plus für 250 Juwelen: verkauft alle Fische sofort (außer Silber, Gold, Diamant), unter Rute & Upgrades an- und ausschaltbar
+- [x] Angelboost für 450 Tokens: +400 % Glück für 5 Minuten, nochmal kaufen verlängert (`angeln.boost`)
 
 ## Jackpot-Ticker und Event-Hüte (v1.52, Test im Spiel offen)
 - [x] Jackpot-Ticker am Jackpot-Hologramm im Casino: die Zahl zählt sichtbar hoch wie ein Automaten-Zähler (statt einmal je Sekunde zu springen), blinkt dabei gold-weiß, darüber steigt „+N Chips“ in Grün auf und verblasst (höchstens einmal je Sekunde, kleine Zuwächse werden gesammelt), leiser Münzklang in der Nähe (höchstens alle 2 Sekunden). Nach einer Auszahlung springt die Zahl sofort auf den neuen Wert. Abschaltbar: `casino.jackpot-ticker.aktiv` und `.ton`

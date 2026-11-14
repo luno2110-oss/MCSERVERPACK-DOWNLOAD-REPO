@@ -295,6 +295,58 @@ def write_java():
         f.write("\n".join(L))
 
 
+# Seltene Varianten (FishVariant in Java): Fisch in Metall umgefärbt, Glanz oben links, Funkeln oben rechts
+VARIANTS = {"silber": ("silber", 0), "gold": ("gold", 1), "diamant": ("tuerkis", 2)}
+
+
+def metal(img, variant):
+    """Färbt einen fertigen Fisch in die Rampe der Variante um (Helligkeit -> Stufe), Kontur bleibt dunkel (leicht
+    getönt), dazu ein Glanzpixel oben links am Körper und ein kleines Funkeln oben rechts neben dem Fisch."""
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "icon_db"))
+    from materials import OUTLINE, RAMPS  # noqa: E402
+    ramp_name, _ = VARIANTS[variant]
+    ramp = [rgb(c.lstrip("#")) for c in RAMPS[ramp_name]]
+    if variant == "diamant":
+        ramp = ramp[2:]
+    out = img.copy()
+    px = out.load()
+    w, h = out.size
+    lum = {}
+    for y in range(h):
+        for x in range(w):
+            r, g, b, a = px[x, y]
+            if a:
+                lum[(x, y)] = 0.3 * r + 0.59 * g + 0.11 * b
+    body = [v for v in lum.values() if v >= 45]
+    lo, hi = (min(body), max(body)) if body else (0, 255)
+    edge = mix(rgb(OUTLINE.lstrip("#")), ramp[0], 0.35)
+    for (x, y), v in lum.items():
+        if v < 45:
+            px[x, y] = edge + (255,)
+            continue
+        t = (v - lo) / max(1, hi - lo)
+        t = min(1.0, t * 0.85 + 0.12 * (1 - y / h))        # Licht von oben
+        k = 1 + int(round(t * (len(ramp) - 2)))
+        px[x, y] = ramp[max(1, min(len(ramp) - 1, k))] + (255,)
+    # Glanz: erster Körperpixel von oben links
+    for d in range(w + h):
+        hit = [(x, d - x) for x in range(w) if 0 <= d - x < h and (x, d - x) in lum and lum[(x, d - x)] >= 45]
+        if hit:
+            x, y = hit[0]
+            px[x, y] = ramp[-1] + (255,)
+            break
+    # Funkeln oben rechts (nur auf leere Pixel, ohne Kontur)
+    occ = [(x, y) for (x, y) in lum]
+    top = min(y for _, y in occ) if occ else 2
+    right = max(x for x, _ in occ) if occ else 13
+    cx, cy = min(w - 2, right), max(1, top - 1)
+    for (dx, dy), c in (((0, 0), ramp[-1]), ((1, 0), ramp[-2]), ((-1, 0), ramp[-2]), ((0, 1), ramp[-2]), ((0, -1), ramp[-2])):
+        xx, yy = cx + dx, cy + dy
+        if 0 <= xx < w and 0 <= yy < h and px[xx, yy][3] == 0:
+            px[xx, yy] = c + (255,)
+    return out
+
+
 def build(out):
     write_java()
     tex = os.path.join(out, "assets/kuby/textures/item/fish")
@@ -312,6 +364,13 @@ def build(out):
             json.dump({"parent": "minecraft:item/generated", "textures": {"layer0": "kuby:item/fish/" + f[0]}}, fh)
         with open(os.path.join(items, f[0] + ".json"), "w", encoding="utf-8") as fh:
             json.dump({"model": {"type": "minecraft:model", "model": "kuby:item/fish/" + f[0]}}, fh)
+        for v in VARIANTS:
+            vid = f[0] + "_" + v
+            metal(img, v).save(os.path.join(tex, vid + ".png"))
+            with open(os.path.join(models, vid + ".json"), "w", encoding="utf-8") as fh:
+                json.dump({"parent": "minecraft:item/generated", "textures": {"layer0": "kuby:item/fish/" + vid}}, fh)
+            with open(os.path.join(items, vid + ".json"), "w", encoding="utf-8") as fh:
+                json.dump({"model": {"type": "minecraft:model", "model": "kuby:item/fish/" + vid}}, fh)
         sheet.alpha_composite(img, ((i % cols) * 16, (i // cols) * 16))
         sheet.alpha_composite(render(f, silhouette=True), ((i % cols) * 16, (rows + i // cols) * 16))
     return sheet

@@ -111,7 +111,7 @@ public final class AngelMenus implements AngelScreens.Nav {
         String recName = rec == null ? null : org.bukkit.Bukkit.getOfflinePlayer(rec.getKey()).getName();
         show(p, AngelScreens.detail(new AngelScreens.DetailView(s, a.caught.getOrDefault(s.id(), 0),
                 a.best.getOrDefault(s.id(), 0.0), recName, rec == null ? 0 : rec.getValue(),
-                service.price(p.getUniqueId(), s, 1), service.price(p.getUniqueId(), s, 5),
+                service.priceMin(p.getUniqueId(), s), service.priceMax(p.getUniqueId(), s),
                 service.bonusPercent(p.getUniqueId(), s), s.water() == Water.MYTHOS), this));
     }
 
@@ -122,7 +122,9 @@ public final class AngelMenus implements AngelScreens.Nav {
         for (Upgrade u : Upgrade.values()) levels[u.ordinal()] = a.upgrade(u);
         show(p, AngelScreens.rod(new AngelScreens.RodView(service.baseLuck(id) + Math.max(0, service.jobBonus(id)),
                 4.0 * a.upgrade(Upgrade.SCHNELLSPULE), 1.2 + 0.5 * a.upgrade(Upgrade.SCHATZSINN), levels, a.autoSell,
-                service.autoSellPrice(), armedFor(p), core.economy().balance(id), addon.jobs().worker(id).tokens), this));
+                service.autoSellPrice(), armedFor(p), core.economy().balance(id), addon.jobs().worker(id).tokens, a.autoSellAll,
+                a.autoSellAllOn, service.autoSellAllPrice(), core.jewels().balance(id), service.boostLeft(id), service.boostPrice(),
+                service.boostMinutes()), this));
     }
 
     public void openBaits(Player p) {
@@ -319,6 +321,54 @@ public final class AngelMenus implements AngelScreens.Nav {
                 Sfx.play(core, p, Sfx.Kind.LEVEL_UP);
                 Msg.send(p, "<aqua><b>ANGELN</b> <dark_gray>▶ <green>" + u.label + " auf Stufe "
                         + service.profile(p.getUniqueId()).upgrade(u) + "!");
+            }
+            openRod(p);
+        };
+    }
+
+    @Override
+    public Consumer<Player> buyAutoSellAll() {
+        return p -> {
+            if (!confirm(p, "autosellall")) {
+                openRod(p);
+                return;
+            }
+            String e = service.buyAutoSellAll(p);
+            if (e != null) {
+                err(p, e);
+            } else {
+                Sfx.play(core, p, Sfx.Kind.SUCCESS_BIG);
+                Msg.send(p, "<aqua><b>ANGELN</b> <dark_gray>▶ <green>Auto-Verkauf Plus aktiv: <white>alle Fische gehen sofort an den "
+                        + "Händler (außer Silber, Gold und Diamant). <gray>Ausschalten unter Rute & Upgrades.");
+            }
+            openRod(p);
+        };
+    }
+
+    @Override
+    public Consumer<Player> toggleAutoSellAll() {
+        return p -> {
+            boolean on = service.toggleAutoSellAll(p.getUniqueId());
+            Sfx.play(core, p, Sfx.Kind.CLICK);
+            Msg.send(p, "<aqua><b>ANGELN</b> <dark_gray>▶ <gray>Auto-Verkauf Plus " + (on ? "<green>an" : "<red>aus") + "<gray>.");
+            openRod(p);
+        };
+    }
+
+    @Override
+    public Consumer<Player> buyBoost() {
+        return p -> {
+            if (!confirm(p, "boost")) {
+                openRod(p);
+                return;
+            }
+            String e = service.buyBoost(p);
+            if (e != null) {
+                err(p, e);
+            } else {
+                Sfx.play(core, p, Sfx.Kind.EPIC);
+                Msg.send(p, "<aqua><b>ANGELN</b> <dark_gray>▶ <gold>Angelboost aktiv: <white>+400 % Glück <gray>für noch "
+                        + AngelText.duration(service.boostLeft(p.getUniqueId())) + ".");
             }
             openRod(p);
         };

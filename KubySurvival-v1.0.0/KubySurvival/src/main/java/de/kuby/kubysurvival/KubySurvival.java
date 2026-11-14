@@ -161,6 +161,13 @@ public final class KubySurvival extends JavaPlugin {
             core.registerSelfTestCanvas("Angel-Shop " + tab + " voll", () -> de.kuby.kubysurvival.angeln.AngelScreens.shop(
                     new de.kuby.kubysurvival.angeln.AngelScreens.ShopView(t, all, all, de.kuby.kubysurvival.angeln.Rod.GOETTLICH, 0, 0, null), an));
         }
+        // Rute & Upgrades: nichts gekauft (scharfe Knöpfe) und alles gekauft mit laufendem Boost
+        core.registerSelfTestCanvas("Angel-Rute leer", () -> de.kuby.kubysurvival.angeln.AngelScreens.rod(
+                new de.kuby.kubysurvival.angeln.AngelScreens.RodView(999.9, 99, 99.9, new int[4], false, 99_999, "boost", 999_999_999,
+                        999_999, false, false, 99_999, 999_999_999, 0, 99_999, 99), an));
+        core.registerSelfTestCanvas("Angel-Rute voll", () -> de.kuby.kubysurvival.angeln.AngelScreens.rod(
+                new de.kuby.kubysurvival.angeln.AngelScreens.RodView(999.9, 99, 99.9, new int[] {99, 99, 99, 99}, true, 150, null, 0,
+                        0, true, true, 250, 0, 86_399, 450, 5), an));
         // Angelwelt: alle offen (lange Namen), alle gesperrt, nicht eingerichtet
         for (int k = 0; k < 3; k++) {
             int mode = k;

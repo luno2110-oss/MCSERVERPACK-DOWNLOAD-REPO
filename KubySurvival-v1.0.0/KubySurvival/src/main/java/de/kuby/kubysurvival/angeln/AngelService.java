@@ -78,7 +78,7 @@ public final class AngelService {
     /** Ergebnis eines Fangs, für Anzeige und Animation. */
     public record Catch(FishSpecies species, double kg, int stars, int points, int amount, boolean record,
                         double previousBest, int levelBefore, int levelAfter, boolean zone, Water water,
-                        String treasure, long autoSold, Water pageDone) {}
+                        String treasure, long autoSold, Water pageDone, FishVariant variant) {}
 
     /** Zeile einer Bestenliste. */
     public record TopEntry(UUID id, String name, String value) {}
@@ -188,6 +188,7 @@ public final class AngelService {
         if (a.active != null && a.bait(a.active) > 0 && (!a.active.nightLuck || night)) luck += a.active.luck;
         if (inZone) luck += 10;
         luck += Math.max(0, jobBonus(id));
+        if (a.boostUntil > System.currentTimeMillis()) luck += cfg("boost.glueck", 400);
         return luck;
     }
 
@@ -401,6 +402,7 @@ public final class AngelService {
         kg = Math.round(kg * (kg < 10 ? 100 : 10)) / (kg < 10 ? 100.0 : 10.0);
         int stars = q < 0.35 ? 1 : q < 0.6 ? 2 : q < 0.8 ? 3 : q < 0.93 ? 4 : 5;
         if (rod != null && rod.star > 0 && stars < 5 && rnd.nextDouble() * 100 < rod.star) stars++;
+        FishVariant variant = rollVariant(luck, rnd);
 
         // Statistik
         int levelBefore = a.level();
@@ -411,6 +413,7 @@ public final class AngelService {
         int amount = 1;
         if (rnd.nextDouble() < 0.05 * a.doubleCatch + (rod == null ? 0 : rod.doubleCatch / 100.0)) amount = 2;
         a.caught.merge(species.id(), amount, Integer::sum);
+        if (variant.special()) a.variants.merge(variant.id, amount, Integer::sum);
         a.catches += amount;
         a.weekCatches += amount;
         long now = System.currentTimeMillis();
@@ -469,12 +472,14 @@ public final class AngelService {
 
         // Auto-Verkauf bis Ungewöhnlich
         long autoSold = 0;
-        if (a.autoSell && !species.rarity().atLeast(Rarity.SELTEN)) {
-            autoSold = sellNow(p, a, species, stars, amount);
+        double itemKg = AngelItems.itemKg(kg);
+        boolean plus = a.autoSellAll && a.autoSellAllOn && !variant.special();
+        if (plus || (a.autoSell && !species.rarity().atLeast(Rarity.SELTEN) && !variant.special())) {
+            autoSold = sellNow(p, a, species, stars, itemKg, amount);
         }
 
         // Goldene Hand: Anteil des Fischwerts sofort als Coins
-        if (rod != null && rod.coins > 0) pay(id, Math.max(1, price(id, species, stars) * amount * rod.coins / 100));
+        if (rod != null && rod.coins > 0) pay(id, Math.max(1, price(id, species, stars, itemKg, variant) * amount * rod.coins / 100));
 
         // Turnier
         if (tournamentRunning()) tournament.merge(id, kg * amount, Double::sum);
@@ -487,7 +492,7 @@ public final class AngelService {
         }
         dirty = true;
         return new Catch(species, kg, stars, points, amount, record, previous, levelBefore, levelAfter, inZone, water,
-                treasure, autoSold, pageDone);
+                treasure, autoSold, pageDone, variant);
     }
 
     private String treasure(Player p, AngelProfile a) {
@@ -532,7 +537,7 @@ public final class AngelService {
     }
 
     public long hourBudget() {
-        return cfg("dealer.hour-budget", 1000);
+        return cfg("dealer.kleinfisch-budget", 150_000);
     }
 
     /** Noch so viel diese Stunde zum vollen Preis. */
@@ -550,12 +555,50 @@ public final class AngelService {
         return b;
     }
 
-    /** Preis eines Fisches beim Händler (volles Budget). */
-    public long price(UUID id, FishSpecies s, int stars) {
-        Rarity r = s.rarity();
-        double f = Math.pow((Math.max(1, Math.min(5, stars)) - 1) / 4.0, 1.3);
-        double base = r.minPrice + (r.maxPrice - r.minPrice) * f;
-        return Math.max(1, Math.round(base * (100 + bonusPercent(id, s)) / 100.0));
+    /** Faktor je Stern (1 bis 5). */
+    private static final double[] STAR_FACTOR = {1.0, 1.6, 2.5, 4.0, 6.5};
+
+    /**
+     * Grundwert eines Fisches ohne Boni: Seltenheit x Sterne x Gewicht x Variante. Gewicht: leichtester Fisch der Art
+     * x0,5 bis schwerster x2. Gewöhnlich 1 Stern leicht = 50 $, Diamant-Mythisch 5 Sterne Rekordgewicht ~2,5 Mio. $.
+     */
+    public static long value(FishSpecies s, int stars, double kg, FishVariant v) {
+        double span = s.maxKg() - s.minKg();
+        double q = span <= 0 ? 0.5 : Math.max(0, Math.min(1, (kg - s.minKg()) / span));
+        double w = 0.5 + 1.5 * q;
+        double f = STAR_FACTOR[Math.max(1, Math.min(5, stars)) - 1];
+        return Math.max(50, Math.round(s.rarity().base * f * w * (v == null ? 1 : v.mult)));
+    }
+
+    /** Preis eines Fisches beim Händler (Grundwert plus Boni in Prozent). */
+    public long price(UUID id, FishSpecies s, int stars, double kg, FishVariant v) {
+        return Math.max(1, Math.round(value(s, stars, kg, v) * (100 + bonusPercent(id, s)) / 100.0));
+    }
+
+    /** Spanne einer Art (für die Fischbuch-Seite): 1 Stern leicht bis 5 Sterne schwer, ohne Variante. */
+    public long priceMin(UUID id, FishSpecies s) {
+        return price(id, s, 1, s.minKg(), FishVariant.NORMAL);
+    }
+
+    public long priceMax(UUID id, FishSpecies s) {
+        return price(id, s, 5, s.maxKg(), FishVariant.NORMAL);
+    }
+
+    /** Fällt der Fisch unter das Stundenbudget? Nur gewöhnliche und ungewöhnliche ohne Variante. */
+    static boolean budgeted(FishSpecies s, FishVariant v) {
+        return !s.rarity().atLeast(Rarity.SELTEN) && !v.special();
+    }
+
+    /** Würfelt die Variante: Chancen aus angeln.varianten.&lt;id&gt;.chance (Prozent), Glück erhöht sie leicht. */
+    private FishVariant rollVariant(double luck, ThreadLocalRandom rnd) {
+        double boost = 1 + Math.max(0, luck) / 200.0;
+        double x = rnd.nextDouble() * 100;
+        for (FishVariant v : new FishVariant[] {FishVariant.DIAMANT, FishVariant.GOLD, FishVariant.SILBER}) {
+            double c = core.getConfig().getDouble("angeln.varianten." + v.id + ".chance", v.chance) * boost;
+            if (x < c) return v;
+            x -= c;
+        }
+        return FishVariant.NORMAL;
     }
 
     private boolean matches(SellMode mode, FishSpecies s) {
@@ -573,12 +616,15 @@ public final class AngelService {
         for (ItemStack it : p.getInventory().getStorageContents()) {
             AngelItems.FishItem f = AngelItems.read(it);
             if (f == null || !matches(mode, f.species())) continue;
-            sum += price(p.getUniqueId(), f.species(), f.stars()) * it.getAmount();
+            sum += price(p.getUniqueId(), f.species(), f.stars(), f.kg(), f.variant()) * it.getAmount();
         }
         return sum;
     }
 
-    /** Bucht einen Verkauf: über dem Stundenbudget gibt es nur noch einen Teil des Preises. */
+    /**
+     * Bucht einen Verkauf von gewöhnlichen und ungewöhnlichen Fischen: über dem Stundenbudget gibt es nur noch einen
+     * Teil des Preises. Seltene Fische und Varianten laufen nicht über das Budget.
+     */
     private long book(AngelProfile a, long full) {
         String h = hourKey();
         if (!h.equals(a.dealerHour)) {
@@ -593,9 +639,9 @@ public final class AngelService {
         return atFull + reduced;
     }
 
-    private long sellNow(Player p, AngelProfile a, FishSpecies s, int stars, int amount) {
-        long full = price(p.getUniqueId(), s, stars) * amount;
-        long money = book(a, full);
+    private long sellNow(Player p, AngelProfile a, FishSpecies s, int stars, double kg, int amount) {
+        long full = price(p.getUniqueId(), s, stars, kg, FishVariant.NORMAL) * amount;
+        long money = budgeted(s, FishVariant.NORMAL) ? book(a, full) : full;
         a.earned += money;
         pay(p.getUniqueId(), money);
         sold(p, a, money);
@@ -605,25 +651,27 @@ public final class AngelService {
     public synchronized SaleResult sell(Player p, SellMode mode) {
         AngelProfile a = profile(p.getUniqueId());
         PlayerInventory inv = p.getInventory();
-        long full = 0;
+        long full = 0, small = 0;
         int count = 0;
         ItemStack[] contents = inv.getStorageContents();
         for (int i = 0; i < contents.length; i++) {
             AngelItems.FishItem f = AngelItems.read(contents[i]);
             if (f == null || !matches(mode, f.species())) continue;
-            full += price(p.getUniqueId(), f.species(), f.stars()) * contents[i].getAmount();
+            long v = price(p.getUniqueId(), f.species(), f.stars(), f.kg(), f.variant()) * contents[i].getAmount();
+            full += v;
+            if (budgeted(f.species(), f.variant())) small += v;
             count += contents[i].getAmount();
             contents[i] = null;
         }
         if (count == 0) return new SaleResult(0, 0, 0, false);
         inv.setStorageContents(contents);
         long leftBefore = budgetLeft(p.getUniqueId());
-        long money = book(a, full);
+        long money = book(a, small) + (full - small);
         a.earned += money;
         pay(p.getUniqueId(), money);
         sold(p, a, money);
         dirty = true;
-        return new SaleResult(count, money, full, full > leftBefore);
+        return new SaleResult(count, money, full, small > leftBefore);
     }
 
     private void sold(Player p, AngelProfile a, long money) {
@@ -698,6 +746,55 @@ public final class AngelService {
         if (a.autoSell) return "Auto-Verkauf hast du schon.";
         if (!addon.jobs().takeTokens(p.getUniqueId(), autoSellPrice())) return "Dafür brauchst du " + autoSellPrice() + " Tokens.";
         a.autoSell = true;
+        dirty = true;
+        return null;
+    }
+
+    public long autoSellAllPrice() {
+        return cfg("auto-sell-alles-juwelen", 250);
+    }
+
+    /** Auto-Verkauf Plus für Juwelen: verkauft alle Fische (außer Silber/Gold/Diamant und Minispiel-Fängen). */
+    public synchronized String buyAutoSellAll(Player p) {
+        String err = survivalOnly(p);
+        if (err != null) return err;
+        AngelProfile a = profile(p.getUniqueId());
+        if (a.autoSellAll) return "Auto-Verkauf Plus hast du schon.";
+        if (!core.jewels().take(p.getUniqueId(), autoSellAllPrice())) return "Dafür fehlen dir Juwelen (" + autoSellAllPrice() + ").";
+        a.autoSellAll = true;
+        a.autoSellAllOn = true;
+        dirty = true;
+        return null;
+    }
+
+    public synchronized boolean toggleAutoSellAll(UUID id) {
+        AngelProfile a = profile(id);
+        a.autoSellAllOn = !a.autoSellAllOn;
+        dirty = true;
+        return a.autoSellAllOn;
+    }
+
+    public long boostPrice() {
+        return cfg("boost.tokens", 450);
+    }
+
+    public long boostMinutes() {
+        return cfg("boost.minuten", 5);
+    }
+
+    /** Restzeit des Angelboosts in Sekunden (0 = aus). */
+    public synchronized long boostLeft(UUID id) {
+        return Math.max(0, (profile(id).boostUntil - System.currentTimeMillis()) / 1000);
+    }
+
+    /** Angelboost für Tokens: +400 % Glück für 5 Minuten; nochmal kaufen verlängert. */
+    public synchronized String buyBoost(Player p) {
+        String err = survivalOnly(p);
+        if (err != null) return err;
+        if (!addon.jobs().takeTokens(p.getUniqueId(), boostPrice())) return "Dafür brauchst du " + boostPrice() + " Tokens.";
+        AngelProfile a = profile(p.getUniqueId());
+        long now = System.currentTimeMillis();
+        a.boostUntil = Math.max(now, a.boostUntil) + boostMinutes() * 60_000L;
         dirty = true;
         return null;
     }
@@ -1067,6 +1164,9 @@ public final class AngelService {
                     a.bestStreak = s.getInt("best-streak");
                     a.treasures = s.getInt("treasures");
                     a.autoSell = s.getBoolean("auto-sell");
+                    a.autoSellAll = s.getBoolean("auto-sell-all");
+                    a.autoSellAllOn = s.getBoolean("auto-sell-all-on", true);
+                    a.boostUntil = s.getLong("boost-until");
                     a.doubleCatch = s.getInt("double-catch");
                     for (String r : s.getStringList("rods")) {
                         Rod rod = Rod.byId(r);
@@ -1100,6 +1200,8 @@ public final class AngelService {
                         }
                     }
                 }
+                ConfigurationSection vs = s.getConfigurationSection("variants");
+                if (vs != null) for (String k : vs.getKeys(false)) a.variants.put(k, vs.getInt(k));
                 ConfigurationSection c = s.getConfigurationSection("caught");
                 if (c != null) {
                     for (String f : c.getKeys(false)) {
@@ -1207,6 +1309,10 @@ public final class AngelService {
                 out.set(ob + "finished", o.finished);
             }
             for (Map.Entry<String, Integer> c : a.caught.entrySet()) out.set(base + "caught." + c.getKey(), c.getValue());
+            for (Map.Entry<String, Integer> c : a.variants.entrySet()) out.set(base + "variants." + c.getKey(), c.getValue());
+            out.set(base + "auto-sell-all", a.autoSellAll);
+            out.set(base + "auto-sell-all-on", a.autoSellAllOn);
+            if (a.boostUntil > System.currentTimeMillis()) out.set(base + "boost-until", a.boostUntil);
             for (Map.Entry<String, Double> b : a.best.entrySet()) out.set(base + "best." + b.getKey(), b.getValue());
         }
         for (Zone z : zones.values()) {

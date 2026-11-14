@@ -1065,19 +1065,36 @@ landclaim:
 
 # Angeln in Survival (KubySurvival): 48 Fischarten auf 6 Gewässern, Seltenheiten und Sterne, Angel-Punkte und
 # Level, Upgrades und Köder (/angeln). Angel-Zonen (/kp angel zone): +10 % Glück, -10 % Wartezeit,
-# Mythen-Fische und Schätze nur dort. Preise je Seltenheit: Gewöhnlich 2-8, Ungewöhnlich 5-19, Selten 14-53,
-# Episch 45-169, Legendär 180-675, Mythisch 900-3.375 (1 bis 5 Sterne).
+# Mythen-Fische und Schätze nur dort.
+# Preis = Grundwert der Seltenheit x Sterne x Gewicht x Variante (fest im Code):
+#   Grundwert: Gewöhnlich 100, Ungewöhnlich 220, Selten 520, Episch 1.300, Legendär 3.200, Mythisch 7.700
+#   Sterne: 1 = x1, 2 = x1,6, 3 = x2,5, 4 = x4, 5 = x6,5 · Gewicht: leichtester der Art x0,5 bis schwerster x2
+#   Variante: Silber x3, Gold x8, Diamant x25 · also 50 $ (Gewöhnlich, 1 Stern, leicht) bis ~2,5 Mio. $
+#   (Diamant-Mythisch, 5 Sterne, Rekordgewicht), dazu Goldene Stunde, Fisch des Tages und Angler-Job.
 angeln:
   dealer:
-    # So viel zahlt der Händler pro Stunde und Spieler zum vollen Preis, darüber nur noch over-budget-percent.
-    # (Balance: Jobs bringen 300+ Coins pro Stunde, Angeln mit Budget etwa 1.000 bis 1.500.)
-    hour-budget: 1000
+    # Nur gewöhnliche und ungewöhnliche Fische (ohne Variante): so viel zahlt der Händler pro Stunde und Spieler zum
+    # vollen Preis, darüber nur noch over-budget-percent. Seltene Fische und Varianten zahlt er immer voll.
+    kleinfisch-budget: 150000
     over-budget-percent: 20
+  # Seltene Varianten jeder Art (Chance je Fang in Prozent; Glück erhöht sie leicht). Eigene glänzende Textur,
+  # nie im Auto-Verkauf, Gold und Diamant werden allen in Survival angesagt.
+  varianten:
+    silber: {chance: 1.2}
+    gold: {chance: 0.3}
+    diamant: {chance: 0.04}
   # Belohnung für eine volle Fischbuch-Seite (alle 8 Arten)
   page-coins: 3000
   page-tokens: 2
   # Auto-Verkauf (Fische bis Ungewöhnlich sofort verkaufen), einmalig
   auto-sell-tokens: 150
+  # Auto-Verkauf Plus (alle Fische außer Silber/Gold/Diamant und Minispiel-Fängen), einmalig, an/aus schaltbar
+  auto-sell-alles-juwelen: 250
+  # Angelboost: Glück + glueck Prozent für minuten Minuten, nochmal kaufen verlängert
+  boost:
+    tokens: 450
+    minuten: 5
+    glueck: 400
   # Doppelfang im Token-Shop: 3 Stufen zu je 5 % Chance auf zwei Fische, Preis = Wert * Stufe
   double-catch-tokens: 100
   tournament:

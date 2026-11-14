@@ -85,7 +85,7 @@ public final class AngelListener implements Listener {
                     return;
                 }
                 AngelService.Catch c = service.catchFish(p, at);
-                ItemStack fish = AngelItems.fish(c.species(), c.stars(), c.amount());
+                ItemStack fish = AngelItems.fish(c.species(), c.stars(), c.kg(), c.variant(), c.amount());
                 if (c.autoSold() > 0) {
                     try {
                         item.setItemStack(ItemStack.empty());

@@ -40,6 +40,8 @@ public final class AngelProfile {
     public int weekCatches;
     public String week = "";
     public final Map<String, Integer> caught = new HashMap<>();
+    /** Gefangene Varianten (silber, gold, diamant) -> Anzahl. */
+    public final Map<String, Integer> variants = new HashMap<>();
     public final Map<String, Double> best = new HashMap<>();
     public long earned;
     public int streak;
@@ -48,6 +50,10 @@ public final class AngelProfile {
     public int treasures;
     public final Map<Upgrade, Integer> upgrades = new EnumMap<>(Upgrade.class);
     public boolean autoSell;
+    /** Auto-Verkauf Plus (Juwelen): verkauft alle Fische außer Varianten und Minispiel-Fängen; an/aus. */
+    public boolean autoSellAll, autoSellAllOn = true;
+    /** Angelboost (Tokens): Glück +400 % bis zu diesem Zeitpunkt. */
+    public long boostUntil;
     public int doubleCatch;
     public final Map<Bait, Integer> baits = new EnumMap<>(Bait.class);
     public Bait active;
