@@ -103,7 +103,10 @@ function playFishGame(bot) {
         const key = r < 0.8 ? 'left' : 'right';
         stats.gameInputs[key === 'left' ? 'a' : 'd']++;
         bot.setControlState(key, true);
-        setTimeout(() => { try { bot.setControlState(key, false); } catch (e) { /* weg */ } }, rnd(200, 600));
+        sendInput(bot, key);
+        setTimeout(() => {
+          try { bot.setControlState(key, false); sendInput(bot, null); } catch (e) { /* weg */ }
+        }, rnd(200, 600));
       }
     } catch (e) {
       stats.errors.push({ bot: bot.username, error: 'Minispiel: ' + String(e).slice(0, 200) });
@@ -111,6 +114,20 @@ function playFishGame(bot) {
     setTimeout(step, rnd(120, 350));
   };
   step();
+}
+
+// Tastenzustand wie ein echter 1.21.2+-Client (Paket player_input: A = left, D = right); der Server liest ihn über
+// Player#getCurrentInput. Nur wenn die Protokoll-Version das Paket kennt.
+function sendInput(bot, key) {
+  try {
+    const proto = require('minecraft-data')(bot.version).protocol;
+    if (!proto.play.toServer.types.packet_player_input) return;
+    bot._client.write('player_input', { inputs: { forward: false, backward: false, left: key === 'left', right: key === 'right',
+      jump: false, shift: false, sprint: false } });
+    stats.inputPackets = (stats.inputPackets || 0) + 1;
+  } catch (e) {
+    stats.inputErrors = String(e).slice(0, 200);
+  }
 }
 
 function endFishGame(bot, how) {

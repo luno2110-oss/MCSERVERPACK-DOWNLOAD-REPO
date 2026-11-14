@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.60** (ungetestet, nicht kompiliert)
+Stand: **v1.61** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -555,6 +555,10 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - große Beträge an engen Stellen jetzt kurz („1,2 Mio.“, „3 Mrd.“)
   - Kern: Info-Leiste (Vorschau der Job-Leiste ragte aus dem Fenster), Kits („alle … Std.“ über „Vorschau“), Bestenliste (Untertitel), Investments (Name über Preis), Quiz-Abstimmung (Zeile zu lang)
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
+
+## Fehler: Angel-Minispiel nahm nur den ersten Klick an (v1.61)
+- [x] Gefunden im Belastungstest: Bots klickten etwa 30 mal je Runde, am Server kam je Runde nur 1 Links- und 1 Rechtsklick an. Ursache: die Sperre gegen doppelte Klicks im selben Tick rechnete mit der Weltzeit, und die steht in Welten mit angehaltenem Tageszyklus (Hub-Zeitsperre) still, also galt jeder weitere Klick als „derselbe Tick“. Jetzt zählt der Server-Tick
+- [x] Die Bots melden sich mit deutscher Client-Sprache (wie die Tester) und schicken A/D als echtes Tasten-Paket; der Belastungstest scheitert jetzt auch, wenn Klicks nur teilweise ankommen oder A/D nicht ankommt
 
 ## Belastungstest: Angel-Minispiel mit echten Eingaben (v1.60)
 - [x] Neues Test-Event „Survival: Angel-Minispiel“: startet für bis zu 3 Spieler in Survival eine Runde mit einem extrem seltenen Fang (Animation, „1 zu N“, Leisten), wie nach einem echten Biss

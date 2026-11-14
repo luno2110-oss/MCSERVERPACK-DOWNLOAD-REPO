@@ -202,7 +202,7 @@ public final class FishGame implements Listener {
         Session s = sessions.get(e.getPlayer().getUniqueId());
         if (s == null || s.phase != 1 || e.getHand() != EquipmentSlot.HAND) return;
         // Rechtsklick mit der Angel schwingt den Arm mit: dieser Schwung ist kein Linksklick
-        long tick = s.p.getWorld().getFullTime();
+        long tick = org.bukkit.Bukkit.getCurrentTick(); // Server-Tick: die Weltzeit steht bei angehaltenem Tageszyklus still
         if (s.lastRight == tick || s.lastRight == tick - 1) return;
         push(s, false);
     }
@@ -223,7 +223,7 @@ public final class FishGame implements Listener {
     }
 
     private void push(Session s, boolean right) {
-        long tick = s.p.getWorld().getFullTime();
+        long tick = org.bukkit.Bukkit.getCurrentTick(); // Server-Tick: die Weltzeit steht bei angehaltenem Tageszyklus still
         if (right) {
             if (s.lastRight == tick) return;
             s.lastRight = tick;

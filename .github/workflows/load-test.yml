@@ -38,6 +38,7 @@ jobs:
           npm install --no-audit --no-fund
           node pick_version.js 1.21.11 > version.txt
           cat version.txt
+          echo "mineflayer sendet player_input selbst: $(grep -c player_input node_modules/mineflayer/lib/plugins/physics.js || true)"
           echo "MC_VERSION=$(sed -n 1p version.txt)" >> "$GITHUB_ENV"
           echo "NEED_VIA=$(sed -n 2p version.txt)" >> "$GITHUB_ENV"
 
@@ -158,12 +159,17 @@ jobs:
           played = [g for g in games if not g[1].startswith("abgebrochen")]
           if not played: probs.append("Angel-Minispiel: keine Runde zu Ende gespielt (gestartet: %d)" % gstarted)
           elif r.get("games", 0) == 0: probs.append("Angel-Minispiel: Bots haben den Spielstart nicht erkannt; Chat: " + " | ".join(r.get("fishChat", [])[:4]))
-          elif gsum[0] == 0 or gsum[1] == 0: probs.append("Angel-Minispiel: Klicks kommen nicht an (links %d, rechts %d)" % (gsum[0], gsum[1]))
+          else:
+              # je zu Ende gespielter Runde müssen viele Eingaben ankommen (Bots drücken etwa 3 bis 8 mal je Sekunde)
+              full = [g for g in played if g[1] in ("gewonnen", "entkommen")]
+              lc = sum(int(g[3]) for g in full); rc = sum(int(g[4]) for g in full); ad = sum(int(g[5]) + int(g[6]) for g in full)
+              if full and (lc < 3 * len(full) or rc < 3 * len(full)): probs.append("Angel-Minispiel: Klicks kommen nur teilweise an (%d Runden: links %d, rechts %d)" % (len(full), lc, rc))
+              if full and r.get("inputPackets", 0) > 0 and ad == 0: probs.append("Angel-Minispiel: A/D kommt nicht an (%d Tasten-Pakete gesendet)" % r.get("inputPackets", 0))
           print("## Belastungstest")
           print("- Bots: %d, Spawns: %d (davon %d Wiederkehrer), Befehle: %d, Chatzeilen: %d" % (n, r.get("spawned", 0), r.get("rejoins", 0), r.get("commands", 0), r.get("chats", 0)))
           print("- Menü-Klicks (wie echte Klicks, in den Pack-Dialogen): %d, dabei %d Menüs neu geöffnet" % (clicks, opened))
           print("- Event-Runden: %d (%s)" % (len(evruns), evruns[-1].strip() if evruns else "keine"))
-          print("- Angel-Minispiel: %d Runden gestartet, %d beendet (%s); am Server angekommen: %d Linksklicks, %d Rechtsklicks, %d Ticks A, %d Ticks D; Bots spielten %d Runden" % (gstarted, len(games), ", ".join("%s %d" % kv for kv in gout.items()) or "keine", gsum[0], gsum[1], gsum[2], gsum[3], r.get("games", 0)))
+          print("- Angel-Minispiel: %d Runden gestartet, %d beendet (%s); am Server angekommen: %d Linksklicks, %d Rechtsklicks, %d Ticks A, %d Ticks D; Bots spielten %d Runden, Tasten-Pakete %d%s" % (gstarted, len(games), ", ".join("%s %d" % kv for kv in gout.items()) or "keine", gsum[0], gsum[1], gsum[2], gsum[3], r.get("games", 0), r.get("inputPackets", 0), (" (Fehler: %s)" % r["inputErrors"]) if r.get("inputErrors") else ""))
           print("- TPS (1 min) gemessen: %s" % (", ".join("%.1f" % t for t in tps) or "keine Messung"))
           print("- Kicks: %d, Verbindungsfehler: %d, Befehlsfehler: %d, Exceptions im Log: %d" % (len(r.get("kicked", [])), len(r.get("errors", [])), len(r.get("cmdErrors", [])), len(exc)))
           open("problems.txt", "w").write("\n".join(probs) if probs else "keine Probleme")
