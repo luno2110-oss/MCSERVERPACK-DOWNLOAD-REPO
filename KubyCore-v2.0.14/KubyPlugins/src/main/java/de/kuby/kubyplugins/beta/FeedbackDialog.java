@@ -76,8 +76,9 @@ public final class FeedbackDialog {
         c.textRight(380, 12, "Seite " + (page + 1) + " von " + pages, GRAY, false);
         c.text(50, 32, Canvas.fit(title + " · " + sub, true, 330), GOLD, true);
         c.text(12, 48, "Beantwortet:", LIGHT, false);
-        c.bar(80, 48, 200, total == 0 ? 0 : (double) answered / total, KitData.Fill.GOLD);
-        c.text(286, 48, answered + " / " + total + (submitted ? " · abgeschickt ✔" : ""), submitted ? TextColor.color(0x6CE86E) : LIGHT, false);
+        c.bar(80, 48, 150, total == 0 ? 0 : (double) answered / total, KitData.Fill.GOLD);
+        c.text(236, 48, Canvas.fit(answered + " / " + total + (submitted ? " · abgeschickt ✔" : ""), false, 144),
+                submitted ? TextColor.color(0x6CE86E) : LIGHT, false);
         c.text(12, 59, Canvas.fit("Klick aufs Feld schaltet weiter · 6 Sterne = am besten · Text freiwillig", false, 366), GRAY, false);
         return c;
     }
