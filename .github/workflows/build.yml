@@ -69,11 +69,12 @@ jobs:
 
           KubyCore.jar ist das Hauptplugin, die anderen sind Addons und brauchen KubyCore.
           Welche fremden Plugins optional sind und welche du nicht brauchst: PLUGINS.md
+          Beta-Test vorbereiten (server.properties, Tester-Rolle, Feedback): BETA.md
           TXT
           sed -i 's/^          //' dist/INSTALLATION.txt
           sed -i "s/\${GITHUB_SHA}/${GITHUB_SHA::7}/" dist/INSTALLATION.txt
-          cp PLUGINS.md dist/
-          (cd dist && zip -q KubyPlugins.zip *.jar INSTALLATION.txt PLUGINS.md KubyUI-Pack.zip)
+          cp PLUGINS.md BETA.md dist/
+          (cd dist && zip -q KubyPlugins.zip *.jar INSTALLATION.txt PLUGINS.md BETA.md KubyUI-Pack.zip)
           ls -la dist
 
       # Client-Mod „Kuby Rematch“ (Fabric 1.21.11). Liegt bewusst NICHT in KubyPlugins.zip (die ZIP wandert in den
