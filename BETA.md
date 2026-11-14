@@ -32,7 +32,11 @@ Belastungstest in der CI (Release „load-test“) spielt genau das mit 10 Bots 
 - Kadmin → Sicherheit → **Beta-Feedback** (`/kadmin feedback`): Durchschnitt je Frage, Textantworten, Bugs
   (Hinreisen, Erledigt).
 - Kadmin → **Warnungen** und **Wirtschaft**: auffällige Buchungen (große Gutschriften, schnelles Geld).
-- `/tps` und `/mspt` im Auge behalten (Belastungstest: 19,7 bis 20,0 TPS mit 10 Bots).
+- `/tps` und `/mspt` im Auge behalten (Belastungstest: 18 bis 20 TPS mit 10 Bots, die dauernd Menüs klicken, Events
+  auslösen und das Angel-Minispiel spielen).
+- Selbst nachspielen, was der Belastungstest macht (nur Konsole und Admins): `/kubytest klicks 3` (jeder Spieler klickt
+  3 zufällige Knöpfe im offenen Menü), `/kubytest events` (alle Events einmal auslösen, auch eine Minispiel-Runde für
+  bis zu 3 Spieler in Survival).
 
 ## Danach
 
