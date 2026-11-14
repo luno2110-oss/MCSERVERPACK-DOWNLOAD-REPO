@@ -218,7 +218,7 @@ public final class LimitService {
         Bukkit.getScheduler().runTaskTimer(addon, task -> {
             for (int n = 0; n < 8 && at[0] < chunks.size(); n++, at[0]++) {
                 int[] c = chunks.get(at[0]);
-                snaps.add(worlds.get(c[0]).getChunkAt(c[1], c[2]).getChunkSnapshot(false, false, false));
+                snaps.add(worlds.get(c[0]).getChunkAt(c[1], c[2]).getChunkSnapshot(true, false, false)); // mit Höhenkarte (getHighestBlockYAt)
                 snapWorld.add(c[0]);
             }
             if (at[0] < chunks.size()) return;

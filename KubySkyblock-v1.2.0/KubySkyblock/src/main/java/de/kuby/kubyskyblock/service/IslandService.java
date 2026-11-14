@@ -1074,7 +1074,7 @@ public final class IslandService {
         int x0 = c.getBlockX() - r, x1 = c.getBlockX() + r, z0 = c.getBlockZ() - r, z1 = c.getBlockZ() + r;
         List<ChunkSnapshot> snaps = new ArrayList<>();
         for (int cx = x0 >> 4; cx <= x1 >> 4; cx++) {
-            for (int cz = z0 >> 4; cz <= z1 >> 4; cz++) snaps.add(w.getChunkAt(cx, cz).getChunkSnapshot(false, false, false));
+            for (int cz = z0 >> 4; cz <= z1 >> 4; cz++) snaps.add(w.getChunkAt(cx, cz).getChunkSnapshot(true, false, false)); // mit Höhenkarte (getHighestBlockYAt)
         }
         int min = w.getMinHeight(), max = w.getMaxHeight();
         Map<Material, Integer> cache = new HashMap<>();
