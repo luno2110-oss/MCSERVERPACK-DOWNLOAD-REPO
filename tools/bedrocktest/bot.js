@@ -13,6 +13,15 @@ const DURATION = +(process.env.DURATION || 90) * 1000;
 const COMMANDS = ['/menu', '/feedback', '/shop', '/settings', '/freunde', '/feedback', '/support', '/menu', '/modus survival', '/angeln'];
 
 const PACK_UUID = (process.env.PACK_UUID || '').toLowerCase();
+// bedrock-protocol liest die UUID im Pack-Info-Paket als zwei Little-Endian-Hälften: dieselbe UUID in dieser Schreibweise
+function swapped(u) {
+  const h = u.replace(/-/g, '');
+  if (h.length !== 32) return u;
+  const rev = (x) => x.match(/../g).reverse().join('');
+  const s = rev(h.slice(0, 16)) + rev(h.slice(16));
+  return [s.slice(0, 8), s.slice(8, 12), s.slice(12, 16), s.slice(16, 20), s.slice(20)].join('-');
+}
+const PACK_UUID_WIRE = PACK_UUID ? swapped(PACK_UUID) : '';
 const res = { pack: { offered: false, requested: false, chunks: 0, chunkCount: 0, size: 0, sha256ok: null, saved: null },
   version: VERSION, joined: false, spawned: false, packs: [], forms: [], clicks: 0, commands: [], chat: [],
   sidebarTitle: null, sidebarLines: [], errors: [], disconnect: null, schema: {} };
@@ -118,10 +127,10 @@ client.on('player_list', (p) => {
 client.on('resource_packs_info', (p) => {
   const list = p.texture_packs || p.resource_packs || [];
   const packs = list.map((x) => (x.uuid || x.pack_id) + ' ' + (x.version || '') + ' ' + (x.size || ''));
-  const ours = list.find((x) => String(x.uuid || x.pack_id).toLowerCase() === PACK_UUID);
+  const ours = list.find((x) => [PACK_UUID, PACK_UUID_WIRE].includes(String(x.uuid || x.pack_id).toLowerCase()));
   if (ours) {
     res.pack.offered = true;
-    packWanted = ours.uuid + '_' + ours.version;
+    packWanted = PACK_UUID + '_' + ours.version;
   } else if (PACK_UUID) {
     packPhase = 'done';     // nicht angeboten: normal weiter, die Auswertung meldet es
   }
