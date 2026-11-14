@@ -12,7 +12,9 @@ const VERSION = process.env.VERSION || '1.26.60';
 const DURATION = +(process.env.DURATION || 90) * 1000;
 const COMMANDS = ['/menu', '/feedback', '/shop', '/settings', '/freunde', '/feedback', '/support', '/menu', '/modus survival', '/angeln'];
 
-const res = { version: VERSION, joined: false, spawned: false, packs: [], forms: [], clicks: 0, commands: [], chat: [],
+const PACK_UUID = (process.env.PACK_UUID || '').toLowerCase();
+const res = { pack: { offered: false, requested: false, chunks: 0, chunkCount: 0, size: 0, sha256ok: null, saved: null },
+  version: VERSION, joined: false, spawned: false, packs: [], forms: [], clicks: 0, commands: [], chat: [],
   sidebarTitle: null, sidebarLines: [], errors: [], disconnect: null, schema: {} };
 const start = Date.now();
 const log = (...a) => console.log(`[${((Date.now() - start) / 1000).toFixed(1).padStart(5)}s]`, ...a);
@@ -33,6 +35,48 @@ function fieldsOf(name) {
 const client = bedrock.createClient({ host: HOST, port: PORT, username: 'KubyBedrock', offline: true, version: VERSION,
   skipPing: true, connectTimeout: 30000, skinData: { LanguageCode: 'de_DE' } });
 let uuid = '00000000-0000-0000-0000-000000000000';
+
+// Pack wie ein echtes Gerät herunterladen: die automatische Bestätigung von bedrock-protocol abfangen, unser Pack
+// anfordern (send_packs), alle Stücke laden, SHA-256 gegen Geysers Angabe prüfen und speichern
+const crypto = require('crypto');
+let packPhase = PACK_UUID ? 'idle' : 'done';
+let packWanted = null;
+let packInfo = null;
+const packChunks = [];
+const rawWrite = client.write.bind(client);
+client.write = (name, params) => {
+  if (name === 'resource_pack_client_response' && params && params.response_status === 'completed' && packPhase !== 'done') {
+    if (packPhase === 'idle' && packWanted) {
+      packPhase = 'downloading';
+      res.pack.requested = true;
+      log('fordere Pack an:', packWanted);
+      rawWrite(name, { response_status: 'send_packs', response_status_name: '', resourcepackids: [packWanted] });
+    }
+    return;
+  }
+  return rawWrite(name, params);
+};
+client.on('resource_pack_data_info', (p) => {
+  packInfo = p;
+  res.pack.chunkCount = p.chunk_count;
+  res.pack.size = Number(p.size);
+  log('Pack-Daten:', p.pack_id, p.chunk_count, 'Stücke,', Number(p.size), 'Bytes');
+  for (let i = 0; i < p.chunk_count; i++) rawWrite('resource_pack_chunk_request', { pack_id: p.pack_id, chunk_index: i });
+});
+client.on('resource_pack_chunk_data', (p) => {
+  packChunks[p.chunk_index] = Buffer.from(p.payload);
+  res.pack.chunks++;
+  if (packInfo && res.pack.chunks === packInfo.chunk_count) {
+    const buf = Buffer.concat(packChunks);
+    const sha = crypto.createHash('sha256').update(buf).digest();
+    res.pack.sha256ok = Buffer.compare(sha, Buffer.from(packInfo.hash)) === 0;
+    fs.writeFileSync('downloaded.mcpack', buf);
+    res.pack.saved = buf.length;
+    log('Pack geladen:', buf.length, 'Bytes, SHA-256', res.pack.sha256ok ? 'stimmt' : 'FALSCH');
+    packPhase = 'done';
+    rawWrite('resource_pack_client_response', { response_status: 'have_all_packs', response_status_name: '', resourcepackids: [] });
+  }
+});
 let queue = COMMANDS.slice();
 let lastCommandAt = 0;
 
@@ -67,7 +111,15 @@ client.on('player_list', (p) => {
   for (const r of (p.records && p.records.records) || []) if (r.username && r.username.includes('KubyBedrock') && r.uuid) uuid = r.uuid;
 });
 client.on('resource_packs_info', (p) => {
-  const packs = (p.texture_packs || p.resource_packs || []).map((x) => (x.uuid || x.pack_id) + ' ' + (x.version || '') + ' ' + (x.size || ''));
+  const list = p.texture_packs || p.resource_packs || [];
+  const packs = list.map((x) => (x.uuid || x.pack_id) + ' ' + (x.version || '') + ' ' + (x.size || ''));
+  const ours = list.find((x) => String(x.uuid || x.pack_id).toLowerCase() === PACK_UUID);
+  if (ours) {
+    res.pack.offered = true;
+    packWanted = ours.uuid + '_' + ours.version;
+  } else if (PACK_UUID) {
+    packPhase = 'done';     // nicht angeboten: normal weiter, die Auswertung meldet es
+  }
   res.packs.push(...packs);
   log('Resource Packs angeboten:', packs.length, packs.join(' | ').slice(0, 300));
 });

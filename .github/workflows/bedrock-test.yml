@@ -123,8 +123,17 @@ jobs:
           for i in $(seq 1 300); do grep -q "Done (" server.log && break; kill -0 $PID 2>/dev/null || break; sleep 1; done
           sleep 10
           grep -iE "geyser|floodgate|custom item|resource pack|pack" server.log | head -40
+          # Welche Versionen diese Geyser-Instanz selbst unterstützt (statt Wiki): Ausgabe von "geyser version"
+          echo "geyser version" >&3
+          sleep 6
+          grep -A12 -i "geyser version" server.log | tail -14 > geyser-version.txt || true
+          cat geyser-version.txt
+          # UUID unseres Packs (der Client lädt genau dieses wie ein Gerät herunter)
+          export PACK_UUID=$(unzip -p kuby/KubyBedrock.mcpack manifest.json | python3 -c "import json,sys;print(json.load(sys.stdin)['header']['uuid'])")
+          echo "Pack-UUID $PACK_UUID"
           (cd ../tools/bedrocktest && node bot.js > ../../server/bot.log 2>&1) || true
           cp ../tools/bedrocktest/bedrock-result.json . || echo '{}' > bedrock-result.json
+          cp ../tools/bedrocktest/downloaded.mcpack . || touch downloaded.mcpack
           echo "stop" >&3
           for i in $(seq 1 90); do kill -0 $PID 2>/dev/null || break; sleep 1; done
           kill $PID 2>/dev/null || true
@@ -148,6 +157,12 @@ jobs:
           if simple and imgs == 0: probs.append("Formulare ohne Bilder")
           probs += ["Log: " + l[:250] for l in exc[:30]]
           print("## Bedrock-Test (Bedrock %s über Geyser)" % r.get("version"))
+          try:
+              gv = [re.sub(r"^\[[^\]]*\] *(\[[^\]]*\] *)?", "", l).strip() for l in open("geyser-version.txt", encoding="utf-8", errors="replace")]
+              gv = [l for l in gv if re.search(r"(?i)bedrock|java|version|geyser", l)]
+          except OSError:
+              gv = []
+          print("- Geyser selbst (Konsole „geyser version“): " + (" · ".join(gv[:4]) if gv else "keine Ausgabe"))
           print("- Beigetreten: %s, gespawnt: %s, Resource Packs: %s" % (r.get("joined"), r.get("spawned"), len(r.get("packs", []))))
           print("- Befehle: %s" % ", ".join(r.get("commands", [])))
           print("- Formulare: %d (davon Menüs %d, Eingabe %d), Knöpfe mit Bild: %d, Klicks: %d" % (len(forms), len(simple),
@@ -162,6 +177,15 @@ jobs:
               print("\n### Probleme")
               for p in probs[:60]: print("    " + p)
           EOF
+          # Darstellbarkeit: geladenes Pack = unser Pack, jedes Knopf-Bild und jedes Icon-Zeichen im Pack sichtbar
+          pip install -q pillow
+          echo "" >> summary.md
+          echo "### Darstellung auf dem Gerät (Pack-Lieferung, Bilder, Glyphen)" >> summary.md
+          python3 ../tools/bedrocktest/verify.py bedrock-result.json kuby/KubyBedrock.mcpack downloaded.mcpack kuby/KubyBedrock-Items.json >> summary.md
+          if [ -s verify-problems.txt ]; then
+            if grep -q "keine Probleme" problems.txt; then cp verify-problems.txt problems.txt; else cat verify-problems.txt >> problems.txt; fi
+            { echo; echo "### Probleme (Darstellung)"; sed 's/^/    /' verify-problems.txt; } >> summary.md
+          fi
           cat summary.md >> "$GITHUB_STEP_SUMMARY"
           cat summary.md
           if ! grep -q "keine Probleme" problems.txt; then
@@ -180,4 +204,5 @@ jobs:
           touch bot.log summary.md server.log first.log
           gh release view bedrock-test -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
             gh release create bedrock-test -R "$GITHUB_REPOSITORY" --title "Bedrock-Test" --notes "Ergebnis des letzten Bedrock-Tests" --prerelease
-          gh release upload bedrock-test server.log first.log bot.log bedrock-result.json problems.txt summary.md -R "$GITHUB_REPOSITORY" --clobber
+          touch geyser-version.txt downloaded.mcpack
+          gh release upload bedrock-test server.log first.log bot.log bedrock-result.json problems.txt summary.md geyser-version.txt -R "$GITHUB_REPOSITORY" --clobber
