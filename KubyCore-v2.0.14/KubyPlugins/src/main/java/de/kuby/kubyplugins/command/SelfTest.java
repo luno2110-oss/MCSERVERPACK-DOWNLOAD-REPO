@@ -315,6 +315,7 @@ final class SelfTest {
                     for (java.util.Map<String, String> vals : List.of(java.util.Map.<String, String>of(), filled)) {
                         DialogBase base = DialogBase.builder(Msg.parse("<b>Beta-Feedback"))
                                 .canCloseWithEscape(true)
+                                .pause(false)
                                 .afterAction(DialogBase.DialogAfterAction.NONE)
                                 .body(List.of(DialogBody.plainMessage(Msg.parse("Kopf"), 454)))
                                 .inputs(de.kuby.kubyplugins.beta.FeedbackDialog.inputs(fp, vals))

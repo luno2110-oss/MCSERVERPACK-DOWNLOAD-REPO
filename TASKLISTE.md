@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.57** (ungetestet, nicht kompiliert)
+Stand: **v1.58** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -555,6 +555,12 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - große Beträge an engen Stellen jetzt kurz („1,2 Mio.“, „3 Mrd.“)
   - Kern: Info-Leiste (Vorschau der Job-Leiste ragte aus dem Fenster), Kits („alle … Std.“ über „Vorschau“), Bestenliste (Untertitel), Investments (Name über Preis), Quiz-Abstimmung (Zeile zu lang)
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
+
+## Angel-Minispiel: Steuerung überarbeitet (v1.58, Rückmeldung: reagierte nicht sauber auf Links-/Rechtsklick)
+- [x] Neu: A/D gedrückt halten steuert den Fangbereich gleichmäßig (`angeln.minispiel.tasten-tempo`); der Spieler steht währenddessen still (Laufgeschwindigkeit 0, danach zurück, auch bei Abbruch und Ausloggen)
+- [x] Linksklick über jeden Armschwung (auch beim Blick auf Blöcke oder Wasser) statt nur „Klick in die Luft“; Abbauen während des Spiels gesperrt
+- [x] Rechtsklick höchstens einmal je Tick (Minecraft meldete Haupt-/Nebenhand und Luft/Block doppelt), Rechtsklick auf Tiere zählt auch; der Armschwung, den die Angel beim Rechtsklick mitschickt, zählt nicht mehr als Linksklick
+- [x] Selbsttest-Fehler behoben (Testdialog für das Feedback-Formular war als pausierend gebaut)
 
 ## Beta-Test: Belastungstest und Stabilität (v1.57)
 - [x] Belastungstest in der CI (`.github/workflows/load-test.yml`, `tools/loadtest/bots.js`): nach jedem Build startet ein echter Paper-1.21.11-Server mit allen Kuby-Plugins, alle vier Modi werden eingerichtet, 10 Bots (mineflayer) joinen nach und nach und spielen 4 Minuten: wechseln zwischen Hub, SMP, Survival und Skyblock, öffnen rund 50 Menüs und Befehle (/menu, /shop, /angeln, /angeln pass, /angeln markt, /insel, /combo, /casino, /quests, /feedback, /bug …), laufen, springen, bauen ab, schicken sich Geld, chatten und loggen einmal aus und wieder ein. Geprüft werden Spawns, Kicks, Verbindungsfehler, Befehlsfehler, Exceptions und TPS (alle 30 s gemessen); Ergebnis als Release „load-test“

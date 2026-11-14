@@ -69,6 +69,9 @@ public final class FishGame implements Listener {
         final double meterMax;
         int combo, interval = 10, intervalTick;
         boolean clean = true;
+        /** Laufgeschwindigkeit vor dem Spiel (währenddessen 0, damit A/D nur den Bereich steuert). */
+        float walk = 0.2f;
+        long lastRight, lastLeft;
 
         Session(Player p, AngelService.Roll roll, int tier, Location hook) {
             this.p = p;
@@ -131,7 +134,9 @@ public final class FishGame implements Listener {
 
     /** Startet Animation und Minispiel für einen ausgewürfelten seltenen Fang. */
     public void start(Player p, Location hook, AngelService.Roll roll, int tier) {
-        sessions.put(p.getUniqueId(), new Session(p, roll, tier, hook.clone()));
+        Session s = new Session(p, roll, tier, hook.clone());
+        s.walk = p.getWalkSpeed();
+        sessions.put(p.getUniqueId(), s);
         p.playSound(p.getLocation(), Sound.BLOCK_BEACON_POWER_SELECT, 0.8f, 1.6f);
     }
 
@@ -139,16 +144,57 @@ public final class FishGame implements Listener {
     // Eingabe
     // =================================================================================================================
 
+    /**
+     * Rechtsklick (in die Luft oder auf einen Block): Bereich nach rechts. Höchstens einmal je Tick, weil Minecraft für
+     * Haupt- und Nebenhand oder für Luft und Block doppelt meldet. Linksklicks kommen über den Armschwung (onSwing).
+     */
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)
     public void onInteract(PlayerInteractEvent e) {
         Session s = sessions.get(e.getPlayer().getUniqueId());
-        if (s == null || e.getHand() == EquipmentSlot.OFF_HAND) return;
+        if (s == null) return;
         e.setCancelled(true);
         if (s.phase != 1) return;
-        double impulse = cfg("schub", 3.2);
         Action a = e.getAction();
-        if (a == Action.LEFT_CLICK_AIR || a == Action.LEFT_CLICK_BLOCK) s.zoneV -= impulse;
-        else if (a == Action.RIGHT_CLICK_AIR || a == Action.RIGHT_CLICK_BLOCK) s.zoneV += impulse;
+        if (a == Action.RIGHT_CLICK_AIR || a == Action.RIGHT_CLICK_BLOCK) push(s, true);
+    }
+
+    /** Linksklick: jeder Armschwung (auch auf Blöcke oder Wasser), höchstens einmal je Tick. */
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)
+    public void onSwing(io.papermc.paper.event.player.PlayerArmSwingEvent e) {
+        Session s = sessions.get(e.getPlayer().getUniqueId());
+        if (s == null || s.phase != 1 || e.getHand() != EquipmentSlot.HAND) return;
+        // Rechtsklick mit der Angel schwingt den Arm mit: dieser Schwung ist kein Linksklick
+        long tick = s.p.getWorld().getFullTime();
+        if (s.lastRight == tick || s.lastRight == tick - 1) return;
+        push(s, false);
+    }
+
+    /** Rechtsklick auf ein Tier oder einen Spieler zählt auch. */
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)
+    public void onEntity(org.bukkit.event.player.PlayerInteractEntityEvent e) {
+        Session s = sessions.get(e.getPlayer().getUniqueId());
+        if (s == null) return;
+        e.setCancelled(true);
+        if (s.phase == 1 && e.getHand() == EquipmentSlot.HAND) push(s, true);
+    }
+
+    /** Während des Spiels nichts abbauen (Linksklick auf Blöcke steuert nur). */
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onDamage(org.bukkit.event.block.BlockDamageEvent e) {
+        if (sessions.containsKey(e.getPlayer().getUniqueId())) e.setCancelled(true);
+    }
+
+    private void push(Session s, boolean right) {
+        long tick = s.p.getWorld().getFullTime();
+        if (right) {
+            if (s.lastRight == tick) return;
+            s.lastRight = tick;
+        } else {
+            if (s.lastLeft == tick) return;
+            s.lastLeft = tick;
+        }
+        double impulse = cfg("schub", 3.2);
+        s.zoneV += right ? impulse : -impulse;
     }
 
     /** Während des Spiels nicht neu auswerfen. */
@@ -159,7 +205,14 @@ public final class FishGame implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
-        sessions.remove(e.getPlayer().getUniqueId());
+        end(sessions.get(e.getPlayer().getUniqueId()));
+    }
+
+    /** Spiel beenden: Laufgeschwindigkeit zurück, Sitzung weg. */
+    private void end(Session s) {
+        if (s == null) return;
+        sessions.remove(s.p.getUniqueId());
+        if (s.p.getWalkSpeed() == 0f) s.p.setWalkSpeed(s.walk <= 0f ? 0.2f : s.walk);
     }
 
     // =================================================================================================================
@@ -170,12 +223,12 @@ public final class FishGame implements Listener {
         if (sessions.isEmpty()) return;
         for (Session s : new java.util.ArrayList<>(sessions.values())) {
             if (!s.p.isOnline()) {
-                sessions.remove(s.p.getUniqueId());
+                end(s);
                 continue;
             }
             // Modus oder Welt gewechselt (Hub, SMP, Skyblock): Spiel abbrechen, sonst landet der Fisch im falschen Inventar
             if (!"survival".equals(core.modes().modeOf(s.p.getUniqueId())) || !s.p.getWorld().equals(s.hook.getWorld())) {
-                sessions.remove(s.p.getUniqueId());
+                end(s);
                 s.p.clearTitle();
                 Msg.send(s.p, "<aqua><b>ANGELN</b> <dark_gray>▶ <gray>Der Fisch ist weg, du hast den Ort gewechselt.");
                 continue;
@@ -220,7 +273,8 @@ public final class FishGame implements Listener {
         if (s.t >= (secret ? 96 : 70)) {
             s.phase = 1;
             s.t = 0;
-            Msg.send(s.p, "<aqua><b>ANGELN</b> <dark_gray>▶ <white>Halte den Fisch im grünen Bereich! <gray>Linksklick ◀ · Rechtsklick ▶");
+            s.p.setWalkSpeed(0f);
+            Msg.send(s.p, "<aqua><b>ANGELN</b> <dark_gray>▶ <white>Halte den Fisch im grünen Bereich! <gray>A/D halten oder Linksklick ◀ · Rechtsklick ▶");
         }
     }
 
@@ -252,7 +306,11 @@ public final class FishGame implements Listener {
         double d = s.fishTarget - s.fishX;
         s.fishX += Math.signum(d) * Math.min(Math.abs(d), s.fishSpeed);
         s.fishX = Math.max(0, Math.min(W - FISH_W, s.fishX));
-        // Fangbereich: Schub aus Klicks, Reibung, Rand
+        // Fangbereich: A/D gedrückt halten (gleichmäßig), dazu Schub aus Klicks, Reibung, Rand
+        org.bukkit.Input in = s.p.getCurrentInput();
+        double accel = cfg("tasten-tempo", 0.75);
+        if (in.isLeft() && !in.isRight()) s.zoneV -= accel;
+        else if (in.isRight() && !in.isLeft()) s.zoneV += accel;
         s.zoneX += s.zoneV;
         s.zoneV *= cfg("reibung", 0.82);
         if (s.zoneX < 0) {
@@ -331,7 +389,7 @@ public final class FishGame implements Listener {
     }
 
     private void win(Session s) {
-        sessions.remove(s.p.getUniqueId());
+        end(s);
         double mult = mult(s);
         AngelService.Catch c = service.book(s.p, s.roll, mult, true);
         ItemStack fish = AngelItems.fish(c.species(), c.stars(), c.kg(), c.variant(), mult, c.odds(), c.amount());
@@ -351,7 +409,7 @@ public final class FishGame implements Listener {
     }
 
     private void lose(Session s) {
-        sessions.remove(s.p.getUniqueId());
+        end(s);
         long jewels = buyPrice(s.roll.odds());
         offers.put(s.p.getUniqueId(), new Offer(s.roll, s.tier, jewels, System.currentTimeMillis() + 60_000L));
         s.p.showTitle(Title.title(Component.text("ENTKOMMEN", NamedTextColor.RED, TextDecoration.BOLD),
