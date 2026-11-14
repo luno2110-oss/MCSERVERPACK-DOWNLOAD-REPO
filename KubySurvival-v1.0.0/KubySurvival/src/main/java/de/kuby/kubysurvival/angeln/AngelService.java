@@ -78,7 +78,7 @@ public final class AngelService {
     /** Ergebnis eines Fangs, für Anzeige und Animation. */
     public record Catch(FishSpecies species, double kg, int stars, int points, int amount, boolean record,
                         double previousBest, int levelBefore, int levelAfter, boolean zone, Water water,
-                        String treasure, long autoSold, Water pageDone, FishVariant variant) {}
+                        String treasure, long autoSold, Water pageDone, FishVariant variant, double mult, double odds) {}
 
     /** Zeile einer Bestenliste. */
     public record TopEntry(UUID id, String name, String value) {}
@@ -111,6 +111,13 @@ public final class AngelService {
         this.file = new File(addon.getDataFolder(), "angeln.yml");
         load();
         this.pass = new AngelPass(addon, core, this);
+        this.market = new AngelMarket(addon, core);
+    }
+
+    private final AngelMarket market;
+
+    public AngelMarket market() {
+        return market;
     }
 
     private final AngelPass pass;
@@ -388,8 +395,28 @@ public final class AngelService {
     // Fangen
     // =================================================================================================================
 
+    /**
+     * Ausgewürfelter, noch nicht verbuchter Fang. odds = 1 zu N (Art x Sterne x Variante), daraus die Stufe für das
+     * Minispiel: ab angeln.minispiel.ab (5.000) wirklich selten, ab .extrem-ab (250.000) extrem selten.
+     */
+    public record Roll(FishSpecies species, double kg, int stars, FishVariant variant, double odds, boolean inZone, boolean night,
+                       Water water, Rod rod, AngelWorld.Spot spot) {}
+
+    /** 0 = normal, 1 = wirklich selten, 2 = extrem selten (Minispiel, Animation, Markt). */
+    public int tier(Roll r) {
+        if (!core.getConfig().getBoolean("angeln.minispiel.aktiv", true)) return 0;
+        if (r.odds() >= core.getConfig().getDouble("angeln.minispiel.extrem-ab", 250_000)) return 2;
+        if (r.odds() >= core.getConfig().getDouble("angeln.minispiel.ab", 5_000)) return 1;
+        return 0;
+    }
+
     /** Würfelt Art, Gewicht und Sterne aus und verbucht den Fang. */
     public synchronized Catch catchFish(Player p, Location hook) {
+        return book(p, roll(p, hook), 1.0, false);
+    }
+
+    /** Würfelt einen Fang aus (ohne ihn zu verbuchen). */
+    public synchronized Roll roll(Player p, Location hook) {
         UUID id = p.getUniqueId();
         AngelProfile a = profile(id);
         Zone zone = zoneAt(hook);
@@ -423,10 +450,12 @@ public final class AngelService {
         ThreadLocalRandom rnd = ThreadLocalRandom.current();
         double roll = rnd.nextDouble(total);
         FishSpecies species = pool.get(pool.size() - 1);
+        double pSpecies = w[pool.size() - 1] / total;
         for (int i = 0; i < pool.size(); i++) {
             roll -= w[i];
             if (roll < 0) {
                 species = pool.get(i);
+                pSpecies = w[i] / total;
                 break;
             }
         }
@@ -442,6 +471,38 @@ public final class AngelService {
         // 6-Sterne-Secret: selten aus einem 5-Sterne-Fang (Kosmos-Angel 10x so oft)
         if (stars == 5 && rnd.nextDouble() * 100 < secretChance(rod)) stars = 6;
         FishVariant variant = rollVariant(luck, rnd, rod);
+
+        // Wahrscheinlichkeit: Art x Stern-Bereich des Gewichtswurfs x Secret x Variante
+        int n = rolls + 1;
+        double[] lo = {0, 0.35, 0.6, 0.8, 0.93}, hi = {0.35, 0.6, 0.8, 0.93, 1.0};
+        int band = Math.min(5, stars) - 1;
+        double pStars = Math.max(1e-9, Math.pow(hi[band], n) - Math.pow(lo[band], n));
+        if (stars == 6) pStars *= secretChance(rod) / 100.0;
+        double pVar = 1;
+        if (variant.special()) {
+            double boost = (1 + Math.max(0, luck) / 200.0) * (rod == Rod.STURM ? 5 : 1);
+            pVar = core.getConfig().getDouble("angeln.varianten." + variant.id + ".chance", variant.chance) * boost / 100.0;
+        }
+        double odds = 1.0 / Math.max(1e-15, pSpecies * pStars * pVar);
+        return new Roll(species, kg, stars, variant, odds, inZone, night, water, rod, spot);
+    }
+
+    /**
+     * Verbucht einen ausgewürfelten Fang. mult = Combo-Faktor aus dem Minispiel (Wert x mult), minigame = nie im
+     * Auto-Verkauf.
+     */
+    public synchronized Catch book(Player p, Roll r, double mult, boolean minigame) {
+        UUID id = p.getUniqueId();
+        AngelProfile a = profile(id);
+        FishSpecies species = r.species();
+        double kg = r.kg();
+        int stars = r.stars();
+        FishVariant variant = r.variant();
+        boolean inZone = r.inZone(), night = r.night();
+        Water water = r.water();
+        Rod rod = r.rod();
+        AngelWorld.Spot spot = r.spot();
+        ThreadLocalRandom rnd = ThreadLocalRandom.current();
 
         // Statistik
         int levelBefore = a.level();
@@ -513,13 +574,15 @@ public final class AngelService {
         // Auto-Verkauf bis Ungewöhnlich
         long autoSold = 0;
         double itemKg = AngelItems.itemKg(kg);
-        boolean plus = a.autoSellAll && a.autoSellAllOn && !variant.special();
-        if (plus || (a.autoSell && !species.rarity().atLeast(Rarity.SELTEN) && !variant.special())) {
+        boolean plus = a.autoSellAll && a.autoSellAllOn && !variant.special() && !minigame;
+        if (plus || (a.autoSell && !species.rarity().atLeast(Rarity.SELTEN) && !variant.special() && !minigame)) {
             autoSold = sellNow(p, a, species, stars, itemKg, amount);
         }
 
         // Goldene Hand: Anteil des Fischwerts sofort als Coins
-        if (rod != null && rod.coins > 0) pay(id, Math.max(1, price(id, species, stars, itemKg, variant) * amount * rod.coins / 100));
+        if (rod != null && rod.coins > 0) {
+            pay(id, Math.max(1, Math.round(price(id, species, stars, itemKg, variant) * mult) * amount * rod.coins / 100));
+        }
 
         // Turnier
         if (tournamentRunning()) tournament.merge(id, kg * amount, Double::sum);
@@ -532,7 +595,7 @@ public final class AngelService {
         }
         dirty = true;
         return new Catch(species, kg, stars, points, amount, record, previous, levelBefore, levelAfter, inZone, water,
-                treasure, autoSold, pageDone, variant);
+                treasure, autoSold, pageDone, variant, mult, r.odds());
     }
 
     private String treasure(Player p, AngelProfile a) {
@@ -662,7 +725,7 @@ public final class AngelService {
         for (ItemStack it : p.getInventory().getStorageContents()) {
             AngelItems.FishItem f = AngelItems.read(it);
             if (f == null || !matches(mode, f.species())) continue;
-            sum += price(p.getUniqueId(), f.species(), f.stars(), f.kg(), f.variant()) * it.getAmount();
+            sum += Math.round(price(p.getUniqueId(), f.species(), f.stars(), f.kg(), f.variant()) * f.mult()) * it.getAmount();
         }
         return sum;
     }
@@ -703,9 +766,9 @@ public final class AngelService {
         for (int i = 0; i < contents.length; i++) {
             AngelItems.FishItem f = AngelItems.read(contents[i]);
             if (f == null || !matches(mode, f.species())) continue;
-            long v = price(p.getUniqueId(), f.species(), f.stars(), f.kg(), f.variant()) * contents[i].getAmount();
+            long v = Math.round(price(p.getUniqueId(), f.species(), f.stars(), f.kg(), f.variant()) * f.mult()) * contents[i].getAmount();
             full += v;
-            if (budgeted(f.species(), f.variant())) small += v;
+            if (budgeted(f.species(), f.variant()) && f.mult() <= 1.0) small += v;
             count += contents[i].getAmount();
             contents[i] = null;
         }

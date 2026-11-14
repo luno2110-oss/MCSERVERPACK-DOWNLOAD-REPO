@@ -64,6 +64,10 @@ import build_cookie_art  # noqa: E402
 build_cookie_art.build()
 import build_event_items  # noqa: E402
 build_event_items.build(OUT)
+
+# Fang-Minispiel beim Angeln (Schrift kuby:fishgame), siehe build_fishgame.py
+import build_fishgame  # noqa: E402
+build_fishgame.build(OUT)
 # Generatoren: 3D-Spawner-Käfige je Art und Qualität, dazu die Symbole, die sich im Spawner-Block drehen
 build_generator_art.write_models(OUT)
 # Cookie Clicker: großer Keks, Glückskeks und Kekse aus dem Keksregen

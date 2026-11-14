@@ -77,6 +77,8 @@ public final class AngelScreens {
 
         Consumer<Player> pass();
 
+        Consumer<Player> market();
+
         Consumer<Player> tokenShop();
 
         Consumer<Player> bait(Bait b, String action);
@@ -258,7 +260,9 @@ public final class AngelScreens {
             textButton(c, 0, 402, KitData.Button.TEAL_LINE, "Zur Angel-Zone", AQUA, false, nav.toZone(),
                     "+10 % Glück, Mythen-Fische und Schätze");
         }
-        textButtonRight(c, W, 402, KitData.Button.DARK, "So funktioniert's", TAB, false, nav.help(), "Kurz erklärt");
+        int hw = textButtonRight(c, W, 402, KitData.Button.DARK, "So funktioniert's", TAB, false, nav.help(), "Kurz erklärt");
+        textButtonRight(c, W - hw - 6, 402, KitData.Button.PURPLE_LINE, "Fisch-Markt", TextColor.color(0xD6A4FF), false, nav.market(),
+                "Extrem seltene Fische gegen Juwelen kaufen und anbieten");
         return c;
     }
 

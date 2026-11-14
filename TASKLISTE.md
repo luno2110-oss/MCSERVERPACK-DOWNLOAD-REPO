@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.54** (ungetestet, nicht kompiliert)
+Stand: **v1.55** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -555,6 +555,16 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - große Beträge an engen Stellen jetzt kurz („1,2 Mio.“, „3 Mrd.“)
   - Kern: Info-Leiste (Vorschau der Job-Leiste ragte aus dem Fenster), Kits („alle … Std.“ über „Vorschau“), Bestenliste (Untertitel), Investments (Name über Preis), Quiz-Abstimmung (Zeile zu lang)
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
+
+## Angeln: Fang-Minispiel, „1 zu N“-Animation, Freikaufen, Fisch-Markt (v1.55, Test im Spiel offen)
+- [x] Jeder Fang hat jetzt eine Wahrscheinlichkeit „1 zu N“ (Art x Sterne x Variante x Secret). Normale und seltene Fänge bleiben wie bisher; ab 1 zu 5.000 „wirklich selten“, ab 1 zu 250.000 „extrem selten“ (`angeln.minispiel`)
+- [x] Würfel-Animation wie in Roblox-RNG-Spielen: Stufen laufen durch (Gewöhnlich bis Göttlich), werden langsamer, landen auf der Stufe nach „1 zu N“ mit Untertitel „Hecht ★★★★★ · 1 zu 12.000.122“, Klänge und Totem-Partikel. 6-Sterne-Secrets landen erst auf „Episch“ und drehen dann zu „SECRET!“
+- [x] Fang-Minispiel (eigene Grafik `kuby:fishgame`, `tools/build_fishgame.py`): im Untertitel oben die Wasser-Leiste mit dem Fisch (treibt, springt, zickzackt, zittert, zufällig gewechselt), darunter der eigene Fangbereich (Linksklick nach links, Rechtsklick nach rechts, mit Schwung), darüber der Fangbalken. Grün = Fisch drin, orange = draußen
+  - wirklich selten: größerer Bereich (36 px), extrem selten: kleiner (22 px), schneller und länger; schwere Fische zusätzlich kleiner und schneller
+  - Combo im Titel: alle 0,50 s ganz im Bereich +1, Takt je Erfolg 0,10 s kürzer bis 0,10 s, raus = Takt wieder 0,50 s (Combo bleibt). Kein Limit, Wert x (1 + Combo x 0,03), steht als „Combo x…“ am Fisch
+  - Gewonnen: „GEFANGEN!“, Fisch mit Combo und „1 zu N“ in der Lore; extrem seltene werden allen in Survival angesagt
+  - Entkommen: 60 Sekunden lang für 100 bis 1.000 Juwelen kaufbar (je seltener desto teurer), Klick im Chat oder `/angeln freikaufen`
+- [x] Fisch-Markt (`/angeln markt`, Knopf im Angel-Menü): nur extrem seltene Fische, Preis in Juwelen (`/angeln markt anbieten <Juwelen>` mit dem Fisch in der Hand), Karten mit Sternen, Gewicht, „1 zu N“, Combo und Verkäufer, Kaufen mit Rückfrage, eigene Angebote zurücknehmen, Verkäufer bekommt den Preis minus 5 % auch offline, höchstens 5 Angebote je Spieler
 
 ## Angelpass, Pass-Angeln, 6-Sterne-Secret (v1.54, Test im Spiel offen)
 - [x] Angelpass (`/angeln pass`, Kachel im Angel-Menü): 550 Juwelen, 75 Stufen, kein Gratis-Pfad. Stufen steigen mit den Angel-Punkten jedes Fangs (2.000 je Stufe) oder lassen sich kaufen (Stufe 1 = 25 Juwelen, jede weitere +2). Dialog mit Vorteilen, Fortschrittsbalken, „Stufe kaufen“, „Alles abholen“ und Belohnungen in 5 Seiten zu 15 Karten

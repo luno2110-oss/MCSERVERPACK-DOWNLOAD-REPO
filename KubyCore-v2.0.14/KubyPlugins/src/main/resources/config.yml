@@ -1106,6 +1106,22 @@ angeln:
     stufe-start: 25
     stufe-plus: 2
     gewinn-prozent: 150
+  # Wirklich seltene Fänge (Wahrscheinlichkeit 1 zu ab, extrem selten ab extrem-ab): Würfel-Animation mit „1 zu N“,
+  # danach das Fang-Minispiel (Untertitel: oben der Fisch, unten der Fangbereich, Linksklick nach links, Rechtsklick
+  # nach rechts). Combo alle 0,50 s im Bereich, Takt wird je Erfolg 0,10 s kürzer (bis 0,10 s), raus = Takt wieder 0,50 s;
+  # Wert x (1 + Combo x combo-wert), kein Limit. Entkommen: 60 s lang für 100 bis 1.000 Juwelen kaufbar (/angeln freikaufen).
+  minispiel:
+    aktiv: true
+    ab: 5000
+    extrem-ab: 250000
+    combo-wert: 0.03
+    schub: 3.2              # Tempo des Fangbereichs je Klick (Pixel je Tick)
+    reibung: 0.82
+  # Fisch-Markt (/angeln markt): nur extrem seltene Fische, Preis in Juwelen
+  markt:
+    gebuehr-prozent: 5
+    max-angebote: 5
+    max-preis: 1000000
   # Doppelfang im Token-Shop: 3 Stufen zu je 5 % Chance auf zwei Fische, Preis = Wert * Stufe
   double-catch-tokens: 100
   tournament:

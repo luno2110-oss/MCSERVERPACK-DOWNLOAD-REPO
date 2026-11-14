@@ -145,6 +145,12 @@ public final class KubySurvival extends JavaPlugin {
     public GraveService graves() { return graves; }
     public FurnitureService furniture() { return furniture; }
 
+    private static de.kuby.kubysurvival.angeln.AngelMarketScreen.Actions marketNav() {
+        return (de.kuby.kubysurvival.angeln.AngelMarketScreen.Actions) java.lang.reflect.Proxy.newProxyInstance(
+                KubySurvival.class.getClassLoader(), new Class<?>[]{de.kuby.kubysurvival.angeln.AngelMarketScreen.Actions.class},
+                (o, m, args) -> (java.util.function.Consumer<org.bukkit.entity.Player>) pl -> { });
+    }
+
     private static de.kuby.kubysurvival.angeln.AngelPassScreen.Actions passNav() {
         return (de.kuby.kubysurvival.angeln.AngelPassScreen.Actions) java.lang.reflect.Proxy.newProxyInstance(
                 KubySurvival.class.getClassLoader(), new Class<?>[]{de.kuby.kubysurvival.angeln.AngelPassScreen.Actions.class},
@@ -184,6 +190,18 @@ public final class KubySurvival extends JavaPlugin {
                         999_999_999, 2000, 75, 550, 999_999, 999_999_999, page, cl, "level"), passNav());
             });
         }
+        core.registerSelfTestCanvas("Fisch-Markt voll", () -> {
+            java.util.List<de.kuby.kubysurvival.angeln.AngelMarketScreen.Card> cards = new java.util.ArrayList<>();
+            for (int i = 0; i < 8; i++) {
+                cards.add(new de.kuby.kubysurvival.angeln.AngelMarketScreen.Card("" + i, de.kuby.kubysurvival.angeln.FishSpecies.ALL.get(i * 9),
+                        i == 3 ? 6 : 5, de.kuby.kubysurvival.angeln.FishVariant.values()[i % 4], 9999.9, 99.99, 999_999_999_999.0,
+                        "WWWWWWWWWWWWWWWW", 999_999_999, i % 3 == 0));
+            }
+            return de.kuby.kubysurvival.angeln.AngelMarketScreen.canvas(new de.kuby.kubysurvival.angeln.AngelMarketScreen.View(cards, 1, 9,
+                    999_999_999, 5, "buy:1"), marketNav());
+        });
+        core.registerSelfTestCanvas("Fisch-Markt leer", () -> de.kuby.kubysurvival.angeln.AngelMarketScreen.canvas(
+                new de.kuby.kubysurvival.angeln.AngelMarketScreen.View(java.util.List.of(), 0, 1, 0, 0, null), marketNav()));
         core.registerSelfTestCanvas("Angelpass ohne Pass", () -> de.kuby.kubysurvival.angeln.AngelPassScreen.canvas(
                 new de.kuby.kubysurvival.angeln.AngelPassScreen.View(false, 0, 0, 2000, 0, 550, 25, 999_999_999, 0,
                         new boolean[de.kuby.kubysurvival.angeln.AngelPass.MAX], "pass"), passNav()));
@@ -392,8 +410,11 @@ public final class KubySurvival extends JavaPlugin {
         angelHolo = new AngelHolo(this);
         AngelDealer angelDealer = new AngelDealer(this);
         AngelFx angelFx = new AngelFx(this, core, angeln);
-        getServer().getPluginManager().registerEvents(new AngelListener(this, core, angeln, angelFx, angelMenus, angelDealer), this);
+        de.kuby.kubysurvival.angeln.FishGame fishGame = new de.kuby.kubysurvival.angeln.FishGame(this, core, angeln, angelFx);
+        getServer().getPluginManager().registerEvents(fishGame, this);
+        getServer().getPluginManager().registerEvents(new AngelListener(this, core, angeln, angelFx, angelMenus, angelDealer, fishGame), this);
         AngelCommand angelCommand = new AngelCommand(core, angeln, angelMenus, angelHolo, angelDealer);
+        angelCommand.game(fishGame);
         // Orte für die Kamerafahrt der Einführung (Survival): Priester, Bankier, Angel-Händler am Spawn
         if (core.intro() != null) {
             core.intro().registerPoints(mode -> {

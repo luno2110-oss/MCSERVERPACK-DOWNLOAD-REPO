@@ -40,15 +40,29 @@ public final class AngelListener implements Listener {
     private final AngelFx fx;
     private final AngelMenus menus;
     private final AngelDealer dealer;
+    private final FishGame game;
 
     public AngelListener(KubySurvival addon, KubyPlugins core, AngelService service, AngelFx fx, AngelMenus menus,
-                         AngelDealer dealer) {
+                         AngelDealer dealer, FishGame game) {
         this.addon = addon;
         this.core = core;
         this.service = service;
         this.fx = fx;
         this.menus = menus;
         this.dealer = dealer;
+        this.game = game;
+        if (game != null) game.onFinish(this::afterCatch);
+    }
+
+    /** Alles nach einem Fang: Effekte, Angel-Effekte, Job-XP, Quests. */
+    private void afterCatch(Player p, Location at, AngelService.Catch c, ItemStack fish) {
+        fx.caught(p, at, c, fish);
+        rodFx(p, at, c);
+        Rarity r = c.species().rarity();
+        int xp = 4 + 4 * r.ordinal() * r.ordinal();
+        addon.jobs().reward(p, Job.ANGLER, xp, xp);
+        addon.questProgress(p, "fish", null, c.amount());
+        if (c.treasure() != null) addon.questProgress(p, "treasure", null, 1);
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -86,7 +100,15 @@ public final class AngelListener implements Listener {
                     item.remove();
                     return;
                 }
-                AngelService.Catch c = service.catchFish(p, at);
+                // wirklich seltene Fänge: Würfel-Animation und Minispiel statt sofort
+                AngelService.Roll roll = service.roll(p, at);
+                int tier = service.tier(roll);
+                if (tier > 0 && game != null && !game.active(p)) {
+                    item.remove();
+                    game.start(p, at, roll, tier);
+                    return;
+                }
+                AngelService.Catch c = service.book(p, roll, 1.0, false);
                 ItemStack fish = AngelItems.fish(c.species(), c.stars(), c.kg(), c.variant(), c.amount());
                 if (c.autoSold() > 0) {
                     try {
@@ -100,13 +122,7 @@ public final class AngelListener implements Listener {
                     item.setVelocity(item.getVelocity().multiply(0.2));
                     item.teleport(p.getLocation().add(0, 0.3, 0));
                 }
-                fx.caught(p, at, c, fish);
-                rodFx(p, at, c);
-                Rarity r = c.species().rarity();
-                int xp = 4 + 4 * r.ordinal() * r.ordinal();
-                addon.jobs().reward(p, Job.ANGLER, xp, xp);
-                addon.questProgress(p, "fish", null, c.amount());
-                if (c.treasure() != null) addon.questProgress(p, "treasure", null, 1);
+                afterCatch(p, at, c, fish);
             }
             default -> fx.stop(p);
         }

@@ -28,6 +28,12 @@ public final class AngelCommand implements CommandExecutor, TabCompleter {
     private final AngelDealer dealer;
     private final Map<UUID, Location[]> corners = new HashMap<>();
 
+    private FishGame game;
+
+    public void game(FishGame g) {
+        this.game = g;
+    }
+
     public AngelCommand(KubyPlugins core, AngelService service, AngelMenus menus, AngelHolo holo, AngelDealer dealer) {
         this.core = core;
         this.service = service;
@@ -44,6 +50,24 @@ public final class AngelCommand implements CommandExecutor, TabCompleter {
             case "buch", "fischbuch" -> menus.openBook(p, Water.FLUSS);
             case "rute", "upgrades" -> menus.openRod(p);
             case "pass", "angelpass" -> menus.openPass(p, -1);
+            case "freikaufen" -> {
+                if (game != null) game.buyEscaped(p);
+            }
+            case "markt", "fischmarkt" -> {
+                if (args.length >= 3 && args[1].equalsIgnoreCase("anbieten")) {
+                    long price;
+                    try {
+                        price = Long.parseLong(args[2].replace(".", ""));
+                    } catch (NumberFormatException ex) {
+                        Msg.send(p, "<red>Nutzung: /angeln markt anbieten <Juwelen>");
+                        return true;
+                    }
+                    String e = service.market().offer(p, price);
+                    if (e != null) Msg.send(p, "<red>" + e);
+                    else Msg.send(p, "<aqua><b>FISCH-MARKT</b> <dark_gray>▶ <green>Angebot eingestellt für " + AngelText.num(price) + " Juwelen.");
+                }
+                menus.openMarket(p, 0);
+            }
             case "shop", "angeln", "kaufen" -> menus.openShop(p, args.length > 1 && args[1].toLowerCase().startsWith("j") ? 1 : 0);
             case "koeder", "köder" -> menus.openBaits(p);
             case "haendler", "händler", "verkaufen" -> menus.openDealer(p, null);

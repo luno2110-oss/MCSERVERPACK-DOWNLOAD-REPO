@@ -27,9 +27,15 @@ public final class AngelItems {
     private static final NamespacedKey KEY_STARS = new NamespacedKey("kubysurvival", "angel_stars");
     private static final NamespacedKey KEY_KG = new NamespacedKey("kubysurvival", "angel_kg");
     private static final NamespacedKey KEY_VARIANT = new NamespacedKey("kubysurvival", "angel_variant");
+    private static final NamespacedKey KEY_MULT = new NamespacedKey("kubysurvival", "angel_mult");
+    private static final NamespacedKey KEY_ODDS = new NamespacedKey("kubysurvival", "angel_odds");
 
     /** Gelesener Fisch: Art, Sterne, Gewicht (alte Items ohne Gewicht: Mitte des Stern-Bereichs) und Variante. */
-    public record FishItem(FishSpecies species, int stars, double kg, FishVariant variant) {}
+    public record FishItem(FishSpecies species, int stars, double kg, FishVariant variant, double mult, double odds) {
+        public FishItem(FishSpecies species, int stars, double kg, FishVariant variant) {
+            this(species, stars, kg, variant, 1.0, 0);
+        }
+    }
 
     /** Gewicht auf dem Item, gröber gerundet, damit sich gleiche Fische stapeln: unter 1 kg 0,05, unter 10 kg 0,1, unter 100 kg 1, sonst 10. */
     public static double itemKg(double kg) {
@@ -58,7 +64,13 @@ public final class AngelItems {
     }
 
     public static ItemStack fish(FishSpecies s, int stars, double kg, FishVariant v, int amount) {
+        return fish(s, stars, kg, v, 1.0, 0, amount);
+    }
+
+    /** mult = Combo-Faktor aus dem Minispiel, odds = 1 zu N (0 = nicht anzeigen). */
+    public static ItemStack fish(FishSpecies s, int stars, double kg, FishVariant v, double mult, double odds, int amount) {
         double ikg = itemKg(kg);
+        mult = Math.round(Math.max(1.0, mult) * 100) / 100.0;
         ItemStack item = new ItemStack(Material.COD, amount);
         item.unsetData(DataComponentTypes.FOOD);
         item.unsetData(DataComponentTypes.CONSUMABLE);
@@ -81,7 +93,9 @@ public final class AngelItems {
         lore.add(line("Seltenheit: ", s.rarity().label, s.rarity().color()));
         lore.add(line("Gewicht: ", AngelText.kg(ikg), NamedTextColor.WHITE));
         lore.add(line("Gewässer: ", s.water().label, NamedTextColor.AQUA));
-        lore.add(line("Wert: ", AngelText.money(AngelService.value(s, stars, ikg, v)) + " (ohne Boni)", NamedTextColor.GOLD));
+        if (odds >= 1) lore.add(line("Seltenheit: ", "1 zu " + AngelText.num(Math.round(odds)), TextColor.color(0xFF8AD8)));
+        if (mult > 1.0) lore.add(line("Combo: ", "x" + AngelText.dec(mult), TextColor.color(0xFFD25A)));
+        lore.add(line("Wert: ", AngelText.money(Math.round(AngelService.value(s, stars, ikg, v) * mult)) + " (ohne Boni)", NamedTextColor.GOLD));
         lore.add(Component.empty());
         lore.add(Msg.item("<dark_gray>Verkaufen beim Fischhändler · /angeln"));
         meta.lore(lore);
@@ -90,6 +104,8 @@ public final class AngelItems {
         pdc.set(KEY_STARS, PersistentDataType.INTEGER, stars);
         pdc.set(KEY_KG, PersistentDataType.DOUBLE, ikg);
         if (v.special()) pdc.set(KEY_VARIANT, PersistentDataType.STRING, v.id);
+        if (mult > 1.0) pdc.set(KEY_MULT, PersistentDataType.DOUBLE, mult);
+        if (odds >= 1) pdc.set(KEY_ODDS, PersistentDataType.DOUBLE, (double) Math.round(odds));
         item.setItemMeta(meta);
         return item;
     }
@@ -109,7 +125,10 @@ public final class AngelItems {
         Integer stars = pdc.get(KEY_STARS, PersistentDataType.INTEGER);
         int st = stars == null ? 1 : Math.max(1, Math.min(6, stars));
         Double kg = pdc.get(KEY_KG, PersistentDataType.DOUBLE);
-        return new FishItem(s, st, kg == null ? kgForStars(s, st) : kg, FishVariant.byId(pdc.get(KEY_VARIANT, PersistentDataType.STRING)));
+        Double mult = pdc.get(KEY_MULT, PersistentDataType.DOUBLE);
+        Double odds = pdc.get(KEY_ODDS, PersistentDataType.DOUBLE);
+        return new FishItem(s, st, kg == null ? kgForStars(s, st) : kg, FishVariant.byId(pdc.get(KEY_VARIANT, PersistentDataType.STRING)),
+                mult == null ? 1.0 : Math.max(1.0, mult), odds == null ? 0 : odds);
     }
 
     public static boolean isFish(ItemStack it) {

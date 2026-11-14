@@ -327,6 +327,75 @@ public final class AngelMenus implements AngelScreens.Nav {
     }
 
     // =================================================================================================================
+    // Fisch-Markt
+    // =================================================================================================================
+
+    @Override
+    public Consumer<Player> market() {
+        return p -> openMarket(p, 0);
+    }
+
+    public void openMarket(Player p, int page) {
+        if (!survival(p)) return;
+        UUID id = p.getUniqueId();
+        AngelMarket m = service.market();
+        List<AngelMarket.Listing> all = m.all();
+        int pages = Math.max(1, (all.size() + AngelMarketScreen.PER_PAGE - 1) / AngelMarketScreen.PER_PAGE);
+        int pg = Math.max(0, Math.min(pages - 1, page));
+        List<AngelMarketScreen.Card> cards = new ArrayList<>();
+        for (AngelMarket.Listing l : all.subList(pg * AngelMarketScreen.PER_PAGE, Math.min(all.size(), (pg + 1) * AngelMarketScreen.PER_PAGE))) {
+            AngelItems.FishItem f = AngelItems.read(l.item());
+            if (f == null) continue;
+            cards.add(new AngelMarketScreen.Card(l.id(), f.species(), f.stars(), f.variant(), f.kg(), f.mult(), f.odds(), l.sellerName(),
+                    l.price(), l.seller().equals(id)));
+        }
+        String armedKey = armedFor(p);
+        show(p, AngelMarketScreen.canvas(new AngelMarketScreen.View(cards, pg, pages, core.jewels().balance(id), (int) m.countOf(id), armedKey),
+                marketActions(pg)));
+    }
+
+    private AngelMarketScreen.Actions marketActions(int page) {
+        return new AngelMarketScreen.Actions() {
+            @Override
+            public Consumer<Player> back() {
+                return AngelMenus.this.main();
+            }
+
+            @Override
+            public Consumer<Player> buy(String id) {
+                return p -> {
+                    if (!confirm(p, "buy:" + id)) {
+                        openMarket(p, page);
+                        return;
+                    }
+                    String e = service.market().buy(p, id);
+                    if (e != null) err(p, e);
+                    else {
+                        Sfx.play(core, p, Sfx.Kind.SUCCESS_BIG);
+                        Msg.send(p, "<aqua><b>FISCH-MARKT</b> <dark_gray>▶ <green>Gekauft! <gray>Der Fisch ist in deinem Inventar.");
+                    }
+                    openMarket(p, page);
+                };
+            }
+
+            @Override
+            public Consumer<Player> cancel(String id) {
+                return p -> {
+                    String e = service.market().cancel(p, id);
+                    if (e != null) err(p, e);
+                    else Sfx.play(core, p, Sfx.Kind.CLICK);
+                    openMarket(p, page);
+                };
+            }
+
+            @Override
+            public Consumer<Player> page(int pg) {
+                return p -> openMarket(p, pg);
+            }
+        };
+    }
+
+    // =================================================================================================================
     // Angelpass
     // =================================================================================================================
 
