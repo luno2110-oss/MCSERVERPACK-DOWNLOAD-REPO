@@ -33,9 +33,24 @@ import java.util.function.Supplier;
 public final class EditorService implements Listener {
 
     /** Ein Eintrag in einer Kategorie. {@code confirm}: erst nach einem zweiten Klick ausführen (große Eingriffe). */
-    public record Tool(String id, String name, String desc, Material icon, boolean confirm, Consumer<Player> action) {
+    public record Tool(String id, String name, String desc, Material icon, boolean confirm, Consumer<Player> action, String button) {
+        public Tool(String id, String name, String desc, Material icon, boolean confirm, Consumer<Player> action) {
+            this(id, name, desc, icon, confirm, action, "Ausführen");
+        }
+
+        /** Aktion (Knopf „Ausführen“). */
         public static Tool of(String id, String name, String desc, Material icon, Consumer<Player> action) {
-            return new Tool(id, name, desc, icon, false, action);
+            return new Tool(id, name, desc, icon, false, action, "Ausführen");
+        }
+
+        /** Gibt ein Item (Knopf „Holen“). */
+        public static Tool give(String id, String name, String desc, Material icon, Consumer<Player> action) {
+            return new Tool(id, name, desc, icon, false, action, "Holen");
+        }
+
+        /** Öffnet ein Menü (Knopf „Öffnen ›“). */
+        public static Tool open(String id, String name, String desc, Material icon, Consumer<Player> action) {
+            return new Tool(id, name, desc, icon, false, action, "Öffnen ›");
         }
     }
 

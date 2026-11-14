@@ -335,13 +335,13 @@ public final class KubySkyblock extends JavaPlugin {
             out.add(new de.kuby.kubyplugins.editor.EditorService.Tool("loot", "10 Loot-Inseln erzeugen",
                     "Neue Loot-Inseln in dieser Welt", org.bukkit.Material.CHEST_MINECART, true,
                     p -> p.performCommand("kp skyblock loot generate 10")));
-            out.add(de.kuby.kubyplugins.editor.EditorService.Tool.of("werkzeug", "Vorlagen-Werkzeug",
+            out.add(de.kuby.kubyplugins.editor.EditorService.Tool.give("werkzeug", "Vorlagen-Werkzeug",
                     "Ecken markieren, dann /kp skyblock template save <id>", org.bukkit.Material.STICK,
                     p -> p.performCommand("kp skyblock tool")));
             out.add(de.kuby.kubyplugins.editor.EditorService.Tool.of("vorlagen", "Insel-Vorlagen anzeigen",
                     "Alle Vorlagen im Chat", org.bukkit.Material.MAP, p -> p.performCommand("kp skyblock template list")));
             for (String tier : loot().tiers()) {
-                out.add(de.kuby.kubyplugins.editor.EditorService.Tool.of("loot-" + tier, "Loot bearbeiten: " + tier,
+                out.add(de.kuby.kubyplugins.editor.EditorService.Tool.open("loot-" + tier, "Loot bearbeiten: " + tier,
                         "Inhalt der Loot-Kisten dieser Stufe", org.bukkit.Material.BARREL,
                         p -> p.performCommand("kp skyblock loot edit " + tier)));
             }

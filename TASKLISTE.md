@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.63** (ungetestet, nicht kompiliert)
+Stand: **v1.64** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -556,6 +556,10 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Kern: Info-Leiste (Vorschau der Job-Leiste ragte aus dem Fenster), Kits („alle … Std.“ über „Vorschau“), Bestenliste (Untertitel), Investments (Name über Preis), Quiz-Abstimmung (Zeile zu lang)
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
+## Angelpass und Editor-Knöpfe (v1.64)
+- [x] Angelpass: Stufen kaufen kostet immer gleich viel (25 Juwelen je Stufe, `angeln.angelpass.stufe-preis`), statt mit jedem Level 2 Juwelen teurer zu werden. Alte Configs: `stufe-plus` wird nicht mehr gelesen
+- [x] Editor: Knöpfe nach Art des Werkzeugs, „Holen“ (Item), „Öffnen ›“ (Menü), „Ausführen“ (Aktion), bei großen Eingriffen „Ausführen“ → „Sicher? Ja!“
+
 ## Editor `/kp editor` (v1.63, Test im Spiel offen)
 - [x] `/kp editor` öffnet den Editor als Dialog (Admin-Stil wie Kadmin): Kategorien mit Anzahl der Einträge, je Kategorie Werkzeuge mit „Holen“ oder „Ausführen“. Ohne Pack als Chat-Liste mit Klick-Befehlen; direkt: `/kp editor <kategorie> [werkzeug]`
 - [x] **Kisten**: jede Kiste aus der Config (alle Modi) als platzierbarer Block mit Namen in der Schlüsselfarbe, Modus und Anzahl der Gewinne; zeigt, wie oft sie schon steht. Rechtsklick auf einen Block stellt sie hin (zum Spieler gedreht), das Item bleibt in der Hand für weitere. Abbauen: Schleichen + Linksklick (nur Admins), dann gibt es das Item zurück. Block je Kiste wählbar: `crates.<modus>.<id>.block` (z. B. ENDER_CHEST, BARREL), sonst Truhe. `/keys kiste set` geht weiter
@@ -615,7 +619,7 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
 - [x] Fisch-Markt (`/angeln markt`, Knopf im Angel-Menü): nur extrem seltene Fische, Preis in Juwelen (`/angeln markt anbieten <Juwelen>` mit dem Fisch in der Hand), Karten mit Sternen, Gewicht, „1 zu N“, Combo und Verkäufer, Kaufen mit Rückfrage, eigene Angebote zurücknehmen, Verkäufer bekommt den Preis minus 5 % auch offline, höchstens 5 Angebote je Spieler
 
 ## Angelpass, Pass-Angeln, 6-Sterne-Secret (v1.54, Test im Spiel offen)
-- [x] Angelpass (`/angeln pass`, Kachel im Angel-Menü): 550 Juwelen, 75 Stufen, kein Gratis-Pfad. Stufen steigen mit den Angel-Punkten jedes Fangs (2.000 je Stufe) oder lassen sich kaufen (Stufe 1 = 25 Juwelen, jede weitere +2). Dialog mit Vorteilen, Fortschrittsbalken, „Stufe kaufen“, „Alles abholen“ und Belohnungen in 5 Seiten zu 15 Karten
+- [x] Angelpass (`/angeln pass`, Kachel im Angel-Menü): 550 Juwelen, 75 Stufen, kein Gratis-Pfad. Stufen steigen mit den Angel-Punkten jedes Fangs (2.000 je Stufe) oder lassen sich kaufen (jede Stufe 25 Juwelen, wird nicht teurer; `angeln.angelpass.stufe-preis`). Dialog mit Vorteilen, Fortschrittsbalken, „Stufe kaufen“, „Alles abholen“ und Belohnungen in 5 Seiten zu 15 Karten
 - [x] Belohnungen: ungerade Stufen Geld (5.000 $ x Stufe), gerade Stufen Angel-Punkte (150 x Stufe), jede 5. Stufe Angelboost-Minuten (+400 % Glück, 5 bis 30 Min.), Stufe 25/50/75 eine besondere Angel
 - [x] Dauerhafte Pass-Vorteile: +150 % Gewinn beim Händler, doppelt so schnelles Angeln, alle Coin- und Token-Preise beim Angeln halbiert (Upgrades, Coin-Angeln, Köder, Auto-Verkauf, Angelboost, Doppelfang; Juwelen nicht), Glück verdoppelt (mindestens +100 %)
 - [x] Drei Pass-Angeln mit eigenen Fähigkeiten, eigenen Texturen und Fang-Effekten: Goldfieber (Stufe 25: jeder Fang zahlt sofort seinen vollen Wert, also doppeltes Geld), Sturm (Stufe 50: Silber/Gold/Diamant 5x so oft, 25 % Blitzfang mit zweitem Fisch und Blitz-Effekt), Kosmos (Stufe 75: immer ein Stern mehr, 6-Sterne-Secret 10x so oft, +50 % Punkte). Nicht im Shop

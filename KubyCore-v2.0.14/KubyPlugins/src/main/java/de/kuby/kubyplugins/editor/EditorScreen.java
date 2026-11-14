@@ -122,7 +122,7 @@ public final class EditorScreen {
                     category(pl, id, pg);
                 }, "Großer Eingriff: danach noch einmal bestätigen");
             } else {
-                b = new Btn(armed ? "Sicher? Ja!" : t.confirm() ? "Ausführen" : "Holen", true, pl -> {
+                b = new Btn(armed ? "Sicher? Ja!" : t.button(), true, pl -> {
                     pending.remove(pl.getUniqueId());
                     UiDialog.close(pl);
                     t.action().accept(pl);

@@ -49,7 +49,7 @@ public final class CoreEditor {
             for (String mode : all.getKeys(false)) {
                 for (CrateService.Crate c : plugin.crates().crates(mode)) {
                     long n = placed.values().stream().filter(x -> x.equals(c.mode() + ":" + c.id())).count();
-                    out.add(EditorService.Tool.of(c.mode() + "-" + c.id(), c.name() + " · " + ModeService.label(c.mode()),
+                    out.add(EditorService.Tool.give(c.mode() + "-" + c.id(), c.name() + " · " + ModeService.label(c.mode()),
                             c.rewards().size() + " Gewinne · " + n + "× aufgestellt", plugin.crates().blockOf(c),
                             p -> {
                                 plugin.editor().give(p, plugin.crates().editorItem(c));
@@ -64,7 +64,7 @@ public final class CoreEditor {
                 "Eigene 3D-Modelle aus dem Pack hinstellen (Abbauen: Linksklick aufs Modell)", Material.ARMOR_STAND, () -> {
             List<EditorService.Tool> out = new ArrayList<>();
             for (var d : plugin.customItems().all()) {
-                out.add(EditorService.Tool.of(d.id(), plain(d.name()), "Modell " + d.model(), d.material(), p -> {
+                out.add(EditorService.Tool.give(d.id(), plain(d.name()), "Modell " + d.model(), d.material(), p -> {
                     plugin.editor().give(p, plugin.editor().placeable("model", d.id(), plugin.customItems().create(d, 1),
                             "<aqua><b>Modell: " + Msg.escape(plain(d.name())) + "</b>", List.of("<gray>ID: <white>" + d.id())));
                     Msg.send(p, "<green>Rechtsklick auf einen Block stellt das Modell hin.");
@@ -98,11 +98,11 @@ public final class CoreEditor {
 
         ed.registerCategory(new EditorService.Category("einstellungen", "Einstellungen & Shops", "Hub-Einstellungen und Juwelenshops bearbeiten",
                 Material.COMPARATOR, () -> List.of(
-                EditorService.Tool.of("hub", "Hub-Einstellungen", "Zeit, Wetter, Lobby-Items und mehr", Material.NETHER_STAR,
+                EditorService.Tool.open("hub", "Hub-Einstellungen", "Zeit, Wetter, Lobby-Items und mehr", Material.NETHER_STAR,
                         p -> p.performCommand("kp hub editor")),
-                EditorService.Tool.of("shop-survival", "Juwelenshop Survival", "Angebote und Preise bearbeiten", Material.EMERALD,
+                EditorService.Tool.open("shop-survival", "Juwelenshop Survival", "Angebote und Preise bearbeiten", Material.EMERALD,
                         p -> p.performCommand("kp shop editor survival")),
-                EditorService.Tool.of("shop-smp", "Juwelenshop SMP", "Angebote und Preise bearbeiten", Material.EMERALD,
+                EditorService.Tool.open("shop-smp", "Juwelenshop SMP", "Angebote und Preise bearbeiten", Material.EMERALD,
                         p -> p.performCommand("kp shop editor smp")))));
     }
 }

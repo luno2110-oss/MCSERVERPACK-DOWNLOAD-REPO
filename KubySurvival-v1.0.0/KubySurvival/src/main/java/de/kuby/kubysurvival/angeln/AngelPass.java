@@ -19,7 +19,7 @@ import java.util.UUID;
 
 /**
  * Angelpass: 550 Juwelen, 75 Stufen, kein Gratis-Pfad. Stufen steigen mit Angel-Punkten aus Fängen (nur mit Pass) oder
- * lassen sich kaufen (Stufe 1 kostet 25 Juwelen, jede weitere 2 mehr). Belohnungen: Geld, Angel-Punkte, Angelboost-
+ * lassen sich kaufen (jede Stufe 25 Juwelen, gleichbleibend). Belohnungen: Geld, Angel-Punkte, Angelboost-
  * Minuten und drei besondere Angeln (Stufe 25 Goldfieber, 50 Sturm, 75 Kosmos).
  * <p>
  * Dauerhafte Vorteile mit Pass: +150 % Gewinn beim Händler, doppelt so schnelles Angeln, alle Coin- und Token-Preise
@@ -85,9 +85,9 @@ public final class AngelPass {
         return Math.max(1, cfg("punkte-pro-stufe", 2000));
     }
 
-    /** Preis der nächsten Stufe in Juwelen: Stufe 1 = 25, jede weitere +2. */
+    /** Preis einer Stufe in Juwelen: immer gleich (Standard 25), wird mit dem Level nicht teurer. */
     public long levelPrice(int currentLevel) {
-        return cfg("stufe-start", 25) + cfg("stufe-plus", 2) * currentLevel;
+        return Math.max(1, cfg("stufe-preis", cfg("stufe-start", 25)));
     }
 
     /** Belohnung der Stufe (1 bis 75). */
