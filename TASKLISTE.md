@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.56** (ungetestet, nicht kompiliert)
+Stand: **v1.57** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -555,6 +555,12 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - große Beträge an engen Stellen jetzt kurz („1,2 Mio.“, „3 Mrd.“)
   - Kern: Info-Leiste (Vorschau der Job-Leiste ragte aus dem Fenster), Kits („alle … Std.“ über „Vorschau“), Bestenliste (Untertitel), Investments (Name über Preis), Quiz-Abstimmung (Zeile zu lang)
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
+
+## Beta-Test: Belastungstest und Stabilität (v1.57)
+- [x] Belastungstest in der CI (`.github/workflows/load-test.yml`, `tools/loadtest/bots.js`): nach jedem Build startet ein echter Paper-1.21.11-Server mit allen Kuby-Plugins, alle vier Modi werden eingerichtet, 10 Bots (mineflayer) joinen nach und nach und spielen 4 Minuten: wechseln zwischen Hub, SMP, Survival und Skyblock, öffnen rund 50 Menüs und Befehle (/menu, /shop, /angeln, /angeln pass, /angeln markt, /insel, /combo, /casino, /quests, /feedback, /bug …), laufen, springen, bauen ab, schicken sich Geld, chatten und loggen einmal aus und wieder ein. Geprüft werden Spawns, Kicks, Verbindungsfehler, Befehlsfehler, Exceptions und TPS (alle 30 s gemessen); Ergebnis als Release „load-test“
+- [x] Erster Lauf: 20 Spawns, 645 Befehle, 0 Kicks, TPS 19,7 bis 20,0. Gefunden und behoben: `/regeln` brach im Chat ab, weil MiniMessage „§1“ als alten Farbcode las. Jetzt macht `Msg` jedes „§“ in Chat-, Item- und Actionbar-Texten sicher (gilt auch für Regeltexte aus `regeln.yml` und Verwarnungs-Hinweise wie „Spam im Chat (§3)“), der Selbsttest prüft es
+- [x] Server- und Belastungstest werten jetzt auch „Command exception“ und „Could not pass event“ im Log als Fehler, die Bots erkennen „An unexpected error occurred“
+- [x] Angel-Minispiel bricht ab, wenn der Spieler den Modus oder die Welt wechselt (sonst wäre der Fisch im falschen Inventar gelandet)
 
 ## Beta-Test: Rolle, Feedback-Formular, Bug-Meldungen (v1.56, Ziel: Beta-Test Ende des Monats)
 - [x] Rolle Beta-Tester: `/kp beta add|remove <Spieler>` (gespeichert in `beta.yml`, setzt beim Join die Permission `kuby.beta`; per Permission-Plugin geht `kuby.beta` ebenso), `/kp beta alle` macht jeden Spieler zum Tester, `/kp beta liste`. Tester bekommen beim Join einen Hinweis auf `/feedback` und `/bug`

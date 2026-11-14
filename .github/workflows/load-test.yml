@@ -129,7 +129,7 @@ jobs:
           log = open("server.log", encoding="utf-8", errors="replace").read()
           tps = [float(x) for x in re.findall(r"TPS from last 1m, 5m, 15m: \D*([\d.]+)", log)]
           probs = []
-          exc = [l for l in log.splitlines() if re.search(r"Exception.*de\.kuby|de\.kuby\..*Exception|at de\.kuby|Error occurred while enabling|Could not load", l)]
+          exc = [l for l in log.splitlines() if re.search(r"Exception.*de\.kuby|de\.kuby\..*Exception|at de\.kuby|at Kuby\w*\.jar//|Command exception|Error occurred while enabling|Could not load|Could not pass event", l)]
           n = r.get("bots", 10)
           if r.get("spawned", 0) < n: probs.append("Nur %d von %d Bots sind gespawnt" % (r.get("spawned", 0), n))
           for k in r.get("kicked", []): probs.append("Kick %s: %s" % (k["bot"], k["reason"][:200]))

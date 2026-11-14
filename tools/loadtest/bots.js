@@ -55,7 +55,7 @@ function create(i, again) {
   });
   bot.on('messagestr', (msg) => {
     stats.chats++;
-    if (/internal error|interner fehler|An error occurred/i.test(msg)) {
+    if (/internal error|interner fehler|An error occurred|unexpected error/i.test(msg)) {
       stats.cmdErrors.push({ bot: name, cmd: bot.lastCmd, msg: msg.slice(0, 200) });
       log('BEFEHLSFEHLER', name, bot.lastCmd, '->', msg.slice(0, 120));
     }

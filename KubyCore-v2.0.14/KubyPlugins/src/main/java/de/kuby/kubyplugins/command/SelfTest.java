@@ -287,6 +287,15 @@ final class SelfTest {
             fails.add("Eingabe-Dialog: " + t);
         }
 
+        // Paragraphen-Zeichen in Chat-Texten (Regeln, Verwarnungen): darf MiniMessage nicht als alten Farbcode abbrechen
+        try {
+            Msg.parse("<green><b>§3 Spam</b> <click:run_command:'/regeln 4'>[Weiter zu §4]</click> §a §k");
+            Msg.item("Spam im Chat (§3)");
+            ok[0]++;
+        } catch (Throwable t) {
+            fails.add("Paragraphen-Zeichen: " + t);
+        }
+
         // Beta-Feedback: jede Formular-Seite als echter Dialog (Umschalt-Felder, mehrzeilige Textfelder) und der Kopf
         {
             List<de.kuby.kubyplugins.beta.FeedbackQuestions.Page> fps = de.kuby.kubyplugins.beta.FeedbackQuestions.pages();

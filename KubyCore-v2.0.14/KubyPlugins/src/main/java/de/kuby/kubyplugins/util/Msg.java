@@ -19,22 +19,30 @@ public final class Msg {
     public static void setPrefix(String value) { prefix = value; }
 
     public static Component parse(String mini) {
-        return MM.deserialize(mini);
+        return MM.deserialize(safe(mini));
+    }
+
+    /**
+     * MiniMessage bricht ab, sobald „§“ vor einem Zeichen wie 1 oder a steht (alter Farbcode), z. B. „§3“ in Regeln.
+     * Ein leeres Tag dahinter hält das Paragraphen-Zeichen sichtbar, ohne dass es als Farbcode gilt.
+     */
+    public static String safe(String mini) {
+        return mini == null || mini.indexOf('\u00a7') < 0 ? mini : mini.replace("\u00a7", "\u00a7<!obf>");
     }
 
     /** Item-Texte ohne den Standard-Kursivstil von Minecraft (im Sprach-Kontext übersetzt, siehe I18n). */
     public static Component item(String mini) {
-        return MM.deserialize("<!i>" + I18n.ctx(mini));
+        return MM.deserialize(safe("<!i>" + I18n.ctx(mini)));
     }
 
     /** Meldung mit Präfix; englisch, wenn der Empfänger Englisch eingestellt hat. */
     public static void send(CommandSender to, String mini) {
-        to.sendMessage(MM.deserialize(prefix + (to instanceof Player p ? I18n.forPlayer(p, mini) : mini)));
+        to.sendMessage(MM.deserialize(safe(prefix + (to instanceof Player p ? I18n.forPlayer(p, mini) : mini))));
     }
 
     /** Meldung ohne Präfix, übersetzt für den Empfänger. */
     public static void raw(CommandSender to, String mini) {
-        to.sendMessage(MM.deserialize(to instanceof Player p ? I18n.forPlayer(p, mini) : mini));
+        to.sendMessage(MM.deserialize(safe(to instanceof Player p ? I18n.forPlayer(p, mini) : mini)));
     }
 
     /** Fertige Komponente, übersetzt für den Empfänger. */
@@ -44,7 +52,7 @@ public final class Msg {
 
     /** Aktionsleiste, übersetzt für den Empfänger. */
     public static void actionBar(Player p, String mini) {
-        p.sendActionBar(MM.deserialize(I18n.forPlayer(p, mini)));
+        p.sendActionBar(MM.deserialize(safe(I18n.forPlayer(p, mini))));
     }
 
     /** Entschärft Spielereingaben, damit niemand MiniMessage-Tags einschleusen kann. */

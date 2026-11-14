@@ -173,6 +173,13 @@ public final class FishGame implements Listener {
                 sessions.remove(s.p.getUniqueId());
                 continue;
             }
+            // Modus oder Welt gewechselt (Hub, SMP, Skyblock): Spiel abbrechen, sonst landet der Fisch im falschen Inventar
+            if (!"survival".equals(core.modes().modeOf(s.p.getUniqueId())) || !s.p.getWorld().equals(s.hook.getWorld())) {
+                sessions.remove(s.p.getUniqueId());
+                s.p.clearTitle();
+                Msg.send(s.p, "<aqua><b>ANGELN</b> <dark_gray>▶ <gray>Der Fisch ist weg, du hast den Ort gewechselt.");
+                continue;
+            }
             s.t++;
             if (s.phase == 0) animate(s);
             else play(s);
