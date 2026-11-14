@@ -295,10 +295,21 @@ public final class CrateService implements Listener {
     public void onInteract(PlayerInteractEvent e) {
         if (e.getHand() != EquipmentSlot.HAND) return;
         if (e.getAction() != Action.RIGHT_CLICK_BLOCK && e.getAction() != Action.LEFT_CLICK_BLOCK) return;
+        // Editor-Item in der Hand: der Editor setzt (EditorService), die Kiste öffnet nicht
+        if (e.getAction() == Action.RIGHT_CLICK_BLOCK && plugin.editor().isPlaceable(e.getItem())) return;
         Crate c = at(e.getClickedBlock());
         if (c == null) return;
         e.setCancelled(true);
         Player p = e.getPlayer();
+        // Admin: Schleichen + Linksklick baut die Kiste ab und gibt das Editor-Item zurück
+        if (e.getAction() == Action.LEFT_CLICK_BLOCK && p.isSneaking() && p.hasPermission("kuby.admin")) {
+            Block b = e.getClickedBlock();
+            remove(b);
+            b.setType(org.bukkit.Material.AIR);
+            plugin.editor().give(p, editorItem(c));
+            Msg.send(p, "<green>Kiste <white>" + Msg.escape(c.name()) + "</white> abgebaut. <gray>Mit dem Item wieder setzen.");
+            return;
+        }
         lastCrateAt.put(p.getUniqueId(), key(e.getClickedBlock()));
         if (e.getAction() == Action.LEFT_CLICK_BLOCK) {
             plugin.crateScreens().preview(p, c, true);
@@ -310,6 +321,41 @@ public final class CrateService implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onBreak(BlockBreakEvent e) {
         if (at(e.getBlock()) != null) e.setCancelled(true);
+    }
+
+    /** Editor-Item: setzt diese Kiste per Rechtsklick (Block nach Wahl in der Config: crates.&lt;modus&gt;.&lt;id&gt;.block). */
+    public org.bukkit.inventory.ItemStack editorItem(Crate c) {
+        KeyService.KeyType t = plugin.keys().type(c.key());
+        String color = t == null ? "#F8D35A" : t.color();
+        return plugin.editor().placeable("crate", c.mode() + ":" + c.id(), new org.bukkit.inventory.ItemStack(blockOf(c)),
+                "<" + color + "><b>Kiste: " + Msg.escape(c.name()) + "</b>", List.of("<gray>Modus: <white>" + ModeService.label(c.mode()),
+                        "<gray>Inhalt: <white>" + c.rewards().size() + " Gewinne", "<dark_gray>Abbauen: Schleichen + Linksklick"));
+    }
+
+    /** Block der Kiste: crates.&lt;modus&gt;.&lt;id&gt;.block, sonst Truhe. */
+    public org.bukkit.Material blockOf(Crate c) {
+        String b = plugin.getConfig().getString("crates." + c.mode() + "." + c.id() + ".block", "CHEST");
+        org.bukkit.Material m = org.bukkit.Material.matchMaterial(b);
+        return m != null && m.isBlock() ? m : org.bukkit.Material.CHEST;
+    }
+
+    /** Editor: Kiste auf den Block setzen (Blickrichtung zum Spieler). */
+    public String placeFromEditor(Player p, Block at, String value) {
+        String[] v = value.split(":", 2);
+        Crate c = v.length < 2 ? null : crate(v[0], v[1]);
+        if (c == null) return "Diese Kiste gibt es in der Config nicht mehr.";
+        org.bukkit.block.data.BlockData d = blockOf(c).createBlockData();
+        if (d instanceof org.bukkit.block.data.Directional dir && dir.getFaces().contains(p.getFacing().getOppositeFace())) {
+            dir.setFacing(p.getFacing().getOppositeFace());
+        }
+        at.setBlockData(d, false);
+        String err = set(at, c.mode(), c.id());
+        if (err != null) {
+            at.setType(org.bukkit.Material.AIR);
+            return err;
+        }
+        Msg.send(p, "<green>Kiste <white>" + Msg.escape(c.name()) + "</white> gesetzt. <gray>Abbauen: Schleichen + Linksklick.");
+        return null;
     }
 
     /** Aus der Vorschau öffnen: nur, wenn der Spieler noch an der Kiste steht. */

@@ -279,6 +279,10 @@ public final class KubyPlugins extends JavaPlugin {
         crates = new de.kuby.kubyplugins.service.CrateService(this);
         crateScreens = new de.kuby.kubyplugins.gui.CrateScreens(this);
         getServer().getPluginManager().registerEvents(crates, this);
+        editor = new de.kuby.kubyplugins.editor.EditorService(this);
+        editorScreen = new de.kuby.kubyplugins.editor.EditorScreen(this);
+        getServer().getPluginManager().registerEvents(editor, this);
+        de.kuby.kubyplugins.editor.CoreEditor.register(this);
         hats = new de.kuby.kubyplugins.service.HatService(this);
         getServer().getPluginManager().registerEvents(hats, this);
         // Einstellungen: was die Schalter in /settings im Spiel tun
@@ -720,6 +724,11 @@ public final class KubyPlugins extends JavaPlugin {
     public ModeService modes() { return modes; }
     public de.kuby.kubyplugins.service.CustomItemService customItems() { return customItems; }
     public de.kuby.kubyplugins.service.ModelService models() { return models; }
+    private de.kuby.kubyplugins.editor.EditorService editor;
+    private de.kuby.kubyplugins.editor.EditorScreen editorScreen;
+    /** Admin-Editor (/kp editor): Addons tragen mit registerCategory/registerPlacer ihre Kategorien ein. */
+    public de.kuby.kubyplugins.editor.EditorService editor() { return editor; }
+    public de.kuby.kubyplugins.editor.EditorScreen editorScreen() { return editorScreen; }
 
     /** Werte für das Scoreboard, die ein Addon bereitstellt (z. B. Claimblöcke). */
     private final java.util.Map<String, java.util.function.Function<java.util.UUID, Long>> statProviders = new java.util.HashMap<>();

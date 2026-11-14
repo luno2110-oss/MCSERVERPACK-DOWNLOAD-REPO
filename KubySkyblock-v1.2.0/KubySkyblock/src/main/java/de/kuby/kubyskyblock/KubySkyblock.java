@@ -221,6 +221,7 @@ public final class KubySkyblock extends JavaPlugin {
             return (pf == null ? "Stufe " : "#" + (pf.index + 1) + " · Stufe ") + oneblock.progress(t).total();
         });
         core.registerKpSub("skyblock", command);
+        editorCategory();
         core.registerMainEntry(ModeService.SKYBLOCK, new KubyPlugins.MainEntry(org.bukkit.Material.GRASS_BLOCK, "Insel",
                 "Zuhause, Mitglieder, Upgrades und Level", de.kuby.kubyskyblock.gui.IslandScreen::open));
         core.registerMainEntry(ModeService.SKYBLOCK, new KubyPlugins.MainEntry(org.bukkit.Material.GOLD_INGOT, "Top-Inseln",
@@ -313,5 +314,38 @@ public final class KubySkyblock extends JavaPlugin {
             oneblock.save();
         }
         de.kuby.kubyskyblock.service.DataFiles.shutdown();
+    }
+
+    /** /kp editor → Skyblock: Aufbau-Werkzeuge und Loot-Tabellen. Große Eingriffe brauchen einen zweiten Klick. */
+    private void editorCategory() {
+        de.kuby.kubyplugins.editor.EditorService ed = core.editor();
+        if (ed == null) return;
+        ed.registerCategory(new de.kuby.kubyplugins.editor.EditorService.Category("skyblock", "Skyblock",
+                "Einrichten, One-Blocks, Biom- und Loot-Inseln, Insel-Vorlagen, Loot", org.bukkit.Material.GRASS_BLOCK, () -> {
+            java.util.List<de.kuby.kubyplugins.editor.EditorService.Tool> out = new java.util.ArrayList<>();
+            out.add(new de.kuby.kubyplugins.editor.EditorService.Tool("einrichten", "Alles einrichten",
+                    "Welt, Spawn-Insel, Spawn, One-Blocks und Loot-Inseln auf einmal", org.bukkit.Material.BEACON, true,
+                    p -> p.performCommand("kp skyblock einrichten")));
+            out.add(new de.kuby.kubyplugins.editor.EditorService.Tool("oneblock", "One-Block-Plattformen aufbauen",
+                    "Baut die One-Block-Plattformen in dieser Welt", org.bukkit.Material.DIRT, true,
+                    p -> p.performCommand("kp skyblock oneblock setup")));
+            out.add(new de.kuby.kubyplugins.editor.EditorService.Tool("biome", "Biom-Inseln bauen",
+                    "Baut die Biom-Inseln aus der Config (eine je Tick)", org.bukkit.Material.OAK_SAPLING, true,
+                    p -> p.performCommand("kp skyblock biominseln")));
+            out.add(new de.kuby.kubyplugins.editor.EditorService.Tool("loot", "10 Loot-Inseln erzeugen",
+                    "Neue Loot-Inseln in dieser Welt", org.bukkit.Material.CHEST_MINECART, true,
+                    p -> p.performCommand("kp skyblock loot generate 10")));
+            out.add(de.kuby.kubyplugins.editor.EditorService.Tool.of("werkzeug", "Vorlagen-Werkzeug",
+                    "Ecken markieren, dann /kp skyblock template save <id>", org.bukkit.Material.STICK,
+                    p -> p.performCommand("kp skyblock tool")));
+            out.add(de.kuby.kubyplugins.editor.EditorService.Tool.of("vorlagen", "Insel-Vorlagen anzeigen",
+                    "Alle Vorlagen im Chat", org.bukkit.Material.MAP, p -> p.performCommand("kp skyblock template list")));
+            for (String tier : loot().tiers()) {
+                out.add(de.kuby.kubyplugins.editor.EditorService.Tool.of("loot-" + tier, "Loot bearbeiten: " + tier,
+                        "Inhalt der Loot-Kisten dieser Stufe", org.bukkit.Material.BARREL,
+                        p -> p.performCommand("kp skyblock loot edit " + tier)));
+            }
+            return out;
+        }));
     }
 }

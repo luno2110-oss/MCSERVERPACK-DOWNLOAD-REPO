@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.62** (ungetestet, nicht kompiliert)
+Stand: **v1.63** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -555,6 +555,16 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - große Beträge an engen Stellen jetzt kurz („1,2 Mio.“, „3 Mrd.“)
   - Kern: Info-Leiste (Vorschau der Job-Leiste ragte aus dem Fenster), Kits („alle … Std.“ über „Vorschau“), Bestenliste (Untertitel), Investments (Name über Preis), Quiz-Abstimmung (Zeile zu lang)
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
+
+## Editor `/kp editor` (v1.63, Test im Spiel offen)
+- [x] `/kp editor` öffnet den Editor als Dialog (Admin-Stil wie Kadmin): Kategorien mit Anzahl der Einträge, je Kategorie Werkzeuge mit „Holen“ oder „Ausführen“. Ohne Pack als Chat-Liste mit Klick-Befehlen; direkt: `/kp editor <kategorie> [werkzeug]`
+- [x] **Kisten**: jede Kiste aus der Config (alle Modi) als platzierbarer Block mit Namen in der Schlüsselfarbe, Modus und Anzahl der Gewinne; zeigt, wie oft sie schon steht. Rechtsklick auf einen Block stellt sie hin (zum Spieler gedreht), das Item bleibt in der Hand für weitere. Abbauen: Schleichen + Linksklick (nur Admins), dann gibt es das Item zurück. Block je Kiste wählbar: `crates.<modus>.<id>.block` (z. B. ENDER_CHEST, BARREL), sonst Truhe. `/keys kiste set` geht weiter
+- [x] **Modelle**: alle Custom Items als platzierbares Modell (Rechtsklick auf einen Block), Abbauen wie bisher per Linksklick aufs Modell
+- [x] **Welt & NPCs**: Spawn je Modus setzen, Modus-NPCs setzen, Discord-Statue, Deko in der Nähe entfernen, Bearbeitungsmodus
+- [x] **Einstellungen & Shops**: Hub-Einstellungen, Juwelenshop Survival und SMP
+- [x] **Skyblock** (aus dem Skyblock-Addon): Alles einrichten, One-Block-Plattformen, Biom-Inseln, 10 Loot-Inseln (alle vier mit zweitem Klick „Sicher? Ja!“), Vorlagen-Werkzeug, Vorlagen anzeigen, Loot je Stufe bearbeiten
+- [x] Addons tragen eigene Kategorien und Platzier-Arten ein (`core.editor().registerCategory/registerPlacer`); alle Editor-Seiten sind im SELFTEST mit Layout-Prüfung
+- [ ] Animierte Custom Models (Blockbench) für Kisten: wartet auf die Modell-Dateien des Besitzers
 
 ## Fehler: Skyblock-Insel-Level und Block-Limits wurden nie berechnet (v1.62)
 - [x] Gefunden durch die simulierten Menü-Klicks im Belastungstest („Level berechnen“): die Zählung brach im Hintergrund jedes Mal mit „ChunkSnapshot created without height map“ ab, das Insel-Level blieb stehen. Dieselbe Ursache in der Zählung der Block-Limits. Beide holen die Chunks jetzt mit Höhenkarte

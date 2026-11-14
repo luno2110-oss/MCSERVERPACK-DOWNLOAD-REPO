@@ -71,6 +71,7 @@ public final class KpCommand implements CommandExecutor {
             case "create" -> create(p, args);
             case "item" -> item(p, args);
             case "model" -> model(p, args);
+            case "editor" -> plugin.editorScreen().command(p, args);
             case "module" -> module(p, args);
             case "edit" -> {
                 String err = plugin.edit().enter(p);
@@ -164,6 +165,7 @@ public final class KpCommand implements CommandExecutor {
 
     private void help(Player p) {
         Msg.send(p, "<gold>/kp <dark_gray>- <gray>Admin-Befehle");
+        Msg.send(p, "<gray>/kp editor <dark_gray>- <gray>Editor: Kisten, Modelle, Welt & NPCs, Skyblock … als Dialog");
         Msg.send(p, "<gray>/kp setspawn <hub|smp|survival> <dark_gray>- <gray>Spawn an deiner Position setzen");
         Msg.send(p, "<gray>/kp setworld <hub|smp|survival> <welt> <dark_gray>- <gray>Welt eines Modus festlegen");
         Msg.send(p, "<gray>/kp mode <hub|smp|survival> <dark_gray>- <gray>Modus direkt wechseln");

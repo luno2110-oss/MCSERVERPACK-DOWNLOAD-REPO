@@ -60,7 +60,13 @@ public final class ModelService {
         if (def == null) return "Unbekanntes Modell. Siehe /kp item list";
         Block target = p.getTargetBlockExact(5);
         if (target == null) return "Schau auf einen Block.";
-        Block at = target.getRelative(org.bukkit.block.BlockFace.UP);
+        return placeAt(target.getRelative(org.bukkit.block.BlockFace.UP), id, p);
+    }
+
+    /** Setzt das Modell auf genau diesen Block (Editor-Item). Gibt null bei Erfolg zurück. */
+    public synchronized String placeAt(Block at, String id, Player p) {
+        var def = plugin.customItems().get(id);
+        if (def == null) return "Unbekanntes Modell. Siehe /kp item list";
         Placed pl = new Placed(at.getWorld().getName(), at.getX(), at.getY(), at.getZ(), def.id());
         if (placed.stream().anyMatch(x -> x.key().equals(pl.key()))) return "Hier steht schon ein Modell.";
         placed.add(pl);
