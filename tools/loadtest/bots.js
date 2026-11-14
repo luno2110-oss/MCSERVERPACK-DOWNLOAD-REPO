@@ -21,7 +21,7 @@ const COMMANDS = [
   '/insel', '/combo', '/skyblock', '/oneblock', '/feedback', '/bug Testmeldung vom Belastungstest',
 ];
 
-const stats = { games: 0, gameEnds: {}, gameInputs: { left: 0, right: 0, a: 0, d: 0 }, buys: 0, joined: 0, spawned: 0, kicked: [], errors: [], commands: 0, cmdErrors: [], chats: 0, rejoins: 0, ended: 0 };
+const stats = { fishChat: [], games: 0, gameEnds: {}, gameInputs: { left: 0, right: 0, a: 0, d: 0 }, buys: 0, joined: 0, spawned: 0, kicked: [], errors: [], commands: 0, cmdErrors: [], chats: 0, rejoins: 0, ended: 0 };
 const bots = [];
 const start = Date.now();
 const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
@@ -33,7 +33,7 @@ function log(...a) {
 
 function create(i, again) {
   const name = 'Tester' + String(i).padStart(2, '0');
-  const bot = mineflayer.createBot({ host: HOST, port: PORT, username: name, version: VERSION, auth: 'offline',
+  const bot = mineflayer.createBot({ host: HOST, port: PORT, username: name, version: VERSION, auth: 'offline', locale: 'de_DE',
     hideErrors: true, checkTimeoutInterval: 60000 });
   bot.lastCmd = null;
   bot.index = i;
@@ -41,6 +41,8 @@ function create(i, again) {
   bot.once('login', () => { stats.joined++; log(name, 'eingeloggt', again ? '(erneut)' : ''); });
   bot.once('spawn', () => {
     stats.spawned++;
+    // deutsche Tester: der Server stellt die Sprache nach dem Client ein
+    try { bot.setSettings({ locale: 'de_DE' }); } catch (e) { /* ältere mineflayer */ }
     loop(bot);
     // einmal mitten im Test aus- und wieder einloggen (Join/Quit-Wechsel wie bei echten Spielern)
     if (!again) {
@@ -55,16 +57,21 @@ function create(i, again) {
   });
   bot.on('messagestr', (msg) => {
     stats.chats++;
-    if (/Halte den Fisch im grünen Bereich/.test(msg)) playFishGame(bot);
-    else if (bot.fishing && /Der Fisch ist entkommen/.test(msg)) endFishGame(bot, 'entkommen');
-    else if (bot.fishing && /Der Fisch ist weg/.test(msg)) endFishGame(bot, 'abgebrochen');
+    if (/ANGELN|Fisch|fish/i.test(msg) && stats.fishChat.length < 12) stats.fishChat.push(name + ': ' + msg.slice(0, 160));
+    if (/Halte den Fisch|grünen Bereich|green (zone|area)|Keep the fish/i.test(msg)) playFishGame(bot);
+    else if (bot.fishing && /entkommen|escaped|got away/i.test(msg)) endFishGame(bot, 'entkommen');
+    else if (bot.fishing && /Fisch ist weg|fish is gone|Ort gewechselt/i.test(msg)) endFishGame(bot, 'abgebrochen');
+    else if (bot.fishing && msg.includes(name) && /Combo \d+/.test(msg)) endFishGame(bot, 'gewonnen');
     if (/internal error|interner fehler|An error occurred|unexpected error/i.test(msg)) {
       stats.cmdErrors.push({ bot: name, cmd: bot.lastCmd, msg: msg.slice(0, 200) });
       log('BEFEHLSFEHLER', name, bot.lastCmd, '->', msg.slice(0, 120));
     }
   });
   bot.on('title', (text) => {
-    if (bot.fishing && /GEFANGEN/.test(typeof text === 'string' ? text : JSON.stringify(text))) endFishGame(bot, 'gewonnen');
+    const t = typeof text === 'string' ? text : JSON.stringify(text);
+    // Würfel-Animation vor dem Spiel: schon jetzt keine Befehle mehr (sonst Moduswechsel mitten im Fang)
+    if (/GEWÖHNLICH|UNGEWÖHNLICH|SELTEN|EPISCH|LEGENDÄR|MYTHISCH|GÖTTLICH|SECRET/.test(t)) bot.fishWaitUntil = Date.now() + 8000;
+    if (bot.fishing && /GEFANGEN|G.{0,40}E.{0,40}F.{0,40}A.{0,40}N.{0,40}G.{0,40}E.{0,40}N/.test(t)) endFishGame(bot, 'gewonnen');
   });
   bot.on('kicked', (reason) => {
     const r = typeof reason === 'string' ? reason : JSON.stringify(reason);
@@ -121,7 +128,7 @@ function endFishGame(bot, how) {
 function loop(bot) {
   const tick = () => {
     if (!bot.entity || bot.rejoining || Date.now() - start > DURATION) return;
-    if (bot.fishing) { setTimeout(tick, 1000); return; }
+    if (bot.fishing || (bot.fishWaitUntil || 0) > Date.now()) { setTimeout(tick, 1000); return; }
     try {
       const r = Math.random();
       if (r < 0.55) {

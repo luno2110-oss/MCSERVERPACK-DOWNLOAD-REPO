@@ -157,6 +157,7 @@ jobs:
           if not evruns: probs.append("Keine Events ausgelöst")
           played = [g for g in games if not g[1].startswith("abgebrochen")]
           if not played: probs.append("Angel-Minispiel: keine Runde zu Ende gespielt (gestartet: %d)" % gstarted)
+          elif r.get("games", 0) == 0: probs.append("Angel-Minispiel: Bots haben den Spielstart nicht erkannt; Chat: " + " | ".join(r.get("fishChat", [])[:4]))
           elif gsum[0] == 0 or gsum[1] == 0: probs.append("Angel-Minispiel: Klicks kommen nicht an (links %d, rechts %d)" % (gsum[0], gsum[1]))
           print("## Belastungstest")
           print("- Bots: %d, Spawns: %d (davon %d Wiederkehrer), Befehle: %d, Chatzeilen: %d" % (n, r.get("spawned", 0), r.get("rejoins", 0), r.get("commands", 0), r.get("chats", 0)))
