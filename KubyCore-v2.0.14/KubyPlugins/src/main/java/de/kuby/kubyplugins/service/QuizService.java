@@ -32,7 +32,11 @@ public final class QuizService {
     public static final List<String> CATEGORIES =
             List.of("physik", "mathe", "deutsch", "geografie", "chemie", "minecraft", "zufall");
     private static final ZoneId ZONE = ZoneId.of("Europe/Berlin");
-    private static final long ANSWER_WINDOW_TICKS = 20L * 120;
+
+    /** Laufende Frage: Start-Multiplikator und Startzeit (der Multiplikator sinkt jede Sekunde bis x1). */
+    private double startMult = 1;
+    private long askedAt;
+    private org.bukkit.scheduler.BukkitTask ticker;
 
     private final KubyPlugins plugin;
     private final File questionFile;
@@ -149,6 +153,76 @@ public final class QuizService {
                 + (winner == null ? "alle Kategorien" : winner));
     }
 
+    private int windowSeconds() {
+        return Math.max(15, plugin.getConfig().getInt("quiz.zeit-sekunden", 60));
+    }
+
+    /** Start-Multiplikator: schwerere Fragen (höherer Grundgewinn) starten höher, dazu Zufall; zwischen min und max. */
+    private double startMultiplier(Question q) {
+        double min = plugin.getConfig().getDouble("quiz.multi-min", 4), max = plugin.getConfig().getDouble("quiz.multi-max", 25);
+        double d = Math.max(0, Math.min(1, (q.reward() - 100) / 200.0));
+        double m = min + d * (max - min) * 0.5 + ThreadLocalRandom.current().nextDouble() * (max - min) * 0.5;
+        return Math.round(Math.max(min, Math.min(max, m)));
+    }
+
+    /** Aktueller Multiplikator der laufenden Frage (sinkt linear von Start auf x1 bis zum Ende der Antwortzeit). */
+    public synchronized double multiplier() {
+        if (current == null) return 1;
+        double t = (System.currentTimeMillis() - askedAt) / 1000.0;
+        double m = startMult - (startMult - 1) * Math.min(1, t / windowSeconds());
+        return Math.max(1, Math.round(m * 10) / 10.0);
+    }
+
+    private static String mult(double m) {
+        return (m == Math.floor(m) ? String.valueOf((long) m) : String.format(Locale.GERMANY, "%.1f", m));
+    }
+
+    /** Spieler, die das Quiz über der Hotbar sehen wollen (statt der Chat-Zeilen). */
+    private boolean hotbar(Player pl) {
+        return plugin.playerSettings() != null && plugin.playerSettings().get(pl.getUniqueId(), "quiz.hotbar");
+    }
+
+    /** Jede Sekunde: Hotbar-Anzeige, alle chat-schritte Sekunden eine Chat-Zeile, am Ende Auflösung. */
+    private void tick(Question q) {
+        if (current != q) {
+            stopTicker();
+            return;
+        }
+        long sec = (System.currentTimeMillis() - askedAt) / 1000;
+        int window = windowSeconds();
+        long left = window - sec;
+        if (left <= 0) {
+            current = null;
+            stopTicker();
+            plugin.notifications().send("chat.quiz", "<gray>Quiz beendet, niemand hat geantwortet. Antwort: <white>"
+                    + Msg.escape(q.answers().get(0)));
+            return;
+        }
+        double m = multiplier();
+        long prize = Math.round(q.reward() * m);
+        String color = m >= startMult * 0.66 ? "#7CF57C" : m >= startMult * 0.33 ? "#FFD25A" : "#FF7A5C";
+        net.kyori.adventure.text.Component bar = Msg.parse("<aqua><b>QUIZ</b> <dark_gray>▶ <" + color + "><b>x" + mult(m)
+                + "</b></" + color + "> <dark_gray>· <gold>" + Msg.coins(prize) + "$ <dark_gray>· <gray>noch " + left + " s");
+        int step = Math.max(5, plugin.getConfig().getInt("quiz.chat-schritte", 10));
+        for (Player pl : plugin.getServer().getOnlinePlayers()) {
+            if (!plugin.notifications().wants(pl, "chat.quiz")) continue;
+            if (hotbar(pl)) {
+                if (plugin.hotbar() != null) plugin.hotbar().flash(pl, bar, 25, 5);
+                else pl.sendActionBar(bar);
+            } else if (sec > 0 && sec % step == 0) {
+                Msg.raw(pl, "<dark_gray>⏱ <aqua>Quiz <dark_gray>▶ <" + color + "><b>x" + mult(m) + "</b></" + color
+                        + "> <gray>· Gewinn jetzt <gold>" + Msg.coins(prize) + "$ <gray>· noch " + left + " s");
+            }
+        }
+    }
+
+    private void stopTicker() {
+        if (ticker != null) {
+            ticker.cancel();
+            ticker = null;
+        }
+    }
+
     /** Stellt eine Frage. Wird auch vom Admin-Panel aufgerufen. */
     public void ask() {
         if (questions.isEmpty()) return;
@@ -162,19 +236,20 @@ public final class QuizService {
             if (!inCat.isEmpty()) pool = inCat;
         }
         Question q = pool.get(ThreadLocalRandom.current().nextInt(pool.size()));
-        current = q;
-        plugin.notifications().send("chat.quiz", "<aqua>Chat-Quiz <gray>[" + q.category() + "]: <white>"
-                + Msg.escape(q.text()) + " <gray>Erste richtige Antwort gewinnt <gold>" + Msg.coins(q.reward()) + "$<gray>!");
+        stopTicker();
+        synchronized (this) {
+            startMult = startMultiplier(q);
+            askedAt = System.currentTimeMillis();
+            current = q;
+        }
+        plugin.notifications().send("chat.quiz", "<aqua><b>Chat-Quiz</b> <gray>[" + q.category() + "]: <white>"
+                + Msg.escape(q.text()) + "\n<gray>Start-Multiplikator <#7CF57C><b>x" + mult(startMult) + "</b><gray> = <gold>"
+                + Msg.coins(Math.round(q.reward() * startMult)) + "$<gray>, sinkt jede Sekunde · " + windowSeconds()
+                + " s Zeit · erste richtige Antwort gewinnt!");
         for (Player pl : plugin.getServer().getOnlinePlayers()) {
             if (plugin.notifications().wants(pl, "chat.quiz")) Sfx.play(plugin, pl, Sfx.Kind.QUIZ);
         }
-        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
-            if (current == q) {
-                current = null;
-                plugin.notifications().send("chat.quiz", "<gray>Quiz beendet, niemand hat geantwortet. Antwort: <white>"
-                        + Msg.escape(q.answers().get(0)));
-            }
-        }, ANSWER_WINDOW_TICKS);
+        ticker = plugin.getServer().getScheduler().runTaskTimer(plugin, () -> tick(q), 20L, 20L);
     }
 
     /** Muss im Hauptthread laufen. */
@@ -184,11 +259,19 @@ public final class QuizService {
         String m = message.trim().toLowerCase(Locale.ROOT);
         for (String a : q.answers()) {
             if (a.trim().toLowerCase(Locale.ROOT).equals(m)) {
+                double mu = multiplier();
+                double secs = (System.currentTimeMillis() - askedAt) / 1000.0;
+                long prize = Math.round(q.reward() * mu);
                 current = null;
-                plugin.economy().deposit(p.getUniqueId(), q.reward());
+                stopTicker();
+                plugin.economy().deposit(p.getUniqueId(), prize);
                 Sfx.play(plugin, p, Sfx.Kind.COIN);
                 plugin.notifications().send("chat.quiz", "<gold>" + Msg.escape(p.getName())
-                        + " <gray>hat das Quiz gelöst und <gold>" + Msg.coins(q.reward()) + "$ <gray>gewonnen!");
+                        + " <gray>hat das Quiz in <white>" + String.format(Locale.GERMANY, "%.1f", secs) + " s</white> gelöst: <#7CF57C><b>x"
+                        + mult(mu) + "</b> <gray>= <gold>" + Msg.coins(prize) + "$<gray>!");
+                if (plugin.hotbar() != null && hotbar(p)) {
+                    plugin.hotbar().flash(p, Msg.parse("<gold><b>+" + Msg.coins(prize) + "$</b> <gray>(Quiz x" + mult(mu) + ")"), 60, 6);
+                }
                 return;
             }
         }

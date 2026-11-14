@@ -1,9 +1,10 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.65** (ungetestet, nicht kompiliert)
+Stand: **v1.66** (ungetestet, nicht kompiliert)
 
 ---
+
 
 ## Ordnergruppe 1 – Casino (Refs: CASINO REF) – nur Survival
 Prinzip: Keine GUI. Spiel läuft über physische Dinge am Tisch (Karten, Chips, Rad, Dealer).
@@ -555,6 +556,13 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - große Beträge an engen Stellen jetzt kurz („1,2 Mio.“, „3 Mrd.“)
   - Kern: Info-Leiste (Vorschau der Job-Leiste ragte aus dem Fenster), Kits („alle … Std.“ über „Vorschau“), Bestenliste (Untertitel), Investments (Name über Preis), Quiz-Abstimmung (Zeile zu lang)
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
+
+## Shop, OP-Werkzeuge und Quiz (v1.66)
+- [x] Shop: 229 Bau-Blöcke (alle Holzarten, Steine, Tiefenschiefer, Tuff, Ziegel, Quarz, Prismarin, Kupfer, Beton, Betonpulver, Terrakotta, glasierte Terrakotta, Wolle und Glas in allen 16 Farben, Natur-Blöcke, Leuchtblöcke) und 182 Deko-Items (alle Blumen, Pflanzen, Laub, Setzlinge, Korallen, Fackeln, Laternen, Kerzen, Teppiche in 16 Farben, Möbel-Blöcke, Zäune, Türen, Betten, Banner, Köpfe …). Bestehende Server bekommen die neuen Angebote einmal in ihre shop.yml nachgetragen (`defaults-version`), eigene Einträge bleiben
+- [x] Daily Shop (Juwelen) und Wochenend-Angebot ($) mit OP-Werkzeugen: 3x3-Bohrer, 5x5-Bohrer, Sell-Äxte Eisen x1,5 / Gold x2 / Diamant x3 / Netherit x4 (Rechtsklick auf Kiste verkauft den Inhalt, 64 bis 512 Ladungen), Holzfäller-Axt (ganzer Baum bis 48 Stämme), Waldfresser (bis 200, auch Riesenbäume), Schmelz-Spitzhacke (Barren statt Erz, Glas statt Sand), Erntesense (3x3 ernten und neu pflanzen), Vampirklinge (heilt 20 % des Schadens), Donnerklinge (15 % Blitz +5 Schaden), Enterhaken, Bücher Reparatur und Effizienz V; dazu seltene Items (Elytren, Dreizack, Streitkolben, Netherit-Vorlage, Netherstern, Drachenkopf, Schnüffler-Ei, Netheritblock …)
+- [x] Fair und sicher: Zusatz-Blöcke laufen über echte Abbau-Events (Grundstücke, Inseln, Regionen und Jobs gelten), Baumfäller nur bei echten Bäumen mit Laub, Schleichen = nur ein Block, Sell-Axt nur an Kisten, die man öffnen darf (Kistenläden geschützt), Werkzeuge selbst unverkäuflich; SELFTEST baut alle 15 Werkzeuge
+- [x] Quiz: Gewinn = Grundgewinn x Multiplikator. Start x4 bis x25 (schwerere Fragen höher, dazu Zufall), sinkt jede Sekunde bis x1 nach 60 s; Ansage mit Start-Multiplikator und Gewinn, alle 10 s eine Zeile im Chat oder live über der Hotbar (neuer Schalter „Quiz über der Hotbar“ in /settings → Chat); Auflösung mit Zeit und Multiplikator (`quiz.zeit-sekunden`, `multi-min`, `multi-max`, `chat-schritte`)
+- [ ] Eigene Grafiken (Item-Modelle) für die OP-Werkzeuge: zurzeit Vanilla-Werkzeug mit Glanz, Name und Beschreibung
 
 ## Bedrock-Spieler über Geyser + Floodgate (v1.65, Anleitung BEDROCK.md)
 - [x] Erkennung über Floodgate (oder Geyser-API ohne Floodgate); ohne beide läuft alles wie bisher (softdepend)

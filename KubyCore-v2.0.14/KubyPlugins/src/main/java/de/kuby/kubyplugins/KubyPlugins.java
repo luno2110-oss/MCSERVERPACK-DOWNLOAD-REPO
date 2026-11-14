@@ -174,6 +174,8 @@ public final class KubyPlugins extends JavaPlugin {
         teams = new TeamService(this);
         market = new MarketService(this);
         sell = new SellService(this);
+        tools = new de.kuby.kubyplugins.tools.SpecialTools(this);
+        getServer().getPluginManager().registerEvents(tools, this);
         orders = new OrderService(this);
         abholbox = new AbholboxService(this);
         friends = new FriendService(this);
@@ -657,6 +659,9 @@ public final class KubyPlugins extends JavaPlugin {
     public TeamService teams() { return teams; }
     public MarketService market() { return market; }
     public SellService sell() { return sell; }
+    private de.kuby.kubyplugins.tools.SpecialTools tools;
+    /** OP-Werkzeuge aus Daily Shop und Wochenend-Angebot (Bohrer, Sell-Äxte, Baumfäller …). */
+    public de.kuby.kubyplugins.tools.SpecialTools tools() { return tools; }
     public OrderService orders() { return orders; }
     public AbholboxService abholbox() { return abholbox; }
     public FriendService friends() { return friends; }

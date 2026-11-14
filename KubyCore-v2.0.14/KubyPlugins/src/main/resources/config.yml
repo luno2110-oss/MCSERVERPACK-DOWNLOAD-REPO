@@ -170,8 +170,15 @@ coinflip:
   max-bet: 5000
   announce-min: 2500   # ab diesem Einsatz geht ein Gewinn an alle mit "Coinflip-Mitteilungen"
 
+# Chat-Quiz: Gewinn = Grundgewinn der Frage x Multiplikator. Der Multiplikator startet je nach Frage (höherer
+# Grundgewinn = schwerer) und Zufall zwischen multi-min und multi-max und sinkt jede Sekunde bis x1 am Ende der Zeit.
+# Anzeige: alle chat-schritte Sekunden eine Zeile im Chat, oder live über der Hotbar (Einstellung "Quiz über der Hotbar").
 quiz:
   interval-minutes: 20
+  zeit-sekunden: 60
+  multi-min: 4
+  multi-max: 25
+  chat-schritte: 10
   questions:
     - "Welcher Block wird aus Lehm und Sand gebrannt?;Ziegel;300"
     - "Wie viele Seiten hat ein Würfel?;6;200"

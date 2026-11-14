@@ -604,6 +604,24 @@ final class SelfTest {
             fails.add("Rematch-Handshake: " + t);
         }
 
+        // OP-Werkzeuge: jedes lässt sich bauen und trägt seine Art; jedes Shop-Angebot mit Werkzeug kennt es
+        try {
+            for (String k : de.kuby.kubyplugins.tools.SpecialTools.all().keySet()) {
+                org.bukkit.inventory.ItemStack it = plugin.tools().create(k, 1);
+                if (it == null || !k.equals(plugin.tools().kind(it))) fails.add("Werkzeug " + k + ": falsch gebaut");
+                else ok[0]++;
+            }
+            for (String sec : de.kuby.kubyplugins.service.ShopService.SECTIONS) {
+                for (de.kuby.kubyplugins.service.ShopService.Item it : plugin.shop().items(sec)) {
+                    if (it.special() != null && de.kuby.kubyplugins.tools.SpecialTools.def(it.special()) == null) {
+                        fails.add("Shop " + sec + ": unbekanntes Werkzeug " + it.special());
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            fails.add("Werkzeuge: " + t);
+        }
+
         // Backup: Packen und Entpacken einmal echt ausprobieren
         try {
             String err = de.kuby.kubyplugins.service.BackupService.selfCheck(plugin);

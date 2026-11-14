@@ -101,6 +101,9 @@ public final class PlayerSettings {
         add("chat.quiz", Tab.CHAT, "Chat-Quiz", "Chat quiz",
                 "Quizfragen im Chat. Wer zuerst richtig antwortet, gewinnt.",
                 "Quiz questions in chat. The first right answer wins.", true);
+        add("quiz.hotbar", Tab.CHAT, "Quiz über der Hotbar", "Quiz above hotbar",
+                "Multiplikator und Gewinn live über der Hotbar statt alle 10 Sekunden im Chat.",
+                "Multiplier and prize live above the hotbar instead of every 10 seconds in chat.", false);
         add("chat.help", Tab.CHAT, "Chat-Hilfe", "Chat help",
                 "Bei vertippten Befehlen den passenden vorschlagen.", "Suggest the right command after a typo.", true);
         add("chat.changelog", Tab.CHAT, "Changelog beim Join", "Changelog on join",

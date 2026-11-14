@@ -111,6 +111,34 @@ public final class SellService {
         return payout;
     }
 
+    /**
+     * Verkauft den Inhalt eines Behälters (Sell-Axt) mit Wochen-Meta, Verkaufs-Stufe und dem Faktor der Axt.
+     * Sonder-Items bleiben liegen. Gibt die Auszahlung zurück.
+     */
+    public synchronized long sellContainer(Player p, org.bukkit.inventory.Inventory inv, double factor) {
+        Map<Material, Long> prices = worth();
+        long sum = 0, items = 0;
+        ItemStack[] contents = inv.getContents();
+        for (int i = 0; i < contents.length; i++) {
+            ItemStack item = contents[i];
+            if (item == null) continue;
+            Long price = prices.get(item.getType());
+            if (price == null || price <= 0 || special(item)) continue;
+            long unit = plugin.weekly().isMeta(item.getType()) ? price * 125 / 100 : price;
+            sum += unit * item.getAmount();
+            items += item.getAmount();
+            if (plugin.trading() != null) plugin.trading().demandMaterial(item.getType(), item.getAmount(), -1);
+            contents[i] = null;
+        }
+        if (items == 0) return 0;
+        inv.setContents(contents);
+        long payout = (long) Math.floor(sum * multiplier(p.getUniqueId()) * factor);
+        if (payout > 0) plugin.economy().deposit(p.getUniqueId(), payout);
+        sold.merge(p.getUniqueId(), items, Long::sum);
+        save();
+        return payout;
+    }
+
     /** Eigene Sonder-Items (eigenes Modell oder Plugin-Daten, z. B. Generatoren, Möbel, Kit-Items) und Behälter mit
      *  Inhalt werden nie zum Material-Preis verkauft (sonst wären sie oder ihr Inhalt verloren). */
     public static boolean special(ItemStack item) {

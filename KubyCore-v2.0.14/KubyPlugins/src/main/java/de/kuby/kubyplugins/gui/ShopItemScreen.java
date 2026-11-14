@@ -200,7 +200,10 @@ public final class ShopItemScreen {
         if (dl && plugin.shop().dailyBoughtBy(id, it.id())) return "Dieses Angebot hast du heute schon gekauft.";
         boolean paid = dl ? plugin.jewels().take(id, price) : plugin.economy().withdraw(id, price);
         if (!paid) return dl ? "Du brauchst " + Msg.coins(price) + " Juwelen." : "Nicht genug $ (" + Msg.coins(price) + " $).";
-        if (!plugin.shopStorage().add(id, new ItemStack(it.material(), it.amount()))) {
+        // OP-Werkzeuge (Bohrer, Sell-Äxte …) kommen als echtes Werkzeug mit Fähigkeit in die Abholbox
+        ItemStack stack = it.special() != null && plugin.tools() != null ? plugin.tools().create(it.special(), it.amount()) : null;
+        if (stack == null) stack = new ItemStack(it.material(), it.amount());
+        if (!plugin.shopStorage().add(id, stack)) {
             if (dl) plugin.jewels().add(id, price);
             else plugin.economy().deposit(id, price);
             return "Die Abholbox ist voll. Hol Items ab oder schalte eine Seite frei.";
