@@ -145,6 +145,12 @@ public final class KubySurvival extends JavaPlugin {
     public GraveService graves() { return graves; }
     public FurnitureService furniture() { return furniture; }
 
+    private static de.kuby.kubysurvival.angeln.AngelPassScreen.Actions passNav() {
+        return (de.kuby.kubysurvival.angeln.AngelPassScreen.Actions) java.lang.reflect.Proxy.newProxyInstance(
+                KubySurvival.class.getClassLoader(), new Class<?>[]{de.kuby.kubysurvival.angeln.AngelPassScreen.Actions.class},
+                (o, m, args) -> (java.util.function.Consumer<org.bukkit.entity.Player>) pl -> { });
+    }
+
     /** /kp selftest: alle Seiten des Survival-Juwelenshops bauen, Kataloge und Bilder prüfen. */
     private void selfTests() {
         // Angel-Shop: alle gekauft und keine, Juwelen-Seite mit scharfem Kauf-Knopf
@@ -164,10 +170,23 @@ public final class KubySurvival extends JavaPlugin {
         // Rute & Upgrades: nichts gekauft (scharfe Knöpfe) und alles gekauft mit laufendem Boost
         core.registerSelfTestCanvas("Angel-Rute leer", () -> de.kuby.kubysurvival.angeln.AngelScreens.rod(
                 new de.kuby.kubysurvival.angeln.AngelScreens.RodView(999.9, 99, 99.9, new int[4], false, 99_999, "boost", 999_999_999,
-                        999_999, false, false, 99_999, 999_999_999, 0, 99_999, 99), an));
+                        999_999, false, false, 99_999, 999_999_999, 0, 99_999, 99, true), an));
         core.registerSelfTestCanvas("Angel-Rute voll", () -> de.kuby.kubysurvival.angeln.AngelScreens.rod(
                 new de.kuby.kubysurvival.angeln.AngelScreens.RodView(999.9, 99, 99.9, new int[] {99, 99, 99, 99}, true, 150, null, 0,
-                        0, true, true, 250, 0, 86_399, 450, 5), an));
+                        0, true, true, 250, 0, 86_399, 450, 5, false), an));
+        // Angelpass: ohne Pass (scharfer Kauf-Knopf), mit Pass auf jeder Seite, alles abgeholt
+        for (int pg = 0; pg < 5; pg++) {
+            int page = pg;
+            core.registerSelfTestCanvas("Angelpass Seite " + (pg + 1), () -> {
+                boolean[] cl = new boolean[de.kuby.kubysurvival.angeln.AngelPass.MAX];
+                for (int i = 0; i < 20; i++) cl[i] = true;
+                return de.kuby.kubysurvival.angeln.AngelPassScreen.canvas(new de.kuby.kubysurvival.angeln.AngelPassScreen.View(true, 74,
+                        999_999_999, 2000, 75, 550, 999_999, 999_999_999, page, cl, "level"), passNav());
+            });
+        }
+        core.registerSelfTestCanvas("Angelpass ohne Pass", () -> de.kuby.kubysurvival.angeln.AngelPassScreen.canvas(
+                new de.kuby.kubysurvival.angeln.AngelPassScreen.View(false, 0, 0, 2000, 0, 550, 25, 999_999_999, 0,
+                        new boolean[de.kuby.kubysurvival.angeln.AngelPass.MAX], "pass"), passNav()));
         // Angelwelt: alle offen (lange Namen), alle gesperrt, nicht eingerichtet
         for (int k = 0; k < 3; k++) {
             int mode = k;

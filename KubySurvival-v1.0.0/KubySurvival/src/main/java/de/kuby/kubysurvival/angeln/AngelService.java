@@ -110,6 +110,41 @@ public final class AngelService {
         this.core = core;
         this.file = new File(addon.getDataFolder(), "angeln.yml");
         load();
+        this.pass = new AngelPass(addon, core, this);
+    }
+
+    private final AngelPass pass;
+
+    public AngelPass pass() {
+        return pass;
+    }
+
+    /** Hat der Spieler den Angelpass (dauerhafte Vorteile)? */
+    public boolean passOwner(UUID id) {
+        return pass != null && pass.owned(id);
+    }
+
+    /** Coin- und Token-Preis beim Angeln: mit Angelpass halbiert (Juwelen nie). */
+    public long cost(UUID id, long price) {
+        return passOwner(id) ? (price + 1) / 2 : price;
+    }
+
+    synchronized void addPoints(UUID id, long points) {
+        profile(id).points += points;
+        dirty = true;
+    }
+
+    synchronized void addBoostMinutes(UUID id, long minutes) {
+        AngelProfile a = profile(id);
+        a.boostUntil = Math.max(System.currentTimeMillis(), a.boostUntil) + minutes * 60_000L;
+        dirty = true;
+    }
+
+    /** Angel freischalten (Angelpass) und ins Inventar legen. */
+    synchronized void grantRod(Player p, Rod r) {
+        profile(p.getUniqueId()).rods.add(r);
+        dirty = true;
+        giveRod(p, r);
     }
 
     private long cfg(String path, long def) {
@@ -189,6 +224,8 @@ public final class AngelService {
         if (inZone) luck += 10;
         luck += Math.max(0, jobBonus(id));
         if (a.boostUntil > System.currentTimeMillis()) luck += cfg("boost.glueck", 400);
+        // Angelpass: Glück doppelt, mindestens +100 %
+        if (passOwner(id)) luck = Math.max(luck * 2, luck + 100);
         return luck;
     }
 
@@ -402,7 +439,9 @@ public final class AngelService {
         kg = Math.round(kg * (kg < 10 ? 100 : 10)) / (kg < 10 ? 100.0 : 10.0);
         int stars = q < 0.35 ? 1 : q < 0.6 ? 2 : q < 0.8 ? 3 : q < 0.93 ? 4 : 5;
         if (rod != null && rod.star > 0 && stars < 5 && rnd.nextDouble() * 100 < rod.star) stars++;
-        FishVariant variant = rollVariant(luck, rnd);
+        // 6-Sterne-Secret: selten aus einem 5-Sterne-Fang (Kosmos-Angel 10x so oft)
+        if (stars == 5 && rnd.nextDouble() * 100 < secretChance(rod)) stars = 6;
+        FishVariant variant = rollVariant(luck, rnd, rod);
 
         // Statistik
         int levelBefore = a.level();
@@ -423,6 +462,7 @@ public final class AngelService {
         int points = (int) Math.round(species.rarity().points * (0.8 + 0.1 * stars) * (record ? 1.2 : 1.0)
                 * (1 + (rod == null ? 0 : rod.points) / 100.0)) * amount;
         a.points += points;
+        if (pass != null) pass.addXp(id, points);
 
         // Köder verbrauchen
         boolean usedBait = false;
@@ -522,7 +562,7 @@ public final class AngelService {
         for (ItemStack it : rest.values()) p.getWorld().dropItemNaturally(p.getLocation(), it);
     }
 
-    void pay(UUID id, long amount) {
+    public void pay(UUID id, long amount) {
         if (amount <= 0) return;
         core.modes().depositIn(id, SURVIVAL, amount);
     }
@@ -552,11 +592,17 @@ public final class AngelService {
         int b = Math.max(0, jobBonus(id));
         if (goldenActive()) b += 50;
         if (fishOfDay().contains(s)) b += 50;
+        if (passOwner(id)) b += (int) cfg("angelpass.gewinn-prozent", 150);
         return b;
     }
 
     /** Faktor je Stern (1 bis 5). */
-    private static final double[] STAR_FACTOR = {1.0, 1.6, 2.5, 4.0, 6.5};
+    private static final double[] STAR_FACTOR = {1.0, 1.6, 2.5, 4.0, 6.5, 15.0};
+
+    /** Chance in Prozent, dass aus einem 5-Sterne-Fang ein 6-Sterne-Secret wird (angeln.secret-chance, Standard 0,5). */
+    public double secretChance(Rod rod) {
+        return core.getConfig().getDouble("angeln.secret-chance", 0.5) * (rod == Rod.KOSMOS ? 10 : 1);
+    }
 
     /**
      * Grundwert eines Fisches ohne Boni: Seltenheit x Sterne x Gewicht x Variante. Gewicht: leichtester Fisch der Art
@@ -566,7 +612,7 @@ public final class AngelService {
         double span = s.maxKg() - s.minKg();
         double q = span <= 0 ? 0.5 : Math.max(0, Math.min(1, (kg - s.minKg()) / span));
         double w = 0.5 + 1.5 * q;
-        double f = STAR_FACTOR[Math.max(1, Math.min(5, stars)) - 1];
+        double f = STAR_FACTOR[Math.max(1, Math.min(6, stars)) - 1];
         return Math.max(50, Math.round(s.rarity().base * f * w * (v == null ? 1 : v.mult)));
     }
 
@@ -590,8 +636,8 @@ public final class AngelService {
     }
 
     /** Würfelt die Variante: Chancen aus angeln.varianten.&lt;id&gt;.chance (Prozent), Glück erhöht sie leicht. */
-    private FishVariant rollVariant(double luck, ThreadLocalRandom rnd) {
-        double boost = 1 + Math.max(0, luck) / 200.0;
+    private FishVariant rollVariant(double luck, ThreadLocalRandom rnd, Rod rod) {
+        double boost = (1 + Math.max(0, luck) / 200.0) * (rod == Rod.STURM ? 5 : 1);
         double x = rnd.nextDouble() * 100;
         for (FishVariant v : new FishVariant[] {FishVariant.DIAMANT, FishVariant.GOLD, FishVariant.SILBER}) {
             double c = core.getConfig().getDouble("angeln.varianten." + v.id + ".chance", v.chance) * boost;
@@ -695,7 +741,7 @@ public final class AngelService {
         AngelProfile a = profile(p.getUniqueId());
         int level = a.upgrade(u);
         if (level >= u.max) return u.label + " ist schon auf der höchsten Stufe.";
-        long price = u.price(level);
+        long price = cost(p.getUniqueId(), u.price(level));
         if (!core.economy().withdraw(p.getUniqueId(), price)) return "Dafür fehlen dir Coins (" + AngelText.money(price) + ").";
         a.upgrades.put(u, level + 1);
         dirty = true;
@@ -708,10 +754,11 @@ public final class AngelService {
         if (err != null) return err;
         AngelProfile a = profile(p.getUniqueId());
         if (a.rods.contains(r)) return "Die " + r.label + " hast du schon. Mit „Holen“ bekommst du sie wieder.";
+        if (r.pass()) return "Die " + r.label + " gibt es nur im Angelpass.";
         if (r.jewels) {
             if (!core.jewels().take(p.getUniqueId(), r.price)) return "Dafür fehlen dir Juwelen (" + AngelText.num(r.price) + ").";
-        } else if (!core.economy().withdraw(p.getUniqueId(), r.price)) {
-            return "Dafür fehlen dir Coins (" + AngelText.money(r.price) + ").";
+        } else if (!core.economy().withdraw(p.getUniqueId(), cost(p.getUniqueId(), r.price))) {
+            return "Dafür fehlen dir Coins (" + AngelText.money(cost(p.getUniqueId(), r.price)) + ").";
         }
         a.rods.add(r);
         dirty = true;
@@ -744,7 +791,8 @@ public final class AngelService {
         if (err != null) return err;
         AngelProfile a = profile(p.getUniqueId());
         if (a.autoSell) return "Auto-Verkauf hast du schon.";
-        if (!addon.jobs().takeTokens(p.getUniqueId(), autoSellPrice())) return "Dafür brauchst du " + autoSellPrice() + " Tokens.";
+        long tp = cost(p.getUniqueId(), autoSellPrice());
+        if (!addon.jobs().takeTokens(p.getUniqueId(), tp)) return "Dafür brauchst du " + tp + " Tokens.";
         a.autoSell = true;
         dirty = true;
         return null;
@@ -791,7 +839,8 @@ public final class AngelService {
     public synchronized String buyBoost(Player p) {
         String err = survivalOnly(p);
         if (err != null) return err;
-        if (!addon.jobs().takeTokens(p.getUniqueId(), boostPrice())) return "Dafür brauchst du " + boostPrice() + " Tokens.";
+        long bp = cost(p.getUniqueId(), boostPrice());
+        if (!addon.jobs().takeTokens(p.getUniqueId(), bp)) return "Dafür brauchst du " + bp + " Tokens.";
         AngelProfile a = profile(p.getUniqueId());
         long now = System.currentTimeMillis();
         a.boostUntil = Math.max(now, a.boostUntil) + boostMinutes() * 60_000L;
@@ -811,7 +860,7 @@ public final class AngelService {
         if (err != null) return err;
         AngelProfile a = profile(p.getUniqueId());
         if (a.doubleCatch >= DOUBLE_MAX) return "Doppelfang ist schon auf der höchsten Stufe.";
-        long price = doublePrice(a.doubleCatch);
+        long price = cost(p.getUniqueId(), doublePrice(a.doubleCatch));
         if (!addon.jobs().takeTokens(p.getUniqueId(), price)) return "Dafür brauchst du " + price + " Tokens.";
         a.doubleCatch++;
         dirty = true;
@@ -821,7 +870,8 @@ public final class AngelService {
     public synchronized String buyBait(Player p, Bait b) {
         String err = survivalOnly(p);
         if (err != null) return err;
-        if (!core.economy().withdraw(p.getUniqueId(), b.price10)) return "Dafür fehlen dir Coins (" + AngelText.money(b.price10) + ").";
+        long bc = cost(p.getUniqueId(), b.price10);
+        if (!core.economy().withdraw(p.getUniqueId(), bc)) return "Dafür fehlen dir Coins (" + AngelText.money(bc) + ").";
         profile(p.getUniqueId()).baits.merge(b, 10, Integer::sum);
         dirty = true;
         return null;
@@ -1269,6 +1319,7 @@ public final class AngelService {
 
     public synchronized void save() {
         dirty = false;
+        if (pass != null) pass.save();
         YamlConfiguration out = new YamlConfiguration();
         for (Map.Entry<UUID, AngelProfile> e : profiles.entrySet()) {
             AngelProfile a = e.getValue();

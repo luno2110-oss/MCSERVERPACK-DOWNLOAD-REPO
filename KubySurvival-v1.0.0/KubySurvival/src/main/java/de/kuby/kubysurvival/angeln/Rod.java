@@ -37,7 +37,14 @@ public enum Rod {
     VOID("Void-Angel", "void", 0xB46CFF, true, 1_500, 40, 35, 4, 1, 15, 0, 0, 0,
             "Mythos-Fische überall, Schätze überall (+4 %), 15 % Doppelfang."),
     GOETTLICH("Göttliche Angel", "goettlich", 0xFFE7A8, true, 2_000, 60, 45, 5, 3, 30, 50, 40, 35,
-            "Segen: +60 % Glück, -45 % Wartezeit, 30 % Doppelfang, 35 % Stern mehr, +40 % Fischwert sofort.");
+            "Segen: +60 % Glück, -45 % Wartezeit, 30 % Doppelfang, 35 % Stern mehr, +40 % Fischwert sofort."),
+    // Angelpass (nicht im Shop): Stufe 25, 50, 75
+    GOLDFIEBER("Goldfieber-Angel", "goldfieber", 0xFFB830, true, 0, 35, 25, 0, 1, 0, 0, 100, 0,
+            "Goldfieber: jeder Fang zahlt sofort seinen vollen Wert, also doppeltes Geld."),
+    STURM("Sturm-Angel", "sturm", 0x8AB4FF, true, 0, 40, 30, 2, 2, 25, 0, 0, 0,
+            "Gewitter: Silber, Gold und Diamant 5x so oft, 25 % Blitzfang mit zweitem Fisch."),
+    KOSMOS("Kosmos-Angel", "kosmos", 0xB59CFF, true, 0, 50, 35, 3, 1, 0, 50, 0, 100,
+            "Sternenstaub: immer ein Stern mehr, 6-Sterne-Secret 10x so oft, +50 % Punkte.");
 
     public final String label, id, perk;
     public final int color;
@@ -67,6 +74,11 @@ public enum Rod {
 
     public TextColor textColor() {
         return TextColor.color(color);
+    }
+
+    /** Angel aus dem Angelpass (nicht im Shop). */
+    public boolean pass() {
+        return this == GOLDFIEBER || this == STURM || this == KOSMOS;
     }
 
     /** Ab Eisen unzerstörbar. */
@@ -105,6 +117,9 @@ public enum Rod {
             case RAINBOW -> "30 % Stern mehr, +30 % Punkte";
             case VOID -> "Mythos überall, 15 % Doppelfang";
             case GOETTLICH -> "Alles: 30 % Doppel, 35 % Stern";
+            case GOLDFIEBER -> "Doppeltes Geld";
+            case STURM -> "Varianten 5x, Blitzfang";
+            case KOSMOS -> "+1 Stern, Secret 10x";
             default -> perk;
         };
     }

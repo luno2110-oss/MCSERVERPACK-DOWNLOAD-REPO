@@ -101,6 +101,7 @@ public final class AngelFx {
     }
 
     static Component stars(int n) {
+        if (n >= 6) return Msg.parse("<gradient:#FF5AE0:#FFD25A>★★★★★★</gradient>");
         return Component.text().append(Component.text("★".repeat(n), NamedTextColor.YELLOW))
                 .append(Component.text("★".repeat(5 - n), NamedTextColor.DARK_GRAY)).build();
     }

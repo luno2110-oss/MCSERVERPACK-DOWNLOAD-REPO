@@ -16,7 +16,7 @@ import os
 from PIL import Image
 
 ROD_IDS = ["holz", "stein", "kupfer", "eisen", "gold", "lapis", "diamant", "smaragd", "quarz", "amethyst", "netherite",
-           "rainbow", "void", "goettlich"]
+           "rainbow", "void", "goettlich", "goldfieber", "sturm", "kosmos"]
 
 # Vanilla-Holztöne des Stocks (dunkel -> hell) und der Rolle
 WOOD = ["281e0b", "493615", "684e1e", "896727"]
@@ -44,6 +44,10 @@ MAT = {
     "netherite": (["17131a", "2f282f", "4a434a", "6d666d"], ["7e3000", "f49d02", "faf44a"]),
     "void": (["06030b", "1e1430", "3b2754", "5a3c7e"], ["2b0178", "973ae0", "f0d8ff"]),
     "goettlich": (["e08001", "f8de06", "fff7b0", "ffffff"], ["c86600", "f8de06", "ffffff"]),
+    # Angelpass: Goldfieber (Rot-Gold), Sturm (Gewitterblau, gelbe Schnur), Kosmos (Nachtviolett mit Sternen)
+    "goldfieber": (["5a0a12", "a01828", "e0a020", "ffe070"], ["7e3000", "f49d02", "faf44a"]),
+    "sturm": (["1a2236", "34466e", "6a86c0", "b8d0ff"], ["2a2a3a", "f2e24a", "ffffa0"]),
+    "kosmos": (["0a0820", "1e1a54", "3c3aa0", "7c7ef0"], ["1a0a40", "c080ff", "ffffff"]),
 }
 
 
@@ -82,6 +86,12 @@ def recolor(src, rid):
                 px[x, y] = h(reel[REEL.index(hexc)]) + (a,)
             elif rid == "goettlich" and hexc in LINE:
                 px[x, y] = h(["c86600", "f49d02", "f8de06"][LINE.index(hexc)]) + (a,)
+            elif rid == "sturm" and hexc in LINE:
+                px[x, y] = h(["c8b820", "f2e24a", "ffff90"][LINE.index(hexc)]) + (a,)
+            elif rid == "goldfieber" and hexc in LINE:
+                px[x, y] = h(["a01828", "e0a020", "ffe070"][LINE.index(hexc)]) + (a,)
+            elif rid == "kosmos" and hexc in LINE:
+                px[x, y] = h(["6a4ad0", "a080ff", "e0d0ff"][LINE.index(hexc)]) + (a,)
             elif rid == "void" and hexc in LINE:
                 px[x, y] = h(["4b02bb", "7216d1", "973ae0"][LINE.index(hexc)]) + (a,)
     if rid == "void":
@@ -89,6 +99,19 @@ def recolor(src, rid):
         for (x, y) in ((11, 4), (8, 7), (5, 10)):
             if px[x, y][3]:
                 px[x, y] = (240, 160, 255, 255)
+    if rid == "kosmos":
+        # Sterne am Stock (ungleich verteilt) und ein Glanz an der Spitze
+        for (x, y) in ((12, 3), (9, 6), (4, 11)):
+            if px[x, y][3]:
+                px[x, y] = (255, 255, 255, 255)
+    if rid == "sturm":
+        for (x, y) in ((10, 5), (6, 9)):
+            if px[x, y][3]:
+                px[x, y] = (255, 240, 120, 255)
+    if rid == "goldfieber":
+        for (x, y) in ((12, 2), (7, 7)):
+            if px[x, y][3]:
+                px[x, y] = (255, 250, 200, 255)
     if rid == "goettlich":
         # Glanzpunkte: Spitze und einmal in der Mitte
         for (x, y) in ((12, 2), (9, 5)):

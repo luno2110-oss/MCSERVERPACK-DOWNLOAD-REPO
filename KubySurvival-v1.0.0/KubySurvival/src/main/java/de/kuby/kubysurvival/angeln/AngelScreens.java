@@ -75,6 +75,8 @@ public final class AngelScreens {
 
         Consumer<Player> buyBoost();
 
+        Consumer<Player> pass();
+
         Consumer<Player> tokenShop();
 
         Consumer<Player> bait(Bait b, String action);
@@ -247,12 +249,15 @@ public final class AngelScreens {
         tile(c, 0, y + 144, Theme.TEAL, KitData.Icon.FILLED_MAP, "Angelwelt", null,
                 spans(v.worldReady ? "8 Gewässer mit Boni" : "Noch nicht eingerichtet", GRAY), true, nav.world(),
                 "Eigene Welt zum Angeln: Gewässer mit Boni, manche nur mit Angel, Köder und Level");
-        if (v.hasZone) {
-            tile(c, 198, y + 144, Theme.NAVY, KitData.Icon.COMPASS, "Angel-Zone", null,
-                    spans("+10 % Glück, Mythen, Schätze", GRAY), true, nav.toZone(), "Zur Angel-Zone reisen");
-        }
+        tile(c, 198, y + 144, Theme.GOLD, Rod.KOSMOS.icon(), "Angelpass", null,
+                spans("75 Stufen · 3 besondere Angeln", GRAY), true, nav.pass(),
+                "Pass-Vorteile, Belohnungen und Stufen");
 
         // Knöpfe
+        if (v.hasZone) {
+            textButton(c, 0, 402, KitData.Button.TEAL_LINE, "Zur Angel-Zone", AQUA, false, nav.toZone(),
+                    "+10 % Glück, Mythen-Fische und Schätze");
+        }
         textButtonRight(c, W, 402, KitData.Button.DARK, "So funktioniert's", TAB, false, nav.help(), "Kurz erklärt");
         return c;
     }
@@ -397,11 +402,16 @@ public final class AngelScreens {
 
     public record RodView(double luck, double faster, double treasure, int[] levels, boolean autoSell,
                           long autoSellTokens, String armed, long coins, long tokens, boolean autoSellAll, boolean autoSellAllOn,
-                          long autoSellAllJewels, long jewels, long boostLeft, long boostTokens, long boostMinutes) {
+                          long autoSellAllJewels, long jewels, long boostLeft, long boostTokens, long boostMinutes, boolean half) {
         public RodView(double luck, double faster, double treasure, int[] levels, boolean autoSell, long autoSellTokens, String armed,
                        long coins, long tokens) {
-            this(luck, faster, treasure, levels, autoSell, autoSellTokens, armed, coins, tokens, false, false, 250, 0, 0, 450, 5);
+            this(luck, faster, treasure, levels, autoSell, autoSellTokens, armed, coins, tokens, false, false, 250, 0, 0, 450, 5, false);
         }
+    }
+
+    /** Angelpass: Coin- und Token-Preise beim Angeln halbiert (Juwelen nicht). */
+    static long cost(long price, boolean half) {
+        return half ? (price + 1) / 2 : price;
     }
 
     public static Canvas rod(RodView v, Nav nav) {
@@ -425,7 +435,7 @@ public final class AngelScreens {
             if (lv < u.max) {
                 c.text(34, y + 30, List.of(Span.of("Nächste Stufe: ", GRAY), Span.of(u.effect(lv + 1), GREEN)));
                 boolean armed = ("up:" + u.name()).equals(v.armed);
-                String label = armed ? "Nochmal klicken!" : "Kaufen · " + AngelText.money(u.price(lv));
+                String label = armed ? "Nochmal klicken!" : "Kaufen · " + AngelText.money(cost(u.price(lv), v.half));
                 textButtonRight(c, 380, y + 15, KitData.Button.GREEN, label, ON_GREEN, true, nav.buyUpgrade(u),
                         "Zweimal klicken zum Kaufen");
             } else {
@@ -443,7 +453,7 @@ public final class AngelScreens {
             c.textRight(380, y + 19, "Aktiv ✓", GREEN, true);
         } else {
             boolean armed = "autosell".equals(v.armed);
-            textButtonRight(c, 380, y + 15, KitData.Button.PURPLE, armed ? "Nochmal klicken!" : "Kaufen · " + v.autoSellTokens + " Tokens",
+            textButtonRight(c, 380, y + 15, KitData.Button.PURPLE, armed ? "Nochmal klicken!" : "Kaufen · " + cost(v.autoSellTokens, v.half) + " Tokens",
                     ON_PURPLE, true, nav.buyAutoSell(), "Zweimal klicken zum Kaufen · Du hast " + v.tokens + " Tokens");
         }
         y += 63;
@@ -470,7 +480,7 @@ public final class AngelScreens {
         c.text(34, y + 19, "+400 % Glück für " + v.boostMinutes + " Minuten", LIGHT, false);
         c.text(34, y + 30, v.boostLeft > 0 ? "Aktiv: noch " + AngelText.duration(v.boostLeft) : "Nochmal kaufen verlängert", v.boostLeft > 0 ? GREEN : LIGHT, false);
         boolean armedB = "boost".equals(v.armed);
-        textButtonRight(c, 380, y + 15, KitData.Button.PURPLE, armedB ? "Nochmal klicken!" : "Kaufen · " + v.boostTokens + " Tokens",
+        textButtonRight(c, 380, y + 15, KitData.Button.PURPLE, armedB ? "Nochmal klicken!" : "Kaufen · " + cost(v.boostTokens, v.half) + " Tokens",
                 ON_PURPLE, true, nav.buyBoost(), "Zweimal klicken zum Kaufen · Du hast " + v.tokens + " Tokens");
         y += 60;
         textButtonRight(c, W, y, KitData.Button.PURPLE_LINE, "Doppelfang im Token-Shop", TextColor.color(0xD6A4FF), false,
@@ -487,7 +497,11 @@ public final class AngelScreens {
      * @param carried im Inventar (je Rod.ordinal)
      * @param inHand  Shop-Angel in der Hand oder null
      */
-    public record ShopView(int tab, boolean[] owned, boolean[] carried, Rod inHand, long coins, long jewels, String armed) {}
+    public record ShopView(int tab, boolean[] owned, boolean[] carried, Rod inHand, long coins, long jewels, String armed, boolean half) {
+        public ShopView(int tab, boolean[] owned, boolean[] carried, Rod inHand, long coins, long jewels, String armed) {
+            this(tab, owned, carried, inHand, coins, jewels, armed, false);
+        }
+    }
 
     public static Canvas shop(ShopView v, Nav nav) {
         Canvas c = new Canvas(W).heading("Angeln", net.kyori.adventure.text.format.TextColor.color(0x55FCFC));
@@ -500,7 +514,7 @@ public final class AngelScreens {
         if (!jew) {
             int i = 0;
             for (Rod r : Rod.values()) {
-                if (r.jewels) continue;
+                if (r.jewels || r.pass()) continue;
                 int x = (i % 2) * 198, cy = y + (i / 2) * 52;
                 rodCard(c, x, cy, r, v, nav);
                 i++;
@@ -511,7 +525,7 @@ public final class AngelScreens {
         } else {
             int cy = y;
             for (Rod r : Rod.values()) {
-                if (!r.jewels) continue;
+                if (!r.jewels || r.pass()) continue;
                 premiumCard(c, cy, r, v, nav);
                 cy += 110;
             }
@@ -526,7 +540,7 @@ public final class AngelScreens {
         c.box(x, y, 192, 50, box);
         c.icon(x + 8, y + 17, r.icon(), false);
         boolean armed = ("rod:" + r.id).equals(v.armed);
-        String status = armed ? "Nochmal!" : hand ? "in der Hand" : carried ? "dabei ✓" : owned ? "Holen ›" : AngelText.money(r.price);
+        String status = armed ? "Nochmal!" : hand ? "in der Hand" : carried ? "dabei ✓" : owned ? "Holen ›" : AngelText.money(cost(r.price, v.half));
         TextColor sc = armed ? GOLD_T : hand || carried ? GREEN : owned ? AQUA : GOLD_T;
         int sw = Canvas.width(status, true);
         c.text(x + 30, y + 7, Canvas.fit(r.label, true, 150 - sw), r.textColor(), true);
@@ -534,7 +548,7 @@ public final class AngelScreens {
         c.text(x + 30, y + 19, Canvas.fit(r.stats(), false, 154), GRAY, false);
         c.text(x + 30, y + 31, Canvas.fit(r.shortPerk(), false, 154), LIGHT, false);
         String hover = r.label + ": " + r.stats() + ". " + r.perk + (owned ? (carried ? "" : " Klick: wieder ins Inventar.")
-                : " Zweimal klicken zum Kaufen (" + AngelText.money(r.price) + ").");
+                : " Zweimal klicken zum Kaufen (" + AngelText.money(cost(r.price, v.half)) + ").");
         if (!carried || !owned) c.action(x, y, 192, 50, nav.rodAction(r, owned ? "take" : "buy"), hover);
         else c.action(x, y, 192, 50, null, hover);
     }
@@ -571,7 +585,11 @@ public final class AngelScreens {
     // Köder
     // =================================================================================================================
 
-    public record BaitView(int[] counts, Bait active, boolean[] canCraft, String[] missing, String armed) {}
+    public record BaitView(int[] counts, Bait active, boolean[] canCraft, String[] missing, String armed, boolean half) {
+        public BaitView(int[] counts, Bait active, boolean[] canCraft, String[] missing, String armed) {
+            this(counts, active, canCraft, missing, armed, false);
+        }
+    }
 
     public static Canvas baits(BaitView v, Nav nav) {
         Canvas c = new Canvas(W).heading("Angeln", net.kyori.adventure.text.format.TextColor.color(0x55FCFC));
@@ -595,7 +613,7 @@ public final class AngelScreens {
                         "Diesen Köder an die Angel") + 4;
             }
             boolean armed = ("buy:" + b.name()).equals(v.armed);
-            bx += textButton(c, bx, y + 33, KitData.Button.GOLD_LINE, armed ? "Nochmal klicken!" : "10x kaufen · " + AngelText.money(b.price10),
+            bx += textButton(c, bx, y + 33, KitData.Button.GOLD_LINE, armed ? "Nochmal klicken!" : "10x kaufen · " + AngelText.money(cost(b.price10, v.half)),
                     TextColor.color(0xF6CB4C), false, nav.bait(b, "buy"), "Zweimal klicken zum Kaufen") + 4;
             String craftHover = v.missing[b.ordinal()] == null ? "Basteln aus: " + recipe(b) : "Dir fehlt: " + v.missing[b.ordinal()];
             textButton(c, bx, y + 33, KitData.Button.BROWN_LINE, b.craftAmount + "x basteln", TextColor.color(0xE8A060),

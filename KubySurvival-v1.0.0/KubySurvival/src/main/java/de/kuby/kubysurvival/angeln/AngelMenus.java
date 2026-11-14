@@ -124,7 +124,7 @@ public final class AngelMenus implements AngelScreens.Nav {
                 4.0 * a.upgrade(Upgrade.SCHNELLSPULE), 1.2 + 0.5 * a.upgrade(Upgrade.SCHATZSINN), levels, a.autoSell,
                 service.autoSellPrice(), armedFor(p), core.economy().balance(id), addon.jobs().worker(id).tokens, a.autoSellAll,
                 a.autoSellAllOn, service.autoSellAllPrice(), core.jewels().balance(id), service.boostLeft(id), service.boostPrice(),
-                service.boostMinutes()), this));
+                service.boostMinutes(), service.passOwner(id)), this));
     }
 
     public void openBaits(Player p) {
@@ -138,7 +138,7 @@ public final class AngelMenus implements AngelScreens.Nav {
             missing[b.ordinal()] = service.missing(p, b);
             can[b.ordinal()] = missing[b.ordinal()] == null;
         }
-        show(p, AngelScreens.baits(new AngelScreens.BaitView(counts, a.active, can, missing, armedFor(p)), this));
+        show(p, AngelScreens.baits(new AngelScreens.BaitView(counts, a.active, can, missing, armedFor(p), service.passOwner(p.getUniqueId())), this));
     }
 
     public void openDealer(Player p, String lastSale) {
@@ -174,7 +174,7 @@ public final class AngelMenus implements AngelScreens.Nav {
             if (r != null) carried[r.ordinal()] = true;
         }
         show(p, AngelScreens.shop(new AngelScreens.ShopView(tab, owned, carried, AngelService.rodOf(p), core.economy().balance(id),
-                core.jewels().balance(id), armedFor(p)), this));
+                core.jewels().balance(id), armedFor(p), service.passOwner(id)), this));
     }
 
     public void openHelp(Player p) {
@@ -323,6 +323,95 @@ public final class AngelMenus implements AngelScreens.Nav {
                         + service.profile(p.getUniqueId()).upgrade(u) + "!");
             }
             openRod(p);
+        };
+    }
+
+    // =================================================================================================================
+    // Angelpass
+    // =================================================================================================================
+
+    private final Map<UUID, Integer> passPages = new HashMap<>();
+
+    @Override
+    public Consumer<Player> pass() {
+        return p -> openPass(p, -1);
+    }
+
+    /** Angelpass-Dialog; page -1 = Seite der nächsten Stufe. */
+    public void openPass(Player p, int page) {
+        if (!survival(p)) return;
+        UUID id = p.getUniqueId();
+        AngelPass ap = service.pass();
+        int level = ap.level(id);
+        if (page < 0) page = passPages.getOrDefault(id, Math.min(level, AngelPass.MAX - 1) / AngelPassScreen.PER_PAGE);
+        passPages.put(id, page);
+        boolean[] claimed = new boolean[AngelPass.MAX];
+        for (int i = 1; i <= AngelPass.MAX; i++) claimed[i - 1] = ap.claimed(id, i);
+        AngelPassScreen.View v = new AngelPassScreen.View(ap.owned(id), level, ap.xp(id), ap.perLevel(), ap.claimable(id), ap.price(),
+                ap.levelPrice(level), core.jewels().balance(id), page, claimed, armedFor(p));
+        show(p, AngelPassScreen.canvas(v, passActions()));
+    }
+
+    private AngelPassScreen.Actions passActions() {
+        return new AngelPassScreen.Actions() {
+            @Override
+            public Consumer<Player> back() {
+                return AngelMenus.this.main();
+            }
+
+            @Override
+            public Consumer<Player> buy() {
+                return p -> {
+                    if (!confirm(p, "pass")) {
+                        openPass(p, -1);
+                        return;
+                    }
+                    String e = service.pass().buy(p);
+                    if (e != null) {
+                        err(p, e);
+                    } else {
+                        Sfx.play(core, p, Sfx.Kind.EPIC);
+                        p.showTitle(net.kyori.adventure.title.Title.title(Msg.parse("<gradient:#FF8AD8:#FFD25A><b>ANGELPASS</b></gradient>"),
+                                Msg.parse("<gray>+150 % Gewinn · 2x schneller · 2x Glück · -50 % Preise")));
+                        Msg.send(p, "<aqua><b>ANGELN</b> <dark_gray>▶ <light_purple>Angelpass aktiv! <gray>Jeder Fang bringt jetzt "
+                                + "Pass-Punkte. Belohnungen: <white>/angeln pass");
+                    }
+                    openPass(p, -1);
+                };
+            }
+
+            @Override
+            public Consumer<Player> buyLevel() {
+                return p -> {
+                    if (!confirm(p, "level")) {
+                        openPass(p, -1);
+                        return;
+                    }
+                    String e = service.pass().buyLevel(p);
+                    if (e != null) err(p, e);
+                    else Sfx.play(core, p, Sfx.Kind.LEVEL_UP);
+                    openPass(p, -1);
+                };
+            }
+
+            @Override
+            public Consumer<Player> claim() {
+                return p -> {
+                    List<String> got = service.pass().claimAll(p);
+                    if (got.isEmpty()) {
+                        err(p, "Gerade gibt es nichts abzuholen.");
+                    } else {
+                        Sfx.play(core, p, Sfx.Kind.SUCCESS_BIG);
+                        Msg.send(p, "<aqua><b>ANGELPASS</b> <dark_gray>▶ <green>Abgeholt: <white>" + Msg.escape(String.join(", ", got)));
+                    }
+                    openPass(p, -1);
+                };
+            }
+
+            @Override
+            public Consumer<Player> page(int page) {
+                return p -> openPass(p, page);
+            }
         };
     }
 

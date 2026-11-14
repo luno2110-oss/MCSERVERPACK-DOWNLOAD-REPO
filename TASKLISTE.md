@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.53** (ungetestet, nicht kompiliert)
+Stand: **v1.54** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -555,6 +555,13 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - große Beträge an engen Stellen jetzt kurz („1,2 Mio.“, „3 Mrd.“)
   - Kern: Info-Leiste (Vorschau der Job-Leiste ragte aus dem Fenster), Kits („alle … Std.“ über „Vorschau“), Bestenliste (Untertitel), Investments (Name über Preis), Quiz-Abstimmung (Zeile zu lang)
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
+
+## Angelpass, Pass-Angeln, 6-Sterne-Secret (v1.54, Test im Spiel offen)
+- [x] Angelpass (`/angeln pass`, Kachel im Angel-Menü): 550 Juwelen, 75 Stufen, kein Gratis-Pfad. Stufen steigen mit den Angel-Punkten jedes Fangs (2.000 je Stufe) oder lassen sich kaufen (Stufe 1 = 25 Juwelen, jede weitere +2). Dialog mit Vorteilen, Fortschrittsbalken, „Stufe kaufen“, „Alles abholen“ und Belohnungen in 5 Seiten zu 15 Karten
+- [x] Belohnungen: ungerade Stufen Geld (5.000 $ x Stufe), gerade Stufen Angel-Punkte (150 x Stufe), jede 5. Stufe Angelboost-Minuten (+400 % Glück, 5 bis 30 Min.), Stufe 25/50/75 eine besondere Angel
+- [x] Dauerhafte Pass-Vorteile: +150 % Gewinn beim Händler, doppelt so schnelles Angeln, alle Coin- und Token-Preise beim Angeln halbiert (Upgrades, Coin-Angeln, Köder, Auto-Verkauf, Angelboost, Doppelfang; Juwelen nicht), Glück verdoppelt (mindestens +100 %)
+- [x] Drei Pass-Angeln mit eigenen Fähigkeiten, eigenen Texturen und Fang-Effekten: Goldfieber (Stufe 25: jeder Fang zahlt sofort seinen vollen Wert, also doppeltes Geld), Sturm (Stufe 50: Silber/Gold/Diamant 5x so oft, 25 % Blitzfang mit zweitem Fisch und Blitz-Effekt), Kosmos (Stufe 75: immer ein Stern mehr, 6-Sterne-Secret 10x so oft, +50 % Punkte). Nicht im Shop
+- [x] 6-Sterne-Secret: 0,5 % aus jedem 5-Sterne-Fang (`angeln.secret-chance`), Wert x15 statt x6,5, Sterne im Verlauf mit „SECRET“
 
 ## Angeln: viel mehr Geld, Varianten, stärkere Juwelen-Angeln, Auto-Verkauf Plus, Angelboost (v1.53, Test im Spiel offen)
 - [x] Neue Preise: Grundwert der Seltenheit x Sterne x Gewicht x Variante. Grundwert Gewöhnlich 100, Ungewöhnlich 220, Selten 520, Episch 1.300, Legendär 3.200, Mythisch 7.700; Sterne x1 / x1,6 / x2,5 / x4 / x6,5; Gewicht x0,5 (leichtester der Art) bis x2 (schwerster); Varianten Silber x3, Gold x8, Diamant x25. Ergebnis: 50 $ bis ~2,5 Mio. $ (Diamant-Mythisch, 5 Sterne, Rekordgewicht), dazu Goldene Stunde, Fisch des Tages, Angler-Job

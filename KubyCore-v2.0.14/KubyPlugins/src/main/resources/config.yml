@@ -1095,6 +1095,17 @@ angeln:
     tokens: 450
     minuten: 5
     glueck: 400
+  # 6-Sterne-Secret: Chance in Prozent, dass aus einem 5-Sterne-Fang 6 Sterne werden (Wert x15 statt x6,5)
+  secret-chance: 0.5
+  # Angelpass (/angeln pass): kein Gratis-Pfad, 75 Stufen. Stufen mit Angel-Punkten aus Fängen oder für Juwelen
+  # (Stufe 1 = stufe-start, jede weitere + stufe-plus). Vorteile mit Pass: +gewinn-prozent beim Händler, doppelt so
+  # schnelles Angeln, Coin- und Token-Preise beim Angeln halbiert, Glück verdoppelt (mindestens +100 %).
+  angelpass:
+    preis-juwelen: 550
+    punkte-pro-stufe: 2000
+    stufe-start: 25
+    stufe-plus: 2
+    gewinn-prozent: 150
   # Doppelfang im Token-Shop: 3 Stufen zu je 5 % Chance auf zwei Fische, Preis = Wert * Stufe
   double-catch-tokens: 100
   tournament:

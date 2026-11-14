@@ -67,6 +67,8 @@ public final class AngelListener implements Listener {
                 boolean rain = !hook.getWorld().isClearWeather();
                 double f = Math.max(0.15, 1.0 - (service.faster(p.getUniqueId(), zone, rod, rain)
                         + (spot == null ? 0 : spot.faster)) / 100.0);
+                // Angelpass: doppelt so schnell
+                if (service.passOwner(p.getUniqueId())) f *= 0.5;
                 int min = Math.max(1, (int) (hook.getMinWaitTime() * f));
                 int max = Math.max(min, (int) (hook.getMaxWaitTime() * f));
                 hook.setMinWaitTime(min);
@@ -149,6 +151,24 @@ public final class AngelListener implements Listener {
                             new org.bukkit.Particle.DustOptions(org.bukkit.Color.fromRGB(0xFFE7A8), 1.8f));
                     p.playSound(at, "kuby:cine.shing", 0.8f, 1.3f);
                 }
+            }
+            case GOLDFIEBER -> {
+                w.spawnParticle(org.bukkit.Particle.DUST, at, 30, 0.4, 0.4, 0.4,
+                        new org.bukkit.Particle.DustOptions(org.bukkit.Color.fromRGB(0xFFC93A), 1.5f));
+                p.playSound(p.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, 1.4f);
+            }
+            case STURM -> {
+                w.spawnParticle(org.bukkit.Particle.ELECTRIC_SPARK, at, 30, 0.4, 0.6, 0.4, 0.2);
+                if (c.amount() > 1) {
+                    // Blitzfang: Blitz ohne Schaden über dem Haken
+                    w.strikeLightningEffect(at);
+                    Msg.send(p, "<aqua><b>ANGELN</b> <dark_gray>▶ <#8AB4FF>⚡ Blitzfang! <gray>Ein zweiter Fisch hing am Haken.");
+                }
+            }
+            case KOSMOS -> {
+                w.spawnParticle(org.bukkit.Particle.END_ROD, at, 20, 0.5, 0.6, 0.5, 0.03);
+                w.spawnParticle(org.bukkit.Particle.DUST, at, 25, 0.6, 0.6, 0.6,
+                        new org.bukkit.Particle.DustOptions(org.bukkit.Color.fromRGB(0xB59CFF), 1.2f));
             }
             default -> {
             }

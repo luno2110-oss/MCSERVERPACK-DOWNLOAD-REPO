@@ -43,6 +43,7 @@ public final class AngelCommand implements CommandExecutor, TabCompleter {
         switch (sub) {
             case "buch", "fischbuch" -> menus.openBook(p, Water.FLUSS);
             case "rute", "upgrades" -> menus.openRod(p);
+            case "pass", "angelpass" -> menus.openPass(p, -1);
             case "shop", "angeln", "kaufen" -> menus.openShop(p, args.length > 1 && args[1].toLowerCase().startsWith("j") ? 1 : 0);
             case "koeder", "köder" -> menus.openBaits(p);
             case "haendler", "händler", "verkaufen" -> menus.openDealer(p, null);

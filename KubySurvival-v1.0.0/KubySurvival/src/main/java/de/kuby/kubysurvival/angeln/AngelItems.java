@@ -72,9 +72,10 @@ public final class AngelItems {
             meta.displayName(Component.text(s.name(), s.rarity().color()).decoration(TextDecoration.ITALIC, false));
         }
         List<Component> lore = new ArrayList<>();
-        lore.add(Component.text()
+        lore.add(stars >= 6 ? Msg.item("<gradient:#FF5AE0:#FFD25A>★★★★★★</gradient> <light_purple><b>SECRET</b>")
+                : Component.text()
                 .append(Component.text("★".repeat(stars), NamedTextColor.YELLOW))
-                .append(Component.text("★".repeat(5 - stars), NamedTextColor.DARK_GRAY))
+                .append(Component.text("★".repeat(Math.max(0, 5 - stars)), NamedTextColor.DARK_GRAY))
                 .decoration(TextDecoration.ITALIC, false).build());
         if (v.special()) lore.add(line("Variante: ", v.label + " (Wert x" + v.mult + ")", v.color()));
         lore.add(line("Seltenheit: ", s.rarity().label, s.rarity().color()));
@@ -106,7 +107,7 @@ public final class AngelItems {
         FishSpecies s = FishSpecies.byId(id);
         if (s == null) return null;
         Integer stars = pdc.get(KEY_STARS, PersistentDataType.INTEGER);
-        int st = stars == null ? 1 : Math.max(1, Math.min(5, stars));
+        int st = stars == null ? 1 : Math.max(1, Math.min(6, stars));
         Double kg = pdc.get(KEY_KG, PersistentDataType.DOUBLE);
         return new FishItem(s, st, kg == null ? kgForStars(s, st) : kg, FishVariant.byId(pdc.get(KEY_VARIANT, PersistentDataType.STRING)));
     }
