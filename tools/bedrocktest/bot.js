@@ -10,7 +10,7 @@ const HOST = process.env.HOST || '127.0.0.1';
 const PORT = +(process.env.PORT || 19132);
 const VERSION = process.env.VERSION || '1.26.60';
 const DURATION = +(process.env.DURATION || 90) * 1000;
-const COMMANDS = ['/menu', '/shop', '/angeln', '/quests', '/settings', '/feedback', '/keys', '/menu'];
+const COMMANDS = ['/menu', '/feedback', '/shop', '/settings', '/freunde', '/feedback', '/support', '/menu', '/modus survival', '/angeln'];
 
 const res = { version: VERSION, joined: false, spawned: false, packs: [], forms: [], clicks: 0, commands: [], chat: [],
   sidebarTitle: null, sidebarLines: [], errors: [], disconnect: null, schema: {} };
@@ -31,7 +31,7 @@ function fieldsOf(name) {
 }
 
 const client = bedrock.createClient({ host: HOST, port: PORT, username: 'KubyBedrock', offline: true, version: VERSION,
-  skipPing: true, connectTimeout: 30000 });
+  skipPing: true, connectTimeout: 30000, skinData: { LanguageCode: 'de_DE' } });
 let uuid = '00000000-0000-0000-0000-000000000000';
 let queue = COMMANDS.slice();
 let lastCommandAt = 0;

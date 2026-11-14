@@ -106,6 +106,7 @@ jobs:
               c["modes"].setdefault(m, {})
               c["modes"][m]["world"] = "world"
               c["modes"][m]["spawn"] = "world;%d;110;0;0;0" % (i * 300)
+          c.setdefault("beta", {})["alle-tester"] = True
           yaml.safe_dump(c, open(k, "w", encoding="utf-8"), allow_unicode=True, sort_keys=False)
           EOF
 
