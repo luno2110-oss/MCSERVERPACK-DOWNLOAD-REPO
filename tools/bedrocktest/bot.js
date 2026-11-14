@@ -42,20 +42,25 @@ const crypto = require('crypto');
 let packPhase = PACK_UUID ? 'idle' : 'done';
 let packWanted = null;
 let packInfo = null;
+let pendingComplete = false;
+log('Pack-UUID gesucht:', PACK_UUID || '(keine)');
 const packChunks = [];
 const rawWrite = client.write.bind(client);
 client.write = (name, params) => {
   if (name === 'resource_pack_client_response' && params && params.response_status === 'completed' && packPhase !== 'done') {
-    if (packPhase === 'idle' && packWanted) {
-      packPhase = 'downloading';
-      res.pack.requested = true;
-      log('fordere Pack an:', packWanted);
-      rawWrite(name, { response_status: 'send_packs', response_status_name: '', resourcepackids: [packWanted] });
-    }
+    if (packPhase === 'idle' && packWanted) requestPack();
+    else if (packPhase === 'idle') pendingComplete = true;    // Pack-Liste noch nicht gelesen: gleich nachholen
     return;
   }
   return rawWrite(name, params);
 };
+function requestPack() {
+  packPhase = 'downloading';
+  res.pack.requested = true;
+  log('fordere Pack an:', packWanted);
+  rawWrite('resource_pack_client_response', { response_status: 'send_packs', response_status_name: '', resourcepackids: [packWanted] });
+}
+
 client.on('resource_pack_data_info', (p) => {
   packInfo = p;
   res.pack.chunkCount = p.chunk_count;
@@ -119,6 +124,11 @@ client.on('resource_packs_info', (p) => {
     packWanted = ours.uuid + '_' + ours.version;
   } else if (PACK_UUID) {
     packPhase = 'done';     // nicht angeboten: normal weiter, die Auswertung meldet es
+  }
+  if (pendingComplete) {
+    pendingComplete = false;
+    if (packWanted && packPhase === 'idle') requestPack();
+    else rawWrite('resource_pack_client_response', { response_status: 'completed', response_status_name: 'resourcepackstackfinished', resourcepackids: [] });
   }
   res.packs.push(...packs);
   log('Resource Packs angeboten:', packs.length, packs.join(' | ').slice(0, 300));

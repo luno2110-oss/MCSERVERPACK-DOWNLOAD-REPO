@@ -126,7 +126,7 @@ jobs:
           # Welche Versionen diese Geyser-Instanz selbst unterstützt (statt Wiki): Ausgabe von "geyser version"
           echo "geyser version" >&3
           sleep 6
-          grep -A12 -i "geyser version" server.log | tail -14 > geyser-version.txt || true
+          grep -i "running Geyser version" server.log | tail -1 > geyser-version.txt || true
           cat geyser-version.txt
           # UUID unseres Packs (der Client lädt genau dieses wie ein Gerät herunter)
           export PACK_UUID=$(unzip -p kuby/KubyBedrock.mcpack manifest.json | python3 -c "import json,sys;print(json.load(sys.stdin)['header']['uuid'])")
@@ -159,7 +159,7 @@ jobs:
           print("## Bedrock-Test (Bedrock %s über Geyser)" % r.get("version"))
           try:
               gv = [re.sub(r"^\[[^\]]*\] *(\[[^\]]*\] *)?", "", l).strip() for l in open("geyser-version.txt", encoding="utf-8", errors="replace")]
-              gv = [l for l in gv if re.search(r"(?i)bedrock|java|version|geyser", l)]
+              gv = [l for l in gv if re.search(r"(?i)running Geyser version", l)]
           except OSError:
               gv = []
           print("- Geyser selbst (Konsole „geyser version“): " + (" · ".join(gv[:4]) if gv else "keine Ausgabe"))
