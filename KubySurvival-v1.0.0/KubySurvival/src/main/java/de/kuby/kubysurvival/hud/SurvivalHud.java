@@ -75,7 +75,7 @@ public final class SurvivalHud implements Listener {
         UUID id = p.getUniqueId();
         if (de.kuby.kubyplugins.cinema.Cinema.busy(id)) return false;
         if (!core.getConfig().getBoolean("survival-hud.enabled", true) || !core.infoBar().on(id) || !survival(p)
-                || !core.uiPack().active(p)) return false;
+                || !core.uiPack().javaPack(p)) return false;
         for (Element e : Element.group(false)) if (!e.row() && core.infoBar().visible(id, e)) return true;
         return false;
     }

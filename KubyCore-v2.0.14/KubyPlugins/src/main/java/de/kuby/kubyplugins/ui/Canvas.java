@@ -50,6 +50,8 @@ public final class Canvas {
         final int top, bottom;
         int line;
         Region region;
+        /** Lesbarer Text bei Titel- und Überschrift-Schriften (für die Bedrock-Formulare). */
+        String plain;
 
         Glyph(Kind kind, int x, int y, int w, int h, int advance, int z, String chars, TextColor color, boolean bold,
               int minShift, int maxShift, int top, int bottom) {
@@ -701,9 +703,11 @@ public final class Canvas {
         String chars = titleChars(t, gold);
         int w = titleWidth(t);
         int top = y - KitData.TITLE_TOP;
-        glyphs.add(new Glyph(Kind.ICON, x, top, w, KitData.TITLE_H, w, Z_TEXT, chars,
+        Glyph tg = new Glyph(Kind.ICON, x, top, w, KitData.TITLE_H, w, Z_TEXT, chars,
                 gold || color == null ? NamedTextColor.WHITE : color, false,
-                Math.max(KitData.I_MIN, 7 - KitData.TITLE_H), KitData.I_MAX, top, top + KitData.TITLE_H));
+                Math.max(KitData.I_MIN, 7 - KitData.TITLE_H), KitData.I_MAX, top, top + KitData.TITLE_H);
+        tg.plain = t;
+        glyphs.add(tg);
         return w;
     }
 
@@ -782,8 +786,10 @@ public final class Canvas {
         }
         int w = headlineWidth(text);
         int top = y - HeadlineData.TOP;
-        glyphs.add(new Glyph(Kind.HEAD, x, top, w, HeadlineData.CELL_H, w, Z_TEXT, chars.toString(), NamedTextColor.WHITE, false,
-                Math.max(KitData.I_MIN, HeadlineData.MIN_SHIFT), KitData.I_MAX, top, top + HeadlineData.CELL_H));
+        Glyph hg = new Glyph(Kind.HEAD, x, top, w, HeadlineData.CELL_H, w, Z_TEXT, chars.toString(), NamedTextColor.WHITE, false,
+                Math.max(KitData.I_MIN, HeadlineData.MIN_SHIFT), KitData.I_MAX, top, top + HeadlineData.CELL_H);
+        hg.plain = text.replace("|", "");
+        glyphs.add(hg);
         return w;
     }
 
@@ -804,6 +810,40 @@ public final class Canvas {
             }
         }
         return sb.toString();
+    }
+
+    // =================================================================================================================
+    // Export für Bedrock-Formulare (de.kuby.kubyplugins.bedrock.FormModel)
+    // =================================================================================================================
+
+    /** Ein sichtbares Stück: Text (kind 0, mit Farbe und fett), Icon aus dem Kit (1) oder Item-Bild (2, Zeichen im Item-Font). */
+    public record Piece(int kind, int x, int y, int w, int h, String text, TextColor color, boolean bold) {}
+
+    /** Klickbarer Bereich (Aktion oder Link) mit Tooltip. */
+    public record Click(int x, int y, int w, int h, Consumer<Player> action, Component hover, String url) {}
+
+    /** Texte, Icons und Item-Bilder in Zeichenreihenfolge (ohne Kästen, Knöpfe und Balken). */
+    public List<Piece> pieces() {
+        List<Piece> out = new ArrayList<>();
+        for (Glyph g : glyphs) {
+            switch (g.kind) {
+                case TEXT -> out.add(new Piece(0, g.x, g.y, g.w, g.h, g.chars, g.color, g.bold));
+                case HEAD -> out.add(new Piece(0, g.x, g.top, g.w, g.bottom - g.top, g.plain == null ? "" : g.plain, g.color, true));
+                case ICON -> {
+                    if (g.plain != null) out.add(new Piece(0, g.x, g.top, g.w, g.bottom - g.top, g.plain, g.color, true));
+                    else out.add(new Piece(1, g.x, g.top, g.w, g.bottom - g.top, g.chars, g.color, false));
+                }
+                case ITEM -> out.add(new Piece(2, g.x, g.top, g.w, g.bottom - g.top, g.chars, g.color, false));
+                default -> { }
+            }
+        }
+        return out;
+    }
+
+    public List<Click> clicks() {
+        List<Click> out = new ArrayList<>();
+        for (Region r : regions) out.add(new Click(r.x(), r.y(), r.w(), r.h(), r.onClick(), r.hover(), r.url()));
+        return out;
     }
 
     // =================================================================================================================

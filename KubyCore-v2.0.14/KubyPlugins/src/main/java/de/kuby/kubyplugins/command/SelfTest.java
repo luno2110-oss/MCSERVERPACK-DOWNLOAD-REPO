@@ -47,11 +47,30 @@ final class SelfTest {
     static void run(KubyPlugins plugin, CommandSender out) {
         List<String> fails = new ArrayList<>();
         List<String> layout = new ArrayList<>();
+        List<String> bedrock = new ArrayList<>();
+        StringBuilder forms = new StringBuilder();
         int[] ok = {0};
+        int[] bf = {0, 0, 0};   // Formulare, Knöpfe, Knöpfe mit Bild
         java.util.function.BiConsumer<String, Supplier<Canvas>> canvas = (name, c) -> {
             try {
                 Canvas cv = c.get();
                 for (String issue : cv.lint()) layout.add(name + ": " + issue);
+                // Bedrock: dasselbe Menü als Formular (Knopf je klickbarem Bereich, lesbare Beschriftung)
+                de.kuby.kubyplugins.bedrock.FormModel.Model fm = de.kuby.kubyplugins.bedrock.FormModel.of(cv);
+                long clicks = cv.clicks().stream().filter(k -> k.action() != null || k.url() != null).count();
+                if (fm.buttons().size() != clicks) bedrock.add(name + ": " + fm.buttons().size() + " Knöpfe statt " + clicks);
+                if (fm.content().isEmpty() && fm.buttons().isEmpty()) bedrock.add(name + ": leeres Formular");
+                for (de.kuby.kubyplugins.bedrock.FormModel.Button b : fm.buttons()) {
+                    String t = de.kuby.kubyplugins.bedrock.FormModel.plain(b.text().replaceAll("§.", ""));
+                    if (t.isEmpty() || t.equals("›")) bedrock.add(name + ": Knopf ohne Beschriftung (" + b.hover() + ")");
+                    if (b.image() != null) bf[2]++;
+                }
+                bf[0]++;
+                bf[1] += fm.buttons().size();
+                forms.append("=== ").append(name).append(" | ").append(fm.title()).append('\n').append(fm.content()).append('\n');
+                for (de.kuby.kubyplugins.bedrock.FormModel.Button b : fm.buttons()) {
+                    forms.append("  [").append(b.text().replace("\n", " / ")).append("]").append(b.image() == null ? "" : " <" + b.image() + ">").append('\n');
+                }
                 Dialog d = UiDialog.dialog(null, cv, 330);
                 if (d == null) throw new IllegalStateException("kein Dialog");
                 ok[0]++;
@@ -601,6 +620,19 @@ final class SelfTest {
         for (String l : uniq) {
             if (shown++ >= 600) break;
             out.sendMessage("SELFTEST LAYOUT " + l);
+        }
+        java.util.LinkedHashSet<String> buniq = new java.util.LinkedHashSet<>(bedrock);
+        out.sendMessage("SELFTEST BEDROCK " + bf[0] + " Formulare, " + bf[1] + " Knöpfe, davon " + bf[2] + " mit Bild, "
+                + buniq.size() + " Auffälligkeiten");
+        int bshown = 0;
+        for (String l : buniq) {
+            if (bshown++ >= 200) break;
+            out.sendMessage("SELFTEST BEDROCK " + l);
+        }
+        try {
+            java.nio.file.Files.writeString(new java.io.File(plugin.getDataFolder(), "bedrock-formulare.txt").toPath(), forms.toString());
+        } catch (java.io.IOException ignored) {
+            // nur zum Nachsehen
         }
         out.sendMessage("SELFTEST " + ok[0] + " Dialoge gebaut, " + fails.size() + " Fehler");
         for (String f : fails) out.sendMessage("SELFTEST FEHLER " + f);

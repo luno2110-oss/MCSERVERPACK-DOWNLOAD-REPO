@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.64** (ungetestet, nicht kompiliert)
+Stand: **v1.65** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -555,6 +555,18 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - große Beträge an engen Stellen jetzt kurz („1,2 Mio.“, „3 Mrd.“)
   - Kern: Info-Leiste (Vorschau der Job-Leiste ragte aus dem Fenster), Kits („alle … Std.“ über „Vorschau“), Bestenliste (Untertitel), Investments (Name über Preis), Quiz-Abstimmung (Zeile zu lang)
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
+
+## Bedrock-Spieler über Geyser + Floodgate (v1.65, Anleitung BEDROCK.md)
+- [x] Erkennung über Floodgate (oder Geyser-API ohne Floodgate); ohne beide läuft alles wie bisher (softdepend)
+- [x] **Alle Canvas-Menüs als native Bedrock-Formulare**, automatisch aus demselben Menü: Titel, Inhalt in Lesereihenfolge mit Farben und Kuby-Icons als Glyphen, ein Knopf je klickbarer Stelle mit Bild (Icon im Bereich oder in seiner Zeile), kurze Knöpfe wie „Kaufen“ mit dem Zeilentitel davor. Klicks laufen wie echte Menü-Klicks (Töne, Folge-Menüs), Links kommen in den Chat; sich selbst aktualisierende Menüs senden nicht jede Sekunde neu
+- [x] Dialoge mit Eingabefeldern (Feedback, Namen, Beträge, Tickets): für Bedrock mit lesbarem Text statt Java-Grafik, Geyser macht daraus ein Bedrock-Eingabeformular; klickbare Stellen werden zusätzliche Knöpfe
+- [x] Bedrock-Pack `KubyBedrock.mcpack` (`tools/build_bedrock_pack.py`, im Build): Knopf-Bilder für alle Icons und Item-Bilder, 1.951 Icons als Text-Glyphen (glyph_E3 …), Scoreboard-Icons und Modus-Logos, 764 eigene Items (Angeln, Fische, Möbel, Hüte, Casino, Event, Generatoren …; 3D-Modelle als gerenderte Icons) mit Geyser-Mappings `KubyBedrock-Items.json` (Format 2), Scoreboard ohne rote Zahlen
+- [x] Scoreboard für Bedrock: Modus-Logo im Titel, Icons als Glyphen, normale Buchstaben statt Kapitälchen
+- [x] Chat an Bedrock-Spieler ohne Kapitälchen; Angel-Minispiel mit eigener Bedrock-Leiste (Blöcke, Fisch-Icon, Prozent)
+- [x] Info-Leiste oben, Kino-Szenen, Hotbar-Icons: auf Bedrock aus (Java-Schriften), Werte stehen im Scoreboard
+- [x] SELFTEST baut jede Seite zusätzlich als Bedrock-Formular und prüft Knöpfe und Beschriftungen (Liste: `bedrock-formulare.txt`)
+- [x] Neuer CI-Test „Bedrock-Test“: Paper 1.21.11 + ViaVersion + Geyser + Floodgate + Pack + Mappings, ein Bedrock-Client (26.60) tritt bei, öffnet Menüs, klickt Knöpfe, füllt Formulare aus, liest das Scoreboard
+- [ ] Im Spiel mit echtem Handy/Konsole testen (Darstellung der Formular-Bilder und Glyphen)
 
 ## Angelpass und Editor-Knöpfe (v1.64)
 - [x] Angelpass: Stufen kaufen kostet immer gleich viel (25 Juwelen je Stufe, `angeln.angelpass.stufe-preis`), statt mit jedem Level 2 Juwelen teurer zu werden. Alte Configs: `stufe-plus` wird nicht mehr gelesen

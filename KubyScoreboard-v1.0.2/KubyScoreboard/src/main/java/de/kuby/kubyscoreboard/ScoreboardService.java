@@ -152,10 +152,14 @@ public final class ScoreboardService {
         }
 
         // Mit geladenem Grafik-Pack: Rahmen, Logo und Icons. Ohne: reine Text-Version.
-        boolean textured = addon.getConfig().getBoolean("scoreboard-logo-title", true) && plugin.uiPack().active(p);
+        boolean textured = addon.getConfig().getBoolean("scoreboard-logo-title", true) && plugin.uiPack().javaPack(p);
+        // Bedrock (Geyser): Text-Fassung, Icons und Modus-Logo als Glyphen aus dem Bedrock-Pack, normale Buchstaben
+        boolean bedrock = !textured && plugin.getConfig().getBoolean("bedrock.scoreboard", true)
+                && de.kuby.kubyplugins.bedrock.Bedrock.is(p);
         List<String> lines = lines(p, mode, shown, textured);
         String title = textured
                 ? SbUi.title(mode, lines.size())
+                : bedrock ? bedrockTitle(mode)
                 : ScoreboardText.smallText(addon.getConfig().getString("scoreboard.title." + mode, "<gold><bold>KUBY"));
         int maxPx = textured ? SbUi.W : addon.getConfig().getInt("scoreboard.max-width", 140);
         if (!title.equals(lastTitle.get(id))) {
@@ -170,6 +174,7 @@ public final class ScoreboardService {
             if (i < lines.size()) {
                 text = textured
                         ? ScoreboardText.fit(lines.get(i), maxPx)
+                        : bedrock ? bedrockLine(lines.get(i))
                         : ScoreboardText.fit(ScoreboardText.stripIcons(lines.get(i)), maxPx);
             }
             if (!text.equals(prev[i])) {
@@ -251,6 +256,37 @@ public final class ScoreboardService {
         Counter c = counters.get(p.getUniqueId());
         if (c == null || c.shown == c.target) return "<gold>";   // in Ruhe gold, beim Zählen grün/rot
         return c.target > c.shown ? "<green>" : "<red>";
+    }
+
+    private static final java.util.regex.Pattern SB_ICON = java.util.regex.Pattern.compile(
+            "(?:<white>)?<font:" + java.util.regex.Pattern.quote(ScoreboardText.FONT) + ">([^<]*)</font>(?:</white>)? ?");
+
+    /** Bedrock-Zeile: Pack-Icons als Glyphen (fehlt eins, entfällt es), Small Caps als normale Buchstaben. */
+    static String bedrockLine(String mini) {
+        java.util.regex.Matcher m = SB_ICON.matcher(mini);
+        StringBuilder out = new StringBuilder();
+        while (m.find()) {
+            StringBuilder g = new StringBuilder();
+            for (char c : m.group(1).toCharArray()) g.append(de.kuby.kubyplugins.bedrock.BedrockAssets.scoreboard(c));
+            m.appendReplacement(out, java.util.regex.Matcher.quoteReplacement(g.isEmpty() ? "" : "<white>" + g + "</white> "));
+        }
+        m.appendTail(out);
+        return de.kuby.kubyplugins.bedrock.FormModel.unsmall(out.toString());
+    }
+
+    /** Bedrock-Titel: Modus-Logo als Glyph und der Titel aus der Config in normalen Buchstaben. */
+    private String bedrockTitle(String mode) {
+        char logo = switch (mode) {
+            case "smp" -> '\ue050';
+            case "survival" -> '\ue051';
+            case "skyblock" -> '\ue054';
+            case "casino" -> '\ue053';
+            default -> '\ue052';
+        };
+        String g = de.kuby.kubyplugins.bedrock.BedrockAssets.scoreboard(logo);
+        String t = de.kuby.kubyplugins.bedrock.FormModel.unsmall(
+                addon.getConfig().getString("scoreboard.title." + mode, "<gold><bold>KUBY"));
+        return g.isEmpty() ? t : "<white>" + g + "</white> " + t;
     }
 
     /** Beschriftete Zeile: Icon, Name in Small Caps (weiß), dann der farbige Wert. */

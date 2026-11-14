@@ -124,7 +124,7 @@ public final class IntroService implements Listener {
     }
 
     private boolean pack(Player p) {
-        return plugin.uiPack() != null && plugin.uiPack().active(p);
+        return plugin.uiPack() != null && plugin.uiPack().javaPack(p);
     }
 
     /** Klick: erst den Dialog schließen, dann weiter. */

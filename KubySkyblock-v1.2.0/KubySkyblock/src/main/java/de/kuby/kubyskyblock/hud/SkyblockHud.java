@@ -57,7 +57,7 @@ public final class SkyblockHud implements Listener {
         UUID id = p.getUniqueId();
         if (de.kuby.kubyplugins.cinema.Cinema.busy(id)) return false;
         if (!addon.getConfig().getBoolean("leiste.aktiv", true) || !core.infoBar().on(id) || !skyblock(p)
-                || !core.uiPack().active(p)) return false;
+                || !core.uiPack().javaPack(p)) return false;
         for (Element e : Element.group(true)) if (core.infoBar().visible(id, e, true)) return true;
         return false;
     }

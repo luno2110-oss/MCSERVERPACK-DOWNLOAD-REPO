@@ -115,6 +115,11 @@ public final class UiClicks implements Listener {
         return true;
     }
 
+    /** Eine Menü-Aktion wie ein echter Klick ausführen (auch für Bedrock-Formulare). */
+    public static void runAction(Player player, Consumer<Player> action) {
+        run(player, action);
+    }
+
     private static void run(Player player, Consumer<Player> action) {
         if (!player.isOnline()) return;
         boolean sounded = false;
@@ -137,6 +142,7 @@ public final class UiClicks implements Listener {
     public void onQuit(PlayerQuitEvent event) {
         UUID id = event.getPlayer().getUniqueId();
         SESSIONS.remove(id);
+        de.kuby.kubyplugins.bedrock.Bedrock.quit(id);
         PREVIOUS.remove(id);
         PREVIOUS_UNTIL.remove(id);
         UiDialog.forget(id);

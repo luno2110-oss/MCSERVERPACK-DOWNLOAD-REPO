@@ -227,6 +227,7 @@ public final class KubyPlugins extends JavaPlugin {
         achievements = new AchievementService(this);
         achievements.start();
         uiPack = new UiPackService(this);
+        de.kuby.kubyplugins.bedrock.Bedrock.init(this);
         uiPack.start();
         // Stat-Quellen für Erfolge (Addons melden weitere an, z. B. Angeln und Claims).
         registerStat("playtime", id -> playtime().minutesOf(id));

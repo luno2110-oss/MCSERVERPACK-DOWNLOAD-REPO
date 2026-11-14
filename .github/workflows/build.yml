@@ -33,6 +33,20 @@ jobs:
           echo "UI_SHA=$SHA" >> "$GITHUB_ENV"
           echo "UI-Pack $SHA"
 
+      # Bedrock-Pack (Geyser): Formular-Bilder, Text-Glyphen, eigene Items mit Mappings. Schreibt auch die
+      # Glyph-Tabelle ins KubyCore-Jar (resources/bedrock/glyphs.tsv), darum vor dem KubyCore-Build.
+      - name: Bedrock-Pack bauen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          pip install -q pillow numpy pyyaml
+          mkdir -p vanilla && cd vanilla
+          gh release download vanilla-assets -p vanilla-assets.zip -R "$GITHUB_REPOSITORY"
+          unzip -q vanilla-assets.zip && rm vanilla-assets.zip && cd ..
+          KUBY_VANILLA=$PWD/vanilla python3 tools/build_bedrock_pack.py
+          cp build/KubyBedrock.mcpack dist/KubyBedrock.mcpack
+          cp build/kuby_items.json dist/KubyBedrock-Items.json
+
       - name: KubyCore bauen
         working-directory: KubyCore-v2.0.14/KubyPlugins
         run: |
@@ -70,11 +84,14 @@ jobs:
           KubyCore.jar ist das Hauptplugin, die anderen sind Addons und brauchen KubyCore.
           Welche fremden Plugins optional sind und welche du nicht brauchst: PLUGINS.md
           Beta-Test vorbereiten (server.properties, Tester-Rolle, Feedback): BETA.md
+          Bedrock-Spieler (Handy, Konsole) über Geyser + Floodgate: BEDROCK.md
+            KubyBedrock.mcpack -> plugins/Geyser-Spigot/packs/
+            KubyBedrock-Items.json -> plugins/Geyser-Spigot/custom_mappings/
           TXT
           sed -i 's/^          //' dist/INSTALLATION.txt
           sed -i "s/\${GITHUB_SHA}/${GITHUB_SHA::7}/" dist/INSTALLATION.txt
-          cp PLUGINS.md BETA.md dist/
-          (cd dist && zip -q KubyPlugins.zip *.jar INSTALLATION.txt PLUGINS.md BETA.md KubyUI-Pack.zip)
+          cp PLUGINS.md BETA.md BEDROCK.md dist/
+          (cd dist && zip -q KubyPlugins.zip *.jar INSTALLATION.txt PLUGINS.md BETA.md BEDROCK.md KubyUI-Pack.zip KubyBedrock.mcpack KubyBedrock-Items.json)
           ls -la dist
 
       # Client-Mod „Kuby Rematch“ (Fabric 1.21.11). Liegt bewusst NICHT in KubyPlugins.zip (die ZIP wandert in den
@@ -105,5 +122,5 @@ jobs:
           gh release upload ui-packs "dist/KubyUI-${UI_SHA::12}.zip" --clobber
           rm "dist/KubyUI-${UI_SHA::12}.zip"
           gh release delete latest --yes --cleanup-tag || true
-          gh release create latest dist/KubyPlugins.zip dist/KubyUI-Pack.zip dist/*.jar --title "Aktueller Stand" \
+          gh release create latest dist/KubyPlugins.zip dist/KubyUI-Pack.zip dist/KubyBedrock.mcpack dist/KubyBedrock-Items.json dist/*.jar --title "Aktueller Stand" \
             --notes "Automatisch gebaut aus Commit ${GITHUB_SHA::7}. KubyPlugins.zip enthält alle Jars und eine Anleitung." --latest

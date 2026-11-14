@@ -4,7 +4,7 @@ main: de.kuby.kubyplugins.KubyPlugins
 api-version: '1.21'
 author: Kuby
 description: All-in-One Plugin für KubySMP
-softdepend: [Votifier, NuVotifier]
+softdepend: [Votifier, NuVotifier, floodgate, Geyser-Spigot]
 
 commands:
   befehle:

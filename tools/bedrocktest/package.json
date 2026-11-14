@@ -1,0 +1,8 @@
+{
+  "name": "kuby-bedrocktest",
+  "private": true,
+  "description": "Bedrock-Test: ein Bedrock-Client (bedrock-protocol) kommt über Geyser auf den Server, öffnet Menüs (Formulare), klickt und liest das Scoreboard",
+  "dependencies": {
+    "bedrock-protocol": "^3.61.0"
+  }
+}

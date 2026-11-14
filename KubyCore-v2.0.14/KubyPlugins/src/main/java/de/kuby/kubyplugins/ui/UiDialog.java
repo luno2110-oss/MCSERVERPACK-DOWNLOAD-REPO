@@ -88,9 +88,56 @@ public final class UiDialog {
 
     /** Dialog zeigen (merkt sich in einer Menü-Aktion, dass ein neues Menü kommt). */
     public static void open(Player p, Dialog dialog) {
+        Canvas src = CANVAS.get(dialog);
+        if (src != null && bedrockShow(p, src, null)) return;
         if (inClick(p)) shown = true;
         bump(p);
         p.showDialog(dialog);
+    }
+
+    // ---------- Bedrock: Canvas-Menüs als native Formulare (de.kuby.kubyplugins.bedrock) ----------
+
+    /** Canvas hinter einem gebauten Dialog (für open(): Bedrock-Spieler bekommen das Formular statt des Dialogs). */
+    private static final java.util.Map<Dialog, Canvas> CANVAS = java.util.Collections.synchronizedMap(new java.util.WeakHashMap<>());
+
+    /** Bedrock-Spieler: Formular senden. true = erledigt (kein Java-Dialog). */
+    private static boolean bedrockShow(Player p, Canvas canvas, java.util.function.Consumer<Player> onClose) {
+        if (p == null || !de.kuby.kubyplugins.bedrock.Bedrock.forms(p)) return false;
+        boolean click = inClick(p);
+        if (!de.kuby.kubyplugins.bedrock.Bedrock.show(p, canvas, onClose, click)) return false;
+        if (click) shown = true;
+        bump(p);
+        return true;
+    }
+
+    /**
+     * Bedrock-Spieler, Dialog mit Eingabefeldern: derselbe Dialog mit lesbarem Text statt der Java-Grafik (Geyser macht
+     * daraus ein Bedrock-Formular mit denselben Feldern und Knöpfen); klickbare Stellen des Canvas werden zusätzliche Knöpfe.
+     */
+    private static Dialog bedrockInputs(Player p, Canvas canvas, List<DialogInput> inputs, List<ActionButton> buttons) {
+        de.kuby.kubyplugins.bedrock.FormModel.Model m = de.kuby.kubyplugins.bedrock.FormModel.of(canvas);
+        net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer leg =
+                net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection();
+        List<ActionButton> all = new java.util.ArrayList<>(buttons);
+        net.kyori.adventure.text.event.ClickCallback.Options opts = net.kyori.adventure.text.event.ClickCallback.Options.builder()
+                .uses(1).lifetime(java.time.Duration.ofMinutes(10)).build();
+        for (de.kuby.kubyplugins.bedrock.FormModel.Button b : m.buttons()) {
+            if (b.action() == null) continue;
+            java.util.function.Consumer<Player> act = b.action();
+            all.add(ActionButton.create(leg.deserialize(b.text().replace("\n", " ")), null, 200,
+                    io.papermc.paper.registry.data.dialog.action.DialogAction.customClick((response, audience) -> {
+                        if (audience instanceof Player pl) UiClicks.runAction(pl, act);
+                    }, opts)));
+        }
+        DialogBase base = DialogBase.builder(Component.text(m.title()))
+                .canCloseWithEscape(true)
+                .pause(false)
+                .afterAction(DialogBase.DialogAfterAction.NONE)
+                .body(m.content().isEmpty() ? List.of() : List.of(DialogBody.plainMessage(leg.deserialize(m.content()), 300)))
+                .inputs(inputs)
+                .build();
+        if (all.size() == 1) return Dialog.create(b -> b.empty().base(base).type(DialogType.notice(all.get(0))));
+        return Dialog.create(b -> b.empty().base(base).type(DialogType.multiAction(all, null, 1)));
     }
 
     /**
@@ -98,6 +145,7 @@ public final class UiDialog {
      * Menü zugemacht hat (für Menüs, die sich selbst aktualisieren).
      */
     public static void showWithExit(Player player, Canvas canvas, int minHeight, java.util.function.Consumer<Player> onExit) {
+        if (bedrockShow(player, canvas, onExit)) return;
         Component body = canvas.build(player);
         int lines = countLines(body);
         int want = (minHeight + 8) / 9;
@@ -131,6 +179,7 @@ public final class UiDialog {
      *                  Blättern immer an derselben Stelle (Minecraft zentriert den Körper senkrecht).
      */
     public static void show(Player player, Canvas canvas, int minHeight) {
+        if (bedrockShow(player, canvas, null)) return;
         open(player, dialog(player, canvas, minHeight));
     }
 
@@ -151,7 +200,9 @@ public final class UiDialog {
                 .afterAction(DialogBase.DialogAfterAction.NONE)
                 .body(List.of(DialogBody.plainMessage(body, Math.min(1024, canvas.width() + 64))))
                 .build();
-        return Dialog.create(b -> b.empty().base(base).type(DialogType.serverLinks(null, 1, 100)));
+        Dialog d = Dialog.create(b -> b.empty().base(base).type(DialogType.serverLinks(null, 1, 100)));
+        CANVAS.put(d, canvas);
+        return d;
     }
 
     public static void show(Player player, Canvas canvas) {
@@ -163,6 +214,7 @@ public final class UiDialog {
      * Feld „Spielername“. Der Körper wird nicht aufgefüllt, damit die Felder direkt darunter stehen.
      */
     public static Dialog dialog(Player player, Canvas canvas, List<DialogInput> inputs, ActionButton button) {
+        if (player != null && de.kuby.kubyplugins.bedrock.Bedrock.forms(player)) return bedrockInputs(player, canvas, inputs, List.of(button));
         DialogBase base = DialogBase.builder(canvas.heading())
                 .canCloseWithEscape(true)
                 .pause(false)
@@ -178,6 +230,7 @@ public final class UiDialog {
      * z. B. „Abschicken“ und „Zurück“ unter „Neues Ticket“.
      */
     public static Dialog dialog(Player player, Canvas canvas, List<DialogInput> inputs, List<ActionButton> buttons, int columns) {
+        if (player != null && de.kuby.kubyplugins.bedrock.Bedrock.forms(player)) return bedrockInputs(player, canvas, inputs, buttons);
         DialogBase base = DialogBase.builder(canvas.heading())
                 .canCloseWithEscape(true)
                 .pause(false)

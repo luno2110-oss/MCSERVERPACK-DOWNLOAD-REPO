@@ -1462,6 +1462,13 @@ achievements:
 # Grafik-Pack "KubyUI" für Menüs (Casino-Hilfe): wird beim Join zusätzlich zu anderen Packs geschickt.
 # pack-url: auto = genau das Pack, mit dem dieses Plugin gebaut wurde (sonst passen die Zeichen nicht); eigene Adresse
 # nur, wenn du das Pack selbst hostest (dann immer zusammen mit dem Plugin aktualisieren).
+# Bedrock-Spieler über Geyser + Floodgate (Anleitung: BEDROCK.md). aktiv: Bedrock-Anpassungen an, formulare: alle Menüs
+# als native Bedrock-Formulare mit Bildern (sonst Truhen), scoreboard: eigene Sidebar mit Icons für Bedrock.
+bedrock:
+  aktiv: true
+  formulare: true
+  scoreboard: true
+
 ui:
   pack-url: "auto"
   pack-prompt: "Grafiken für Menüs und Casino"

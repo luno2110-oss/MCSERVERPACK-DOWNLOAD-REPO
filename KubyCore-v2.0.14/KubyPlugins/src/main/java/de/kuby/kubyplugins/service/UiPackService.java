@@ -131,8 +131,18 @@ public final class UiPackService implements Listener {
         loaded.remove(e.getPlayer().getUniqueId());
     }
 
-    /** Eigene Grafiken für diesen Spieler? ui.custom-textures: auto (wenn Pack geladen), on, off. */
+    /**
+     * Eigene Menüs (Dialoge statt Truhen) für diesen Spieler? Java: wenn das Pack geladen ist (ui.custom-textures: auto,
+     * on, off). Bedrock: ja, die Menüs kommen dort als native Formulare (bedrock.formulare).
+     */
     public boolean active(Player p) {
+        if (de.kuby.kubyplugins.bedrock.Bedrock.forms(p)) return true;
+        return javaPack(p);
+    }
+
+    /** Java-Grafik-Pack wirklich da (für HUD, Scoreboard-Logo, Kino und alles, was die Java-Schriften direkt zeigt)? */
+    public boolean javaPack(Player p) {
+        if (de.kuby.kubyplugins.bedrock.Bedrock.is(p)) return false;
         String mode = plugin.getConfig().getString("ui.custom-textures", "auto");
         if ("on".equalsIgnoreCase(mode)) return true;
         if ("off".equalsIgnoreCase(mode)) return false;

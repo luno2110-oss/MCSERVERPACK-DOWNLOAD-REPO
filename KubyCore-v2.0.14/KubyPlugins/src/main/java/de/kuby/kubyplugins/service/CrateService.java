@@ -406,7 +406,7 @@ public final class CrateService implements Listener {
         if (!plugin.getConfig().getBoolean("crates.cutscene.aktiv", true)) return false;
         List<String> keys = plugin.getConfig().getStringList("crates.cutscene.schluessel");
         if (keys.isEmpty()) keys = List.of("episch", "legendaer", "kosmetik");
-        if (!keys.contains(c.key()) || plugin.cinema() == null || !plugin.uiPack().active(p) || plugin.cinema().active(p)) return false;
+        if (!keys.contains(c.key()) || plugin.cinema() == null || !plugin.uiPack().javaPack(p) || plugin.cinema().active(p)) return false;
         double ch = c.chance(win);
         int tier = ch < 1.5 ? 3 : ch < 5 ? 2 : ch < 15 ? 1 : 0;
         ItemStack di = displayItem(win);

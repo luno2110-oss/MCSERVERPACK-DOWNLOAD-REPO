@@ -1,0 +1,181 @@
+# Bedrock-Test: echter Paper-1.21.11-Server mit allen Kuby-Jars aus "latest", dazu ViaVersion, Geyser und Floodgate
+# (aktuelle Builds) mit unserem Bedrock-Pack und den Item-Mappings. Ein Bedrock-Client (bedrock-protocol, Bedrock 26.60,
+# ohne Xbox-Login) kommt über Geyser rein, öffnet Menüs per Befehl, bekommt sie als Bedrock-Formulare, klickt Knöpfe,
+# füllt Eingabe-Formulare aus und liest Scoreboard und Chat. Geprüft: Beitritt, Formulare mit Bildern, Klicks führen
+# weiter, Scoreboard mit Bedrock-Glyphen, keine Exceptions. Ergebnis als Release "bedrock-test".
+name: Bedrock-Test
+
+on:
+  workflow_run:
+    workflows: ["Build plugins"]
+    types: [completed]
+  workflow_dispatch:
+
+jobs:
+  bedrock:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: tools/bedrocktest
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Bedrock-Client installieren
+        working-directory: tools/bedrocktest
+        run: |
+          npm install --no-audit --no-fund
+          node -e "console.log('bedrock-protocol', require('bedrock-protocol/package.json').version)"
+
+      - name: Paper, Kuby, ViaVersion, Geyser, Floodgate holen
+        run: |
+          mkdir -p server/plugins
+          cd server
+          UA="KubyPlugins-CI (github.com/${GITHUB_REPOSITORY})"
+          curl -sSf -A "$UA" https://fill.papermc.io/v3/projects/paper/versions/1.21.11/builds -o builds.json
+          URL=$(python3 -c "import json;b=json.load(open('builds.json'));print(b[0]['downloads']['server:default']['url'])")
+          curl -sSfL -A "$UA" "$URL" -o paper.jar
+          curl -sSfL "https://github.com/${GITHUB_REPOSITORY}/releases/download/latest/KubyPlugins.zip" -o kuby.zip
+          unzip -q kuby.zip -d kuby
+          cp kuby/*.jar plugins/
+          J=$(curl -sSf -H "Authorization: Bearer ${{ github.token }}" "https://api.github.com/repos/ViaVersion/ViaVersion/releases/latest" \
+            | python3 -c "import json,sys;print([a['browser_download_url'] for a in json.load(sys.stdin)['assets'] if a['name'].endswith('.jar')][0])")
+          echo "ViaVersion: $J"
+          curl -sSfL "$J" -o plugins/ViaVersion.jar
+          curl -sSfL https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot -o plugins/Geyser-Spigot.jar
+          curl -sSfL https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot -o plugins/floodgate-spigot.jar
+          ls -la plugins
+          echo "eula=true" > eula.txt
+          printf "online-mode=false\nallow-flight=true\nspawn-protection=0\nview-distance=5\nsimulation-distance=5\nenforce-secure-profile=false\n" > server.properties
+
+      - name: Erster Start (Configs anlegen)
+        working-directory: server
+        run: |
+          mkfifo console
+          java -Xmx3G -jar paper.jar --nogui < console > first.log 2>&1 &
+          PID=$!
+          exec 3>console
+          for i in $(seq 1 300); do grep -q "Done (" first.log && break; kill -0 $PID 2>/dev/null || break; sleep 1; done
+          sleep 8
+          echo "stop" >&3
+          for i in $(seq 1 60); do kill -0 $PID 2>/dev/null || break; sleep 1; done
+          kill $PID 2>/dev/null || true
+          rm console
+          grep -iE "geyser|floodgate|viaversion" first.log | head -30
+
+      - name: Geyser, Pack, Mappings und Modi einrichten
+        working-directory: server
+        run: |
+          mkdir -p plugins/Geyser-Spigot/packs plugins/Geyser-Spigot/custom_mappings
+          cp kuby/KubyBedrock.mcpack plugins/Geyser-Spigot/packs/
+          cp kuby/KubyBedrock-Items.json plugins/Geyser-Spigot/custom_mappings/
+          python3 - <<'EOF'
+          import yaml, os
+          p = "plugins/Geyser-Spigot/config.yml"
+          c = yaml.safe_load(open(p, encoding="utf-8")) or {}
+          found = {"validate-bedrock-login": False, "enable-custom-content": False}
+          def walk(d):
+              if isinstance(d, dict):
+                  for k in list(d):
+                      if k == "validate-bedrock-login": d[k] = False; found[k] = True
+                      elif k == "enable-custom-content": d[k] = True; found[k] = True
+                      elif k == "auth-type": d[k] = "floodgate"
+                      else: walk(d[k])
+          walk(c)
+          if not found["validate-bedrock-login"]:
+              c.setdefault("advanced", {}).setdefault("bedrock", {})["validate-bedrock-login"] = False
+          if not found["enable-custom-content"]:
+              c.setdefault("gameplay", {})["enable-custom-content"] = True
+          yaml.safe_dump(c, open(p, "w", encoding="utf-8"), allow_unicode=True, sort_keys=False)
+          print(open(p, encoding="utf-8").read()[:3000])
+          k = "plugins/KubyCore/config.yml"
+          c = yaml.safe_load(open(k, encoding="utf-8"))
+          c.setdefault("modes", {})
+          for i, m in enumerate(["hub", "smp", "survival", "skyblock"]):
+              c["modes"].setdefault(m, {})
+              c["modes"][m]["world"] = "world"
+              c["modes"][m]["spawn"] = "world;%d;110;0;0;0" % (i * 300)
+          yaml.safe_dump(c, open(k, "w", encoding="utf-8"), allow_unicode=True, sort_keys=False)
+          EOF
+
+      - name: Server starten, Bedrock-Client spielen lassen
+        working-directory: server
+        env:
+          DURATION: '100'
+        run: |
+          mkfifo console
+          java -Xmx3G -jar paper.jar --nogui < console > server.log 2>&1 &
+          PID=$!
+          exec 3>console
+          for i in $(seq 1 300); do grep -q "Done (" server.log && break; kill -0 $PID 2>/dev/null || break; sleep 1; done
+          sleep 10
+          grep -iE "geyser|floodgate|custom item|resource pack|pack" server.log | head -40
+          (cd ../tools/bedrocktest && node bot.js > ../../server/bot.log 2>&1) || true
+          cp ../tools/bedrocktest/bedrock-result.json . || echo '{}' > bedrock-result.json
+          echo "stop" >&3
+          for i in $(seq 1 90); do kill -0 $PID 2>/dev/null || break; sleep 1; done
+          kill $PID 2>/dev/null || true
+          cat bot.log | tail -80
+
+      - name: Auswerten
+        working-directory: server
+        run: |
+          python3 - <<'EOF' > summary.md
+          import json, re
+          r = json.load(open("bedrock-result.json"))
+          log = open("server.log", encoding="utf-8", errors="replace").read()
+          probs = []
+          exc = [l for l in log.splitlines() if re.search(r"Exception.*de\.kuby|de\.kuby\..*Exception|at de\.kuby|at Kuby\w*\.jar//|Command exception|Could not pass event|Fehler bei Menü-Klick|Bedrock-Formular .* fehlgeschlagen", l)]
+          forms = r.get("forms", [])
+          simple = [f for f in forms if f.get("type") == "form"]
+          imgs = sum(f.get("images", 0) for f in simple)
+          glyph = any(re.search("[-]", str(x)) for x in (r.get("sidebarLines", []) + [r.get("sidebarTitle") or ""]))
+          if not r.get("spawned"): probs.append("Bedrock-Client nicht gespawnt (%s)" % (r.get("disconnect") or "; ".join(r.get("errors", [])[:3])))
+          if r.get("spawned") and len(simple) < 2: probs.append("Zu wenige Kuby-Formulare (%d)" % len(simple))
+          if simple and imgs == 0: probs.append("Formulare ohne Bilder")
+          probs += ["Log: " + l[:250] for l in exc[:30]]
+          print("## Bedrock-Test (Bedrock %s über Geyser)" % r.get("version"))
+          print("- Beigetreten: %s, gespawnt: %s, Resource Packs: %s" % (r.get("joined"), r.get("spawned"), len(r.get("packs", []))))
+          print("- Befehle: %s" % ", ".join(r.get("commands", [])))
+          print("- Formulare: %d (davon Menüs %d, Eingabe %d), Knöpfe mit Bild: %d, Klicks: %d" % (len(forms), len(simple),
+                sum(1 for f in forms if f.get("type") == "custom_form"), imgs, r.get("clicks", 0)))
+          for f in forms[:14]:
+              print("  - %s „%s“: %s Knöpfe (%s mit Bild) %s" % (f.get("type"), re.sub("§.", "", f.get("title") or ""), f.get("buttonCount"),
+                    f.get("images"), "/ " + "; ".join(re.sub("§.", "", (b.get("text") or "")).replace("\n", " ")[:40] for b in f.get("buttons", [])[:4])))
+          print("- Scoreboard: Titel %s, %d Zeilen, Bedrock-Icons: %s" % (json.dumps(r.get("sidebarTitle")), len(r.get("sidebarLines", [])), "ja" if glyph else "nein"))
+          print("- Exceptions im Log: %d, Client-Fehler: %d" % (len(exc), len(r.get("errors", []))))
+          open("problems.txt", "w").write("\n".join(probs) if probs else "keine Probleme")
+          if probs:
+              print("\n### Probleme")
+              for p in probs[:60]: print("    " + p)
+          EOF
+          cat summary.md >> "$GITHUB_STEP_SUMMARY"
+          cat summary.md
+          if ! grep -q "keine Probleme" problems.txt; then
+            head -20 problems.txt | while IFS= read -r l; do echo "::error::${l:0:300}"; done
+            exit 1
+          fi
+
+      - name: Ergebnis als Release-Datei (bedrock-test)
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        working-directory: server
+        run: |
+          [ -f problems.txt ] || echo "kein Ergebnis" > problems.txt
+          [ -f bedrock-result.json ] || echo '{}' > bedrock-result.json
+          touch bot.log summary.md server.log first.log
+          gh release view bedrock-test -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
+            gh release create bedrock-test -R "$GITHUB_REPOSITORY" --title "Bedrock-Test" --notes "Ergebnis des letzten Bedrock-Tests" --prerelease
+          gh release upload bedrock-test server.log first.log bot.log bedrock-result.json problems.txt summary.md -R "$GITHUB_REPOSITORY" --clobber

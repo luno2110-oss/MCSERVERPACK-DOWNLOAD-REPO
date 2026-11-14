@@ -403,7 +403,7 @@ public final class WeaponService implements Listener, CommandExecutor, TabComple
     /** Cutscene abspielen; reward: danach das Schwert geben (erstes Mal). */
     public boolean play(Player p, boolean reward) {
         if (stone == null || plugin.cinema() == null) return false;
-        if (!plugin.uiPack().active(p)) {
+        if (!plugin.uiPack().javaPack(p)) {
             // ohne Grafik-Pack keine Szene (Modelle, Schrift und Sounds kommen aus dem Pack): Schwert direkt
             if (!reward) {
                 Msg.send(p, "<gray>Die Szene gibt es nur mit dem Grafik-Pack.");

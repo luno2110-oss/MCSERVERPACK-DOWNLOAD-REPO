@@ -412,8 +412,31 @@ public final class FishGame implements Listener {
     private void render(Session s, boolean inside) {
         Component title = Component.text().append(Component.text("COMBO " + s.combo, TextColor.color(0xFFD25A), TextDecoration.BOLD))
                 .append(Component.text("  x" + AngelText.dec(Math.round(mult(s) * 100) / 100.0), NamedTextColor.WHITE)).build();
-        s.p.showTitle(Title.title(title, bars(s.meter / s.meterMax, s.fishX, s.zoneX, s.zoneW, inside),
-                Title.Times.times(Duration.ZERO, Duration.ofMillis(400), Duration.ZERO)));
+        Component sub = de.kuby.kubyplugins.bedrock.Bedrock.is(s.p)
+                ? bedrockBars(s.meter / s.meterMax, s.fishX, s.zoneX, s.zoneW, inside)
+                : bars(s.meter / s.meterMax, s.fishX, s.zoneX, s.zoneW, inside);
+        s.p.showTitle(Title.title(title, sub, Title.Times.times(Duration.ZERO, Duration.ofMillis(400), Duration.ZERO)));
+    }
+
+    /**
+     * Bedrock (keine Java-Schriften mit Verschiebung): eine Zeile aus Blöcken, 28 Felder. Grün/orange = Fangbereich,
+     * der Fisch als Glyph aus dem Bedrock-Pack (sonst ◆), dahinter der Fortschritt in Prozent.
+     */
+    public static Component bedrockBars(double frac, double fishX, double zoneX, int zoneW, boolean inside) {
+        int n = 28;
+        double cell = (double) W / n;
+        int fish = (int) Math.min(n - 1, Math.round((fishX + FISH_W / 2.0) / cell - 0.5));
+        int z0 = (int) Math.floor(zoneX / cell), z1 = (int) Math.ceil((zoneX + zoneW) / cell);
+        String fg = de.kuby.kubyplugins.bedrock.BedrockAssets.glyph(de.kuby.kubyplugins.ui.KitData.Icon.FISH_FLUSSBARSCH);
+        StringBuilder b = new StringBuilder();
+        for (int i = 0; i < n; i++) {
+            if (i == fish) b.append("§f").append(fg.isEmpty() ? "◆" : fg);
+            else if (i >= z0 && i < z1) b.append(inside ? "§a█" : "§6█");
+            else b.append("§8█");
+        }
+        int pct = (int) Math.round(Math.max(0, Math.min(1, frac)) * 100);
+        b.append("  ").append(pct >= 70 ? "§a" : pct >= 35 ? "§e" : "§c").append(pct).append(" %");
+        return net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(b.toString());
     }
 
     /** Die drei Leisten als Untertitel (öffentlich für die Vorschau). */
