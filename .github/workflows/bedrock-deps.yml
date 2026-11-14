@@ -1,0 +1,121 @@
+# Holt alles, was für die Bedrock-Unterstützung gebraucht wird und lokal nicht erreichbar ist: Floodgate-, Cumulus- und
+# Geyser-API (Jars + Quellen), die Geyser-Wiki-Seiten (Custom Items, Versionen, Formulare, Floodgate-API), die
+# Quelldateien von Geyser zum Mapping-Format und die aktuellen Geyser-/Floodgate-Jars. Ergebnis: Release "bedrock-deps".
+name: Bedrock-Abhängigkeiten
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Versionen und API-Jars
+        run: |
+          mkdir -p out/jars out/docs out/src
+          for path in main maven-snapshots maven-releases; do
+            for a in org/geysermc/floodgate/api org/geysermc/cumulus/cumulus org/geysermc/geyser/api; do
+              echo "== $path/$a" >> out/docs/maven-metadata.txt
+              curl -sSL "https://repo.opencollab.dev/$path/$a/maven-metadata.xml" >> out/docs/maven-metadata.txt || true
+              echo >> out/docs/maven-metadata.txt
+            done
+          done
+          cat out/docs/maven-metadata.txt | head -120
+          pick() { python3 - "$1" <<'EOF'
+          import re, sys
+          txt = open("out/docs/maven-metadata.txt").read()
+          best = None
+          for block in txt.split("== ")[1:]:
+              head, body = block.split("\n", 1)
+              if not head.endswith(sys.argv[1]): continue
+              vs = re.findall(r"<version>([^<]+)</version>", body)
+              if vs: best = vs[-1]
+          print(best or "")
+          EOF
+          }
+          FG=$(pick org/geysermc/floodgate/api); GA=$(pick org/geysermc/geyser/api)
+          echo "Floodgate API $FG, Geyser API $GA" | tee out/docs/versions.txt
+          cat > pom.xml <<EOF
+          <project xmlns="http://maven.apache.org/POM/4.0.0"><modelVersion>4.0.0</modelVersion>
+            <groupId>x</groupId><artifactId>x</artifactId><version>1</version>
+            <repositories>
+              <repository><id>oc</id><url>https://repo.opencollab.dev/main/</url></repository>
+              <repository><id>ocs</id><url>https://repo.opencollab.dev/maven-snapshots/</url></repository>
+            </repositories>
+            <dependencies>
+              <dependency><groupId>org.geysermc.floodgate</groupId><artifactId>api</artifactId><version>$FG</version></dependency>
+              <dependency><groupId>org.geysermc.geyser</groupId><artifactId>api</artifactId><version>$GA</version></dependency>
+            </dependencies>
+          </project>
+          EOF
+          sed -i 's/^          //' pom.xml
+          mvn -B -ntp -q dependency:copy-dependencies -DoutputDirectory=out/jars || true
+          mvn -B -ntp -q dependency:copy-dependencies -Dclassifier=sources -DoutputDirectory=out/jars || true
+          mvn -B -ntp -q dependency:tree > out/docs/dependency-tree.txt || true
+          ls -la out/jars
+
+      - name: Wiki-Seiten
+        run: |
+          for page in geyser/custom-items geyser/supported-versions floodgate/api geyser/forms geyser/getting-started-with-the-api \
+                      geyser/custom-resource-packs geyser/setup geyser/understanding-the-config geyser/custom-blocks floodgate/features \
+                      geyser/geyser-command-line-arguments-and-system-properties geyser/custom-skulls other/rainbow geyser/current-limitations; do
+            f="out/docs/$(echo $page | tr '/' '_').html"
+            curl -sSL "https://geysermc.org/wiki/$page/" -o "$f" || true
+            python3 - "$f" <<'EOF'
+          import html, re, sys
+          p = sys.argv[1]
+          s = open(p, encoding="utf-8", errors="replace").read()
+          m = re.search(r"<article.*?</article>", s, re.S)
+          s = m.group(0) if m else s
+          s = re.sub(r"<(script|style).*?</\1>", "", s, flags=re.S)
+          s = re.sub(r"<pre[^>]*>", "\n```\n", s); s = s.replace("</pre>", "\n```\n")
+          s = re.sub(r"<br\s*/?>|</(p|div|li|h\d|tr)>", "\n", s)
+          s = re.sub(r"<[^>]+>", "", s)
+          s = html.unescape(s)
+          s = re.sub(r"\n{3,}", "\n\n", s)
+          open(p[:-5] + ".txt", "w", encoding="utf-8").write(s)
+          EOF
+            rm -f "$f"
+          done
+          wc -c out/docs/*.txt
+
+      - name: Geyser-Quellen zum Mapping-Format und Formularen
+        run: |
+          git clone -q --depth 1 https://github.com/GeyserMC/Geyser.git geyser
+          (cd geyser && git log -1 --format='%H %cd') > out/docs/geyser-commit.txt
+          cd geyser
+          grep -rl --include=*.java -e "format_version" -e "bedrock_options" -e "MappingsReader" . | head -40 > ../out/docs/geyser-mapping-files.txt
+          tar czf ../out/src/geyser-mappings-src.tgz $(cat ../out/docs/geyser-mapping-files.txt) \
+            $(find . -path '*resources*' -name '*.json' | grep -i -e mapping -e custom | head -40) \
+            $(find . -name 'config.yml' -path '*resources*' | head -3) || true
+          find . -name '*.java' | xargs grep -l -i "dialog" | head -30 > ../out/docs/geyser-dialog-files.txt
+          tar czf ../out/src/geyser-dialog-src.tgz $(cat ../out/docs/geyser-dialog-files.txt) || true
+          find . -name '*.java' | xargs grep -l -e "class GameProtocol" -e "SUPPORTED_BEDROCK" | head -5 | xargs tar czf ../out/src/geyser-protocol-src.tgz || true
+          cd ..
+          git clone -q --depth 1 https://github.com/GeyserMC/Cumulus.git cumulus || true
+          tar czf out/src/cumulus-src.tgz cumulus/src 2>/dev/null || tar czf out/src/cumulus-src.tgz cumulus || true
+
+      - name: Geyser- und Floodgate-Plugins, Bedrock-Bot
+        run: |
+          curl -sSL https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot -o out/jars/Geyser-Spigot.jar || true
+          curl -sSL https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot -o out/jars/floodgate-spigot.jar || true
+          curl -sSL https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest -o out/docs/geyser-latest-build.json || true
+          ls -la out/jars
+          mkdir bot && cd bot && npm init -y >/dev/null && npm install --no-audit --no-fund bedrock-protocol >/dev/null 2>&1 || true
+          (npm view bedrock-protocol version; cat node_modules/bedrock-protocol/src/options.js 2>/dev/null | head -40; ls node_modules/minecraft-data/minecraft-data/data/bedrock 2>/dev/null | tail -15) > ../out/docs/bedrock-protocol.txt
+
+      - name: Release bedrock-deps
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd out && zip -q -r ../bedrock-deps.zip . && cd ..
+          gh release view bedrock-deps -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
+            gh release create bedrock-deps -R "$GITHUB_REPOSITORY" --title "Bedrock-Abhängigkeiten" --notes "Floodgate/Geyser-API, Wiki, Quellen" --prerelease
+          gh release upload bedrock-deps bedrock-deps.zip -R "$GITHUB_REPOSITORY" --clobber
