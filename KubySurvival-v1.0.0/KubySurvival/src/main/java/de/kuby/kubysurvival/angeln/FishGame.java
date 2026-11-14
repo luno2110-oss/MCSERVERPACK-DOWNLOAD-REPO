@@ -29,6 +29,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -72,6 +73,9 @@ public final class FishGame implements Listener {
         /** Laufgeschwindigkeit vor dem Spiel (währenddessen 0, damit A/D nur den Bereich steuert). */
         float walk = 0.2f;
         long lastRight, lastLeft;
+        /** Belastungstest: Runde wurde von /kubytest gestartet, Eingaben werden gezählt und ins Log geschrieben. */
+        boolean test;
+        int nLeft, nRight, ticksA, ticksD;
 
         Session(Player p, AngelService.Roll roll, int tier, Location hook) {
             this.p = p;
@@ -140,6 +144,40 @@ public final class FishGame implements Listener {
         p.playSound(p.getLocation(), Sound.BLOCK_BEACON_POWER_SELECT, 0.8f, 1.6f);
     }
 
+    /**
+     * Belastungstest: startet für bis zu {@code max} Spieler in Survival eine Runde mit einem ausgedachten extrem seltenen
+     * Fang (wie nach einem echten Biss). Die Eingaben kommen danach echt vom Client (Klicks, A/D) und werden gezählt.
+     */
+    public int startTest(int max) {
+        ThreadLocalRandom rnd = ThreadLocalRandom.current();
+        List<FishSpecies> rare = FishSpecies.ALL.stream().filter(f -> f.rarity().ordinal() >= 3).toList();
+        int n = 0;
+        for (Player p : addon.getServer().getOnlinePlayers()) {
+            if (n >= max) break;
+            if (active(p) || !"survival".equals(core.modes().modeOf(p.getUniqueId()))) continue;
+            FishSpecies sp = rare.get(rnd.nextInt(rare.size()));
+            double kg = sp.minKg() + rnd.nextDouble() * (sp.maxKg() - sp.minKg());
+            int stars = rnd.nextInt(10) == 0 ? 6 : 4 + rnd.nextInt(2);
+            AngelService.Roll roll = new AngelService.Roll(sp, Math.round(kg * 100) / 100.0, stars, FishVariant.NORMAL,
+                    300_000 + rnd.nextInt(5_000_000), false, false, sp.water(), null, null);
+            if (p.getInventory().getItemInMainHand().getType() != org.bukkit.Material.FISHING_ROD) {
+                p.getInventory().setItemInMainHand(new ItemStack(org.bukkit.Material.FISHING_ROD));
+            }
+            start(p, p.getLocation(), roll, 2);
+            sessions.get(p.getUniqueId()).test = true;
+            n++;
+        }
+        return n;
+    }
+
+    /** Belastungstest: Ergebnis und gezählte Eingaben einer Test-Runde ins Server-Log. */
+    private void report(Session s, String outcome) {
+        if (s == null || !s.test) return;
+        addon.getLogger().info("[Angel-Minispiel] " + s.p.getName() + ": " + outcome + ", Combo " + s.combo + ", Linksklicks "
+                + s.nLeft + ", Rechtsklicks " + s.nRight + ", A-Ticks " + s.ticksA + ", D-Ticks " + s.ticksD + ", Spielzeit "
+                + (s.phase == 1 ? s.t : 0) + " Ticks");
+    }
+
     // =================================================================================================================
     // Eingabe
     // =================================================================================================================
@@ -189,9 +227,11 @@ public final class FishGame implements Listener {
         if (right) {
             if (s.lastRight == tick) return;
             s.lastRight = tick;
+            s.nRight++;
         } else {
             if (s.lastLeft == tick) return;
             s.lastLeft = tick;
+            s.nLeft++;
         }
         double impulse = cfg("schub", 3.2);
         s.zoneV += right ? impulse : -impulse;
@@ -205,7 +245,9 @@ public final class FishGame implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
-        end(sessions.get(e.getPlayer().getUniqueId()));
+        Session s = sessions.get(e.getPlayer().getUniqueId());
+        report(s, "abgebrochen (ausgeloggt)");
+        end(s);
     }
 
     /** Spiel beenden: Laufgeschwindigkeit zurück, Sitzung weg. */
@@ -228,6 +270,7 @@ public final class FishGame implements Listener {
             }
             // Modus oder Welt gewechselt (Hub, SMP, Skyblock): Spiel abbrechen, sonst landet der Fisch im falschen Inventar
             if (!"survival".equals(core.modes().modeOf(s.p.getUniqueId())) || !s.p.getWorld().equals(s.hook.getWorld())) {
+                report(s, "abgebrochen (Ort gewechselt)");
                 end(s);
                 s.p.clearTitle();
                 Msg.send(s.p, "<aqua><b>ANGELN</b> <dark_gray>▶ <gray>Der Fisch ist weg, du hast den Ort gewechselt.");
@@ -309,8 +352,13 @@ public final class FishGame implements Listener {
         // Fangbereich: A/D gedrückt halten (gleichmäßig), dazu Schub aus Klicks, Reibung, Rand
         org.bukkit.Input in = s.p.getCurrentInput();
         double accel = cfg("tasten-tempo", 0.75);
-        if (in.isLeft() && !in.isRight()) s.zoneV -= accel;
-        else if (in.isRight() && !in.isLeft()) s.zoneV += accel;
+        if (in.isLeft() && !in.isRight()) {
+            s.zoneV -= accel;
+            s.ticksA++;
+        } else if (in.isRight() && !in.isLeft()) {
+            s.zoneV += accel;
+            s.ticksD++;
+        }
         s.zoneX += s.zoneV;
         s.zoneV *= cfg("reibung", 0.82);
         if (s.zoneX < 0) {
@@ -389,6 +437,7 @@ public final class FishGame implements Listener {
     }
 
     private void win(Session s) {
+        report(s, "gewonnen");
         end(s);
         double mult = mult(s);
         AngelService.Catch c = service.book(s.p, s.roll, mult, true);
@@ -409,6 +458,7 @@ public final class FishGame implements Listener {
     }
 
     private void lose(Session s) {
+        report(s, "entkommen");
         end(s);
         long jewels = buyPrice(s.roll.odds());
         offers.put(s.p.getUniqueId(), new Offer(s.roll, s.tier, jewels, System.currentTimeMillis() + 60_000L));

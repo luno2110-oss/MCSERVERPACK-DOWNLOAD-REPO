@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.59** (ungetestet, nicht kompiliert)
+Stand: **v1.60** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -555,6 +555,11 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - große Beträge an engen Stellen jetzt kurz („1,2 Mio.“, „3 Mrd.“)
   - Kern: Info-Leiste (Vorschau der Job-Leiste ragte aus dem Fenster), Kits („alle … Std.“ über „Vorschau“), Bestenliste (Untertitel), Investments (Name über Preis), Quiz-Abstimmung (Zeile zu lang)
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
+
+## Belastungstest: Angel-Minispiel mit echten Eingaben (v1.60)
+- [x] Neues Test-Event „Survival: Angel-Minispiel“: startet für bis zu 3 Spieler in Survival eine Runde mit einem extrem seltenen Fang (Animation, „1 zu N“, Leisten), wie nach einem echten Biss
+- [x] Die Bots spielen die Runde mit echten Client-Eingaben: Linksklick (Armschwung), Rechtsklick (Angel benutzen), A/D halten; dabei keine Befehle. Nach „Entkommen“ kaufen sie den Fisch manchmal frei (`/angeln freikaufen`)
+- [x] Der Server zählt je Test-Runde, was wirklich ankommt (Linksklicks, Rechtsklicks, Ticks A/D, Combo, Ergebnis), und schreibt es ins Log. Der Belastungstest scheitert, wenn keine Runde zu Ende gespielt wird oder Links-/Rechtsklicks nicht ankommen
 
 ## Belastungstest: Menü-Klicks und Events (v1.59)
 - [x] Die Bots bekommen im Test die echten Pack-Dialoge (`ui.custom-textures: on`) statt der Truhen-Ersatzmenüs

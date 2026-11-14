@@ -21,7 +21,7 @@ const COMMANDS = [
   '/insel', '/combo', '/skyblock', '/oneblock', '/feedback', '/bug Testmeldung vom Belastungstest',
 ];
 
-const stats = { joined: 0, spawned: 0, kicked: [], errors: [], commands: 0, cmdErrors: [], chats: 0, rejoins: 0, ended: 0 };
+const stats = { games: 0, gameEnds: {}, gameInputs: { left: 0, right: 0, a: 0, d: 0 }, buys: 0, joined: 0, spawned: 0, kicked: [], errors: [], commands: 0, cmdErrors: [], chats: 0, rejoins: 0, ended: 0 };
 const bots = [];
 const start = Date.now();
 const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
@@ -55,10 +55,16 @@ function create(i, again) {
   });
   bot.on('messagestr', (msg) => {
     stats.chats++;
+    if (/Halte den Fisch im grünen Bereich/.test(msg)) playFishGame(bot);
+    else if (bot.fishing && /Der Fisch ist entkommen/.test(msg)) endFishGame(bot, 'entkommen');
+    else if (bot.fishing && /Der Fisch ist weg/.test(msg)) endFishGame(bot, 'abgebrochen');
     if (/internal error|interner fehler|An error occurred|unexpected error/i.test(msg)) {
       stats.cmdErrors.push({ bot: name, cmd: bot.lastCmd, msg: msg.slice(0, 200) });
       log('BEFEHLSFEHLER', name, bot.lastCmd, '->', msg.slice(0, 120));
     }
+  });
+  bot.on('title', (text) => {
+    if (bot.fishing && /GEFANGEN/.test(typeof text === 'string' ? text : JSON.stringify(text))) endFishGame(bot, 'gewonnen');
   });
   bot.on('kicked', (reason) => {
     const r = typeof reason === 'string' ? reason : JSON.stringify(reason);
@@ -68,9 +74,54 @@ function create(i, again) {
   bot.on('end', () => { stats.ended++; });
 }
 
+// Angel-Minispiel (Server startet es über /kubytest events): echte Eingaben wie ein Spieler, Linksklick (Armschwung),
+// Rechtsklick (Item benutzen) und A/D halten, bunt gemischt, bis die Runde vorbei ist. Keine Befehle währenddessen.
+function playFishGame(bot) {
+  if (bot.fishing) return;
+  bot.fishing = true;
+  stats.games++;
+  log(bot.username, 'spielt das Angel-Minispiel');
+  const until = Date.now() + 125000;
+  const step = () => {
+    if (!bot.fishing || !bot.entity) return;
+    if (Date.now() > until) { endFishGame(bot, 'zeit'); return; }
+    try {
+      const r = Math.random();
+      if (r < 0.3) { bot.swingArm('right'); stats.gameInputs.left++; }
+      else if (r < 0.6) {
+        bot.activateItem();
+        stats.gameInputs.right++;
+        setTimeout(() => { try { bot.deactivateItem(); } catch (e) { /* weg */ } }, 60);
+      } else {
+        const key = r < 0.8 ? 'left' : 'right';
+        stats.gameInputs[key === 'left' ? 'a' : 'd']++;
+        bot.setControlState(key, true);
+        setTimeout(() => { try { bot.setControlState(key, false); } catch (e) { /* weg */ } }, rnd(200, 600));
+      }
+    } catch (e) {
+      stats.errors.push({ bot: bot.username, error: 'Minispiel: ' + String(e).slice(0, 200) });
+    }
+    setTimeout(step, rnd(120, 350));
+  };
+  step();
+}
+
+function endFishGame(bot, how) {
+  if (!bot.fishing) return;
+  bot.fishing = false;
+  stats.gameEnds[how] = (stats.gameEnds[how] || 0) + 1;
+  try { bot.clearControlStates(); } catch (e) { /* weg */ }
+  log(bot.username, 'Minispiel vorbei:', how);
+  // entkommenen Fisch manchmal freikaufen (Juwelen-Weg)
+  if (how === 'entkommen' && Math.random() < 0.5) {
+    setTimeout(() => { if (bot.entity) { bot.lastCmd = '/angeln freikaufen'; bot.chat('/angeln freikaufen'); stats.buys++; stats.commands++; } }, 1500);
+  }
+}
+
 function loop(bot) {
   const tick = () => {
     if (!bot.entity || bot.rejoining || Date.now() - start > DURATION) return;
+    if (bot.fishing) { setTimeout(tick, 1000); return; }
     try {
       const r = Math.random();
       if (r < 0.55) {
@@ -116,7 +167,7 @@ setTimeout(() => {
     fs.writeFileSync('loadtest-result.json', JSON.stringify(res, null, 2));
     log(`ERGEBNIS: ${stats.spawned} Spawns (${N} Bots, ${stats.rejoins} Wiederkehrer), ${stats.commands} Befehle, `
       + `${stats.chats} Chatzeilen, ${stats.kicked.length} Kicks, ${stats.errors.length} Verbindungsfehler, `
-      + `${stats.cmdErrors.length} Befehlsfehler`);
+      + `${stats.cmdErrors.length} Befehlsfehler, Minispiele ${stats.games} ${JSON.stringify(stats.gameEnds)}`);
     process.exit(0);
   }, 3000);
 }, DURATION + 5000);

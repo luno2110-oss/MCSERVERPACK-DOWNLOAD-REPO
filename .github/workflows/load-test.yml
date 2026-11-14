@@ -141,6 +141,11 @@ jobs:
           clicks = sum(int(x) for x in re.findall(r"\[Belastungstest\] (\d+) Menü-Klicks", log))
           opened = sum(int(x) for x in re.findall(r"Menü-Klicks, (\d+) Menüs geöffnet", log))
           evruns = re.findall(r"\[Belastungstest\] Events ausgelöst: (.*)", log)
+          games = re.findall(r"\[Angel-Minispiel\] (\w+): ([^,]+), Combo (\d+), Linksklicks (\d+), Rechtsklicks (\d+), A-Ticks (\d+), D-Ticks (\d+)", log)
+          gstarted = sum(int(x) for x in re.findall(r"\[Angel-Minispiel\] Test-Runde gestartet für (\d+)", log))
+          gsum = [sum(int(g[i]) for g in games) for i in (3, 4, 5, 6)]
+          gout = {}
+          for g in games: gout[g[1]] = gout.get(g[1], 0) + 1
           n = r.get("bots", 10)
           if r.get("spawned", 0) < n: probs.append("Nur %d von %d Bots sind gespawnt" % (r.get("spawned", 0), n))
           for k in r.get("kicked", []): probs.append("Kick %s: %s" % (k["bot"], k["reason"][:200]))
@@ -150,10 +155,14 @@ jobs:
           if tps and min(tps) < 15: probs.append("TPS fiel auf %.1f" % min(tps))
           if clicks == 0: probs.append("Keine Menü-Klicks ausgeführt")
           if not evruns: probs.append("Keine Events ausgelöst")
+          played = [g for g in games if not g[1].startswith("abgebrochen")]
+          if not played: probs.append("Angel-Minispiel: keine Runde zu Ende gespielt (gestartet: %d)" % gstarted)
+          elif gsum[0] == 0 or gsum[1] == 0: probs.append("Angel-Minispiel: Klicks kommen nicht an (links %d, rechts %d)" % (gsum[0], gsum[1]))
           print("## Belastungstest")
           print("- Bots: %d, Spawns: %d (davon %d Wiederkehrer), Befehle: %d, Chatzeilen: %d" % (n, r.get("spawned", 0), r.get("rejoins", 0), r.get("commands", 0), r.get("chats", 0)))
           print("- Menü-Klicks (wie echte Klicks, in den Pack-Dialogen): %d, dabei %d Menüs neu geöffnet" % (clicks, opened))
           print("- Event-Runden: %d (%s)" % (len(evruns), evruns[-1].strip() if evruns else "keine"))
+          print("- Angel-Minispiel: %d Runden gestartet, %d beendet (%s); am Server angekommen: %d Linksklicks, %d Rechtsklicks, %d Ticks A, %d Ticks D; Bots spielten %d Runden" % (gstarted, len(games), ", ".join("%s %d" % kv for kv in gout.items()) or "keine", gsum[0], gsum[1], gsum[2], gsum[3], r.get("games", 0)))
           print("- TPS (1 min) gemessen: %s" % (", ".join("%.1f" % t for t in tps) or "keine Messung"))
           print("- Kicks: %d, Verbindungsfehler: %d, Befehlsfehler: %d, Exceptions im Log: %d" % (len(r.get("kicked", [])), len(r.get("errors", [])), len(r.get("cmdErrors", [])), len(exc)))
           open("problems.txt", "w").write("\n".join(probs) if probs else "keine Probleme")

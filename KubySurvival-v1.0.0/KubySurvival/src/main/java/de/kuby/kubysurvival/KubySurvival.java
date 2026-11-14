@@ -158,7 +158,13 @@ public final class KubySurvival extends JavaPlugin {
     }
 
     /** Events für den Belastungstest (/kubytest events). */
+    private de.kuby.kubysurvival.angeln.FishGame fishGame;
+
     private void testEvents() {
+        core.registerTestEvent("Survival: Angel-Minispiel", () -> {
+            if (fishGame == null) return;
+            getLogger().info("[Angel-Minispiel] Test-Runde gestartet für " + fishGame.startTest(3) + " Spieler in Survival");
+        });
         core.registerTestEvent("Survival: Event-Kapitel laden", () -> {
             if (events != null) events.loadNextForTest();
         });
@@ -426,7 +432,7 @@ public final class KubySurvival extends JavaPlugin {
         angelHolo = new AngelHolo(this);
         AngelDealer angelDealer = new AngelDealer(this);
         AngelFx angelFx = new AngelFx(this, core, angeln);
-        de.kuby.kubysurvival.angeln.FishGame fishGame = new de.kuby.kubysurvival.angeln.FishGame(this, core, angeln, angelFx);
+        fishGame = new de.kuby.kubysurvival.angeln.FishGame(this, core, angeln, angelFx);
         getServer().getPluginManager().registerEvents(fishGame, this);
         getServer().getPluginManager().registerEvents(new AngelListener(this, core, angeln, angelFx, angelMenus, angelDealer, fishGame), this);
         AngelCommand angelCommand = new AngelCommand(core, angeln, angelMenus, angelHolo, angelDealer);
