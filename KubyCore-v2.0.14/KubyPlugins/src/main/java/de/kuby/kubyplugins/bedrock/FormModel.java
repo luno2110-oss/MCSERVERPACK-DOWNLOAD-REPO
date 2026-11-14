@@ -152,7 +152,7 @@ public final class FormModel {
                 text = cut(l, 60);
             }
             String image = img == null ? null : BedrockAssets.image(img.kind(), img.text().isEmpty() ? 0 : img.text().charAt(0));
-            buttons.add(new Button(text, image, k.action(), k.url(), hov));
+            buttons.add(new Button(onLight(text), image, k.action(), k.url(), hov));
         }
         // Inhalt: übrige Texte und kleine Icons zeilenweise
         List<Canvas.Piece> rest = new ArrayList<>();
@@ -175,6 +175,34 @@ public final class FormModel {
         }
         appendLine(content, line);
         return new Model(title.isEmpty() ? "Menü" : title, content.toString().trim(), buttons);
+    }
+
+    /** Bedrock-Knöpfe sind hell: helle Textfarben werden zur dunklen Fassung derselben Farbe (gut lesbar). */
+    static String onLight(String t) {
+        StringBuilder b = new StringBuilder(t.length() + 4);
+        for (int i = 0; i < t.length(); i++) {
+            char c = t.charAt(i);
+            if (c == '§' && i + 1 < t.length()) {
+                char k = t.charAt(i + 1);
+                char m = switch (k) {
+                    case 'f', '7' -> '0';
+                    case '8' -> '8';
+                    case 'b' -> '3';
+                    case 'a' -> '2';
+                    case 'e', 'g', '6' -> '6';
+                    case 'c' -> '4';
+                    case 'd' -> '5';
+                    case '9' -> '1';
+                    default -> k;
+                };
+                b.append('§').append(m);
+                i++;
+                continue;
+            }
+            b.append(c);
+        }
+        String out = b.toString();
+        return out.startsWith("§") ? out : "§0" + out;
     }
 
     private static boolean insideAny(Canvas.Piece p, List<Canvas.Click> clicks) {

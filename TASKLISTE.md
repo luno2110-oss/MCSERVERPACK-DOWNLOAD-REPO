@@ -566,7 +566,10 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
 - [x] Info-Leiste oben, Kino-Szenen, Hotbar-Icons: auf Bedrock aus (Java-Schriften), Werte stehen im Scoreboard
 - [x] SELFTEST baut jede Seite zusätzlich als Bedrock-Formular und prüft Knöpfe und Beschriftungen (Liste: `bedrock-formulare.txt`)
 - [x] Neuer CI-Test „Bedrock-Test“: Paper 1.21.11 + ViaVersion + Geyser + Floodgate + Pack + Mappings, ein Bedrock-Client (26.60) tritt bei, öffnet Menüs, klickt Knöpfe, füllt Formulare aus, liest das Scoreboard
-- [ ] Im Spiel mit echtem Handy/Konsole testen (Darstellung der Formular-Bilder und Glyphen)
+- [x] Ergebnis Bedrock-Test (echter Bedrock-Client 26.60 über Geyser 2.12.1 + Floodgate + ViaVersion auf Paper 1.21.11): Beitritt mit unserem Pack, 41 bis 57 Formulare je Lauf (Hauptmenü, Shop, Einstellungen, Hilfe, Support, Angeln …) mit 248 bis 784 Knöpfen mit Bild, jeder Klick öffnet das richtige Folgemenü, Feedback-Formular als Bedrock-Eingabeformular (Sterne als Auswahl, Text als Feld) ausgefüllt, Scoreboard mit Modus-Logo und Icons („KUBY HUB“, „KUBY SURVIVAL“), Geyser registriert 1.113 eigene Items, 0 Exceptions
+- [x] SELFTEST: 401 Formulare, 3.141 Knöpfe (1.740 mit Bild), 0 Auffälligkeiten
+- [x] Knopf-Schrift dunkel (Bedrock-Knöpfe sind hell), Inhalt hell auf dunklem Grund
+- [ ] Im Spiel mit echtem Handy/Konsole ansehen (Schriftgrößen der Glyphen, Bildschärfe)
 
 ## Angelpass und Editor-Knöpfe (v1.64)
 - [x] Angelpass: Stufen kaufen kostet immer gleich viel (25 Juwelen je Stufe, `angeln.angelpass.stufe-preis`), statt mit jedem Level 2 Juwelen teurer zu werden. Alte Configs: `stufe-plus` wird nicht mehr gelesen
