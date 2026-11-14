@@ -513,6 +513,7 @@ public final class KubyPlugins extends JavaPlugin {
         getServer().getPluginManager().registerEvents(votes, this);
         getServer().getPluginManager().registerEvents(uiPack, this);
         getServer().getScheduler().runTaskLater(this, () -> {
+            modes.healWorlds();
             markers.respawnAll();
             casino.respawn();
             blackjack.respawn();

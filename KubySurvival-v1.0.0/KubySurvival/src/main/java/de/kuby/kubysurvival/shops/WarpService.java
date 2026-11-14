@@ -186,7 +186,7 @@ public final class WarpService {
     /** Darf hier ein Warp stehen? Null wenn ja, sonst der Grund. */
     private String placeError(Player p, Location l) {
         if (!ModeService.SURVIVAL.equals(core.modes().modeOf(p.getUniqueId()))) return "Warps gibt es nur in Survival.";
-        if (l.getWorld() == null || !l.getWorld().getName().equals(core.modes().worldOf(ModeService.SURVIVAL))) {
+        if (!core.modes().isWorldOf(ModeService.SURVIVAL, l.getWorld())) {
             return "Warps gehen nur in der Survival-Welt (nicht in der Farmwelt, im Nether oder End).";
         }
         if (!addon.claims().canBuild(p, l)) return "Hier darfst du keinen Warp setzen, das Grundstück gehört jemand anderem.";

@@ -48,9 +48,16 @@ public final class KpCommand implements CommandExecutor {
                 String mode = modeArg(args, 1);
                 if (mode == null) { Msg.send(p, "<red>Nutzung: /kp setspawn <hub|smp|survival>"); return true; }
                 plugin.getConfig().set("modes." + mode + ".spawn", Locs.serialize(p.getLocation()));
+                // Der Spawn bestimmt, wo der Modus gespielt wird: Welt mitziehen (sonst z. B. "Claims nur in der Survival-Welt")
+                String before = plugin.modes().worldOf(mode);
+                String now = p.getWorld().getName();
+                plugin.getConfig().set("modes." + mode + ".world", now);
                 plugin.saveConfig();
                 Sfx.play(plugin, p, Sfx.Kind.SUCCESS);
                 Msg.send(p, "<green>Spawn von " + ModeService.label(mode) + " gesetzt.");
+                if (!now.equals(before)) {
+                    Msg.send(p, "<gray>Welt von " + ModeService.label(mode) + " ist jetzt <white>" + now + "<gray> (vorher " + before + ").");
+                }
             }
             case "setworld" -> {
                 String mode = modeArg(args, 1);

@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.66** (ungetestet, nicht kompiliert)
+Stand: **v1.67** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -556,6 +556,13 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - große Beträge an engen Stellen jetzt kurz („1,2 Mio.“, „3 Mrd.“)
   - Kern: Info-Leiste (Vorschau der Job-Leiste ragte aus dem Fenster), Kits („alle … Std.“ über „Vorschau“), Bestenliste (Untertitel), Investments (Name über Preis), Quiz-Abstimmung (Zeile zu lang)
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
+
+## Fehler: Claims „nur in der Survival-Welt“, obwohl man in Survival ist (v1.67)
+- [x] Ursache: Claims (und Kistenläden, Spieler-Warps) prüften nur die eingestellte Welt `modes.survival.world` (Standard „survival“). Wurde der Survival-Spawn mit `/kp setspawn survival` (oder im Editor) in einer anders benannten Welt gesetzt, spielten alle dort, die Welt zählte aber nicht als Survival-Welt
+- [x] Die Welt des gesetzten Spawns zählt jetzt immer als Welt des Modus (Claims, Läden, Warps)
+- [x] `/kp setspawn <modus>` stellt die Welt des Modus mit um (Meldung, wenn sie sich ändert); beim Start wird eine eingestellte, aber nicht vorhandene Welt einmal auf die Spawn-Welt korrigiert (Hinweis im Log)
+- [x] Fehlermeldung nennt die Survival-Welt und die eigene Welt, Admins bekommen den Befehl zum Umstellen dazu (`/kp setworld survival <welt>`)
+- [x] SELFTEST prüft: Spawn in anders benannter Welt = Survival-Welt, fremde Welt ohne Spawn ≠ Survival-Welt
 
 ## Shop, OP-Werkzeuge und Quiz (v1.66)
 - [x] Shop: 229 Bau-Blöcke (alle Holzarten, Steine, Tiefenschiefer, Tuff, Ziegel, Quarz, Prismarin, Kupfer, Beton, Betonpulver, Terrakotta, glasierte Terrakotta, Wolle und Glas in allen 16 Farben, Natur-Blöcke, Leuchtblöcke) und 182 Deko-Items (alle Blumen, Pflanzen, Laub, Setzlinge, Korallen, Fackeln, Laternen, Kerzen, Teppiche in 16 Farben, Möbel-Blöcke, Zäune, Türen, Betten, Banner, Köpfe …). Bestehende Server bekommen die neuen Angebote einmal in ihre shop.yml nachgetragen (`defaults-version`), eigene Einträge bleiben

@@ -57,6 +57,43 @@ public final class ModeService {
         return plugin.getConfig().getString("modes." + mode + ".world", mode);
     }
 
+    /** Welt des gesetzten Spawns eines Modus (nur der Name, auch wenn die Welt gerade nicht geladen ist), sonst null. */
+    public String spawnWorldOf(String mode) {
+        String raw = plugin.getConfig().getString("modes." + mode + ".spawn");
+        if (raw == null) return null;
+        int i = raw.indexOf(';');
+        return i <= 0 ? null : raw.substring(0, i);
+    }
+
+    /**
+     * Ist w die Oberwelt dieses Modus? Zählt die eingestellte Welt (modes.&lt;modus&gt;.world) und die Welt des gesetzten
+     * Spawns: wer mit /kp setspawn den Spawn in einer anders benannten Welt gesetzt hat, spielt dort, also gilt sie.
+     */
+    public boolean isWorldOf(String mode, World w) {
+        if (w == null) return false;
+        String n = w.getName();
+        return n.equals(worldOf(mode)) || n.equals(spawnWorldOf(mode));
+    }
+
+    /**
+     * Gleicht die eingestellte Welt an den Spawn an, wenn die eingestellte Welt gar nicht geladen ist, der Spawn aber in
+     * einer geladenen Welt liegt (typisch: /kp setspawn ohne /kp setworld). Gibt die Anzahl der korrigierten Modi zurück.
+     */
+    public int healWorlds() {
+        int n = 0;
+        for (String mode : List.of(HUB, SMP, SURVIVAL, SKYBLOCK)) {
+            String set = worldOf(mode);
+            String sp = spawnWorldOf(mode);
+            if (sp == null || sp.equals(set) || Bukkit.getWorld(set) != null || Bukkit.getWorld(sp) == null) continue;
+            plugin.getConfig().set("modes." + mode + ".world", sp);
+            plugin.getLogger().info("Welt von " + label(mode) + " war auf \"" + set + "\" gestellt (nicht geladen), der Spawn liegt in \""
+                    + sp + "\": modes." + mode + ".world ist jetzt " + sp + ".");
+            n++;
+        }
+        if (n > 0) plugin.saveConfig();
+        return n;
+    }
+
     public boolean isHub(World w) {
         return w != null && w.getName().equals(worldOf(HUB));
     }

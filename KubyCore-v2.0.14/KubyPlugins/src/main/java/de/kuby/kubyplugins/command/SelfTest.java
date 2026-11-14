@@ -622,6 +622,29 @@ final class SelfTest {
             fails.add("Werkzeuge: " + t);
         }
 
+        // Modus-Welt: Spawn in einer anders benannten Welt zählt als Survival-Welt (Claims, Läden, Warps)
+        try {
+            String keyW = "modes.survival.world", keyS = "modes.survival.spawn";
+            Object oldW = plugin.getConfig().get(keyW), oldS = plugin.getConfig().get(keyS);
+            org.bukkit.World w0 = org.bukkit.Bukkit.getWorlds().get(0);
+            try {
+                plugin.getConfig().set(keyW, "gibt_es_nicht_" + w0.getName());
+                plugin.getConfig().set(keyS, w0.getName() + ";0.5;64;0.5;0;0");
+                if (!plugin.modes().isWorldOf(de.kuby.kubyplugins.service.ModeService.SURVIVAL, w0)) {
+                    fails.add("Survival-Welt: Spawn-Welt " + w0.getName() + " wird nicht erkannt (Claims gingen dort nicht)");
+                } else ok[0]++;
+                plugin.getConfig().set(keyS, null);
+                if (plugin.modes().isWorldOf(de.kuby.kubyplugins.service.ModeService.SURVIVAL, w0)) {
+                    fails.add("Survival-Welt: fremde Welt " + w0.getName() + " zählt als Survival-Welt");
+                } else ok[0]++;
+            } finally {
+                plugin.getConfig().set(keyW, oldW);
+                plugin.getConfig().set(keyS, oldS);
+            }
+        } catch (Throwable t) {
+            fails.add("Modus-Welt: " + t);
+        }
+
         // Backup: Packen und Entpacken einmal echt ausprobieren
         try {
             String err = de.kuby.kubyplugins.service.BackupService.selfCheck(plugin);

@@ -197,7 +197,7 @@ public final class ChestShopService implements Listener {
         Block box = attached(sign);
         String err = null;
         if (!ModeService.SURVIVAL.equals(core.modes().modeOf(p.getUniqueId()))
-                || !sign.getWorld().getName().equals(core.modes().worldOf(ModeService.SURVIVAL))) {
+                || !core.modes().isWorldOf(ModeService.SURVIVAL, sign.getWorld())) {
             err = "Läden gibt es nur in der Survival-Welt.";
         } else if (!shopContainer(box)) {
             err = "Das Schild muss an einer Kiste oder einem Fass hängen (oder obendrauf stehen).";

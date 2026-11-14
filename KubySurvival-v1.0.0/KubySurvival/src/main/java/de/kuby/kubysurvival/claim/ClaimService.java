@@ -147,7 +147,10 @@ public final class ClaimService {
         if (a == null || b == null) return "Markiere erst zwei Ecken mit der Claim-Axt (/claim axt).";
         if (a.getWorld() == null || !a.getWorld().equals(b.getWorld())) return "Beide Ecken müssen in derselben Welt liegen.";
         String world = a.getWorld().getName();
-        if (!world.equals(core.modes().worldOf(SURVIVAL))) return "Claims gibt es nur in der Survival-Welt.";
+        if (!core.modes().isWorldOf(SURVIVAL, a.getWorld())) {
+            return "Claims gibt es nur in der Survival-Welt (" + core.modes().worldOf(SURVIVAL) + "), du bist in " + world + "."
+                    + (p.hasPermission("kuby.admin") ? " Admins: /kp setworld survival " + world + " stellt die Welt um." : "");
+        }
         int x1 = Math.min(a.getBlockX(), b.getBlockX());
         int z1 = Math.min(a.getBlockZ(), b.getBlockZ());
         int x2 = Math.max(a.getBlockX(), b.getBlockX());
