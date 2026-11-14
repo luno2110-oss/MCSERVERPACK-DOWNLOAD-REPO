@@ -809,6 +809,7 @@ public final class StaffScreen {
         l.add(new Tile(sec, Material.BELL, "Warnungen", "Auffälliges", "warnungen"));
         l.add(new Tile(sec, Material.CHEST_MINECART, "Backups", "Sichern, zurück", "backups"));
         l.add(new Tile(sec, Material.NAME_TAG, "Zweitkonten", "Gleiche IP", "zweitkonten"));
+        l.add(new Tile(sec, Material.WRITABLE_BOOK, "Beta-Feedback", "Formulare, Bugs", "feedback"));
         String v = "Verwaltung";
         l.add(new Tile(v, Material.PLAYER_HEAD, "Spieler", "Akten, Aktionen", "spieler"));
         l.add(new Tile(v, Material.WHITE_BANNER, "Teams", "Teams verwalten", "teams"));

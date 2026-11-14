@@ -217,6 +217,12 @@ commands:
     description: "In den SMP wechseln"
   survival:
     description: "In Survival wechseln"
+  feedback:
+    description: "Beta-Feedback-Formular (für Beta-Tester)"
+    usage: "/feedback"
+  bug:
+    description: "Bug melden (Beta-Tester): Ort und Modus werden mitgespeichert"
+    usage: "/bug <Was ist passiert?>"
   kp:
     description: "Operative Befehle für Admins"
     permission: kuby.admin
@@ -242,6 +248,9 @@ commands:
     aliases: [schluessel]
 
 permissions:
+  kuby.beta:
+    description: "Beta-Tester: /feedback und /bug. Wird auch mit /kp beta add <Spieler> vergeben"
+    default: false
   kuby.alerts.see:
     description: "Bekommt Team-Warnungen (große Gutschriften, schnelles Geld, Überweisungen, Zweitkonten)"
     default: op

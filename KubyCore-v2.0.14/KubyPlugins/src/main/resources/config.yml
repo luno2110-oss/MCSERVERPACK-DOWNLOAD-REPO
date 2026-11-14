@@ -282,6 +282,13 @@ battlepass:
     - "duellant;Duellant|Duelist;diamond_sword;DUEL;5;800;smp"
     - "haendler;Händler|Trader;emerald;TRADE;3;500"
 
+# Beta-Test: Rolle Beta-Tester (/kp beta add <Spieler>, oder alle-tester: true), Feedback-Formular (/feedback, 7 Seiten,
+# Sterne 1 bis 6 und Textfragen), Bug-Meldungen (/bug), Auswertung im Kadmin (Sicherheit > Beta-Feedback), CSV-Export
+# (/kp beta export). Für das erste abgeschickte Formular gibt es belohnung-juwelen.
+beta:
+  alle-tester: false
+  belohnung-juwelen: 50
+
 # Kosmetik (/cosmetics): ID;HAT|TRAIL|KILL|TELEPORT;Partikel oder Hut-Modell;Anzeige;Seltenheit;Währung;Preis;BP-Stufe
 # Währung: MONEY, XP, JEWELS, NONE (gratis bzw. Battlepass-Stufe), CRATE (nur aus Kisten: /cosmetics give <Spieler> <ID>),
 # EVENT (nur im Event-Shop oder mit /cosmetics give).

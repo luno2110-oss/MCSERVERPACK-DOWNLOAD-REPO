@@ -287,6 +287,40 @@ final class SelfTest {
             fails.add("Eingabe-Dialog: " + t);
         }
 
+        // Beta-Feedback: jede Formular-Seite als echter Dialog (Umschalt-Felder, mehrzeilige Textfelder) und der Kopf
+        {
+            List<de.kuby.kubyplugins.beta.FeedbackQuestions.Page> fps = de.kuby.kubyplugins.beta.FeedbackQuestions.pages();
+            java.util.Set<String> keys = new java.util.HashSet<>();
+            for (int i = 0; i < fps.size(); i++) {
+                de.kuby.kubyplugins.beta.FeedbackQuestions.Page fp = fps.get(i);
+                for (de.kuby.kubyplugins.beta.FeedbackQuestions.Question q : fp.questions()) {
+                    if (!keys.add(q.key())) fails.add("Beta-Feedback: Schlüssel doppelt: " + q.key());
+                }
+                int idx = i;
+                canvas.accept("Beta-Feedback Kopf " + (i + 1), () -> de.kuby.kubyplugins.beta.FeedbackDialog.header(idx, fps.size(),
+                        fp.title(), fp.sub(), 99, 99, idx % 2 == 0));
+                try {
+                    java.util.Map<String, String> filled = new java.util.HashMap<>();
+                    for (de.kuby.kubyplugins.beta.FeedbackQuestions.Question q : fp.questions()) filled.put(q.key(), q.type()
+                            == de.kuby.kubyplugins.beta.FeedbackQuestions.Type.STARS ? "6" : "W".repeat(1000));
+                    for (java.util.Map<String, String> vals : List.of(java.util.Map.<String, String>of(), filled)) {
+                        DialogBase base = DialogBase.builder(Msg.parse("<b>Beta-Feedback"))
+                                .canCloseWithEscape(true)
+                                .afterAction(DialogBase.DialogAfterAction.NONE)
+                                .body(List.of(DialogBody.plainMessage(Msg.parse("Kopf"), 454)))
+                                .inputs(de.kuby.kubyplugins.beta.FeedbackDialog.inputs(fp, vals))
+                                .build();
+                        ActionButton b1 = ActionButton.create(Msg.parse("Weiter"), null, 124, DialogAction.customClick((r, a) -> { },
+                                net.kyori.adventure.text.event.ClickCallback.Options.builder().uses(1).build()));
+                        Dialog.create(b -> b.empty().base(base).type(DialogType.multiAction(List.of(b1, b1, b1), null, 3)));
+                    }
+                    ok[0]++;
+                } catch (Throwable t) {
+                    fails.add("Beta-Feedback Seite " + (i + 1) + ": " + t);
+                }
+            }
+        }
+
         // Spielzeit: alle Seiten mit den echten Stufen; jede Schlüssel-Belohnung braucht ihre Art und eine Kiste im Modus
         PlaytimeScreen pts = new PlaytimeScreen(plugin);
         for (String mode : List.of("survival", "smp")) {

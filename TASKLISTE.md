@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.55** (ungetestet, nicht kompiliert)
+Stand: **v1.56** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -555,6 +555,13 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - große Beträge an engen Stellen jetzt kurz („1,2 Mio.“, „3 Mrd.“)
   - Kern: Info-Leiste (Vorschau der Job-Leiste ragte aus dem Fenster), Kits („alle … Std.“ über „Vorschau“), Bestenliste (Untertitel), Investments (Name über Preis), Quiz-Abstimmung (Zeile zu lang)
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
+
+## Beta-Test: Rolle, Feedback-Formular, Bug-Meldungen (v1.56, Ziel: Beta-Test Ende des Monats)
+- [x] Rolle Beta-Tester: `/kp beta add|remove <Spieler>` (gespeichert in `beta.yml`, setzt beim Join die Permission `kuby.beta`; per Permission-Plugin geht `kuby.beta` ebenso), `/kp beta alle` macht jeden Spieler zum Tester, `/kp beta liste`. Tester bekommen beim Join einen Hinweis auf `/feedback` und `/bug`
+- [x] Feedback-Formular `/feedback` als Minecraft-Dialog: 7 Seiten (Allgemein, Wirtschaft, UI und Anzeigen, Sound und Effekte, Modi, Features, Technik und Abschluss), 42 Sterne-Fragen (Umschalt-Feld: bitte wählen, 1 bis 6 Sterne, nicht getestet; Pflicht) und 9 Textfragen (mehrzeilig, freiwillig), z. B. „Hat das Economy-System sauber funktioniert?“, „Gab es Probleme mit der UI oder anderen Anzeigen?“, „Haben SFX gefehlt?“. Kopf mit Seite und Fortschritt, lange Seiten scrollen. Weiter/Zurück speichern den Entwurf (auch nach dem Ausloggen), Absenden prüft die Pflichtfragen und springt zur ersten offenen Seite. Erstes Absenden: 50 Juwelen Dank (`beta.belohnung-juwelen`), Admins bekommen eine Meldung. Ändern geht jederzeit
+- [x] `/bug <Text>`: Bug sofort melden, Ort und Modus werden mitgespeichert, Admins sehen ihn sofort
+- [x] Kadmin → Sicherheit → Beta-Feedback (`/kadmin feedback`): je Formular-Seite der Durchschnitt jeder Sterne-Frage (grün/gelb/rot) mit Anzahl und „nicht getestet“, Textantworten zum Lesen, Bug-Liste mit Hinreisen und Erledigt, Export als CSV für Excel (`/kp beta export`, `beta-export.csv`), Umschalter „alle sind Tester“
+- [x] Selbsttest baut alle 7 Formular-Seiten als echte Dialoge (leer und voll) und prüft doppelte Schlüssel
 
 ## Angeln: Fang-Minispiel, „1 zu N“-Animation, Freikaufen, Fisch-Markt (v1.55, Test im Spiel offen)
 - [x] Jeder Fang hat jetzt eine Wahrscheinlichkeit „1 zu N“ (Art x Sterne x Variante x Secret). Normale und seltene Fänge bleiben wie bisher; ab 1 zu 5.000 „wirklich selten“, ab 1 zu 250.000 „extrem selten“ (`angeln.minispiel`)

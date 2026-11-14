@@ -643,6 +643,8 @@ public final class StaffMenus implements CommandExecutor, TabCompleter, Listener
             case "warnungen" -> screens().alerts(p, 0, true);
             case "backups" -> screens().backups(p, 0);
             case "zweitkonten" -> screens().alts(p, null);
+            case "feedback", "beta" -> screens().feedback(p, 0);
+            case "bugs" -> screens().bugs(p, 0);
             case "truhe" -> new de.kuby.kubyplugins.gui.AdminMenu(plugin).open(p);
             case "speichern" -> {
                 plugin.saveAll();

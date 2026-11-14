@@ -161,6 +161,101 @@ public final class KadminScreens {
     }
 
     /** Selbsttest: Grenzwerte (lange Texte, große Zahlen, viele Knöpfe). */
+    // =================================================================================================================
+    // Beta: Feedback-Auswertung und Bugs
+    // =================================================================================================================
+
+    /** Feedback je Formular-Seite: Durchschnitt je Sterne-Frage, Textfragen mit „Lesen“. */
+    public void feedback(Player p, int page) {
+        de.kuby.kubyplugins.beta.BetaService b = plugin.beta();
+        List<de.kuby.kubyplugins.beta.FeedbackQuestions.Page> pages = de.kuby.kubyplugins.beta.FeedbackQuestions.pages();
+        int pg = Math.max(0, Math.min(pages.size() - 1, page));
+        List<Row> rows = new ArrayList<>();
+        for (de.kuby.kubyplugins.beta.FeedbackQuestions.Question q : pages.get(pg).questions()) {
+            if (q.type() == de.kuby.kubyplugins.beta.FeedbackQuestions.Type.STARS) {
+                double[] st = b.stats(q.key());
+                double avg = st[1] == 0 ? 0 : st[0] / st[1];
+                TextColor c = st[1] == 0 ? DIM : avg >= 4.5 ? GREEN : avg >= 3 ? GOLD_SOFT : RED;
+                rows.add(new Row(Material.NETHER_STAR, q.text(), GOLD_SOFT, (int) st[1] + " Bewertungen · " + (int) st[2] + "x nicht getestet",
+                        st[1] == 0 ? "–" : String.format(java.util.Locale.GERMANY, "%.1f ★", avg), c, List.of(), null, q.text()));
+            } else {
+                int n = 0;
+                for (de.kuby.kubyplugins.beta.BetaService.Answers a : b.allAnswers().values()) if (a.submitted > 0 && a.values.containsKey(q.key())) n++;
+                rows.add(new Row(Material.WRITABLE_BOOK, q.text(), GOLD_SOFT, n + " Textantworten", null, null,
+                        List.of(new Btn("Lesen", n > 0, n > 0 ? pl -> feedbackText(pl, q.key(), 0, pg) : null, "Alle Antworten lesen")), null, q.text()));
+            }
+        }
+        List<Btn> top = new ArrayList<>();
+        top.add(new Btn("Bugs (" + b.bugs().size() + ")", true, pl -> bugs(pl, 0), "Bug-Meldungen der Tester"));
+        top.add(new Btn("Export", false, pl -> {
+            try {
+                java.io.File f = b.export();
+                ok(pl, "Exportiert: " + f.getPath());
+            } catch (java.io.IOException e) {
+                err(pl, "Export fehlgeschlagen: " + e.getMessage());
+            }
+            feedback(pl, pg);
+        }, "Alles als CSV (beta-export.csv)"));
+        top.add(new Btn(b.everyone() ? "Alle sind Tester" : "Nur Eingetragene", b.everyone(), pl -> {
+            plugin.getConfig().set("beta.alle-tester", !b.everyone());
+            plugin.saveConfig();
+            feedback(pl, pg);
+        }, "Umschalten: alle Spieler als Beta-Tester"));
+        de.kuby.kubyplugins.beta.FeedbackQuestions.Page fp = pages.get(pg);
+        show(p, new Page(KitData.Icon.BOOK, "Feedback: " + fp.title(), b.submittedCount() + " Formulare · " + b.testers().size()
+                + " Tester · Seite " + (pg + 1) + "/" + pages.size(), top, rows, pg, pages.size(),
+                pg > 0 ? pl -> feedback(pl, pg - 1) : null, pg + 1 < pages.size() ? pl -> feedback(pl, pg + 1) : null, this::back,
+                "Noch keine Fragen."));
+    }
+
+    /** Alle Textantworten zu einer Frage. */
+    public void feedbackText(Player p, String key, int page, int backPage) {
+        de.kuby.kubyplugins.beta.BetaService b = plugin.beta();
+        de.kuby.kubyplugins.beta.FeedbackQuestions.Question q = de.kuby.kubyplugins.beta.FeedbackQuestions.byKey(key);
+        List<Row> all = new ArrayList<>();
+        for (de.kuby.kubyplugins.beta.BetaService.Answers a : b.allAnswers().values()) {
+            String v = a.values.get(key);
+            if (a.submitted == 0 || v == null) continue;
+            all.add(new Row(Material.PAPER, a.name, GOLD_SOFT, v, ago(a.submitted), GRAY, List.of(), null, v));
+        }
+        int per = 12;
+        int pages = Math.max(1, (all.size() + per - 1) / per);
+        int pg = Math.max(0, Math.min(pages - 1, page));
+        show(p, new Page(KitData.Icon.BOOK, "Antworten", q == null ? key : q.text(), List.of(),
+                all.subList(pg * per, Math.min(all.size(), (pg + 1) * per)), pg, pages,
+                pg > 0 ? pl -> feedbackText(pl, key, pg - 1, backPage) : null, pg + 1 < pages ? pl -> feedbackText(pl, key, pg + 1, backPage) : null,
+                pl -> feedback(pl, backPage), "Noch keine Antworten."));
+    }
+
+    /** Bug-Meldungen (/bug): neueste zuerst, hinreisen, erledigt. */
+    public void bugs(Player p, int page) {
+        de.kuby.kubyplugins.beta.BetaService b = plugin.beta();
+        List<de.kuby.kubyplugins.beta.BetaService.Bug> all = b.bugs();
+        int per = 10;
+        int pages = Math.max(1, (all.size() + per - 1) / per);
+        int pg = Math.max(0, Math.min(pages - 1, page));
+        List<Row> rows = new ArrayList<>();
+        for (de.kuby.kubyplugins.beta.BetaService.Bug bug : all.subList(pg * per, Math.min(all.size(), (pg + 1) * per))) {
+            rows.add(new Row(Material.SPIDER_EYE, "#" + bug.id() + " " + bug.name() + " · " + bug.mode(), GOLD_SOFT, bug.text(), ago(bug.time()), GRAY,
+                    List.of(new Btn("Hin", false, pl -> {
+                        String[] w = bug.where().split(" ");
+                        org.bukkit.World world = Bukkit.getWorld(w[0]);
+                        if (world == null || w.length < 4) {
+                            err(pl, "Welt nicht gefunden.");
+                            return;
+                        }
+                        pl.teleport(new org.bukkit.Location(world, Integer.parseInt(w[1]) + 0.5, Integer.parseInt(w[2]), Integer.parseInt(w[3]) + 0.5));
+                    }, bug.where()), new Btn("Erledigt", true, pl -> {
+                        b.removeBug(bug.id());
+                        ok(pl, "Bug #" + bug.id() + " erledigt.");
+                        bugs(pl, pg);
+                    }, "Aus der Liste nehmen")), null, bug.text()));
+        }
+        show(p, new Page(KitData.Icon.BOOK, "Bugs", all.size() + " offene Meldungen von Beta-Testern (/bug)", List.of(), rows, pg, pages,
+                pg > 0 ? pl -> bugs(pl, pg - 1) : null, pg + 1 < pages ? pl -> bugs(pl, pg + 1) : null, pl -> feedback(pl, 0),
+                "Keine offenen Bugs."));
+    }
+
     public static void samples(BiConsumer<String, java.util.function.Supplier<Canvas>> reg) {
         Consumer<Player> no = p -> { };
         List<Btn> many = List.of(new Btn("Spieler: WWWWWWWWWWWWWWWW", true, no, null), new Btn("Herkunft: Überweisung an WWWW", false, no, null),

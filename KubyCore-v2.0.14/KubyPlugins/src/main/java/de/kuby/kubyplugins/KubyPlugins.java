@@ -450,6 +450,14 @@ public final class KubyPlugins extends JavaPlugin {
         getServer().getPluginManager().registerEvents(alts, this);
         registerKpSub("backup", (pl, args) -> new de.kuby.kubyplugins.command.SafetyCommands(this).backup(pl, args));
         registerKpSub("alts", (pl, args) -> new de.kuby.kubyplugins.command.SafetyCommands(this).alts(pl, args));
+        // Beta-Test: Rolle, Feedback-Formular, Bug-Meldungen
+        beta = new de.kuby.kubyplugins.beta.BetaService(this);
+        feedbackDialog = new de.kuby.kubyplugins.beta.FeedbackDialog(this, beta);
+        getServer().getPluginManager().registerEvents(beta, this);
+        var betaCmd = new de.kuby.kubyplugins.beta.BetaCommand(this);
+        setAll(betaCmd, "feedback", "bug");
+        registerKpSub("beta", betaCmd::admin);
+        registerSaver(beta::save);
         {
             var msc = new de.kuby.kubyplugins.command.ModeSwitchCommand(this);
             for (String name : new String[]{"modus", "smp", "survival"}) {
@@ -622,6 +630,12 @@ public final class KubyPlugins extends JavaPlugin {
     public de.kuby.kubyplugins.service.AlertService alerts() { return alerts; }
     private de.kuby.kubyplugins.service.BackupService backups;
     private de.kuby.kubyplugins.service.AltService alts;
+    private de.kuby.kubyplugins.beta.BetaService beta;
+    private de.kuby.kubyplugins.beta.FeedbackDialog feedbackDialog;
+
+    public de.kuby.kubyplugins.beta.BetaService beta() { return beta; }
+
+    public de.kuby.kubyplugins.beta.FeedbackDialog feedbackDialog() { return feedbackDialog; }
     public de.kuby.kubyplugins.service.BackupService backups() { return backups; }
     /** Zweitkonto-Erkennung (gleiche IP). */
     public de.kuby.kubyplugins.service.AltService alts() { return alts; }
