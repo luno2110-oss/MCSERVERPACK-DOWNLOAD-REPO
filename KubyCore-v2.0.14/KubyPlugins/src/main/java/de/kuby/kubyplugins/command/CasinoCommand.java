@@ -35,6 +35,10 @@ public final class CasinoCommand implements CommandExecutor {
         String sub = args[0].toLowerCase();
         switch (sub) {
             case "status" -> status(p);
+            case "werfen" -> {
+                String err = plugin.roulette().throwBall(p);
+                if (err != null) Msg.send(p, "<red>" + err);
+            }
             case "waehrung", "währung", "juwelen" -> {
                 de.kuby.kubyplugins.service.CasinoPlay cp = plugin.casinoPlay();
                 de.kuby.kubyplugins.service.CasinoPlay.Cur want = args.length > 1

@@ -20,10 +20,11 @@ public final class Scene {
         NamespacedKey tag = new NamespacedKey("kuby", "tag");
         NamespacedKey click = new NamespacedKey("kuby", "click");
         switch (args[0]) {
-            case "slots" -> {
+            case "slots", "slots_gold", "slots_neon" -> {
                 double width = args.length > 2 ? Double.parseDouble(args[2]) : 2.7;
+                String style = args[0].equals("slots") ? "klassik" : args[0].substring(6);
                 SlotMachine m = new SlotMachine("s1", new Location(w, 0.5, 1.5, 0.03), 0f, width, 1,
-                        new Location(w, 0.5, 0, 1.6), tag, click);
+                        new Location(w, 0.5, 0, 1.6), tag, click, style);
                 String[][] start = {{"cherry", "seven", "bell"}, {"lemon", "seven", "diamond"}, {"star", "seven", "coin"}};
                 m.build(start);
                 m.panel(new long[]{10, 50, 100, 500, 1000, 5000}, 2);

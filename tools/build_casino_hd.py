@@ -659,6 +659,116 @@ def action_button(name, w=128, h=64):
     return big.resize((w, h), Image.LANCZOS)
 
 
+# =====================================================================================================================
+# Slot-Automaten "Goldrausch" und "Neon 7": Leuchtschild oben, Front am Pult, Materialien
+# =====================================================================================================================
+
+VELVET = [rgb(c) for c in ("4A0610", "6E0A18", "961224", "B82434")]
+NEON_P = [rgb(c) for c in ("8A1050", "D0207A", "FF4FA8", "FFC2E0")]
+NEON_C = [rgb(c) for c in ("0A6A7A", "12A8C0", "3FE6F0", "C8FAFF")]
+PURPLE = [rgb(c) for c in ("12081E", "1E0E30", "2C1646", "40205E")]
+
+
+def _glow_text(img, xy, text, fnt, core, glow, radius=6):
+    layer = Image.new("RGBA", img.size, T)
+    ImageDraw.Draw(layer).text(xy, text, font=fnt, fill=glow[:3] + (255,), anchor="mm")
+    blur = layer.filter(ImageFilter.GaussianBlur(radius))
+    img.alpha_composite(blur)
+    img.alpha_composite(blur)
+    ImageDraw.Draw(img).text(xy, text, font=fnt, fill=core, anchor="mm")
+
+
+def slot_top(style, w=256, h=96):
+    S = 4
+    if style == "gold":
+        big = Image.new("RGBA", (w * S, h * S), LEATHER[1])
+        d = ImageDraw.Draw(big)
+        d.rectangle((0, 0, w * S - 1, h * S - 1), outline=GOLD[2], width=3 * S)
+        d.rectangle((6 * S, 6 * S, (w - 6) * S, (h - 6) * S), outline=GOLD[4], width=S)
+        # rotes Feld mit Licht von innen
+        inner = (14 * S, 14 * S, (w - 14) * S, (h - 14) * S)
+        d.rounded_rectangle(inner, radius=8 * S, fill=VELVET[1], outline=GOLD[3], width=2 * S)
+        glow = Image.new("RGBA", big.size, T)
+        ImageDraw.Draw(glow).ellipse((w * S * 0.25, h * S * 0.2, w * S * 0.75, h * S * 0.8), fill=VELVET[3][:3] + (200,))
+        big.alpha_composite(glow.filter(ImageFilter.GaussianBlur(16 * S)))
+        # Lauflicht-Birnen rundum (gleichmäßig, eine bewusst dunkler)
+        k = 0
+        for x in range(12, w - 8, 12):
+            for y in (9, h - 9):
+                col = GOLD[5] if (k % 9) != 4 else GOLD[1]
+                d.ellipse(((x - 2.5) * S, (y - 2.5) * S, (x + 2.5) * S, (y + 2.5) * S), fill=col, outline=GOLD[0], width=S)
+                k += 1
+        img = big.resize((w, h), Image.LANCZOS)
+        f = font(FONT_SERIF, 23)
+        d2 = ImageDraw.Draw(img)
+        d2.text((w / 2 + 2, h / 2 + 2), "GOLDRAUSCH", font=f, fill=INK, anchor="mm")
+        d2.text((w / 2, h / 2), "GOLDRAUSCH", font=f, fill=GOLD[4], anchor="mm", stroke_width=1, stroke_fill=GOLD[0])
+        for x in (27, w - 27):
+            d2.text((x, h / 2), "7", font=font(FONT_SERIF, 24), fill=GOLD[3], anchor="mm", stroke_width=1, stroke_fill=VELVET[0])
+        return img
+    big = Image.new("RGBA", (w, h), PURPLE[0])
+    d = ImageDraw.Draw(big)
+    for y in range(h):
+        d.line((0, y, w, y), fill=mix(PURPLE[1], PURPLE[0], abs(y - h / 2) / (h / 2)))
+    # Röhrenrahmen cyan mit Leuchten
+    frame = Image.new("RGBA", big.size, T)
+    ImageDraw.Draw(frame).rounded_rectangle((5, 5, w - 6, h - 6), radius=10, outline=NEON_C[2], width=3)
+    big.alpha_composite(frame.filter(ImageFilter.GaussianBlur(4)))
+    big.alpha_composite(frame)
+    ImageDraw.Draw(big).rounded_rectangle((5, 5, w - 6, h - 6), radius=10, outline=NEON_C[3], width=1)
+    _glow_text(big, (w / 2 - 14, h / 2 + 2), "NEON", font(FONT_SANS, 34), NEON_P[3], NEON_P[2], 5)
+    _glow_text(big, (w / 2 + 62, h / 2 + 2), "7", font(FONT_SERIF, 46), NEON_C[3], NEON_C[2], 6)
+    return big
+
+
+def slot_front(style, w=128, h=64):
+    if style == "gold":
+        img = Image.new("RGBA", (w, h), LEATHER[1])
+        d = ImageDraw.Draw(img)
+        # Art-déco-Fächer aus der Mitte unten, gleichmäßig, ein Strahl länger
+        cx, cy = w / 2, h - 4
+        for k in range(-6, 7):
+            a = math.radians(90 + k * 13)
+            L = 54 if k != 2 else 60
+            d.line((cx, cy, cx + math.cos(a) * L, cy - math.sin(a) * L), fill=GOLD[2] if k % 2 else GOLD[3], width=1)
+        d.rectangle((0, 0, w - 1, h - 1), outline=GOLD[3], width=2)
+        d.line((0, 5, w, 5), fill=GOLD[1])
+        return img
+    img = Image.new("RGBA", (w, h), PURPLE[1])
+    d = ImageDraw.Draw(img)
+    for k in range(-4, 10):
+        x = k * 18
+        d.line((x, h, x + h, 0), fill=NEON_P[2] if k % 2 else NEON_C[2], width=2)
+    layer = img.filter(ImageFilter.GaussianBlur(2))
+    img.alpha_composite(layer)
+    d.rectangle((0, 0, w - 1, h - 1), outline=NEON_C[3], width=2)
+    return img
+
+
+def mat_flat(ramp, kind="plain", n=64):
+    img = Image.new("RGBA", (n, n), ramp[2])
+    px = img.load()
+    for y in range(n):
+        for x in range(n):
+            f = y / (n - 1)
+            c = mix(ramp[3], ramp[1], f)
+            if kind == "tube":
+                q = abs(x - n / 2) / (n / 2)
+                c = mix(ramp[3], ramp[2], q * 1.4)
+            elif kind == "velvet" and (x + y * 3) % 7 == 0:
+                c = mix(c, ramp[0], 0.25)
+            px[x, y] = c
+    return img
+
+
+SLOT_MATS = {
+    "hd_velvet": lambda: mat_flat(VELVET, "velvet"),
+    "hd_neon_pink": lambda: mat_flat(NEON_P, "tube"),
+    "hd_neon_cyan": lambda: mat_flat(NEON_C, "tube"),
+    "hd_purple": lambda: mat_flat(PURPLE),
+}
+
+
 def dealer_button(n=64):
     """Dealer-Button: weiße Scheibe mit schwarzem D, Goldrand."""
     S = 4
@@ -757,6 +867,14 @@ def write(out):
         action_button(name).save(os.path.join(itex, "pk_" + name + ".png"))
         item("pk_btn_" + name, flat_model("kuby:item/casino/hd/pk_" + name, 0, 4, 16, 12))
     dealer_button().save(os.path.join(itex, "dealer_btn.png"))
+    for name, fn in SLOT_MATS.items():
+        fn().save(os.path.join(btex, name + ".png"))
+        item("m_" + name, cube_model("kuby:block/casino/" + name))
+    for style in ("gold", "neon"):
+        slot_top(style).save(os.path.join(itex, "sl_" + style + "_top.png"))
+        item("sl_" + style + "_top", flat_model("kuby:item/casino/hd/sl_" + style + "_top", 0, 5, 16, 11))
+        slot_front(style).save(os.path.join(itex, "sl_" + style + "_front.png"))
+        item("sl_" + style + "_front", flat_model("kuby:item/casino/hd/sl_" + style + "_front", 0, 4, 16, 12))
     item("pk_dealer", {"textures": {"top": "kuby:item/casino/hd/dealer_btn", "side": "kuby:block/casino/hd_edge",
                                     "particle": "kuby:item/casino/hd/dealer_btn"},
                        "elements": [{"from": [2, 7.5, 2], "to": [14, 8.5, 14],
@@ -777,7 +895,7 @@ def write(out):
 def preview(path):
     """Kontaktbogen: Filz, Materialien, alle Karten, Chips (4-fach)."""
     cards = [card_face(r, s) for s in "hdsc" for r in RANKS] + [card_back()]
-    sheet = Image.new("RGBA", (13 * 44 * 2 + 20, 5 * 60 * 2 + 700), rgb("1C1A20"))
+    sheet = Image.new("RGBA", (13 * 44 * 2 + 20, 5 * 60 * 2 + 1000), rgb("1C1A20"))
     for i, c in enumerate(cards):
         x, y = (i % 13) * 88 + 10, (i // 13) * 120 + 10
         sheet.alpha_composite(c.crop((0, 0, CW, CH)).resize((CW * 2, CH * 2), Image.NEAREST), (x, y))
@@ -796,6 +914,9 @@ def preview(path):
     for i, name in enumerate(PK_BUTTONS):
         sheet.alpha_composite(action_button(name), (10 + (i % 8) * 136, 1150 + (i // 8) * 70))
     sheet.alpha_composite(dealer_button(), (1000, 1080))
+    for i, style in enumerate(("gold", "neon")):
+        sheet.alpha_composite(slot_top(style).resize((384, 144)), (10 + i * 400, 1300))
+        sheet.alpha_composite(slot_front(style).resize((256, 128)), (10 + i * 400, 1450))
     sheet.save(path)
 
 

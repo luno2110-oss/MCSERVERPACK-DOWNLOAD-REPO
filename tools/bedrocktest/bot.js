@@ -139,6 +139,19 @@ client.on('add_entity', (p) => {
     if (res.displays.length < 400) res.displays.push({ id: String(p.runtime_id), type: t });
   }
 });
+// GeyserDisplayEntity legt eigene Items in den Brust-Slot (MobArmorEquipment), Vanilla-Items in die Hand
+client.on('mob_armor_equipment', (p) => {
+  const rid = String(p.runtime_entity_id);
+  if (!displayIds.has(rid)) return;
+  for (const slot of ['chestplate', 'helmet']) {
+    const it = p[slot];
+    if (!it) continue;
+    const nid = it.network_id !== undefined ? it.network_id : it.id;
+    if (!nid) continue;
+    const name = itemNames[String(nid)] || String(nid);
+    res.displayItems[name] = (res.displayItems[name] || 0) + 1;
+  }
+});
 client.on('mob_equipment', (p) => {
   const rid = String(p.runtime_entity_id);
   if (!displayIds.has(rid)) return;

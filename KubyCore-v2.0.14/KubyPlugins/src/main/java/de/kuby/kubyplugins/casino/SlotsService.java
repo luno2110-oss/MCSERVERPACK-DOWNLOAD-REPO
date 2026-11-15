@@ -118,7 +118,8 @@ public final class SlotsService implements Listener {
             Location c = new Location(w, Double.parseDouble(p[1]), Double.parseDouble(p[2]), Double.parseDouble(p[3]));
             Location stool = p.length >= 9 ? new Location(w, Double.parseDouble(p[6]), Double.parseDouble(p[7]), Double.parseDouble(p[8])) : null;
             int desk = p.length >= 10 ? Integer.parseInt(p[9]) : 1;
-            s = new State(new SlotMachine(id, c, Float.parseFloat(p[4]), Double.parseDouble(p[5]), desk, stool, tag, click));
+            String style = p.length >= 11 ? p[10] : "klassik";
+            s = new State(new SlotMachine(id, c, Float.parseFloat(p[4]), Double.parseDouble(p[5]), desk, stool, tag, click, style));
             machines.put(id, s);
             return s;
         } catch (NumberFormatException e) {
@@ -432,11 +433,20 @@ public final class SlotsService implements Listener {
         switch (sub) {
             case "automat" -> {
                 double width = 2.7;
-                try {
-                    if (args.length > 2) width = Math.max(1.2, Math.min(3.6, Double.parseDouble(args[2].replace(',', '.'))));
-                } catch (NumberFormatException ex) {
-                    Msg.send(p, "<red>Nutzung: /casino slots automat [Breite 1,2–3,6]");
-                    return;
+                String style = "klassik";
+                for (int ai = 2; ai < args.length; ai++) {
+                    String a0 = args[ai].toLowerCase();
+                    if (a0.equals("gold") || a0.equals("goldrausch")) style = "gold";
+                    else if (a0.equals("neon")) style = "neon";
+                    else if (a0.equals("klassik")) style = "klassik";
+                    else {
+                        try {
+                            width = Math.max(1.2, Math.min(3.6, Double.parseDouble(a0.replace(',', '.'))));
+                        } catch (NumberFormatException ex) {
+                            Msg.send(p, "<red>Nutzung: /casino slots automat [Breite 1,2–3,6] [klassik|gold|neon]");
+                            return;
+                        }
+                    }
                 }
                 RayTraceResult hit = p.rayTraceBlocks(6);
                 if (hit == null || hit.getHitBlockFace() == null || hit.getHitBlock() == null) {
@@ -468,11 +478,11 @@ public final class SlotsService implements Listener {
                         p.getLocation().getBlockZ() + 0.5);
                 String id = "s" + System.currentTimeMillis() % 100000;
                 raw.put(id, p.getWorld().getName() + ";" + pos.getX() + ";" + pos.getY() + ";" + pos.getZ() + ";" + yaw + ";" + width
-                        + ";" + stool.getX() + ";" + stool.getY() + ";" + stool.getZ() + ";" + desk);
+                        + ";" + stool.getX() + ";" + stool.getY() + ";" + stool.getZ() + ";" + desk + ";" + style);
                 save();
                 State s = load(id);
                 if (s != null) build(s);
-                Msg.send(p, "<green>Slot-Automat aufgebaut (Breite " + String.format(java.util.Locale.GERMAN, "%.1f", width) + ", Pult "
+                Msg.send(p, "<green>Slot-Automat " + (style.equals("gold") ? "„Goldrausch“ " : style.equals("neon") ? "„Neon 7“ " : "") + "aufgebaut (Breite " + String.format(java.util.Locale.GERMAN, "%.1f", width) + ", Pult "
                         + desk + " Block tief), Hocker an deiner Position. Entfernen: /casino slots entfernen");
             }
             case "entfernen" -> {
@@ -512,7 +522,7 @@ public final class SlotsService implements Listener {
             }
             default -> Msg.send(p, "<gray>" + raw.size() + " Slot-Automaten. Aufbauen: Pult (1 Block hoch, 3 breit) vor eine Wand bauen, dort"
                     + " hinstellen, wo der Hocker hin soll, auf die Wand direkt über der Pult-Mitte schauen und"
-                    + " <white>/casino slots automat [Breite]</white> (Standard 2,7). Weiter: entfernen, jackpot [Betrag]");
+                    + " <white>/casino slots automat [Breite] [klassik|gold|neon]</white> (Standard 2,7, klassik). Weiter: entfernen, jackpot [Betrag]");
         }
     }
 }

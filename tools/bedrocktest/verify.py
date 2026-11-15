@@ -152,6 +152,8 @@ def main():
     out.append("- Display-Entities beim Client (GeyserDisplayEntity): %d (geyser:item_display %d), gehaltene Kuby-Items %d, davon mit 3D-Modell %d"
                % (sum(v for k, v in types.items() if "display" in k), types.get("geyser:item_display", 0),
                   sum(kuby_items.values()), with_att))
+    top = sorted(shown.items(), key=lambda kv: -kv[1])[:8]
+    out.append("  - gehaltene Items: " + (", ".join("%s %d" % kv for kv in top) if top else "keine"))
     if types.get("geyser:item_display", 0) == 0:
         probs.append("Der Client hat keine geyser:item_display bekommen (GeyserDisplayEntity fehlt oder Tisch nicht gebaut)")
     elif kuby_items and with_att == 0:

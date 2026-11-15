@@ -283,6 +283,10 @@ public final class RouletteTable {
         if (t != null && t.isValid()) t.text(numberText(n, on));
     }
 
+    public static int numberAt(int pos) {
+        return WHEEL[Math.floorMod(pos, 37)];
+    }
+
     public static int position(int number) {
         for (int i = 0; i < 37; i++) if (WHEEL[i] == number) return i;
         return 0;

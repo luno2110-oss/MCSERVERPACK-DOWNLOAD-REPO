@@ -144,7 +144,8 @@ public final class CasinoRules {
                         "Am Tisch oder beim Croupier öffnest du mit /roulette das Menü. Chip wählen, dann auf ein Feld klicken.",
                         "Der erste Einsatz startet die Runde, nach " + c.getLong("casino.roulette.wait-seconds", 20)
                                 + " Sekunden läuft das Licht über die Zahlen und bleibt auf dem Ergebnis stehen.",
-                        "Rot, Schwarz, Gerade, Ungerade, 1–18, 19–36: 1:1. Dutzend und Kolonne: 2:1. Zahl: 35:1.");
+                        "Rot, Schwarz, Gerade, Ungerade, 1–18, 19–36: 1:1. Dutzend und Kolonne: 2:1. Zahl: 35:1.",
+                        "Nichts geht mehr: 1 bis 3 Blitz-Zahlen zahlen bei Volltreffer x2 bis x5. Wer am meisten setzt, wirft die Kugel.");
                 commands.add(new String[]{"/roulette", "Roulette-Menü"});
                 commands.add(new String[]{"/casino setzen <Einsatz> <rot|schwarz|0-36>", "Einsatz per Befehl"});
             }
@@ -172,7 +173,7 @@ public final class CasinoRules {
                 how = List.of(
                         "Einsatz beim Crash-Creeper oder an den Schildern unter dem Bildschirm setzen ("
                                 + c.getLong("casino.crash.min-bet", 10) + " bis " + de.kuby.kubyplugins.casino.CasinoText.num(c.getLong("casino.crash.max-bet", 100000)) + " Chips).",
-                        "Nach " + c.getLong("casino.crash.wait-seconds", 10) + " Sekunden steigt der Multiplikator, die Kurve wächst.",
+                        "Nach " + c.getLong("casino.crash.wait-seconds", 10) + " Sekunden steigt der Multiplikator, je höher, desto schneller.",
                         "Steig aus mit Schleichen + Klick, Klick oder Schlag aufs Schild, dem Chat-Knopf oder /cashout:"
                                 + " Einsatz mal Multiplikator. Wer beim Crash noch drin ist, verliert den Einsatz.",
                         "Bei " + Math.round(c.getDouble("casino.crash.max-multiplier", 50)) + "x wird automatisch ausgezahlt.");

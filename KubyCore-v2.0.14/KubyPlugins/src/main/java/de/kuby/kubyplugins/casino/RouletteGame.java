@@ -5,6 +5,7 @@ import de.kuby.kubyplugins.service.CasinoFx;
 import de.kuby.kubyplugins.ui.UiDialog;
 import de.kuby.kubyplugins.util.Msg;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.title.Title;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
@@ -110,6 +111,11 @@ public final class RouletteGame implements org.bukkit.event.Listener {
     private Phase phase = Phase.IDLE;
     private int countdown;
     private int lastResult = -1;
+    /** Blitz-Zahlen dieser Runde: Zahl -> Multiplikator auf Volltreffer (Zahl-Einsätze). */
+    private final Map<Integer, Integer> blitz = new LinkedHashMap<>();
+    /** Wer die Kugel werfen darf (größter Einsatz) und wie lange noch (Sekunden). */
+    private UUID thrower;
+    private int throwWait;
     private String resultLine = "";
     private BukkitTask timer;
     private BukkitTask spin;
@@ -297,6 +303,7 @@ public final class RouletteGame implements org.bukkit.event.Listener {
         if (closed != null) return closed;
         if (!near(p.getLocation())) return "Geh näher an den Roulette-Tisch.";
         if (phase == Phase.SPINNING || phase == Phase.RESULT) return "Die Kugel rollt – gleich geht's weiter.";
+        if (throwWait > 0) return "Nichts geht mehr – gleich rollt die Kugel.";
         boolean jw = plugin.casinoPlay().cur(p.getUniqueId(), "roulette") == de.kuby.kubyplugins.service.CasinoPlay.Cur.JEWELS;
         if (!jw && amount < minBet()) return "Mindesteinsatz " + CasinoText.num(minBet()) + " Chips.";
         if (!jw && placed(p.getUniqueId()) + amount > maxRound()) {
@@ -333,7 +340,7 @@ public final class RouletteGame implements org.bukkit.event.Listener {
     }
 
     public String clear(Player p) {
-        if (phase == Phase.SPINNING || phase == Phase.RESULT) return "Die Kugel rollt schon.";
+        if (phase == Phase.SPINNING || phase == Phase.RESULT || throwWait > 0) return "Die Kugel rollt schon.";
         long back = 0;
         for (Bet b : new ArrayList<>(bets)) {
             if (b.player().equals(p.getUniqueId())) {
@@ -358,23 +365,97 @@ public final class RouletteGame implements org.bukkit.event.Listener {
 
     private void tick() {
         if (phase != Phase.BETTING) return;
-        countdown--;
-        if (countdown <= 0) {
-            startSpin();
+        if (throwWait > 0) {
+            if (--throwWait <= 0) {
+                Player t = thrower == null ? null : Bukkit.getPlayer(thrower);
+                if (t != null) CasinoText.send(t, "Der Croupier wirft für dich.");
+                startSpin();
+            }
             return;
         }
-        if (countdown <= 5 || countdown % 5 == 0) {
-            Location c = table.center();
-            if (c != null) c.getWorld().playSound(c, Sound.BLOCK_NOTE_BLOCK_HAT, 0.5f, countdown <= 3 ? 1.6f : 1.2f);
+        countdown--;
+        if (countdown <= 0) {
+            rienNeVaPlus();
+            return;
+        }
+        Location c = table.center();
+        if (c != null && (countdown <= 5 || countdown % 5 == 0)) {
+            c.getWorld().playSound(c, Sound.BLOCK_NOTE_BLOCK_HAT, 0.6f, countdown <= 5 ? 1.0f + (5 - countdown) * 0.18f : 1.2f);
         }
         for (Player p : bettors()) {
-            p.sendActionBar(Msg.parse("<gray>Roulette · Einsatz <#F2C94C>" + CasinoText.chips(placed(p.getUniqueId()))
-                    + "</#F2C94C> · Runde in <white>" + countdown + " s"));
+            String col = countdown <= 5 ? "<#FF6B6B>" : "<white>";
+            p.sendActionBar(Msg.parse("<gray>Roulette · Einsatz <#F2C94C>" + plugin.casinoPlay().unit(p.getUniqueId(), "roulette", placed(p.getUniqueId()))
+                    + "</#F2C94C> · Runde in " + col + countdown + " s"
+                    + (plugin.casinoPlay().golden() ? " <gold>· ✦ Gewinne x" + de.kuby.kubyplugins.service.CasinoPlay.fmt(plugin.casinoPlay().goldenFactor()) : "")));
         }
         updateTable();
     }
 
+    /** "Nichts geht mehr": Glocke, Blitz-Zahlen, und wer am meisten gesetzt hat, darf die Kugel werfen. */
+    private void rienNeVaPlus() {
+        Location c = table.center();
+        if (c != null) {
+            c.getWorld().playSound(c, Sound.BLOCK_BELL_USE, 0.9f, 1.2f);
+            c.getWorld().playSound(c, Sound.BLOCK_BELL_USE, 0.6f, 1.6f);
+        }
+        // Blitz-Zahlen: 1 bis 3 zufällige Zahlen, Volltreffer darauf zahlen x2 bis x5 mehr
+        blitz.clear();
+        int n = 1 + RNG.nextInt(3);
+        while (blitz.size() < n) blitz.put(1 + RNG.nextInt(36), new int[]{2, 2, 3, 3, 4, 5}[RNG.nextInt(6)]);
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<Integer, Integer> e : blitz.entrySet()) {
+            if (sb.length() > 0) sb.append("<gray>, ");
+            sb.append(RouletteTable.red(e.getKey()) ? "<#FF5A5A>" : "<#D8D8D8>").append("<b>").append(e.getKey()).append("</b> <yellow>x").append(e.getValue());
+        }
+        String blitzLine = sb.toString();
+        if (c != null) {
+            c.getWorld().playSound(c, Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 0.25f, 1.6f);
+            de.kuby.kubyplugins.util.Fx.particle(plugin, c.clone().add(0, 1.2, 0), org.bukkit.Particle.ELECTRIC_SPARK, 40, 1.0, 0.3, 0.8, 0.05);
+        }
+        table.center(centerText("<#FFE070><b>⚡ BLITZ-ZAHLEN</b>", blitzLine));
+        long top = 0;
+        thrower = null;
+        Map<UUID, Long> per = new LinkedHashMap<>();
+        for (Bet b : bets) per.merge(b.player(), b.amount(), Long::sum);
+        for (Map.Entry<UUID, Long> e : per.entrySet()) if (e.getValue() > top) {
+            top = e.getValue();
+            thrower = e.getKey();
+        }
+        for (Player p : nearby(15)) {
+            p.showTitle(Title.title(Msg.parse("<gold><b>Nichts geht mehr!</b>"),
+                    Msg.parse("<#FFE070>⚡ " + blitzLine), Title.Times.times(
+                            java.time.Duration.ofMillis(100), java.time.Duration.ofMillis(1500), java.time.Duration.ofMillis(300))));
+        }
+        Player t = thrower == null ? null : Bukkit.getPlayer(thrower);
+        if (t != null) {
+            throwWait = 4;
+            t.sendMessage(Msg.parse(CasinoText.PREFIX + "<white>Du hast am meisten gesetzt: "
+                    + "<click:run_command:'/casino werfen'><hover:show_text:'Kugel jetzt werfen'><green><b>[KUGEL WERFEN]</b></green></hover></click>"));
+            t.playSound(t.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f, 1.6f);
+        } else {
+            plugin.getServer().getScheduler().runTaskLater(plugin, this::startSpin, 30L);
+            throwWait = 0;
+            phase = Phase.SPINNING;
+        }
+    }
+
+    /** /casino werfen: der Spieler mit dem größten Einsatz wirft die Kugel selbst. */
+    public String throwBall(Player p) {
+        if (phase != Phase.BETTING || throwWait <= 0) return "Gerade gibt es keine Kugel zu werfen.";
+        if (!p.getUniqueId().equals(thrower)) return "Die Kugel wirft, wer am meisten gesetzt hat.";
+        throwWait = 0;
+        Location c = table.center();
+        if (c != null) {
+            c.getWorld().playSound(c, Sound.ENTITY_SNOWBALL_THROW, 0.9f, 0.8f);
+            for (Player q : nearby(15)) q.sendActionBar(Msg.parse("<white>" + Msg.escape(p.getName()) + " <gray>wirft die Kugel!"));
+        }
+        startSpin();
+        return null;
+    }
+
     private void startSpin() {
+        if (spin != null || phase == Phase.RESULT) return;
+        throwWait = 0;
         phase = Phase.SPINNING;
         int result = RNG.nextInt(37);
         int start = lastResult < 0 ? 0 : RouletteTable.position(lastResult);
@@ -400,6 +481,13 @@ public final class RouletteGame implements org.bukkit.event.Listener {
                 if (c != null) {
                     float pitch = 1.9f - 0.9f * step / steps;
                     c.getWorld().playSound(c, Sound.BLOCK_NOTE_BLOCK_HAT, 0.35f, pitch);
+                    if (steps - step <= 6) c.getWorld().playSound(c, Sound.BLOCK_NOTE_BLOCK_BASEDRUM, 0.5f, 0.6f);
+                }
+                if (step > steps / 2) {
+                    int num = RouletteTable.numberAt(pos);
+                    String tagc = num == 0 ? "#3FD55C" : RouletteTable.red(num) ? "#FF5A5A" : "#D8D8D8";
+                    table.center(centerText("<" + tagc + "><b>" + num + "</b>", blitz.containsKey(num)
+                            ? "<#FFE070>⚡ x" + blitz.get(num) : "<gray>Die Kugel rollt.."));
                 }
                 double f = (double) step / steps;
                 wait = (int) Math.round(6.5 * Math.pow(f, 2.4));
@@ -423,6 +511,7 @@ public final class RouletteGame implements org.bukkit.event.Listener {
         Map<UUID, List<Bet>> byPlayer = new LinkedHashMap<>();
         for (Bet b : bets) {
             long paid = b.wins(result) ? b.amount() * b.kind().multiplier : 0;
+            if (paid > 0 && b.kind() == Kind.ZAHL && blitz.containsKey(result)) paid *= blitz.get(result);
             long[] s = sum.computeIfAbsent(b.player(), k -> new long[2]);
             s[0] += b.amount();
             s[1] += paid;
@@ -453,6 +542,27 @@ public final class RouletteGame implements org.bukkit.event.Listener {
                         + (paid > 0 ? " · <green>Du gewinnst +" + unitWin + (bl.isEmpty() ? "" : " <dark_gray>| " + bl)
                         : " · <#FF5A5A>Leider verloren (-" + de.kuby.kubyplugins.service.CasinoPlay.unit(o.cur(), staked) + ")"));
                 plugin.casinoPlay().feedback(p, o, fx);
+                boolean straight = byPlayer.get(e.getKey()).stream().anyMatch(b -> b.kind() == Kind.ZAHL && b.wins(result));
+                if (paid > 0) {
+                    p.showTitle(Title.title(Msg.parse("<" + colorTag + "><b>" + result + " " + colorName.toUpperCase() + "</b>"),
+                            Msg.parse("<green><b>+" + de.kuby.kubyplugins.service.CasinoPlay.unit(o.cur(), net) + "</b>"
+                                    + (straight && blitz.containsKey(result) ? " <#FFE070>⚡ Blitz x" + blitz.get(result) : straight ? " <gold>Volltreffer!" : ""))));
+                    if (straight && fx != null) de.kuby.kubyplugins.util.Fx.particle(plugin, fx, org.bukkit.Particle.TOTEM_OF_UNDYING, 60, 0.6, 0.6, 0.6, 0.3);
+                } else {
+                    // knapp daneben: eine eigene Zahl lag direkt neben der Kugel
+                    int at = RouletteTable.position(result);
+                    Integer near = null;
+                    for (Bet b : byPlayer.get(e.getKey())) {
+                        if (b.kind() != Kind.ZAHL) continue;
+                        int bp = RouletteTable.position(b.param());
+                        if (Math.floorMod(bp - at, 37) == 1 || Math.floorMod(at - bp, 37) == 1) near = b.param();
+                    }
+                    if (near != null) {
+                        Integer nn = near;
+                        plugin.getServer().getScheduler().runTaskLater(plugin, () -> p.sendActionBar(Msg.parse(
+                                "<yellow><b>Knapp!</b></yellow> <gray>Deine <white>" + nn + "</white> lag direkt neben der " + result)), 40L);
+                    }
+                }
             }
         }
         for (Player q : nearby(15)) {
@@ -465,7 +575,17 @@ public final class RouletteGame implements org.bukkit.event.Listener {
                 + " · " + CasinoText.chips(paidTotal);
         bets.clear();
         save();
-        table.center(centerText("<" + colorTag + "><b>" + result + " " + colorName.toUpperCase(), "<gray>" + paidLine));
+        StringBuilder last = new StringBuilder();
+        for (int i = 0; i < Math.min(8, history.size()); i++) {
+            int h = history.get(i);
+            last.append(h == 0 ? "<#3FD55C>" : RouletteTable.red(h) ? "<#FF5A5A>" : "<#D8D8D8>").append(h).append(" ");
+        }
+        table.center(centerText("<" + colorTag + "><b>" + result + " " + colorName.toUpperCase(), "<gray>" + paidLine
+                + "\n<dark_gray>Letzte: " + last.toString().trim()));
+        if (fx != null) {
+            fx.getWorld().playSound(fx, Sound.BLOCK_NOTE_BLOCK_CHIME, 0.8f, 1.2f);
+            if (winners > 0) de.kuby.kubyplugins.util.Fx.particle(plugin, fx, org.bukkit.Particle.FIREWORK, 30, 0.8, 0.4, 0.8, 0.05);
+        }
         table.bets(Component.empty());
         // Ergebnis blinken lassen, dann aufräumen
         plugin.getServer().getScheduler().runTaskTimer(plugin, new Consumer<BukkitTask>() {

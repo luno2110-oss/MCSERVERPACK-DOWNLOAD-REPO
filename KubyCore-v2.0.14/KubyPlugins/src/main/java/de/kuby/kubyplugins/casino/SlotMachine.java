@@ -50,6 +50,9 @@ public final class SlotMachine {
     private final double width;
     private final int desk;
 
+    /** Stil: "klassik" (vor gebautem Gehäuse wie im Clip), "gold" (Goldrausch) oder "neon" (Neon 7). */
+    private final String style;
+    private final java.util.List<ItemDisplay> lights = new java.util.ArrayList<>();
     private final ItemDisplay[][] symbols = new ItemDisplay[3][3];
     private TextDisplay panel;
     private TextDisplay holo;
@@ -58,6 +61,12 @@ public final class SlotMachine {
 
     public SlotMachine(String id, Location center, float frontYaw, double width, int desk, Location stool, NamespacedKey tag,
                        NamespacedKey click) {
+        this(id, center, frontYaw, width, desk, stool, tag, click, "klassik");
+    }
+
+    public SlotMachine(String id, Location center, float frontYaw, double width, int desk, Location stool, NamespacedKey tag,
+                       NamespacedKey click, String style) {
+        this.style = style == null ? "klassik" : style;
         this.id = id;
         this.center = center.clone();
         this.frontYaw = frontYaw;
@@ -82,6 +91,10 @@ public final class SlotMachine {
 
     public double width() {
         return width;
+    }
+
+    public String style() {
+        return style;
     }
 
     private Vector3f front() {
@@ -234,7 +247,8 @@ public final class SlotMachine {
         double ctrl = rad + 0.26;
         // Hebel und Knopf an den Enden des Pults: vom Hocker aus verdecken sie keine Symbole
         Location lb = off(-(1.5 * s - 0.17), DESK_TOP + 0.09, ctrl);
-        block(lb, face, Material.POLISHED_ANDESITE, 0.34f, 0.18f, 0.3f);
+        if (style.equals("klassik")) block(lb, face, Material.POLISHED_ANDESITE, 0.34f, 0.18f, 0.3f);
+        else box(lb, face, 0.34f, 0.18f, 0.3f, style.equals("gold") ? "hd_gold" : "hd_dark");
         lever = lb.getWorld().spawn(lb.clone().add(0, 0.09, 0), BlockDisplay.class, e -> {
             Switch data = (Switch) Bukkit.createBlockData(Material.LEVER);
             data.setAttachedFace(org.bukkit.block.data.FaceAttachable.AttachedFace.FLOOR);
@@ -257,8 +271,10 @@ public final class SlotMachine {
         // Schild vorn am Pult (Gewinnplan)
         if (desk > 0) {
             Location sl = off(0, DESK_TOP - 0.5, desk + 0.02);
-            box(sl, face, (float) Math.min(1.2, 3 * s * 0.45), 0.42f, 0.04f, "rack");
-            box(sl.clone().add(0, 0, 0), face, (float) Math.min(1.12, 3 * s * 0.45 - 0.08), 0.34f, 0.05f, "wood");
+            box(sl, face, (float) Math.min(1.2, 3 * s * 0.45), 0.42f, 0.04f,
+                    style.equals("gold") ? "hd_gold" : style.equals("neon") ? "hd_neon_cyan" : "rack");
+            box(sl.clone().add(0, 0, 0), face, (float) Math.min(1.12, 3 * s * 0.45 - 0.08), 0.34f, 0.05f,
+                    style.equals("gold") ? "hd_dark" : style.equals("neon") ? "hd_purple" : "wood");
             Vector3f n = front();
             interaction(sl.clone().add(n.x * 0.1, -0.25, n.z * 0.1), 0.5f, 0.5f, "sign");
         }
@@ -276,11 +292,74 @@ public final class SlotMachine {
         // Hocker
         if (stool != null) {
             Quaternionf sq = new Quaternionf().rotateY(faceAngle());
-            box(stool.clone().add(0, 0.03, 0), sq, 0.42f, 0.06f, 0.42f, "white");
-            box(stool.clone().add(0, 0.33, 0), sq, 0.12f, 0.56f, 0.12f, "white");
-            box(stool.clone().add(0, 0.64, 0), sq, 0.5f, 0.1f, 0.5f, "white");
+            String leg = style.equals("gold") ? "hd_gold" : style.equals("neon") ? "hd_dark" : "white";
+            String top = style.equals("gold") ? "hd_velvet" : style.equals("neon") ? "hd_purple" : "white";
+            box(stool.clone().add(0, 0.03, 0), sq, 0.42f, 0.06f, 0.42f, leg);
+            box(stool.clone().add(0, 0.33, 0), sq, 0.12f, 0.56f, 0.12f, leg);
+            box(stool.clone().add(0, 0.64, 0), sq, 0.5f, 0.1f, 0.5f, top);
+            if (style.equals("neon")) lights.add(box(stool.clone().add(0, 0.585, 0), sq, 0.52f, 0.02f, 0.52f, "hd_neon_cyan"));
             interaction(stool.clone(), 0.6f, 0.75f, "seat");
         }
+        if (!style.equals("klassik")) cabinet(face, s, rad, front);
+    }
+
+    /**
+     * Eigenes Gehäuse für die Stile Goldrausch und Neon: Seitensäulen, Rückwand, Dach, Leuchtschild oben, Zierleisten
+     * (leuchten beim Drehen), Pultplatte und Pultfront. Das Walzenfenster bleibt wie beim klassischen Automaten.
+     */
+    private void cabinet(Quaternionf face, double s, double rad, double front) {
+        boolean gold = style.equals("gold");
+        String body = gold ? "hd_dark" : "hd_purple";
+        String trim = gold ? "hd_gold" : "hd_neon_pink";
+        String trim2 = gold ? "hd_gold" : "hd_neon_cyan";
+        double W = 3 * s + 0.16;
+        double colW = 0.16;
+        double top = rad + 0.25;
+        double depth = Math.max(rad + 0.12, 0.5);
+        // Rückwand hinter den Walzen
+        box(off(0, 0.0, -0.06), face, (float) W, (float) (2 * rad + 0.3), 0.06f, body);
+        // Seitensäulen von der Pultplatte bis über das Fenster
+        double colH = top - DESK_TOP + 0.1;
+        for (int side = -1; side <= 1; side += 2) {
+            double x = side * (W / 2 + colW / 2);
+            box(off(x, DESK_TOP + colH / 2, depth / 2 - 0.05), face, (float) colW, (float) colH, (float) depth, body);
+            // Leuchtleiste vorn an der Säule
+            lights.add(box(off(x, DESK_TOP + colH / 2, depth - 0.04), face, 0.05f, (float) (colH - 0.1), 0.03f, side < 0 ? trim : trim2));
+        }
+        // Dach über dem Fenster und Zierleiste darunter
+        box(off(0, top + 0.06, depth / 2 - 0.05), face, (float) (W + 2 * colW), 0.12f, (float) depth, body);
+        lights.add(box(off(0, top - 0.01, depth - 0.03), face, (float) (W + 2 * colW), 0.03f, 0.03f, trim2));
+        // Leuchtschild über dem Dach (senkrecht, Vorderseite zum Spieler)
+        double signW = W + 2 * colW;
+        double signH = signW * 6 / 16.0;
+        Quaternionf upright = new Quaternionf(face).rotateX((float) Math.toRadians(90)).rotateY((float) Math.PI);
+        ItemDisplay sign = center.getWorld().spawn(off(0, top + 0.12 + signH / 2, depth / 2), ItemDisplay.class, e -> {
+            e.setItemStack(model("sl_" + style + "_top"));
+            e.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
+            e.setTransformation(new Transformation(new Vector3f(), upright, new Vector3f((float) signW, 1f, (float) signW), new Quaternionf()));
+            e.setBrightness(new Display.Brightness(15, 15));
+            mark(e, "static");
+        });
+        lights.add(sign);
+        box(off(0, top + 0.12 + signH / 2, depth / 2 - 0.04), face, (float) signW, (float) signH, 0.05f, body);
+        lights.add(box(off(0, top + 0.13 + signH, depth / 2), face, (float) signW, 0.03f, 0.08f, trim));
+        // Pultplatte und Pultfront
+        if (desk > 0) {
+            double d = desk;
+            box(off(0, DESK_TOP + 0.01, d / 2 + 0.02), face, (float) (W + 2 * colW), 0.02f, (float) d, body);
+            lights.add(box(off(0, DESK_TOP + 0.025, d + 0.02), face, (float) (W + 2 * colW), 0.03f, 0.03f, trim));
+            Quaternionf frontQ = new Quaternionf(face).rotateX((float) Math.toRadians(90)).rotateY((float) Math.PI);
+            float fw = (float) (W + 2 * colW);
+            center.getWorld().spawn(off(0, DESK_TOP - 0.5, d + 0.03), ItemDisplay.class, e -> {
+                e.setItemStack(model("sl_" + style + "_front"));
+                e.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
+                // Fläche 16 x 8: Breite fw, Höhe fw / 2 -> auf 0,96 Höhe begrenzen
+                float sc = Math.min(fw, 1.9f);
+                e.setTransformation(new Transformation(new Vector3f(), frontQ, new Vector3f(fw, 1f, sc), new Quaternionf()));
+                mark(e, "static");
+            });
+        }
+        for (ItemDisplay l : lights) l.setBrightness(new Display.Brightness(15, 15));
     }
 
     public void removeAll() {
@@ -329,8 +408,10 @@ public final class SlotMachine {
         Key chip = Key.key("kuby", "k/i-5");
         TextComponent.Builder b = Component.text();
         b.append(Component.text(String.valueOf(de.kuby.kubyplugins.ui.KitData.SmallIcon.C_RED.c)).font(chip).color(NamedTextColor.WHITE));
-        b.append(Component.text(de.kuby.kubyplugins.ui.Canvas.titleChars(" SLOTS ", false)).font(Key.key("kuby", "title"))
-                .color(TextColor.color(0xF0303E)));
+        String title = style.equals("gold") ? " GOLDRAUSCH " : style.equals("neon") ? " NEON 7 " : " SLOTS ";
+        int tcol = style.equals("gold") ? 0xF2C23A : style.equals("neon") ? 0xFF4FA8 : 0xF0303E;
+        b.append(Component.text(de.kuby.kubyplugins.ui.Canvas.titleChars(title, false)).font(Key.key("kuby", "title"))
+                .color(TextColor.color(tcol)));
         b.append(Component.text(String.valueOf(de.kuby.kubyplugins.ui.KitData.SmallIcon.C_RED.c)).font(chip).color(NamedTextColor.WHITE));
         b.append(Component.newline());
         b.append(Component.text("Jackpot ", NamedTextColor.GRAY)).append(Component.text(CasinoText.num(jackpot), NamedTextColor.YELLOW)
@@ -374,6 +455,15 @@ public final class SlotMachine {
     /** Redstone-Lampen im Gehäuse über den Walzen (Leuchtkasten) an- oder ausschalten. */
     public void lamps(boolean on) {
         if (center.getWorld() == null) return;
+        if (!style.equals("klassik")) {
+            int c = style.equals("gold") ? 0xFFE070 : 0xFF4FA8;
+            for (ItemDisplay l : lights) {
+                if (!l.isValid()) continue;
+                l.setGlowing(on);
+                l.setGlowColorOverride(org.bukkit.Color.fromRGB(c));
+            }
+            return;
+        }
         double s = pitch();
         int reach = (int) Math.ceil(1.5 * s + 0.5);
         Vector3f r = right(), n = front();
