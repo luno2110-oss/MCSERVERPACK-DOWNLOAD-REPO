@@ -31,6 +31,32 @@ public final class Scene {
                 m.holo(20080, 10, 5000);
                 m.seat();
             }
+            case "dealer_anim" -> {
+                // Ein Clip: Bild k liegt bei x = 4k (args[2] = Geste, args[3] = Bilder, args[4] = Ticks je Bild)
+                int frames = Integer.parseInt(args[3]), every = Integer.parseInt(args[4]);
+                for (int k = 0; k < frames; k++) {
+                    de.kuby.kubyplugins.casino.DealerAnim d = new de.kuby.kubyplugins.casino.DealerAnim(Mock.plugin(), w,
+                            new Location(w, k * 4.0, 0, 0), 0f, null, null);
+                    d.simulate(args[2], k * every);
+                }
+            }
+            case "models" -> {
+                // alle Casino-Item-Modelle im Raster (args[2] = Ordner items/casino), Reihen zu 12
+                java.io.File[] fs = new java.io.File(args[2]).listFiles((dir, n) -> n.endsWith(".json"));
+                java.util.Arrays.sort(fs);
+                for (int i = 0; i < fs.length; i++) {
+                    String n = fs[i].getName().replace(".json", "");
+                    Location l = new Location(w, (i % 12) * 1.5, 0.5, (i / 12) * -3.0);
+                    w.spawn(l, org.bukkit.entity.ItemDisplay.class, d -> {
+                        d.setItemStack(BlackjackTable.model(n));
+                        d.setItemDisplayTransform(org.bukkit.entity.ItemDisplay.ItemDisplayTransform.NONE);
+                    });
+                    w.spawn(l.clone().add(0, -0.75, 0.6), org.bukkit.entity.TextDisplay.class, td -> {
+                        td.text(Component.text(n, NamedTextColor.WHITE));
+                        td.setBillboard(org.bukkit.entity.Display.Billboard.CENTER);
+                    });
+                }
+            }
             case "dealer" -> {
                 // Posen des Dealers nebeneinander: Name:Tick
                 String[] poses = {"rest:0", "wait:0", "lean:0", "tie:15", "sleeve:15", "cuff:16", "sweep:8", "sweep:26",

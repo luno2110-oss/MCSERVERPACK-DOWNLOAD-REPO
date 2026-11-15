@@ -196,7 +196,7 @@ public final class BlackjackTable {
     // Aufbau
     // =================================================================================================================
 
-    static ItemStack model(String name) {
+    public static ItemStack model(String name) {
         ItemStack it = new ItemStack(Material.PAPER);
         ItemMeta meta = it.getItemMeta();
         meta.setItemModel(new NamespacedKey("kuby", "casino/" + name));

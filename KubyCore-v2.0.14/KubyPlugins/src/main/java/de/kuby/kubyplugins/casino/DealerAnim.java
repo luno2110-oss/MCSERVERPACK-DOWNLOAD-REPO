@@ -552,6 +552,37 @@ public final class DealerAnim {
         }
     }
 
+    /**
+     * Für die Vorschau: Geste starten und die echten Federn ticks Schritte lang rechnen (ohne Scheduler), dann die
+     * Pose an die Anzeigen schicken. Der Zufall ist fest, damit Clips reproduzierbar sind.
+     */
+    public void simulate(String gesture, int ticks) {
+        rnd.setSeed(7);
+        Location front = root.clone().add(-Math.sin(Math.toRadians(yaw)) * 1.5, 1.4, Math.cos(Math.toRadians(yaw)) * 1.5);
+        Location side = root.clone().add(Math.cos(Math.toRadians(yaw)) * 1.2, 1.0, Math.sin(Math.toRadians(yaw)) * 1.2);
+        switch (gesture) {
+            case "tie" -> tie();
+            case "sleeve" -> sleeve();
+            case "cuff" -> cuff();
+            case "sweep" -> sweep();
+            case "deal" -> deal(side);
+            case "shuffle" -> shuffle();
+            case "push" -> push(side);
+            case "collect" -> collect(side);
+            case "applaud" -> applaud(front);
+            case "shake" -> shakeHead();
+            case "bow" -> bow();
+            case "nod" -> nod();
+            case "tap" -> tap();
+            case "room" -> lookRoom();
+            case "lean" -> stance = Stance.LEAN;
+            case "wait" -> prompt(front);
+            default -> rest();
+        }
+        for (int i = 0; i < ticks; i++) step();
+        apply(0);
+    }
+
     /** Für die Vorschau: Pose direkt setzen (ohne Federn). */
     public void previewPose(String gesture, int atTick) {
         Clip c = switch (gesture) {
