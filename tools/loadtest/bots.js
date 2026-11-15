@@ -75,7 +75,7 @@ function create(i, again) {
   bot.on('messagestr', (msg) => {
     stats.chats++;
     // Casino-Spieltest: der Server setzt den Spieler an einen Tisch, keine eigenen Aktionen mehr bis zum Ende
-    if (msg.includes('[Casino-Test]')) { bot.casinoUntil = Date.now() + 130000; stats.casinoBots = (stats.casinoBots || 0) + 1; log(name, 'Casino-Spieltest'); }
+    if (msg.includes('[Casino-Test]')) { const sec = /\((\d+) s\)/.exec(msg); bot.casinoUntil = Date.now() + (sec ? (+sec[1] + 20) * 1000 : 130000); stats.casinoBots = (stats.casinoBots || 0) + 1; log(name, 'Casino-Spieltest'); }
     if (/ANGELN|Fisch|fish/i.test(msg) && stats.fishChat.length < 12) stats.fishChat.push(name + ': ' + msg.slice(0, 160));
     if (/Halte den Fisch|grünen Bereich|green (zone|area)|Keep the fish/i.test(msg)) playFishGame(bot);
     else if (bot.fishing && /entkommen|escaped|got away/i.test(msg)) endFishGame(bot, 'entkommen');

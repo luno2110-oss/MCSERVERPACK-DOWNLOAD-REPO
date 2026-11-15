@@ -114,8 +114,8 @@ public final class LoadTestCommand implements CommandExecutor {
             }
             case "poker_nah" -> {
                 // nah über dem Pokertisch: Gemeinschaftskarten, Pot, Einsätze, eigene Karten
-                from = camPk.clone().add(0, 2.1, -2.3);
-                to = camPk.clone().add(0, 0.85, 0.2);
+                from = camPk.clone().add(0, 2.1, 2.3);
+                to = camPk.clone().add(0, 0.85, -0.2);
             }
             case "crash" -> {
                 if (camCrash == null) return;
@@ -206,7 +206,7 @@ public final class LoadTestCommand implements CommandExecutor {
         }
         for (Player p : players) {
             CASINO.add(p.getUniqueId());
-            p.sendMessage("[Casino-Test] Pause für den Spieltest");
+            p.sendMessage("[Casino-Test] Pause für den Spieltest (" + seconds + " s)");
             if (!"survival".equals(plugin.modes().modeOf(p.getUniqueId()))) plugin.modes().switchTo(p, "survival");
             plugin.casino().giveChips(p.getUniqueId(), 20000);
         }

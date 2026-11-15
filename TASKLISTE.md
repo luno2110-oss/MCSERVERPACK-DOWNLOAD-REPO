@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.82** (ungetestet, nicht kompiliert)
+Stand: **v1.83** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -558,6 +558,9 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
 ## Casino fertigstellen (v1.68)
+- [x] **v1.83 Blackjack-Ergebnisse aufgeräumt (aus den echten Client-Bildern)**
+  - [x] Beim Ergebnis überlagerten sich die Texte der Nachbarplätze („ÜBERKAUFT“, „UNENTSCHIEDEN“, „Tester02 +400 Chips“, „-100 … zurück“, „+3 Cashback“): am Platz jetzt nur zwei Zeilen (Ergebnis und Betrag), der schwebende Banner nur noch beim Blackjack und höher über dem Tisch, sonst nur der Gewinn-Ton (Betrag steht ja am Platz); „19 gegen 17“ im Chat
+  - [x] Testablauf: die Bots blieben nur 130 s am Tisch, der Kamera-Lauf dauert 200 s (Pokertisch war bei der Nahaufnahme leer) – die Pause kommt jetzt vom Server
 - [x] **v1.82 Weitere Nachweise aus dem echten Spiel**
   - [x] Goldene Zeit mit der echten Uhr: Zeitzone einstellbar (`casino.goldene-zeit.zeitzone`, Standard Europe/Berlin); der Regeltest prüft die Goldene Zeit jetzt auch ohne Test-Schalter nach der echten Uhrzeit; die CI „Client-Bilder“ stellt die Zeitzone so, dass es gerade 18 Uhr ist, und prüft, dass echte Abrechnungen am Tisch die Goldene Zeit bekommen
   - [x] Casino-SFX: Ton-IDs aus dem Register des echten Servers (`sound-ids.txt`), weil die Namensliste von minecraft-data nicht genau zu 1.21.11 passt; die Bots zeichnen jeden Ton auf, den der Server ihnen am Tisch als Netzwerkpaket schickt (Karte austeilen, Chip setzen, am Zug, Aufdecken, Überkauft, Gewinn, Verlust, Roulette); fehlen Austeilen, Chip oder Glocke, schlägt der Belastungstest fehl

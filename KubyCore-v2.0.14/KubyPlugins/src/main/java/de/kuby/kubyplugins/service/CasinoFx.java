@@ -38,6 +38,12 @@ public final class CasinoFx {
         floating(plugin, at, "<white>" + nameOf(id) + " " + text);
     }
 
+    /** Nur den Ergebnis-Ton für den Spieler (wenn der Betrag schon anderswo steht, z. B. am Blackjack-Platz). */
+    public static void sound(KubyPlugins plugin, UUID id, Result result) {
+        Player p = Bukkit.getPlayer(id);
+        if (p != null) Sfx.play(plugin, p, sound(result));
+    }
+
     /** Jackpot: eigener Text, Partikel und Sound für alle in der Nähe. */
     public static void jackpot(KubyPlugins plugin, UUID id, Location at, long money) {
         floating(plugin, at, "<gold><b>JACKPOT!</b> <white>" + nameOf(id) + " <yellow>+" + Msg.coins(money) + "$");

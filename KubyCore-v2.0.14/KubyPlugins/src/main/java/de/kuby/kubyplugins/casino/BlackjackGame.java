@@ -656,7 +656,10 @@ public final class BlackjackGame {
                     ? "UNENTSCHIEDEN" : best.equals("Überkauft") ? "ÜBERKAUFT" : "VERLOREN";
             Component result = Component.text().append(Component.text(head, best.equals("Blackjack!") ? TextColor.color(0xFFD34D) : col)
                     .decorate(TextDecoration.BOLD)).append(Component.newline()).append(Component.text(vs, NamedTextColor.WHITE)).build();
-            table.result(i, Component.text().append(result).append(Component.newline())
+            // am Platz nur Ergebnis und Betrag (zwei Zeilen): im echten Client überlagerten sich sonst die Texte der Nachbarplätze;
+            // „19 gegen 17“ steht im Chat und beim Einzelspieler über dem Dealer
+            Component headOnly = Component.text(head, best.equals("Blackjack!") ? TextColor.color(0xFFD34D) : col).decorate(TextDecoration.BOLD);
+            table.result(i, Component.text().append(headOnly).append(Component.newline())
                     .append(net > 0 ? Component.text("+" + CasinoText.num(net) + unit, NamedTextColor.GREEN).decorate(TextDecoration.BOLD)
                             : net < 0 ? Component.text("-" + CasinoText.num(-net) + unit, TextColor.color(0xFF6B6B))
                             : Component.text("Einsatz zurück", NamedTextColor.GRAY)).build());
@@ -687,8 +690,9 @@ public final class BlackjackGame {
                 } else if (net < 0) {
                     later(4, () -> p.playSound(p.getLocation(), Sound.BLOCK_SAND_STEP, 0.6f, 0.8f));
                 }
-                if (net > 0) CasinoFx.show(plugin, owner, table.cardsAt(i).add(0, 0.9, 0), best.startsWith("Blackjack")
-                        ? CasinoFx.Result.BIG_WIN : CasinoFx.Result.WIN, net);
+                // schwebender Banner nur beim Blackjack (hoch über allem), sonst nur der Gewinn-Ton – der Betrag steht am Platz
+                if (net > 0 && best.startsWith("Blackjack")) CasinoFx.show(plugin, owner, table.cardsAt(i).add(0, 1.35, 0), CasinoFx.Result.BIG_WIN, net);
+                else if (net > 0) CasinoFx.sound(plugin, owner, CasinoFx.Result.WIN);
             }
         }
         if (players == 1 && single != null) table.dealerText(single);
