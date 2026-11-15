@@ -72,13 +72,9 @@ public final class CasinoCommand implements CommandExecutor {
                 if (!p.hasPermission("kuby.admin")) {
                     Msg.send(p, "<red>Nur Admins können den Poker-Tisch setzen.");
                 } else {
-                    Block target = p.getTargetBlockExact(6);
-                    if (target == null) {
-                        Msg.send(p, "<red>Schau auf den Block, der der Poker-Tisch wird.");
-                    } else {
-                        plugin.poker().setTable(target.getLocation());
-                        Msg.send(p, "<green>Poker-Tisch gesetzt. Hinsetzen mit /poker sitzen <Chips>.");
-                    }
+                    plugin.poker().setTable(p.getLocation());
+                    Msg.send(p, "<green>Poker-Tisch aufgebaut: Mitte da, wo du stehst, die Dealerin an der Seite, auf die du schaust"
+                            + " (Tisch 5,4 x 2,7 Blöcke, sechs Plätze). Spieler: Hocker anklicken oder /poker sitzen <Chips>.");
                 }
             }
             case "barkeeper" -> {

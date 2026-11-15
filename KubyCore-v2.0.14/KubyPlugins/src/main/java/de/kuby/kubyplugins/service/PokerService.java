@@ -26,13 +26,19 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Texas Hold'em am Poker-Tisch (VIP-Lounge), Spieler gegen Spieler, ohne Abzug durch das Casino.
- * Blinds und Buy-in aus der config.yml (Standard 10/20, 40 bis 200 Big Blinds). Bis zu 6 Plätze.
- * Aktionen per /poker (Buttons im Chat), die eigenen Karten stehen in der Aktionsleiste.
+ * Texas Hold'em am Poker-Tisch, Spieler gegen Spieler, ohne Abzug durch das Casino.
+ * Blinds und Buy-in aus der config.yml (Standard 10/20, 40 bis 200 Big Blinds). Sechs feste Plätze am echten Tisch
+ * ({@link de.kuby.kubyplugins.casino.PokerTable}): Hocker anklicken = hinsetzen, die Handkarten liegen vor dem Platz
+ * (nur für den Besitzer offen), Aktionen per Knopf auf dem Filz (Passen, Check/Mitgehen, Erhöhen mit −/+/½ Pot/Pot,
+ * All-in) oder /poker. Regeln: Dealer-Button wandert, Small/Big Blind (Heads-up: Dealer = Small Blind), Mindest-
+ * erhöhung = letzte volle Erhöhung, ein zu kleines All-in öffnet die Setzrunde nicht neu, Side-Pots, geteilte Pots
+ * (Rest-Chip links vom Dealer), Board läuft bei All-in durch, Showdown mit Handbewertung (beste 5 aus 7), Verlierer
+ * legen verdeckt ab, wer alleine übrig ist, darf zeigen. Pause (Platz behalten, Hände aussetzen), Nachkaufen bis zum
+ * Maximum zwischen den Händen. Zeit pro Zug (Standard 30 s), danach Check bzw. Passen.
  * Sicherheit: Stacks und Einsätze werden laufend in poker.yml gesichert und nach einem Absturz zurückgegeben.
  * Wer geht, ausloggt oder zu weit weg ist, passt und bekommt seinen Stack zurück.
  */
-public final class PokerService {
+public final class PokerService implements org.bukkit.event.Listener {
 
     private static final int MAX_SEATS = 6;
     private static final String SURVIVAL = "survival";
@@ -56,6 +62,11 @@ public final class PokerService {
 
     private static final class Seat {
         final UUID id;
+        int pos;
+        boolean sitOut;
+        boolean raising;
+        long raiseTo;
+        boolean mayShow;
         long stack;
         long bet;
         long committed;
@@ -90,11 +101,16 @@ public final class PokerService {
     private long nextHandAt;
     private String tisch;
     private TextDisplay display;
+    private de.kuby.kubyplugins.casino.PokerTable desk;
+    private final NamespacedKey ptag;
+    private final NamespacedKey pclick;
 
     public PokerService(KubyPlugins plugin) {
         this.plugin = plugin;
         this.file = new File(plugin.getDataFolder(), "poker.yml");
         this.tag = new NamespacedKey(plugin, "kp_poker");
+        this.ptag = new NamespacedKey(plugin, "kp_poker_t");
+        this.pclick = new NamespacedKey(plugin, "kp_poker_c");
         YamlConfiguration yml = YamlConfiguration.loadConfiguration(file);
         tisch = yml.getString("tisch");
         // Nach einem Absturz: alles, was am Tisch lag, zurückgeben.
@@ -114,16 +130,48 @@ public final class PokerService {
 
     public void start() {
         plugin.getServer().getScheduler().runTaskTimer(plugin, this::tick, 40L, 20L);
+        plugin.getServer().getScheduler().runTaskTimer(plugin, this::hoverTick, 42L, 2L);
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
     // ---------- Tisch ----------
 
-    public synchronized void setTable(Location block) {
-        tisch = block.getWorld().getName() + ";" + block.getBlockX() + ";" + block.getBlockY() + ";" + block.getBlockZ();
+    /** Tisch setzen: Mitte = Block unter dem Admin, Dealerin an der Seite, auf die er schaut (Blick zur Mitte). */
+    public synchronized void setTable(Location at) {
+        if (desk != null) desk.removeAll();
+        float yaw = Math.round((at.getYaw() + 180f) / 90f) * 90f;
+        tisch = at.getWorld().getName() + ";" + at.getBlockX() + ";" + at.getBlockY() + ";" + at.getBlockZ() + ";" + yaw;
         if (display != null) display.remove();
         display = null;
+        desk = null;
         save();
+        buildDesk();
         render();
+    }
+
+    private de.kuby.kubyplugins.casino.PokerTable desk() {
+        if (desk != null) return desk;
+        Location t = table();
+        if (t == null) return null;
+        String[] p = tisch.split(";");
+        float yaw = p.length > 4 ? Float.parseFloat(p[4]) : 0f;
+        desk = new de.kuby.kubyplugins.casino.PokerTable(plugin, "pk", t, yaw, ptag, pclick);
+        return desk;
+    }
+
+    private void buildDesk() {
+        de.kuby.kubyplugins.casino.PokerTable d = desk();
+        if (d == null || d.origin().getWorld() == null) return;
+        Location o = d.origin();
+        if (!o.getWorld().isChunkLoaded(o.getBlockX() >> 4, o.getBlockZ() >> 4)) return;
+        d.build();
+        for (Seat s : seats) {
+            Player p = Bukkit.getPlayer(s.id);
+            if (p != null && !s.leaving) {
+                d.vehicle(s.pos).addPassenger(p);
+                d.ownPlate(s.pos, p, true);
+            }
+        }
     }
 
     public boolean hasTable() {
@@ -138,6 +186,7 @@ public final class PokerService {
             if (d.getPersistentDataContainer().has(tag, PersistentDataType.BYTE)) d.remove();
         }
         display = null;
+        buildDesk();
         render();
     }
 
@@ -148,6 +197,11 @@ public final class PokerService {
     // ---------- Hinsetzen und Aufstehen ----------
 
     public synchronized String sit(Player p, long buyIn) {
+        return sit(p, buyIn, -1);
+    }
+
+    /** Hinsetzen an Platz pos (-1 = der nächste freie Platz). */
+    public synchronized String sit(Player p, long buyIn, int pos) {
         UUID id = p.getUniqueId();
         Location t = table();
         if (t == null) return "Der Poker-Tisch ist noch nicht eingerichtet.";
@@ -162,8 +216,20 @@ public final class PokerService {
         long min = bb * plugin.getConfig().getLong("casino.poker.min-buyin-bb", 40);
         long max = bb * plugin.getConfig().getLong("casino.poker.max-buyin-bb", 200);
         if (buyIn < min || buyIn > max) return "Buy-in zwischen " + min + " und " + max + " Chips.";
+        int at = pos >= 0 && free(pos) ? pos : nearestFree(p.getLocation());
+        if (at < 0) return "Alle Plätze sind besetzt.";
         if (!plugin.casino().takeChips(id, buyIn)) return "Du hast nicht genug Chips. Tausch sie an der Kasse.";
-        seats.add(new Seat(id, buyIn));
+        Seat ns = new Seat(id, buyIn);
+        ns.pos = at;
+        seats.add(ns);
+        seats.sort(java.util.Comparator.comparingInt(x -> x.pos));
+        de.kuby.kubyplugins.casino.PokerTable d = desk();
+        if (d != null && d.ready()) {
+            d.vehicle(at).addPassenger(p);
+            d.ownPlate(at, p, true);
+        }
+        p.playSound(p.getLocation(), org.bukkit.Sound.BLOCK_WOOL_PLACE, 0.7f, 1.2f);
+        p.sendActionBar(Msg.parse("<gray>Du sitzt am Pokertisch · Stack <white>" + buyIn + "</white> · aufstehen mit Schleichen"));
         if (phase == Phase.WAITING) nextHandAt = Math.max(nextHandAt, System.currentTimeMillis() + 3000);
         announce("<gold>Poker: <white>" + nameOf(id) + " <gray>setzt sich mit " + buyIn + " Chips an den Tisch.");
         save();
@@ -186,6 +252,13 @@ public final class PokerService {
         if (stack > 0) plugin.casino().giveChips(id, stack);
         Player p = Bukkit.getPlayer(id);
         if (p != null) Msg.send(p, "<green>Du stehst auf und nimmst " + stack + " Chips mit.");
+        if (desk != null) {
+            desk.removeVehicle(s.pos);
+            desk.ownPlate(s.pos, p, false);
+            desk.clearButtons(s.pos);
+            desk.hideHint(s.pos, p);
+            if (s.inHand) desk.muck(s.pos);
+        }
         announce("<gold>Poker: <white>" + nameOf(id) + " <gray>steht auf.");
         if (phase == Phase.WAITING) {
             seats.remove(s);
@@ -210,8 +283,10 @@ public final class PokerService {
             long back = s.stack + (s.inHand ? s.committed : 0);
             if (back > 0) plugin.casino().giveChips(s.id, back);
         }
+        for (Seat s : seats) if (desk != null) desk.removeVehicle(s.pos);
         seats.clear();
         phase = Phase.WAITING;
+        if (desk != null) desk.removeAll();
         save();
     }
 
@@ -220,8 +295,61 @@ public final class PokerService {
     public synchronized String act(Player p, String action, long amount) {
         Seat s = seat(p.getUniqueId());
         if (s == null) return "Du sitzt nicht am Tisch. Hinsetzen mit /poker sitzen <Chips>.";
+        switch (action) {
+            case "sitout" -> {
+                s.sitOut = !s.sitOut;
+                Msg.send(p, s.sitOut ? "<gray>Pause: du setzt ab der nächsten Hand aus und behältst deinen Platz."
+                        : "<green>Du spielst ab der nächsten Hand wieder mit.");
+                render();
+                return null;
+            }
+            case "show" -> {
+                if (!s.mayShow) return "Zeigen geht nur direkt nach einem Gewinn ohne Showdown.";
+                s.mayShow = false;
+                if (desk != null) desk.reveal(s.pos);
+                announce("<gold>Poker: <white>" + nameOf(s.id) + " <gray>zeigt " + cards(s.hole));
+                return null;
+            }
+            default -> {
+            }
+        }
         if (phase == Phase.WAITING || turn < 0 || seats.get(turn) != s) return "Du bist gerade nicht dran.";
         long toCall = currentBet - s.bet;
+        long minTo = Math.min(currentBet + minRaise, s.bet + s.stack);
+        long maxTo = s.bet + s.stack;
+        switch (action) {
+            case "raisemode" -> {
+                s.raising = true;
+                s.raiseTo = Math.max(minTo, Math.min(maxTo, currentBet + Math.max(minRaise, pot() / 2)));
+                showButtons(s);
+                return null;
+            }
+            case "minus", "plus", "half", "pot" -> {
+                long bb = bigBlind();
+                long v = switch (action) {
+                    case "minus" -> s.raiseTo - bb;
+                    case "plus" -> s.raiseTo + bb;
+                    case "half" -> currentBet + toCall + (pot() + toCall) / 2;
+                    default -> currentBet + toCall + pot() + toCall;
+                };
+                s.raiseTo = Math.max(minTo, Math.min(maxTo, v));
+                p.playSound(p.getLocation(), org.bukkit.Sound.BLOCK_STONE_BUTTON_CLICK_ON, 0.5f, 1.6f);
+                showButtons(s);
+                return null;
+            }
+            case "back" -> {
+                s.raising = false;
+                showButtons(s);
+                return null;
+            }
+            case "ok" -> {
+                s.raising = false;
+                action = "raise";
+                amount = s.raiseTo;
+            }
+            default -> {
+            }
+        }
         switch (action) {
             case "fold" -> {
                 s.folded = true;
@@ -252,7 +380,13 @@ public final class PokerService {
             }
         }
         s.acted = true;
-        Sfx.play(plugin, p, Sfx.Kind.CLICK);
+        s.raising = false;
+        actionSound(s, p);
+        if (desk != null) {
+            desk.clearButtons(s.pos);
+            desk.bet(s.pos, s.bet, false);
+            if (s.folded) desk.muck(s.pos);
+        }
         proceed();
         save();
         render();
@@ -312,12 +446,23 @@ public final class PokerService {
             return;
         }
         long limit = plugin.getConfig().getLong("casino.poker.turn-seconds", 30) * 1000;
+        if (turn >= 0 && desk != null) {
+            double left = 1 - (System.currentTimeMillis() - turnStarted) / (double) limit;
+            desk.timer(seats.get(turn).pos, Math.max(0, left));
+            Player tp = Bukkit.getPlayer(seats.get(turn).id);
+            long secs = Math.max(0, (limit - (System.currentTimeMillis() - turnStarted)) / 1000);
+            if (tp != null && secs <= 5) tp.playSound(tp.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_HAT, 0.6f, 1.0f + (5 - secs) * 0.15f);
+        }
         if (turn >= 0 && System.currentTimeMillis() - turnStarted > limit) {
             Seat s = seats.get(turn);
             boolean canCheck = currentBet - s.bet <= 0;
             s.folded = !canCheck;
             s.last = canCheck ? "Check (Zeit)" : "Fold (Zeit)";
             s.acted = true;
+            if (desk != null) {
+                desk.clearButtons(s.pos);
+                if (s.folded) desk.muck(s.pos);
+            }
             proceed();
             save();
         }
@@ -332,7 +477,9 @@ public final class PokerService {
 
     private void startHand() {
         for (Seat s : seats) {
-            s.inHand = !s.leaving && s.stack > 0;
+            s.mayShow = false;
+            s.raising = false;
+            s.inHand = !s.leaving && !s.sitOut && s.stack > 0;
             s.folded = false;
             s.allIn = false;
             s.acted = false;
@@ -363,12 +510,32 @@ public final class PokerService {
         minRaise = bbAmount;
         phase = Phase.PREFLOP;
         turn = bb;
+        if (desk != null && desk.ready()) {
+            desk.clearBoard();
+            desk.pot(0, null, false);
+            desk.dealerButton(seats.get(dealer).pos);
+            for (int i = 0; i < 6; i++) playAt(org.bukkit.Sound.ITEM_BOOK_PAGE_TURN, 0.6f, 1.5f + i * 0.05f, i * 2L);
+            int k = 0;
+            for (Seat s : seats) {
+                desk.clearHole(s.pos);
+                desk.bet(s.pos, s.bet, false);
+                if (!s.inHand) continue;
+                Seat fs = s;
+                plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                    if (desk == null || !fs.inHand) return;
+                    desk.holeCards(fs.pos, fs.id, new String[]{model(fs.hole.get(0)), model(fs.hole.get(1))});
+                    desk.dealerGesture();
+                    playAt(org.bukkit.Sound.ITEM_BOOK_PAGE_TURN, 0.8f, 1.4f, 0);
+                }, 12L + 4L * k++);
+            }
+        }
         for (Seat s : seats) {
             if (!s.inHand) continue;
             Player p = Bukkit.getPlayer(s.id);
             if (p != null) {
                 Msg.send(p, "<gold>Poker: <gray>Neue Hand. Deine Karten: " + cards(s.hole));
                 Sfx.play(plugin, p, Sfx.Kind.OPEN);
+                updateHint(s);
             }
         }
         advanceTurn();
@@ -416,6 +583,13 @@ public final class PokerService {
     }
 
     private void nextStreet() {
+        if (desk != null) {
+            desk.collectBets();
+            playAt(org.bukkit.Sound.BLOCK_CHAIN_PLACE, 0.6f, 1.3f, 2);
+            plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                if (desk != null) desk.pot(pot(), sidePotText(), false);
+            }, 10L);
+        }
         for (Seat s : seats) {
             s.bet = 0;
             s.acted = false;
@@ -454,8 +628,23 @@ public final class PokerService {
 
     private void deal(int n) {
         deck.pollFirst(); // Burn
-        for (int i = 0; i < n; i++) board.add(deck.pollFirst());
+        for (int i = 0; i < n; i++) {
+            Card c = deck.pollFirst();
+            board.add(c);
+            int k = board.size() - 1;
+            if (desk != null) {
+                plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                    if (desk != null) {
+                        desk.boardCard(k, model(c));
+                        desk.dealerGesture();
+                    }
+                }, 14L + 5L * i);
+            }
+        }
         announce("<gold>Poker: <gray>Board " + cards(board));
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            for (Seat s : seats) if (s.inHand && !s.folded) updateHint(s);
+        }, 30L);
     }
 
     private void finishUncontested() {
@@ -474,7 +663,19 @@ public final class PokerService {
                 winner.stack += pot;
             }
             won.put(winner, pot);
+            winner.mayShow = true;
             announce("<gold>Poker: <white>" + nameOf(winner.id) + " <gray>gewinnt <gold>" + pot + " Chips<gray>, alle anderen haben gepasst.");
+            Player wp = Bukkit.getPlayer(winner.id);
+            if (wp != null) Msg.send(wp, "<click:run_command:'/poker zeigen'><hover:show_text:'Deine Karten allen zeigen'><aqua>[Karten zeigen]</aqua></hover></click>");
+            if (desk != null) {
+                desk.collectBets();
+                desk.pot(pot, null, false);
+                Seat w = winner;
+                plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                    if (desk != null) desk.pushPot(w.pos);
+                }, 12L);
+                desk.buttons(w.pos, new String[]{"show"}, null);
+            }
         }
         endHand(won);
     }
@@ -489,6 +690,12 @@ public final class PokerService {
             score.put(s, best(seven));
             announce("<gold>Poker: <white>" + nameOf(s.id) + " <gray>zeigt " + cards(s.hole)
                     + " <gray>· " + CATEGORY[(int) (score.get(s) >> 20)]);
+            if (desk != null) desk.reveal(s.pos);
+        }
+        if (desk != null) {
+            desk.collectBets();
+            desk.pot(pot(), sidePotText(), false);
+            playAt(org.bukkit.Sound.BLOCK_NOTE_BLOCK_SNARE, 0.7f, 1.0f, 0);
         }
         // Side-Pots: Schicht für Schicht nach dem kleinsten Einsatz der Verbliebenen.
         Map<Seat, Long> left = new HashMap<>();
@@ -543,6 +750,21 @@ public final class PokerService {
             won.merge(w, amount, Long::sum);
             announce("<gold>Poker: <white>" + nameOf(w.id) + " <gray>gewinnt <gold>" + amount + " Chips <gray>mit "
                     + CATEGORY[(int) (best >> 20)]);
+            if (desk != null) {
+                desk.glowHole(w.pos, 0xFFD34D);
+                Seat ws = w;
+                plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                    if (desk != null) desk.pushPot(ws.pos);
+                }, 30L);
+                desk.dealerText(Msg.parse("<gradient:#FFE070:#F2A21C><b>" + CATEGORY[(int) (best >> 20)].toUpperCase() + "</b></gradient>"
+                        + "\n<white>" + nameOf(w.id) + " <gold>+" + amount));
+                Player wp = Bukkit.getPlayer(w.id);
+                if (wp != null) {
+                    wp.showTitle(net.kyori.adventure.title.Title.title(Msg.parse("<gradient:#FFE070:#F2A21C><b>POT GEWONNEN</b></gradient>"),
+                            Msg.parse("<white>" + CATEGORY[(int) (best >> 20)] + " <gold>+" + amount + " Chips")));
+                    wp.playSound(wp.getLocation(), org.bukkit.Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.7f, 1.3f);
+                }
+            }
         }
     }
 
@@ -573,6 +795,19 @@ public final class PokerService {
         turn = -1;
         board.clear();
         nextHandAt = System.currentTimeMillis() + PAUSE_MS;
+        if (desk != null) {
+            plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                if (desk == null || phase != Phase.WAITING) return;
+                desk.clearBoard();
+                for (int i = 0; i < de.kuby.kubyplugins.casino.PokerTable.SEATS; i++) {
+                    desk.clearHole(i);
+                    desk.clearButtons(i);
+                    desk.bet(i, 0, false);
+                }
+                desk.pot(0, null, false);
+                for (Seat s : seats) desk.hideHint(s.pos, Bukkit.getPlayer(s.id));
+            }, 90L);
+        }
         save();
         render();
     }
@@ -595,6 +830,9 @@ public final class PokerService {
         Msg.send(p, "<click:run_command:'/poker fold'><hover:show_text:'Passen'><red>[Fold]</red></hover></click> " + call + raise
                 + " <click:run_command:'/poker allin'><hover:show_text:'Alles setzen'><gold>[All-in " + s.stack + "]</gold></hover></click>");
         Sfx.play(plugin, p, Sfx.Kind.PING);
+        s.raising = false;
+        showButtons(s);
+        if (desk != null) desk.dealerText(Msg.parse("<gray>" + nameOf(s.id) + " ist dran"));
     }
 
     // ---------- Anzeige ----------
@@ -603,7 +841,10 @@ public final class PokerService {
         Location t = table();
         if (t == null || t.getWorld() == null) return;
         if (!t.getWorld().isChunkLoaded(t.getBlockX() >> 4, t.getBlockZ() >> 4)) return;
-        if (display == null || !display.isValid()) {
+        if (desk != null && desk.ready()) {
+            if (display != null && display.isValid()) display.remove();
+            display = null;
+        } else if (display == null || !display.isValid()) {
             display = t.getWorld().spawn(t.clone().add(0, 2.0, 0), TextDisplay.class, e -> {
                 e.setBillboard(Display.Billboard.VERTICAL);
                 e.getPersistentDataContainer().set(tag, PersistentDataType.BYTE, (byte) 1);
@@ -625,7 +866,236 @@ public final class PokerService {
             if (!s.last.isEmpty()) sb.append(" · ").append(s.last);
             if (i == turn && phase != Phase.WAITING) sb.append(" <gold>◀");
         }
-        display.text(Msg.parse(sb.toString()));
+        if (display != null && display.isValid()) display.text(Msg.parse(sb.toString()));
+        if (desk != null && desk.ready()) {
+            boolean[] used = new boolean[de.kuby.kubyplugins.casino.PokerTable.SEATS];
+            for (int i = 0; i < seats.size(); i++) {
+                Seat s = seats.get(i);
+                if (s.leaving) continue;
+                used[s.pos] = true;
+                String head = (i == turn && phase != Phase.WAITING ? "<gold>▶ " : "") + (s.folded ? "<dark_gray>" : "<white>") + nameOf(s.id);
+                String line2 = "<#F2C94C>" + s.stack + " <gray>Chips" + (s.sitOut ? " <dark_gray>· Pause" : "")
+                        + (s.last.isEmpty() ? "" : " <dark_gray>· <aqua>" + s.last);
+                desk.plate(s.pos, Msg.parse(head + "\n" + line2));
+            }
+            for (int k = 0; k < used.length; k++) {
+                if (!used[k]) desk.plate(k, Msg.parse("<#F2B829>Freier Platz\n<gray>Rechtsklick zum Hinsetzen"));
+            }
+            if (phase == Phase.WAITING) {
+                desk.dealerText(Msg.parse("<gold><b>POKER</b>\n<gray>Blinds " + smallBlind() + "/" + bigBlind() + " · "
+                        + (eligible() < 2 ? "Warte auf Spieler" : "Nächste Hand gleich")));
+            }
+        }
+    }
+
+    // ---------- Tisch: Knöpfe, Hinweise, Klicks ----------
+
+    private void showButtons(Seat s) {
+        if (desk == null || !desk.ready()) return;
+        long toCall = currentBet - s.bet;
+        if (s.raising) {
+            desk.buttons(s.pos, new String[]{"back", "minus", "half", "pot", "plus", "ok"},
+                    Msg.parse("<gray>Erhöhen auf <gold><b>" + s.raiseTo + "</b>"));
+            return;
+        }
+        boolean canRaise = s.stack > toCall && s.bet + s.stack > currentBet;
+        desk.buttons(s.pos, new String[]{"fold", toCall > 0 ? "call" : "check", canRaise ? "raise" : null, "allin"},
+                toCall > 0 ? Msg.parse("<gray>Mitgehen <white>" + Math.min(toCall, s.stack)) : null);
+    }
+
+    private void updateHint(Seat s) {
+        if (desk == null || s.hole.size() < 2) return;
+        List<Card> all = new ArrayList<>(s.hole);
+        all.addAll(board);
+        String label;
+        if (all.size() >= 5) {
+            label = CATEGORY[(int) (best(all) >> 20)];
+        } else {
+            label = s.hole.get(0).rank() == s.hole.get(1).rank() ? "Paar" : "Höchste Karte";
+        }
+        desk.hint(s.pos, Bukkit.getPlayer(s.id), Msg.parse("<aqua>" + label));
+    }
+
+    private String sidePotText() {
+        List<Long> levels = new ArrayList<>();
+        for (Seat s : seats) if (s.inHand && !s.folded && s.allIn) levels.add(s.committed);
+        if (levels.isEmpty()) return "";
+        levels.sort(Long::compare);
+        return levels.size() + " Side-Pot" + (levels.size() > 1 ? "s" : "");
+    }
+
+    private static String model(Card c) {
+        String r = switch (c.rank()) {
+            case 14 -> "a";
+            case 13 -> "k";
+            case 12 -> "q";
+            case 11 -> "j";
+            default -> String.valueOf(c.rank());
+        };
+        char s = switch (c.suit()) {
+            case '♥' -> 'h';
+            case '♦' -> 'd';
+            case '♠' -> 's';
+            default -> 'c';
+        };
+        return r + s;
+    }
+
+    private void actionSound(Seat s, Player p) {
+        String a = s.last;
+        org.bukkit.Sound snd = a.startsWith("Fold") ? org.bukkit.Sound.ITEM_BOOK_PAGE_TURN
+                : a.startsWith("Check") ? org.bukkit.Sound.BLOCK_WOOD_HIT
+                : a.startsWith("All-in") ? org.bukkit.Sound.BLOCK_NOTE_BLOCK_BASEDRUM
+                : org.bukkit.Sound.BLOCK_CHAIN_PLACE;
+        playAt(snd, 0.8f, a.startsWith("Check") ? 0.8f : 1.2f, 0);
+        if (a.startsWith("Check")) playAt(org.bukkit.Sound.BLOCK_WOOD_HIT, 0.8f, 0.8f, 3);
+        if (a.startsWith("All-in")) {
+            for (Seat o : seats) {
+                Player op = Bukkit.getPlayer(o.id);
+                if (op != null) op.showTitle(net.kyori.adventure.title.Title.title(Msg.parse("<gradient:#AA52F0:#FF4D8D><b>ALL-IN!</b></gradient>"),
+                        Msg.parse("<white>" + nameOf(s.id) + " <gray>setzt alles")));
+            }
+        }
+    }
+
+    private void playAt(org.bukkit.Sound snd, float vol, float pitch, long delay) {
+        Location t = table();
+        if (t == null || t.getWorld() == null) return;
+        Location at = t.clone().add(0, 1, 0);
+        if (delay <= 0) at.getWorld().playSound(at, snd, vol, pitch);
+        else plugin.getServer().getScheduler().runTaskLater(plugin, () -> at.getWorld().playSound(at, snd, vol, pitch), delay);
+    }
+
+    private boolean free(int pos) {
+        for (Seat s : seats) if (s.pos == pos && !s.leaving) return false;
+        return pos >= 0 && pos < de.kuby.kubyplugins.casino.PokerTable.SEATS;
+    }
+
+    private int nearestFree(Location l) {
+        de.kuby.kubyplugins.casino.PokerTable d = desk();
+        int best = -1;
+        double bd = Double.MAX_VALUE;
+        for (int i = 0; i < de.kuby.kubyplugins.casino.PokerTable.SEATS; i++) {
+            if (!free(i)) continue;
+            double dist = d == null ? i : d.seatLocation(i).distanceSquared(l);
+            if (dist < bd) {
+                bd = dist;
+                best = i;
+            }
+        }
+        return best;
+    }
+
+    /** Nachkaufen zwischen den Händen bis zum Maximum. */
+    public synchronized String topUp(Player p, long amount) {
+        Seat s = seat(p.getUniqueId());
+        if (s == null) return "Du sitzt nicht am Tisch.";
+        if (s.inHand && phase != Phase.WAITING) return "Nachkaufen geht nur zwischen den Händen.";
+        long max = bigBlind() * plugin.getConfig().getLong("casino.poker.max-buyin-bb", 200);
+        long add = Math.min(amount, max - s.stack);
+        if (add <= 0) return "Dein Stack ist schon beim Maximum (" + max + ").";
+        if (!plugin.casino().takeChips(p.getUniqueId(), add)) return "Du hast nicht genug Chips.";
+        s.stack += add;
+        save();
+        render();
+        Msg.send(p, "<green>+" + add + " Chips nachgekauft. Stack: " + s.stack);
+        return null;
+    }
+
+    private void handle(Player p, org.bukkit.entity.Entity e) {
+        String v = e.getPersistentDataContainer().get(pclick, PersistentDataType.STRING);
+        if (v == null) return;
+        String[] parts = v.split(":");
+        String err = null;
+        switch (parts[1]) {
+            case "seat" -> {
+                Seat cur = seat(p.getUniqueId());
+                if (cur != null) return;
+                int pos = Integer.parseInt(parts[2]);
+                if (!free(pos)) {
+                    err = "Der Platz ist besetzt.";
+                } else {
+                    long bb = bigBlind();
+                    long min = bb * plugin.getConfig().getLong("casino.poker.min-buyin-bb", 40);
+                    long max = bb * plugin.getConfig().getLong("casino.poker.max-buyin-bb", 200);
+                    StringBuilder sb = new StringBuilder("<gold>Poker: <gray>Mit wie vielen Chips setzt du dich? ");
+                    for (long amt : new long[]{min, bb * 100, max}) {
+                        sb.append("<click:run_command:'/poker sitzen ").append(amt).append(" ").append(pos).append("'><hover:show_text:'")
+                                .append(amt).append(" Chips'><green>[").append(amt).append("]</green></hover></click> ");
+                    }
+                    Msg.send(p, sb.toString());
+                }
+            }
+            case "act" -> {
+                String a = parts[3];
+                err = act(p, a.equals("raise") ? "raisemode" : a, 0);
+            }
+            case "dealer" -> {
+                if (seat(p.getUniqueId()) == null) {
+                    int pos = nearestFree(p.getLocation());
+                    if (pos < 0) err = "Alle Plätze sind besetzt.";
+                    else err = sit(p, bigBlind() * 100, pos);
+                }
+            }
+            default -> {
+            }
+        }
+        if (err != null) Msg.send(p, "<red>" + err);
+    }
+
+    @org.bukkit.event.EventHandler(priority = org.bukkit.event.EventPriority.HIGH)
+    public void onInteract(org.bukkit.event.player.PlayerInteractEntityEvent e) {
+        if (!e.getRightClicked().getPersistentDataContainer().has(pclick, PersistentDataType.STRING)) return;
+        e.setCancelled(true);
+        if (e.getHand() != org.bukkit.inventory.EquipmentSlot.HAND) return;
+        synchronized (this) {
+            handle(e.getPlayer(), e.getRightClicked());
+        }
+    }
+
+    @org.bukkit.event.EventHandler(priority = org.bukkit.event.EventPriority.HIGH)
+    public void onAttack(io.papermc.paper.event.player.PrePlayerAttackEntityEvent e) {
+        if (!e.getAttacked().getPersistentDataContainer().has(pclick, PersistentDataType.STRING)) return;
+        e.setCancelled(true);
+        synchronized (this) {
+            handle(e.getPlayer(), e.getAttacked());
+        }
+    }
+
+    @org.bukkit.event.EventHandler
+    public void onDismount(org.bukkit.event.entity.EntityDismountEvent e) {
+        if (!(e.getEntity() instanceof Player p)) return;
+        String v = e.getDismounted().getPersistentDataContainer().get(ptag, PersistentDataType.STRING);
+        if (v == null || !v.endsWith(":vehicle")) return;
+        synchronized (this) {
+            if (seat(p.getUniqueId()) != null) stand(p.getUniqueId());
+        }
+    }
+
+    @org.bukkit.event.EventHandler
+    public void onChunkLoad(org.bukkit.event.world.ChunkLoadEvent e) {
+        Location t = table();
+        if (t == null || !e.getWorld().equals(t.getWorld())) return;
+        if ((t.getBlockX() >> 4) != e.getChunk().getX() || (t.getBlockZ() >> 4) != e.getChunk().getZ()) return;
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            synchronized (this) {
+                if (desk() != null && !desk.ready()) {
+                    buildDesk();
+                    render();
+                }
+            }
+        }, 5L);
+    }
+
+    private synchronized void hoverTick() {
+        if (desk == null || !desk.ready() || turn < 0 || phase == Phase.WAITING) return;
+        for (Seat s : seats) {
+            Player p = Bukkit.getPlayer(s.id);
+            if (p == null) continue;
+            if (desk.hover(s.pos, p.getEyeLocation(), p.getEyeLocation().getDirection())) {
+                p.playSound(p.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_HAT, 0.25f, 1.9f);
+            }
+        }
     }
 
     // ---------- Karten und Auswertung ----------
@@ -781,7 +1251,7 @@ public final class PokerService {
         World w = Bukkit.getWorld(p[0]);
         if (w == null) return null;
         try {
-            return new Location(w, Integer.parseInt(p[1]) + 0.5, Integer.parseInt(p[2]), Integer.parseInt(p[3]) + 0.5);
+            return new Location(w, (int) Double.parseDouble(p[1]) + 0.5, (int) Double.parseDouble(p[2]), (int) Double.parseDouble(p[3]) + 0.5);
         } catch (NumberFormatException e) {
             return null;
         }

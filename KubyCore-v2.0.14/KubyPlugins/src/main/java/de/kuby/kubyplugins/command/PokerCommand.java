@@ -30,7 +30,9 @@ public final class PokerCommand implements CommandExecutor {
                     + bb * plugin.getConfig().getLong("casino.poker.min-buyin-bb", 40) + " bis "
                     + bb * plugin.getConfig().getLong("casino.poker.max-buyin-bb", 200) + " Chips)");
             Msg.send(p, "<white>/poker aufstehen <gray>Aufstehen, du nimmst deinen Stack mit");
-            Msg.send(p, "<white>/poker fold | check | call | raise <Betrag> | allin <gray>Wenn du dran bist (auch per Klick)");
+            Msg.send(p, "<white>/poker fold | check | call | raise <Betrag> | allin <gray>Wenn du dran bist (oder Knöpfe auf dem Tisch)");
+            Msg.send(p, "<white>/poker pause <gray>Hände aussetzen, Platz behalten · <white>/poker nachkaufen [Chips] <gray>zwischen den Händen"
+                    + " · <white>/poker zeigen <gray>Karten nach einem Gewinn zeigen");
             return true;
         }
         String sub = args[0].toLowerCase();
@@ -45,10 +47,31 @@ public final class PokerCommand implements CommandExecutor {
                         yield "Ungültiger Betrag.";
                     }
                 }
-                yield plugin.poker().sit(p, buyIn);
+                int pos = -1;
+                if (args.length > 2) {
+                    try {
+                        pos = Integer.parseInt(args[2]);
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+                yield plugin.poker().sit(p, buyIn, pos);
             }
             case "aufstehen", "leave" -> plugin.poker().stand(p.getUniqueId());
             case "fold", "check", "call", "allin" -> plugin.poker().act(p, sub, 0);
+            case "zeigen", "show" -> plugin.poker().act(p, "show", 0);
+            case "pause", "sitout" -> plugin.poker().act(p, "sitout", 0);
+            case "nachkaufen", "rebuy" -> {
+                long bb = plugin.getConfig().getLong("casino.poker.big-blind", 20);
+                long amt = bb * 100;
+                if (args.length > 1) {
+                    try {
+                        amt = Long.parseLong(args[1]);
+                    } catch (NumberFormatException e) {
+                        yield "Ungültiger Betrag.";
+                    }
+                }
+                yield plugin.poker().topUp(p, amt);
+            }
             case "raise" -> {
                 if (args.length < 2) yield "Nutzung: /poker raise <Betrag> (Gesamteinsatz in dieser Runde)";
                 try {

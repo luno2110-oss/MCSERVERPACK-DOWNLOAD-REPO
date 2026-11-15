@@ -54,6 +54,23 @@ public final class Scene {
                 t.seatText(0, Component.text("Freier Platz", NamedTextColor.GOLD));
                 Mock.runLater();
             }
+            case "poker" -> {
+                de.kuby.kubyplugins.casino.PokerTable t = new de.kuby.kubyplugins.casino.PokerTable(Mock.plugin(), "pk",
+                        new Location(w, 0.5, 0, 0.5), 0f, tag, click);
+                t.build();
+                for (int i = 0; i < 6; i++) t.holeCards(i, null, new String[]{"ah", "kd"});
+                t.reveal(1);
+                String[] b5 = {"10s", "js", "qs", "2h", "9c"};
+                for (int k = 0; k < 5; k++) t.boardCard(k, b5[k]);
+                t.bet(0, 200, false);
+                t.bet(4, 600, false);
+                t.pot(2400, "1 Side-Pot", false);
+                t.dealerButton(2);
+                t.buttons(0, new String[]{"fold", "call", "raise", "allin"}, Component.text("Mitgehen 400", NamedTextColor.WHITE));
+                for (int i = 0; i < 6; i++) t.plate(i, Component.text("Spieler " + (i + 1), NamedTextColor.WHITE));
+                t.dealerText(Component.text("POKER", NamedTextColor.GOLD));
+                Mock.runLater();
+            }
             case "roulette" -> {
                 RouletteTable t = new RouletteTable(tag);
                 t.geometry(new Location(w, 0.5, 1.0, 0.5), 3.75, 2.75, 0f);

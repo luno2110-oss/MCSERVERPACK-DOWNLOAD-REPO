@@ -592,8 +592,25 @@ BUTTONS = {
 }
 
 
+PK_BUTTONS = {
+    "fold": ("PASSEN", ["7A1418", "A81E22", "CC2E2C", "E85A4C"], "x"),
+    "check": ("CHECK", ["0E5A2C", "16803C", "22A04E", "4CC872"], "check"),
+    "call": ("MITGEHEN", ["0E5A2C", "16803C", "22A04E", "4CC872"], "plus"),
+    "raise": ("ERHÖHEN", ["8A5A08", "B57E0C", "D9A11A", "F2C23A"], "up"),
+    "allin": ("ALL-IN", ["4A0C86", "6A16B4", "8A28DA", "AA52F0"], "star"),
+    "ok": ("SETZEN", ["0E5A2C", "16803C", "22A04E", "4CC872"], "check"),
+    "half": ("½ POT", ["123E86", "1A56B4", "2872DA", "56A0F0"], "none"),
+    "pot": ("POT", ["123E86", "1A56B4", "2872DA", "56A0F0"], "none"),
+    "minus": ("−", ["2A2238", "3E3354", "5A4C78", "8A7AB0"], "none"),
+    "plus": ("+", ["2A2238", "3E3354", "5A4C78", "8A7AB0"], "none"),
+    "back": ("ZURÜCK", ["3A3640", "524C5A", "6A6474", "8A8494"], "none"),
+    "show": ("ZEIGEN", ["123E86", "1A56B4", "2872DA", "56A0F0"], "none"),
+    "sitout": ("PAUSE", ["3A3640", "524C5A", "6A6474", "8A8494"], "none"),
+}
+
+
 def action_button(name, w=128, h=64):
-    label, ramp, sym = BUTTONS[name]
+    label, ramp, sym = BUTTONS[name] if name in BUTTONS else PK_BUTTONS[name]
     ramp = [rgb(c) for c in ramp]
     S = 4
     big = Image.new("RGBA", (w * S, h * S), T)
@@ -603,9 +620,11 @@ def action_button(name, w=128, h=64):
     d.rounded_rectangle((2 * S, 2 * S, (w - 2) * S, (h - 6) * S), radius=12 * S, fill=ramp[1], outline=mix(ramp[0], INK, 0.6), width=2 * S)
     d.rounded_rectangle((5 * S, 5 * S, (w - 5) * S, (h - 9) * S), radius=9 * S, fill=ramp[2])
     d.rounded_rectangle((8 * S, 7 * S, (w - 8) * S, 11 * S), radius=3 * S, fill=mix(ramp[3], PAPER[3], 0.35))
-    f = font(FONT_SANS, int((17 if len(label) <= 6 else 14) * S))
+    size = 30 if len(label) <= 1 else 17 if len(label) <= 6 else 14 if len(label) <= 7 else 12.5
+    f = font(FONT_SANS, int(size * S))
     cy = (h - 4) * S / 2
-    d.text(((w / 2 + 9) * S, cy), label, font=f, fill=PAPER[3], anchor="mm", stroke_width=S, stroke_fill=mix(ramp[0], INK, 0.4))
+    tx = (w / 2 + (9 if sym != "none" else 0)) * S
+    d.text((tx, cy), label, font=f, fill=PAPER[3], anchor="mm", stroke_width=S, stroke_fill=mix(ramp[0], INK, 0.4))
     # Symbol links
     ix, iy, r = 16 * S, cy, 8 * S
     col = PAPER[3]
@@ -619,10 +638,39 @@ def action_button(name, w=128, h=64):
             d.rounded_rectangle((x, iy - r, x + 3 * S, iy), radius=S, fill=col)
     elif sym == "x2":
         d.text((ix, iy), "2×", font=font(FONT_SANS, int(14 * S)), fill=col, anchor="mm")
-    else:
+    elif sym == "split":
         d.polygon([(ix - r, iy), (ix - 2 * S, iy - r), (ix - 2 * S, iy + r)], fill=col)
         d.polygon([(ix + r, iy), (ix + 2 * S, iy - r), (ix + 2 * S, iy + r)], fill=col)
+    elif sym == "x":
+        d.line((ix - r * 0.8, iy - r * 0.8, ix + r * 0.8, iy + r * 0.8), fill=col, width=4 * S)
+        d.line((ix - r * 0.8, iy + r * 0.8, ix + r * 0.8, iy - r * 0.8), fill=col, width=4 * S)
+    elif sym == "check":
+        d.line((ix - r * 0.9, iy, ix - r * 0.2, iy + r * 0.7, ix + r, iy - r * 0.8), fill=col, width=4 * S, joint="curve")
+    elif sym == "up":
+        d.polygon([(ix, iy - r), (ix + r, iy + r * 0.2), (ix + r * 0.35, iy + r * 0.2), (ix + r * 0.35, iy + r),
+                   (ix - r * 0.35, iy + r), (ix - r * 0.35, iy + r * 0.2), (ix - r, iy + r * 0.2)], fill=col)
+    elif sym == "star":
+        pts = []
+        for k in range(10):
+            rr = r if k % 2 == 0 else r * 0.45
+            a = math.radians(-90 + k * 36)
+            pts.append((ix + rr * math.cos(a), iy + rr * math.sin(a)))
+        d.polygon(pts, fill=col)
     return big.resize((w, h), Image.LANCZOS)
+
+
+def dealer_button(n=64):
+    """Dealer-Button: weiße Scheibe mit schwarzem D, Goldrand."""
+    S = 4
+    big = Image.new("RGBA", (n * S, n * S), T)
+    d = ImageDraw.Draw(big)
+    c = n * S / 2
+    r = n * S / 2 - 2 * S
+    d.ellipse((c - r, c - r, c + r, c + r), fill=PAPER[2], outline=GOLD[2], width=3 * S)
+    d.ellipse((c - r * 0.8, c - r * 0.8, c + r * 0.8, c + r * 0.8), outline=PAPER[0], width=S)
+    d.text((c, c + S), "D", font=font(FONT_SERIF, int(r * 1.2)), fill=BLACK[1], anchor="mm")
+    d.arc((c - r * 0.9, c - r * 0.9, c + r * 0.9, c + r * 0.9), 200, 280, fill=PAPER[3], width=2 * S)
+    return big.resize((n, n), Image.LANCZOS)
 
 
 def control_button(kind, n=64):
@@ -705,6 +753,18 @@ def write(out):
     for name in BUTTONS:
         action_button(name).save(os.path.join(itex, "btn_" + name + ".png"))
         item("bj_btn_" + name, flat_model("kuby:item/casino/hd/btn_" + name, 0, 4, 16, 12))
+    for name in PK_BUTTONS:
+        action_button(name).save(os.path.join(itex, "pk_" + name + ".png"))
+        item("pk_btn_" + name, flat_model("kuby:item/casino/hd/pk_" + name, 0, 4, 16, 12))
+    dealer_button().save(os.path.join(itex, "dealer_btn.png"))
+    item("pk_dealer", {"textures": {"top": "kuby:item/casino/hd/dealer_btn", "side": "kuby:block/casino/hd_edge",
+                                    "particle": "kuby:item/casino/hd/dealer_btn"},
+                       "elements": [{"from": [2, 7.5, 2], "to": [14, 8.5, 14],
+                                     "faces": {"up": {"texture": "#top", "uv": [0, 0, 16, 16]},
+                                               "north": {"texture": "#side", "uv": [0, 0, 16, 1]},
+                                               "south": {"texture": "#side", "uv": [0, 0, 16, 1]},
+                                               "east": {"texture": "#side", "uv": [0, 0, 16, 1]},
+                                               "west": {"texture": "#side", "uv": [0, 0, 16, 1]}}}]})
     for kind in ("repeat", "clear", "chips", "jewels"):
         control_button(kind).save(os.path.join(itex, "ctl_" + kind + ".png"))
         item("bj_ctl_" + kind, flat_model("kuby:item/casino/hd/ctl_" + kind, 0, 0, 16, 16))
@@ -717,7 +777,7 @@ def write(out):
 def preview(path):
     """Kontaktbogen: Filz, Materialien, alle Karten, Chips (4-fach)."""
     cards = [card_face(r, s) for s in "hdsc" for r in RANKS] + [card_back()]
-    sheet = Image.new("RGBA", (13 * 44 * 2 + 20, 5 * 60 * 2 + 600), rgb("1C1A20"))
+    sheet = Image.new("RGBA", (13 * 44 * 2 + 20, 5 * 60 * 2 + 700), rgb("1C1A20"))
     for i, c in enumerate(cards):
         x, y = (i % 13) * 88 + 10, (i // 13) * 120 + 10
         sheet.alpha_composite(c.crop((0, 0, CW, CH)).resize((CW * 2, CH * 2), Image.NEAREST), (x, y))
@@ -733,6 +793,9 @@ def preview(path):
         sheet.alpha_composite(action_button(name), (10 + i * 136, 1000))
     for i, k in enumerate(("repeat", "clear", "chips", "jewels")):
         sheet.alpha_composite(control_button(k), (10 + i * 72, 1080))
+    for i, name in enumerate(PK_BUTTONS):
+        sheet.alpha_composite(action_button(name), (10 + (i % 8) * 136, 1150 + (i // 8) * 70))
+    sheet.alpha_composite(dealer_button(), (1000, 1080))
     sheet.save(path)
 
 
