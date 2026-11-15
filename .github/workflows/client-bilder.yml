@@ -1,0 +1,192 @@
+# Bilder aus dem echten Spiel: Vanilla-Minecraft-Java-Client 1.21.11 (ohne Mods) unter Xvfb mit Software-Grafik (Mesa),
+# verbindet sich mit einem echten Paper-Server mit allen Kuby-Jars aus "latest", lädt das echte KubyUI-Resource-Pack
+# vom Server und wird per /kubytest kamera an die Casino-Tische gestellt, während Bots dort spielen (Blackjack, Poker,
+# Roulette) und der Casino-Regeltest eine echte Crash-Runde und einen Slot-Dreh startet. Ergebnis: Release "client-bilder"
+# (PNG je Ansicht, client.log, server.log).
+name: Client-Bilder
+
+on:
+  workflow_run:
+    workflows: ["Build plugins"]
+    types: [completed]
+  workflow_dispatch:
+
+jobs:
+  shots:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            tools/clientshot
+            tools/loadtest
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Xvfb, Mesa und Werkzeuge
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb libgl1-mesa-dri libglx-mesa0 mesa-utils imagemagick xdotool \
+            libxrandr2 libxinerama1 libxcursor1 libxi6 libxxf86vm1 libxtst6 > /dev/null
+          pip install -q pillow pyyaml
+
+      - name: Bots installieren
+        working-directory: tools/loadtest
+        run: |
+          npm install --no-audit --no-fund
+          node pick_version.js 1.21.11 > version.txt
+          echo "MC_VERSION=$(sed -n 1p version.txt)" >> "$GITHUB_ENV"
+          echo "NEED_VIA=$(sed -n 2p version.txt)" >> "$GITHUB_ENV"
+
+      - name: Minecraft-Client holen (Vanilla 1.21.11)
+        run: python3 tools/clientshot/prepare.py 1.21.11 "$PWD/client" localhost:25565
+
+      - name: Paper und Plugins holen
+        run: |
+          mkdir -p server/plugins
+          cd server
+          UA="KubyPlugins-CI (github.com/${GITHUB_REPOSITORY})"
+          curl -sSf -A "$UA" https://fill.papermc.io/v3/projects/paper/versions/1.21.11/builds -o builds.json
+          URL=$(python3 -c "import json;b=json.load(open('builds.json'));print(b[0]['downloads']['server:default']['url'])")
+          curl -sSfL -A "$UA" "$URL" -o paper.jar
+          curl -sSfL "https://github.com/${GITHUB_REPOSITORY}/releases/download/latest/KubyPlugins.zip" -o kuby.zip
+          unzip -q kuby.zip -d kuby
+          cp kuby/*.jar plugins/
+          if [ "$NEED_VIA" = "via" ]; then
+            for repo in ViaVersion/ViaVersion ViaVersion/ViaBackwards; do
+              J=$(curl -sSf -H "Authorization: Bearer ${{ github.token }}" "https://api.github.com/repos/$repo/releases/latest" \
+                | python3 -c "import json,sys;print([a['browser_download_url'] for a in json.load(sys.stdin)['assets'] if a['name'].endswith('.jar')][0])")
+              curl -sSfL "$J" -o "plugins/$(basename $repo).jar"
+            done
+          fi
+          echo "eula=true" > eula.txt
+          printf "online-mode=false\nallow-flight=true\nspawn-protection=0\nview-distance=6\nsimulation-distance=5\nmax-players=30\n" > server.properties
+          printf "settings:\n  connection-throttle: -1\n" > bukkit.yml
+
+      - name: Erster Start (Configs anlegen)
+        working-directory: server
+        run: |
+          mkfifo console
+          java -Xmx3G -jar paper.jar --nogui < console > first.log 2>&1 &
+          PID=$!
+          exec 3>console
+          for i in $(seq 1 300); do grep -q "Done (" first.log && break; kill -0 $PID 2>/dev/null || break; sleep 1; done
+          sleep 5
+          echo "stop" >&3
+          for i in $(seq 1 60); do kill -0 $PID 2>/dev/null || break; sleep 1; done
+          kill $PID 2>/dev/null || true
+          rm console
+          python3 - <<'EOF'
+          import yaml
+          p = "plugins/KubyCore/config.yml"
+          c = yaml.safe_load(open(p, encoding="utf-8"))
+          c.setdefault("modes", {})
+          for i, m in enumerate(["hub", "smp", "survival", "skyblock"]):
+              c["modes"].setdefault(m, {})
+              c["modes"][m]["world"] = "world"
+              c["modes"][m]["spawn"] = "world;%d;110;0;0;0" % (i * 300)
+          c.setdefault("beta", {})["alle-tester"] = True
+          c.setdefault("casino", {}).setdefault("rundgang", {})["aktiv"] = False   # keine Kino-Szenen für die Kamera
+          c.setdefault("einfuehrung", {})["aktiv"] = False
+          yaml.safe_dump(c, open(p, "w", encoding="utf-8"), allow_unicode=True, sort_keys=False)
+          EOF
+
+      - name: Server, Bots und Client starten, Bilder aufnehmen
+        working-directory: server
+        env:
+          BOTS: '6'
+          DURATION: '330'
+        run: |
+          mkdir -p shots
+          mkfifo console
+          java -Xmx3G -jar paper.jar --nogui < console > server.log 2>&1 &
+          PID=$!
+          exec 3>console
+          for i in $(seq 1 300); do grep -q "Done (" server.log && break; kill -0 $PID 2>/dev/null || break; sleep 1; done
+          Xvfb :99 -screen 0 1600x900x24 -nolisten tcp > xvfb.log 2>&1 &
+          export DISPLAY=:99 LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe
+          sleep 2
+          glxinfo -B 2>/dev/null | grep -E "OpenGL (renderer|core profile version)" || true
+          ../client/launch.sh > client.log 2>&1 &
+          CPID=$!
+          shot() { import -window root "shots/$1.png"; echo "Bild $1"; }
+          # Client im Spiel? (bis 6 Minuten, Software-Grafik ist langsam)
+          for i in $(seq 1 360); do grep -q "Kamera joined the game\|Kamera\[.*logged in" server.log && break; kill -0 $CPID 2>/dev/null || break; sleep 1; done
+          grep -m1 "Kamera" server.log || { echo "Client nicht beigetreten"; tail -60 client.log; }
+          shot 00_beitritt
+          (cd ../tools/loadtest && node bots.js > ../../server/bots.log 2>&1) &
+          sleep 40
+          shot 01_spawn_pack
+          echo "kubytest casino 200" >&3
+          sleep 50
+          for v in bj_oben bj_platz bj_seite poker roulette slots; do
+            echo "kubytest kamera $v Kamera" >&3
+            sleep 9
+            shot "10_$v"
+          done
+          echo "kubytest kamera bj_platz Kamera" >&3
+          sleep 4
+          for k in 1 2 3; do sleep 3; shot "11_bj_platz_$k"; done
+          echo "kubytest regeln" >&3
+          sleep 6
+          echo "kubytest kamera crash Kamera" >&3
+          for k in 1 2 3 4 5 6; do sleep 3; shot "20_crash_$k"; done
+          echo "kubytest kamera slots Kamera" >&3
+          for k in 1 2 3 4 5 6 7 8; do sleep 2; shot "30_slots_$k"; done
+          sleep 5
+          kill $CPID 2>/dev/null || true
+          echo "stop" >&3
+          for i in $(seq 1 90); do kill -0 $PID 2>/dev/null || break; sleep 1; done
+          kill $PID 2>/dev/null || true
+          grep -E "\[Kamera\]|\[Casino-Regel\]|resource pack|Ressourcen|Kamera" server.log | tail -60 || true
+          grep -iE "error|exception|pack" client.log | head -40 || true
+
+      - name: Auswerten
+        if: always()
+        working-directory: server
+        run: |
+          python3 - <<'EOF' > summary.md
+          import glob, os
+          from PIL import Image, ImageStat
+          shots = sorted(glob.glob("shots/*.png"))
+          print("## Bilder aus dem echten Client")
+          probs = []
+          for f in shots:
+              im = Image.open(f).convert("RGB")
+              st = ImageStat.Stat(im)
+              spread = sum(st.stddev) / 3
+              print("- %s: %dx%d, Helligkeit %.0f, Kontrast %.0f" % (os.path.basename(f), im.width, im.height, sum(st.mean) / 3, spread))
+              if spread < 4: probs.append("%s ist einfarbig (kein Bild)" % os.path.basename(f))
+          if not shots: probs.append("keine Bilder")
+          log = open("server.log", encoding="utf-8", errors="replace").read()
+          if "Kamera" not in log: probs.append("Client ist dem Server nicht beigetreten")
+          open("problems.txt", "w").write("\n".join(probs) if probs else "keine Probleme")
+          for p in probs: print("- Problem: " + p)
+          EOF
+          cat summary.md >> "$GITHUB_STEP_SUMMARY"
+          cat summary.md
+
+      - name: Bilder als Release-Datei (client-bilder)
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        working-directory: server
+        run: |
+          touch client.log server.log summary.md problems.txt
+          gh release view client-bilder -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
+            gh release create client-bilder -R "$GITHUB_REPOSITORY" --title "Client-Bilder" --notes "Bilder aus dem echten Minecraft-Client (Vanilla, Xvfb)" --prerelease
+          (cd shots 2>/dev/null && zip -q ../client-bilder.zip *.png) || true
+          gh release upload client-bilder client.log server.log summary.md problems.txt -R "$GITHUB_REPOSITORY" --clobber
+          [ -f client-bilder.zip ] && gh release upload client-bilder client-bilder.zip -R "$GITHUB_REPOSITORY" --clobber || true
+          if ! grep -q "keine Probleme" problems.txt; then cat problems.txt; exit 1; fi

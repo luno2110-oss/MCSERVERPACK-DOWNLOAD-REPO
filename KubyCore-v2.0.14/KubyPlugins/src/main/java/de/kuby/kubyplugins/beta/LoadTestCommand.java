@@ -83,22 +83,39 @@ public final class LoadTestCommand implements CommandExecutor {
             case "casino" -> casino(args.length > 1 ? Integer.parseInt(args[1]) : 100);
             case "regeln" -> rules();
             case "kamera" -> {
-                if (sender instanceof Player p && args.length > 1) camera(p, args[1].toLowerCase(java.util.Locale.ROOT));
+                // /kubytest kamera <wo> [Spieler] – auch von der Konsole (CI "Client-Bilder" mit echtem Client)
+                Player cam = args.length > 2 ? Bukkit.getPlayerExact(args[2]) : sender instanceof Player p ? p : null;
+                if (cam != null && args.length > 1) camera(cam, args[1].toLowerCase(java.util.Locale.ROOT));
             }
             default -> sender.sendMessage("/kubytest klicks [n] | events | casino [Sekunden] | regeln");
         }
         return true;
     }
 
-    private static Location camBj, camRl, camPk, camSlots;
+    private static Location camBj, camRl, camPk, camSlots, camCrash;
 
     /** Kamera-Punkte für Screenshots aus dem echten Client (CI "Client-Bilder"). */
     private void camera(Player p, String where) {
+        if (camBj == null) {
+            plugin.getLogger().info("[Kamera] Casino-Spieltest läuft noch nicht");
+            return;
+        }
+        if (!"survival".equals(plugin.modes().modeOf(p.getUniqueId()))) plugin.modes().switchTo(p, "survival");
         Location from, to;
         switch (where) {
             case "bj_oben" -> {
                 from = camBj.clone().add(0, 3.0, 5.6);
                 to = camBj.clone().add(0, 0.8, 1.3);
+            }
+            case "bj_platz" -> {
+                // Blick eines Spielers auf dem mittleren Platz: eigene Karten, Summe, Einsatz, Dealer
+                from = camBj.clone().add(0, 1.75, 2.4);
+                to = camBj.clone().add(0, 0.8, 0.2);
+            }
+            case "crash" -> {
+                if (camCrash == null) return;
+                from = camCrash.clone().add(0, -1.2, -6.5);
+                to = camCrash.clone();
             }
             case "bj_seite" -> {
                 from = camBj.clone().add(-3.6, 1.9, 3.2);
@@ -119,8 +136,7 @@ public final class LoadTestCommand implements CommandExecutor {
         }
         if (p.getVehicle() != null) p.leaveVehicle();
         from.setDirection(to.toVector().subtract(from.toVector()));
-        p.setAllowFlight(true);
-        p.setFlying(true);
+        p.setGameMode(org.bukkit.GameMode.SPECTATOR); // keine Hand, keine Hotbar, fällt nicht
         p.teleport(from);
         plugin.getLogger().info("[Kamera] " + p.getName() + " bei " + where);
     }
@@ -133,6 +149,7 @@ public final class LoadTestCommand implements CommandExecutor {
     private void casino(int seconds) {
         if (!CASINO.isEmpty()) return;
         List<Player> all = new ArrayList<>(Bukkit.getOnlinePlayers());
+        all.removeIf(x -> x.getName().startsWith("Kamera"));
         all.sort(java.util.Comparator.comparing(Player::getName));
         List<Player> players = all.subList(0, Math.min(6, all.size()));
         if (players.isEmpty()) {
@@ -237,6 +254,7 @@ public final class LoadTestCommand implements CommandExecutor {
         ruleOk = 0;
         ruleBad = 0;
         List<Player> all = new ArrayList<>(Bukkit.getOnlinePlayers());
+        all.removeIf(x -> x.getName().startsWith("Kamera"));
         all.sort(java.util.Comparator.comparing(Player::getName));
         if (all.isEmpty()) {
             plugin.getLogger().info("[Casino-Regel] keine Spieler online");
@@ -333,6 +351,7 @@ public final class LoadTestCommand implements CommandExecutor {
         Location scr = new Location(w, spawn.getBlockX() + 0.5, w.getHighestBlockYAt(spawn.getBlockX(), spawn.getBlockZ() + 18) + 3.0,
                 spawn.getBlockZ() + 18.0);
         plugin.crash().testScreen(scr, 180f);
+        camCrash = scr;
         plugin.crash().testCrashAt = 8.0;
         long chips0 = plugin.casino().chips(id);
         String bet = plugin.crash().bet(p, 100);
