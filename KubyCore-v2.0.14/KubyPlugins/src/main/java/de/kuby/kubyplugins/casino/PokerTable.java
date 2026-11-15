@@ -14,7 +14,6 @@ import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Interaction;
 import org.bukkit.entity.ItemDisplay;
-import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.persistence.PersistentDataType;
@@ -58,7 +57,7 @@ public final class PokerTable {
     private final Location origin;
     private final float yaw;
 
-    private Mannequin dealer;
+    private DealerAnim anim;
     private TextDisplay dealerText;
     private TextDisplay potBadge;
     private ItemDisplay dealerButton;
@@ -259,20 +258,8 @@ public final class PokerTable {
         // Dealerin an der Längsseite (-fwd), schaut zur Mitte
         Location dAt = local(0, 0, -(R + 0.55));
         dAt.setYaw(yaw);
-        dealer = w.spawn(dAt, Mannequin.class, m -> {
-            m.setProfile(io.papermc.paper.datacomponent.item.ResolvableProfile.resolvableProfile().name("Dealer")
-                    .skinPatch(sp -> sp.body(Key.key("kuby", "entity/casino/croupier"))
-                            .model(org.bukkit.profile.PlayerTextures.SkinModel.SLIM)).build());
-            m.setImmovable(true);
-            m.setDescription(null);
-            m.setAI(false);
-            m.setInvulnerable(true);
-            m.setSilent(true);
-            m.setCollidable(false);
-            m.setCustomNameVisible(false);
-            mark(m, "dealer");
-            m.getPersistentDataContainer().set(click, PersistentDataType.STRING, id + ":dealer:0");
-        });
+        anim = new DealerAnim(plugin, w, dAt, yaw, e -> mark(e, "dealer"),
+                hb -> hb.getPersistentDataContainer().set(click, PersistentDataType.STRING, id + ":dealer:0"));
         dealerText = text(local(0, 2.25, -(R + 0.55)), Component.empty(), 0.85f, Display.Billboard.VERTICAL);
         // Chip-Tablett der Dealerin
         Location tray = local(0, FELT_Y + 0.02, -(R - 0.28));
@@ -680,8 +667,14 @@ public final class PokerTable {
         return best >= 0;
     }
 
+    /** Dealer-Geste beim Austeilen (ohne Ziel: vor sich). */
     public void dealerGesture() {
-        if (dealer != null && dealer.isValid()) dealer.swingMainHand();
+        if (anim != null) anim.deal(null);
+    }
+
+    /** Animationen des Dealers (nie null nach dem Aufbau). */
+    public DealerAnim dealer() {
+        return anim;
     }
 
     public Location center() {

@@ -320,7 +320,11 @@ public final class Mock {
             for (Map.Entry<String, Object> p : en.props.entrySet()) {
                 Object v = p.getValue();
                 String k = p.getKey();
-                if (v instanceof Transformation t) {
+                if (v instanceof org.joml.Matrix4f mx) {
+                    float[] cm = new float[16];
+                    mx.get(cm);
+                    o.add("matrix", arr(cm));
+                } else if (v instanceof Transformation t) {
                     JsonObject j = new JsonObject();
                     Vector3f tr = t.getTranslation(), sc = t.getScale();
                     Quaternionf l = t.getLeftRotation(), r = t.getRightRotation();

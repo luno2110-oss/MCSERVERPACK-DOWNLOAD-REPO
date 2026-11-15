@@ -252,6 +252,14 @@ public final class BlackjackGame {
 
     /** Jede Sekunde vom Dienst aufgerufen. */
     public void tick() {
+        if (phase == Phase.BETTING && table.dealer() != null) {
+            List<org.bukkit.Location> faces = new ArrayList<>();
+            for (Seat st : seats) {
+                Player sp = st.player == null ? null : Bukkit.getPlayer(st.player);
+                if (sp != null) faces.add(sp.getEyeLocation());
+            }
+            table.dealer().idle(faces);
+        }
         if (phase == Phase.BETTING) {
             if (countdown > 0) {
                 table.dealerText(Component.text().append(Component.text("Runde beginnt in ", NamedTextColor.GRAY))
@@ -298,6 +306,7 @@ public final class BlackjackGame {
         if (shoe.needsShuffle()) {
             shoe.shuffle();
             table.dealerText(Component.text("Neues Deck wird gemischt", NamedTextColor.GRAY));
+            table.dealer().shuffle();
             for (int i = 0; i < 6; i++) later(i * 2L, () -> playAll(Sound.ITEM_BOOK_PAGE_TURN, 0.7f, 1.5f + (float) Math.random() * 0.4f));
         }
         List<Integer> order = new ArrayList<>();
@@ -338,7 +347,7 @@ public final class BlackjackGame {
                     h.cards.add(c);
                     table.card(seat, 0, h.cards.size() - 1, c, 1);
                     later(10, () -> table.total(seat, label(h.cards)));
-                    table.dealerGesture();
+                    table.dealer().deal(table.cardsAt(seat));
                     cardSound();
                 });
             }
@@ -378,6 +387,8 @@ public final class BlackjackGame {
                         bp.playSound(bp.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.7f, 1.4f);
                     }
                     de.kuby.kubyplugins.util.Fx.particle(plugin, table.cardsAt(i).add(0, 0.3, 0), org.bukkit.Particle.FIREWORK, 18, 0.25, 0.2, 0.25, 0.04);
+                    final int bjSeat = i;
+                    later(12, () -> table.dealer().applaud(table.cardsAt(bjSeat)));
                 }
             }
         }
@@ -424,6 +435,7 @@ public final class BlackjackGame {
         table.dealerText(Component.text().append(Component.text("Karte für ", NamedTextColor.GRAY))
                 .append(Component.text(s.name, NamedTextColor.WHITE)).append(Component.text("?", NamedTextColor.GRAY)).build());
         p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 0.6f, 1.4f);
+        table.dealer().prompt(table.cardsAt(seat));
         // Tipp nach der Grundstrategie, dezent in der Actionbar
         p.sendActionBar(Msg.parse("<gray>Du hast <white><b>" + label(h.cards) + "</b></white> · Bank zeigt <white>"
                 + dealer.get(0).value() + "</white> <dark_gray>· <gray>Tipp: <#9AE6B4>" + hint(h, canDouble, canSplit)));
@@ -572,6 +584,7 @@ public final class BlackjackGame {
                 if (BjCards.total(dealer) > 21) {
                     table.bust(BlackjackTable.SEATS);
                     table.dealerText(Component.text("BANK ÜBERKAUFT!", TextColor.color(0x7CFF9A)).decorate(TextDecoration.BOLD));
+                    later(6, () -> table.dealer().shakeHead());
                     playAll(Sound.ENTITY_PLAYER_LEVELUP, 0.6f, 1.6f);
                 }
             });
@@ -650,6 +663,12 @@ public final class BlackjackGame {
             if (net > 0) table.glow(i, best.equals("Blackjack!") ? 0xFFD34D : 0x7CFF9A);
             single = result;
             table.sweepChips(i, payout > 0);
+            final int ps = i;
+            final boolean won = net > 0;
+            later(8 + 20L * (players - 1), () -> {
+                if (won) table.dealer().push(table.cardsAt(ps));
+                else table.dealer().collect(table.cardsAt(ps));
+            });
             Player p = owner == null ? null : Bukkit.getPlayer(owner);
             if (p != null && o != null) {
                 String u = de.kuby.kubyplugins.service.CasinoPlay.unit(o.cur(), payout);
@@ -671,6 +690,7 @@ public final class BlackjackGame {
                 .append(Component.text(dt > 21 ? "über 21" : String.valueOf(dt), NamedTextColor.WHITE)).build());
         save();
         later(70, table::collectCards);
+        later(74, () -> table.dealer().bow());
         later(90, this::cleanup);
     }
 

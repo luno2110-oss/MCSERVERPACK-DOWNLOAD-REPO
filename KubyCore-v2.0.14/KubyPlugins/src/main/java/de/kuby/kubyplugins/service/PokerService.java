@@ -441,6 +441,14 @@ public final class PokerService implements org.bukkit.event.Listener {
                 stand(s.id);
             }
         }
+        if (desk != null && desk.dealer() != null && (phase == Phase.WAITING || turn < 0)) {
+            List<Location> faces = new ArrayList<>();
+            for (Seat st : seats) {
+                Player sp = Bukkit.getPlayer(st.id);
+                if (sp != null) faces.add(sp.getEyeLocation());
+            }
+            desk.dealer().idle(faces);
+        }
         if (phase == Phase.WAITING) {
             if (eligible() >= 2 && System.currentTimeMillis() >= nextHandAt) startHand();
             return;
@@ -515,6 +523,7 @@ public final class PokerService implements org.bukkit.event.Listener {
             desk.pot(0, null, false);
             desk.dealerButton(seats.get(dealer).pos);
             for (int i = 0; i < 6; i++) playAt(org.bukkit.Sound.ITEM_BOOK_PAGE_TURN, 0.6f, 1.5f + i * 0.05f, i * 2L);
+            if (desk.dealer() != null) desk.dealer().shuffle();
             int k = 0;
             for (Seat s : seats) {
                 desk.clearHole(s.pos);
@@ -524,7 +533,7 @@ public final class PokerService implements org.bukkit.event.Listener {
                 plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
                     if (desk == null || !fs.inHand) return;
                     desk.holeCards(fs.pos, fs.id, new String[]{model(fs.hole.get(0)), model(fs.hole.get(1))});
-                    desk.dealerGesture();
+                    if (desk.dealer() != null) desk.dealer().deal(desk.seatLocation(fs.pos));
                     playAt(org.bukkit.Sound.ITEM_BOOK_PAGE_TURN, 0.8f, 1.4f, 0);
                 }, 12L + 4L * k++);
             }
@@ -575,6 +584,7 @@ public final class PokerService implements org.bukkit.event.Listener {
             if (!s.acted || s.bet < currentBet) {
                 turn = idx;
                 turnStarted = System.currentTimeMillis();
+                if (desk != null && desk.dealer() != null) desk.dealer().prompt(desk.seatLocation(s.pos).add(0, 1.4, 0));
                 prompt(s);
                 return;
             }
@@ -637,6 +647,11 @@ public final class PokerService implements org.bukkit.event.Listener {
                     if (desk != null) {
                         desk.boardCard(k, model(c));
                         desk.dealerGesture();
+                        if (k == board.size() - 1 && desk.dealer() != null && Math.random() < 0.6) {
+                            plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                                if (desk != null && desk.dealer() != null) desk.dealer().sweep();
+                            }, 8L);
+                        }
                     }
                 }, 14L + 5L * i);
             }
@@ -672,7 +687,10 @@ public final class PokerService implements org.bukkit.event.Listener {
                 desk.pot(pot, null, false);
                 Seat w = winner;
                 plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
-                    if (desk != null) desk.pushPot(w.pos);
+                    if (desk != null) {
+                        desk.pushPot(w.pos);
+                        if (desk.dealer() != null) desk.dealer().push(desk.seatLocation(w.pos));
+                    }
                 }, 12L);
                 desk.buttons(w.pos, new String[]{"show"}, null);
             }
@@ -754,7 +772,10 @@ public final class PokerService implements org.bukkit.event.Listener {
                 desk.glowHole(w.pos, 0xFFD34D);
                 Seat ws = w;
                 plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
-                    if (desk != null) desk.pushPot(ws.pos);
+                    if (desk != null) {
+                        desk.pushPot(ws.pos);
+                        if (desk.dealer() != null) desk.dealer().push(desk.seatLocation(ws.pos));
+                    }
                 }, 30L);
                 desk.dealerText(Msg.parse("<gradient:#FFE070:#F2A21C><b>" + CATEGORY[(int) (best >> 20)].toUpperCase() + "</b></gradient>"
                         + "\n<white>" + nameOf(w.id) + " <gold>+" + amount));

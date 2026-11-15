@@ -462,13 +462,327 @@ def bankier():
     return s.img
 
 
+def dealer():
+    """Dealer (Mann): schwarzer Smoking mit Satin-Revers, weinrote Weste, rote Fliege, goldenes Einstecktuch,
+    goldene Knöpfe und Manschettenknöpfe, schwarze, nach hinten gegelte Haare, Lackschuhe. Breite Arme."""
+    s = Skin({
+        "K": "1C1816", "h": "3A322C", "d": "100C0A",       # Haare (Glanz oben links)
+        "S": "EEC6A4", "s": "D6AA88", "o": "BE906E",       # Haut
+        "W": "F4F4F0", "w": "D4D2D0", "e": "2E3A48", "m": "A8685A", "t": "CFA486",
+        "B": "1C1A22", "b": "2E2A36", "k": "0C0A10", "L": "3A3644",   # Smoking, Glanz, Schatten, Satin-Revers
+        "V": "6E1424", "v": "4E0E1A",                      # Weste weinrot
+        "R": "C42032", "r": "861422",                      # Fliege
+        "Y": "F0C24A", "y": "B0841E",                      # Gold
+        "G": "0C0A0E", "g": "4A4652",                      # Lackschuhe
+    })
+    s.fill("head", "top", "K")
+    s.paint("head", "top", ["dKKKKKKd", "KhhKKKKK", "KhKKKKKK", "KKKKKhKK", "KKKKKKKK", "KKKKKKKK", "KKKKKKKK", "dKKKKKKd"])
+    s.fill("head", "bottom", "s")
+    s.paint("head", "front", [
+        "KhhKKKKK",
+        "KKKKKKKd",
+        "KSSSSSSK",
+        "SKKSSKKS",
+        "SWeSSeWS",
+        "SSSooSSS",
+        "sSSmmSSs",
+        "ssttttss",
+    ])
+    s.paint("head", "right", ["KKKKKKKK", "KKKKKKKK", "dKKKKKSS", "dKKKSSSS", "dKKSoSSS", "ddKSSSSS", "ddSSSSSs", "ddsssSss"])
+    s.paint("head", "left", ["KKKKKKKK", "KKKKKKKK", "SSKKKKKd", "SSSSKKKd", "SSSoSKKd", "SSSSSKdd", "sSSSSSdd", "sssSsssd"])
+    s.paint("head", "back", ["KKKKKKKK", "KKhKKKKK", "KKKKKKKK", "KKKKKKKK", "KKKKKKKK", "dKKKKKKd", "ddKKKKdd", "sddddds s"])
+    s.paint("body", "front", [
+        "BLWWWWLB",
+        "BLRrrRLB",
+        "bBLWWLBY",
+        "BBLVVLBy",
+        "BBBLVLBB",
+        "BBBLVLBB",
+        "BBBBLBBB",
+        "BkBBYBBB",
+        "BBBBBBBB",
+        "BBBBYBBB",
+        "kBBBBBBk",
+        "kkBBBBkk",
+    ])
+    s.paint("body", "back", [
+        "bBBBBBBB",
+        "BBBBBBBB",
+        "BBBBBBBB",
+        "BBBBBBBB",
+        "BBBBBBBB",
+        "BBBBBBBB",
+        "BBBBBBBB",
+        "BBBBBBBB",
+        "BBBkkBBB",
+        "BBBkkBBB",
+        "kBBkkBBk",
+        "kkBkkBkk",
+    ])
+    for side in ("right", "left"):
+        s.column("body", side, "BBBBBBBBBBkk")
+    s.fill("body", "top", "B")
+    s.paint("body", "top", ["BBBBBBBB", "BLWWWWLB", "BLWWWWLB", "BBBBBBBB"])
+    s.fill("body", "bottom", "k")
+    for arm in ("rarm4", "larm4"):
+        for side in ("front", "back", "right", "left"):
+            s.column(arm, side, "BBBBBBBBkWSS")
+        s.fill(arm, "top", "B")
+        s.fill(arm, "bottom", "S")
+    # Licht oben links: rechter Arm (Bildseite links) mit Glanzkante, Manschettenknöpfe gold, nur außen
+    s.paint("rarm4", "front", ["bBBB", "bBBB", "bBBB"])
+    s.paint("rarm4", "right", ["", "", "", "", "", "", "", "", "", ".Y.."])
+    s.paint("larm4", "left", ["", "", "", "", "", "", "", "", "", "..Y."])
+    for leg in ("rleg", "lleg"):
+        for side in ("front", "back", "right", "left"):
+            s.column(leg, side, "BBBBBBBBBBGG")
+        s.fill(leg, "top", "B")
+        s.fill(leg, "bottom", "G")
+    # Satinstreifen an der Außennaht, Glanz auf den Lackschuhen
+    s.paint("rleg", "right", [".L..", ".L..", ".L..", ".L..", ".L..", ".L..", ".L..", ".L..", ".L..", ".L..", "", "g..."])
+    s.paint("lleg", "left", ["..L.", "..L.", "..L.", "..L.", "..L.", "..L.", "..L.", "..L.", "..L.", "..L.", "", "...g"])
+    s.paint("rleg", "front", ["", "", "", "", "", "", "", "", "", "", "", "gGGG"])
+    s.paint("lleg", "front", ["", "", "", "", "", "", "", "", "", "", "", "GGgG"])
+    return s.img
+
+
+def kassierer():
+    """Kassierer wie im alten Casino: grüner Augenschirm, weißes Hemd, schwarze Weste mit goldener Uhrkette,
+    rote Ärmelhalter, Fliege, kurzer Schnurrbart. Breite Arme."""
+    s = Skin({
+        "H": "5A3A22", "h": "7A5232", "d": "3E2614",
+        "S": "F0CCAE", "s": "DAB092", "o": "C49478",
+        "W": "F4F4F0", "w": "D6D6D2", "e": "3A2A1E", "M": "5A3A22", "m": "B47C6C",
+        "N": "1E1C24", "n": "121016", "b": "34303C",       # Weste
+        "R": "C8283A", "r": "8E1A28",                       # Ärmelhalter, Fliege
+        "Y": "F0C840", "y": "B08A20",                       # Gold
+        "V": "2E8A4A", "v": "1E6234", "u": "5AC07A",        # grüner Augenschirm (durchscheinend wirkend)
+        "P": "2A2830", "p": "1A1820", "F": "1A1410", "f": "4A3A30",
+    })
+    s.fill("head", "top", "H")
+    s.paint("head", "top", ["dHHHHHHd", "HhHHHHHH", "HHHHhHHH", "HHHHHHHH", "HHHHHHHH", "HhHHHHHH", "HHHHHHHH", "dHHHHHHd"])
+    s.fill("head", "bottom", "s")
+    s.paint("head", "front", [
+        "HHHHHHHH",
+        "HSSSSSSH",
+        "SHHSSHHS",
+        "SWeSSeWS",
+        "SSSooSSS",
+        "SMMMMMMS",
+        "sSSmmSSs",
+        "ssSSSSss",
+    ])
+    s.paint("head", "right", ["HHHHHHHH", "HHHHHHSS", "dHHHHSSS", "dHHSoSSS", "dHHSSSSS", "ddHSSSSS", "ddSSSSSs", "ddsssSss"])
+    s.paint("head", "left", ["HHHHHHHH", "SSHHHHHH", "SSSHHHHd", "SSSoSHHd", "SSSSSHHd", "SSSSSHdd", "sSSSSSdd", "sssSsssd"])
+    s.paint("head", "back", ["HHHHHHHH", "HhHHHHHH", "HHHHHHHH", "HHHHHHHH", "HHHHHHHH", "dHHHHHHd", "ddHHHHdd", "sddddds s"])
+    # Augenschirm auf der Hut-Ebene: grünes Band um den Kopf, vorne der Schirm
+    s.paint("hat", "front", ["uVVVVVVV", "vvvvvvvv"])
+    for side in ("right", "left", "back"):
+        s.paint("hat", side, ["VVVVVVVV", "vvvvvvvv"])
+    s.paint("body", "front", [
+        "NNWRRWNN",
+        "NNWrrWNN",
+        "bNNWWNNN",
+        "NNNWWNNN",
+        "NNNWWNNN",
+        "NYYWWNNN",
+        "NNyYWNNN",
+        "NNNWWNNN",
+        "NNNWWNyN",
+        "PPPPPPPP",
+        "PPPyPPPP",
+        "pPPPPPPp",
+    ])
+    s.paint("body", "back", ["NNNNNNNN"] * 8 + ["NNNbbNNN", "PPPPPPPP", "PPPPPPPP", "pPPPPPPp"])
+    for side in ("right", "left"):
+        s.column("body", side, "NNNNNNNNNPPp")
+    s.fill("body", "top", "N")
+    s.paint("body", "top", ["NNNNNNNN", "NNWWWWNN", "NNWWWWNN", "NNNNNNNN"])
+    s.fill("body", "bottom", "P")
+    for arm in ("rarm4", "larm4"):
+        for side in ("front", "back", "right", "left"):
+            s.column(arm, side, "WWWRrWWWWwSS")
+        s.fill(arm, "top", "W")
+        s.fill(arm, "bottom", "S")
+    for leg in ("rleg", "lleg"):
+        for side in ("front", "back", "right", "left"):
+            s.column(leg, side, "PPPPPPPPPpFF")
+        s.fill(leg, "top", "P")
+        s.fill(leg, "bottom", "F")
+    s.paint("rleg", "front", ["", "", "", "", "", "", "", "", "", "", "", "Ffff"])
+    s.paint("lleg", "front", ["", "", "", "", "", "", "", "", "", "", "", "ffff"])
+    return s.img
+
+
 # Name -> (Malfunktion, Ordner unter kuby:entity/)
-SKINS = {"croupier": (croupier, "casino"), "mia": (mia, "casino"),
+SKINS = {"croupier": (croupier, "casino"), "mia": (mia, "casino"), "dealer": (dealer, "casino"),
+         "kassierer": (kassierer, "casino"),
          "priester": (priester, "survival"), "bankier": (bankier, "survival")}
 
 
+# ---------------------------------------------------------------------------------------------------------------------
+# Gelenkfigur (Rig) aus einem Skin: Item-Modelle je Körperteil, Gelenk jeweils in der Modellmitte (8, 8, 8).
+# Die Item-Anzeige dreht das Modell um 180° (Ry(pi)): darum zeigt die Vorderseite im Modell nach Norden und die rechte
+# Körperseite der Figur liegt im Modell bei +X (Osten). Maße wie im Minecraft-Skin (1 px = 1/16 Block).
+# ---------------------------------------------------------------------------------------------------------------------
+RIG_PARTS = {
+    # Teil: (Skin-Würfel (u, v, w, h, d), Zeilen von-bis, Element von/bis relativ zum Gelenk in px, Deckel oben/unten)
+    "head": ((0, 0, 8, 8, 8), (0, 8), (-4, 0, -4), (4, 8, 4), True, True),
+    "torso": ((16, 16, 8, 12, 4), (0, 12), (-4, 0, -2), (4, 12, 2), True, True),
+    "rleg": ((0, 16, 4, 12, 4), (0, 12), (0, -12, -2), (4, 0, 2), True, True),
+    "lleg": ((16, 48, 4, 12, 4), (0, 12), (-4, -12, -2), (0, 0, 2), True, True),
+    "rarm_up": ((40, 16, 4, 12, 4), (0, 6), (-2, -5, -2), (2, 1, 2), True, False),
+    "rarm_lo": ((40, 16, 4, 12, 4), (6, 12), (-2, -6, -2), (2, 0, 2), False, True),
+    "larm_up": ((32, 48, 4, 12, 4), (0, 6), (-2, -5, -2), (2, 1, 2), True, False),
+    "larm_lo": ((32, 48, 4, 12, 4), (6, 12), (-2, -6, -2), (2, 0, 2), False, True),
+}
+
+
+def rig_part_model(tex, part):
+    (u, v, w, h, d), (r0, r1), lo, hi, cap_top, cap_bottom = RIG_PARTS[part]
+
+    def uv(x, y, ww, hh):
+        return [x / 4, y / 4, (x + ww) / 4, (y + hh) / 4]
+
+    rows = r1 - r0
+    side_y = v + d + r0
+    faces = {
+        "north": {"texture": "#skin", "uv": uv(u + d, side_y, w, rows)},           # Vorderseite
+        "south": {"texture": "#skin", "uv": uv(u + 2 * d + w, side_y, w, rows)},   # Rücken
+        "east": {"texture": "#skin", "uv": uv(u, side_y, d, rows)},                # rechte Körperseite
+        "west": {"texture": "#skin", "uv": uv(u + d + w, side_y, d, rows)},        # linke Körperseite
+    }
+    faces["up"] = {"texture": "#skin", "uv": uv(u + d, v, w, d) if cap_top else uv(u + d, side_y, w, 1)}
+    faces["down"] = ({"texture": "#skin", "uv": uv(u + d + w, v, w, d)} if cap_bottom
+                     else {"texture": "#skin", "uv": uv(u + d, side_y + rows - 1, w, 1)})
+    return {"textures": {"skin": tex, "particle": tex},
+            "elements": [{"from": [8 + lo[0], 8 + lo[1], 8 + lo[2]], "to": [8 + hi[0], 8 + hi[1], 8 + hi[2]],
+                          "faces": faces}]}
+
+
+def dealer_hd():
+    """Dealer in doppelter Auflösung (128 x 128) für die Gelenkfigur: gleiche Aufteilung wie der 64er-Skin, jede
+    Fläche mit 2 x 2 Pixeln je Skin-Pixel. Grundlage ist der 64er-Skin (hochskaliert), darauf die feinen Teile."""
+    base = dealer().resize((128, 128), Image.NEAREST)
+    pal = {k: rgb(v) for k, v in {
+        "K": "1C1816", "h": "3A322C", "d": "100C0A",
+        "S": "EEC6A4", "s": "D6AA88", "o": "BE906E", "t": "CFA486", "e": "2E3A48", "W": "F4F4F0", "Z": "CFCCC8",
+        "m": "A8685A", "B": "1C1A22", "b": "2E2A36", "k": "0C0A10", "L": "3A3644", "l": "4E4A5C",
+        "V": "6E1424", "v": "4E0E1A", "R": "C42032", "r": "861422", "Y": "F0C24A", "y": "B0841E",
+        "G": "0C0A0E", "g": "4A4652", "P": "F0C24A", "p": "B0841E"}.items()}
+
+    def put(x0, y0, rows):
+        for y, row in enumerate(rows):
+            assert len(row) == len(rows[0]), (x0, y0, row)
+            for x, ch in enumerate(row):
+                if ch != ".":
+                    base.putpixel((x0 + x, y0 + y), pal[ch])
+
+    # Kopf vorne (16 x 16)
+    put(16, 16, [
+        "KKKKKKKKKKKKKKKK",
+        "KKhhhKKKKKKKKKKK",
+        "KKKhhhKKKKKKKKKd",
+        "KKKKKKKKKKKKKKKd",
+        "KSSSSSSSSSSSSSSK",
+        "KSSSSSSSSSSSSSSK",
+        "SSKKKKSSSSKKKKSS",
+        "SSSSSSSSSSSSSSSS",
+        "SSWWeeSSSSeeWWSS",
+        "SSWWeeSSSSeeWWSS",
+        "SSSSSSSooSSSSSSS",
+        "SSSSSSSooSSSSSSS",
+        "SSSSSSooooSSSSSS",
+        "SSSSStmmmmtSSSSS",
+        "sSSSSSSSSSSSSSSs",
+        "sstttttttttttss.".replace(".", "s"),
+    ])
+    # Oberkörper vorne (16 x 24): Satin-Revers, Fliege, Weste mit Knopf, Einstecktuch, ein Knopf, Taschenklappen
+    put(40, 40, [
+        "bBlLWWWWWWWWLlBB",
+        "bBlLWWZWWZWWLlBB",
+        "bBBlLRRrrRRLlBBB",
+        "bBBlLrRrrRrLlBBB",
+        "bBBBlLVWWVLlBBBB",
+        "bBBBlLVWWVLlBPPB",
+        "bBBBBlLVVLlBBpPB",
+        "bBBBBlLVvLlBBBBB",
+        "bBBBBBlVYVlBBBBB",
+        "bBBBBBBlVlBBBBBB",
+        "bBBBBBBBlBBBBBBB",
+        "bBBBBBBBBBBBBBBB",
+        "bBBBBBByYBBBBBBB",
+        "bBBBBBBkBBBBBBBB",
+        "bBBBBBkBkBBBBBBB",
+        "bBBBBkBBBkBBBBBB",
+        "bBBBkBBBBBkBBBBB",
+        "bbbbbBBBBBBbbbbB",
+        "BkkkkBBBBBBkkkkB",
+        "bBBBBBBBBBBBBBBB",
+        "bBBBBBBBBBBBBBBB",
+        "bBBBBBBBBBBBBBBB",
+        "kBBBBBBBBBBBBBBk",
+        "kkBBBBBBBBBBBBkk",
+    ])
+    # Rücken (16 x 24): Mittelnaht und Schlitz
+    put(64, 40, ["BBBBBBBBBBBBBBBB"] + ["BBBBBBBkBBBBBBBB"] * 15 + ["BBBBBBkBkBBBBBBB"] * 6
+        + ["kBBBBBkBkBBBBBBk", "kkBBBBkBkBBBBBkk"])
+    # Ärmel: vorne/hinten/innen/außen 8 x 24; außen mit vier Ärmelknöpfen und Manschettenknopf
+    sleeve = ["bBBBBBBB"] * 11 + ["bBBkBBBB"] + ["bBBBBBBk"] * 5 + ["kkkkkkkk", "WWWWWWWW", "ZZWWWWZZ",
+              "SSSSSSSS", "SSSSSSSS", "sSSSSSSs", "ssSsSsSs"]
+    outer = ["BBBBBBBB"] * 11 + ["BBBkBBBB"] + ["BBBBBBBB"] * 2 + ["BBByByBB", "BByByBBB", "BBBBBBBB",
+             "kkkkkkkk", "WWWYYWWW", "ZZWyyWZZ", "SSSSSSSS", "SSSSSSSS", "sSSSSSSs", "ssSsSsSs"]
+    inner = ["BBBBBBBB"] * 17 + ["kkkkkkkk", "WWWWWWWW", "ZZZZZZZZ", "sSSSSSSs", "sSSSSSSs", "ssssssss", "ssssssss"]
+    # rechter Arm (64er: 40,16): außen = rechte Seite (80,40), vorne (88,40), innen (96,40), hinten (104,40)
+    put(80, 40, outer)
+    put(88, 40, sleeve)
+    put(96, 40, inner)
+    put(104, 40, [r.replace("b", "B") for r in sleeve])
+    # linker Arm (64er: 32,48): innen = rechte Seite (64,104), vorne (72,104), außen (80,104), hinten (88,104)
+    put(64, 104, inner)
+    put(72, 104, sleeve)
+    put(80, 104, outer)
+    put(88, 104, [r.replace("b", "B") for r in sleeve])
+    # Hosenbeine: Bügelfalte vorne, Satinstreifen außen, Lackschuhe mit Glanz
+    front = ["BBBbBBBB"] * 19 + ["kkkkkkkk", "GgGGGGGG", "GggGGGGG", "GGGGGGGG", "GGGGGGGG"]
+    stripe = ["BBBlLBBB"] * 19 + ["kkkkkkkk", "GGGGGGGG", "GGGGGGGG", "GGGGGGGG", "GGGGGGGG"]
+    plain = ["BBBBBBBB"] * 19 + ["kkkkkkkk", "GGGGGGGG", "GGGGGGGG", "GGGGGGGG", "GGGGGGGG"]
+    put(0, 40, stripe)        # rechtes Bein außen
+    put(8, 40, front)
+    put(16, 40, plain)
+    put(24, 40, plain)
+    put(32, 104, plain)       # linkes Bein innen
+    put(40, 104, front)       # linkes Bein vorne
+    put(48, 104, stripe)      # linkes Bein außen
+    put(56, 104, plain)       # linkes Bein hinten
+    return base
+
+
+RIGS = {"dealer": dealer_hd}
+
+
+def build_rigs(out, skins):
+    import json
+    tex_dir = os.path.join(out, "assets/kuby/textures/block/casino")
+    models = os.path.join(out, "assets/kuby/models/item/casino")
+    items = os.path.join(out, "assets/kuby/items/casino")
+    for d in (tex_dir, models, items):
+        os.makedirs(d, exist_ok=True)
+    for name, fn in RIGS.items():
+        fn().save(os.path.join(tex_dir, "rig_" + name + ".png"))
+        for part in RIG_PARTS:
+            mid = "rig_" + name + "_" + part
+            with open(os.path.join(models, mid + ".json"), "w", encoding="utf-8") as fh:
+                json.dump(rig_part_model("kuby:block/casino/rig_" + name, part), fh)
+            with open(os.path.join(items, mid + ".json"), "w", encoding="utf-8") as fh:
+                json.dump({"model": {"type": "minecraft:model", "model": "kuby:item/casino/" + mid}}, fh)
+
+
 def build(out):
+    made = {}
     for name, (fn, folder) in SKINS.items():
         d = os.path.join(out, "assets/kuby/textures/entity", folder)
         os.makedirs(d, exist_ok=True)
-        fn().save(os.path.join(d, name + ".png"))
+        made[name] = fn()
+        made[name].save(os.path.join(d, name + ".png"))
+    build_rigs(out, made)

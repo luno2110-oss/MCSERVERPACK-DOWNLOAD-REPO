@@ -31,6 +31,21 @@ public final class Scene {
                 m.holo(20080, 10, 5000);
                 m.seat();
             }
+            case "dealer" -> {
+                // Posen des Dealers nebeneinander: Name:Tick
+                String[] poses = {"rest:0", "wait:0", "lean:0", "tie:15", "sleeve:15", "cuff:16", "sweep:8", "sweep:26",
+                        "deal:4", "shuffle:12", "applaud:5", "bow:12"};
+                for (int i = 0; i < poses.length; i++) {
+                    String[] pt = poses[i].split(":");
+                    de.kuby.kubyplugins.casino.DealerAnim d = new de.kuby.kubyplugins.casino.DealerAnim(Mock.plugin(), w,
+                            new Location(w, i * 1.4, 0, 0), 0f, null, null);
+                    d.previewPose(pt[0], Integer.parseInt(pt[1]));
+                    w.spawn(new Location(w, i * 1.4, 2.25, 0), org.bukkit.entity.TextDisplay.class, td -> {
+                        td.text(Component.text(pt[0] + " " + pt[1], NamedTextColor.WHITE));
+                        td.setBillboard(org.bukkit.entity.Display.Billboard.CENTER);
+                    });
+                }
+            }
             case "blackjack" -> {
                 BlackjackTable t = new BlackjackTable(Mock.plugin(), "b1", new Location(w, 0.5, 0, 0.5), 0f, 3.0, tag, click);
                 t.build();

@@ -388,6 +388,8 @@ def orientation(e, rs):
 
 
 def transformation(e):
+    if e.get("matrix"):
+        return np.array(e["matrix"], dtype=float).reshape(4, 4).T
     t = e.get("transformation")
     if not t:
         return np.eye(4)

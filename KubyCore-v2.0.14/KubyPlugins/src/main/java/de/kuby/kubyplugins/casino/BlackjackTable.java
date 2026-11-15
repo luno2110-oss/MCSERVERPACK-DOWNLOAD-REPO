@@ -15,7 +15,6 @@ import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Interaction;
 import org.bukkit.entity.ItemDisplay;
-import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -64,7 +63,7 @@ public final class BlackjackTable {
     private final float yaw;
     private final double radius;
 
-    private Mannequin dealer;
+    private DealerAnim anim;
     private TextDisplay dealerText;
     private TextDisplay dealerBadge;
     private final TextDisplay[] seatText = new TextDisplay[SEATS];
@@ -257,20 +256,8 @@ public final class BlackjackTable {
         // Dealer
         Location dealerAt = at(fwd(), -0.6, 0);
         dealerAt.setYaw(yaw);
-        dealer = w.spawn(dealerAt, Mannequin.class, m -> {
-            m.setProfile(io.papermc.paper.datacomponent.item.ResolvableProfile.resolvableProfile().name("Dealer")
-                    .skinPatch(sp -> sp.body(Key.key("kuby", "entity/casino/croupier"))
-                            .model(org.bukkit.profile.PlayerTextures.SkinModel.SLIM)).build());
-            m.setImmovable(true);
-            m.setDescription(null);
-            m.setAI(false);
-            m.setInvulnerable(true);
-            m.setSilent(true);
-            m.setCollidable(false);
-            m.setCustomNameVisible(false);
-            mark(m, "dealer");
-            m.getPersistentDataContainer().set(click, PersistentDataType.STRING, id + ":dealer:0");
-        });
+        anim = new DealerAnim(plugin, w, dealerAt, yaw, e -> mark(e, "dealer"),
+                hb -> hb.getPersistentDataContainer().set(click, PersistentDataType.STRING, id + ":dealer:0"));
         dealerText = text(at(fwd(), -0.6, 2.25), Component.empty(), 0.85f, Display.Billboard.VERTICAL);
         // Chip-Tablett der Bank: schwarz glänzend, sechs Stapel echter 3D-Chips
         Vector3f r = right();
@@ -885,12 +872,17 @@ public final class BlackjackTable {
     }
 
     public Location dealerLocation() {
-        return dealer != null && dealer.isValid() ? dealer.getLocation() : at(fwd(), -0.6, 0);
+        return anim != null ? anim.location() : at(fwd(), -0.6, 0);
     }
 
-    /** Dealer-Geste (Arm schwingen) beim Austeilen und Einsammeln. */
+    /** Dealer-Geste beim Austeilen (ohne Ziel: vor sich). */
     public void dealerGesture() {
-        if (dealer != null && dealer.isValid()) dealer.swingMainHand();
+        if (anim != null) anim.deal(null);
+    }
+
+    /** Animationen des Dealers (nie null nach dem Aufbau). */
+    public DealerAnim dealer() {
+        return anim;
     }
 
     public Location shoeLocation() {

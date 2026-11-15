@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.69** (ungetestet, nicht kompiliert)
+Stand: **v1.70** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -558,6 +558,15 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
 ## Casino fertigstellen (v1.68)
+- [x] **v1.70 Dealer neu** (Wunsch: Mann, schwarzer Anzug mit rot-goldenen Akzenten, elegant und reich, Animationen wie die Dealer in GTA, smooth und menschlich)
+  - [x] Gelenkfigur statt Mannequin (`casino/DealerAnim`): Kopf, Oberkörper, Beine, Ober- und Unterarme als einzelne 3D-Teile (`kuby:casino/rig_dealer_*`, gebaut von `tools/build_skins.py`), Gelenkkette mit Ellbogen; jedes Gelenk folgt seiner Zielpose über eine kritisch gedämpfte Feder (kein Ruck, kein Nachwippen), Kopf schneller als Rumpf, Unterarm leicht nach; Client blendet weich über (alle 2 Ticks, Überblendung 3 Ticks)
+  - [x] Smoking in doppelter Auflösung (128 px): Satin-Revers, rote Fliege, weinrote Weste mit Goldknopf, goldenes Einstecktuch, vier Ärmelknöpfe, Manschetten mit Goldknopf, Bügelfalte, Satinstreifen an der Hose, Lackschuhe; gegelte schwarze Haare
+  - [x] Grundhaltung aufrecht, Brust leicht raus; Atmung (4,2 s), Gewichtsverlagerung in unregelmäßigen Abständen, kleine Blicksprünge
+  - [x] Spieler am Zug: Dealer schaut ihn an, nickt, wartet mit gefalteten Händen
+  - [x] Gesten: Austeilen (Stapel links, rechte Hand zum Platz), Hand über den Tisch („Ihre Karten, meine Herrschaften“, nach Flop/Turn/River), Mischen mit Brücke, Chips zum Gewinner schieben, Verluste einsammeln, Applaus bei Blackjack, Kopfschütteln mit Schulterzucken bei „Bank überkauft“, Verbeugung mit Hand an der Brust am Rundenende, Nicken, Klopfen
+  - [x] Leerlauf (zufällig, nie zweimal dieselbe Geste hintereinander): Fliege richten, Sakko-Ärmel nachziehen, Manschette richten, auf den Tisch stützen und wieder aufrichten, durch den Raum schauen, Spieler anschauen
+  - [x] Blackjack- und Pokertisch nutzen den neuen Dealer; 3D-Vorschau aller Posen (Szene `dealer` in `tools/preview3d`)
+  - [ ] Im Spiel prüfen (Bewegung live), Bedrock: Teile sichtbar, Überblendung evtl. ruckiger
 - [x] **v1.69 Casino-Grafik im Minecraft-Look** (Feedback: „zu hochauflösend, Karten zeigen Pink-Schwarz-Karo, Automaten zu realistisch“): `tools/build_casino_px.py` ersetzt `build_casino_hd.py` (gelöscht), alle Modellnamen bleiben, kein Code geändert
   - [x] etwa 16 px je Block: Blackjack-Filz 96 x 48, Poker-Filz 96 x 48, Materialien 16 x 16, Chips 16 x 16, Knöpfe 48 x 16, Bedienknöpfe 16 x 16; harte Farbstufen aus den Icon-Rampen, 1-px-Kontur, keine Verläufe, kein Weichzeichnen, keine Schriftarten (eigene 3 x 5-Pixelschrift, M/N/W breiter)
   - [x] Karten: die 32-px-Pixelkarten (wie in den Menüs) als 3D-Karte, Rückseite rot; alle Casino-Texturen jetzt unter `textures/block/casino/` (die Karten lagen vorher unter `textures/item/…` – seit 1.21.11 getrennter Item-Atlas, wahrscheinliche Ursache des Pink-Schwarz-Karos). Prüfung: kein Modell im Pack mischt `item/`- und `block/`-Texturen, keine fehlende Textur
