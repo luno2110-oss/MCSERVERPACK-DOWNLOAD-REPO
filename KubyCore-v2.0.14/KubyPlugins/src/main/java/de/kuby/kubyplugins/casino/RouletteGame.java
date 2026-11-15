@@ -122,6 +122,11 @@ public final class RouletteGame implements org.bukkit.event.Listener {
     /** Tisch aus der Datei, solange die Welt noch nicht geladen ist. */
     private String tableRaw;
 
+    /** Der Roulette-Tisch (für den Rundgang). */
+    public RouletteTable table() {
+        return table;
+    }
+
     public RouletteGame(KubyPlugins plugin) {
         this.plugin = plugin;
         this.file = new File(plugin.getDataFolder(), "roulette-tisch.yml");

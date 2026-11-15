@@ -97,6 +97,9 @@ public final class CasinoCommand implements CommandExecutor {
             }
             case "jackpot" -> jackpot(p, args);
             case "kasse" -> kasse(p);
+            case "rundgang", "tour" -> {
+                if (!plugin.casinoTour().play(p)) Msg.send(p, "<red>Hier gibt es nichts zu zeigen – stell dich ins Casino (im Umkreis von 90 Blöcken).");
+            }
             case "npc" -> plugin.casinoNpc().command(p, args);
             case "wechseln", "chips" -> {
                 String blocked = plugin.casino().checkUse(p);

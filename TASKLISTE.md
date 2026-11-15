@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.76** (ungetestet, nicht kompiliert)
+Stand: **v1.77** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -558,6 +558,11 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
 ## Casino fertigstellen (v1.68)
+- [x] **v1.77 Casino-Rundgang** (wie die Führung durchs Diamond Casino; `casino/CasinoTourService`, `cinema/scenes/CasinoTour`)
+  - [x] Startet beim ersten Betreten der Casino-Region automatisch (einmal je Spieler, `casino-tour.yml`, `casino.rundgang.aktiv`), jederzeit mit Schleichen überspringbar, wiederholen mit `/casino rundgang`
+  - [x] Gastgeber Vincent (Gelenkfigur im Smoking): Kranfahrt über das Casino mit Titelkarte „KUBY CASINO“, Vincent kommt auf den Spieler zu, verbeugt sich, begrüßt ihn
+  - [x] Zeigt jede Station, die im Umkreis von 90 Blöcken wirklich steht: Kasse, Blackjack, High-Roller-Tische, Poker (auch weinrot), Roulette, Slots, Crash, Jukebox. Je Station: beide gehen hin, Vincent zeigt mit der Hand darauf und erklärt (zwei Sätze als Untertitel); mitten im Satz schneidet die Kamera auf das Geschehen (Dealer, Walzen, Rad, Bildschirm) oder auf einen echten Spieler, der dort gerade spielt
+  - [x] Abschluss: Tipp zur Goldenen Zeit, Verbeugung, Titelkarte „VIEL ERFOLG“
 - [x] **v1.76 Erster Jackpot: Besuch beim Geschäftsführer**
   - [x] Wer zum ersten Mal den Slots-Jackpot knackt, wird nach dem Jackpot-Feuerwerk (5 s) in einer Kino-Szene (`cinema/scenes/ManagerVisit`, 17 s, ab Sekunde 2 überspringbar) vom Gastgeber (Dealer) ins Büro des Geschäftsführers begleitet: Titelkarte „JACKPOT“, der Gastgeber führt durch die Tür und verbeugt sich, der Geschäftsführer (eigene Gelenkfigur: graues Haar, goldene Brille, weinroter Anzug, goldene Krawatte) kommt um den Schreibtisch, Handschlag, spricht (Untertitel), überreicht einen goldenen Chip; goldener Blitz, Titelkarte „HIGH ROLLER – Einsatzlimits x3 im ganzen Casino“
   - [x] Büro als Kulisse aus Block-Teilen 90 Blöcke über dem Automaten (Holzboden, roter Teppich, Vertäfelung, großes Fenster mit Goldleisten, Schreibtisch mit Goldkante, Ledersessel, Bücherregal, goldener Tresor, Lampe, Deckenlicht), Abendhimmel

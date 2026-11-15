@@ -1338,6 +1338,11 @@ public final class PokerService implements org.bukkit.event.Listener {
         return name == null ? "?" : name;
     }
 
+    /** Blickrichtung des Dealers (zur Tischmitte). */
+    public float tableYaw() {
+        return desk != null ? desk.yaw() : 0f;
+    }
+
     /** Mitte des Tisches (oder null). */
     public Location tableLocation() {
         return table();

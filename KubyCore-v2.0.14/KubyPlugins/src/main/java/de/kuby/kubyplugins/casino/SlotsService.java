@@ -82,6 +82,13 @@ public final class SlotsService implements Listener {
     private final Map<UUID, Integer> level = new HashMap<>();
     private long jackpot;
 
+    /** Alle aufgebauten Automaten (für den Rundgang). */
+    public java.util.List<SlotMachine> machineList() {
+        java.util.List<SlotMachine> l = new java.util.ArrayList<>();
+        for (State st : machines.values()) l.add(st.machine);
+        return l;
+    }
+
     public SlotsService(KubyPlugins plugin) {
         this.plugin = plugin;
         this.file = new File(plugin.getDataFolder(), "slots-automaten.yml");

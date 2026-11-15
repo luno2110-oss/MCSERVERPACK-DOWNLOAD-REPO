@@ -153,6 +153,11 @@ public final class CrashGame implements Listener, CommandExecutor {
         }
     }
 
+    /** Bildschirm (oder null), z. B. für den Rundgang. */
+    public CrashScreen currentScreen() {
+        return screen();
+    }
+
     private CrashScreen screen() {
         if (screen != null) return screen;
         if (screenRaw == null) return null;

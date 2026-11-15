@@ -267,6 +267,14 @@ public final class CasinoNpc implements Listener {
         }
     }
 
+    /** Alle Figuren dieser Rolle im Umkreis (für den Rundgang). */
+    public java.util.List<Entity> find(Role role, Location l, double r) {
+        java.util.List<Entity> out = new java.util.ArrayList<>();
+        if (l.getWorld() == null) return out;
+        for (Entity e : l.getWorld().getNearbyEntities(l, r, r, r)) if (roleOf(e) == role) out.add(e);
+        return out;
+    }
+
     /** True, wenn eine Figur dieser Rolle näher als r Blöcke ist. */
     public boolean near(Location l, Role role, double r) {
         if (l.getWorld() == null) return false;

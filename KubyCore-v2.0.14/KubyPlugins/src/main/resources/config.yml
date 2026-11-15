@@ -149,6 +149,9 @@ casino:
     comeback-ab: 3
     comeback-bonus: 0.25
     max-gesamt: 6.0             # Obergrenze aller Faktoren zusammen (Serie x Goldene Zeit + Comeback)
+  # Rundgang beim ersten Betreten der Casino-Region (Gastgeber Vincent zeigt alle aufgebauten Stationen); /casino rundgang
+  rundgang:
+    aktiv: true
   # Erster Jackpot: Kino-Szene beim Geschäftsführer, danach dieser Faktor auf alle Höchsteinsätze (Chips) im Casino
   jackpot-bonus:
     faktor: 3.0

@@ -46,6 +46,11 @@ public final class BlackjackService implements Listener {
     private final Map<String, String> raw = new LinkedHashMap<>();
     private BukkitTask timer;
 
+    /** Alle geladenen Tische (für den Rundgang). */
+    public java.util.Collection<BlackjackGame> games() {
+        return games.values();
+    }
+
     public BlackjackService(KubyPlugins plugin) {
         this.plugin = plugin;
         this.file = new File(plugin.getDataFolder(), "blackjack-tische.yml");
