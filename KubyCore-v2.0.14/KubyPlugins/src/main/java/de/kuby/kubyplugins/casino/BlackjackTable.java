@@ -308,7 +308,7 @@ public final class BlackjackTable {
             seatText[s] = text(seatLocation(s).add(0, 1.45, 0), Component.empty(), 0.65f, Display.Billboard.VERTICAL);
             resultText[s] = text(cardsAt(s).add(0, 0.55, 0), Component.empty(), 0.62f, Display.Billboard.CENTER);
             streakText[s] = text(cardsAt(s).add(0, 0.47, 0), Component.empty(), 0.5f, Display.Billboard.CENTER);
-            totals[s] = badge(onSeatAxis(s, radius * F_CARDS + 0.12, 0.34, FELT_Y + 0.09));
+            totals[s] = badge(onSeatAxis(s, radius * F_CARDS + 0.12, 0.44, FELT_Y + 0.09)); // weit genug neben der ersten Karte, damit die Zahl aus keinem Winkel Karten verdeckt
         }
         dealerBadge = badge(at(fwd(), radius * F_DEALER_CARDS + 0.05, FELT_Y + 0.1).add(r.x * 0.5, 0, r.z * 0.5));
     }
