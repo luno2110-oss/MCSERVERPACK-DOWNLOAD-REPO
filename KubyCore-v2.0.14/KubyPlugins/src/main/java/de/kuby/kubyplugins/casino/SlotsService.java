@@ -300,10 +300,13 @@ public final class SlotsService implements Listener {
     private void tensionCam(Player p, State s, int snap, String sym, boolean win, java.util.UUID pid) {
         if (!p.isOnline() || plugin.cinema() == null || de.kuby.kubyplugins.cinema.Cinema.busy(pid)) return;
         if (!plugin.getConfig().getBoolean("casino.slots.kino", true)) return;
-        Location face = s.machine.reelFront(2);
+        de.kuby.kubyplugins.cinema.V3[] faces = new de.kuby.kubyplugins.cinema.V3[3];
+        for (int i = 0; i < 3; i++) {
+            Location f = s.machine.reelFront(i);
+            faces[i] = new de.kuby.kubyplugins.cinema.V3(f.getX(), f.getY(), f.getZ());
+        }
         org.bukkit.util.Vector n = s.machine.frontVector();
-        var script = new de.kuby.kubyplugins.cinema.scenes.SlotTension(
-                new de.kuby.kubyplugins.cinema.V3(face.getX(), face.getY(), face.getZ()),
+        var script = new de.kuby.kubyplugins.cinema.scenes.SlotTension(faces,
                 new de.kuby.kubyplugins.cinema.V3(n.getX(), 0, n.getZ()), snap, sym, win, null, System.nanoTime());
         de.kuby.kubyplugins.cinema.Cinema.Options o = new de.kuby.kubyplugins.cinema.Cinema.Options();
         o.anchor = s.machine.center();

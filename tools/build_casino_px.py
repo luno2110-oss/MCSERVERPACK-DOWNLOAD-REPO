@@ -29,6 +29,8 @@ rgb, mix = bc.rgb, bc.mix
 
 GOLD = [rgb(c) for c in ("8A5A08", "B57E0C", "D9A11A", "F2C23A", "FAE07A")]
 FELT = [rgb(c) for c in ("163F27", "1B4D31", "215C3A", "2A6B44", "347A50")]
+# Weinrot für die High-Roller-Tische
+FELT_RED = [rgb(c) for c in ("3C0A14", "4E0F1C", "621624", "761E2E", "8A2A3A")]
 LEATHER = [rgb(c) for c in ("0E0C12", "1A171F", "26222C", "38333F")]
 CREAM = [rgb(c) for c in ("B4A890", "CFC4AC", "E2D9C4", "F0EADB")]
 WALNUT = [rgb(c) for c in ("2A170C", "3E2614", "52341C", "684426")]
@@ -102,7 +104,7 @@ SEAT_ANGLES = (-60, -30, 0, 30, 60)
 F_RIM_IN, F_BET, F_BET_R, F_LINE = 0.885, 0.70, 0.078, 0.60
 
 
-def felt_blackjack(w=96):
+def felt_blackjack(w=96, FELT=FELT):
     h = w // 2
     R = w / 2
     img = Image.new("RGBA", (w, h), T)
@@ -137,7 +139,7 @@ def felt_blackjack(w=96):
     return img
 
 
-def felt_poker(w=96):
+def felt_poker(w=96, FELT=FELT, label="POKER"):
     h = w // 2
     img = Image.new("RGBA", (w, h), T)
     px = img.load()
@@ -161,7 +163,7 @@ def felt_poker(w=96):
         px[x1, y] = GOLD[3]
     for (cx, cy) in ((x0 + 1, y0 + 1), (x1 - 1, y0 + 1), (x0 + 1, y1 - 1), (x1 - 1, y1 - 1)):
         px[cx, cy] = GOLD[3]
-    draw_text(img, (w - text_width("POKER")) // 2, y0 - 7, "POKER", GOLD[3])
+    draw_text(img, (w - text_width(label)) // 2, y0 - 7, label, GOLD[3])
     return img
 
 
@@ -509,6 +511,10 @@ def write(out):
     item("bj_felt", flat_model(B + "bj_felt", 0, 8, 16, 16))
     felt_poker().save(os.path.join(tex, "pk_felt.png"))
     item("pk_felt", flat_model(B + "pk_felt", 0, 4, 16, 12))
+    felt_blackjack(FELT=FELT_RED).save(os.path.join(tex, "bj_felt_red.png"))
+    item("bj_felt_red", flat_model(B + "bj_felt_red", 0, 8, 16, 16))
+    felt_poker(FELT=FELT_RED, label="HIGH ROLLER").save(os.path.join(tex, "pk_felt_red.png"))
+    item("pk_felt_red", flat_model(B + "pk_felt_red", 0, 4, 16, 12))
     for name, fn in MATERIALS.items():
         fn().save(os.path.join(tex, name + ".png"))
         item("m_" + name, cube_model(B + name))

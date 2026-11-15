@@ -54,12 +54,12 @@ public final class PokerCommand implements CommandExecutor {
                     } catch (NumberFormatException ignored) {
                     }
                 }
-                yield plugin.poker().sit(p, buyIn, pos);
+                yield plugin.pokerFor(p).sit(p, buyIn, pos);
             }
-            case "aufstehen", "leave" -> plugin.poker().stand(p.getUniqueId());
-            case "fold", "check", "call", "allin" -> plugin.poker().act(p, sub, 0);
-            case "zeigen", "show" -> plugin.poker().act(p, "show", 0);
-            case "pause", "sitout" -> plugin.poker().act(p, "sitout", 0);
+            case "aufstehen", "leave" -> plugin.pokerFor(p).stand(p.getUniqueId());
+            case "fold", "check", "call", "allin" -> plugin.pokerFor(p).act(p, sub, 0);
+            case "zeigen", "show" -> plugin.pokerFor(p).act(p, "show", 0);
+            case "pause", "sitout" -> plugin.pokerFor(p).act(p, "sitout", 0);
             case "nachkaufen", "rebuy" -> {
                 long bb = plugin.getConfig().getLong("casino.poker.big-blind", 20);
                 long amt = bb * 100;
@@ -70,12 +70,12 @@ public final class PokerCommand implements CommandExecutor {
                         yield "Ungültiger Betrag.";
                     }
                 }
-                yield plugin.poker().topUp(p, amt);
+                yield plugin.pokerFor(p).topUp(p, amt);
             }
             case "raise" -> {
                 if (args.length < 2) yield "Nutzung: /poker raise <Betrag> (Gesamteinsatz in dieser Runde)";
                 try {
-                    yield plugin.poker().act(p, "raise", Long.parseLong(args[1]));
+                    yield plugin.pokerFor(p).act(p, "raise", Long.parseLong(args[1]));
                 } catch (NumberFormatException e) {
                     yield "Ungültiger Betrag.";
                 }

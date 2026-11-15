@@ -3,6 +3,7 @@ package de.kuby.kubyplugins.cinema.scenes;
 import de.kuby.kubyplugins.cinema.Ease;
 import de.kuby.kubyplugins.cinema.Ev;
 import de.kuby.kubyplugins.cinema.Frame;
+import de.kuby.kubyplugins.cinema.Prop;
 import de.kuby.kubyplugins.cinema.Script;
 import de.kuby.kubyplugins.cinema.V3;
 
@@ -13,8 +14,11 @@ import java.util.Random;
  * gleiche Symbol einrastet.
  *
  * <ul>
- *   <li>Kamera fährt langsam auf die letzte Walze zu (leichtes Handkamera-Schwanken), Kinobalken, Vignette in der Farbe
- *       des Symbols, das noch fehlt (Kirsche rot, Banane/Zitrone/Glocke/Münze gold, Klee grün, Diamant blau …)</li>
+ *   <li>Kamera fährt langsam auf die letzte Walze zu (leichtes Handkamera-Schwanken), Kinobalken, weiche farblose
+ *       Vignette (Mitte frei, langer Verlauf)</li>
+ *   <li>Farbe als Licht, wie mit feuchten Augen auf eine Ampel geschaut: auf den beiden gleichen Symbolen weiche
+ *       Lichthöfe mit langen Lichtstreifen in der Farbe des Symbols (Kirsche rot, Banane/Zitrone/Glocke/Münze gold,
+ *       Klee grün, Diamant blau …), die im Herzschlag pulsieren; auf der drehenden Walze flackern Lichter</li>
  *   <li>Herzschlag, der immer schneller wird; darüber das Geklimper von Münzen, die in einen Topf fallen (lauter werdend)</li>
  *   <li>kurz vor dem Einrasten: Stille</li>
  *   <li>Einrasten: harter Schnitt nah ran, weißer Blitz, Krachen, die Kamera wackelt; Gewinn: goldenes Bild und Jubel,
@@ -33,6 +37,8 @@ public final class SlotTension implements Script {
     private static final int AFTER = 38;
 
     private final V3 face, n, r;
+    private final V3[] lights;
+    private final int color;
     private final int snap;
     private final String grade;
     private final boolean win;
@@ -40,8 +46,10 @@ public final class SlotTension implements Script {
     private final long seed;
     private final boolean[] beat;
 
-    public SlotTension(V3 face, V3 front, int snap, String sym, boolean win, String pay, long seed) {
-        this.face = face;
+    public SlotTension(V3[] faces, V3 front, int snap, String sym, boolean win, String pay, long seed) {
+        this.face = faces[2];
+        this.lights = faces;
+        this.color = colorOf(sym);
         this.n = front.flat();
         this.r = n.right();
         this.snap = Math.max(20, snap);
@@ -59,6 +67,23 @@ public final class SlotTension implements Script {
         }
     }
 
+    /** Lichtfarbe je Symbol. */
+    public static int colorOf(String sym) {
+        return switch (sym) {
+            case "cherry" -> 0xFF3A46;
+            case "chip" -> 0xFF4A6A;
+            case "seven" -> 0xFF5A2A;
+            case "lemon" -> 0xFFE45A;
+            case "banana" -> 0xFFD640;
+            case "bell" -> 0xFFB838;
+            case "coin" -> 0xFFC848;
+            case "clover" -> 0x58FF78;
+            case "diamond" -> 0x58C0FF;
+            case "star" -> 0xFFFFFF;
+            default -> 0xFFD08A;
+        };
+    }
+
     /** Farbstimmung je Symbol (Glyphen aus tools/build_cinema.py). */
     public static String gradeOf(String sym) {
         return switch (sym) {
@@ -69,6 +94,46 @@ public final class SlotTension implements Script {
             case "star" -> "white";
             default -> "warm";
         };
+    }
+
+    /** Herzschlag-Puls 0..1 (springt beim Schlag hoch und klingt ab). */
+    private double pulse(int t) {
+        for (int k = 0; k < 10; k++) {
+            int b = t - k;
+            if (b >= 0 && b < beat.length && beat[b]) return Math.exp(-k * 0.45);
+        }
+        return 0;
+    }
+
+    /** Lichthöfe und Lichtstreifen vor den Symbolen (zur Kamera gedreht, leuchtend, in Symbolfarbe). */
+    private void light(int t, Frame fr, Random rnd) {
+        double in = Ease.smooth(Math.min(1, t / 14.0));
+        double out = t > length() - 12 ? Ease.smooth((length() - t) / 12.0) : 1;
+        double fade = in * out;
+        if (fade <= 0.01) return;
+        double p = pulse(t);
+        for (int i = 0; i < 2; i++) {
+            V3 at = lights[i].add(n.mul(0.07));
+            double s = (0.5 + 0.12 * p) * fade;
+            fr.prop(Prop.item("glow" + i, "kuby:fx/glow", at, s).tint(color).lit(15).board(1).snap(2));
+            fr.prop(Prop.item("bloom" + i, "kuby:fx/bloom", at.add(n.mul(0.01)), (0.7 + 0.18 * p) * fade).tint(color).lit(15).board(1).snap(2));
+        }
+        V3 at = face.add(n.mul(0.07));
+        if (t < snap) {
+            // die drehende Walze: Lichter huschen vorbei (heller, kleiner, unruhig)
+            double s = (0.22 + 0.12 * rnd.nextDouble()) * fade;
+            int c = rnd.nextInt(3) == 0 ? color : 0xFFF2D8;
+            fr.prop(Prop.item("glow2", "kuby:fx/glow", at.up((rnd.nextDouble() - 0.5) * 0.18), s).tint(c).lit(15).board(1).snap(1));
+        } else {
+            int a = t - snap;
+            double bloom = win ? 1.25 * Math.exp(-a * 0.06) + 0.55 : 0.5 * Math.exp(-a * 0.15);
+            int c = win ? color : 0x9A9A9A;
+            fr.prop(Prop.item("glow2", "kuby:fx/glow", at, bloom * fade).tint(c).lit(15).board(1).snap(a == 0 ? 0 : 2));
+            fr.prop(Prop.item("bloom2", "kuby:fx/bloom", at.add(n.mul(0.01)), bloom * 1.5 * fade).tint(c).lit(15).board(1)
+                    .snap(a == 0 ? 0 : 2));
+            if (win) fr.prop(Prop.item("star2", "kuby:fx/star", at.add(n.mul(0.02)), (0.35 + 0.25 * Math.exp(-a * 0.1)) * fade)
+                    .tint(color).lit(15).board(1).snap(2));
+        }
     }
 
     @Override
@@ -101,7 +166,8 @@ public final class SlotTension implements Script {
         }
         // Bild
         fr.bars = t < 10 ? Ease.smooth(t / 10.0) : t > length() - 10 ? Ease.smooth((length() - t) / 10.0) : 1;
-        fr.grade = t < snap ? grade : win ? "gold" : "dark";
+        fr.grade = t < snap || win ? "soft" : "dark";
+        light(t, fr, rnd);
         if (t >= snap + 6 && t < length() - 6 && pay != null) fr.cardSub = pay;
         // Ton
         if (t < beat.length && beat[t]) {

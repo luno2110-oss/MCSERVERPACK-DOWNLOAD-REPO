@@ -76,9 +76,12 @@ public final class CasinoCommand implements CommandExecutor {
                 if (!p.hasPermission("kuby.admin")) {
                     Msg.send(p, "<red>Nur Admins können den Poker-Tisch setzen.");
                 } else {
-                    plugin.poker().setTable(p.getLocation());
-                    Msg.send(p, "<green>Poker-Tisch aufgebaut: Mitte da, wo du stehst, die Dealerin an der Seite, auf die du schaust"
-                            + " (Tisch 5,4 x 2,7 Blöcke, sechs Plätze). Spieler: Hocker anklicken oder /poker sitzen <Chips>.");
+                    boolean hr = args.length > 1 && (args[1].equalsIgnoreCase("rot") || args[1].equalsIgnoreCase("weinrot")
+                            || args[1].equalsIgnoreCase("highroller"));
+                    (hr ? plugin.pokerHr() : plugin.poker()).setTable(p.getLocation());
+                    Msg.send(p, "<green>" + (hr ? "High-Roller-Pokertisch (weinrot)" : "Poker-Tisch") + " aufgebaut: Mitte da, wo du stehst,"
+                            + " der Dealer an der Seite, auf die du schaust (Tisch 5,4 x 2,7 Blöcke, sechs Plätze)."
+                            + " Spieler: Hocker anklicken oder /poker sitzen <Chips>." + (hr ? "" : " Weinrot: /casino poker-tisch rot"));
                 }
             }
             case "barkeeper" -> {

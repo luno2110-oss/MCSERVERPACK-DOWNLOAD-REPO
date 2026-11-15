@@ -10,8 +10,8 @@ import java.util.List;
  *   <li>Ausholen: die Walze ruckt kurz zurück (der Hebel spannt die Feder)</li>
  *   <li>Anlauf und schnelles Drehen (verwischte Symbole)</li>
  *   <li>normal: Abbremsen und Einrasten mit Überschwingen und Zurückfedern (Bounce)</li>
- *   <li>Spannung (zwei gleiche auf den ersten Walzen): Abbremsen auf Kriechgang, Symbol für Symbol schleicht vorbei,
- *       dann rastet die Walze PLÖTZLICH ein (harter Stopp, kräftiges Überschwingen)</li>
+ *   <li>Spannung (zwei gleiche auf den ersten Walzen): die letzte Walze dreht im vollen Tempo einfach länger und
+ *       rastet dann PLÖTZLICH ein (Stopp in 3 Ticks, kräftiges Überschwingen)</li>
  * </ol>
  * Die Strecke wird so gestreckt, dass die Walze genau auf dem Zielsymbol landet.
  */
@@ -38,7 +38,7 @@ public final class SlotSpin {
      * @param from    Startwinkel
      * @param to      Zielwinkel (Zielsymbol auf der Linie, bis auf volle Umdrehungen)
      * @param arrive  Tick des Einrastens
-     * @param crawlAt Tick, ab dem die Walze im Kriechgang schleicht (Spannung), -1 = normal
+     * @param crawlAt > 0: Spannung (länger drehen, plötzlicher Stopp), -1 = normal
      */
     public static SlotSpin plan(double from, double to, int arrive, int crawlAt) {
         boolean tension = crawlAt > 0 && crawlAt < arrive - 8;
@@ -69,27 +69,17 @@ public final class SlotSpin {
                 scalable.add(true);
             }
         } else {
-            double crawl = 4.0;
-            int slow = 10;
-            int cruise = Math.max(4, crawlAt - v.size() - slow);
+            // Spannung: die letzte Walze dreht im vollen Tempo einfach länger und rastet dann PLÖTZLICH ein
+            int stop = 3;
+            int cruise = Math.max(4, arrive - v.size() - stop);
             for (int i = 0; i < cruise; i++) {
                 v.add(vmax);
                 scalable.add(true);
             }
-            for (int i = 1; i <= slow; i++) {
-                double u = i / (double) slow;
-                v.add(crawl + (vmax - crawl) * (1 - u) * (1 - u));
+            for (double w : new double[]{vmax * 0.55, vmax * 0.25, vmax * 0.08}) {
+                v.add(w);
                 scalable.add(true);
             }
-            // Kriechgang (fest, damit jedes Symbol gleich lang vorbeischleicht), am Ende kein Abbremsen
-            int n = Math.max(8, arrive - v.size());
-            for (int i = 0; i < n; i++) {
-                v.add(crawl);
-                scalable.add(false);
-            }
-            // und dann plötzlich: ein harter Ruck ins Raster
-            v.add(12.0);
-            scalable.add(false);
         }
         double over = tension ? 13 : 7;
         // gewünschte Strecke bis zum Einrasten: Ziel + Überschwingen, so viele Umdrehungen, wie zur Kurve passen

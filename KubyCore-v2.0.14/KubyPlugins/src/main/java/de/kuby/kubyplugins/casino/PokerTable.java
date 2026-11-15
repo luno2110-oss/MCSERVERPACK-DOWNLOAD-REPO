@@ -74,6 +74,14 @@ public final class PokerTable {
     private final ItemDisplay[] timer = new ItemDisplay[SEATS];
     private final int[] hovered = {-1, -1, -1, -1, -1, -1};
 
+    private boolean highRoller;
+
+    /** Weinroter High-Roller-Tisch (höhere Blinds). */
+    public PokerTable highRoller(boolean hr) {
+        this.highRoller = hr;
+        return this;
+    }
+
     public PokerTable(org.bukkit.plugin.Plugin plugin, String id, Location origin, float yaw, NamespacedKey tag, NamespacedKey click) {
         this.plugin = plugin;
         this.id = id;
@@ -232,7 +240,7 @@ public final class PokerTable {
         // Filz: Textur 512 x 256 = Länge 2(S+R) x Breite 2R
         double L = 2 * (S + R);
         w.spawn(origin.clone().add(0, FELT_Y, 0), ItemDisplay.class, e -> {
-            e.setItemStack(BlackjackTable.model("pk_felt"));
+            e.setItemStack(BlackjackTable.model(highRoller ? "pk_felt_red" : "pk_felt"));
             e.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
             // Element 16 x 8 (x 0..16, z 4..12) -> Skala L in beide Richtungen ergibt L x L/2
             e.setTransformation(new Transformation(new Vector3f(), new Quaternionf().rotateY(a0 + (float) Math.PI),

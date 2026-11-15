@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.73** (ungetestet, nicht kompiliert)
+Stand: **v1.74** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -558,6 +558,12 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
 ## Casino fertigstellen (v1.68)
+- [x] **v1.74 Weinrote High-Roller-Tische** (`/casino blackjack tisch [Radius] rot`, `/casino poker-tisch rot`)
+  - [x] Weinroter Filz (Pixel-Look) für Blackjack und Poker („HIGH ROLLER“ auf dem Pokerfilz und über dem Tisch), gleicher Dealer
+  - [x] Blackjack: Einsatz 500 bis 250.000 (`casino.blackjack.hr-min-bet` / `hr-max-bet`), Chip-Rack 500 bis 100.000, eigenes Spiel `blackjack_hr`; Siegesserie +0,5x je Sieg bis **x8** (`casino.highroller.serie-schritt` / `serie-max`, Obergrenze aller Boni 16), Juwelen für VIP wie am normalen Tisch
+  - [x] Poker: zweiter, eigenständiger Tisch (`poker-rot.yml`, Blinds 250/500 in `casino.poker-rot`, sonst wie `casino.poker`); `/poker …` wirkt am Tisch, an dem man sitzt (sonst am nächsten); Poker hat keine Siegesserie (das Geld kommt von den Mitspielern, nicht von der Bank)
+  - [x] Selbsttest: Serie x8 nach 14 Siegen, normal weiter x2,5, Juwelen am High-Roller-Blackjack
+- [x] **v1.74 Slots nach Feedback:** letzte Walze dreht bei zwei gleichen einfach länger im vollen Tempo (statt Kriechgang) und rastet dann plötzlich ein; Vignette weich und farblos (neue Stimmung `soft`: Mitte frei, langer gleichmäßiger Verlauf); Farbe jetzt als Licht wie durch feuchte Augen auf eine Ampel: Lichthöfe mit langen Lichtstreifen (`kuby:fx/bloom`) in Symbolfarbe auf den beiden gleichen Symbolen, im Herzschlag pulsierend, flackernde Lichter auf der drehenden Walze, beim Einrasten blüht das Licht auf (Gewinn: hell + Stern, Verlust: verglimmt)
 - [x] **v1.73 Slots wie in Vegas** (Idee des Besitzers)
   - [x] Echte Walzen: jede Walze eine Trommel aus 10 Symbol-Kacheln (`kuby:casino/sr_<symbol>`, Kachel liegt im Modell um die Walzenachse, die Anzeige dreht um ihre Mitte → der Client dreht sauber auf dem Kreis); jede Walze hat ihre eigene Symbol-Reihenfolge, oben und unten sieht man die Nachbarn
   - [x] Bewegung (`casino/SlotSpin`): Zurückrucken beim Hebel, Anlauf, schnelles Drehen mit verwischten Symbolen, Abbremsen, Einrasten mit Überschwingen und Zurückfedern (Bounce); landet genau auf dem ausgelosten Symbol (Gewinnchancen unverändert)

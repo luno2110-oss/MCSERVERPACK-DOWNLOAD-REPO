@@ -106,7 +106,7 @@ public final class Cinema implements Listener {
     static final int GRADE_ADV = 2801;
     static final char TOP = '', BOTTOM = '', FLASH = '';
     static final Map<String, Character> GRADES = Map.of("red", '', "warm", '', "space", '', "dark", '',
-            "gold", '', "white", '', "cold", '', "purple", '', "green", '');
+            "gold", '', "white", '', "cold", '', "purple", '', "green", '', "soft", '');
 
     private static final Set<UUID> BUSY = ConcurrentHashMap.newKeySet();
 

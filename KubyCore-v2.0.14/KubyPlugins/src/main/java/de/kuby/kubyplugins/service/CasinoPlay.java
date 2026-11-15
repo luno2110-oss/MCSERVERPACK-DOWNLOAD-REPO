@@ -96,7 +96,8 @@ public final class CasinoPlay {
     public boolean jewelGame(String game) {
         java.util.List<String> l = plugin.getConfig().getStringList("casino.juwelen.spiele");
         if (l.isEmpty()) l = java.util.List.of("blackjack");
-        for (String g : l) if (g.equalsIgnoreCase(game)) return true;
+        String base = game.endsWith("_hr") ? game.substring(0, game.length() - 3) : game;
+        for (String g : l) if (g.equalsIgnoreCase(base)) return true;
         return false;
     }
 
@@ -145,10 +146,24 @@ public final class CasinoPlay {
         };
     }
 
-    /** Serien-Multiplikator für den Sieg nach n Siegen in Folge. */
+    /** Serien-Multiplikator für den Sieg nach n Siegen in Folge (normale Tische). */
     public double streakMult(int winsBefore) {
-        double step = cfg("serie-schritt", 0.2);
-        double max = cfg("serie-max", 2.5);
+        return streakMult("", winsBefore);
+    }
+
+    /** High-Roller-Spiel (weinroter Tisch): Name endet auf _hr. */
+    public static boolean highRoller(String game) {
+        return game != null && game.endsWith("_hr");
+    }
+
+    /**
+     * Serien-Multiplikator je Spiel: normal +0,2x je Sieg bis x2,5, an High-Roller-Tischen +0,5x bis x8
+     * (casino.highroller.serie-schritt / serie-max).
+     */
+    public double streakMult(String game, int winsBefore) {
+        boolean hr = highRoller(game);
+        double step = hr ? plugin.getConfig().getDouble("casino.highroller.serie-schritt", 0.5) : cfg("serie-schritt", 0.2);
+        double max = hr ? plugin.getConfig().getDouble("casino.highroller.serie-max", 8.0) : cfg("serie-max", 2.5);
         return Math.min(max, 1.0 + step * Math.max(0, winsBefore));
     }
 
@@ -407,7 +422,7 @@ public final class CasinoPlay {
         int newStreak = before;
         if (gross > stake) {
             long profit = gross - stake;
-            mult = streakMult(before);
+            mult = streakMult(game, before);
             if (golden()) {
                 golden = true;
                 mult *= goldenFactor();
@@ -416,7 +431,8 @@ public final class CasinoPlay {
                 comeback = true;
                 mult += cfg("comeback-bonus", 0.25);
             }
-            mult = Math.min(mult, cfg("max-gesamt", 6.0));
+            mult = Math.min(mult, highRoller(game) ? plugin.getConfig().getDouble("casino.highroller.max-gesamt", 16.0)
+                    : cfg("max-gesamt", 6.0));
             bonus = Math.round(profit * (mult - 1));
             newStreak = before + 1;
             streak.put(id, newStreak);

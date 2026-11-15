@@ -49,9 +49,12 @@ public final class Scene {
                 for (int i = 0; i < 3; i++) spin[i] = de.kuby.kubyplugins.casino.SlotSpin.plan(m.reelAngle(i),
                         SlotMachine.stopAngle(i, SlotMachine.SYMBOLS[result[i]]), arrive[i], tension && i == 2 ? arrive[1] + 6 : -1);
                 int start = spin[1].arrive;
-                Location face = m.reelFront(2);
-                var script = new de.kuby.kubyplugins.cinema.scenes.SlotTension(
-                        new de.kuby.kubyplugins.cinema.V3(face.getX(), face.getY(), face.getZ()),
+                de.kuby.kubyplugins.cinema.V3[] faces = new de.kuby.kubyplugins.cinema.V3[3];
+                for (int i = 0; i < 3; i++) {
+                    Location f = m.reelFront(i);
+                    faces[i] = new de.kuby.kubyplugins.cinema.V3(f.getX(), f.getY(), f.getZ());
+                }
+                var script = new de.kuby.kubyplugins.cinema.scenes.SlotTension(faces,
                         new de.kuby.kubyplugins.cinema.V3(0, 0, 1), spin[2].arrive - start, SlotMachine.SYMBOLS[result[0]], win, null, 1);
                 int end = Math.max(spin[2].length() + 30, tension ? start + script.length() : 0);
                 java.util.Random rnd = new java.util.Random(3);
@@ -99,6 +102,7 @@ public final class Scene {
                     String grade = "-";
                     double bars = 0;
                     boolean flash = false;
+                    String lights = "";
                     if (tension && t >= start && t - start < script.length()) {
                         de.kuby.kubyplugins.cinema.Frame fr = new de.kuby.kubyplugins.cinema.Frame();
                         script.frame(t - start, fr);
@@ -112,8 +116,14 @@ public final class Scene {
                         grade = fr.grade == null ? "-" : fr.grade;
                         bars = fr.bars;
                         for (Object ev : fr.events) if (ev instanceof de.kuby.kubyplugins.cinema.Ev.Flash) flash = true;
+                        StringBuilder lp = new StringBuilder();
+                        for (de.kuby.kubyplugins.cinema.Prop pr : fr.props) {
+                            lp.append(String.format(java.util.Locale.ROOT, " %s:%.4f:%.4f:%.4f:%.4f:%06x", pr.what().replace("kuby:fx/", ""),
+                                    pr.pos().x(), pr.pos().y(), pr.pos().z(), pr.scale().x(), pr.color() & 0xFFFFFF));
+                        }
+                        lights = lp.toString();
                     }
-                    cams.append(String.format(java.util.Locale.ROOT, "%d %.4f %.4f %.4f %.4f %.4f %.4f %s %.3f %b%n", t, cx, cy, cz, lx, ly, lz, grade, bars, flash));
+                    cams.append(String.format(java.util.Locale.ROOT, "%d %.4f %.4f %.4f %.4f %.4f %.4f %s %.3f %b%s%n", t, cx, cy, cz, lx, ly, lz, grade, bars, flash, lights));
                 }
                 try (FileWriter fw = new FileWriter(dir + "/cams.txt")) {
                     fw.write(cams.toString());
@@ -160,8 +170,9 @@ public final class Scene {
                     });
                 }
             }
-            case "blackjack" -> {
-                BlackjackTable t = new BlackjackTable(Mock.plugin(), "b1", new Location(w, 0.5, 0, 0.5), 0f, 3.0, tag, click);
+            case "blackjack", "blackjack_rot" -> {
+                BlackjackTable t = new BlackjackTable(Mock.plugin(), "b1", new Location(w, 0.5, 0, 0.5), 0f, 3.0, tag, click)
+                        .highRoller(args[0].endsWith("rot"));
                 t.build();
                 t.card(2, 0, 0, new BjCards.Card(13, 'c'), 1);
                 t.card(2, 0, 1, new BjCards.Card(4, 'd'), 1);
@@ -184,9 +195,9 @@ public final class Scene {
                 t.seatText(0, Component.text("Freier Platz", NamedTextColor.GOLD));
                 Mock.runLater();
             }
-            case "poker" -> {
+            case "poker", "poker_rot" -> {
                 de.kuby.kubyplugins.casino.PokerTable t = new de.kuby.kubyplugins.casino.PokerTable(Mock.plugin(), "pk",
-                        new Location(w, 0.5, 0, 0.5), 0f, tag, click);
+                        new Location(w, 0.5, 0, 0.5), 0f, tag, click).highRoller(args[0].endsWith("rot"));
                 t.build();
                 for (int i = 0; i < 6; i++) t.holeCards(i, null, new String[]{"ah", "kd"});
                 t.reveal(1);

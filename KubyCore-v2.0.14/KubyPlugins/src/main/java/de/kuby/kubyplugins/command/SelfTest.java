@@ -608,6 +608,20 @@ final class SelfTest {
             fails.add("Casino-Währung: " + t);
         }
 
+        // High-Roller (weinrot): Serie +0,5x bis x8, normal bis x2,5; Juwelen auch am High-Roller-Blackjack
+        try {
+            var cp = plugin.casinoPlay();
+            if (cp != null) {
+                if (Math.abs(cp.streakMult("blackjack_hr", 14) - 8.0) > 1e-9) fails.add("High-Roller-Serie nach 14 Siegen: " + cp.streakMult("blackjack_hr", 14));
+                if (cp.streakMult("blackjack_hr", 30) > 8.0) fails.add("High-Roller-Serie über x8");
+                if (Math.abs(cp.streakMult("blackjack", 30) - 2.5) > 1e-9) fails.add("normale Serie nicht bei x2,5: " + cp.streakMult("blackjack", 30));
+                if (!cp.jewelGame("blackjack_hr")) fails.add("High-Roller-Blackjack erlaubt keine Juwelen");
+            }
+            if (plugin.pokerHr() == null || !plugin.pokerHr().isHighRoller()) fails.add("High-Roller-Pokertisch fehlt");
+        } catch (Throwable t) {
+            fails.add("High-Roller: " + t);
+        }
+
         // OP-Werkzeuge: jedes lässt sich bauen und trägt seine Art; jedes Shop-Angebot mit Werkzeug kennt es
         try {
             for (String k : de.kuby.kubyplugins.tools.SpecialTools.all().keySet()) {

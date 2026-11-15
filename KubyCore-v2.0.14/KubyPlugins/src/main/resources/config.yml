@@ -149,6 +149,11 @@ casino:
     comeback-ab: 3
     comeback-bonus: 0.25
     max-gesamt: 6.0             # Obergrenze aller Faktoren zusammen (Serie x Goldene Zeit + Comeback)
+  # Weinrote High-Roller-Tische (/casino blackjack tisch [Radius] rot, /casino poker-tisch rot)
+  highroller:
+    serie-schritt: 0.5          # je Sieg in Folge +0,5x (1. Sieg x1, 15. Sieg x8)
+    serie-max: 8.0
+    max-gesamt: 16.0
   # Goldene Zeit: jeden Tag von "von" bis "bis" Uhr (Europe/Berlin) werden Gewinne mit "faktor" multipliziert
   goldene-zeit:
     aktiv: true
@@ -170,9 +175,14 @@ casino:
     min-buyin-bb: 40
     max-buyin-bb: 200
     turn-seconds: 30
+  poker-rot:                    # weinroter High-Roller-Pokertisch (fehlende Werte wie bei poker)
+    small-blind: 250
+    big-blind: 500
   blackjack:
     min-bet: 10
     max-bet: 10000              # je Platz und Runde (vor Doppeln/Teilen)
+    hr-min-bet: 500             # weinroter High-Roller-Tisch
+    hr-max-bet: 250000
     bet-seconds: 8              # Countdown nach dem ersten Einsatz
     turn-seconds: 15            # Zeit pro Zug, danach wird gehalten
   roulette:

@@ -26,7 +26,10 @@ import java.util.UUID;
 public final class BlackjackGame {
 
     public static final long[] RACK = {10, 50, 100, 500, 1000, 5000};
-    static final String GAME = "blackjack";
+    /** Chips am weinroten High-Roller-Tisch. */
+    public static final long[] RACK_HR = {500, 1000, 5000, 10000, 50000, 100000};
+    /** "blackjack" oder "blackjack_hr" (High-Roller): Serie, Limits und Abrechnung je Tischart. */
+    final String GAME;
 
     private enum Phase { IDLE, BETTING, DEALING, PLAYING, DEALER, SETTLE }
 
@@ -67,6 +70,7 @@ public final class BlackjackGame {
         this.plugin = plugin;
         this.table = table;
         this.name = name;
+        this.GAME = table.isHighRoller() ? "blackjack_hr" : "blackjack";
         for (int i = 0; i < seats.length; i++) seats[i] = new Seat();
     }
 
@@ -122,7 +126,7 @@ public final class BlackjackGame {
                     + (plugin.casinoPlay().golden() ? " <gold>✦ Goldene Zeit: Gewinne x" + de.kuby.kubyplugins.service.CasinoPlay.fmt(plugin.casinoPlay().goldenFactor()) : "")));
             int st = plugin.casinoPlay().streak(p.getUniqueId());
             if (st >= 1) table.streak(seat, Msg.parse("<#FF8A3D>🔥 Serie " + st + " <gray>· nächster Sieg <white>x"
-                    + de.kuby.kubyplugins.service.CasinoPlay.fmt(plugin.casinoPlay().streakMult(st))));
+                    + de.kuby.kubyplugins.service.CasinoPlay.fmt(plugin.casinoPlay().streakMult(GAME, st))));
         } else {
             p.sendActionBar(Msg.parse("<gray>Du sitzt am <white>" + name + "</white>. Die nächste Runde beginnt gleich."));
         }
@@ -194,11 +198,13 @@ public final class BlackjackGame {
     // =================================================================================================================
 
     private long maxBet() {
-        return plugin.getConfig().getLong("casino.blackjack.max-bet", 10_000);
+        return table.isHighRoller() ? plugin.getConfig().getLong("casino.blackjack.hr-max-bet", 250_000)
+                : plugin.getConfig().getLong("casino.blackjack.max-bet", 10_000);
     }
 
     private long minBet() {
-        return plugin.getConfig().getLong("casino.blackjack.min-bet", 10);
+        return table.isHighRoller() ? plugin.getConfig().getLong("casino.blackjack.hr-min-bet", 500)
+                : plugin.getConfig().getLong("casino.blackjack.min-bet", 10);
     }
 
     private long totalBets() {
@@ -657,7 +663,7 @@ public final class BlackjackGame {
             if (o != null) {
                 String bl = de.kuby.kubyplugins.service.CasinoPlay.bonusLine(o);
                 if (o.win()) table.streak(i, Msg.parse(bl.isEmpty() ? "<gray>Nächster Sieg: <white>x"
-                        + de.kuby.kubyplugins.service.CasinoPlay.fmt(plugin.casinoPlay().streakMult(o.streak())) : bl));
+                        + de.kuby.kubyplugins.service.CasinoPlay.fmt(plugin.casinoPlay().streakMult(GAME, o.streak())) : bl));
                 else if (!o.push()) table.streak(i, Msg.parse(o.cashback() > 0 ? "<aqua>+" + CasinoText.num(o.cashback()) + " Cashback" : ""));
             }
             if (net > 0) table.glow(i, best.equals("Blackjack!") ? 0xFFD34D : 0x7CFF9A);
@@ -727,7 +733,7 @@ public final class BlackjackGame {
                 showRack(i);
                 int st = plugin.casinoPlay().streak(seats[i].player);
                 table.streak(i, st >= 1 ? Msg.parse("<#FF8A3D>🔥 Serie " + st + " <gray>· nächster Sieg <white>x"
-                        + de.kuby.kubyplugins.service.CasinoPlay.fmt(plugin.casinoPlay().streakMult(st))) : Component.empty());
+                        + de.kuby.kubyplugins.service.CasinoPlay.fmt(plugin.casinoPlay().streakMult(GAME, st))) : Component.empty());
             } else {
                 table.streak(i, Component.empty());
             }
@@ -829,7 +835,7 @@ public final class BlackjackGame {
         Seat s = seats[seat];
         if (s.player == null) return;
         s.jewels = plugin.casinoPlay().cur(s.player, GAME) == de.kuby.kubyplugins.service.CasinoPlay.Cur.JEWELS;
-        s.rackValues = plugin.casinoPlay().rack(s.player, GAME, RACK);
+        s.rackValues = plugin.casinoPlay().rack(s.player, GAME, table.isHighRoller() ? RACK_HR : RACK);
         table.rack(seat, s.rackValues, s.jewels);
         showControls(seat);
     }

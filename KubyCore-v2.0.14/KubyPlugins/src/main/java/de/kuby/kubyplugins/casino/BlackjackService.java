@@ -82,8 +82,11 @@ public final class BlackjackService implements Listener {
         if (w == null) return null;
         try {
             Location o = new Location(w, Double.parseDouble(p[1]), Double.parseDouble(p[2]), Double.parseDouble(p[3]));
-            BlackjackTable table = new BlackjackTable(plugin, id, o, Float.parseFloat(p[4]), Double.parseDouble(p[5]), tag, click);
-            g = new BlackjackGame(plugin, table, "Blackjack-Tisch " + (new ArrayList<>(raw.keySet()).indexOf(id) + 1));
+            boolean hr = p.length >= 7 && p[6].equals("rot");
+            BlackjackTable table = new BlackjackTable(plugin, id, o, Float.parseFloat(p[4]), Double.parseDouble(p[5]), tag, click)
+                    .highRoller(hr);
+            g = new BlackjackGame(plugin, table, (hr ? "High-Roller-Tisch " : "Blackjack-Tisch ")
+                    + (new ArrayList<>(raw.keySet()).indexOf(id) + 1));
             games.put(id, g);
             return g;
         } catch (NumberFormatException e) {
@@ -290,17 +293,26 @@ public final class BlackjackService implements Listener {
         switch (sub) {
             case "tisch" -> {
                 double radius = 3.0;
-                try {
-                    if (args.length > 2) radius = Math.max(2.2, Math.min(4.5, Double.parseDouble(args[2].replace(',', '.'))));
-                } catch (NumberFormatException ex) {
-                    Msg.send(p, "<red>Nutzung: /casino blackjack tisch [Radius 2,2–4,5]");
-                    return;
+                boolean hr = false;
+                for (int i = 2; i < args.length; i++) {
+                    String a = args[i].toLowerCase();
+                    if (a.equals("rot") || a.equals("weinrot") || a.equals("highroller")) {
+                        hr = true;
+                        continue;
+                    }
+                    try {
+                        radius = Math.max(2.2, Math.min(4.5, Double.parseDouble(a.replace(',', '.'))));
+                    } catch (NumberFormatException ex) {
+                        Msg.send(p, "<red>Nutzung: /casino blackjack tisch [Radius 2,2–4,5] [rot]");
+                        return;
+                    }
                 }
                 Location l = p.getLocation();
                 float yaw = Math.round(l.getYaw() / 45f) * 45f;
                 Location o = new Location(l.getWorld(), l.getBlockX() + 0.5, l.getBlockY(), l.getBlockZ() + 0.5);
                 String id = "t" + System.currentTimeMillis() % 100000;
-                raw.put(id, o.getWorld().getName() + ";" + o.getX() + ";" + o.getY() + ";" + o.getZ() + ";" + yaw + ";" + radius);
+                raw.put(id, o.getWorld().getName() + ";" + o.getX() + ";" + o.getY() + ";" + o.getZ() + ";" + yaw + ";" + radius
+                        + (hr ? ";rot" : ""));
                 saveEscrow();
                 BlackjackGame g = load(id);
                 if (g != null) {

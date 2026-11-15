@@ -101,6 +101,18 @@ public final class BlackjackTable {
         }
     }
 
+    /** Weinroter High-Roller-Tisch (höhere Einsätze, Serie bis x8). */
+    private boolean highRoller;
+
+    public BlackjackTable highRoller(boolean hr) {
+        this.highRoller = hr;
+        return this;
+    }
+
+    public boolean isHighRoller() {
+        return highRoller;
+    }
+
     public BlackjackTable(org.bukkit.plugin.Plugin plugin, String id, Location origin, float yaw, double radius,
                           NamespacedKey tag, NamespacedKey click) {
         this.plugin = plugin;
@@ -236,7 +248,7 @@ public final class BlackjackTable {
         removeAll();
         // Filz: eine Fläche, Halbkreis mit Radius R, Bankkante bei z = 0
         origin.getWorld().spawn(origin.clone().add(0, FELT_Y, 0), ItemDisplay.class, e -> {
-            e.setItemStack(model("bj_felt"));
+            e.setItemStack(model(highRoller ? "bj_felt_red" : "bj_felt"));
             e.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
             e.setTransformation(new Transformation(new Vector3f(), facing(fwd()),
                     new Vector3f((float) (2 * radius), 1f, (float) (2 * radius)), new Quaternionf()));

@@ -64,7 +64,7 @@ public final class CasinoAdmin {
                 + " " + mark("Roulette", plugin.roulette().hasTable())
                 + " " + mark("Slots", plugin.slots().hasMachine())
                 + " " + mark("Crash", plugin.crash().hasScreen())
-                + " " + mark("Poker", plugin.poker().hasTable())));
+                + " " + mark("Poker", plugin.poker().hasTable()) + " " + mark("Poker rot", plugin.pokerHr().hasTable())));
 
         StringBuilder payout = new StringBuilder("<red><b>AUSZAHLUNG</b></red>");
         Map<String, CasinoLog.Totals> totals = plugin.casinoLog().totals();

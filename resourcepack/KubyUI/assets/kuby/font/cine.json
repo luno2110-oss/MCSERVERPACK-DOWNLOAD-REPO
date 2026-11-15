@@ -167,6 +167,15 @@
    "chars": [
     ""
    ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:cine/grade_soft.png",
+   "height": 700,
+   "ascent": 560,
+   "chars": [
+    ""
+   ]
   }
  ]
 }

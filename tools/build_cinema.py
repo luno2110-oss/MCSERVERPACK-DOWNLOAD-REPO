@@ -518,6 +518,29 @@ def build_fx():
     save(radial(64, flare), "fx/flare")
     write("models/fx/flare.json", quad_face("kuby:fx/flare"))
     item_def("fx/flare", "kuby:fx/flare", tint=True)
+    # Bloom (Slots): Licht wie durch feuchte Augen auf eine Ampel – weicher Kern, langer waagerechter Lichtstreifen,
+    # kürzerer senkrechter, schwacher Hof; sehr weich auslaufend (64 x 64, Breite 4:1 im Modell gestreckt)
+    W2, H2 = 128, 64
+
+    def bloom(x, y):
+        dx, dy = (x + 0.5 - W2 / 2) / (W2 / 2), (y + 0.5 - H2 / 2) / (H2 / 2)
+        r = math.hypot(dx * 2, dy)
+        core = max(0.0, 1 - r * 1.15) ** 2.4
+        halo = 0.35 * max(0.0, 1 - abs(r - 0.55) / 0.35) ** 2 * max(0.0, 1 - r)
+        streak_h = max(0.0, 1 - abs(dx)) ** 2.6 * math.exp(-(dy * 9) ** 2) * 0.85
+        streak_v = max(0.0, 1 - abs(dy)) ** 3 * math.exp(-(dx * 26) ** 2) * 0.45
+        a = min(1.0, core + halo + streak_h + streak_v)
+        return (255, 255, 255, int(255 * a) if a >= 0.03 else 0)
+    im = Image.new("RGBA", (W2, H2))
+    for y in range(H2):
+        for x in range(W2):
+            im.putpixel((x, y), bloom(x, y))
+    save(im, "fx/bloom")
+    q = quad_face("kuby:fx/bloom")
+    q["elements"][0]["from"] = [-8, 4, 8]
+    q["elements"][0]["to"] = [24, 12, 8]
+    write("models/fx/bloom.json", q)
+    item_def("fx/bloom", "kuby:fx/bloom", tint=True)
     # Stern: stachelig wie ein RPG-Stern (Kern + 14 Strahlen), glühende Farben von innen
     st = Image.new("RGBA", (16, 16))
     for y in range(16):
@@ -580,9 +603,11 @@ def build_fonts():
         "cold": ((90, 150, 255), (5, 15, 45), 0.12, 0.55),
         "purple": ((150, 60, 230), (25, 0, 45), 0.14, 0.58),
         "green": ((80, 220, 110), (4, 40, 12), 0.12, 0.56),
+        # weiche, farblose Vignette (Slots): Mitte frei, gleichmäßiger, langer Verlauf zum Rand
+        "soft": ((0, 0, 0), (0, 0, 0), 0.0, 0.5),
     }
     codes = {"red": 0xE030, "warm": 0xE031, "space": 0xE032, "dark": 0xE033, "gold": 0xE034, "white": 0xE035, "cold": 0xE036,
-             "purple": 0xE037, "green": 0xE038}
+             "purple": 0xE037, "green": 0xE038, "soft": 0xE039}
     for name, (cm, ce, am, ae) in grades.items():
         W, H = 256, 64
         im = Image.new("RGBA", (W, H))
@@ -592,10 +617,14 @@ def build_fonts():
                 u = (x + 0.5 - W / 2) / (W * 0.21)
                 v = (y + 0.5 - H / 2) / (H * 0.4)
                 r = min(1.6, math.hypot(u, v * 1.05))
-                k = max(0, min(1, (r - 0.55) / 0.85)) ** 1.5
+                if name == "soft":
+                    q = max(0, min(1, (r - 0.3) / 1.2))
+                    k = q * q * (3 - 2 * q)
+                else:
+                    k = max(0, min(1, (r - 0.55) / 0.85)) ** 1.5
                 a = am + (ae - am) * k
                 c = tuple(int(cm[i] + (ce[i] - cm[i]) * k) for i in range(3))
-                im.putpixel((x, y), c + (int(255 * a) if a >= 0.1 else 0,))
+                im.putpixel((x, y), c + (int(255 * a) if a >= (0.02 if name == "soft" else 0.1) else 0,))
         save(im, "cine/grade_" + name)
         prov.append({"type": "bitmap", "file": "kuby:cine/grade_%s.png" % name, "height": 700, "ascent": 560, "chars": [chr(codes[name])]})
     write("font/cine.json", {"providers": prov})
