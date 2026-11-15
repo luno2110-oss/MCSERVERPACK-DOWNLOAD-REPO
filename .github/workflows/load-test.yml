@@ -195,10 +195,16 @@ jobs:
                   if len(a) == 2: ids["#" + a[0]] = a[1]
           except OSError:
               pass
+          # Versatz zwischen gelesener ID und Register-ID mit dem Eichton bestimmen (block.beacon.activate)
+          def shifted(k, d):
+              return ids.get("#%d" % (int(k[1:]) + d), k) if k.startswith("#") else k
+          shift = max((-1, 0, 1), key=lambda d: sum(v for k, v in snd_raw.items() if shifted(k, d) == "block.beacon.activate"))
+          calib = sum(v for k, v in snd_raw.items() if shifted(k, shift) == "block.beacon.activate")
           snd = {}
           for k, v in snd_raw.items():
-              name = ids.get(k, k)
+              name = shifted(k, shift)
               snd[name] = snd.get(name, 0) + v
+          if snd_raw and calib == 0: probs.append("Casino-SFX: Eichton nicht gefunden, Ton-Namen unsicher")
           if snd_raw and not ids: probs.append("Casino-SFX: sound-ids.txt fehlt, Töne nicht zuzuordnen")
           sfx = [("Karte austeilen", ["item.book.page_turn", "entity.player.attack.sweep"]),
                  ("Chip setzen / Stapel", ["block.amethyst_cluster.hit", "block.chain.place"]),
@@ -229,7 +235,7 @@ jobs:
           print("- Angel-Minispiel: %d Runden gestartet, %d beendet (%s); am Server angekommen: %d Linksklicks, %d Rechtsklicks, %d Ticks A, %d Ticks D; Bots spielten %d Runden, Tasten-Pakete %d%s" % (gstarted, len(games), ", ".join("%s %d" % kv for kv in gout.items()) or "keine", gsum[0], gsum[1], gsum[2], gsum[3], r.get("games", 0), r.get("inputPackets", 0), (" (Fehler: %s)" % r["inputErrors"]) if r.get("inputErrors") else ""))
           print(casino_line)
           if bonus: print("  - Boni/Trost im Spieltest: " + ", ".join(sorted(set(bonus))[:8]))
-          print("- Casino-SFX (bei den Bots angekommene Ton-Pakete während des Spieltests): %d Töne, %d verschiedene" % (sum(snd.values()), len(snd)))
+          print("- Casino-SFX (bei den Bots angekommene Ton-Pakete während des Spieltests): %d Töne, %d verschiedene; Eichton %d× erkannt (Versatz %+d)" % (sum(snd.values()), len(snd), calib, shift))
           for name, n_, keys in sfx_rows: print("  - %s %s: %d" % ("✅" if n_ else "⬜", name, n_))
           print("  - häufigste: " + ", ".join("%s %d" % kv for kv in sorted(snd.items(), key=lambda kv: -kv[1])[:12]))
           print("- Casino-Regeltest (echter Spieler, echte Abrechnung): %s" % (rres[-1] if rres else "nicht beendet"))

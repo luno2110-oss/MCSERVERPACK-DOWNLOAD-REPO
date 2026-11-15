@@ -64,7 +64,7 @@ function create(i, again) {
     const h = packet.sound;
     let n = null;
     if (h && h.data && h.data.soundName) n = h.data.soundName;
-    else if (h && h.soundId !== undefined) n = '#' + (h.soundId - 1);   // Register-ID; Name aus sound-ids.txt vom Server
+    else if (h && h.soundId !== undefined) n = '#' + h.soundId;   // ID wie gelesen; Name und Versatz löst die Auswertung (Eichton)
     if (!n) return;
     n = String(n).replace(/^minecraft:/, '');
     stats.casinoSounds = stats.casinoSounds || {};

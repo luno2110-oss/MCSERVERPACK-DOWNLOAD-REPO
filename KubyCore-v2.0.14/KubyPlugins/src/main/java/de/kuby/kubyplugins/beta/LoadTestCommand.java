@@ -207,6 +207,8 @@ public final class LoadTestCommand implements CommandExecutor {
         for (Player p : players) {
             CASINO.add(p.getUniqueId());
             p.sendMessage("[Casino-Test] Pause für den Spieltest (" + seconds + " s)");
+            // Eichton für die Ton-Auswertung der CI (eindeutig, spielt sonst nirgends im Casino)
+            plugin.getServer().getScheduler().runTaskLater(plugin, () -> p.playSound(p.getLocation(), org.bukkit.Sound.BLOCK_BEACON_ACTIVATE, 0.4f, 1f), 10L);
             if (!"survival".equals(plugin.modes().modeOf(p.getUniqueId()))) plugin.modes().switchTo(p, "survival");
             plugin.casino().giveChips(p.getUniqueId(), 20000);
         }
@@ -458,10 +460,12 @@ public final class LoadTestCommand implements CommandExecutor {
             prevRate = rate;
         }
         check("Crash: Kurs steigt mit der Höhe immer schneller (echte Runde, je Tick gemessen)", faster && prevRate > 0, line.toString().trim());
-        long win = Math.round(100 * cashAt);
-        long delta = plugin.casino().chips(p.getUniqueId()) - chips0;
-        check("Crash: Auszahlung bei x" + de.kuby.kubyplugins.service.CasinoPlay.fmt(cashAt), cashed && Math.abs(delta - (win - 100)) <= 1,
-                "Chips vorher/nachher: " + chips0 + " → " + (chips0 + delta));
+        // die echte Abrechnung der Crash-Runde (nicht der Kontostand: andere Spieler und Belohnungen ändern ihn nebenbei)
+        var o = plugin.casinoPlay().testLast.get(p.getUniqueId() + "|crash");
+        long gross = (long) Math.floor(100 * cashAt);
+        check("Crash: Auszahlung bei x" + de.kuby.kubyplugins.service.CasinoPlay.fmt(cashAt), cashed && o != null && o.stake() == 100
+                        && Math.abs(o.gross() - gross) <= 1 && o.payout() == o.gross(),
+                o == null ? "keine Abrechnung" : "Einsatz " + o.stake() + ", Spiel zahlt " + o.gross() + " (100 × Kurs), ausgezahlt " + o.payout());
         // --- echter Slot-Dreh am Gold-Automaten aus dem Casino-Spieltest ---
         plugin.casino().giveChips(p.getUniqueId(), 10_000);
         boolean pulled = plugin.slots().testPull(p, "kgold");

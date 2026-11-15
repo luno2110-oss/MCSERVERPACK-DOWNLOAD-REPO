@@ -367,6 +367,9 @@ public final class CasinoPlay {
     }
 
     /** Nur für den Regeltest: Serie, Verluste, Volumen, Währung und offene Einsätze eines Spielers zurücksetzen. */
+    /** Nur für den Regeltest: letzte Abrechnung je Spieler und Spiel. */
+    public final Map<String, Outcome> testLast = new java.util.concurrent.ConcurrentHashMap<>();
+
     public synchronized void testReset(UUID id) {
         streak.remove(id);
         losses.remove(id);
@@ -510,7 +513,9 @@ public final class CasinoPlay {
                     + (cashback > 0 ? ", Cashback " + cashback : "") + ", Serie " + newStreak + (golden ? ", Goldene Zeit" : "")
                     + ", Währung " + c);
         }
-        return new Outcome(c, stake, gross, payout, bonus, mult, newStreak, golden, comeback, cashback, lost);
+        Outcome out = new Outcome(c, stake, gross, payout, bonus, mult, newStreak, golden, comeback, cashback, lost);
+        if (testLog) testLast.put(id + "|" + game, out);
+        return out;
     }
 
     /** Ergebnis ohne Bank-Abrechnung (z. B. Poker): nur Serie fortschreiben, kein Bonus. */

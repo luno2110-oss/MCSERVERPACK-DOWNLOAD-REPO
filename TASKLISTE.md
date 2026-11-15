@@ -560,6 +560,9 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
 ## Casino fertigstellen (v1.68)
 - [x] **v1.83 Blackjack-Ergebnisse aufgeräumt (aus den echten Client-Bildern)**
   - [x] Beim Ergebnis überlagerten sich die Texte der Nachbarplätze („ÜBERKAUFT“, „UNENTSCHIEDEN“, „Tester02 +400 Chips“, „-100 … zurück“, „+3 Cashback“): am Platz jetzt nur zwei Zeilen (Ergebnis und Betrag), der schwebende Banner nur noch beim Blackjack und höher über dem Tisch, sonst nur der Gewinn-Ton (Betrag steht ja am Platz); „19 gegen 17“ im Chat
+  - [x] Crash im Regeltest prüft die echte Abrechnung der Runde (Einsatz, 100 × Kurs, Auszahlung) statt des Kontostands, den andere Spieler nebenbei ändern
+  - [x] Casino-SFX: Eichton (Leuchtfeuer) zu Testbeginn, die Auswertung bestimmt daraus den Versatz zwischen Paket-ID und Register-ID
+  - [x] Client-Bilder holen die Jars genau aus dem auslösenden Build (Release-Notiz mit Commit), nicht aus einem zwischengespeicherten Download
   - [x] Testablauf: die Bots blieben nur 130 s am Tisch, der Kamera-Lauf dauert 200 s (Pokertisch war bei der Nahaufnahme leer) – die Pause kommt jetzt vom Server
 - [x] **v1.82 Weitere Nachweise aus dem echten Spiel**
   - [x] Goldene Zeit mit der echten Uhr: Zeitzone einstellbar (`casino.goldene-zeit.zeitzone`, Standard Europe/Berlin); der Regeltest prüft die Goldene Zeit jetzt auch ohne Test-Schalter nach der echten Uhrzeit; die CI „Client-Bilder“ stellt die Zeitzone so, dass es gerade 18 Uhr ist, und prüft, dass echte Abrechnungen am Tisch die Goldene Zeit bekommen
