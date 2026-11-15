@@ -12,6 +12,11 @@ Plugins erkennen sie und zeigen ihnen alles in einer eigenen Bedrock-Fassung:
 - **Chat**: Kuby-Präfix und Überschriften in normalen Buchstaben (die Bedrock-Schrift hat keine Kapitälchen).
 - **Angel-Minispiel** mit eigener Leiste aus Blöcken und Fisch-Icon; Klicks und Bewegung steuern wie auf Java.
 
+- **3D-Modelle** (Casino-Tische, Karten, Chips, Keks, Möbel, Generatoren …): Bedrock kennt keine Item-Anzeigen. Mit
+  der Geyser-Erweiterung **GeyserDisplayEntity** (siehe Einrichtung, Schritt 4b) erscheinen sie als eigene
+  Bedrock-Entity; unser Pack bringt zu jedem 3D-Modell die passende Bedrock-Geometrie mit (Attachable, aus dem
+  Java-Modell umgerechnet, gleiche Texturen), damit Tische und Karten wie auf Java aussehen statt als flaches Bild.
+
 Was Java-only bleibt (Bedrock kann es nicht anzeigen, es gibt einen Ersatz): die Info-Leiste oben (die Werte stehen im
 Scoreboard), Kino-Szenen von Kisten und Schwert (Bedrock bekommt den Gewinn direkt), Grafik-Schriften in Hologrammen.
 
@@ -51,6 +56,13 @@ ViaVersion 5.12.2 auf unserem Paper-1.21.11-Server. Den aktuellen Stand zeigt au
 4. Aus `KubyPlugins.zip`:
    - `KubyBedrock.mcpack` → `plugins/Geyser-Spigot/packs/`
    - `KubyBedrock-Items.json` → `plugins/Geyser-Spigot/custom_mappings/`
+4b. **3D-Modelle für Bedrock**: von github.com/GeyserExtensionists/GeyserDisplayEntity (Release „latest“)
+   - `GeyserDisplayEntity-….jar` → `plugins/Geyser-Spigot/extensions/`
+   - `packs/GeyserDisplayEntityPack.mcpack` (aus dem Repository) → `plugins/Geyser-Spigot/packs/`
+   - nach dem ersten Start in `plugins/Geyser-Spigot/extensions/geyserdisplayentity/config.yml`:
+     `hide-unmapped-vanilla-displays: false` (sonst bleiben Anzeigen mit normalen Items unsichtbar). `y-offset: -0.5`
+     so lassen, unsere Modelle sind darauf gerechnet.
+   - Ohne die Erweiterung läuft alles weiter, Bedrock-Spieler sehen dann nur die Texte und Figuren der Tische.
 5. Server neu starten. Im Log: Geyser lädt das Pack und die Items („custom items“). Bedrock-Spieler laden das Pack beim
    ersten Beitreten (ca. 6 MB).
 6. Bedrock-Spieler heißen auf dem Server mit Punkt davor (`.Name`, Floodgate-Standard). Rechte, Ränge und Befehle mit

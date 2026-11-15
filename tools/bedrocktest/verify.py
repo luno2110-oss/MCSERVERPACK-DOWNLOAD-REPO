@@ -128,6 +128,35 @@ def main():
     if not glyphs:
         probs.append("Der Client hat keine eigenen Icon-Zeichen bekommen")
 
+    # ---------- 3D-Modelle (Attachables) und Display-Entities ----------
+    att = [n for n in names if n.startswith("attachables/") and n.endswith(".json")]
+    geos = {}
+    for n in names:
+        if n.startswith("models/entity/") and n.endswith(".geo.json"):
+            for g in json.loads(z.read(n)).get("minecraft:geometry", []):
+                geos[g["description"]["identifier"]] = n
+    att_ids, att_bad = set(), []
+    for n in att:
+        d = json.loads(z.read(n))["minecraft:attachable"]["description"]
+        att_ids.add(d["identifier"])
+        if d["geometry"]["default"] not in geos or d["textures"]["default"] + ".png" not in names:
+            att_bad.append(d["identifier"])
+    out.append("- 3D-Modelle für Bedrock: %d Attachables mit Geometrie und Textur, fehlerhaft: %d"
+               % (len(att), len(att_bad)))
+    if att_bad:
+        probs.append("Attachables ohne Geometrie/Textur: %s" % ", ".join(att_bad[:5]))
+    types = r.get("entityTypes", {})
+    shown = r.get("displayItems", {})
+    kuby_items = {k: v for k, v in shown.items() if k.startswith("kuby:")}
+    with_att = sum(v for k, v in kuby_items.items() if k in att_ids)
+    out.append("- Display-Entities beim Client (GeyserDisplayEntity): %d (geyser:item_display %d), gehaltene Kuby-Items %d, davon mit 3D-Modell %d"
+               % (sum(v for k, v in types.items() if "display" in k), types.get("geyser:item_display", 0),
+                  sum(kuby_items.values()), with_att))
+    if types.get("geyser:item_display", 0) == 0:
+        probs.append("Der Client hat keine geyser:item_display bekommen (GeyserDisplayEntity fehlt oder Tisch nicht gebaut)")
+    elif kuby_items and with_att == 0:
+        probs.append("Kein gehaltenes Kuby-Item hat ein 3D-Modell (Attachable)")
+
     open("verify-problems.txt", "w").write("\n".join(probs))
     print("\n".join(out))
 

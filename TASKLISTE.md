@@ -575,7 +575,9 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
 - [ ] Poker-Tisch mit 3D-Karten und allen Regeln
 - [ ] Zwei neue Slot-Automaten
 - [ ] Roulette intensiver und interaktiver
-- [ ] Bedrock: 3D-Modelle sichtbar
+- [x] **Bedrock: 3D-Modelle sichtbar** (Casino-Tische, Karten, Chips, Keks, Möbel, Generatoren …): Bedrock kennt keine Item-Anzeigen. Lösung: Geyser-Erweiterung GeyserDisplayEntity (macht aus jeder Item-Anzeige eine Bedrock-Entity, die das Item hält) plus für jedes 3D-Modell eine echte Bedrock-Geometrie im KubyBedrock-Pack: `tools/build_bedrock_pack.py` rechnet jedes Java-Modell mit Elementen in ein Attachable um (330 Modelle, Würfel und Drehungen wie java2bedrock, Texturen je Modell in einem Atlas, Pivot so, dass die Modellmitte am Ort der Anzeige liegt). Anleitung in BEDROCK.md (Schritt 4b)
+  - [x] Bedrock-Test (CI) installiert die Erweiterung und ihr Pack, stellt einen Blackjack-Tisch an den Spawn und prüft: kommen die Anzeigen als `geyser:item_display` beim Bedrock-Client an, hält jede ein Kuby-Item, hat jedes davon ein 3D-Modell im Pack; alle Attachables haben Geometrie und Textur
+  - [ ] Optik auf einem echten Bedrock-Gerät ansehen (Lage und Größe der Modelle; die Rechnung folgt java2bedrock, ein Gerätetest steht aus)
 
 ## Fehler: Claims „nur in der Survival-Welt“, obwohl man in Survival ist (v1.67)
 - [x] Ursache: Claims (und Kistenläden, Spieler-Warps) prüften nur die eingestellte Welt `modes.survival.world` (Standard „survival“). Wurde der Survival-Spawn mit `/kp setspawn survival` (oder im Editor) in einer anders benannten Welt gesetzt, spielten alle dort, die Welt zählte aber nicht als Survival-Welt

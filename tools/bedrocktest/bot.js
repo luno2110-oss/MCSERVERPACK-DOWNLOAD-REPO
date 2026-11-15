@@ -24,7 +24,7 @@ function swapped(u) {
 const PACK_UUID_WIRE = PACK_UUID ? swapped(PACK_UUID) : '';
 const res = { pack: { offered: false, requested: false, chunks: 0, chunkCount: 0, size: 0, sha256ok: null, saved: null },
   version: VERSION, joined: false, spawned: false, packs: [], forms: [], clicks: 0, commands: [], chat: [],
-  sidebarTitle: null, sidebarLines: [], errors: [], disconnect: null, schema: {} };
+  sidebarTitle: null, sidebarLines: [], errors: [], disconnect: null, schema: {}, entityTypes: {}, displays: [], displayItems: {} };
 const start = Date.now();
 const log = (...a) => console.log(`[${((Date.now() - start) / 1000).toFixed(1).padStart(5)}s]`, ...a);
 
@@ -120,6 +120,32 @@ function nextCommand() {
 }
 
 client.on('play_status', (p) => { log('play_status', p.status); });
+// 3D-Anzeigen: welche Entity-Arten kommen an, und welches Item hält jede Display-Entity (GeyserDisplayEntity)
+const itemNames = {};
+function rememberItems(list) {
+  for (const it of list || []) {
+    const id = it.runtime_id !== undefined ? it.runtime_id : it.network_id;
+    if (id !== undefined && it.name) itemNames[String(id)] = it.name;
+  }
+}
+client.on('item_registry', (p) => rememberItems(p.itemstates || p.items));
+client.on('start_game', (p) => rememberItems(p.itemstates));
+const displayIds = new Set();
+client.on('add_entity', (p) => {
+  const t = p.entity_type || p.identifier || '?';
+  res.entityTypes[t] = (res.entityTypes[t] || 0) + 1;
+  if (/display/.test(t)) {
+    displayIds.add(String(p.runtime_id));
+    if (res.displays.length < 400) res.displays.push({ id: String(p.runtime_id), type: t });
+  }
+});
+client.on('mob_equipment', (p) => {
+  const rid = String(p.runtime_entity_id);
+  if (!displayIds.has(rid)) return;
+  const nid = p.item && (p.item.network_id !== undefined ? p.item.network_id : p.item.id);
+  const name = itemNames[String(nid)] || String(nid);
+  res.displayItems[name] = (res.displayItems[name] || 0) + 1;
+});
 client.on('start_game', (p) => { res.joined = true; log('start_game, Laufzeit-ID', String(p.runtime_entity_id)); });
 client.on('player_list', (p) => {
   for (const r of (p.records && p.records.records) || []) if (r.username && r.username.includes('KubyBedrock') && r.uuid) uuid = r.uuid;

@@ -55,6 +55,14 @@ jobs:
           curl -sSfL "$J" -o plugins/ViaVersion.jar
           curl -sSfL https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot -o plugins/Geyser-Spigot.jar
           curl -sSfL https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot -o plugins/floodgate-spigot.jar
+          # GeyserDisplayEntity: zeigt Item-Anzeigen (unsere 3D-Modelle) auf Bedrock, dazu ihr Entity-Pack
+          mkdir -p plugins/Geyser-Spigot/extensions plugins/Geyser-Spigot/packs
+          GDE=$(curl -sSf -H "Authorization: Bearer ${{ github.token }}" "https://api.github.com/repos/GeyserExtensionists/GeyserDisplayEntity/releases/tags/latest" \
+            | python3 -c "import json,sys;print([a['browser_download_url'] for a in json.load(sys.stdin)['assets'] if a['name'].endswith('.jar')][0])" || true)
+          echo "GeyserDisplayEntity: $GDE"
+          [ -n "$GDE" ] && curl -sSfL "$GDE" -o plugins/Geyser-Spigot/extensions/GeyserDisplayEntity.jar || echo "GeyserDisplayEntity nicht geladen"
+          curl -sSfL https://raw.githubusercontent.com/GeyserExtensionists/GeyserDisplayEntity/main/packs/GeyserDisplayEntityPack.mcpack \
+            -o plugins/Geyser-Spigot/packs/GeyserDisplayEntityPack.mcpack || echo "Display-Pack nicht geladen"
           ls -la plugins
           echo "eula=true" > eula.txt
           printf "online-mode=false\nallow-flight=true\nspawn-protection=0\nview-distance=5\nsimulation-distance=5\nenforce-secure-profile=false\n" > server.properties
@@ -108,6 +116,9 @@ jobs:
               c["modes"][m]["spawn"] = "world;%d;110;0;0;0" % (i * 300)
           c.setdefault("beta", {})["alle-tester"] = True
           yaml.safe_dump(c, open(k, "w", encoding="utf-8"), allow_unicode=True, sort_keys=False)
+          # Blackjack-Tisch direkt am Spawn: der Bedrock-Client soll die 3D-Anzeigen (Filz, Kante, Hocker, Chips) bekommen
+          yaml.safe_dump({"tische": {"t1": "world;0.5;110.0;4.5;180.0;3.0"}, "offen": []},
+                         open("plugins/KubyCore/blackjack-tische.yml", "w", encoding="utf-8"))
           EOF
 
       - name: Server starten, Bedrock-Client spielen lassen

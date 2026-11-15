@@ -237,6 +237,10 @@ def main():
     texture_data = {}
     mapping = {}
     count = 0
+    attachables = 0
+    os.makedirs(os.path.join(OUT, "attachables/kuby"), exist_ok=True)
+    os.makedirs(os.path.join(OUT, "models/entity/kuby"), exist_ok=True)
+    os.makedirs(os.path.join(OUT, "textures/kuby/att"), exist_ok=True)
     for f in sorted(glob.glob(os.path.join(PACK, "assets/*/items/**/*.json"), recursive=True)):
         rel = os.path.relpath(f, os.path.join(PACK, "assets"))
         ns = rel.split(os.sep)[0]
@@ -262,7 +266,15 @@ def main():
         key = ns + "." + path.replace("/", "_")
         icon.resize((IMG, IMG), Image.NEAREST).save(os.path.join(OUT, "textures/kuby/items", key + ".png"))
         texture_data[key] = {"textures": "textures/kuby/items/" + key}
+        three_d = bool(sel) and not generated and bool(elements)
         for base in bases_for(ident, bases):
+            bid = ns + ":" + (base.split(":")[1] + "_" if base != "minecraft:paper" else "") + path.replace("/", "_")
+            if three_d:
+                try:
+                    if attachable(bid, key + "_" + base.split(":")[1], elements, textures):
+                        attachables += 1
+                except Exception as e:  # ein kaputtes Modell soll das Pack nicht verhindern
+                    print("Attachable", bid, "übersprungen:", e)
             mapping.setdefault(base, []).append({
                 "type": "definition",
                 "model": ident,
@@ -271,7 +283,7 @@ def main():
                                     "display_handheld": base in ("minecraft:fishing_rod",)},
             })
             count += 1
-    print("Eigene Items:", len(texture_data), "Bedrock-Items:", count)
+    print("Eigene Items:", len(texture_data), "Bedrock-Items:", count, "3D-Attachables:", attachables)
 
     # Scoreboard ohne rote Zahlen rechts (die Java-Sidebar blendet sie mit NumberFormat.blank aus)
     os.makedirs(os.path.join(OUT, "ui"), exist_ok=True)
@@ -309,6 +321,139 @@ def main():
                 info.compress_type = zipfile.ZIP_DEFLATED
                 z.writestr(info, open(full, "rb").read())
     print("Pack:", mc, "%.1f MB" % (os.path.getsize(mc) / 1e6), "Version", version)
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# 3D-Modelle für Bedrock (Attachables): Java-Elemente -> Bedrock-Geometrie wie java2bedrock (Kas-tle), damit
+# Item-Anzeigen (Tische, Karten, Chips, Keks, Möbel …) über die Geyser-Erweiterung GeyserDisplayEntity als echtes 3D
+# erscheinen. Würfel: origin [8 - to.x, from.y, from.z - 8], Knochen "geyser_custom" mit Bindung und Pivot [0, 8, 0];
+# die Erweiterung setzt die Anzeige um 0,5 tiefer (y-offset), so liegt die Modellmitte am Ort der Anzeige.
+# ---------------------------------------------------------------------------------------------------------------------
+
+ATLAS_MAX = 1024
+
+
+def _load_tex(ref):
+    f = asset(ref.split(":", 1)[0] + ":" + ref.split(":", 1)[1] + ".png" if ":" in ref else "minecraft:" + ref + ".png")
+    if f is None:
+        return None
+    im = Image.open(f).convert("RGBA")
+    if im.height > im.width and im.height % im.width == 0 and os.path.exists(f + ".mcmeta"):
+        im = im.crop((0, 0, im.width, im.width))  # animierte Textur: erstes Bild
+    return im
+
+
+def _atlas(refs):
+    """Packt Texturen untereinander/nebeneinander in einen Atlas. Gibt (Bild, {ref: (x, y, w, h)}) zurück."""
+    imgs = {r: _load_tex(r) for r in refs}
+    imgs = {r: i for r, i in imgs.items() if i is not None}
+    if not imgs:
+        return None, {}
+    # einfache Regal-Packung nach Höhe
+    order = sorted(imgs, key=lambda r: -imgs[r].height)
+    width = max(max(i.width for i in imgs.values()), 16)
+    width = max(width, min(ATLAS_MAX, sum(i.width for i in imgs.values())))
+    x = y = row = 0
+    frames = {}
+    for r in order:
+        im = imgs[r]
+        if x + im.width > width:
+            x, y, row = 0, y + row, 0
+        frames[r] = (x, y, im.width, im.height)
+        x += im.width
+        row = max(row, im.height)
+    height = y + row
+    # Bedrock mag Zweierpotenzen
+    W = 1 << (width - 1).bit_length()
+    H = 1 << (max(height, 1) - 1).bit_length()
+    atlas = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    for r, (fx, fy, fw, fh) in frames.items():
+        atlas.paste(imgs[r], (fx, fy))
+    return atlas, frames
+
+
+DEFAULT_UV = {
+    "north": lambda f, t: [16 - t[0], 16 - t[1], 16 - f[0], 16 - f[1]],
+    "south": lambda f, t: [f[0], 16 - t[1], t[0], 16 - f[1]],
+    "east": lambda f, t: [16 - t[2], 16 - t[1], 16 - f[2], 16 - f[1]],
+    "west": lambda f, t: [f[2], 16 - t[1], t[2], 16 - f[1]],
+    "up": lambda f, t: [f[0], f[2], t[0], t[2]],
+    "down": lambda f, t: [f[0], 16 - t[2], t[0], 16 - f[2]],
+}
+
+
+def attachable(bid, key, elements, textures):
+    refs = set()
+    for el in elements:
+        for face in el.get("faces", {}).values():
+            refs.add(r3d.tex_ref(textures, face.get("texture", "#missing")))
+    refs = {r for r in refs if not r.startswith("#") and r != "missing"}
+    atlas, frames = _atlas(refs)
+    if atlas is None:
+        return False
+    AW, AH = atlas.size
+
+    def rnd(v):
+        return round(v * 10000) / 10000
+
+    cubes_plain, groups = [], {}
+    for el in elements:
+        f, t = el["from"], el["to"]
+        cube = {"origin": [rnd(8 - t[0]), rnd(f[1]), rnd(f[2] - 8)],
+                "size": [rnd(t[0] - f[0]), rnd(t[1] - f[1]), rnd(t[2] - f[2])], "uv": {}}
+        for side, face in el.get("faces", {}).items():
+            ref = r3d.tex_ref(textures, face.get("texture", "#missing"))
+            if ref not in frames:
+                continue
+            fx, fy, fw, fh = frames[ref]
+            uv = face.get("uv") or DEFAULT_UV[side](f, t)
+            u0 = (uv[0] * fw / 16 + fx) * 16 / AW
+            v0 = (uv[1] * fh / 16 + fy) * 16 / AH
+            u1 = (uv[2] * fw / 16 + fx) * 16 / AW
+            v1 = (uv[3] * fh / 16 + fy) * 16 / AH
+            xs = max(-1, min(1, u1 - u0))
+            ys = max(-1, min(1, v1 - v0))
+            if side in ("up", "down"):
+                cube["uv"][side] = {"uv": [rnd(u1 - 0.016 * xs), rnd(v1 - 0.016 * ys)],
+                                    "uv_size": [rnd(u0 - u1 + 0.016 * xs), rnd(v0 - v1 + 0.016 * ys)]}
+            else:
+                cube["uv"][side] = {"uv": [rnd(u0 + 0.016 * xs), rnd(v0 + 0.016 * ys)],
+                                    "uv_size": [rnd(u1 - u0 - 0.016 * xs), rnd(v1 - v0 - 0.016 * ys)]}
+        rot = el.get("rotation")
+        if rot and rot.get("angle"):
+            o = rot.get("origin", [8, 8, 8])
+            pivot = (rnd(8 - o[0]), rnd(o[1]), rnd(o[2] - 8))
+            a = float(rot["angle"])
+            r = {"x": (-a, 0, 0), "y": (0, -a, 0), "z": (0, 0, a)}[rot.get("axis", "y")]
+            groups.setdefault((pivot, r), []).append(cube)
+        else:
+            cubes_plain.append(cube)
+    geo = "geometry.kuby." + key
+    bones = [
+        {"name": "geyser_custom", "binding": "c.item_slot == 'head' ? 'head' : q.item_slot_to_bone_name(c.item_slot)",
+         "pivot": [0, 8, 0]},
+        {"name": "geyser_custom_x", "parent": "geyser_custom", "pivot": [0, 8, 0]},
+        {"name": "geyser_custom_y", "parent": "geyser_custom_x", "pivot": [0, 8, 0]},
+        {"name": "geyser_custom_z", "parent": "geyser_custom_y", "pivot": [0, 8, 0], "cubes": cubes_plain},
+    ]
+    for i, ((pivot, r), cubes) in enumerate(groups.items()):
+        bones.append({"name": "rot_%d" % (i + 1), "parent": "geyser_custom_z", "pivot": list(pivot), "rotation": list(r),
+                      "cubes": cubes})
+    span = max(max(abs(c) for el in elements for c in el["from"] + el["to"]) / 16 * 2, 2)
+    json.dump({"format_version": "1.16.0", "minecraft:geometry": [{
+        "description": {"identifier": geo, "texture_width": 16, "texture_height": 16,
+                        "visible_bounds_width": round(span + 2, 1), "visible_bounds_height": round(span + 2, 1),
+                        "visible_bounds_offset": [0, 0.5, 0]},
+        "bones": bones}]}, open(os.path.join(OUT, "models/entity/kuby", key + ".geo.json"), "w"), separators=(",", ":"))
+    atlas.save(os.path.join(OUT, "textures/kuby/att", key + ".png"))
+    json.dump({"format_version": "1.10.0", "minecraft:attachable": {"description": {
+        "identifier": bid,
+        "materials": {"default": "entity_alphatest_one_sided", "enchanted": "entity_alphatest_one_sided"},
+        "textures": {"default": "textures/kuby/att/" + key, "enchanted": "textures/misc/enchanted_item_glint"},
+        "geometry": {"default": geo},
+        "render_controllers": ["controller.render.item_default"]}}},
+        open(os.path.join(OUT, "attachables/kuby", key + ".json"), "w"), indent=1)
+    return True
 
 
 def item_bases():
