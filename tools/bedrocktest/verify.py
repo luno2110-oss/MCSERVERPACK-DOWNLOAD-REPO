@@ -178,6 +178,8 @@ def main():
                 java.add(ns + ":" + rel.split(os.sep, 2)[2][:-5].replace(os.sep, "/"))
         absent = sorted(m for m in java - mapped if m not in ("kuby:cine/empty",))
         out.append("- Eigene Java-Modelle: %d, davon mit Bedrock-Mapping: %d" % (len(java), len(java) - len(absent)))
+        if not java:
+            probs.append("Mapping-Abgleich: keine Java-Item-Dateien gefunden (%s)" % root)
         if absent:
             probs.append("%d eigene Modelle ohne Bedrock-Mapping: %s" % (len(absent), ", ".join(absent[:8])))
     except Exception as e:
