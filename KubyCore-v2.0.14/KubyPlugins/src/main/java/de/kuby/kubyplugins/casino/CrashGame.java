@@ -278,6 +278,18 @@ public final class CrashGame implements Listener, CommandExecutor {
         return plugin.getConfig().getLong("casino.crash.max-bet", 100000);
     }
 
+    /** Nur für den Regeltest: Absturzpunkt der nächsten Runde festlegen (damit die Kurve lange genug läuft). */
+    public Double testCrashAt;
+
+    /** Nur für den Regeltest: Bildschirm an pos (Mitte der Bildfläche) mit Blickrichtung yaw aufbauen. */
+    public void testScreen(Location pos, float yaw) {
+        if (screen != null) screen.removeAll();
+        screen = null;
+        screenRaw = pos.getWorld().getName() + ";" + pos.getX() + ";" + pos.getY() + ";" + pos.getZ() + ";" + yaw + ";6;3";
+        save();
+        build();
+    }
+
     public void open(Player p) {
         String blocked = plugin.casino().checkMode(p);
         if (blocked != null) {
@@ -416,6 +428,10 @@ public final class CrashGame implements Listener, CommandExecutor {
         double u = RNG.nextDouble();
         double c = Math.floor((1 - edge) / (1 - u) * 100) / 100;
         crashAt = Math.max(1.0, Math.min(cap, c));
+        if (testCrashAt != null) {
+            crashAt = testCrashAt;
+            testCrashAt = null;
+        }
         Component button = Component.text("[AUSZAHLEN]", GREEN).decorate(TextDecoration.BOLD)
                 .clickEvent(ClickEvent.runCommand("/cashout"))
                 .hoverEvent(HoverEvent.showText(Component.text("Jetzt aussteigen", GREEN)));

@@ -81,10 +81,11 @@ public final class LoadTestCommand implements CommandExecutor {
                 plugin.getLogger().info("[Belastungstest] Events ausgelöst: " + String.join(", ", done));
             }
             case "casino" -> casino(args.length > 1 ? Integer.parseInt(args[1]) : 100);
+            case "regeln" -> rules();
             case "kamera" -> {
                 if (sender instanceof Player p && args.length > 1) camera(p, args[1].toLowerCase(java.util.Locale.ROOT));
             }
-            default -> sender.sendMessage("/kubytest klicks [n] | events | casino [Sekunden]");
+            default -> sender.sendMessage("/kubytest klicks [n] | events | casino [Sekunden] | regeln");
         }
         return true;
     }
@@ -212,5 +213,178 @@ public final class LoadTestCommand implements CommandExecutor {
                 }
             }, 20L, 20L);
         }, 50L);
+    }
+
+    // =================================================================================================================
+    // Casino-Regeltest: echte Spieler-Konten, echte Abrechnung, echte Crash-Runde, echter Slot-Dreh
+    // =================================================================================================================
+
+    private int ruleOk, ruleBad;
+
+    private void check(String what, boolean ok, String detail) {
+        if (ok) ruleOk++;
+        else ruleBad++;
+        plugin.getLogger().info("[Casino-Regel] " + (ok ? "OK " : "FEHLER ") + what + (detail == null ? "" : " – " + detail));
+    }
+
+    /**
+     * Prüft die Casino-Regeln mit einem echten Spieler auf dem Server: Juwelen nur für VIP und nur am Blackjack-Tisch,
+     * 50 bis 10.000 je Runde, Volumen 50.000; Siegesserie +0,2 bis x2,5 (High Roller +0,5 bis x8); Goldene Zeit
+     * verdoppelt Gewinne; eine echte Crash-Runde (Kurs je Sekunde gemessen) und ein echter Slot-Dreh.
+     * Jede Prüfung steht als "[Casino-Regel] OK|FEHLER"-Zeile im Log, am Ende das Ergebnis.
+     */
+    private void rules() {
+        ruleOk = 0;
+        ruleBad = 0;
+        List<Player> all = new ArrayList<>(Bukkit.getOnlinePlayers());
+        all.sort(java.util.Comparator.comparing(Player::getName));
+        if (all.isEmpty()) {
+            plugin.getLogger().info("[Casino-Regel] keine Spieler online");
+            return;
+        }
+        Player p = all.get(0);
+        java.util.UUID id = p.getUniqueId();
+        var cp = plugin.casinoPlay();
+        if (!"survival".equals(plugin.modes().modeOf(id))) plugin.modes().switchTo(p, "survival");
+        CASINO.add(id); // keine Zufallsklicks während des Tests
+        p.sendMessage("[Casino-Test] Pause für den Regeltest");
+        cp.testLog = true;
+        cp.testReset(id);
+        cp.testGolden = false;
+        plugin.getLogger().info("[Casino-Regel] Start mit " + p.getName());
+
+        // --- Juwelen ---
+        org.bukkit.permissions.PermissionAttachment vip = null;
+        if (!cp.vip(p)) {
+            check("Juwelen ohne VIP gesperrt", cp.setMode(p, de.kuby.kubyplugins.service.CasinoPlay.Cur.JEWELS) != null, null);
+            vip = p.addAttachment(plugin, "kuby.casino.juwelen", true);
+        }
+        check("VIP darf auf Juwelen umstellen", cp.setMode(p, de.kuby.kubyplugins.service.CasinoPlay.Cur.JEWELS) == null, null);
+        plugin.jewels().add(id, 200_000);
+        check("Juwelen nur am Blackjack-Tisch (Roulette spielt in Chips)",
+                cp.cur(id, "roulette") == de.kuby.kubyplugins.service.CasinoPlay.Cur.CHIPS
+                        && cp.cur(id, "blackjack") == de.kuby.kubyplugins.service.CasinoPlay.Cur.JEWELS, null);
+        long j0 = plugin.jewels().balance(id);
+        String e49 = cp.take(p, "blackjack", 49);
+        check("49 Juwelen abgelehnt (min 50)", e49 != null && plugin.jewels().balance(id) == j0, e49);
+        String e50 = cp.take(p, "blackjack", 50);
+        check("50 Juwelen angenommen", e50 == null && plugin.jewels().balance(id) == j0 - 50, e50);
+        cp.refund(id, "blackjack", 50);
+        String eMax = cp.take(p, "blackjack", 10_001);
+        check("10.001 Juwelen abgelehnt (max 10.000)", eMax != null, eMax);
+        int rounds = 0;
+        for (int i = 0; i < 5; i++) {
+            if (cp.take(p, "blackjack", 10_000) == null) {
+                cp.settle(id, "blackjack", 10_000, 0);
+                rounds++;
+            }
+        }
+        check("5 Runden à 10.000 Juwelen gespielt", rounds == 5, "Volumen frei: " + cp.volumeLeft(id));
+        String eVol = cp.take(p, "blackjack", 50);
+        check("Volumen 50.000 erreicht: weiterer Einsatz abgelehnt", eVol != null && cp.volumeLeft(id) == 0, eVol);
+        cp.setMode(p, de.kuby.kubyplugins.service.CasinoPlay.Cur.CHIPS);
+        if (vip != null) p.removeAttachment(vip);
+
+        // --- Siegesserie ---
+        cp.testReset(id);
+        plugin.casino().giveChips(id, 100_000);
+        StringBuilder seq = new StringBuilder();
+        boolean seqOk = true;
+        for (int i = 0; i < 10; i++) {
+            cp.take(p, "blackjack", 100);
+            var o = cp.settle(id, "blackjack", 100, 200);
+            double want = Math.min(2.5, 1.0 + 0.2 * i);
+            seqOk &= Math.abs(o.mult() - want) < 1e-9 && o.payout() == 200 + Math.round(100 * (want - 1));
+            seq.append("x").append(de.kuby.kubyplugins.service.CasinoPlay.fmt(o.mult())).append(' ');
+        }
+        check("Siegesserie +0,2 je Sieg bis x2,5 (Gewinn 100)", seqOk, seq.toString().trim());
+        cp.take(p, "blackjack", 100);
+        cp.settle(id, "blackjack", 100, 0);
+        cp.take(p, "blackjack", 100);
+        var after = cp.settle(id, "blackjack", 100, 200);
+        check("Niederlage setzt die Serie zurück", after.mult() == 1.0 && after.streak() == 1, "x" + de.kuby.kubyplugins.service.CasinoPlay.fmt(after.mult()));
+        cp.testReset(id);
+        StringBuilder hr = new StringBuilder();
+        boolean hrOk = true;
+        for (int i = 0; i < 16; i++) {
+            cp.take(p, "blackjack_hr", 100);
+            var o = cp.settle(id, "blackjack_hr", 100, 200);
+            hrOk &= Math.abs(o.mult() - Math.min(8.0, 1.0 + 0.5 * i)) < 1e-9;
+            if (i % 3 == 0 || i == 15) hr.append("x").append(de.kuby.kubyplugins.service.CasinoPlay.fmt(o.mult())).append(' ');
+        }
+        check("High Roller: +0,5 je Sieg bis x8", hrOk, hr.toString().trim());
+
+        // --- Goldene Zeit ---
+        cp.testReset(id);
+        cp.testGolden = true;
+        cp.take(p, "blackjack", 100);
+        var g = cp.settle(id, "blackjack", 100, 200);
+        check("Goldene Zeit verdoppelt den Gewinn", g.golden() && g.mult() == 2.0 && g.payout() == 300,
+                "Einsatz 100, Spiel zahlt 200, ausgezahlt " + g.payout());
+        cp.testGolden = false;
+        cp.take(p, "blackjack", 100);
+        var ng = cp.settle(id, "blackjack", 100, 200);
+        check("außerhalb der Goldenen Zeit kein Bonus (Serie 1: x1,2)", !ng.golden() && Math.abs(ng.mult() - 1.2) < 1e-9, null);
+        cp.testReset(id);
+
+        // --- echte Crash-Runde (Goldene Zeit bleibt aus, damit die Auszahlung genau 100 x Kurs ist) ---
+        Location spawn = plugin.modes().spawnOf("survival");
+        org.bukkit.World w = spawn.getWorld();
+        Location scr = new Location(w, spawn.getBlockX() + 0.5, w.getHighestBlockYAt(spawn.getBlockX(), spawn.getBlockZ() + 18) + 3.0,
+                spawn.getBlockZ() + 18.0);
+        plugin.crash().testScreen(scr, 180f);
+        plugin.crash().testCrashAt = 8.0;
+        long chips0 = plugin.casino().chips(id);
+        String bet = plugin.crash().bet(p, 100);
+        check("Crash: Einsatz 100 gesetzt", bet == null, bet);
+        List<double[]> samples = new ArrayList<>();
+        final boolean[] cashed = {false};
+        final double[] cashAt = {0};
+        plugin.getServer().getScheduler().runTaskTimer(plugin, task -> {
+            var ph = plugin.crash().phase();
+            if (ph == de.kuby.kubyplugins.casino.CrashGame.Phase.RUNNING) {
+                samples.add(new double[]{samples.size() / 20.0, plugin.crash().current()});
+                if (!cashed[0] && plugin.crash().current() >= 5.0) {
+                    cashAt[0] = plugin.crash().current();
+                    cashed[0] = plugin.crash().cashout(p) == null;
+                }
+            } else if (!samples.isEmpty()) {
+                task.cancel();
+                crashReport(p, samples, cashed[0], cashAt[0], chips0);
+            }
+        }, 1L, 1L);
+    }
+
+    private void crashReport(Player p, List<double[]> s, boolean cashed, double cashAt, long chips0) {
+        StringBuilder line = new StringBuilder();
+        double[] marks = {1.5, 2, 3, 5, 7};
+        double prevRate = 0;
+        boolean faster = true;
+        for (double m : marks) {
+            int i = -1;
+            for (int k = 0; k < s.size(); k++) if (s.get(k)[1] >= m) { i = k; break; }
+            if (i < 0 || i + 20 >= s.size()) continue;
+            double rate = Math.log(s.get(i + 20)[1] / s.get(i)[1]) * 100; // % pro Sekunde
+            line.append("x").append(de.kuby.kubyplugins.service.CasinoPlay.fmt(m)).append(" nach ")
+                    .append(String.format(java.util.Locale.ROOT, "%.1f", s.get(i)[0])).append(" s: +")
+                    .append(String.format(java.util.Locale.ROOT, "%.1f", rate)).append(" %/s; ");
+            faster &= rate > prevRate;
+            prevRate = rate;
+        }
+        check("Crash: Kurs steigt mit der Höhe immer schneller (echte Runde, je Tick gemessen)", faster && prevRate > 0, line.toString().trim());
+        long win = Math.round(100 * cashAt);
+        long delta = plugin.casino().chips(p.getUniqueId()) - chips0;
+        check("Crash: Auszahlung bei x" + de.kuby.kubyplugins.service.CasinoPlay.fmt(cashAt), cashed && Math.abs(delta - (win - 100)) <= 1,
+                "Chips vorher/nachher: " + chips0 + " → " + (chips0 + delta));
+        // --- echter Slot-Dreh am Gold-Automaten aus dem Casino-Spieltest ---
+        plugin.casino().giveChips(p.getUniqueId(), 10_000);
+        boolean pulled = plugin.slots().testPull(p, "kgold");
+        check("Slots: Hebel am Gold-Automaten gezogen", pulled, null);
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            plugin.casinoPlay().testLog = false;
+            plugin.casinoPlay().testGolden = null;
+            CASINO.remove(p.getUniqueId());
+            plugin.getLogger().info("[Casino-Regel] Ergebnis: " + ruleOk + " OK, " + ruleBad + " Fehler");
+        }, 200L);
     }
 }

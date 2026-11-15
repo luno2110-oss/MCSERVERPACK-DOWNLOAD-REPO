@@ -304,6 +304,15 @@ public final class SlotsService implements Listener {
                     task.cancel();
                     s.busy = false;
                     s.machine.lamps(false);
+                    if (plugin.casinoPlay().testLog) {
+                        StringBuilder want = new StringBuilder(), got = new StringBuilder();
+                        for (int i = 0; i < 3; i++) {
+                            want.append(SlotMachine.SYMBOLS[result[i]]).append(' ');
+                            got.append(s.shown[i][1]).append(' ');
+                        }
+                        plugin.getLogger().info("[Casino-Test] slots Walzen: Ergebnis " + want.toString().trim() + " | Mittellinie nach dem Einrasten "
+                                + got.toString().trim() + (tension ? " | Spannung (letzte Walze " + spin[2].arrive + " Ticks)" : ""));
+                    }
                     finish(p, s, result, bet, jw);
                 }
             }
@@ -519,6 +528,14 @@ public final class SlotsService implements Listener {
     // =================================================================================================================
 
     /** Spieltest/Kamera: freistehender Automat (id, Fenstermitte, Blickrichtung zum Spieler, Hocker, Stil). */
+    /** Nur für den Regeltest: Hebel an Automat id ziehen wie ein Spieler. */
+    public boolean testPull(Player p, String id) {
+        State s = machines.get(id);
+        if (s == null || s.busy) return false;
+        pull(p, s);
+        return s.busy;
+    }
+
     public void testMachine(String id, Location center, float yaw, Location stool, String style) {
         raw.put(id, center.getWorld().getName() + ";" + center.getX() + ";" + center.getY() + ";" + center.getZ() + ";" + yaw + ";2.7;"
                 + stool.getX() + ";" + stool.getY() + ";" + stool.getZ() + ";1;" + style);

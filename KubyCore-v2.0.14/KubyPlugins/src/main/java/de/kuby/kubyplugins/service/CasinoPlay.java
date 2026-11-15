@@ -210,7 +210,11 @@ public final class CasinoPlay {
         return plugin.getConfig().getDouble("casino.goldene-zeit.faktor", 2.0);
     }
 
+    /** Nur für den Regeltest (/kubytest regeln): Goldene Zeit erzwingen (true/false), null = nach Uhrzeit. */
+    public Boolean testGolden;
+
     public boolean golden() {
+        if (testGolden != null) return testGolden;
         if (!goldenEnabled()) return false;
         int h = LocalTime.now(ZONE).getHour();
         return h >= goldenStart() && h < goldenEnd();
@@ -351,6 +355,18 @@ public final class CasinoPlay {
             volumeDay = today;
             volume.clear();
         }
+    }
+
+    /** Nur für den Regeltest: Serie, Verluste, Volumen, Währung und offene Einsätze eines Spielers zurücksetzen. */
+    public synchronized void testReset(UUID id) {
+        streak.remove(id);
+        losses.remove(id);
+        volume.remove(id);
+        mode.remove(id);
+        String pre = id + "|";
+        open.keySet().removeIf(k -> k.startsWith(pre));
+        bound.keySet().removeIf(k -> k.startsWith(pre));
+        save();
     }
 
     public synchronized long volumeLeft(UUID id) {

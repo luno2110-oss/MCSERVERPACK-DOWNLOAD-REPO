@@ -121,6 +121,8 @@ jobs:
             if [ $((i % 4)) -eq 0 ]; then echo "kubytest events" >&3; fi
             # Casino-Spieltest: Spieler an echten Tischen (Blackjack, Roulette, Poker), 110 Sekunden
             if [ $i -eq 6 ]; then echo "kubytest casino 110" >&3; fi
+            # Casino-Regeltest: Juwelen-Grenzen, Siegesserie, Goldene Zeit, echte Crash-Runde, echter Slot-Dreh
+            if [ $i -eq 18 ]; then echo "kubytest regeln" >&3; fi
             if [ $((i % 3)) -eq 0 ]; then echo "tps" >&3; echo "mspt" >&3; fi
           done
           wait $BOTPID || true
@@ -174,6 +176,16 @@ jobs:
               if settle.get("blackjack", 0) == 0: probs.append("Casino-Spieltest: keine Blackjack-Runde abgerechnet")
               if settle.get("roulette", 0) == 0: probs.append("Casino-Spieltest: keine Roulette-Runde abgerechnet")
               if pkhands == 0 and "0 am Pokertisch" not in cstart[0]: probs.append("Casino-Spieltest: keine Poker-Hand zu Ende gespielt")
+          # Casino-Regeltest: jede Prüfung als OK/FEHLER-Zeile, dazu Slot-Walzen (Ergebnis = Mittellinie)
+          rules = re.findall(r"\[Casino-Regel\] (OK|FEHLER) (.*)", log)
+          rres = re.findall(r"\[Casino-Regel\] Ergebnis: (.*)", log)
+          reels = re.findall(r"\[Casino-Test\] slots Walzen: Ergebnis ([a-z ]+) \| Mittellinie nach dem Einrasten ([a-z ]+)", log)
+          if not rres: probs.append("Casino-Regeltest nicht beendet (%d Prüfungen gelaufen)" % len(rules))
+          for ok, what in rules:
+              if ok == "FEHLER": probs.append("Casino-Regel: " + what[:250])
+          if not reels: probs.append("Slots: kein Dreh mit Walzen-Ergebnis im Log")
+          for want, got in reels:
+              if want.strip() != got.strip(): probs.append("Slots: Walzen zeigen %s statt %s" % (got.strip(), want.strip()))
           if not evruns: probs.append("Keine Events ausgelöst")
           played = [g for g in games if not g[1].startswith("abgebrochen")]
           if not played: probs.append("Angel-Minispiel: keine Runde zu Ende gespielt (gestartet: %d)" % gstarted)
@@ -191,6 +203,9 @@ jobs:
           print("- Angel-Minispiel: %d Runden gestartet, %d beendet (%s); am Server angekommen: %d Linksklicks, %d Rechtsklicks, %d Ticks A, %d Ticks D; Bots spielten %d Runden, Tasten-Pakete %d%s" % (gstarted, len(games), ", ".join("%s %d" % kv for kv in gout.items()) or "keine", gsum[0], gsum[1], gsum[2], gsum[3], r.get("games", 0), r.get("inputPackets", 0), (" (Fehler: %s)" % r["inputErrors"]) if r.get("inputErrors") else ""))
           print(casino_line)
           if bonus: print("  - Boni/Trost im Spieltest: " + ", ".join(sorted(set(bonus))[:8]))
+          print("- Casino-Regeltest (echter Spieler, echte Abrechnung): %s" % (rres[-1] if rres else "nicht beendet"))
+          for ok, what in rules: print("  - %s %s" % ("✅" if ok == "OK" else "❌", what[:300]))
+          for want, got in reels: print("  - Slots: Ergebnis %s → Walzen zeigen %s %s" % (want.strip(), got.strip(), "✅" if want.strip() == got.strip() else "❌"))
           print("- TPS (1 min) gemessen: %s" % (", ".join("%.1f" % t for t in tps) or "keine Messung"))
           print("- Kicks: %d, Verbindungsfehler: %d, Befehlsfehler: %d, Exceptions im Log: %d" % (len(r.get("kicked", [])), len(r.get("errors", [])), len(r.get("cmdErrors", [])), len(exc)))
           open("problems.txt", "w").write("\n".join(probs) if probs else "keine Probleme")
