@@ -131,8 +131,9 @@ public final class SlotTension implements Script {
             fr.prop(Prop.item("glow2", "kuby:fx/glow", at, bloom * fade).tint(c).lit(15).board(1).snap(a == 0 ? 0 : 2));
             fr.prop(Prop.item("bloom2", "kuby:fx/bloom", at.add(n.mul(0.01)), bloom * 1.5 * fade).tint(c).lit(15).board(1)
                     .snap(a == 0 ? 0 : 2));
-            if (win) fr.prop(Prop.item("star2", "kuby:fx/star", at.add(n.mul(0.02)), (0.35 + 0.25 * Math.exp(-a * 0.1)) * fade)
-                    .tint(color).lit(15).board(1).snap(2));
+            // Gewinn: zweiter, weiter Lichthof (weich, kein harter Stern)
+            if (win) fr.prop(Prop.item("halo2", "kuby:fx/glow", at.add(n.mul(0.02)), (1.6 + 0.8 * Math.exp(-a * 0.08)) * fade)
+                    .tint(color).lit(15).board(1).snap(a == 0 ? 0 : 2));
         }
     }
 
