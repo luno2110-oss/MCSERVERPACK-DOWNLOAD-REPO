@@ -499,8 +499,9 @@ public final class DealerAnim {
         Matrix4f rLo = rot(new Matrix4f(rUp).translate(0, -5, 0), 0, cur[REX], 0);
         Matrix4f lUp = rot(new Matrix4f(torso).translate(6, 11, 0), cur[LSY], cur[LSX], cur[LSZ]);
         Matrix4f lLo = rot(new Matrix4f(lUp).translate(0, -5, 0), 0, cur[LEX], 0);
-        Matrix4f rLeg = new Matrix4f(legs).translate(-2, 0, 0);
-        Matrix4f lLeg = new Matrix4f(legs).translate(2, 0, 0);
+        // Beinmodelle liegen schon seitlich der Hüftmitte (wie im normalen Skin direkt nebeneinander)
+        Matrix4f rLeg = new Matrix4f(legs);
+        Matrix4f lLeg = new Matrix4f(legs);
         Matrix4f[] ms = {head, torso, rLeg, lLeg, rUp, rLo, lUp, lLo};
         for (int i = 0; i < parts.length; i++) {
             ItemDisplay d = parts[i];

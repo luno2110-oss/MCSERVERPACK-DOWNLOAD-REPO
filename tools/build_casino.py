@@ -125,25 +125,76 @@ CHIPS = {
 }
 
 
-def chip(name, size=16):
-    """Dialog-Chip (Draufsicht) im Icon-Stil: Rampe aus CHIP_RAMPS, getönte Kontur, Licht oben links, ein Glanzpunkt."""
+# Runder 16-px-Kreis (Pixel-Kreis, Treppe 6-10-12-14-14-16): Umriss aller 16er-Chips
+CIRCLE16 = [
+    ".....######.....",
+    "...##########...",
+    "..############..",
+    ".##############.",
+    ".##############.",
+    "################",
+    "################",
+    "################",
+    "################",
+    "################",
+    "################",
+    ".##############.",
+    ".##############.",
+    "..############..",
+    "...##########...",
+    ".....######.....",
+]
+
+
+def round16(img, outline):
+    """Schneidet ein 16er-Bild auf den runden Kreis zu; Randpixel (Nachbar außerhalb) werden zur Kontur."""
+    out = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    src, dst = img.load(), out.load()
+
+    def inside(x, y):
+        return 0 <= x < 16 and 0 <= y < 16 and CIRCLE16[y][x] == "#"
+    for y in range(16):
+        for x in range(16):
+            if not inside(x, y):
+                continue
+            edge = any(not inside(x + dx, y + dy) for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))
+            dst[x, y] = outline if edge else src[x, y]
+    return out
+
+
+def chip(name, size=16, edge=None):
+    """Dialog-Chip (Draufsicht) im Icon-Stil: Rampe aus CHIP_RAMPS, getönte Kontur, Licht oben links, ein Glanzpunkt.
+    Umriss exakt rund (CIRCLE16), sechs Tupfer am Rand spiegelgleich, Licht bewusst oben links."""
     if name in CHIP_RAMPS and size == 16:
         ramp, spot, spot_lo = CHIP_RAMPS[name]
         r = [rgb(c) for c in ramp]
-        sp = rgb(spot)
-        p = Pix(16)
-        c = 8.0
-        p.disk(c, c, 7.0, r[2])
-        for a in (30, 90, 150, 210, 270, 330):
-            p.sector(c, c, 4.9, 7.1, a - 14, a + 14, sp)
-        p.ring(c, c, 4.0, 4.9, r[1])
-        p.disk(c, c, 4.0, r[3] if name != "white" else r[2])
-        p.sector(c, c, 6.0, 7.1, 190, 260, r[3])
-        p.sector(c, c, 6.0, 7.1, 20, 80, r[1])
-        p.sector(c, c, 6.0, 7.1, 100, 160, r[1])
-        p.put(5, 5, mix(r[3], rgb("FFFFF0"), 0.6))
-        p.put(8, 8, sp if name != "white" else r[1])
-        return p.image(outline=mix(r[0], OUT, 0.75))
+        sp, sp_lo = rgb(spot), rgb(spot_lo)
+        img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+        px = img.load()
+        for y in range(16):
+            for x in range(16):
+                dx, dy = x + 0.5 - 8, y + 0.5 - 8
+                d = math.hypot(dx, dy)
+                ang = math.degrees(math.atan2(dy, dx)) % 360
+                col = r[2]
+                if d >= 5.6:  # Rand: Licht oben links, Schatten unten rechts
+                    if 190 <= ang < 260:
+                        col = r[3]
+                    elif 10 <= ang < 170:
+                        col = r[1]
+                if 3.5 <= d < 4.6:
+                    col = r[1]
+                elif d < 3.5:
+                    col = r[3] if name != "white" else r[2]
+                px[x, y] = col
+        # sechs Tupfer als gleiche 2x2-Blöcke, spiegelgleich (oben, unten, je zwei seitlich); untere Hälfte im Schatten
+        for (x0, y0) in ((7, 1), (7, 13), (2, 4), (12, 4), (2, 10), (12, 10)):
+            for yy in (y0, y0 + 1):
+                for xx in (x0, x0 + 1):
+                    px[xx, yy] = sp_lo if (y0 >= 10 and yy == y0 + 1) else sp
+        px[6, 6] = mix(r[3], rgb("FFFFF0"), 0.6)
+        # edge="rim": Randfarbe statt Kontur (Deckel der 3D-Chips, sonst blitzt die Kontur im Stapel durch)
+        return round16(img, r[1] if edge == "rim" else mix(r[0], OUT, 0.75))
     base, spot, inner = (rgb(v) for v in CHIPS[name])
     s = size / 16
     c = size / 2

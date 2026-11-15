@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.70** (ungetestet, nicht kompiliert)
+Stand: **v1.71** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -558,6 +558,11 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
 ## Casino fertigstellen (v1.68)
+- [x] **v1.71 Feinschliff nach Test des Besitzers**
+  - [x] Chips exakt rund (gleiche Pixelzahl, nur verschoben): 16-px-Kreis mit Treppe 6-10-12-14-14-16 statt 8 px gerader Kanten; sechs Randtupfer als gleiche 2x2-Blöcke spiegelgleich, Licht oben links; gilt für Dialog-Chips, Item-Bilder und 3D-Chips
+  - [x] Streifen auf liegenden Chips behoben: (1) Stapelabstand passt jetzt exakt zur Chiphöhe je Skalierung (`BlackjackTable.chipStep`), vorher Lücken; (2) Seitenwand als echtes 16-Eck (8 Stäbe, nur Stirnseiten) statt gezacktem Stern aus 4 Quadraten; (3) Deckel knapp innerhalb der Wand und am Rand in Chipfarbe statt dunkler Kontur; (4) Stapel in 22,5°-Schritten gedreht, Kanten liegen übereinander; (5) Tablett-/Pot-Chips 0,19 groß, Nachbarstapel durchdringen sich nicht mehr; Kanten-Textur ohne dunkles unteres Drittel (wirkte wie Lücke)
+  - [x] Knöpfe symmetrisch: Beschriftung mit ungerader Breite saß 1 px neben der Mitte → diese Knöpfe 49 px breit (8 Stück); runde Bedienknöpfe mit demselben runden Kreis wie die Chips (vorher 4 px Abweichung); automatische Spiegelprüfung aller Knöpfe: 0 Abweichung
+  - [x] Dealer-Beine wie beim normalen Skin direkt nebeneinander (vorher doppelt versetzt, 4 px Lücke)
 - [x] **v1.70 Dealer neu** (Wunsch: Mann, schwarzer Anzug mit rot-goldenen Akzenten, elegant und reich, Animationen wie die Dealer in GTA, smooth und menschlich)
   - [x] Gelenkfigur statt Mannequin (`casino/DealerAnim`): Kopf, Oberkörper, Beine, Ober- und Unterarme als einzelne 3D-Teile (`kuby:casino/rig_dealer_*`, gebaut von `tools/build_skins.py`), Gelenkkette mit Ellbogen; jedes Gelenk folgt seiner Zielpose über eine kritisch gedämpfte Feder (kein Ruck, kein Nachwippen), Kopf schneller als Rumpf, Unterarm leicht nach; Client blendet weich über (alle 2 Ticks, Überblendung 3 Ticks)
   - [x] Smoking in doppelter Auflösung (128 px): Satin-Revers, rote Fliege, weinrote Weste mit Goldknopf, goldenes Einstecktuch, vier Ärmelknöpfe, Manschetten mit Goldknopf, Bügelfalte, Satinstreifen an der Hose, Lackschuhe; gegelte schwarze Haare

@@ -267,8 +267,8 @@ public final class PokerTable {
         String[] stacks = {"white", "red", "blue", "green", "black"};
         for (int i = 0; i < stacks.length; i++) {
             for (int k = 0; k < 3; k++) {
-                item(local((i - 2) * 0.16, FELT_Y + 0.05 + 0.024 * k, -(R - 0.28)), "c3chip_" + stacks[i],
-                        new Quaternionf().rotateY(k * 0.7f), 0.24f, "static");
+                item(local((i - 2) * 0.16, FELT_Y + 0.05 + BlackjackTable.chipStep(BlackjackTable.TRAY_CHIP) * k, -(R - 0.28)), "c3chip_" + stacks[i],
+                        new Quaternionf().rotateY((float) (k * Math.PI / 8)), BlackjackTable.TRAY_CHIP, "static");
             }
         }
         // Stapel verdeckter Karten links der Dealerin
@@ -366,8 +366,8 @@ public final class PokerTable {
         for (int i = 0; i < stacks; i++) {
             int h = 2 + (int) ((amount >> i) % 4);
             for (int k = 0; k < h; k++) {
-                pot.add(item(local((i - (stacks - 1) / 2.0) * 0.15, FELT_Y + 0.012 + 0.024 * k, 0.5 + (i % 2) * 0.08),
-                        "c3chip_" + new String[]{"black", "green", "blue", "red", "white"}[i], new Quaternionf().rotateY(k * 0.9f), 0.24f, "pot"));
+                pot.add(item(local((i - (stacks - 1) / 2.0) * 0.15, FELT_Y + 0.012 + BlackjackTable.chipStep(BlackjackTable.TRAY_CHIP) * k, 0.5 + (i % 2) * 0.08),
+                        "c3chip_" + new String[]{"black", "green", "blue", "red", "white"}[i], new Quaternionf().rotateY((float) (k * Math.PI / 8)), BlackjackTable.TRAY_CHIP, "pot"));
             }
         }
     }
@@ -537,8 +537,8 @@ public final class PokerTable {
         if (amount <= 0) return;
         int n = (int) Math.min(8, 1 + Math.log(amount) / Math.log(3));
         for (int k = 0; k < n; k++) {
-            bets.get(seat).add(item(seatPoint(seat, -0.95, 0, FELT_Y + 0.012 + 0.024 * k),
-                    "c3chip_" + BlackjackTable.chipColor(amount), new Quaternionf().rotateY(k * 0.8f), 0.26f, "bet"));
+            bets.get(seat).add(item(seatPoint(seat, -0.95, 0, FELT_Y + 0.012 + BlackjackTable.chipStep(0.26f) * k),
+                    "c3chip_" + BlackjackTable.chipColor(amount), new Quaternionf().rotateY((float) (k * Math.PI / 8)), 0.26f, "bet"));
         }
     }
 

@@ -54,6 +54,13 @@ public final class BlackjackTable {
     private static final double F_DEALER_CARDS = 0.21;
     private static final float CARD_SCALE = 0.48f;
     private static final float CHIP_SCALE = 0.30f;
+    /** Chips im Tablett/Pot: 0,152 breit, damit Nachbarstapel (Abstand 0,15–0,16) sich nicht durchdringen. */
+    public static final float TRAY_CHIP = 0.19f;
+
+    /** Höhe eines 3D-Chips bei dieser Skalierung (Modell 1,28 / 16): Stapel liegen lückenlos, ohne Überlappung. */
+    public static double chipStep(float scale) {
+        return 0.08 * scale;
+    }
 
     public final String id;
     private final org.bukkit.plugin.Plugin plugin;
@@ -268,8 +275,8 @@ public final class BlackjackTable {
         for (int i = 0; i < stacks.length; i++) {
             double side = (i - 2.5) * 0.16;
             for (int k = 0; k < 3; k++) {
-                Location c = trayAt.clone().add(r.x * side, 0.03 + 0.024 * k, r.z * side);
-                item(c, "c3chip_" + stacks[i], new Quaternionf().rotateY((float) (k * 0.7)), 0.24f, "static");
+                Location c = trayAt.clone().add(r.x * side, 0.03 + chipStep(TRAY_CHIP) * k, r.z * side);
+                item(c, "c3chip_" + stacks[i], new Quaternionf().rotateY((float) (k * Math.PI / 8)), TRAY_CHIP, "static");
             }
         }
         // Kartenschlitten (aus Spielersicht links) und Ablage (rechts)
@@ -629,8 +636,8 @@ public final class BlackjackTable {
         int shown = Math.min(stack.size(), 12);
         for (int i = 0; i < shown; i++) {
             long v = stack.get(stack.size() - shown + i);
-            Location l = f.clone().add(0, 0.012 + 0.024 * CHIP_SCALE / 0.3 * i, 0);
-            float rot = (float) ((i * 0.9) % (Math.PI * 2));
+            Location l = f.clone().add(0, 0.012 + chipStep(CHIP_SCALE) * i, 0);
+            float rot = (float) (i * Math.PI / 8); // 22,5°-Schritte: Kanten der Chips liegen übereinander
             chips.get(seat).add(item(l, "c3chip_" + chipColor(v, jw), new Quaternionf().rotateY(rot), CHIP_SCALE, "chip"));
         }
         TextDisplay t = badge(onSeatAxis(seat, radius * F_BET + 0.06, -0.3, FELT_Y + 0.05));
@@ -643,7 +650,7 @@ public final class BlackjackTable {
     /** Ein Chip fliegt vom Rack (Index) auf den Einsatzkreis. */
     public void flyChip(int seat, int index, int count, long value, boolean jw) {
         Location from = rackSpot(seat, index, count);
-        Location to = field(seat).add(0, 0.05 + 0.024 * chips.get(seat).size(), 0);
+        Location to = field(seat).add(0, 0.05 + chipStep(CHIP_SCALE) * chips.get(seat).size(), 0);
         ItemDisplay e = item(from.clone().add(0, 0.05, 0), "c3chip_" + chipColor(value, jw), new Quaternionf(), CHIP_SCALE, "fly");
         e.setTeleportDuration(4);
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
@@ -661,7 +668,7 @@ public final class BlackjackTable {
                 Location from = origin.clone().add(fwd().x * 0.25, FELT_Y + 0.1, fwd().z * 0.25);
                 ItemDisplay e = item(from, "c3chip_" + (jewels ? "gold" : "green"), new Quaternionf(), CHIP_SCALE, "chip");
                 e.setTeleportDuration(7);
-                Location to = f.clone().add(-d.z * 0.16 * (i % 2 == 0 ? 1 : -1), 0.012 + 0.024 * (i / 2), d.x * 0.16 * (i % 2 == 0 ? 1 : -1));
+                Location to = f.clone().add(-d.z * 0.16 * (i % 2 == 0 ? 1 : -1), 0.012 + chipStep(CHIP_SCALE) * (i / 2), d.x * 0.16 * (i % 2 == 0 ? 1 : -1));
                 long at = 2 + i * 2L;
                 plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
                     if (e.isValid()) e.teleport(to);

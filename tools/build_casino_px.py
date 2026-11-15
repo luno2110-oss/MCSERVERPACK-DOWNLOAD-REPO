@@ -281,22 +281,51 @@ CHIP_NAMES = ["white", "red", "blue", "green", "black", "purple", "gold", "pink"
 
 
 def chip_side(name):
+    """Kante: Spalte 0 = Farbtupfer, Spalte 1 = Grundfarbe; oben Licht, unten Schatten (je 16 Zeilen)."""
     ramp, spot, _ = bc.CHIP_RAMPS[name]
     r = [rgb(c) for c in ramp]
     sp = rgb(spot)
-    return _mat(lambda x, y: sp if (x // 2) % 3 == 0 else (r[2] if y < 8 else r[1]))
+
+    def f(x, y):
+        # dünne Kante: nur oben eine Lichtkante und unten eine Schattenkante, sonst Vollfarbe (sonst wirkt der
+        # Schatten im Stapel wie eine Lücke zwischen den Chips)
+        if x % 2 == 0:
+            return mix(sp, r[3], 0.35) if y < 3 else sp if y < 14 else mix(sp, r[1], 0.5)
+        return r[3] if y < 3 else r[2] if y < 14 else mix(r[2], r[1], 0.5)
+    return _mat(f)
+
+
+# Chip-Maße in Modell-Einheiten: Deckel 12,8 breit (0,8 je Textur-Pixel), Höhe 1,28 (Stapelabstand 0,08 x Skalierung)
+CHIP_R = 6.4
+# Deckel knapp innerhalb der Wand (Innenkreis des 16-Ecks 6,28): kein dunkler Rand ragt im Stapel heraus
+CHIP_TOP = 6.27
+CHIP_Y0, CHIP_Y1 = 7.36, 8.64
 
 
 def chip_model(name):
+    """Runder Chip: 16-eckige Seitenwand aus 8 schmalen Stäben (je zwei Stirnseiten = zwei Kanten des 16-Ecks, keine
+    Zacken), Deckel oben und unten mit der runden Chip-Textur. Abwechselnd Farbtupfer und Grundfarbe an der Kante."""
     tex = "kuby:block/casino/chip_" + name
     side = "kuby:block/casino/chipside_" + name
+    a = CHIP_R * math.cos(math.radians(11.25))
+    b = CHIP_R * math.sin(math.radians(11.25))
     els = []
-    for ang in (0, 22.5, 45, -22.5):
-        els.append({"from": [2.2, 7.4, 2.2], "to": [13.8, 8.6, 13.8],
-                    "rotation": {"angle": ang, "axis": "y", "origin": [8, 8, 8]},
-                    "faces": {f: {"texture": "#side", "uv": [0, 0, 16, 1]} for f in ("north", "south", "east", "west")}})
-    els.append({"from": [1.6, 8.62, 1.6], "to": [14.4, 8.62, 14.4], "faces": {"up": {"texture": "#top", "uv": [0, 0, 16, 16]}}})
-    els.append({"from": [1.6, 7.38, 1.6], "to": [14.4, 7.38, 14.4], "faces": {"down": {"texture": "#top", "uv": [0, 0, 16, 16]}}})
+    # (Achse, Drehung, gerade = Tupfer): Richtungen 0, ±22,5, ±45 (Stab entlang x) und 90, 90 ± 22,5 (Stab entlang z)
+    for axis, ang, spot in (("x", 0, True), ("x", 22.5, False), ("x", -22.5, False), ("x", 45, True), ("x", -45, True),
+                            ("z", 0, True), ("z", 22.5, False), ("z", -22.5, False)):
+        col = 0 if spot else 1
+        if axis == "x":
+            fr, to, faces = [8 - a, CHIP_Y0, 8 - b], [8 + a, CHIP_Y1, 8 + b], ("east", "west")
+        else:
+            fr, to, faces = [8 - b, CHIP_Y0, 8 - a], [8 + b, CHIP_Y1, 8 + a], ("north", "south")
+        el = {"from": [round(v, 4) for v in fr], "to": [round(v, 4) for v in to],
+              "faces": {fc: {"texture": "#side", "uv": [col, 0, col + 1, 16]} for fc in faces}}
+        if ang:
+            el["rotation"] = {"angle": ang, "axis": "y", "origin": [8, 8, 8]}
+        els.append(el)
+    lo, hi = 8 - CHIP_TOP, 8 + CHIP_TOP
+    els.append({"from": [lo, CHIP_Y1, lo], "to": [hi, CHIP_Y1, hi], "faces": {"up": {"texture": "#top", "uv": [0, 0, 16, 16]}}})
+    els.append({"from": [lo, CHIP_Y0, lo], "to": [hi, CHIP_Y0, hi], "faces": {"down": {"texture": "#top", "uv": [0, 16, 16, 0]}}})
     return {"textures": {"top": tex, "side": side, "particle": tex}, "elements": els}
 
 
@@ -322,7 +351,9 @@ PK_BUTTONS = {
 def action_button(name):
     label, ramp = BUTTONS[name] if name in BUTTONS else PK_BUTTONS[name]
     r = [rgb(c) for c in ramp]
-    w, h = 48, 16
+    lw = text_width(label)
+    # ungerade Textbreite: 49 px breit, damit links und rechts gleich viel Rand bleibt (Fläche im Modell bleibt gleich)
+    w, h = (48 if lw % 2 == 0 else 49), 16
     img = Image.new("RGBA", (w, h), T)
     px = img.load()
     for y in range(1, h - 1):
@@ -331,31 +362,32 @@ def action_button(name):
                 continue
             px[x, y] = r[3] if y == 2 else r[2] if y < h - 4 else r[1]
     img = _outline(img, mix(r[0], INK, 0.6))
-    lw = text_width(label)
     draw_text(img, (w - lw) // 2, 5, label, PAPER[2], outline=mix(r[0], INK, 0.3))
     return img
 
 
 def control_button(kind):
+    """Runder Bedienknopf 16 px: gleicher Kreis wie die Chips (bc.CIRCLE16), Licht oben links, Symbol mittig."""
     ramp = {"repeat": DUSK, "clear": RED, "chips": GOLDB, "jewels": BLUE}[kind]
     r = [rgb(c) for c in ramp]
     p = bc.Pix(16)
-    p.disk(8, 8, 6.6, r[2])
-    p.sector(8, 8, 5.4, 6.7, 190, 280, r[3])
-    p.sector(8, 8, 5.4, 6.7, 10, 100, r[1])
+    p.disk(8, 8, 8.5, r[2])
+    p.sector(8, 8, 5.6, 8.5, 190, 260, r[3])
+    p.sector(8, 8, 5.6, 8.5, 10, 170, r[1])
     w = PAPER[2]
     if kind == "repeat":
         p.ring(8, 8, 2.2, 3.4, w)
         p.rect(8, 3, 10, 5, r[2])
         p.poly([(9, 2.5), (11.5, 4.5), (9, 6.5)], w)
     elif kind == "clear":
-        p.line(5, 5, 11, 11, w, 1.6)
-        p.line(5, 11, 11, 5, w, 1.6)
+        for k in range(5, 11):
+            p.put(k, k, w)
+            p.put(15 - k, k, w)
     elif kind == "chips":
         p.ring(8, 8, 1.4, 3.2, w)
     else:
         p.poly([(5, 6.5), (6.5, 4.5), (9.5, 4.5), (11, 6.5), (8, 11.5)], w)
-    return p.image(outline=mix(r[0], INK, 0.6))
+    return bc.round16(p.image(), mix(r[0], INK, 0.6))
 
 
 def _outline(img, col):
@@ -488,7 +520,7 @@ def write(out):
             item("c3_" + cid, card_model(B + "card/" + cid, B + "card/back"))
     item("c3_back", card_model(B + "card/back", B + "card/back"))
     for name in CHIP_NAMES:
-        bc.chip(name).save(os.path.join(tex, "chip_" + name + ".png"))
+        bc.chip(name, edge="rim").save(os.path.join(tex, "chip_" + name + ".png"))
         chip_side(name).save(os.path.join(tex, "chipside_" + name + ".png"))
         item("c3chip_" + name, chip_model(name))
     for name in BUTTONS:
