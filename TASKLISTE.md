@@ -557,7 +557,7 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Kern: Info-Leiste (Vorschau der Job-Leiste ragte aus dem Fenster), Kits („alle … Std.“ über „Vorschau“), Bestenliste (Untertitel), Investments (Name über Preis), Quiz-Abstimmung (Zeile zu lang)
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
-## Casino fertigstellen (v1.68, in Arbeit)
+## Casino fertigstellen (v1.68)
 - [x] Gemeinsamer Casino-Kern (`CasinoPlay`) für alle Spiele gegen die Bank (Blackjack, Roulette, Slots, Crash, Losbude):
   - [x] **Juwelen für VIP** (Rang VIP oder höher, Recht `kuby.casino.juwelen`): `/casino waehrung` oder der Knopf am Blackjack-Platz; Einsatz 50 bis 10.000 Juwelen je Spiel und Runde, höchstens 50.000 Juwelen Spielvolumen am Tag (`casino.juwelen.*`). Die Währung eines offenen Einsatzes ist fest gespeichert (Rückgabe nach Absturz in der richtigen Währung)
   - [x] **Siegesserie**: jeder Sieg in Folge +0,2x auf den Gewinn (1. Sieg x1, 2. x1,2 … bis x2,5), Unentschieden hält die Serie, Titel bei 3/5/8/10 Siegen; `/casino bonus` zeigt Serie, beste Serie, Goldene Zeit
@@ -565,6 +565,7 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - [x] **Belohnend auch bei Verlust**: 3 % Cashback auf jeden Verlust, nach 3 Niederlagen in Folge Comeback-Bonus (+0,25x) auf den nächsten Sieg, „Knapp!“-Hinweis bei Slots, Rückmeldung mit Ton, Partikeln und Actionbar nach jeder Runde (`casino.bonus.*`)
   - [x] Boni gelten nur auf den Reingewinn, alle Faktoren zusammen höchstens x6 (`max-gesamt`)
 - [x] **Crash**: Kurs = e^(0,07·s + 0,003·s²) – je höher, desto schneller (2x nach ~8 s, 5x nach ~14 s, 20x nach ~21 s; `casino.crash.beschleunigung`), Ticken wird mit dem Kurs schneller und höher, ab 5x Herzschlag, Gong bei 2x/5x/10x/25x. Hausvorteil unverändert
+- [x] Prüfung v1.68: Build, Server-Test (SELFTEST ohne Fehler), Belastungstest (10 Bots, 504 Menü-Klicks, 0 Fehler, TPS 19,7–20) und Bedrock-Test grün; Tische in der 3D-Vorschau (`tools/preview3d`) aus Spielersicht geprüft. Test im Spiel offen
 - [x] **Blackjack-Tisch neu** (Clean-Look, Texturen in hoher Auflösung, `tools/build_casino_hd.py`): ein durchgehender Filz 512 px mit Goldlinien, Einsatzkreisen und Aufdruck „BLACKJACK ZAHLT 3 ZU 2“, schwarze Leder-Armauflage mit Steppnaht, Sockel Creme-Lack mit Goldband, Barhocker Creme-Leder mit Goldfuß, Chip-Tablett mit echten 3D-Chips, Schlitten und Ablage
   - [x] Tisch 20 cm niedriger (Filz 0,8), Hocker passend; vom Platz aus liegen Karten, Chips und Zahlen frei. Handwert und Einsatz als kleine Plaketten neben Karten und Chips, nie darüber
   - [x] 3D-Karten (40 x 56 px, Vorder- und Rückseite): kommen verdeckt aus dem Schlitten, gleiten an ihren Platz und drehen sich um; Dealer-Geste beim Austeilen; am Ende wandern die Karten in die Ablage
@@ -584,6 +585,7 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
 - [x] **Roulette intensiver**: „Nichts geht mehr!“ mit Glocke und Titel, dazu 1–3 **Blitz-Zahlen** je Runde (Donner, Funken), Volltreffer darauf zahlen x2 bis x5; wer am meisten gesetzt hat, darf die Kugel selbst werfen ([KUGEL WERFEN] bzw. `/casino werfen`, sonst wirft der Croupier nach 4 s); letzte 5 s Countdown steigend und rot; beim Auslaufen zeigt die Mitte live die Zahl unter der Kugel (Blitz-Zahl mit ⚡), in den letzten Feldern Herzschlag; Ergebnis als Titel mit Gewinn, Volltreffer mit Totem-Partikeln, „Knapp!“ wenn die eigene Zahl direkt neben der Kugel lag, Feuerwerk bei Gewinnern, die letzten 8 Zahlen in Farbe
 - [x] **Bedrock: 3D-Modelle sichtbar** (Casino-Tische, Karten, Chips, Keks, Möbel, Generatoren …): Bedrock kennt keine Item-Anzeigen. Lösung: Geyser-Erweiterung GeyserDisplayEntity (macht aus jeder Item-Anzeige eine Bedrock-Entity, die das Item hält) plus für jedes 3D-Modell eine echte Bedrock-Geometrie im KubyBedrock-Pack: `tools/build_bedrock_pack.py` rechnet jedes Java-Modell mit Elementen in ein Attachable um (330 Modelle, Würfel und Drehungen wie java2bedrock, Texturen je Modell in einem Atlas, Pivot so, dass die Modellmitte am Ort der Anzeige liegt). Anleitung in BEDROCK.md (Schritt 4b)
   - [x] Bedrock-Test (CI) installiert die Erweiterung und ihr Pack, stellt einen Blackjack-Tisch an den Spawn und prüft: kommen die Anzeigen als `geyser:item_display` beim Bedrock-Client an, hält jede ein Kuby-Item, hat jedes davon ein 3D-Modell im Pack; alle Attachables haben Geometrie und Textur
+  - [x] Ergebnis (echter Bedrock-Client 26.60, Geyser 2.12.1): 336 `geyser:item_display` am Tisch, 636 gehaltene Kuby-Items (Leder, Creme-Sockel, Gold, Hocker, 3D-Chips …), alle 636 mit 3D-Modell im Pack; 335 Attachables, 0 fehlerhaft
   - [ ] Optik auf einem echten Bedrock-Gerät ansehen (Lage und Größe der Modelle; die Rechnung folgt java2bedrock, ein Gerätetest steht aus)
 
 ## Fehler: Claims „nur in der Survival-Welt“, obwohl man in Survival ist (v1.67)
