@@ -81,9 +81,47 @@ public final class LoadTestCommand implements CommandExecutor {
                 plugin.getLogger().info("[Belastungstest] Events ausgelöst: " + String.join(", ", done));
             }
             case "casino" -> casino(args.length > 1 ? Integer.parseInt(args[1]) : 100);
+            case "kamera" -> {
+                if (sender instanceof Player p && args.length > 1) camera(p, args[1].toLowerCase(java.util.Locale.ROOT));
+            }
             default -> sender.sendMessage("/kubytest klicks [n] | events | casino [Sekunden]");
         }
         return true;
+    }
+
+    private static Location camBj, camRl, camPk, camSlots;
+
+    /** Kamera-Punkte für Screenshots aus dem echten Client (CI "Client-Bilder"). */
+    private void camera(Player p, String where) {
+        Location from, to;
+        switch (where) {
+            case "bj_oben" -> {
+                from = camBj.clone().add(0, 3.0, 5.6);
+                to = camBj.clone().add(0, 0.8, 1.3);
+            }
+            case "bj_seite" -> {
+                from = camBj.clone().add(-3.6, 1.9, 3.2);
+                to = camBj.clone().add(0, 0.8, 1.2);
+            }
+            case "poker" -> {
+                from = camPk.clone().add(0, 3.2, -4.2);
+                to = camPk.clone().add(0, 0.8, 0);
+            }
+            case "roulette" -> {
+                from = camRl.clone().add(0, 2.6, 6.0);
+                to = camRl.clone().add(0, 0, 0.5);
+            }
+            default -> {
+                from = camSlots.clone().add(0, 1.7, 4.4);
+                to = camSlots.clone().add(0, 1.3, 0);
+            }
+        }
+        if (p.getVehicle() != null) p.leaveVehicle();
+        from.setDirection(to.toVector().subtract(from.toVector()));
+        p.setAllowFlight(true);
+        p.setFlying(true);
+        p.teleport(from);
+        plugin.getLogger().info("[Kamera] " + p.getName() + " bei " + where);
     }
 
     /**
@@ -118,10 +156,19 @@ public final class LoadTestCommand implements CommandExecutor {
         Location bjAt = new Location(w, gx + 0.5, gy, gz + 0.5);
         Location rlAt = new Location(w, gx + 9.5, gy + 1, gz + 0.5);
         Location pkAt = new Location(w, gx - 9.5, gy, gz + 0.5, 180f, 0f);
+        Location slotA = new Location(w, gx + 0.5, gy + 1.5, gz - 7.5);
+        Location slotB = new Location(w, gx + 4.5, gy + 1.5, gz - 7.5);
+        camBj = bjAt;
+        camRl = rlAt;
+        camPk = pkAt;
+        camSlots = new Location(w, gx + 2.5, gy, gz - 7.5);
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             de.kuby.kubyplugins.casino.BlackjackGame bj = plugin.blackjack().testTable(bjAt, 0f);
             plugin.roulette().setTable(rlAt, 10, 8, 0f);
             plugin.poker().setTable(pkAt);
+            // zwei neue Automaten freistehend (Hocker 1,6 davor, Blick nach +z zum Spieler)
+            plugin.slots().testMachine("kgold", slotA, 0f, new Location(w, slotA.getX(), gy, slotA.getZ() + 1.6), "gold");
+            plugin.slots().testMachine("kneon", slotB, 0f, new Location(w, slotB.getX(), gy, slotB.getZ() + 1.6), "neon");
             int bjSeat = 0, pkSeat = 0;
             for (int i = 0; i < players.size(); i++) {
                 Player p = players.get(i);

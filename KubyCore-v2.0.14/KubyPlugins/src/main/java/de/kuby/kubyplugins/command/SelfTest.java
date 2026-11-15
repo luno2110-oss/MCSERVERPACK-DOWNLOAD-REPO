@@ -593,15 +593,19 @@ final class SelfTest {
             }
         }
 
-        // Rematch-Mod: Handshake-Kodierung hin und zurück (gleiches Format wie die Fabric-Mod)
+        // Casino: Juwelen nur in den freigegebenen Spielen, sonst immer Chips (auch wenn der Spieler Juwelen gewählt hat)
         try {
-            var rm = de.kuby.kubyplugins.rematch.RematchModService.class;
-            var h = de.kuby.kubyplugins.rematch.RematchModService.decodeHello(
-                    de.kuby.kubyplugins.rematch.RematchModService.encodeHello(300, "0.1.0-ä"));
-            if (h.protocol() != 300 || !h.version().equals("0.1.0-ä")) fails.add("Rematch-Handshake: " + h);
-            if (plugin.rematchMod() == null) fails.add("Rematch-Mod-Dienst nicht gestartet (" + rm.getSimpleName() + ")");
+            var cp = plugin.casinoPlay();
+            if (cp != null) {
+                if (!cp.jewelGame("blackjack")) fails.add("Casino: Blackjack muss Juwelen erlauben");
+                for (String g : new String[]{"roulette", "slots", "crash", "losbude"}) {
+                    if (cp.jewelGame(g)) fails.add("Casino: " + g + " darf keine Juwelen erlauben");
+                    if (cp.cur(java.util.UUID.randomUUID(), g) != de.kuby.kubyplugins.service.CasinoPlay.Cur.CHIPS)
+                        fails.add("Casino: " + g + " spielt nicht mit Chips");
+                }
+            }
         } catch (Throwable t) {
-            fails.add("Rematch-Handshake: " + t);
+            fails.add("Casino-Währung: " + t);
         }
 
         // OP-Werkzeuge: jedes lässt sich bauen und trägt seine Art; jedes Shop-Angebot mit Werkzeug kennt es

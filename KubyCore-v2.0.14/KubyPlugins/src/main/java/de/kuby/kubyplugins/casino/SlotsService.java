@@ -423,6 +423,16 @@ public final class SlotsService implements Listener {
     // Admin
     // =================================================================================================================
 
+    /** Spieltest/Kamera: freistehender Automat (id, Fenstermitte, Blickrichtung zum Spieler, Hocker, Stil). */
+    public void testMachine(String id, Location center, float yaw, Location stool, String style) {
+        raw.put(id, center.getWorld().getName() + ";" + center.getX() + ";" + center.getY() + ";" + center.getZ() + ";" + yaw + ";2.7;"
+                + stool.getX() + ";" + stool.getY() + ";" + stool.getZ() + ";1;" + style);
+        save();
+        machines.remove(id);
+        State s = load(id);
+        if (s != null) build(s);
+    }
+
     /** /casino slots automat [Breite] | entfernen | liste */
     public void command(Player p, String[] args) {
         if (!p.hasPermission("kuby.admin")) {

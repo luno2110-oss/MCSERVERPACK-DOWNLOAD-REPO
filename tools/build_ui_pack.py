@@ -44,7 +44,7 @@ import build_kit  # noqa: E402
 import build_fish  # noqa: E402
 import build_angel_icons  # noqa: E402
 import build_casino  # noqa: E402
-import build_casino_hd  # noqa: E402
+import build_casino_px  # noqa: E402
 import build_help_icons  # noqa: E402
 import build_hats  # noqa: E402
 import build_settings  # noqa: E402
@@ -86,7 +86,7 @@ if VANILLA and os.path.isdir(VANILLA):
     own += [("fishx_" + f[0], build_fish.render(f, silhouette=True)) for f in build_fish.FISH]
     own += build_angel_icons.build(OUT)
     casino16, casino_small, casino_big = build_casino.build(OUT)
-    build_casino_hd.write(OUT)
+    build_casino_px.write(OUT)
     build_skins.build(OUT)
     own += casino16
     own += build_hats.particle_icons(VANILLA)

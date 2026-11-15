@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.68** (ungetestet, nicht kompiliert)
+Stand: **v1.69** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -358,8 +358,8 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
     - https://youtu.be/DI9JtnRuuYM: weitere Tore und Animationen
   - Modi (Antwort des Besitzers): 1v1 (3 min), 2v2 (5 min), 3v3 (5 min), 5v5 (10 min)
   - Wartet auf den Besitzer vor Schritt 3: Ort im Netzwerk, Torwart fest oder automatisch, Belohnungen, Rangliste ab Start
-  - [x] Schritt 1a, Mod-Grundgerüst `rematch/mod/` (Fabric Loom 1.14.10, Gradle-Wrapper 9.9.0, Fabric API 0.141.6, Loader 0.20.1, Java 21, Mojang-Mappings, Client-Code getrennt in `src/client`). Bauen: `cd rematch/mod && ./gradlew build` → `build/libs/kuby-rematch-<version>.jar`. Die CI baut sie mit und legt `KubyRematch.jar` ins Release „latest“ (nicht in KubyPlugins.zip, die gehört in den plugins-Ordner)
-    - Handshake: Mod schickt beim Betreten `kuby:rematch_hello` (VarInt Protokoll, String Version), KubyCore (`rematch/RematchModService`) merkt sich das und antwortet `kuby:rematch_welcome` (Protokoll, kompatibel, Text im Chat). `RematchModService.hasMod(p)` für den Modus, `/kp rematchmod` zeigt, wer die Mod hat. Protokoll-Version auf beiden Seiten gleich halten (jetzt 1). Selbsttest prüft die Kodierung
+  - [x] Schritt 1a, Mod-Grundgerüst `rematch/mod/` (Fabric Loom 1.14.10, Gradle-Wrapper 9.9.0, Fabric API 0.141.6, Loader 0.20.1, Java 21, Mojang-Mappings, Client-Code getrennt in `src/client`). Bauen: `cd rematch/mod && ./gradlew build` → `build/libs/kuby-rematch-<version>.jar`. ~~Die CI baut sie mit~~ v1.69: **komplett vom Server getrennt** (Wunsch des Besitzers: eigenes Projekt, 0 % Zusammenhang): kein Mod-Bau mehr in der Plugin-CI, kein `KubyRematch.jar` im Release
+    - ~~Handshake~~ v1.69 entfernt (`RematchModService`, Selbsttest-Teil gelöscht; das Plugin kennt die Mod nicht mehr): Mod schickte beim Betreten `kuby:rematch_hello` (VarInt Protokoll, String Version), KubyCore (`rematch/RematchModService`) merkt sich das und antwortet `kuby:rematch_welcome` (Protokoll, kompatibel, Text im Chat). `RematchModService.hasMod(p)` für den Modus, `/kp rematchmod` zeigt, wer die Mod hat. Protokoll-Version auf beiden Seiten gleich halten (jetzt 1). Selbsttest prüft die Kodierung
   - [x] Vorlagen-Videos geladen (Release „Rematch_Ref“, 4 Videos, 480p/360p, 30 fps) und ausgewertet: harter Schuss = Arme weit (T), Körper seitlich über dem Standbein gekippt, Bein peitscht und zieht hoch quer durch, Blitz-Stern am Kontakt, Hüpfer und Landung auf dem Schussbein; Fallrückzieher = Ball selbst hochlupfen, Absprung bis Kontakt nur ~0,25 s, Körper waagerecht, Landung auf den Händen, seitlich abrollen; Tor = gemaltes Vollbild mit Raute und Spielstand
   - [x] Schritt 2a, Animationssystem in der Mod (Test im Spiel: Probe-Video `rematch_animationen_ingame.mp4`, im echten Client ohne Bildschirm aufgenommen):
     - Spieler-Gerüst mit Minecraft-Maßen und den Knochennamen des Besitzers (`tools/bbanim/rig_spieler.py`, eine Quelle für Mod und Vorlage): Beine, Rumpf, Arme je 12 Pixel in der Mitte geteilt (Knie, Bauch, Ellbogen). Blockbench-Vorlage mit Steve-Skin: `rematch/animationen/vorlage_spieler.bbmodel`. Alte Skizzen (38 Pixel hoch) rechnet der Exporter automatisch um
@@ -558,6 +558,12 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
 ## Casino fertigstellen (v1.68)
+- [x] **v1.69 Casino-Grafik im Minecraft-Look** (Feedback: „zu hochauflösend, Karten zeigen Pink-Schwarz-Karo, Automaten zu realistisch“): `tools/build_casino_px.py` ersetzt `build_casino_hd.py` (gelöscht), alle Modellnamen bleiben, kein Code geändert
+  - [x] etwa 16 px je Block: Blackjack-Filz 96 x 48, Poker-Filz 96 x 48, Materialien 16 x 16, Chips 16 x 16, Knöpfe 48 x 16, Bedienknöpfe 16 x 16; harte Farbstufen aus den Icon-Rampen, 1-px-Kontur, keine Verläufe, kein Weichzeichnen, keine Schriftarten (eigene 3 x 5-Pixelschrift, M/N/W breiter)
+  - [x] Karten: die 32-px-Pixelkarten (wie in den Menüs) als 3D-Karte, Rückseite rot; alle Casino-Texturen jetzt unter `textures/block/casino/` (die Karten lagen vorher unter `textures/item/…` – seit 1.21.11 getrennter Item-Atlas, wahrscheinliche Ursache des Pink-Schwarz-Karos). Prüfung: kein Modell im Pack mischt `item/`- und `block/`-Texturen, keine fehlende Textur
+  - [x] Automaten Goldrausch und Neon 7 schlicht: Schild 64 x 24 mit Pixelschrift, Pultfront 32 x 16 mit drei Rauten statt Fächer/Streifen
+  - [x] 3D-Vorschau Blackjack, Poker, beide Automaten geprüft
+- [x] **v1.69 Fehler behoben (Test des Besitzers):** die Juwelen-Wahl galt dauerhaft für alle Casino-Spiele (Roulette, Slots, Crash), obwohl es dort keine Juwelen geben soll. Jetzt gilt sie nur in den Spielen aus `casino.juwelen.spiele` (Standard: nur Blackjack), alle anderen spielen immer mit Chips; `/casino waehrung` und `/casino bonus` sagen, wo Juwelen gelten. Selbsttest prüft es
 - [x] Gemeinsamer Casino-Kern (`CasinoPlay`) für alle Spiele gegen die Bank (Blackjack, Roulette, Slots, Crash, Losbude):
   - [x] Juwelen-Volumen wahlweise je Tag, Woche, Monat oder einmalig gesamt (`casino.juwelen.zeitraum`, Standard tag, `casino.juwelen.volumen` 50.000)
   - [x] **Juwelen für VIP** (Rang VIP oder höher, Recht `kuby.casino.juwelen`): `/casino waehrung` oder der Knopf am Blackjack-Platz; Einsatz 50 bis 10.000 Juwelen je Spiel und Runde, höchstens 50.000 Juwelen Spielvolumen am Tag (`casino.juwelen.*`). Die Währung eines offenen Einsatzes ist fest gespeichert (Rückgabe nach Absturz in der richtigen Währung)

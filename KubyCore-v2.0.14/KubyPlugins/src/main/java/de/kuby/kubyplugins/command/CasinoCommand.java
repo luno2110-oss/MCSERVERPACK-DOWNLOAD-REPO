@@ -49,7 +49,7 @@ public final class CasinoCommand implements CommandExecutor {
                 if (err != null) {
                     Msg.send(p, "<red>" + err);
                 } else if (want == de.kuby.kubyplugins.service.CasinoPlay.Cur.JEWELS) {
-                    Msg.send(p, "<#7FE3FF>◆ Du spielst jetzt mit Juwelen. <gray>Einsatz " + cp.jewelMin() + " bis " + cp.jewelMax()
+                    Msg.send(p, "<#7FE3FF>◆ Du spielst jetzt mit Juwelen <gray>(nur " + cp.jewelGamesLabel() + ", alle anderen Spiele bleiben bei Chips). Einsatz " + cp.jewelMin() + " bis " + cp.jewelMax()
                             + " je Runde, " + cp.volumePeriodLabel() + " noch " + cp.volumeLeft(p.getUniqueId()) + " Juwelen Spielvolumen.");
                 } else {
                     Msg.send(p, "<#F2C94C>● Du spielst jetzt mit Chips.");
@@ -64,7 +64,7 @@ public final class CasinoCommand implements CommandExecutor {
                 Msg.send(p, "<gray>" + cp.goldenLabel());
                 Msg.send(p, "<gray>Niederlagen in Folge: <white>" + cp.lossStreak(p.getUniqueId()) + "</white> (ab 3 gibt der nächste Sieg einen Comeback-Bonus), "
                         + "jeder Verlust gibt Cashback zurück.");
-                Msg.send(p, "<gray>Währung: <white>" + (cp.mode(p.getUniqueId()) == de.kuby.kubyplugins.service.CasinoPlay.Cur.JEWELS ? "Juwelen" : "Chips")
+                Msg.send(p, "<gray>Währung: <white>" + (cp.mode(p.getUniqueId()) == de.kuby.kubyplugins.service.CasinoPlay.Cur.JEWELS ? "Juwelen (nur " + cp.jewelGamesLabel() + ")" : "Chips")
                         + (cp.vip(p) ? " <dark_gray>· <gray>wechseln: <white>/casino waehrung" : ""));
             }
             case "kaufen", "buy" -> trade(p, args, true);

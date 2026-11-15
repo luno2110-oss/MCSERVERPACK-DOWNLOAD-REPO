@@ -92,6 +92,23 @@ public final class CasinoPlay {
         return plugin.getConfig().getDouble("casino.bonus." + key, def);
     }
 
+    /** Spiele, in denen man mit Juwelen spielen kann (casino.juwelen.spiele, Standard nur Blackjack). Alle anderen immer Chips. */
+    public boolean jewelGame(String game) {
+        java.util.List<String> l = plugin.getConfig().getStringList("casino.juwelen.spiele");
+        if (l.isEmpty()) l = java.util.List.of("blackjack");
+        for (String g : l) if (g.equalsIgnoreCase(game)) return true;
+        return false;
+    }
+
+    /** Lesbare Liste der Juwelen-Spiele für Meldungen. */
+    public String jewelGamesLabel() {
+        java.util.List<String> l = plugin.getConfig().getStringList("casino.juwelen.spiele");
+        if (l.isEmpty()) l = java.util.List.of("blackjack");
+        java.util.List<String> out = new java.util.ArrayList<>();
+        for (String g : l) out.add(g.isEmpty() ? g : Character.toUpperCase(g.charAt(0)) + g.substring(1));
+        return String.join(", ", out);
+    }
+
     public long jewelMin() {
         return plugin.getConfig().getLong("casino.juwelen.min", 50);
     }
@@ -259,7 +276,8 @@ public final class CasinoPlay {
     /** Währung, in der der Spieler in diesem Spiel gerade spielt (offener Einsatz, sonst gewählte). */
     public synchronized Cur cur(UUID id, String game) {
         Cur c = bound.get(key(id, game));
-        return c != null ? c : mode(id);
+        if (c != null) return c;
+        return jewelGame(game) ? mode(id) : Cur.CHIPS;
     }
 
     public long balance(UUID id, Cur cur) {
@@ -379,7 +397,7 @@ public final class CasinoPlay {
      */
     public synchronized Outcome settle(UUID id, String game, long stake, long gross) {
         String k = key(id, game);
-        Cur c = bound.getOrDefault(k, mode(id));
+        Cur c = bound.getOrDefault(k, jewelGame(game) ? mode(id) : Cur.CHIPS);
         reduce(k, stake);
         int before = streak.getOrDefault(id, 0);
         int lost = losses.getOrDefault(id, 0);

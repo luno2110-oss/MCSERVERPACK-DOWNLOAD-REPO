@@ -138,6 +138,7 @@ casino:
     max: 10000
     volumen: 50000              # höchstens so viele Juwelen Einsatz je Zeitraum
     zeitraum: tag               # tag, woche, monat oder gesamt (einmaliges Gesamtlimit je Spieler)
+    spiele: [blackjack]         # nur hier gilt die Juwelen-Wahl; alle anderen Spiele (Roulette, Slots, Crash, Losbude) immer Chips
   # Belohnungen in allen Spielen gegen die Bank (Blackjack, Roulette, Slots, Crash, Losbude), nur auf den Reingewinn:
   # Siegesserie: jeder Sieg in Folge +serie-schritt (1. Sieg x1, 2. x1,2 …) bis serie-max. Niederlage: cashback vom
   # Verlust zurück; nach comeback-ab Niederlagen in Folge gibt es auf den nächsten Sieg +comeback-bonus.
