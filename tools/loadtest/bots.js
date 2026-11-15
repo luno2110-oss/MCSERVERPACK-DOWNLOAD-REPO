@@ -57,12 +57,21 @@ function create(i, again) {
     }
   });
   // Casino-SFX: jeder Ton, den der Server diesem Spieler während des Casino-Spieltests schickt (echte Netzwerkpakete)
-  bot.on('soundEffectHeard', (soundName) => {
+  // Rohpakete selbst lesen: das Protokoll schickt Register-ID + 1 (0 = Name folgt); Namen löst die Auswertung mit der
+  // Liste des echten Servers auf (plugins/KubyCore/sound-ids.txt), die Liste aus minecraft-data passt nicht genau
+  const heard = (packet) => {
     if ((bot.casinoUntil || 0) < Date.now()) return;
-    const n = String(soundName).replace(/^minecraft:/, '');
+    const h = packet.sound;
+    let n = null;
+    if (h && h.data && h.data.soundName) n = h.data.soundName;
+    else if (h && h.soundId !== undefined) n = '#' + (h.soundId - 1);   // Register-ID; Name aus sound-ids.txt vom Server
+    if (!n) return;
+    n = String(n).replace(/^minecraft:/, '');
     stats.casinoSounds = stats.casinoSounds || {};
     stats.casinoSounds[n] = (stats.casinoSounds[n] || 0) + 1;
-  });
+  };
+  bot._client.on('sound_effect', heard);
+  bot._client.on('entity_sound_effect', heard);
   bot.on('messagestr', (msg) => {
     stats.chats++;
     // Casino-Spieltest: der Server setzt den Spieler an einen Tisch, keine eigenen Aktionen mehr bis zum Ende

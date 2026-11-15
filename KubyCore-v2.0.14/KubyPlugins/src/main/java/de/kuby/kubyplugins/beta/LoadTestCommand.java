@@ -146,6 +146,33 @@ public final class LoadTestCommand implements CommandExecutor {
         plugin.getLogger().info("[Kamera] " + p.getName() + " bei " + where);
     }
 
+    /**
+     * Netzwerk-IDs aller Töne aus dem Register des laufenden Servers nach plugins/KubyCore/sound-ids.txt ("id name"):
+     * damit übersetzt die CI die Ton-Pakete, die die Bots am Tisch bekommen, in Namen.
+     */
+    private void dumpSoundIds() {
+        try {
+            Object registry = Class.forName("net.minecraft.core.registries.BuiltInRegistries").getField("SOUND_EVENT").get(null);
+            java.lang.reflect.Method toNms = Class.forName("org.bukkit.craftbukkit.CraftSound").getMethod("bukkitToMinecraft", org.bukkit.Sound.class);
+            java.lang.reflect.Method getId = null;
+            for (java.lang.reflect.Method m : registry.getClass().getMethods()) {
+                if (m.getName().equals("getId") && m.getParameterCount() == 1 && m.getReturnType() == int.class) getId = m;
+            }
+            StringBuilder out = new StringBuilder();
+            int n = 0;
+            for (org.bukkit.Sound s : org.bukkit.Registry.SOUNDS) {
+                Object ev = toNms.invoke(null, s);
+                int id = (int) getId.invoke(registry, ev);
+                out.append(id).append(' ').append(org.bukkit.Registry.SOUNDS.getKey(s).getKey()).append('\n');
+                n++;
+            }
+            java.nio.file.Files.writeString(new java.io.File(plugin.getDataFolder(), "sound-ids.txt").toPath(), out);
+            plugin.getLogger().info("[Casino-Test] " + n + " Ton-IDs nach sound-ids.txt geschrieben");
+        } catch (Throwable t) {
+            plugin.getLogger().info("[Casino-Test] Ton-IDs nicht lesbar: " + t);
+        }
+    }
+
     /** Ebene Testfläche: Boden aus poliertem Andesit auf Höhe y-1, darüber 12 Blöcke Luft (keine Bäume vor der Kamera). */
     private static void flatten(org.bukkit.World w, int x0, int x1, int z0, int z1, int y) {
         for (int x = x0; x <= x1; x++) {
@@ -184,6 +211,7 @@ public final class LoadTestCommand implements CommandExecutor {
             plugin.casino().giveChips(p.getUniqueId(), 20000);
         }
         plugin.casinoPlay().testLog = true;
+        dumpSoundIds();
         org.bukkit.World w = spawn.getWorld();
         int gx = spawn.getBlockX(), gz = spawn.getBlockZ() + 4;
         double gy = w.getHighestBlockYAt(gx, gz) + 1;

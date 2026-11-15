@@ -187,7 +187,19 @@ jobs:
           for want, got in reels:
               if want.strip() != got.strip(): probs.append("Slots: Walzen zeigen %s statt %s" % (got.strip(), want.strip()))
           # Casino-SFX: Töne, die die Bots am Tisch wirklich als Netzwerkpaket bekommen haben
-          snd = r.get("casinoSounds", {})
+          snd_raw = r.get("casinoSounds", {})
+          ids = {}
+          try:
+              for line in open("plugins/KubyCore/sound-ids.txt", encoding="utf-8"):
+                  a = line.split()
+                  if len(a) == 2: ids["#" + a[0]] = a[1]
+          except OSError:
+              pass
+          snd = {}
+          for k, v in snd_raw.items():
+              name = ids.get(k, k)
+              snd[name] = snd.get(name, 0) + v
+          if snd_raw and not ids: probs.append("Casino-SFX: sound-ids.txt fehlt, Töne nicht zuzuordnen")
           sfx = [("Karte austeilen", ["item.book.page_turn", "entity.player.attack.sweep"]),
                  ("Chip setzen / Stapel", ["block.amethyst_cluster.hit", "block.chain.place"]),
                  ("Am Zug (Glocke)", ["block.note_block.bell"]),
