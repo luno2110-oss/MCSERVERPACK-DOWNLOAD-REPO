@@ -49,6 +49,15 @@ jobs:
           echo "MC_VERSION=$(sed -n 1p version.txt)" >> "$GITHUB_ENV"
           echo "NEED_VIA=$(sed -n 2p version.txt)" >> "$GITHUB_ENV"
 
+      - name: Client-Dateien aus dem Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            client/libraries
+            client/versions
+            client/assets
+          key: mc-client-1.21.11-v1
+
       - name: Minecraft-Client holen (Vanilla 1.21.11)
         run: python3 tools/clientshot/prepare.py 1.21.11 "$PWD/client" localhost:25565
 

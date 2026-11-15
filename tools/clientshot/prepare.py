@@ -7,6 +7,7 @@ Server-Resource-Pack (KubyUI) ohne Rückfrage angenommen wird. Gibt die Startzei
 
 Aufruf: python3 prepare.py <Version> <Zielordner> <Server-Adresse>
 """
+import concurrent.futures
 import hashlib
 import json
 import os
@@ -84,15 +85,25 @@ def main():
     if not os.path.exists(client):
         fetch(vj["downloads"]["client"]["url"], client)
     cp.append(client)
-    # Asset-Index; Objekte nur für die deutsche Sprache (Texturen und Schrift stecken im Client-Jar, Töne braucht ein Bild nicht)
+    # Asset-Index und alle Objekte (Sprachen, Töne, eingebaute Packs; der Client stürzt ab, wenn welche fehlen)
     idx = vj["assetIndex"]
     idx_path = os.path.join(out, "assets", "indexes", idx["id"] + ".json")
     index = json.loads(fetch(idx["url"], idx_path))
-    for name in ("minecraft/lang/de_de.json",):
-        o = index["objects"].get(name)
-        if o:
-            h = o["hash"]
-            fetch("https://resources.download.minecraft.net/%s/%s" % (h[:2], h), os.path.join(out, "assets", "objects", h[:2], h))
+
+    def obj(h):
+        dest = os.path.join(out, "assets", "objects", h[:2], h)
+        if not os.path.exists(dest):
+            for attempt in range(4):
+                try:
+                    fetch("https://resources.download.minecraft.net/%s/%s" % (h[:2], h), dest)
+                    break
+                except Exception:
+                    if attempt == 3:
+                        raise
+    hashes = sorted({o["hash"] for o in index["objects"].values()})
+    with concurrent.futures.ThreadPoolExecutor(32) as ex:
+        list(ex.map(obj, hashes))
+    print("Assets:", len(hashes))
     game = os.path.join(out, "game")
     os.makedirs(game, exist_ok=True)
     with open(os.path.join(game, "options.txt"), "w") as f:
