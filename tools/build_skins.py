@@ -866,7 +866,42 @@ def rig_layers(part, img):
     return []
 
 
-RIGS = {"dealer": dealer_hd}
+def manager_hd():
+    """Geschäftsführer (128 px): älterer Herr, graue zurückgekämmte Haare, goldene Brille, weinroter Anzug mit
+    dunklem Revers, schwarze Weste, goldene Krawatte statt Fliege. Abgeleitet vom Dealer (gleiche Aufteilung)."""
+    img = dealer_hd()
+    swap = {
+        "1C1A22": "5A1422", "2E2A36": "7A2232", "0C0A10": "3A0C16", "3A3644": "2A0A12", "4E4A5C": "3E1420",  # Anzug
+        "1C1816": "8A8A92", "3A322C": "B8B8C0", "100C0A": "5A5A64",                                       # Haare grau
+        "6E1424": "1A181E", "4E0E1A": "0E0C12",                                                           # Weste schwarz
+        "C42032": "F0C24A", "861422": "B0841E",                                                           # Krawatte gold
+    }
+    rgbswap = {tuple(rgb(k)[:3]): rgb(v) for k, v in swap.items()}
+    px = img.load()
+    for y in range(128):
+        for x in range(128):
+            c = px[x, y]
+            if c[3] and c[:3] in rgbswap:
+                px[x, y] = rgbswap[c[:3]]
+    gold, glass = rgb("F0C24A"), rgb("CFE6F0")
+    # Brille auf dem Kopf vorne (16 x 16 bei 16, 16): goldene Fassung um die Augen (Zeilen 7-10)
+    for (x0, x1) in ((17, 22), (25, 30)):
+        for x in range(x0, x1 + 1):
+            px[16 + x - 16, 16 + 7] = gold
+            px[16 + x - 16, 16 + 10] = gold
+        for y in (8, 9):
+            px[16 + x0 - 16, 16 + y] = gold
+            px[16 + x1 - 16, 16 + y] = gold
+    for x in (23, 24):
+        px[x, 16 + 8] = gold
+    # Krawatte statt Fliege: senkrechter Streifen in der Hemdmitte
+    for y in range(41, 53):
+        for x in (47, 48):
+            px[x, y] = gold if y < 51 else rgb("B0841E")
+    return img
+
+
+RIGS = {"dealer": dealer_hd, "manager": manager_hd}
 
 
 def build_rigs(out, skins):

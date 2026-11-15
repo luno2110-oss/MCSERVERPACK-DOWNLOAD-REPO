@@ -190,12 +190,19 @@ public final class SlotsService implements Listener {
     // =================================================================================================================
 
     private int levelOf(Player p) {
-        return level.getOrDefault(p.getUniqueId(), 0);
+        // Juwelen haben weniger Stufen als Chips nach dem ersten Jackpot: nie über die letzte Stufe hinaus
+        return Math.min(level.getOrDefault(p.getUniqueId(), 0), levels(p).length - 1);
     }
 
     /** Einsatz-Stufen in der Währung des Spielers (Juwelen für VIP: 50 bis 10.000). */
     private long[] levels(Player p) {
-        return plugin.casinoPlay().rack(p.getUniqueId(), "slots", LEVELS);
+        long[] base = LEVELS;
+        if (plugin.casinoPlay().hasHighLimit(p.getUniqueId())) {
+            // nach dem ersten Jackpot: dreifacher Höchsteinsatz (eine Stufe mehr)
+            base = java.util.Arrays.copyOf(LEVELS, LEVELS.length + 1);
+            base[LEVELS.length] = plugin.casinoPlay().maxFor(p.getUniqueId(), LEVELS[LEVELS.length - 1]);
+        }
+        return plugin.casinoPlay().rack(p.getUniqueId(), "slots", base);
     }
 
     private boolean jewels(Player p) {
@@ -323,6 +330,22 @@ public final class SlotsService implements Listener {
         plugin.cinema().play(p, script, o);
     }
 
+    /** Kino-Szene beim Geschäftsführer (Büro als Kulisse 90 Blöcke über dem Automaten). */
+    private void managerVisit(Player p, Location near) {
+        if (!p.isOnline() || plugin.cinema() == null || de.kuby.kubyplugins.cinema.Cinema.busy(p.getUniqueId())) {
+            if (p.isOnline()) CasinoText.send(p, "<gold>Der Geschäftsführer gratuliert: ab heute gelten für dich <b>dreifache Höchsteinsätze</b> im ganzen Casino.");
+            return;
+        }
+        var office = new de.kuby.kubyplugins.cinema.V3(near.getBlockX() + 0.5, Math.min(near.getWorld().getMaxHeight() - 12, near.getBlockY() + 90),
+                near.getBlockZ() + 0.5);
+        de.kuby.kubyplugins.cinema.Cinema.Options o = new de.kuby.kubyplugins.cinema.Cinema.Options();
+        o.anchor = near;
+        o.skippable = true;
+        o.onEnd = (pp, res) -> CasinoText.send(pp, "<gold>High Roller: <white>ab heute dreifache Höchsteinsätze an jedem Tisch und Automaten"
+                + " <gray>(Chips; Juwelen-Grenzen bleiben).");
+        plugin.cinema().play(p, new de.kuby.kubyplugins.cinema.scenes.ManagerVisit(office), o);
+    }
+
     private void finish(Player p, State s, int[] r, long bet, boolean jw) {
         long pay;
         String what;
@@ -383,6 +406,11 @@ public final class SlotsService implements Listener {
             CasinoFx.jackpot(plugin, p.getUniqueId(), fx, pay);
             plugin.notifications().send("notify.jackpot", CasinoText.PREFIX + "<yellow><b>" + Msg.escape(p.getName()) + "</b> knackt den Slots-Jackpot: <gold>"
                     + CasinoText.chips(o.payout()) + "</gold>!");
+            // erster Jackpot: der Gastgeber begleitet zum Geschäftsführer, danach dreifache Höchsteinsätze
+            if (plugin.casinoPlay().firstJackpot(p.getUniqueId())) {
+                Location c = s.machine.center();
+                plugin.getServer().getScheduler().runTaskLater(plugin, () -> managerVisit(p, c), 100L);
+            }
         } else if (pay >= bet * 20) {
             CasinoFx.show(plugin, p.getUniqueId(), fx, CasinoFx.Result.BIG_WIN, o.payout() - bet);
         }
@@ -424,7 +452,7 @@ public final class SlotsService implements Listener {
             case "lever" -> pull(p, s);
             case "button" -> {
                 int l = levelOf(p);
-                l = p.isSneaking() ? Math.max(0, l - 1) : Math.min(LEVELS.length - 1, l + 1);
+                l = p.isSneaking() ? Math.max(0, l - 1) : Math.min(levels(p).length - 1, l + 1);
                 level.put(p.getUniqueId(), l);
                 s.machine.panel(levels(p), l);
                 p.playSound(p.getLocation(), Sound.BLOCK_STONE_BUTTON_CLICK_ON, 0.6f, 1.4f);

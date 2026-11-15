@@ -149,6 +149,9 @@ casino:
     comeback-ab: 3
     comeback-bonus: 0.25
     max-gesamt: 6.0             # Obergrenze aller Faktoren zusammen (Serie x Goldene Zeit + Comeback)
+  # Erster Jackpot: Kino-Szene beim Geschäftsführer, danach dieser Faktor auf alle Höchsteinsätze (Chips) im Casino
+  jackpot-bonus:
+    faktor: 3.0
   # Weinrote High-Roller-Tische (/casino blackjack tisch [Radius] rot, /casino poker-tisch rot)
   highroller:
     serie-schritt: 0.5          # je Sieg in Folge +0,5x (1. Sieg x1, 15. Sieg x8)

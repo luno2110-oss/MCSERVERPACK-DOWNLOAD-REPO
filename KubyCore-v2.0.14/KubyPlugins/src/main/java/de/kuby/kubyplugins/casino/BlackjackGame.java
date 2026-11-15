@@ -227,8 +227,8 @@ public final class BlackjackGame {
         Seat s = seats[seat];
         if (index < 0 || index >= s.rackValues.length) return;
         long v = s.rackValues[index];
-        if (!s.jewels && s.bet + v > maxBet()) {
-            CasinoText.error(p, "Höchsteinsatz " + CasinoText.num(maxBet()) + " Chips.");
+        if (!s.jewels && s.bet + v > plugin.casinoPlay().maxFor(p.getUniqueId(), maxBet())) {
+            CasinoText.error(p, "Höchsteinsatz " + CasinoText.num(plugin.casinoPlay().maxFor(p.getUniqueId(), maxBet())) + " Chips.");
             return;
         }
         String err = plugin.casinoPlay().take(p, GAME, v);

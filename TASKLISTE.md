@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.75** (ungetestet, nicht kompiliert)
+Stand: **v1.76** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -558,6 +558,11 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
 ## Casino fertigstellen (v1.68)
+- [x] **v1.76 Erster Jackpot: Besuch beim Geschäftsführer**
+  - [x] Wer zum ersten Mal den Slots-Jackpot knackt, wird nach dem Jackpot-Feuerwerk (5 s) in einer Kino-Szene (`cinema/scenes/ManagerVisit`, 17 s, ab Sekunde 2 überspringbar) vom Gastgeber (Dealer) ins Büro des Geschäftsführers begleitet: Titelkarte „JACKPOT“, der Gastgeber führt durch die Tür und verbeugt sich, der Geschäftsführer (eigene Gelenkfigur: graues Haar, goldene Brille, weinroter Anzug, goldene Krawatte) kommt um den Schreibtisch, Handschlag, spricht (Untertitel), überreicht einen goldenen Chip; goldener Blitz, Titelkarte „HIGH ROLLER – Einsatzlimits x3 im ganzen Casino“
+  - [x] Büro als Kulisse aus Block-Teilen 90 Blöcke über dem Automaten (Holzboden, roter Teppich, Vertäfelung, großes Fenster mit Goldleisten, Schreibtisch mit Goldkante, Ledersessel, Bücherregal, goldener Tresor, Lampe, Deckenlicht), Abendhimmel
+  - [x] Gelenkfiguren jetzt auch in Kino-Szenen (`cinema/Rig`): Körperteile als Szenen-Teile, Gehen mit Bein- und Armschwung, Posen mischen
+  - [x] Belohnung (dauerhaft, `casino-play.yml` → high-limit): dreifache Höchsteinsätze in Chips (`casino.jackpot-bonus.faktor`): Blackjack (normal und weinrot), Roulette je Runde, Crash, Poker-Buy-in und Nachkaufen, Slots (zusätzliche Stufe 15.000); Juwelen-Grenzen (50–10.000, Volumen 50.000) bleiben unverändert
 - [x] **v1.75 Kasse als Mensch, Jukebox für /music**
   - [x] Kasse (`/casino npc kasse`): Kassierer wie im alten Casino statt Dorfbewohner – grüner Augenschirm, Schnurrbart, weißes Hemd, schwarze Weste mit Goldkette, rote Ärmelhalter, Fliege (Skin `kassierer`, breite Arme)
   - [x] Jukebox (`/casino npc musik`): 3D-Modell im Stil der alten Wurlitzer aus amerikanischen Bowlingbahnen (Pixel-Look): Bogen mit leuchtenden Farbröhren, Fenster mit Schallplatten, Chromgitter mit Lautsprecher-Raute, Tasten, Holzsockel; leuchtet (volle Helligkeit), Hologramm „Jukebox“; Rechtsklick öffnet das Musik-Menü wie `/music`. Aufstellen: an die Stelle stellen, Blick in den Raum (die Front zeigt in Blickrichtung)

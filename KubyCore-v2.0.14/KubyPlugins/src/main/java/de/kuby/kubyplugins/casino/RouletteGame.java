@@ -284,7 +284,7 @@ public final class RouletteGame implements org.bukkit.event.Listener {
     private long chipValue(Player p) {
         Session s = session(p.getUniqueId());
         if (s.chip == 6) {
-            long left = maxRound() - placed(p.getUniqueId());
+            long left = plugin.casinoPlay().maxFor(p.getUniqueId(), maxRound()) - placed(p.getUniqueId());
             return Math.min(plugin.casino().chips(p.getUniqueId()), left);
         }
         if (s.chip == 5) return s.custom;
@@ -306,8 +306,9 @@ public final class RouletteGame implements org.bukkit.event.Listener {
         if (throwWait > 0) return "Nichts geht mehr – gleich rollt die Kugel.";
         boolean jw = plugin.casinoPlay().cur(p.getUniqueId(), "roulette") == de.kuby.kubyplugins.service.CasinoPlay.Cur.JEWELS;
         if (!jw && amount < minBet()) return "Mindesteinsatz " + CasinoText.num(minBet()) + " Chips.";
-        if (!jw && placed(p.getUniqueId()) + amount > maxRound()) {
-            return "Höchstens " + CasinoText.num(maxRound()) + " Chips pro Runde.";
+        long maxR = plugin.casinoPlay().maxFor(p.getUniqueId(), maxRound());
+        if (!jw && placed(p.getUniqueId()) + amount > maxR) {
+            return "Höchstens " + CasinoText.num(maxR) + " Chips pro Runde.";
         }
         String err = plugin.casinoPlay().take(p, "roulette", amount);
         if (err != null) return err;

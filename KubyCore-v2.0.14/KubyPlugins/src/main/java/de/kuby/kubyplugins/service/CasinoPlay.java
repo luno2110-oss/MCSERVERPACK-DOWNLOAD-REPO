@@ -65,6 +65,8 @@ public final class CasinoPlay {
     private final KubyPlugins plugin;
     private final File file;
     private final Map<UUID, Cur> mode = new HashMap<>();
+    /** Spieler mit erstem Jackpot: dreifache Höchsteinsätze im ganzen Casino (casino.jackpot-bonus.faktor). */
+    private final java.util.Set<UUID> highLimit = new java.util.HashSet<>();
     /** Offene Einsätze je Spieler und Spiel: Währung und Summe. Schlüssel "uuid|spiel". */
     private final Map<String, Cur> bound = new HashMap<>();
     private final Map<String, Long> open = new HashMap<>();
@@ -149,6 +151,27 @@ public final class CasinoPlay {
     /** Serien-Multiplikator für den Sieg nach n Siegen in Folge (normale Tische). */
     public double streakMult(int winsBefore) {
         return streakMult("", winsBefore);
+    }
+
+    /** Faktor auf alle Höchsteinsätze (Chips): 3 nach dem ersten Jackpot, sonst 1. */
+    public synchronized double limitFactor(UUID id) {
+        return highLimit.contains(id) ? plugin.getConfig().getDouble("casino.jackpot-bonus.faktor", 3.0) : 1.0;
+    }
+
+    public synchronized boolean hasHighLimit(UUID id) {
+        return highLimit.contains(id);
+    }
+
+    /** Erster Jackpot: Status setzen. true, wenn er neu ist (dann läuft die Szene beim Geschäftsführer). */
+    public synchronized boolean firstJackpot(UUID id) {
+        if (!highLimit.add(id)) return false;
+        save();
+        return true;
+    }
+
+    /** Höchsteinsatz für diesen Spieler (Grundwert x Faktor). */
+    public long maxFor(UUID id, long base) {
+        return Math.round(base * limitFactor(id));
     }
 
     /** High-Roller-Spiel (weinroter Tisch): Name endet auf _hr. */
@@ -576,6 +599,12 @@ public final class CasinoPlay {
         YamlConfiguration y = YamlConfiguration.loadConfiguration(file);
         volumeDay = y.getString("volume-day", "");
         readMap(y.getConfigurationSection("mode"), (k, v) -> mode.put(UUID.fromString(k), Cur.valueOf(v.toString())));
+        for (String s : y.getStringList("high-limit")) {
+            try {
+                highLimit.add(UUID.fromString(s));
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
         readMap(y.getConfigurationSection("streak"), (k, v) -> streak.put(UUID.fromString(k), ((Number) v).intValue()));
         readMap(y.getConfigurationSection("best"), (k, v) -> best.put(UUID.fromString(k), ((Number) v).intValue()));
         readMap(y.getConfigurationSection("losses"), (k, v) -> losses.put(UUID.fromString(k), ((Number) v).intValue()));
@@ -614,6 +643,7 @@ public final class CasinoPlay {
         YamlConfiguration y = new YamlConfiguration();
         y.set("volume-day", volumeDay);
         mode.forEach((k, v) -> y.set("mode." + k, v.name()));
+        y.set("high-limit", highLimit.stream().map(UUID::toString).sorted().toList());
         streak.forEach((k, v) -> y.set("streak." + k, v));
         best.forEach((k, v) -> y.set("best." + k, v));
         losses.forEach((k, v) -> y.set("losses." + k, v));

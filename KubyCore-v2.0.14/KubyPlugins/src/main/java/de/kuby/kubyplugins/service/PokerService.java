@@ -233,7 +233,7 @@ public final class PokerService implements org.bukkit.event.Listener {
         if (activeSeats() >= MAX_SEATS) return "Der Tisch ist voll (" + MAX_SEATS + " Plätze).";
         long bb = bigBlind();
         long min = bb * cfg("min-buyin-bb", 40);
-        long max = bb * cfg("max-buyin-bb", 200);
+        long max = plugin.casinoPlay().maxFor(id, bb * cfg("max-buyin-bb", 200));
         if (buyIn < min || buyIn > max) return "Buy-in zwischen " + min + " und " + max + " Chips.";
         int at = pos >= 0 && free(pos) ? pos : nearestFree(p.getLocation());
         if (at < 0) return "Alle Plätze sind besetzt.";
@@ -1085,7 +1085,7 @@ public final class PokerService implements org.bukkit.event.Listener {
         Seat s = seat(p.getUniqueId());
         if (s == null) return "Du sitzt nicht am Tisch.";
         if (s.inHand && phase != Phase.WAITING) return "Nachkaufen geht nur zwischen den Händen.";
-        long max = bigBlind() * cfg("max-buyin-bb", 200);
+        long max = plugin.casinoPlay().maxFor(p.getUniqueId(), bigBlind() * cfg("max-buyin-bb", 200));
         long add = Math.min(amount, max - s.stack);
         if (add <= 0) return "Dein Stack ist schon beim Maximum (" + max + ").";
         if (!plugin.casino().takeChips(p.getUniqueId(), add)) return "Du hast nicht genug Chips.";

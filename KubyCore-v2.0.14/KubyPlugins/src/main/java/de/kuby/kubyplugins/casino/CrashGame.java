@@ -295,7 +295,8 @@ public final class CrashGame implements Listener, CommandExecutor {
         if (amount < 1) return "Der Einsatz muss größer als 0 sein.";
         boolean jw = plugin.casinoPlay().cur(id, "crash") == de.kuby.kubyplugins.service.CasinoPlay.Cur.JEWELS;
         if (!jw && have + amount < minBet()) return "Mindestens " + CasinoText.chips(minBet()) + ".";
-        if (!jw && have + amount > maxBet()) return "Höchstens " + CasinoText.chips(maxBet()) + " je Runde.";
+        long max = plugin.casinoPlay().maxFor(id, maxBet());
+        if (!jw && have + amount > max) return "Höchstens " + CasinoText.chips(max) + " je Runde.";
         String err = plugin.casinoPlay().take(p, "crash", amount);
         if (err != null) return err;
         bets.put(id, have + amount);
