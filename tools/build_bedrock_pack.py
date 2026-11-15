@@ -261,6 +261,12 @@ def main():
             elif elements:
                 gui, light = bii.model_chain(model)
                 icon = bii.render_3d(model, tints, gui, light)
+                if icon is None or icon.getbbox() is None:
+                    # flache Platten ohne display.gui (Filz, Karten, Knöpfe) sieht man von vorn nur als Kante:
+                    # Schrägansicht wie ein Block im Inventar, sonst die Textur selbst als Bild
+                    icon = bii.render_3d(model, tints, {"rotation": [30, 225, 0], "scale": [0.625] * 3}, "side")
+                if icon is None or icon.getbbox() is None:
+                    icon = _texture_icon(textures)
         if icon is None:
             continue
         key = ns + "." + path.replace("/", "_")
@@ -331,6 +337,21 @@ def main():
 # ---------------------------------------------------------------------------------------------------------------------
 
 ATLAS_MAX = 1024
+
+
+def _texture_icon(textures):
+    """Ersatz-Bild für ein Modell ohne sichtbares Inventar-Icon: die erste echte Textur (particle, top, front …)."""
+    for k in ("particle", "top", "front", "side"):
+        ref = textures.get(k)
+        while isinstance(ref, str) and ref.startswith("#"):
+            ref = textures.get(ref[1:])
+        if not ref:
+            continue
+        im = _load_tex(ref)
+        if im is not None and im.getbbox() is not None:
+            side = min(im.width, im.height)
+            return im.crop((0, 0, side, side))
+    return None
 
 
 def _load_tex(ref):

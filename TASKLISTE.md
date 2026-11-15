@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.78** (ungetestet, nicht kompiliert)
+Stand: **v1.79** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -558,6 +558,10 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
 ## Casino fertigstellen (v1.68)
+- [x] **v1.79 Bedrock: 91 fehlende 3D-Modelle (Karten, Filze, Tisch-Knöpfe)**
+  - [x] Fehler gefunden: Auf Bedrock fehlten 91 eigene Modelle – alle 53 Spielkarten, Blackjack- und Pokerfilz (grün und weinrot), alle Blackjack-/Poker-Knöpfe, der goldene Slot-Automat und 9 Kino-Effekte. Bedrock-Spieler sahen dort ein Blatt Papier (der Bedrock-Test-Client meldete 6 Anzeigen als „minecraft:paper“)
+  - [x] Ursache: flache Platten ohne Inventar-Ansicht ergaben beim Icon-Rendern ein leeres Bild, der Pack-Bauer (`tools/build_bedrock_pack.py`) übersprang dann das ganze Item samt 3D-Modell. Jetzt: Schrägansicht, sonst die Textur als Icon; das 3D-Modell wird immer gebaut. Ergebnis: 914 von 914 eigenen Modellen haben ein Bedrock-Mapping (vorher 823), 465 3D-Attachables (vorher 374)
+  - [x] Bedrock-Test schärfer (`tools/bedrocktest/verify.py`): schlägt fehl, wenn eine Anzeige beim Client nur als Papier ankommt, ein gehaltenes Kuby-Item kein 3D-Modell hat oder ein eigenes Java-Modell kein Bedrock-Mapping hat
 - [x] **v1.78 Casino-Prüfung: Regeln und Quoten nachgerechnet**
   - [x] Poker: Hand-Bewertung gegen 18 Regelfälle (Royal/Steel Wheel, Wheel A-5, kein K-A-2-3-4, zwei Drillinge = Full House, drei Paare, 6-Karten-Flush/Straße, Kicker, Board spielt = Split) und 20.000 Zufallshände gegen eine unabhängige Referenz geprüft: 0 Fehler. Side-Pots, nicht gecallte Einsätze, Heads-up-Blinds (Dealer = Small Blind, preflop zuerst, postflop zuletzt), Burn-Karte, Mindesterhöhung, Rest-Chip links vom Dealer: geprüft
   - [x] Poker-Regellücke behoben: Wer schon gehandelt hat und danach nur ein zu kleines All-in (unter der Mindesterhöhung) vor sich hat, darf nur mitgehen oder passen, nicht erneut erhöhen (Knöpfe, Chat-Links, Befehl, Test-Bots)

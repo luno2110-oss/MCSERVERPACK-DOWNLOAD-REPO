@@ -10,9 +10,11 @@
 Aufruf: verify.py bedrock-result.json KubyBedrock.mcpack downloaded.mcpack KubyBedrock-Items.json
 Ausgabe: Markdown-Zeilen; Probleme in verify-problems.txt (leer = alles gut).
 """
+import glob
 import hashlib
 import io
 import json
+import os
 import re
 import sys
 import zipfile
@@ -158,6 +160,28 @@ def main():
         probs.append("Der Client hat keine geyser:item_display bekommen (GeyserDisplayEntity fehlt oder Tisch nicht gebaut)")
     elif kuby_items and with_att == 0:
         probs.append("Kein gehaltenes Kuby-Item hat ein 3D-Modell (Attachable)")
+    # Anzeigen, die beim Client nur als Papier ankommen, haben kein Bedrock-Mapping (dann sieht man ein Blatt Papier)
+    if shown.get("minecraft:paper", 0):
+        probs.append("%d Display-Entities zeigen auf Bedrock nur Papier (Modell ohne Bedrock-Mapping)" % shown["minecraft:paper"])
+    no_att = sorted(k for k in kuby_items if k not in att_ids)
+    if no_att:
+        probs.append("Gehaltene Kuby-Items ohne 3D-Modell: %s" % ", ".join(no_att[:6]))
+    # Jedes eigene Java-Item-Modell braucht ein Bedrock-Mapping (sonst Papier auf Bedrock)
+    try:
+        mapped = {d["model"] for v in json.load(open(items, encoding="utf-8"))["items"].values() for d in v}
+        root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "resourcepack", "KubyUI", "assets")
+        java = set()
+        for f in glob.glob(os.path.join(root, "*", "items", "**", "*.json"), recursive=True):
+            rel = os.path.relpath(f, root)
+            ns = rel.split(os.sep)[0]
+            if ns != "minecraft":
+                java.add(ns + ":" + rel.split(os.sep, 2)[2][:-5].replace(os.sep, "/"))
+        absent = sorted(m for m in java - mapped if m not in ("kuby:cine/empty",))
+        out.append("- Eigene Java-Modelle: %d, davon mit Bedrock-Mapping: %d" % (len(java), len(java) - len(absent)))
+        if absent:
+            probs.append("%d eigene Modelle ohne Bedrock-Mapping: %s" % (len(absent), ", ".join(absent[:8])))
+    except Exception as e:
+        probs.append("Mapping-Abgleich fehlgeschlagen: %s" % e)
 
     open("verify-problems.txt", "w").write("\n".join(probs))
     print("\n".join(out))
