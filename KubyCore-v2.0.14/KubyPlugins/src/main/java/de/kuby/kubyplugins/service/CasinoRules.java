@@ -144,8 +144,8 @@ public final class CasinoRules {
                         "Am Tisch oder beim Croupier öffnest du mit /roulette das Menü. Chip wählen, dann auf ein Feld klicken.",
                         "Der erste Einsatz startet die Runde, nach " + c.getLong("casino.roulette.wait-seconds", 20)
                                 + " Sekunden läuft das Licht über die Zahlen und bleibt auf dem Ergebnis stehen.",
-                        "Rot, Schwarz, Gerade, Ungerade, 1–18, 19–36: 1:1. Dutzend und Kolonne: 2:1. Zahl: 35:1.",
-                        "Nichts geht mehr: 1 bis 3 Blitz-Zahlen zahlen bei Volltreffer x2 bis x5. Wer am meisten setzt, wirft die Kugel.");
+                        "Rot, Schwarz, Gerade, Ungerade, 1–18, 19–36: 1:1. Dutzend und Kolonne: 2:1. Zahl: 31:1.",
+                        "Nichts geht mehr: 1 bis 3 Blitz-Zahlen zahlen bei Volltreffer x2 bis x5 (also bis 160:1). Wer am meisten setzt, wirft die Kugel.");
                 commands.add(new String[]{"/roulette", "Roulette-Menü"});
                 commands.add(new String[]{"/casino setzen <Einsatz> <rot|schwarz|0-36>", "Einsatz per Befehl"});
             }

@@ -68,7 +68,7 @@ public final class CasinoScreens {
         int fh = 114;
         c.box(0, fy, W, fh, KitData.Box.FELT);
         c.text(12, fy + 7, Canvas.caps("Zahlen setzen"), WHITE, true);
-        c.textRight(377, fy + 7, List.of(Canvas.Span.of("Zahl ", GRAY), Canvas.Span.of("35:1", WHITE),
+        c.textRight(377, fy + 7, List.of(Canvas.Span.of("Zahl ", GRAY), Canvas.Span.of("31:1", WHITE),
                 Canvas.Span.of(" · Dutzend ", GRAY), Canvas.Span.of("2:1", WHITE), Canvas.Span.of(" · Rest ", GRAY),
                 Canvas.Span.of("1:1", WHITE)));
         int gy = fy + 18;
@@ -76,7 +76,7 @@ public final class CasinoScreens {
         // Null über alle drei Reihen
         c.box(10, gy, 24, 52, KitData.Box.FIELD_GREEN, z);
         c.textCenter(23, gy + 22, "0", WHITE, true);
-        c.action(10, gy, 24, 52, a.field("ZAHL", 0), tip("Zahl <white>0</white> · Quote <white>35:1", sets, mineLine(v, "zahl:0")));
+        c.action(10, gy, 24, 52, a.field("ZAHL", 0), tip("Zahl <white>0</white> · Quote <white>31:1", sets, mineLine(v, "zahl:0")));
         marker(c, 34, gy, v, "zahl:0");
         for (int col = 0; col < 12; col++) {
             for (int r = 0; r < 3; r++) {
@@ -85,7 +85,7 @@ public final class CasinoScreens {
                 boolean red = de.kuby.kubyplugins.casino.RouletteTable.red(n);
                 c.box(x, y, 24, 16, red ? KitData.Box.FIELD_RED : KitData.Box.FIELD_BLACK, z);
                 c.textCenter(x + 13, y + 4, String.valueOf(n), WHITE, true);
-                c.action(x, y, 24, 16, a.field("ZAHL", n), tip("Zahl <white>" + n + "</white> · Quote <white>35:1",
+                c.action(x, y, 24, 16, a.field("ZAHL", n), tip("Zahl <white>" + n + "</white> · Quote <white>31:1",
                         sets, mineLine(v, "zahl:" + n)));
                 marker(c, x + 24, y, v, "zahl:" + n);
             }
@@ -213,11 +213,11 @@ public final class CasinoScreens {
             c.box(0, fy, W, 60, KitData.Box.FELT);
             c.text(12, fy + 7, Canvas.caps("Farbe setzen"), WHITE, true);
             c.textRight(377, fy + 7, List.of(Canvas.Span.of("Rot/Schwarz ", GRAY), Canvas.Span.of("1:1", WHITE),
-                    Canvas.Span.of(" · Grün ", GRAY), Canvas.Span.of("35:1", WHITE)));
+                    Canvas.Span.of(" · Grün ", GRAY), Canvas.Span.of("31:1", WHITE)));
             field(c, 10, fy + 18, KitData.Box.FIELD_RED, "Rot", "Quote 1:1", a.color("rot"),
                     tip("Quote <white>1:1", sets, mineLine(v, "rot:0")));
-            field(c, 136, fy + 18, KitData.Box.FIELD_GREEN, "Grün · 0", "Quote 35:1", a.color("gruen"),
-                    tip("Quote <white>35:1", sets, mineLine(v, "zahl:0")));
+            field(c, 136, fy + 18, KitData.Box.FIELD_GREEN, "Grün · 0", "Quote 31:1", a.color("gruen"),
+                    tip("Quote <white>31:1", sets, mineLine(v, "zahl:0")));
             field(c, 262, fy + 18, KitData.Box.FIELD_BLACK, "Schwarz", "Quote 1:1", a.color("schwarz"),
                     tip("Quote <white>1:1", sets, mineLine(v, "schwarz:0")));
             marker(c, 10 + 118, fy + 18, v, "rot:0");

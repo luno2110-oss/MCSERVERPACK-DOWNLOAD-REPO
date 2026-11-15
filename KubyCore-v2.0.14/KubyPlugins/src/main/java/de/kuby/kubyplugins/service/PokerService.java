@@ -338,6 +338,7 @@ public final class PokerService implements org.bukkit.event.Listener {
         long maxTo = s.bet + s.stack;
         switch (action) {
             case "raisemode" -> {
+                if (s.acted) return "Nach einem zu kleinen All-in darfst du nur mitgehen oder passen.";
                 s.raising = true;
                 s.raiseTo = Math.max(minTo, Math.min(maxTo, currentBet + Math.max(minRaise, pot() / 2)));
                 showButtons(s);
@@ -424,6 +425,11 @@ public final class PokerService implements org.bukkit.event.Listener {
                 return null;
             }
             return "Erhöhen geht nur über " + currentBet + ". Mitgehen mit /poker call.";
+        }
+        if (s.acted) {
+            // Seit der eigenen Aktion gab es nur ein zu kleines All-in: die Setzrunde ist für diesen Spieler nicht
+            // wieder offen, er darf nur mitgehen oder passen.
+            return "Nach einem zu kleinen All-in darfst du nur mitgehen oder passen.";
         }
         long raiseSize = to - currentBet;
         if (raiseSize < minRaise && to < maxTo) {
@@ -868,14 +874,17 @@ public final class PokerService implements org.bukkit.event.Listener {
         String call = toCall > 0
                 ? "<click:run_command:'/poker call'><hover:show_text:'Mitgehen'><green>[Call " + Math.min(toCall, s.stack) + "]</green></hover></click>"
                 : "<click:run_command:'/poker check'><hover:show_text:'Schieben'><green>[Check]</green></hover></click>";
-        String raise = s.stack > toCall
+        boolean closed = s.acted; // nur ein zu kleines All-in seit der eigenen Aktion: nur mitgehen oder passen
+        String raise = !closed && s.stack > toCall
                 ? " <click:run_command:'/poker raise " + minTo + "'><hover:show_text:'Mindesterhöhung'><yellow>[Raise auf " + minTo + "]</yellow></hover></click>"
                 + " <click:suggest_command:'/poker raise '><hover:show_text:'Betrag selbst eingeben'><yellow>[Raise …]</yellow></hover></click>"
                 : "";
         Msg.send(p, "<gold>Poker: <white>Du bist dran. <gray>Zu zahlen: <white>" + Math.max(0, toCall)
                 + " <gray>· Pot: <white>" + pot + " <gray>· Deine Karten: " + cards(s.hole));
-        Msg.send(p, "<click:run_command:'/poker fold'><hover:show_text:'Passen'><red>[Fold]</red></hover></click> " + call + raise
-                + " <click:run_command:'/poker allin'><hover:show_text:'Alles setzen'><gold>[All-in " + s.stack + "]</gold></hover></click>");
+        String allin = !closed || s.stack <= toCall
+                ? " <click:run_command:'/poker allin'><hover:show_text:'Alles setzen'><gold>[All-in " + s.stack + "]</gold></hover></click>"
+                : " <dark_gray>(nach zu kleinem All-in: nur mitgehen oder passen)";
+        Msg.send(p, "<click:run_command:'/poker fold'><hover:show_text:'Passen'><red>[Fold]</red></hover></click> " + call + raise + allin);
         Sfx.play(plugin, p, Sfx.Kind.PING);
         s.raising = false;
         showButtons(s);
@@ -945,8 +954,10 @@ public final class PokerService implements org.bukkit.event.Listener {
                     Msg.parse("<gray>Erhöhen auf <gold><b>" + s.raiseTo + "</b>"));
             return;
         }
-        boolean canRaise = s.stack > toCall && s.bet + s.stack > currentBet;
-        desk.buttons(s.pos, new String[]{"fold", toCall > 0 ? "call" : "check", canRaise ? "raise" : null, "allin"},
+        // Wer schon gehandelt hat und nur ein zu kleines All-in vor sich hat, darf nicht erneut erhöhen.
+        boolean canRaise = !s.acted && s.stack > toCall && s.bet + s.stack > currentBet;
+        boolean canAllIn = !s.acted || s.stack <= toCall;
+        desk.buttons(s.pos, new String[]{"fold", toCall > 0 ? "call" : "check", canRaise ? "raise" : null, canAllIn ? "allin" : null},
                 toCall > 0 ? Msg.parse("<gray>Mitgehen <white>" + Math.min(toCall, s.stack)) : null);
     }
 
@@ -1068,6 +1079,8 @@ public final class PokerService implements org.bukkit.event.Listener {
             act(p, "raisemode", 0);
             act(p, "plus", 0);
             err = act(p, "ok", 0);
+            // Erhöhen nicht erlaubt (z. B. nach zu kleinem All-in): dann mitgehen
+            if (err != null) err = act(p, currentBet - s.bet > 0 ? "call" : "check", 0);
         } else {
             err = act(p, currentBet - s.bet > 0 ? "call" : "check", 0);
         }

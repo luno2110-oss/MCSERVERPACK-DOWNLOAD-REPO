@@ -622,6 +622,23 @@ final class SelfTest {
             fails.add("High-Roller: " + t);
         }
 
+        // Roulette: jede Wettart hat Hausvorteil, auch Zahlen mit Blitz-Bonus (1 bis 3 Zahlen aus 0..36, x2 bis x5)
+        try {
+            double blitzAvg = (2 + 2 + 3 + 3 + 4 + 5) / 6.0, blitzCount = 2.0;
+            for (var k : de.kuby.kubyplugins.casino.RouletteGame.Kind.values()) {
+                int hits = 0;
+                for (int n = 0; n <= 36; n++) {
+                    if (new de.kuby.kubyplugins.casino.RouletteGame.Bet(null, "", k, k == de.kuby.kubyplugins.casino.RouletteGame.Kind.ZAHL ? 7
+                            : k == de.kuby.kubyplugins.casino.RouletteGame.Kind.DUTZEND || k == de.kuby.kubyplugins.casino.RouletteGame.Kind.KOLONNE ? 1 : 0, 1).wins(n)) hits++;
+                }
+                double ev = hits / 37.0 * k.multiplier;
+                if (k == de.kuby.kubyplugins.casino.RouletteGame.Kind.ZAHL) ev *= 1 + blitzCount / 37.0 * (blitzAvg - 1);
+                if (ev >= 1.0) fails.add("Roulette " + k.label + ": Spieler im Vorteil (Erwartung " + String.format("%.3f", ev) + ")");
+            }
+        } catch (Throwable t) {
+            fails.add("Roulette-Quoten: " + t);
+        }
+
         // OP-Werkzeuge: jedes lässt sich bauen und trägt seine Art; jedes Shop-Angebot mit Werkzeug kennt es
         try {
             for (String k : de.kuby.kubyplugins.tools.SpecialTools.all().keySet()) {

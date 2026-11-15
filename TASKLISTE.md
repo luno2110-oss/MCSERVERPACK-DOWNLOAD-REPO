@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.77** (ungetestet, nicht kompiliert)
+Stand: **v1.78** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -558,6 +558,12 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
 ## Casino fertigstellen (v1.68)
+- [x] **v1.78 Casino-Prüfung: Regeln und Quoten nachgerechnet**
+  - [x] Poker: Hand-Bewertung gegen 18 Regelfälle (Royal/Steel Wheel, Wheel A-5, kein K-A-2-3-4, zwei Drillinge = Full House, drei Paare, 6-Karten-Flush/Straße, Kicker, Board spielt = Split) und 20.000 Zufallshände gegen eine unabhängige Referenz geprüft: 0 Fehler. Side-Pots, nicht gecallte Einsätze, Heads-up-Blinds (Dealer = Small Blind, preflop zuerst, postflop zuletzt), Burn-Karte, Mindesterhöhung, Rest-Chip links vom Dealer: geprüft
+  - [x] Poker-Regellücke behoben: Wer schon gehandelt hat und danach nur ein zu kleines All-in (unter der Mindesterhöhung) vor sich hat, darf nur mitgehen oder passen, nicht erneut erhöhen (Knöpfe, Chat-Links, Befehl, Test-Bots)
+  - [x] Roulette-Exploit behoben: Blitz-Zahlen (x2–x5) kamen zur vollen 35:1-Quote dazu, Zahl-Wetten hatten dadurch +9 % Gewinnerwartung für Spieler. Jetzt wie bei Lightning Roulette: Zahl 31:1, Blitz-Zahlen x2–x5 darauf (bis 160:1), auch die 0 kann Blitz-Zahl sein; Hausvorteil 2,7 % (einfache Chancen, Dutzend, Kolonne) und 3,4 % (Zahl). SELFTEST prüft jetzt alle Roulette-Wetten auf Hausvorteil
+  - [x] Crash nachgerechnet: Kurs m = e^(0,07·t + 0,003·t²); relatives Wachstum steigt mit der Höhe (x2 nach 7,5 s mit 11,5 %/s, x5 nach 14,3 s mit 15,6 %/s, x10 nach 18,4 s mit 18 %/s, x50 nach 26,3 s mit 22,8 %/s)
+  - [x] Blackjack: Dealer zieht bis 17, Blackjack 3:2, Teilen/Doppeln, kein Doppeln auf geteilte Asse
 - [x] **v1.77 Casino-Rundgang** (wie die Führung durchs Diamond Casino; `casino/CasinoTourService`, `cinema/scenes/CasinoTour`)
   - [x] Startet beim ersten Betreten der Casino-Region automatisch (einmal je Spieler, `casino-tour.yml`, `casino.rundgang.aktiv`), jederzeit mit Schleichen überspringbar, wiederholen mit `/casino rundgang`
   - [x] Gastgeber Vincent (Gelenkfigur im Smoking): Kranfahrt über das Casino mit Titelkarte „KUBY CASINO“, Vincent kommt auf den Spieler zu, verbeugt sich, begrüßt ihn

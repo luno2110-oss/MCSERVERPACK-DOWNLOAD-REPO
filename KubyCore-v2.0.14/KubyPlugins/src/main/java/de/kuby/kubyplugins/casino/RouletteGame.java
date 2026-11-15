@@ -40,7 +40,7 @@ public final class RouletteGame implements org.bukkit.event.Listener {
 
     public enum Kind {
         ROT("Rot", 2), SCHWARZ("Schwarz", 2), GERADE("Gerade", 2), UNGERADE("Ungerade", 2), NIEDRIG("1–18", 2),
-        HOCH("19–36", 2), DUTZEND("Dutzend", 3), KOLONNE("Kolonne", 3), ZAHL("Zahl", 36);
+        HOCH("19–36", 2), DUTZEND("Dutzend", 3), KOLONNE("Kolonne", 3), ZAHL("Zahl", 32); // 31:1 statt 35:1, weil Blitz-Zahlen x2 bis x5 zahlen (wie Lightning Roulette); Hausvorteil ~3 %
 
         public final String label;
         /** Auszahlung inklusive Einsatz (Rot = 2, also 1:1). */
@@ -407,11 +407,11 @@ public final class RouletteGame implements org.bukkit.event.Listener {
         // Blitz-Zahlen: 1 bis 3 zufällige Zahlen, Volltreffer darauf zahlen x2 bis x5 mehr
         blitz.clear();
         int n = 1 + RNG.nextInt(3);
-        while (blitz.size() < n) blitz.put(1 + RNG.nextInt(36), new int[]{2, 2, 3, 3, 4, 5}[RNG.nextInt(6)]);
+        while (blitz.size() < n) blitz.put(RNG.nextInt(37), new int[]{2, 2, 3, 3, 4, 5}[RNG.nextInt(6)]);
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<Integer, Integer> e : blitz.entrySet()) {
             if (sb.length() > 0) sb.append("<gray>, ");
-            sb.append(RouletteTable.red(e.getKey()) ? "<#FF5A5A>" : "<#D8D8D8>").append("<b>").append(e.getKey()).append("</b> <yellow>x").append(e.getValue());
+            sb.append(e.getKey() == 0 ? "<#3FD55C>" : RouletteTable.red(e.getKey()) ? "<#FF5A5A>" : "<#D8D8D8>").append("<b>").append(e.getKey()).append("</b> <yellow>x").append(e.getValue());
         }
         String blitzLine = sb.toString();
         if (c != null) {
