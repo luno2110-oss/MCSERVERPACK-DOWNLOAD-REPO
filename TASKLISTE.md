@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.72** (ungetestet, nicht kompiliert)
+Stand: **v1.73** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -558,6 +558,14 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
 ## Casino fertigstellen (v1.68)
+- [x] **v1.73 Slots wie in Vegas** (Idee des Besitzers)
+  - [x] Echte Walzen: jede Walze eine Trommel aus 10 Symbol-Kacheln (`kuby:casino/sr_<symbol>`, Kachel liegt im Modell um die Walzenachse, die Anzeige dreht um ihre Mitte → der Client dreht sauber auf dem Kreis); jede Walze hat ihre eigene Symbol-Reihenfolge, oben und unten sieht man die Nachbarn
+  - [x] Bewegung (`casino/SlotSpin`): Zurückrucken beim Hebel, Anlauf, schnelles Drehen mit verwischten Symbolen, Abbremsen, Einrasten mit Überschwingen und Zurückfedern (Bounce); landet genau auf dem ausgelosten Symbol (Gewinnchancen unverändert)
+  - [x] Hören, sehen, spüren: Ratschen-Klick für jedes Symbol im langsamen Lauf, Einrasten mit Klonk + Bass + kurzem Ruck des ganzen Gehäuses + Funken
+  - [x] Zwei gleiche auf den ersten Walzen: die letzte Walze kriecht Symbol für Symbol (etwa 3 s länger) und rastet dann PLÖTZLICH ein; Kino-Kamera (`cinema/scenes/SlotTension`) fährt langsam auf die letzte Walze, Kinobalken, Vignette in der Farbe des Symbols (Kirsche/Chip/7 rot, Zitrone/Banane/Glocke/Münze gold, Klee grün (neu), Diamant blau, Stern weiß), Herzschlag immer schneller, Münzgeklimper wie beim Preisgeld-Topf, kurz vor dem Einrasten Stille; dann harter Schnitt, weißer Blitz, Krachen, Kamerawackeln, Gewinn golden; danach zurück auf den Hocker (`casino.slots.kino`)
+  - [x] Gewinn: Münzen und Chips schießen aus dem Automaten und fallen rundherum (nicht aufhebbar), das Gehäuse rumpelt und wackelt (drei gleiche stark, Kirschen leicht), Explosion/Feuerwerk-Ton
+  - [x] Vorschau-Videos (Szene `slot_spin` in `tools/preview3d`, Bild für Bild mit derselben Kurve und Kamera)
+  - [ ] Im Spiel prüfen (Drehung live, Kamera-Timing); Bedrock: Walzen sichtbar, Drehung evtl. ruckiger
 - [x] **v1.72 Dealer in Schichten** (wie 3D-Layer-Skins, `build_skins.rig_layers`): Sakko als Schale über dem Körper (0,25 px), Sakko-Ärmel dicker als die Hemdmanschetten darunter (0,3 px), Haarkappe (0,5 px, Deckel angehoben), Hosen-Schale nach außen (0,2 px), Schuhe mit 1 px Spitze; Relief vorne aus der Textur: Fliege 1 px, Revers/Knöpfe 0,5 px, Einstecktuch 0,75 px, Kragen 0,25 px. Abstände ungleich, damit sich keine Flächen überdecken (kein Flimmern). Übersicht der Texturen/Modelle/Animationen als Bilder und Video geliefert
 - [x] **v1.71 Feinschliff nach Test des Besitzers**
   - [x] Chips exakt rund (gleiche Pixelzahl, nur verschoben): 16-px-Kreis mit Treppe 6-10-12-14-14-16 statt 8 px gerader Kanten; sechs Randtupfer als gleiche 2x2-Blöcke spiegelgleich, Licht oben links; gilt für Dialog-Chips, Item-Bilder und 3D-Chips

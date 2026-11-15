@@ -38,8 +38,13 @@ import org.joml.Vector3f;
 public final class SlotMachine {
 
     public static final String[] SYMBOLS = {"cherry", "lemon", "banana", "bell", "star", "clover", "chip", "coin", "diamond", "seven"};
-    /** Flächen einer Walze (Winkel zur Vorderseite); 1, 2, 3 tragen die sichtbaren Symbole oben, Mitte, unten. */
-    private static final double[] FACETS = {72, 36, 0, -36, -72};
+    /** Kacheln je Walze (Trommel aus 10 Symbolen, 36° je Kachel). */
+    public static final int FACES = 10;
+    /** Reihenfolge der Symbole auf den drei Walzen (jede Walze anders, jedes Symbol genau einmal). */
+    private static final int[][] STRIPS = {
+            {0, 3, 9, 1, 6, 2, 8, 4, 7, 5},
+            {9, 0, 5, 2, 7, 1, 4, 8, 3, 6},
+            {2, 6, 0, 8, 3, 9, 5, 1, 7, 4}};
 
     public final String id;
     private final NamespacedKey tag;
@@ -53,7 +58,12 @@ public final class SlotMachine {
     /** Stil: "klassik" (vor gebautem Gehäuse wie im Clip), "gold" (Goldrausch) oder "neon" (Neon 7). */
     private final String style;
     private final java.util.List<ItemDisplay> lights = new java.util.ArrayList<>();
-    private final ItemDisplay[][] symbols = new ItemDisplay[3][3];
+    /** Walzen: je 10 Kacheln, alle mit ihrer Mitte auf der Walzenachse (drehen auf dem Kreis). */
+    private final ItemDisplay[][] reels = new ItemDisplay[3][FACES];
+    private final double[] reelAngle = new double[3];
+    private final boolean[] reelBlur = new boolean[3];
+    /** Alle Anzeigen des Automaten (zum Wackeln). */
+    private final java.util.List<Display> parts = new java.util.ArrayList<>();
     private TextDisplay panel;
     private TextDisplay holo;
     private BlockDisplay lever;
@@ -140,6 +150,7 @@ public final class SlotMachine {
     }
 
     private void mark(Entity e, String role) {
+        if (e instanceof Display d) parts.add(d);
         e.setPersistent(false);
         e.getPersistentDataContainer().set(tag, PersistentDataType.STRING, id + ":" + role);
     }
@@ -187,28 +198,21 @@ public final class SlotMachine {
         float rw = (float) (s - 0.08);
         float symScale = (float) Math.min(0.3, chord * 0.86);
         Quaternionf face = new Quaternionf().rotateY(faceAngle());
+        parts.clear();
         for (int i = 0; i < 3; i++) {
-            double x = (i - 1) * s;
-            for (int k = 0; k < FACETS.length; k++) {
-                double a = Math.toRadians(FACETS[k]);
-                // Fläche: Normale (hoch sin a, vor cos a), Kasten liegt knapp hinter der Oberfläche
-                Quaternionf q = new Quaternionf(face).rotateX((float) -a);
-                double up = Math.sin(a) * (apothem - 0.02), out = Math.cos(a) * (apothem - 0.02);
-                box(off(x, up, out), q, rw, chord, 0.04f, "white");
-                if (k < 1 || k > 3) continue;
-                int row = k - 1;
-                String sym = start == null ? SYMBOLS[(i + row * 3) % SYMBOLS.length] : start[i][row];
-                double sUp = Math.sin(a) * (apothem + 0.012), sOut = Math.cos(a) * (apothem + 0.012);
-                // Items zeigen ihre Vorderseite nach -Z (der Client dreht sie um 180°): noch einmal drehen
-                Quaternionf qs = new Quaternionf(q).rotateY((float) Math.PI);
-                int col = i;
-                symbols[i][row] = center.getWorld().spawn(off(x, sUp, sOut), ItemDisplay.class, e -> {
-                    e.setItemStack(model("slot_" + sym));
-                    e.setTransformation(new Transformation(new Vector3f(), qs, new Vector3f(symScale, symScale, symScale),
-                            new Quaternionf()));
-                    mark(e, "symbol:" + col + ":" + row);
+            Location axis = off((i - 1) * s, 0, 0);
+            for (int k = 0; k < FACES; k++) {
+                String sym = SYMBOLS[STRIPS[i][k]];
+                int col = i, fk = k;
+                reels[i][k] = center.getWorld().spawn(axis, ItemDisplay.class, e -> {
+                    e.setItemStack(model("sr_" + sym));
+                    e.setInterpolationDuration(1);
+                    mark(e, "reel:" + col + ":" + fk);
                 });
             }
+            reelBlur[i] = false;
+            String mid = start == null ? SYMBOLS[STRIPS[i][0]] : start[i][1];
+            reel(i, stopAngle(i, mid), false, 0);
         }
         // Stege zwischen den Walzen, Leisten oben und unten
         float depth = (float) (rad * 0.92);
@@ -382,9 +386,110 @@ public final class SlotMachine {
     // Anzeige
     // =================================================================================================================
 
-    public void symbol(int reel, int row, String sym, boolean blur) {
-        ItemDisplay d = symbols[reel][row];
-        if (d != null && d.isValid()) d.setItemStack(model("slot_" + sym + (blur ? "_blur" : "")));
+    // ---------- Walzen ----------
+
+    /** Symbol auf Kachel k der Walze i. */
+    public static String symbolAt(int reel, int k) {
+        return SYMBOLS[STRIPS[reel][((k % FACES) + FACES) % FACES]];
+    }
+
+    /** Walzenwinkel, bei dem sym genau auf der Gewinnlinie steht (Kachel k bei θ + 36k = 0). */
+    public static double stopAngle(int reel, String sym) {
+        for (int k = 0; k < FACES; k++) if (symbolAt(reel, k).equals(sym)) return -36.0 * k;
+        return 0;
+    }
+
+    /** Was die Walze bei diesem Winkel oben, in der Mitte und unten zeigt. */
+    public static String[] visible(int reel, double angle) {
+        int mid = (int) Math.round(-angle / 36.0);
+        return new String[]{symbolAt(reel, mid - 1), symbolAt(reel, mid), symbolAt(reel, mid + 1)};
+    }
+
+    public double reelAngle(int reel) {
+        return reelAngle[reel];
+    }
+
+    /**
+     * Walze i auf Winkel angle (Grad; kleiner = Symbole wandern nach unten) stellen, interp = Überblendung in Ticks.
+     * Bei hoher Geschwindigkeit zeigen die Kacheln die verwischten Symbole.
+     */
+    public void reel(int i, double angle, boolean blur, int interp) {
+        reelAngle[i] = angle;
+        double rad = radius();
+        float rw = (float) (pitch() - 0.08);
+        float sc = (float) (2 * rad);
+        Quaternionf face = new Quaternionf().rotateY(faceAngle());
+        boolean swap = blur != reelBlur[i];
+        reelBlur[i] = blur;
+        for (int k = 0; k < FACES; k++) {
+            ItemDisplay d = reels[i][k];
+            if (d == null || !d.isValid()) continue;
+            double a = Math.toRadians(angle + 36.0 * k);
+            // Kachel zeigt nach (hoch sin a, vor cos a); das Modell liegt bei +Z, die Anzeige dreht es um 180°
+            Quaternionf q = new Quaternionf(face).rotateX((float) -a).rotateY((float) Math.PI);
+            if (swap) d.setItemStack(model("sr_" + symbolAt(i, k) + (blur ? "_blur" : "")));
+            d.setTransformation(new Transformation(new Vector3f(), q, new Vector3f(rw, sc, sc), new Quaternionf()));
+            d.setInterpolationDelay(0);
+            d.setInterpolationDuration(interp);
+        }
+    }
+
+    /** Für die Kamera: Mitte der Vorderseite von Walze i, ihre Blickrichtung (zum Spieler) und oben. */
+    public Location reelFront(int i) {
+        Location l = off((i - 1) * pitch(), 0, radius());
+        l.setYaw(frontYaw);
+        return l;
+    }
+
+    public org.bukkit.util.Vector frontVector() {
+        Vector3f n = front();
+        return new org.bukkit.util.Vector(n.x, 0, n.z);
+    }
+
+    /**
+     * Gehäuse wackeln lassen (Rumpeln beim Gewinn, kurzer Ruck beim Einrasten): alle Anzeigen springen um ihre
+     * Ruheposition, die Stärke klingt ab. amp in Blöcken.
+     */
+    public void shake(org.bukkit.plugin.Plugin plugin, int ticks, double amp) {
+        java.util.Map<Display, Location> base = new java.util.HashMap<>();
+        for (Display d : parts) if (d.isValid()) base.put(d, d.getLocation());
+        java.util.Random rnd = new java.util.Random();
+        for (int t = 0; t <= ticks; t++) {
+            final int tt = t;
+            plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                double k = tt >= ticks ? 0 : amp * (1 - tt / (double) ticks);
+                double dx = (rnd.nextDouble() * 2 - 1) * k, dy = (rnd.nextDouble() * 2 - 1) * k * 0.6, dz = (rnd.nextDouble() * 2 - 1) * k;
+                for (var e : base.entrySet()) {
+                    Display d = e.getKey();
+                    if (!d.isValid()) continue;
+                    d.setTeleportDuration(1);
+                    d.teleport(e.getValue().clone().add(dx, dy, dz));
+                }
+            }, t);
+        }
+    }
+
+    /** Münzregen: Münzen schießen aus dem Automaten und fallen rundherum (nicht aufhebbar, verschwinden wieder). */
+    public void coinBurst(org.bukkit.plugin.Plugin plugin, int count) {
+        Location from = effectLocation();
+        java.util.Random rnd = new java.util.Random();
+        Vector3f n = front();
+        for (int i = 0; i < count; i++) {
+            final int delay = i / 6;
+            plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                if (from.getWorld() == null) return;
+                org.bukkit.entity.Item it = from.getWorld().dropItem(from, model(rnd.nextInt(4) == 0 ? "slot_chip" : "slot_coin"), e -> {
+                    e.setPickupDelay(Integer.MAX_VALUE);
+                    e.setCanMobPickup(false);
+                    e.setPersistent(false);
+                    e.setInvulnerable(true);
+                    double side = (rnd.nextDouble() * 2 - 1) * 0.35, up = 0.35 + rnd.nextDouble() * 0.35, out = 0.05 + rnd.nextDouble() * 0.25;
+                    Vector3f r = right();
+                    e.setVelocity(new org.bukkit.util.Vector(r.x * side + n.x * out, up, r.z * side + n.z * out));
+                });
+                plugin.getServer().getScheduler().runTaskLater(plugin, it::remove, 50L + rnd.nextInt(30));
+            }, delay);
+        }
     }
 
     public void panel(long[] levels, int selected) {

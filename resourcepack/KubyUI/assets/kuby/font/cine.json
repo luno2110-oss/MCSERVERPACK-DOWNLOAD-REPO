@@ -158,6 +158,15 @@
    "chars": [
     ""
    ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kuby:cine/grade_green.png",
+   "height": 700,
+   "ascent": 560,
+   "chars": [
+    ""
+   ]
   }
  ]
 }

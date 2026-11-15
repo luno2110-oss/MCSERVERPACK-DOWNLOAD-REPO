@@ -579,9 +579,10 @@ def build_fonts():
         "white": ((255, 255, 255), (200, 210, 230), 0.22, 0.35),
         "cold": ((90, 150, 255), (5, 15, 45), 0.12, 0.55),
         "purple": ((150, 60, 230), (25, 0, 45), 0.14, 0.58),
+        "green": ((80, 220, 110), (4, 40, 12), 0.12, 0.56),
     }
     codes = {"red": 0xE030, "warm": 0xE031, "space": 0xE032, "dark": 0xE033, "gold": 0xE034, "white": 0xE035, "cold": 0xE036,
-             "purple": 0xE037}
+             "purple": 0xE037, "green": 0xE038}
     for name, (cm, ce, am, ae) in grades.items():
         W, H = 256, 64
         im = Image.new("RGBA", (W, H))

@@ -191,6 +191,7 @@ casino:
   slots:
     jackpot-start: 20000        # Slots-Jackpot (drei Siebener), startet nach einem Gewinn wieder hier
     jackpot-share: 0.02         # so viel von jedem Dreh wandert in den Slots-Jackpot
+    kino: true                  # zwei gleiche: Kino-Kamera auf die letzte Walze (Vignette, Herzschlag, Einrasten)
 
 coinflip:
   max-bet: 5000

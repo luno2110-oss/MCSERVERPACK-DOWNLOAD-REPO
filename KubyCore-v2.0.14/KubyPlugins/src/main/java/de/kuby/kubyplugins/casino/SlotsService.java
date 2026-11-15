@@ -228,39 +228,96 @@ public final class SlotsService implements Listener {
         Location fx = s.machine.effectLocation();
         fx.getWorld().playSound(fx, Sound.BLOCK_LEVER_CLICK, 0.8f, 0.8f);
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> s.machine.lever(false), 12L);
-        int[] stops = {24, 36, 48};
-        boolean[] stopped = new boolean[3];
+        // Echte Walzen (v1.73): jede Walze dreht, bremst und rastet mit Bounce ein; zwei gleiche → die letzte Walze
+        // kriecht Symbol für Symbol (Kino-Kamera, Herzschlag, Münzgeklimper) und rastet dann plötzlich ein.
+        boolean tension = result[0] == result[1];
+        int cherries = 0;
+        for (int x : result) if (x == 0) cherries++;
+        boolean three = result[0] == result[1] && result[1] == result[2];
+        boolean win = three || cherries > 0;
+        int[] arrive = {32, 46, tension ? 46 + 66 : 60};
+        SlotSpin[] spin = new SlotSpin[3];
+        for (int i = 0; i < 3; i++) {
+            double from = s.machine.reelAngle(i);
+            double to = SlotMachine.stopAngle(i, SlotMachine.SYMBOLS[result[i]]);
+            spin[i] = SlotSpin.plan(from, to, arrive[i], tension && i == 2 ? arrive[1] + 6 : -1);
+        }
+        int len = 0;
+        for (SlotSpin sp : spin) len = Math.max(len, sp.length());
+        final int end = len;
+        java.util.UUID pid = p.getUniqueId();
         plugin.getServer().getScheduler().runTaskTimer(plugin, new java.util.function.Consumer<org.bukkit.scheduler.BukkitTask>() {
             int t;
 
             @Override
             public void accept(org.bukkit.scheduler.BukkitTask task) {
-                t += 2;
-                for (int i = 0; i < 3; i++) {
-                    if (stopped[i]) continue;
-                    if (t >= stops[i]) {
-                        stopped[i] = true;
-                        s.shown[i][1] = SlotMachine.SYMBOLS[result[i]];
-                        s.shown[i][0] = SlotMachine.SYMBOLS[pick()];
-                        s.shown[i][2] = SlotMachine.SYMBOLS[pick()];
-                        for (int k = 0; k < 3; k++) s.machine.symbol(i, k, s.shown[i][k], false);
-                        fx.getWorld().playSound(fx, Sound.BLOCK_WOODEN_BUTTON_CLICK_ON, 0.9f, 0.7f + 0.15f * i);
-                        continue;
-                    }
-                    s.shown[i][2] = s.shown[i][1];
-                    s.shown[i][1] = s.shown[i][0];
-                    s.shown[i][0] = SlotMachine.SYMBOLS[pick()];
-                    for (int k = 0; k < 3; k++) s.machine.symbol(i, k, s.shown[i][k], true);
+                if (!s.machine.ready()) {
+                    task.cancel();
+                    s.busy = false;
+                    return;
                 }
-                if (t % 4 == 0) fx.getWorld().playSound(fx, Sound.BLOCK_NOTE_BLOCK_HAT, 0.35f, 1.6f);
-                if (stopped[0] && stopped[1] && stopped[2]) {
+                boolean fast = false;
+                for (int i = 0; i < 3; i++) {
+                    SlotSpin sp = spin[i];
+                    if (t >= sp.length()) continue;
+                    double v = sp.speed[t];
+                    fast |= Math.abs(v) > 14;
+                    s.machine.reel(i, sp.angle[t], Math.abs(v) > 14, 1);
+                    // Ratsche: im langsamen Lauf klickt jedes Symbol, das an der Linie vorbeikommt
+                    if (t > 0 && Math.abs(v) > 0.5 && Math.abs(v) <= 14
+                            && Math.floor((sp.angle[t - 1] + 18) / 36) != Math.floor((sp.angle[t] + 18) / 36)) {
+                        fx.getWorld().playSound(fx, Sound.BLOCK_WOODEN_BUTTON_CLICK_ON, 0.55f, 1.5f + 0.1f * i);
+                    }
+                    if (t == sp.arrive) {
+                        // Einrasten: Klonk, Bass, kurzer Ruck im Gehäuse
+                        fx.getWorld().playSound(fx, Sound.BLOCK_IRON_TRAPDOOR_CLOSE, 0.9f, 0.7f + 0.12f * i);
+                        fx.getWorld().playSound(fx, Sound.BLOCK_NOTE_BLOCK_BASEDRUM, 0.8f, 0.7f);
+                        s.machine.shake(plugin, 4, 0.012);
+                        de.kuby.kubyplugins.util.Fx.particle(plugin, s.machine.reelFront(i), Particle.CRIT, 6, 0.15, 0.1, 0.05, 0.05);
+                    }
+                    if (t == sp.length() - 1) s.shown[i] = SlotMachine.visible(i, sp.angle[t]);
+                }
+                if (fast && t % 3 == 0) fx.getWorld().playSound(fx, Sound.BLOCK_NOTE_BLOCK_HAT, 0.3f, 1.7f);
+                // Spannung: Kamera auf die letzte Walze, sobald die zweite das zweite gleiche Symbol zeigt
+                if (tension && t == spin[1].arrive) tensionCam(p, s, spin[2].arrive - t, SlotMachine.SYMBOLS[result[0]], win, pid);
+                if (t == spin[2].arrive && win) {
+                    s.machine.coinBurst(plugin, three ? 70 : 14);
+                    s.machine.shake(plugin, three ? 28 : 10, three ? 0.06 : 0.022);
+                    fx.getWorld().playSound(fx, Sound.ENTITY_GENERIC_EXPLODE, three ? 0.5f : 0.15f, 1.5f);
+                }
+                t++;
+                if (t >= end) {
                     task.cancel();
                     s.busy = false;
                     s.machine.lamps(false);
                     finish(p, s, result, bet, jw);
                 }
             }
-        }, 2L, 2L);
+        }, 1L, 1L);
+    }
+
+    /** Kino-Kamera auf die letzte Walze (nur für den Spieler am Automaten); danach wieder auf den Hocker. */
+    private void tensionCam(Player p, State s, int snap, String sym, boolean win, java.util.UUID pid) {
+        if (!p.isOnline() || plugin.cinema() == null || de.kuby.kubyplugins.cinema.Cinema.busy(pid)) return;
+        if (!plugin.getConfig().getBoolean("casino.slots.kino", true)) return;
+        Location face = s.machine.reelFront(2);
+        org.bukkit.util.Vector n = s.machine.frontVector();
+        var script = new de.kuby.kubyplugins.cinema.scenes.SlotTension(
+                new de.kuby.kubyplugins.cinema.V3(face.getX(), face.getY(), face.getZ()),
+                new de.kuby.kubyplugins.cinema.V3(n.getX(), 0, n.getZ()), snap, sym, win, null, System.nanoTime());
+        de.kuby.kubyplugins.cinema.Cinema.Options o = new de.kuby.kubyplugins.cinema.Cinema.Options();
+        o.anchor = s.machine.center();
+        o.skippable = false;
+        o.onEnd = (pp, res) -> {
+            // zurück auf den Hocker
+            if (!pp.isOnline() || pp.getVehicle() != null) return;
+            if (s.seated != null && !s.seated.equals(pp.getUniqueId())) return;
+            var seat = s.machine.seat();
+            if (seat == null) return;
+            seat.addPassenger(pp);
+            s.seated = pp.getUniqueId();
+        };
+        plugin.cinema().play(p, script, o);
     }
 
     private void finish(Player p, State s, int[] r, long bet, boolean jw) {

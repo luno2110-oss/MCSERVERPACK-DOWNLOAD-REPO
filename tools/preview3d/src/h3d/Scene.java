@@ -31,6 +31,94 @@ public final class Scene {
                 m.holo(20080, 10, 5000);
                 m.seat();
             }
+            case "slot_spin" -> {
+                // Ganzer Spin Bild für Bild (args[2] = Ordner, args[3] = Ergebnis z. B. 9,9,9): Walzen wie im Spiel,
+                // Kamera wie im Spiel (Spieler-Blick, ab der zweiten Walze die Kino-Szene), Münzen auf Wurfbahnen
+                String dir = args[2];
+                String[] rs = (args.length > 3 ? args[3] : "9,9,9").split(",");
+                int[] result = {Integer.parseInt(rs[0]), Integer.parseInt(rs[1]), Integer.parseInt(rs[2])};
+                SlotMachine m = new SlotMachine("s1", new Location(w, 0.5, 1.5, 0.03), 0f, 2.7, 1,
+                        new Location(w, 0.5, 0, 1.6), tag, click, "gold");
+                m.build(new String[][]{{"lemon", "cherry", "bell"}, {"clover", "cherry", "chip"}, {"star", "bell", "coin"}});
+                m.panel(new long[]{10, 50, 100, 500, 1000, 5000}, 2);
+                m.holo(20080, 10, 5000);
+                boolean tension = result[0] == result[1];
+                boolean win = (result[0] == result[1] && result[1] == result[2]) || result[0] == 0 || result[1] == 0 || result[2] == 0;
+                int[] arrive = {32, 46, tension ? 46 + 66 : 60};
+                de.kuby.kubyplugins.casino.SlotSpin[] spin = new de.kuby.kubyplugins.casino.SlotSpin[3];
+                for (int i = 0; i < 3; i++) spin[i] = de.kuby.kubyplugins.casino.SlotSpin.plan(m.reelAngle(i),
+                        SlotMachine.stopAngle(i, SlotMachine.SYMBOLS[result[i]]), arrive[i], tension && i == 2 ? arrive[1] + 6 : -1);
+                int start = spin[1].arrive;
+                Location face = m.reelFront(2);
+                var script = new de.kuby.kubyplugins.cinema.scenes.SlotTension(
+                        new de.kuby.kubyplugins.cinema.V3(face.getX(), face.getY(), face.getZ()),
+                        new de.kuby.kubyplugins.cinema.V3(0, 0, 1), spin[2].arrive - start, SlotMachine.SYMBOLS[result[0]], win, null, 1);
+                int end = Math.max(spin[2].length() + 30, tension ? start + script.length() : 0);
+                java.util.Random rnd = new java.util.Random(3);
+                int coins = win ? 60 : 0;
+                double[][] cv = new double[coins][3];
+                for (double[] c : cv) {
+                    c[0] = (rnd.nextDouble() * 2 - 1) * 0.35;
+                    c[1] = 0.35 + rnd.nextDouble() * 0.35;
+                    c[2] = 0.05 + rnd.nextDouble() * 0.25;
+                }
+                java.util.List<org.bukkit.entity.Entity> flying = new java.util.ArrayList<>();
+                StringBuilder cams = new StringBuilder();
+                new java.io.File(dir).mkdirs();
+                for (int t = 0; t < end; t++) {
+                    for (int i = 0; i < 3; i++) {
+                        de.kuby.kubyplugins.casino.SlotSpin sp = spin[i];
+                        int k = Math.min(t, sp.length() - 1);
+                        m.reel(i, sp.angle[k], Math.abs(sp.speed[k]) > 14, 0);
+                    }
+                    for (org.bukkit.entity.Entity e : flying) e.remove();
+                    flying.clear();
+                    int since = t - spin[2].arrive;
+                    if (coins > 0 && since >= 0) {
+                        Location from = m.effectLocation();
+                        for (int c = 0; c < coins; c++) {
+                            double dt = (since - c / 6) / 20.0 * 1.0;
+                            if (dt < 0) continue;
+                            double tt = dt * 20;
+                            double x = from.getX() + cv[c][0] * tt, z = from.getZ() + cv[c][2] * tt;
+                            double y = from.getY() + cv[c][1] * tt - 0.04 * tt * tt / 2;
+                            if (y < 0.05) y = 0.05;
+                            int cc = c;
+                            flying.add(w.spawn(new Location(w, x, y, z), org.bukkit.entity.ItemDisplay.class, d -> {
+                                d.setItemStack(BlackjackTable.model(cc % 4 == 0 ? "slot_chip" : "slot_coin"));
+                                d.setTransformation(new org.bukkit.util.Transformation(new org.joml.Vector3f(),
+                                        new org.joml.Quaternionf().rotateY((float) (tt * 0.4 + cc)), new org.joml.Vector3f(0.28f, 0.28f, 0.28f),
+                                        new org.joml.Quaternionf()));
+                            }));
+                        }
+                    }
+                    try (FileWriter fw = new FileWriter(String.format("%s/f%04d.json", dir, t))) {
+                        fw.write(Mock.dump().toString());
+                    }
+                    double cx = 0.5, cy = 1.95, cz = 1.75, lx = 0.5, ly = 1.42, lz = 0.1;
+                    String grade = "-";
+                    double bars = 0;
+                    boolean flash = false;
+                    if (tension && t >= start && t - start < script.length()) {
+                        de.kuby.kubyplugins.cinema.Frame fr = new de.kuby.kubyplugins.cinema.Frame();
+                        script.frame(t - start, fr);
+                        cx = fr.cam.x();
+                        cy = fr.cam.y();
+                        cz = fr.cam.z();
+                        de.kuby.kubyplugins.cinema.V3 d = de.kuby.kubyplugins.cinema.V3.dir(fr.camYaw, fr.camPitch);
+                        lx = cx + d.x();
+                        ly = cy + d.y();
+                        lz = cz + d.z();
+                        grade = fr.grade == null ? "-" : fr.grade;
+                        bars = fr.bars;
+                        for (Object ev : fr.events) if (ev instanceof de.kuby.kubyplugins.cinema.Ev.Flash) flash = true;
+                    }
+                    cams.append(String.format(java.util.Locale.ROOT, "%d %.4f %.4f %.4f %.4f %.4f %.4f %s %.3f %b%n", t, cx, cy, cz, lx, ly, lz, grade, bars, flash));
+                }
+                try (FileWriter fw = new FileWriter(dir + "/cams.txt")) {
+                    fw.write(cams.toString());
+                }
+            }
             case "dealer_anim" -> {
                 // Ein Clip: Bild k liegt bei x = 4k (args[2] = Geste, args[3] = Bilder, args[4] = Ticks je Bild)
                 int frames = Integer.parseInt(args[3]), every = Integer.parseInt(args[4]);

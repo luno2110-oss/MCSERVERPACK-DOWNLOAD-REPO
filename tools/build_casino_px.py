@@ -540,11 +540,53 @@ def write(out):
                                                "south": {"texture": "#side", "uv": [0, 0, 16, 1]},
                                                "east": {"texture": "#side", "uv": [0, 0, 16, 1]},
                                                "west": {"texture": "#side", "uv": [0, 0, 16, 1]}}}]})
+    reel_plate().save(os.path.join(tex, "reel_plate.png"))
+    icons = os.path.join(a, "textures/item/casino")
+    for sym in SLOT_SYMS:
+        for blur in (False, True):
+            name = "slot_" + sym + ("_blur" if blur else "")
+            src = os.path.join(icons, name + ".png")
+            if os.path.exists(src):
+                shutil.copyfile(src, os.path.join(tex, "sym_" + sym + ("_blur" if blur else "") + ".png"))
+            item("sr_" + sym + ("_blur" if blur else ""), reel_model(sym, blur))
     for style in ("gold", "neon"):
         slot_top(style).save(os.path.join(tex, "sl_" + style + "_top.png"))
         item("sl_" + style + "_top", flat_model(B + "sl_" + style + "_top", 0, 5, 16, 11))
         slot_front(style).save(os.path.join(tex, "sl_" + style + "_front.png"))
         item("sl_" + style + "_front", flat_model(B + "sl_" + style + "_front", 0, 4, 16, 12))
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Walzen der Automaten (v1.73): je Symbol eine Kachel der Trommel, außen bei Radius 8 (0,5 Block), 1/10 des Umfangs
+# hoch. Die Kachel liegt im Modell um die Mitte (8, 8, 8) herum versetzt: dreht man die Anzeige um ihre eigene Mitte,
+# läuft die Kachel auf dem Kreis um die Walzenachse (der Client dreht sauber, statt auf der Sehne zu schieben).
+# ---------------------------------------------------------------------------------------------------------------------
+SLOT_SYMS = ["cherry", "lemon", "banana", "bell", "star", "clover", "chip", "coin", "diamond", "seven"]
+REEL_R = 8.0
+REEL_HALF = REEL_R * math.tan(math.radians(18))  # halbe Kantenlänge des Zehnecks (Innenkreis = Radius)
+
+
+def reel_plate():
+    def f(x, y):
+        if y in (0, 15):
+            return CREAM[1]
+        return CREAM[3] if 3 <= y <= 12 else CREAM[2]
+    return _mat(f)
+
+
+def reel_model(sym, blur):
+    plate = "kuby:block/casino/reel_plate"
+    tex = "kuby:block/casino/sym_" + sym + ("_blur" if blur else "")
+    z1 = 8 + REEL_R
+    h = REEL_HALF
+    edge = {"texture": "#plate", "uv": [0, 0, 16, 1]}
+    return {"textures": {"plate": plate, "sym": tex, "particle": plate},
+            "elements": [
+                {"from": [0, 8 - h, z1 - 0.6], "to": [16, 8 + h, z1],
+                 "faces": {"south": {"texture": "#plate", "uv": [0, 0, 16, 16]}, "east": edge, "west": edge}},
+                {"from": [8 - 2.2, 8 - 2.2, z1 + 0.03], "to": [8 + 2.2, 8 + 2.2, z1 + 0.03],
+                 "faces": {"south": {"texture": "#sym", "uv": [0, 0, 16, 16]}}},
+            ]}
 
 
 def preview(path):
