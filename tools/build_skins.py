@@ -638,7 +638,7 @@ RIG_PARTS = {
 }
 
 
-def rig_part_model(tex, part):
+def rig_part_model(tex, part, img=None):
     (u, v, w, h, d), (r0, r1), lo, hi, cap_top, cap_bottom = RIG_PARTS[part]
 
     def uv(x, y, ww, hh):
@@ -655,9 +655,10 @@ def rig_part_model(tex, part):
     faces["up"] = {"texture": "#skin", "uv": uv(u + d, v, w, d) if cap_top else uv(u + d, side_y, w, 1)}
     faces["down"] = ({"texture": "#skin", "uv": uv(u + d + w, v, w, d)} if cap_bottom
                      else {"texture": "#skin", "uv": uv(u + d, side_y + rows - 1, w, 1)})
-    return {"textures": {"skin": tex, "particle": tex},
-            "elements": [{"from": [8 + lo[0], 8 + lo[1], 8 + lo[2]], "to": [8 + hi[0], 8 + hi[1], 8 + hi[2]],
-                          "faces": faces}]}
+    els = [{"from": [8 + lo[0], 8 + lo[1], 8 + lo[2]], "to": [8 + hi[0], 8 + hi[1], 8 + hi[2]], "faces": faces}]
+    if img is not None:
+        els += rig_layers(part, img)
+    return {"textures": {"skin": tex, "particle": tex}, "elements": els}
 
 
 def dealer_hd():
@@ -758,6 +759,113 @@ def dealer_hd():
     return base
 
 
+# ---------------------------------------------------------------------------------------------------------------------
+# Schichten wie bei 3D-Layer-Skins (128er-Textur, 1 Texel = 0,5 Modell-Pixel): Sakko als Schale über dem Körper,
+# Ärmel dicker als die Manschetten darunter, Haarkappe, Hosen-Schale, Schuhe mit Spitze und ein Relief vorne
+# (Revers, Fliege, Knöpfe, Einstecktuch). Abstände bewusst ungleich (0,2 / 0,25 / 0,3 / 0,5), damit sich nie zwei
+# Flächen genau überdecken (kein Flimmern).
+# ---------------------------------------------------------------------------------------------------------------------
+def _uv8(x, y, w, h):
+    return [x / 8, y / 8, (x + w) / 8, (y + h) / 8]
+
+
+def _regions(part):
+    """Flächen eines Teils in der 128er-Textur: north/south/east/west/up/down -> (x, y, w, h) über die ganze Höhe."""
+    (u, v, w, h, d) = RIG_PARTS[part][0]
+    u, v, w, h, d = u * 2, v * 2, w * 2, h * 2, d * 2
+    return {"east": (u, v + d, d, h), "north": (u + d, v + d, w, h), "west": (u + d + w, v + d, d, h),
+            "south": (u + 2 * d + w, v + d, w, h), "up": (u + d, v, w, d), "down": (u + d + w, v, w, d)}
+
+
+def _shell(part, y0, y1, rows, expand, top=False, bottom=None, x_only=None):
+    """Schale um ein Teil: Zeilen rows=(r0, r1) der Seitenflächen (Texel), Höhe y0..y1 relativ zum Gelenk.
+    expand = (links, rechts, vorne, hinten) in px; bottom = Texel-Zeile für die Unterseite (oder None)."""
+    _, _, lo, hi, _, _ = RIG_PARTS[part]
+    reg = _regions(part)
+    ex0, ex1, ez0, ez1 = expand
+    r0, r1 = rows
+    faces = {}
+    for fc in ("north", "south", "east", "west"):
+        x, y, w, h = reg[fc]
+        faces[fc] = {"texture": "#skin", "uv": _uv8(x, y + r0, w, r1 - r0)}
+    if top:
+        faces["up"] = {"texture": "#skin", "uv": _uv8(*reg["up"])}
+    if bottom is not None:
+        x, y, w, h = reg["north"]
+        faces["down"] = {"texture": "#skin", "uv": _uv8(x, y + bottom, w, 1)}
+    return {"from": [8 + lo[0] - ex0, 8 + y0, 8 + lo[2] - ez0], "to": [8 + hi[0] + ex1, 8 + y1, 8 + hi[2] + ez1],
+            "faces": faces}
+
+
+def _relief(part, img, z_front, x_min, x_max, y_top, rows, depth_of):
+    """Relief auf der Vorderseite: für jede Texel-Zeile Läufe gleicher Tiefe als flache Quader nach vorne (-z).
+    depth_of(Farbe, Spalte, Zeile) -> Tiefe in px oder 0."""
+    x, y, w, h = _regions(part)["north"]
+    px = img.load()
+    els = []
+    cw = (x_max - x_min) / w
+    for r in range(rows[0], rows[1]):
+        c = 0
+        while c < w:
+            dep = depth_of(px[x + c, y + r][:3], c, r)
+            if not dep:
+                c += 1
+                continue
+            c2 = c
+            while c2 + 1 < w and depth_of(px[x + c2 + 1, y + r][:3], c2 + 1, r) == dep:
+                c2 += 1
+            # Spalte 0 liegt bei x_max (Nordseite von außen gesehen), Zeile r von oben
+            xa, xb = x_max - (c2 + 1) * cw, x_max - c * cw
+            yb = y_top - (r - rows[0]) * 0.5
+            uv = _uv8(x + c, y + r, c2 - c + 1, 1)
+            els.append({"from": [8 + xa, 8 + yb - 0.5, 8 + z_front - dep], "to": [8 + xb, 8 + yb, 8 + z_front],
+                        "faces": {f: {"texture": "#skin", "uv": uv} for f in ("north", "east", "west", "up", "down")}})
+            c = c2 + 1
+    return els
+
+
+def _hexs(*cols):
+    return {tuple(rgb(c)[:3]) for c in cols}
+
+
+LAPEL, BOW, GOLD, COLLAR = _hexs("3A3644", "4E4A5C"), _hexs("C42032", "861422"), _hexs("F0C24A", "B0841E"), _hexs("F4F4F0", "CFCCC8")
+
+
+def rig_layers(part, img):
+    if part == "torso":
+        def dep(c, col, row):
+            if c in BOW:
+                return 1.0
+            if c in GOLD:
+                return 0.75 if col >= 12 else 0.5
+            if c in LAPEL:
+                return 0.5
+            if c in COLLAR and row < 2:
+                return 0.25
+            return 0
+        return [_shell(part, 0, 12.25, (0, 24), (0.25, 0.25, 0.25, 0.25), top=True, bottom=23)] + \
+            _relief(part, img, -2.25, -4.25, 4.25, 12, (0, 24), dep)
+    if part == "head":
+        # Haarkappe: obere 2 px rundum 0,5 dicker, Deckel angehoben
+        return [_shell(part, 6, 8.5, (0, 4), (0.5, 0.5, 0.5, 0.5), top=True)]
+    if part in ("rarm_up", "larm_up"):
+        return [_shell(part, -5, 1.3, (0, 12), (0.3, 0.3, 0.3, 0.3), top=True)]
+    if part in ("rarm_lo", "larm_lo"):
+        # Sakko-Ärmel bis zum Saum (Texel 12..18 der Ärmel), darunter schaut die Manschette heraus
+        return [_shell(part, -3, 0, (12, 18), (0.3, 0.3, 0.3, 0.3), bottom=17)]
+    if part in ("rleg", "lleg"):
+        outer = (0, 0.2) if part == "rleg" else (0.2, 0)
+        shoe_out = (0, 0.3) if part == "rleg" else (0.3, 0)
+        trousers = _shell(part, -10, 0, (0, 20), (outer[0], outer[1], 0.2, 0.2), bottom=19)
+        shoe = _shell(part, -12, -10, (20, 24), (shoe_out[0], shoe_out[1], 1.0, 0.3), top=True)
+        shoe["faces"]["up"] = {"texture": "#skin", "uv": _uv8(*_regions(part)["north"][:2], 1, 1)}
+        x, y, w, h = _regions(part)["north"]
+        shoe["faces"]["up"]["uv"] = _uv8(x, y + 21, w, 1)
+        shoe["faces"]["down"] = {"texture": "#skin", "uv": _uv8(x, y + 23, w, 1)}
+        return [trousers, shoe]
+    return []
+
+
 RIGS = {"dealer": dealer_hd}
 
 
@@ -769,11 +877,12 @@ def build_rigs(out, skins):
     for d in (tex_dir, models, items):
         os.makedirs(d, exist_ok=True)
     for name, fn in RIGS.items():
-        fn().save(os.path.join(tex_dir, "rig_" + name + ".png"))
+        img = fn()
+        img.save(os.path.join(tex_dir, "rig_" + name + ".png"))
         for part in RIG_PARTS:
             mid = "rig_" + name + "_" + part
             with open(os.path.join(models, mid + ".json"), "w", encoding="utf-8") as fh:
-                json.dump(rig_part_model("kuby:block/casino/rig_" + name, part), fh)
+                json.dump(rig_part_model("kuby:block/casino/rig_" + name, part, img), fh)
             with open(os.path.join(items, mid + ".json"), "w", encoding="utf-8") as fh:
                 json.dump({"model": {"type": "minecraft:model", "model": "kuby:item/casino/" + mid}}, fh)
 

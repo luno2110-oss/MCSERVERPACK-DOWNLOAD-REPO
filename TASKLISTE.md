@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.71** (ungetestet, nicht kompiliert)
+Stand: **v1.72** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -558,6 +558,7 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
 ## Casino fertigstellen (v1.68)
+- [x] **v1.72 Dealer in Schichten** (wie 3D-Layer-Skins, `build_skins.rig_layers`): Sakko als Schale über dem Körper (0,25 px), Sakko-Ärmel dicker als die Hemdmanschetten darunter (0,3 px), Haarkappe (0,5 px, Deckel angehoben), Hosen-Schale nach außen (0,2 px), Schuhe mit 1 px Spitze; Relief vorne aus der Textur: Fliege 1 px, Revers/Knöpfe 0,5 px, Einstecktuch 0,75 px, Kragen 0,25 px. Abstände ungleich, damit sich keine Flächen überdecken (kein Flimmern). Übersicht der Texturen/Modelle/Animationen als Bilder und Video geliefert
 - [x] **v1.71 Feinschliff nach Test des Besitzers**
   - [x] Chips exakt rund (gleiche Pixelzahl, nur verschoben): 16-px-Kreis mit Treppe 6-10-12-14-14-16 statt 8 px gerader Kanten; sechs Randtupfer als gleiche 2x2-Blöcke spiegelgleich, Licht oben links; gilt für Dialog-Chips, Item-Bilder und 3D-Chips
   - [x] Streifen auf liegenden Chips behoben: (1) Stapelabstand passt jetzt exakt zur Chiphöhe je Skalierung (`BlackjackTable.chipStep`), vorher Lücken; (2) Seitenwand als echtes 16-Eck (8 Stäbe, nur Stirnseiten) statt gezacktem Stern aus 4 Quadraten; (3) Deckel knapp innerhalb der Wand und am Rand in Chipfarbe statt dunkler Kontur; (4) Stapel in 22,5°-Schritten gedreht, Kanten liegen übereinander; (5) Tablett-/Pot-Chips 0,19 groß, Nachbarstapel durchdringen sich nicht mehr; Kanten-Textur ohne dunkles unteres Drittel (wirkte wie Lücke)
