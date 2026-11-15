@@ -43,7 +43,9 @@ public final class CasinoNpc implements Listener {
         CROUPIER("Roulette", "croupier", TextColor.color(0xF0303E), KitData.SmallIcon.C_PINK),
         CRASH("Crash", "crash", TextColor.color(0xF2402E), KitData.SmallIcon.C_WHITE),
         MIA("Mia", "mia", null, null),
-        LOSBUDE("Losbude", "losbude", null, KitData.SmallIcon.Y_CLOVER);
+        LOSBUDE("Losbude", "losbude", null, KitData.SmallIcon.Y_CLOVER),
+        /** Jukebox im Stil der alten Wurlitzer: Rechtsklick öffnet das Musik-Menü (/music). */
+        MUSIK("Jukebox", "musik", TextColor.color(0xFFB23A), null);
 
         public final String title;
         public final String id;
@@ -85,12 +87,9 @@ public final class CasinoNpc implements Listener {
         Location loc = at.clone();
         loc.setPitch(0);
         Entity npc = switch (role) {
-            case KASSE -> loc.getWorld().spawn(loc, Villager.class, v -> {
-                v.setProfession(Villager.Profession.CARTOGRAPHER);
-                v.setVillagerType(Villager.Type.PLAINS);
-                v.setVillagerLevel(5);
-                prepare(v);
-            });
+            // Kassierer wie im alten Casino (grüner Augenschirm, Weste, Ärmelhalter), breite Arme
+            case KASSE -> mannequin(loc, "Kassierer", "kassierer", org.bukkit.profile.PlayerTextures.SkinModel.CLASSIC);
+            case MUSIK -> jukebox(loc);
             case CROUPIER -> mannequin(loc, "Croupier", "croupier");
             // geladener Creeper (blaue Aura) wie im Clip; ohne KI zündet er nie
             case MIA -> mannequin(loc, "Mia", "mia");
@@ -109,16 +108,44 @@ public final class CasinoNpc implements Listener {
 
     /** Figur mit eigenem Skin aus dem Pack (kuby:entity/casino/&lt;skin&gt;), schlanke Arme. */
     private Entity mannequin(Location loc, String name, String skin) {
+        return mannequin(loc, name, skin, org.bukkit.profile.PlayerTextures.SkinModel.SLIM);
+    }
+
+    private Entity mannequin(Location loc, String name, String skin, org.bukkit.profile.PlayerTextures.SkinModel model) {
         return loc.getWorld().spawn(loc, org.bukkit.entity.Mannequin.class, m -> {
             m.setProfile(io.papermc.paper.datacomponent.item.ResolvableProfile.resolvableProfile()
                     .name(name)
-                    .skinPatch(sp -> sp.body(Key.key("kuby", "entity/casino/" + skin))
-                            .model(org.bukkit.profile.PlayerTextures.SkinModel.SLIM))
+                    .skinPatch(sp -> sp.body(Key.key("kuby", "entity/casino/" + skin)).model(model))
                     .build());
             m.setImmovable(true);
             m.setDescription(null);
             prepare(m);
         });
+    }
+
+    /**
+     * Jukebox: leuchtendes 3D-Modell (kuby:casino/jukebox, Front zur Blickrichtung des Admins) und eine Klickfläche,
+     * die die Rolle trägt. Das Modell hängt über die Hologramm-Markierung an der Klickfläche (wird mit entfernt).
+     */
+    private Entity jukebox(Location loc) {
+        org.bukkit.entity.Interaction hit = loc.getWorld().spawn(loc, org.bukkit.entity.Interaction.class, e -> {
+            e.setInteractionWidth(1.1f);
+            e.setInteractionHeight(2.0f);
+            e.setResponsive(true);
+            e.setPersistent(true);
+        });
+        // Modell 2 Blöcke hoch, um seine Mitte gezeichnet: Mitte 1 Block über dem Boden
+        Location at = loc.clone().add(0, 1.0 - 0.5, 0);
+        at.setPitch(0);
+        loc.getWorld().spawn(at, org.bukkit.entity.ItemDisplay.class, d -> {
+            d.setItemStack(BlackjackTable.model("jukebox"));
+            d.setItemDisplayTransform(org.bukkit.entity.ItemDisplay.ItemDisplayTransform.NONE);
+            d.setTransformation(new Transformation(new Vector3f(), new AxisAngle4f(), new Vector3f(1f, 1f, 1f), new AxisAngle4f()));
+            d.setBrightness(new Display.Brightness(15, 15));
+            d.setPersistent(true);
+            d.getPersistentDataContainer().set(holoKey, PersistentDataType.STRING, hit.getUniqueId().toString());
+        });
+        return hit;
     }
 
     private void prepare(LivingEntity e) {
@@ -190,6 +217,10 @@ public final class CasinoNpc implements Listener {
                     .append(Component.text("Rechtsklick", light)).append(Component.text(" · ", NamedTextColor.GRAY))
                     .append(Component.text("Musik an/aus", light))
                     .build();
+            case MUSIK -> Component.text()
+                    .append(Component.text("Lieder wünschen, Lautstärke, Radio", light)).append(Component.newline())
+                    .append(Component.text("➜ ", NamedTextColor.YELLOW)).append(Component.text("Rechtsklick", light))
+                    .build();
             case CROUPIER, CRASH -> Component.text()
                     .append(Component.text("Einsatz setzen", light)).append(Component.newline())
                     .append(Component.text("➜ ", NamedTextColor.YELLOW)).append(Component.text("Rechtsklick", light))
@@ -231,7 +262,7 @@ public final class CasinoNpc implements Listener {
 
     private void removeHolo(Entity npc) {
         String owner = npc.getUniqueId().toString();
-        for (TextDisplay d : npc.getWorld().getNearbyEntitiesByType(TextDisplay.class, npc.getLocation(), 6)) {
+        for (Display d : npc.getWorld().getNearbyEntitiesByType(Display.class, npc.getLocation(), 6)) {
             if (owner.equals(d.getPersistentDataContainer().get(holoKey, PersistentDataType.STRING))) d.remove();
         }
     }
@@ -284,7 +315,7 @@ public final class CasinoNpc implements Listener {
             };
             case CROUPIER -> p -> plugin.roulette().open(p);
             case CRASH -> p -> plugin.crash().open(p);
-            case MIA -> p -> plugin.casinoMusic().openMenu(p);
+            case MIA, MUSIK -> p -> plugin.casinoMusic().openMenu(p);
             case LOSBUDE -> p -> Losbude.open(plugin, p);
         };
     }

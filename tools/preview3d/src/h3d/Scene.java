@@ -129,6 +129,17 @@ public final class Scene {
                     fw.write(cams.toString());
                 }
             }
+            case "kasse_musik" -> {
+                // Kassierer (Skin kassierer, breite Arme) und Jukebox nebeneinander, beide blicken nach +z
+                w.spawn(new Location(w, -0.7, 0, 0.5, 0, 0), org.bukkit.entity.Mannequin.class, m -> m.setProfile(
+                        io.papermc.paper.datacomponent.item.ResolvableProfile.resolvableProfile().name("Kassierer")
+                                .skinPatch(sp -> sp.body(net.kyori.adventure.key.Key.key("kuby", "entity/casino/kassierer"))
+                                        .model(org.bukkit.profile.PlayerTextures.SkinModel.CLASSIC)).build()));
+                w.spawn(new Location(w, 1.2, 0.5, 0.5, 0, 0), org.bukkit.entity.ItemDisplay.class, d -> {
+                    d.setItemStack(BlackjackTable.model("jukebox"));
+                    d.setItemDisplayTransform(org.bukkit.entity.ItemDisplay.ItemDisplayTransform.NONE);
+                });
+            }
             case "dealer_anim" -> {
                 // Ein Clip: Bild k liegt bei x = 4k (args[2] = Geste, args[3] = Bilder, args[4] = Ticks je Bild)
                 int frames = Integer.parseInt(args[3]), every = Integer.parseInt(args[4]);

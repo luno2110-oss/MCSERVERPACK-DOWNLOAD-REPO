@@ -555,6 +555,9 @@ def write(out):
             if os.path.exists(src):
                 shutil.copyfile(src, os.path.join(tex, "sym_" + sym + ("_blur" if blur else "") + ".png"))
             item("sr_" + sym + ("_blur" if blur else ""), reel_model(sym, blur))
+    jukebox_front().save(os.path.join(tex, "jukebox_front.png"))
+    jukebox_side().save(os.path.join(tex, "jukebox_side.png"))
+    item("jukebox", jukebox_model())
     for style in ("gold", "neon"):
         slot_top(style).save(os.path.join(tex, "sl_" + style + "_top.png"))
         item("sl_" + style + "_top", flat_model(B + "sl_" + style + "_top", 0, 5, 16, 11))
@@ -592,6 +595,121 @@ def reel_model(sym, blur):
                  "faces": {"south": {"texture": "#plate", "uv": [0, 0, 16, 16]}, "east": edge, "west": edge}},
                 {"from": [8 - 2.2, 8 - 2.2, z1 + 0.03], "to": [8 + 2.2, 8 + 2.2, z1 + 0.03],
                  "faces": {"south": {"texture": "#sym", "uv": [0, 0, 16, 16]}}},
+            ]}
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Jukebox (v1.75) im Stil der alten Wurlitzer aus amerikanischen Bowlingbahnen: runder Bogen mit leuchtenden
+# Farbröhren, Fenster mit Schallplatten, Chromgitter, Holzsockel. Front 32 x 64 (2 Pixel je Modell-Einheit).
+# ---------------------------------------------------------------------------------------------------------------------
+JB_WOOD = [rgb(c) for c in ("3A1E0C", "5A3016", "7A4420", "9A5A2C")]
+JB_TUBE = [rgb(c) for c in ("FF4A2A", "FF8A1E", "FFC23A", "FFE680")]
+JB_GREEN = [rgb(c) for c in ("1E8A4A", "3AC06A", "8AF0A8")]
+JB_CHROME = [rgb(c) for c in ("6A6E78", "9AA0AC", "C8CDD6", "EEF1F6")]
+
+
+def jukebox_front():
+    w, h = 32, 64
+    img = Image.new("RGBA", (w, h), T)
+    px = img.load()
+    cx = 15.5
+    for y in range(h):
+        for x in range(w):
+            dx = x - cx
+            if y < 16:
+                # Bogen: Halbkreis, außen Holz, dann Farbröhren (orange -> gelb), innen dunkles Glas
+                r = math.hypot(dx, (y - 16) * 1.0)
+                if r > 16:
+                    continue
+                if r > 14.6:
+                    c = JB_WOOD[1]
+                elif r > 12.4:
+                    c = JB_TUBE[0] if r > 13.5 else JB_TUBE[1]
+                elif r > 11.2:
+                    c = JB_TUBE[3]
+                elif r > 10.2:
+                    c = JB_CHROME[2]
+                else:
+                    c = PURPLE[1] if y < 12 else PURPLE[2]
+                px[x, y] = c
+                continue
+            # Seiten: Holz mit senkrechten Farbröhren
+            if x <= 1 or x >= w - 2:
+                px[x, y] = JB_WOOD[1] if y < h - 6 else JB_WOOD[0]
+                continue
+            if x <= 4 or x >= w - 5:
+                if y < h - 8:
+                    k = (y // 3) % 3
+                    px[x, y] = JB_TUBE[1] if (x in (3, w - 4)) else (JB_TUBE[2] if k else JB_TUBE[3])
+                else:
+                    px[x, y] = JB_WOOD[2]
+                continue
+            if y < 30:
+                # Fenster mit Schallplatten und warmem Licht
+                px[x, y] = rgb("2A1830") if y > 17 else JB_CHROME[2]
+                continue
+            if y < 32:
+                px[x, y] = JB_CHROME[3] if y == 30 else JB_CHROME[1]
+                continue
+            if y < 50:
+                # Chromgitter: senkrechte Stäbe, Mitte Lautsprecher-Raute
+                px[x, y] = JB_CHROME[2] if (x % 3 == 0) else JB_CHROME[0]
+                continue
+            if y < 52:
+                px[x, y] = JB_TUBE[2]
+                continue
+            px[x, y] = JB_WOOD[2] if y < h - 4 else JB_WOOD[0]
+    # Schallplatten im Fenster (gleiche Abstände, die mittlere größer = bricht das Muster)
+    for (pxc, rr) in ((9.5, 3.2), (15.5, 4.2), (21.5, 3.2)):
+        for y in range(18, 30):
+            for x in range(5, w - 5):
+                d = math.hypot(x - pxc, y - 24)
+                if d <= rr:
+                    px[x, y] = INK if d > 1.1 else JB_TUBE[0]
+                    if abs(d - rr * 0.6) < 0.5:
+                        px[x, y] = rgb("2A2A34")
+    # warmes Licht oben links im Fenster
+    for x in range(6, 10):
+        px[x, 18] = JB_TUBE[3]
+    # Lautsprecher-Raute im Gitter
+    for y in range(33, 49):
+        for x in range(5, w - 5):
+            if abs(x - cx) + abs(y - 41) * 0.8 <= 6.2:
+                px[x, y] = JB_GREEN[1] if abs(x - cx) + abs(y - 41) * 0.8 > 5 else (JB_CHROME[3] if y % 2 else JB_CHROME[1])
+    # Bedientasten unten
+    for i, x in enumerate(range(8, 24, 3)):
+        px[x, 51] = JB_CHROME[3]
+    img = _outline(img, mix(JB_WOOD[0], INK, 0.5))
+    # quadratisches Blatt (64 x 64), die Front liegt in der linken Hälfte
+    sheet = Image.new("RGBA", (64, 64), T)
+    sheet.alpha_composite(img, (0, 0))
+    return sheet
+
+
+def jukebox_side():
+    def f(x, y):
+        if y % 8 == 7:
+            return JB_WOOD[0]
+        return JB_WOOD[2] if x < 3 else JB_WOOD[1]
+    return _mat(f)
+
+
+def jukebox_model():
+    tex = "kuby:block/casino/jukebox_front"
+    side = "kuby:block/casino/jukebox_side"
+    # Körper 16 x 24 (Front unten 0..24), Bogen oben 24..32; die Anzeige dreht um 180°: Front = Nordseite
+    return {"textures": {"front": tex, "side": side, "particle": side},
+            "elements": [
+                {"from": [0, 0, 3], "to": [16, 24, 13],
+                 "faces": {"north": {"texture": "#front", "uv": [0, 4, 8, 16]},
+                           "south": {"texture": "#side", "uv": [0, 0, 16, 16]},
+                           "east": {"texture": "#side", "uv": [0, 0, 10, 16]},
+                           "west": {"texture": "#side", "uv": [0, 0, 10, 16]},
+                           "up": {"texture": "#side", "uv": [0, 0, 16, 10]},
+                           "down": {"texture": "#side", "uv": [0, 0, 16, 10]}}},
+                {"from": [0, 24, 4], "to": [16, 32, 12],
+                 "faces": {"north": {"texture": "#front", "uv": [0, 0, 8, 4]},
+                           "south": {"texture": "#side", "uv": [0, 0, 16, 8]}}},
             ]}
 
 
