@@ -112,6 +112,11 @@ public final class LoadTestCommand implements CommandExecutor {
                 from = camBj.clone().add(0, 1.75, 2.4);
                 to = camBj.clone().add(0, 0.8, 0.2);
             }
+            case "poker_nah" -> {
+                // nah über dem Pokertisch: Gemeinschaftskarten, Pot, Einsätze, eigene Karten
+                from = camPk.clone().add(0, 2.1, -2.3);
+                to = camPk.clone().add(0, 0.85, 0.2);
+            }
             case "crash" -> {
                 if (camCrash == null) return;
                 from = camCrash.clone().add(0, -1.2, -6.5);
@@ -356,6 +361,18 @@ public final class LoadTestCommand implements CommandExecutor {
         cp.take(p, "blackjack", 100);
         var ng = cp.settle(id, "blackjack", 100, 200);
         check("außerhalb der Goldenen Zeit kein Bonus (Serie 1: x1,2)", !ng.golden() && Math.abs(ng.mult() - 1.2) < 1e-9, null);
+        // Goldene Zeit nach der echten Uhr (ohne Test-Schalter): Stunde in der eingestellten Zeitzone entscheidet
+        cp.testGolden = null;
+        java.time.ZonedDateTime now = java.time.ZonedDateTime.now(cp.goldenZone());
+        boolean expect = now.getHour() >= plugin.getConfig().getInt("casino.goldene-zeit.von", 17)
+                && now.getHour() < plugin.getConfig().getInt("casino.goldene-zeit.bis", 22);
+        cp.testReset(id);
+        cp.take(p, "blackjack", 100);
+        var real = cp.settle(id, "blackjack", 100, 200);
+        check("Goldene Zeit nach echter Uhr (" + cp.goldenZone() + " " + String.format("%02d:%02d", now.getHour(), now.getMinute()) + " → "
+                        + (expect ? "aktiv" : "nicht aktiv") + ")",
+                real.golden() == expect && real.payout() == (expect ? 300 : 200), "Einsatz 100, Spiel zahlt 200, ausgezahlt " + real.payout());
+        cp.testGolden = false;
         cp.testReset(id);
 
         // --- echte Crash-Runde (Goldene Zeit bleibt aus, damit die Auszahlung genau 100 x Kurs ist) ---

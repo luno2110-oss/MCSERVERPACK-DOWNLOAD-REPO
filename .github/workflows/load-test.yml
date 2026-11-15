@@ -186,6 +186,20 @@ jobs:
           if not reels: probs.append("Slots: kein Dreh mit Walzen-Ergebnis im Log")
           for want, got in reels:
               if want.strip() != got.strip(): probs.append("Slots: Walzen zeigen %s statt %s" % (got.strip(), want.strip()))
+          # Casino-SFX: Töne, die die Bots am Tisch wirklich als Netzwerkpaket bekommen haben
+          snd = r.get("casinoSounds", {})
+          sfx = [("Karte austeilen", ["item.book.page_turn", "entity.player.attack.sweep"]),
+                 ("Chip setzen / Stapel", ["block.amethyst_cluster.hit", "block.chain.place"]),
+                 ("Am Zug (Glocke)", ["block.note_block.bell"]),
+                 ("Dealer deckt auf", ["item.book.put"]),
+                 ("Überkauft", ["entity.item.break"]),
+                 ("Gewinn (Münzen, Erfolg)", ["entity.experience_orb.pickup", "block.note_block.pling", "ui.toast.challenge_complete", "entity.player.levelup"]),
+                 ("Verlust / Trost", ["block.note_block.bass"]),
+                 ("Roulette-Kugel / Glocke", ["block.bell.use", "entity.lightning_bolt.thunder"])]
+          sfx_rows = [(name, sum(snd.get(k, 0) for k in keys), keys) for name, keys in sfx]
+          if cstart:
+              for name, n_, keys in sfx_rows[:3]:
+                  if n_ == 0: probs.append("Casino-SFX fehlt: %s (%s)" % (name, ", ".join(keys)))
           if not evruns: probs.append("Keine Events ausgelöst")
           played = [g for g in games if not g[1].startswith("abgebrochen")]
           if not played: probs.append("Angel-Minispiel: keine Runde zu Ende gespielt (gestartet: %d)" % gstarted)
@@ -203,6 +217,9 @@ jobs:
           print("- Angel-Minispiel: %d Runden gestartet, %d beendet (%s); am Server angekommen: %d Linksklicks, %d Rechtsklicks, %d Ticks A, %d Ticks D; Bots spielten %d Runden, Tasten-Pakete %d%s" % (gstarted, len(games), ", ".join("%s %d" % kv for kv in gout.items()) or "keine", gsum[0], gsum[1], gsum[2], gsum[3], r.get("games", 0), r.get("inputPackets", 0), (" (Fehler: %s)" % r["inputErrors"]) if r.get("inputErrors") else ""))
           print(casino_line)
           if bonus: print("  - Boni/Trost im Spieltest: " + ", ".join(sorted(set(bonus))[:8]))
+          print("- Casino-SFX (bei den Bots angekommene Ton-Pakete während des Spieltests): %d Töne, %d verschiedene" % (sum(snd.values()), len(snd)))
+          for name, n_, keys in sfx_rows: print("  - %s %s: %d" % ("✅" if n_ else "⬜", name, n_))
+          print("  - häufigste: " + ", ".join("%s %d" % kv for kv in sorted(snd.items(), key=lambda kv: -kv[1])[:12]))
           print("- Casino-Regeltest (echter Spieler, echte Abrechnung): %s" % (rres[-1] if rres else "nicht beendet"))
           for ok, what in rules: print("  - %s %s" % ("✅" if ok == "OK" else "❌", what[:300]))
           for want, got in reels: print("  - Slots: Ergebnis %s → Walzen zeigen %s %s" % (want.strip(), got.strip(), "✅" if want.strip() == got.strip() else "❌"))

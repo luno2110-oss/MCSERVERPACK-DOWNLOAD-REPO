@@ -56,6 +56,13 @@ function create(i, again) {
       }, rnd(40000, DURATION - 60000));
     }
   });
+  // Casino-SFX: jeder Ton, den der Server diesem Spieler während des Casino-Spieltests schickt (echte Netzwerkpakete)
+  bot.on('soundEffectHeard', (soundName) => {
+    if ((bot.casinoUntil || 0) < Date.now()) return;
+    const n = String(soundName).replace(/^minecraft:/, '');
+    stats.casinoSounds = stats.casinoSounds || {};
+    stats.casinoSounds[n] = (stats.casinoSounds[n] || 0) + 1;
+  });
   bot.on('messagestr', (msg) => {
     stats.chats++;
     // Casino-Spieltest: der Server setzt den Spieler an einen Tisch, keine eigenen Aktionen mehr bis zum Ende

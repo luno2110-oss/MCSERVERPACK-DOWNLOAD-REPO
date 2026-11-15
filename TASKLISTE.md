@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.81** (ungetestet, nicht kompiliert)
+Stand: **v1.82** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -558,6 +558,10 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
 ## Casino fertigstellen (v1.68)
+- [x] **v1.82 Weitere Nachweise aus dem echten Spiel**
+  - [x] Goldene Zeit mit der echten Uhr: Zeitzone einstellbar (`casino.goldene-zeit.zeitzone`, Standard Europe/Berlin); der Regeltest prüft die Goldene Zeit jetzt auch ohne Test-Schalter nach der echten Uhrzeit; die CI „Client-Bilder“ stellt die Zeitzone so, dass es gerade 18 Uhr ist, und prüft, dass echte Abrechnungen am Tisch die Goldene Zeit bekommen
+  - [x] Casino-SFX: die Bots zeichnen jeden Ton auf, den der Server ihnen am Tisch als Netzwerkpaket schickt (Karte austeilen, Chip setzen, am Zug, Aufdecken, Überkauft, Gewinn, Verlust, Roulette); fehlen Austeilen, Chip oder Glocke, schlägt der Belastungstest fehl
+  - [x] Client-Bilder: Serienaufnahmen vom Blackjack-Platz (Austeilen bis Ergebnis) und nah vom Pokertisch (`/kubytest kamera poker_nah`)
 - [x] **v1.81 Fehler aus den echten Client-Bildern behoben**
   - [x] Slots: der Titel („GOLDRAUSCH“, „NEON 7“) ragte im Hologramm in die Jackpot-Zeile (Titel-Font 23 px hoch, Grundlinie bei 15) – Leerzeile dazwischen
   - [x] Roulette: der Text in der Tischmitte lag flach und war von der Spielerseite spiegelverkehrt – schwebt jetzt über der Mitte und dreht sich zu jedem Betrachter

@@ -166,6 +166,7 @@ casino:
     von: 17
     bis: 22
     faktor: 2.0
+    zeitzone: Europe/Berlin   # Uhrzeit der Goldenen Zeit (z. B. America/New_York für Server mit US-Spielern)
   vip:
     region: casino-vip
     daily-chips: 500

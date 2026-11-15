@@ -206,6 +206,15 @@ public final class CasinoPlay {
         return plugin.getConfig().getInt("casino.goldene-zeit.bis", 22);
     }
 
+    /** Zeitzone der Goldenen Zeit (casino.goldene-zeit.zeitzone, Standard Europe/Berlin). */
+    public ZoneId goldenZone() {
+        try {
+            return ZoneId.of(plugin.getConfig().getString("casino.goldene-zeit.zeitzone", "Europe/Berlin"));
+        } catch (Exception e) {
+            return ZONE;
+        }
+    }
+
     public double goldenFactor() {
         return plugin.getConfig().getDouble("casino.goldene-zeit.faktor", 2.0);
     }
@@ -216,13 +225,13 @@ public final class CasinoPlay {
     public boolean golden() {
         if (testGolden != null) return testGolden;
         if (!goldenEnabled()) return false;
-        int h = LocalTime.now(ZONE).getHour();
+        int h = LocalTime.now(goldenZone()).getHour();
         return h >= goldenStart() && h < goldenEnd();
     }
 
     /** Minuten bis zum Ende (läuft) bzw. bis zum Start (läuft nicht). */
     public long goldenMinutes() {
-        ZonedDateTime now = ZonedDateTime.now(ZONE);
+        ZonedDateTime now = ZonedDateTime.now(goldenZone());
         ZonedDateTime target = now.withHour(golden() ? goldenEnd() : goldenStart()).withMinute(0).withSecond(0).withNano(0);
         if (!target.isAfter(now)) target = target.plusDays(1);
         return java.time.Duration.between(now, target).toMinutes();
