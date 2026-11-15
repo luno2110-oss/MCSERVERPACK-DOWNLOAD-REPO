@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.67** (ungetestet, nicht kompiliert)
+Stand: **v1.68** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -556,6 +556,26 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - große Beträge an engen Stellen jetzt kurz („1,2 Mio.“, „3 Mrd.“)
   - Kern: Info-Leiste (Vorschau der Job-Leiste ragte aus dem Fenster), Kits („alle … Std.“ über „Vorschau“), Bestenliste (Untertitel), Investments (Name über Preis), Quiz-Abstimmung (Zeile zu lang)
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
+
+## Casino fertigstellen (v1.68, in Arbeit)
+- [x] Gemeinsamer Casino-Kern (`CasinoPlay`) für alle Spiele gegen die Bank (Blackjack, Roulette, Slots, Crash, Losbude):
+  - [x] **Juwelen für VIP** (Rang VIP oder höher, Recht `kuby.casino.juwelen`): `/casino waehrung` oder der Knopf am Blackjack-Platz; Einsatz 50 bis 10.000 Juwelen je Spiel und Runde, höchstens 50.000 Juwelen Spielvolumen am Tag (`casino.juwelen.*`). Die Währung eines offenen Einsatzes ist fest gespeichert (Rückgabe nach Absturz in der richtigen Währung)
+  - [x] **Siegesserie**: jeder Sieg in Folge +0,2x auf den Gewinn (1. Sieg x1, 2. x1,2 … bis x2,5), Unentschieden hält die Serie, Titel bei 3/5/8/10 Siegen; `/casino bonus` zeigt Serie, beste Serie, Goldene Zeit
+  - [x] **Goldene Zeit** jeden Tag 17–22 Uhr: Gewinne x2, Ansage bei Start und Ende, goldene Bossbar mit Restzeit im Casino (`casino.goldene-zeit.*`)
+  - [x] **Belohnend auch bei Verlust**: 3 % Cashback auf jeden Verlust, nach 3 Niederlagen in Folge Comeback-Bonus (+0,25x) auf den nächsten Sieg, „Knapp!“-Hinweis bei Slots, Rückmeldung mit Ton, Partikeln und Actionbar nach jeder Runde (`casino.bonus.*`)
+  - [x] Boni gelten nur auf den Reingewinn, alle Faktoren zusammen höchstens x6 (`max-gesamt`)
+- [x] **Crash**: Kurs = e^(0,07·s + 0,003·s²) – je höher, desto schneller (2x nach ~8 s, 5x nach ~14 s, 20x nach ~21 s; `casino.crash.beschleunigung`), Ticken wird mit dem Kurs schneller und höher, ab 5x Herzschlag, Gong bei 2x/5x/10x/25x. Hausvorteil unverändert
+- [x] **Blackjack-Tisch neu** (Clean-Look, Texturen in hoher Auflösung, `tools/build_casino_hd.py`): ein durchgehender Filz 512 px mit Goldlinien, Einsatzkreisen und Aufdruck „BLACKJACK ZAHLT 3 ZU 2“, schwarze Leder-Armauflage mit Steppnaht, Sockel Creme-Lack mit Goldband, Barhocker Creme-Leder mit Goldfuß, Chip-Tablett mit echten 3D-Chips, Schlitten und Ablage
+  - [x] Tisch 20 cm niedriger (Filz 0,8), Hocker passend; vom Platz aus liegen Karten, Chips und Zahlen frei. Handwert und Einsatz als kleine Plaketten neben Karten und Chips, nie darüber
+  - [x] 3D-Karten (40 x 56 px, Vorder- und Rückseite): kommen verdeckt aus dem Schlitten, gleiten an ihren Platz und drehen sich um; Dealer-Geste beim Austeilen; am Ende wandern die Karten in die Ablage
+  - [x] Interaktiv: Chips fliegen vom Rack aufs Feld, Knopf unter dem Blick hebt sich und leuchtet (Hover), Aktionsknöpfe KARTE/HALTEN/DOPPELN/TEILEN als Tafeln, Bedienknöpfe auf der Armauflage (Wie zuletzt, Zurücknehmen, Chips/Juwelen), Tipp nach der Grundstrategie in der Actionbar
+  - [x] Feedback: Ergebnis springt groß auf (GEWONNEN/BLACKJACK!/VERLOREN mit Betrag), Gewinner-Karten leuchten (Gold bei Blackjack), Überkauft: Karten wackeln und leuchten rot, „BANK ÜBERKAUFT!“, die Bank legt Gewinn-Chips dazu und schiebt sie zum Spieler, Serie und Cashback über dem Platz
+  - [x] SFX: Mischen, Austeilen (Wischen + Papier), Umdrehen, Chip-Klacken (höher je Stapel), Zug-Glocke, Ticken in den letzten 5 s, Gewinn-Chips, Verlust
+- [x] **Chip-Icons neu** im Icon-Stil (Rampen aus der Icon-Datenbank, getönte Kontur, Licht oben links, Seitenkante, Bodenschatten): Chips und Stapel als Items (32 px), Dialog-Chips (16 px); dazu 3D-Chips für die Tische
+- [ ] Poker-Tisch mit 3D-Karten und allen Regeln
+- [ ] Zwei neue Slot-Automaten
+- [ ] Roulette intensiver und interaktiver
+- [ ] Bedrock: 3D-Modelle sichtbar
 
 ## Fehler: Claims „nur in der Survival-Welt“, obwohl man in Survival ist (v1.67)
 - [x] Ursache: Claims (und Kistenläden, Spieler-Warps) prüften nur die eingestellte Welt `modes.survival.world` (Standard „survival“). Wurde der Survival-Spawn mit `/kp setspawn survival` (oder im Editor) in einer anders benannten Welt gesetzt, spielten alle dort, die Welt zählte aber nicht als Survival-Welt

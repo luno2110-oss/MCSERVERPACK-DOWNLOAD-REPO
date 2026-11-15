@@ -192,6 +192,15 @@ public final class SlotsService implements Listener {
         return level.getOrDefault(p.getUniqueId(), 0);
     }
 
+    /** Einsatz-Stufen in der Währung des Spielers (Juwelen für VIP: 50 bis 10.000). */
+    private long[] levels(Player p) {
+        return plugin.casinoPlay().rack(p.getUniqueId(), "slots", LEVELS);
+    }
+
+    private boolean jewels(Player p) {
+        return plugin.casinoPlay().cur(p.getUniqueId(), "slots") == de.kuby.kubyplugins.service.CasinoPlay.Cur.JEWELS;
+    }
+
     private void pull(Player p, State s) {
         if (s.busy) return;
         if (s.seated != null && !s.seated.equals(p.getUniqueId())) {
@@ -203,14 +212,14 @@ public final class SlotsService implements Listener {
             CasinoText.error(p, closed);
             return;
         }
-        long bet = LEVELS[levelOf(p)];
-        if (!plugin.casino().takeChips(p.getUniqueId(), bet)) {
-            CasinoText.error(p, "So viele Chips hast du nicht (Einsatz " + CasinoText.num(bet) + "). Tausch sie an der Kasse.");
+        long bet = levels(p)[levelOf(p)];
+        boolean jw = jewels(p);
+        String err = plugin.casinoPlay().take(p, "slots", bet);
+        if (err != null) {
+            CasinoText.error(p, err);
             return;
         }
-        long feed = Math.round(bet * plugin.getConfig().getDouble("casino.jackpot-share", 0.01));
-        if (feed > 0) plugin.casino().addJackpot(feed);
-        jackpot += Math.max(1, Math.round(bet * plugin.getConfig().getDouble("casino.slots.jackpot-share", 0.02)));
+        if (!jw) jackpot += Math.max(1, Math.round(bet * plugin.getConfig().getDouble("casino.slots.jackpot-share", 0.02)));
         s.busy = true;
         int[] result = {pick(), pick(), pick()};
         s.machine.lever(true);
@@ -247,20 +256,23 @@ public final class SlotsService implements Listener {
                     task.cancel();
                     s.busy = false;
                     s.machine.lamps(false);
-                    finish(p, s, result, bet);
+                    finish(p, s, result, bet, jw);
                 }
             }
         }, 2L, 2L);
     }
 
-    private void finish(Player p, State s, int[] r, long bet) {
+    private void finish(Player p, State s, int[] r, long bet, boolean jw) {
         long pay;
         String what;
         boolean jack = false;
         int cherries = 0;
         for (int x : r) if (x == 0) cherries++;
         if (r[0] == r[1] && r[1] == r[2]) {
-            if (r[0] == 9) {
+            if (r[0] == 9 && jw) {
+                pay = bet * 100;
+                what = "Drei Siebener!";
+            } else if (r[0] == 9) {
                 long share = Math.max(bet * 100, jackpot * bet / LEVELS[LEVELS.length - 1]);
                 share = Math.min(share, jackpot);
                 pay = share;
@@ -282,26 +294,36 @@ public final class SlotsService implements Listener {
             pay = 0;
             what = null;
         }
-        if (pay > 0) plugin.casino().giveChips(p.getUniqueId(), pay);
-        plugin.casinoLog().record("Slots", p.getUniqueId(), bet, pay);
+        de.kuby.kubyplugins.service.CasinoPlay.Outcome o = plugin.casinoPlay().settle(p.getUniqueId(), "slots", bet, pay);
         Location fx = s.machine.effectLocation();
+        String unit = jw ? " Juwelen" : " Chips";
         if (pay > 0) {
             de.kuby.kubyplugins.util.Fx.particle(plugin, fx, Particle.HAPPY_VILLAGER, 14 + (int) Math.min(30, pay / bet * 2), 0.5, 0.3, 0.2, 0);
             de.kuby.kubyplugins.util.Fx.particle(plugin, fx, Particle.FIREWORK, pay >= bet * 10 ? 30 : 6, 0.4, 0.3, 0.2, 0.05);
             p.playSound(fx, pay >= bet * 10 ? Sound.UI_TOAST_CHALLENGE_COMPLETE : Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.7f, 1.2f);
-            p.sendActionBar(Msg.parse("<green>+" + CasinoText.chips(pay) + " <gray>· <white>" + what));
+            String b = de.kuby.kubyplugins.service.CasinoPlay.bonusLine(o);
+            p.sendActionBar(Msg.parse("<green>+" + CasinoText.num(o.payout()) + unit + " <gray>· <white>" + what
+                    + (b.isEmpty() ? "" : " <dark_gray>| " + b)));
+            if (o.streak() >= 3) de.kuby.kubyplugins.util.Fx.particle(plugin, fx, Particle.FLAME, 6 + o.streak(), 0.4, 0.3, 0.2, 0.01);
         } else {
-            p.sendActionBar(Msg.parse("<gray>Einsatz <white>" + CasinoText.num(bet) + "</white> · Chips <#F2C94C>"
-                    + CasinoText.num(plugin.casino().chips(p.getUniqueId())) + "</#F2C94C> · Jackpot <yellow>" + CasinoText.num(jackpot)));
+            // knapp daneben: zwei gleiche Symbole auf der Linie
+            boolean near = r[0] == r[1] || r[1] == r[2] || r[0] == r[2];
+            plugin.casinoPlay().feedback(p, o, fx);
+            if (near) {
+                plugin.getServer().getScheduler().runTaskLater(plugin, () -> p.sendActionBar(Msg.parse(
+                        "<yellow>Knapp!</yellow> <gray>Zwei gleiche · Einsatz <white>" + CasinoText.num(bet) + unit + "</white> · Jackpot <yellow>"
+                                + CasinoText.num(jackpot))), 30L);
+                p.playSound(fx, Sound.BLOCK_NOTE_BLOCK_BIT, 0.6f, 0.9f);
+            }
         }
         if (jack) {
             p.showTitle(Title.title(Msg.parse("<b><gradient:#FFE070:#F2A21C>JACKPOT!</gradient></b>"),
-                    Msg.parse("<yellow>+" + CasinoText.chips(pay)), Title.Times.times(Duration.ofMillis(200), Duration.ofSeconds(3), Duration.ofMillis(600))));
+                    Msg.parse("<yellow>+" + CasinoText.chips(o.payout())), Title.Times.times(Duration.ofMillis(200), Duration.ofSeconds(3), Duration.ofMillis(600))));
             CasinoFx.jackpot(plugin, p.getUniqueId(), fx, pay);
             plugin.notifications().send("notify.jackpot", CasinoText.PREFIX + "<yellow><b>" + Msg.escape(p.getName()) + "</b> knackt den Slots-Jackpot: <gold>"
-                    + CasinoText.chips(pay) + "</gold>!");
+                    + CasinoText.chips(o.payout()) + "</gold>!");
         } else if (pay >= bet * 20) {
-            CasinoFx.show(plugin, p.getUniqueId(), fx, CasinoFx.Result.BIG_WIN, pay - bet);
+            CasinoFx.show(plugin, p.getUniqueId(), fx, CasinoFx.Result.BIG_WIN, o.payout() - bet);
         }
         updateHolos();
         save();
@@ -343,12 +365,12 @@ public final class SlotsService implements Listener {
                 int l = levelOf(p);
                 l = p.isSneaking() ? Math.max(0, l - 1) : Math.min(LEVELS.length - 1, l + 1);
                 level.put(p.getUniqueId(), l);
-                s.machine.panel(LEVELS, l);
+                s.machine.panel(levels(p), l);
                 p.playSound(p.getLocation(), Sound.BLOCK_STONE_BUTTON_CLICK_ON, 0.6f, 1.4f);
-                p.sendActionBar(Msg.parse("<gray>Einsatz: <white>" + CasinoText.chips(LEVELS[l])
+                p.sendActionBar(Msg.parse("<gray>Einsatz: <white>" + plugin.casinoPlay().unit(p.getUniqueId(), "slots", levels(p)[l])
                         + "</white> · Knopf: höher, Schleichen + Knopf: tiefer"));
             }
-            case "panel", "sign" -> UiDialog.show(p, CasinoScreens.slotsPaytable(jackpot, LEVELS[levelOf(p)]));
+            case "panel", "sign" -> UiDialog.show(p, CasinoScreens.slotsPaytable(jackpot, levels(p)[levelOf(p)]));
             case "seat" -> {
                 if (s.seated != null && !s.seated.equals(p.getUniqueId())) {
                     CasinoText.error(p, "Der Hocker ist besetzt.");
@@ -359,7 +381,7 @@ public final class SlotsService implements Listener {
                 if (seat == null) return;
                 seat.addPassenger(p);
                 s.seated = p.getUniqueId();
-                s.machine.panel(LEVELS, levelOf(p));
+                s.machine.panel(levels(p), levelOf(p));
                 p.sendActionBar(Msg.parse("<gray>Du sitzt — aufstehen mit Schleichen."));
             }
             default -> {

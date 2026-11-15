@@ -121,7 +121,7 @@ public final class CrashGame implements Listener, CommandExecutor {
         if (esc != null) {
             for (String k : esc.getKeys(false)) {
                 try {
-                    plugin.casino().giveChips(UUID.fromString(k), esc.getLong(k));
+                    plugin.casinoPlay().refund(UUID.fromString(k), "crash", esc.getLong(k));
                 } catch (IllegalArgumentException ignored) {
                 }
             }
@@ -207,7 +207,7 @@ public final class CrashGame implements Listener, CommandExecutor {
         task = null;
         // laufende Einsätze zurück (wer schon ausgestiegen ist, hat sein Geld)
         for (Map.Entry<UUID, Long> e : bets.entrySet()) {
-            if (!cashed.containsKey(e.getKey())) plugin.casino().giveChips(e.getKey(), e.getValue());
+            if (!cashed.containsKey(e.getKey())) plugin.casinoPlay().refund(e.getKey(), "crash", e.getValue());
         }
         bets.clear();
         cashed.clear();
@@ -293,11 +293,11 @@ public final class CrashGame implements Listener, CommandExecutor {
         UUID id = p.getUniqueId();
         long have = bets.getOrDefault(id, 0L);
         if (amount < 1) return "Der Einsatz muss größer als 0 sein.";
-        if (have + amount < minBet()) return "Mindestens " + CasinoText.chips(minBet()) + ".";
-        if (have + amount > maxBet()) return "Höchstens " + CasinoText.chips(maxBet()) + " je Runde.";
-        if (!plugin.casino().takeChips(id, amount)) return "So viele Chips hast du nicht. Tausch sie an der Kasse.";
-        long feed = Math.round(amount * plugin.getConfig().getDouble("casino.jackpot-share", 0.01));
-        if (feed > 0) plugin.casino().addJackpot(feed);
+        boolean jw = plugin.casinoPlay().cur(id, "crash") == de.kuby.kubyplugins.service.CasinoPlay.Cur.JEWELS;
+        if (!jw && have + amount < minBet()) return "Mindestens " + CasinoText.chips(minBet()) + ".";
+        if (!jw && have + amount > maxBet()) return "Höchstens " + CasinoText.chips(maxBet()) + " je Runde.";
+        String err = plugin.casinoPlay().take(p, "crash", amount);
+        if (err != null) return err;
         bets.put(id, have + amount);
         lastBet.put(id, have + amount);
         if (phase == Phase.IDLE) {
@@ -306,7 +306,7 @@ public final class CrashGame implements Listener, CommandExecutor {
         }
         save();
         p.sendMessage(prefix().append(Component.text("Einsatz ", NamedTextColor.GRAY))
-                .append(Component.text(CasinoText.chips(have + amount), YELLOW))
+                .append(Component.text(plugin.casinoPlay().unit(id, "crash", have + amount), YELLOW))
                 .append(Component.text(" gesetzt. Sneaken + Klick, Chat-Knopf oder /cashout", NamedTextColor.GRAY)));
         p.playSound(p.getLocation(), Sound.BLOCK_CHAIN_PLACE, 0.7f, 1.3f);
         showState();
@@ -325,20 +325,21 @@ public final class CrashGame implements Listener, CommandExecutor {
     }
 
     private void pay(UUID id, long bet, double at) {
-        long payout = (long) Math.floor(bet * at);
+        long gross = (long) Math.floor(bet * at);
         cashed.put(id, at);
-        plugin.casino().giveChips(id, payout);
-        plugin.casinoLog().record("Crash", id, bet, payout);
+        de.kuby.kubyplugins.service.CasinoPlay.Outcome o = plugin.casinoPlay().settle(id, "crash", bet, gross);
+        long payout = o.payout();
         save();
         Player p = Bukkit.getPlayer(id);
         if (p != null) {
+            String unit = o.cur() == de.kuby.kubyplugins.service.CasinoPlay.Cur.JEWELS ? " Juwelen" : " Chips";
             p.sendMessage(prefix().append(Component.text("Ausgestiegen bei ", NamedTextColor.GRAY))
                     .append(Component.text(fmt(at), GREEN).decorate(TextDecoration.BOLD))
                     .append(Component.text(" — ", NamedTextColor.DARK_GRAY))
-                    .append(Component.text("+" + CasinoText.chips(payout - bet), GREEN)));
-            p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, 1.3f);
+                    .append(Component.text("+" + CasinoText.num(payout - bet) + unit, GREEN))
+                    .append(o.bonus() > 0 ? Msg.parse(" <dark_gray>| " + de.kuby.kubyplugins.service.CasinoPlay.bonusLine(o)) : Component.empty()));
             p.playSound(p.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_CHIME, 0.8f, 1.6f);
-            p.sendActionBar(Component.text("+" + CasinoText.chips(payout - bet), GREEN).append(Component.text(" · bei " + fmt(at), LIGHT)));
+            plugin.casinoPlay().feedback(p, o, fxAt());
         }
         CasinoFx.show(plugin, id, fxAt(), at >= 5 ? CasinoFx.Result.BIG_WIN : CasinoFx.Result.WIN, payout - bet);
     }
@@ -361,9 +362,8 @@ public final class CrashGame implements Listener, CommandExecutor {
                 }
             }
             case RUNNING -> {
-                double rate = plugin.getConfig().getDouble("casino.crash.rate", 0.07);
                 double cap = plugin.getConfig().getDouble("casino.crash.max-multiplier", 50);
-                double next = Math.exp(rate * ticks / 20.0);
+                double next = multAt(ticks / 20.0);
                 if (next >= crashAt) {
                     current = crashAt;
                     if (crashAt >= cap) reachMax(cap);
@@ -371,6 +371,7 @@ public final class CrashGame implements Listener, CommandExecutor {
                 } else {
                     current = next;
                     showState();
+                    tension();
                     if (ticks % 4 == 0) {
                         for (UUID id : bets.keySet()) {
                             if (cashed.containsKey(id)) continue;
@@ -378,7 +379,7 @@ public final class CrashGame implements Listener, CommandExecutor {
                             if (p != null) {
                                 p.sendActionBar(Component.text(fmt(current), GREEN).decorate(TextDecoration.BOLD)
                                         .append(Component.text(" · Auszahlen: ", NamedTextColor.GRAY))
-                                        .append(Component.text(CasinoText.chips((long) Math.floor(bets.get(id) * current)), YELLOW))
+                                        .append(Component.text(plugin.casinoPlay().unit(id, "crash", (long) Math.floor(bets.get(id) * current)), YELLOW))
                                         .append(Component.text(" · Sneaken + Klick", NamedTextColor.DARK_GRAY)));
                             }
                         }
@@ -402,6 +403,7 @@ public final class CrashGame implements Listener, CommandExecutor {
         phase = Phase.RUNNING;
         ticks = 0;
         current = 1.0;
+        lastBeat = 1.0;
         maxed = false;
         double edge = plugin.getConfig().getDouble("casino.crash.house-edge", 0.03);
         double cap = plugin.getConfig().getDouble("casino.crash.max-multiplier", 50);
@@ -437,7 +439,8 @@ public final class CrashGame implements Listener, CommandExecutor {
                 online.sendActionBar(Component.text("Crash bei " + fmt(crashAt), RED).decorate(TextDecoration.BOLD));
             }
             CasinoFx.show(plugin, e.getKey(), fxAt(), CasinoFx.Result.LOSE, -e.getValue());
-            plugin.casinoLog().record("Crash", e.getKey(), e.getValue(), 0);
+            de.kuby.kubyplugins.service.CasinoPlay.Outcome o = plugin.casinoPlay().settle(e.getKey(), "crash", e.getValue(), 0);
+            if (online != null) plugin.getServer().getScheduler().runTaskLater(plugin, () -> plugin.casinoPlay().feedback(online, o, null), 30L);
         }
         Location fx = fxAt();
         if (fx != null) {
@@ -535,10 +538,52 @@ public final class CrashGame implements Listener, CommandExecutor {
         updateSigns();
     }
 
+    /**
+     * Kurs nach t Sekunden: e^(rate·t + beschleunigung·t²). Je höher der Kurs, desto schneller steigt er (die
+     * Wachstumsrate selbst wächst mit der Zeit): mit den Standardwerten 2x nach ~8 s, 5x nach ~14 s, 20x nach ~21 s.
+     * Der Crash-Punkt (und damit der Hausvorteil) hängt nicht von der Kurve ab.
+     */
+    public double multAt(double t) {
+        double rate = plugin.getConfig().getDouble("casino.crash.rate", 0.07);
+        double acc = plugin.getConfig().getDouble("casino.crash.beschleunigung", 0.003);
+        return Math.exp(rate * t + acc * t * t);
+    }
+
+    /** Umkehrung von multAt: Sekunden bis zum Kurs m. */
+    public double timeFor(double m) {
+        double rate = plugin.getConfig().getDouble("casino.crash.rate", 0.07);
+        double acc = plugin.getConfig().getDouble("casino.crash.beschleunigung", 0.003);
+        double l = Math.log(Math.max(1.0, m));
+        if (acc <= 1e-9) return l / rate;
+        return (-rate + Math.sqrt(rate * rate + 4 * acc * l)) / (2 * acc);
+    }
+
+    private double lastBeat = 1.0;
+
+    /** Spannung: Ticken wird schneller und höher, je höher der Kurs; ab 5x Herzschlag, Meilensteine mit Gong. */
+    private void tension() {
+        Location fx = fxAt();
+        if (fx == null || fx.getWorld() == null) return;
+        int every = current < 2 ? 8 : current < 5 ? 4 : current < 10 ? 2 : 1;
+        int step = ticks / (int) TICK;
+        if (step % Math.max(1, every / (int) TICK) == 0) {
+            float pitch = (float) Math.min(2.0, 0.6 + Math.log(current) * 0.45);
+            fx.getWorld().playSound(fx, Sound.BLOCK_NOTE_BLOCK_HAT, 0.5f, pitch);
+        }
+        if (current >= 5 && ticks % 16 == 0) fx.getWorld().playSound(fx, Sound.BLOCK_NOTE_BLOCK_BASEDRUM, 0.7f, 0.6f);
+        double[] marks = {2, 5, 10, 25};
+        for (double m : marks) {
+            if (lastBeat < m && current >= m) {
+                fx.getWorld().playSound(fx, Sound.BLOCK_BELL_USE, 0.9f, (float) (0.8 + m / 40));
+                de.kuby.kubyplugins.util.Fx.particle(plugin, fx, org.bukkit.Particle.END_ROD, 20, 1.0, 0.5, 0.1, 0.05);
+            }
+        }
+        lastBeat = current;
+    }
+
     /** Kurve bis zum aktuellen Wert: x = Zeit, y = Multiplikator, beide Achsen wachsen mit. */
     private void plot(CrashScreen s, boolean red, Component label) {
-        double rate = plugin.getConfig().getDouble("casino.crash.rate", 0.07);
-        double t = Math.log(Math.max(1.0, current)) / rate;
+        double t = timeFor(current);
         if (t < 0.05) {
             s.hideCurve();
             return;
@@ -549,7 +594,7 @@ public final class CrashGame implements Listener, CommandExecutor {
         double[] xs = new double[n + 1], ys = new double[n + 1];
         for (int i = 0; i <= n; i++) {
             double ti = t * i / n;
-            double m = Math.exp(rate * ti);
+            double m = multAt(ti);
             xs[i] = s.plotLeft() + ti / tMax * s.plotWidth();
             ys[i] = s.plotBottom() + (m - 1) / (mMax - 1) * s.plotHeight();
         }

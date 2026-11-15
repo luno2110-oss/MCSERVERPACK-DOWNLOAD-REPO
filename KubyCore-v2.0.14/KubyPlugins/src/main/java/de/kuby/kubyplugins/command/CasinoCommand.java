@@ -35,6 +35,34 @@ public final class CasinoCommand implements CommandExecutor {
         String sub = args[0].toLowerCase();
         switch (sub) {
             case "status" -> status(p);
+            case "waehrung", "währung", "juwelen" -> {
+                de.kuby.kubyplugins.service.CasinoPlay cp = plugin.casinoPlay();
+                de.kuby.kubyplugins.service.CasinoPlay.Cur want = args.length > 1
+                        ? (args[1].toLowerCase().startsWith("j") ? de.kuby.kubyplugins.service.CasinoPlay.Cur.JEWELS : de.kuby.kubyplugins.service.CasinoPlay.Cur.CHIPS)
+                        : (cp.mode(p.getUniqueId()) == de.kuby.kubyplugins.service.CasinoPlay.Cur.CHIPS ? de.kuby.kubyplugins.service.CasinoPlay.Cur.JEWELS
+                        : de.kuby.kubyplugins.service.CasinoPlay.Cur.CHIPS);
+                String err = cp.setMode(p, want);
+                if (err != null) {
+                    Msg.send(p, "<red>" + err);
+                } else if (want == de.kuby.kubyplugins.service.CasinoPlay.Cur.JEWELS) {
+                    Msg.send(p, "<#7FE3FF>◆ Du spielst jetzt mit Juwelen. <gray>Einsatz " + cp.jewelMin() + " bis " + cp.jewelMax()
+                            + " je Runde, heute noch " + cp.volumeLeft(p.getUniqueId()) + " Juwelen Spielvolumen.");
+                } else {
+                    Msg.send(p, "<#F2C94C>● Du spielst jetzt mit Chips.");
+                }
+            }
+            case "bonus", "serie" -> {
+                de.kuby.kubyplugins.service.CasinoPlay cp = plugin.casinoPlay();
+                int st = cp.streak(p.getUniqueId());
+                Msg.send(p, "<gold><b>CASINO-BONUS</b>");
+                Msg.send(p, "<gray>Siegesserie: <#FF8A3D>" + st + "</#FF8A3D> · nächster Sieg zahlt <white>x"
+                        + de.kuby.kubyplugins.service.CasinoPlay.fmt(cp.streakMult(st)) + "</white> · beste Serie <white>" + cp.bestStreak(p.getUniqueId()));
+                Msg.send(p, "<gray>" + cp.goldenLabel());
+                Msg.send(p, "<gray>Niederlagen in Folge: <white>" + cp.lossStreak(p.getUniqueId()) + "</white> (ab 3 gibt der nächste Sieg einen Comeback-Bonus), "
+                        + "jeder Verlust gibt Cashback zurück.");
+                Msg.send(p, "<gray>Währung: <white>" + (cp.mode(p.getUniqueId()) == de.kuby.kubyplugins.service.CasinoPlay.Cur.JEWELS ? "Juwelen" : "Chips")
+                        + (cp.vip(p) ? " <dark_gray>· <gray>wechseln: <white>/casino waehrung" : ""));
+            }
             case "kaufen", "buy" -> trade(p, args, true);
             case "verkaufen", "sell" -> trade(p, args, false);
             case "hilfe" -> CasinoRules.open(plugin, p, null);

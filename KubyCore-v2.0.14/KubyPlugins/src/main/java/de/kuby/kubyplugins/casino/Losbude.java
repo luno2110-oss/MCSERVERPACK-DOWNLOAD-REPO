@@ -129,18 +129,18 @@ public final class Losbude {
             CasinoText.error(p, closed);
             return;
         }
-        if (!plugin.casino().takeChips(p.getUniqueId(), k.price())) {
-            CasinoText.error(p, "So viele Chips hast du nicht. Tausch sie an der Kasse.");
+        String err = plugin.casinoPlay().take(p, "losbude", k.price(), de.kuby.kubyplugins.service.CasinoPlay.Cur.CHIPS);
+        if (err != null) {
+            CasinoText.error(p, err);
             return;
         }
-        long feed = Math.round(k.price() * plugin.getConfig().getDouble("casino.jackpot-share", 0.01));
-        if (feed > 0) plugin.casino().addJackpot(feed);
         int win = draw();
         long prize = win < 0 ? 0 : k.price() * MULT[win];
-        if (prize > 0) plugin.casino().giveChips(p.getUniqueId(), prize);
-        plugin.casinoLog().record("Losbude", p.getUniqueId(), k.price(), prize);
+        de.kuby.kubyplugins.service.CasinoPlay.Outcome o = plugin.casinoPlay().settle(p.getUniqueId(), "losbude", k.price(), prize);
         p.playSound(p.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 0.8f, 1.2f);
-        new Scratch(plugin, k, grid(win), win, prize).open(p);
+        new Scratch(plugin, k, grid(win), win, o.payout()).open(p);
+        // Ergebnis (Serie, Bonus, Cashback) erst nach dem Aufdecken zeigen, nicht vorher verraten
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> plugin.casinoPlay().feedback(p, o, null), 60L);
     }
 
     // =================================================================================================================

@@ -126,6 +126,24 @@ CHIPS = {
 
 
 def chip(name, size=16):
+    """Dialog-Chip (Draufsicht) im Icon-Stil: Rampe aus CHIP_RAMPS, getönte Kontur, Licht oben links, ein Glanzpunkt."""
+    if name in CHIP_RAMPS and size == 16:
+        ramp, spot, spot_lo = CHIP_RAMPS[name]
+        r = [rgb(c) for c in ramp]
+        sp = rgb(spot)
+        p = Pix(16)
+        c = 8.0
+        p.disk(c, c, 7.0, r[2])
+        for a in (30, 90, 150, 210, 270, 330):
+            p.sector(c, c, 4.9, 7.1, a - 14, a + 14, sp)
+        p.ring(c, c, 4.0, 4.9, r[1])
+        p.disk(c, c, 4.0, r[3] if name != "white" else r[2])
+        p.sector(c, c, 6.0, 7.1, 190, 260, r[3])
+        p.sector(c, c, 6.0, 7.1, 20, 80, r[1])
+        p.sector(c, c, 6.0, 7.1, 100, 160, r[1])
+        p.put(5, 5, mix(r[3], rgb("FFFFF0"), 0.6))
+        p.put(8, 8, sp if name != "white" else r[1])
+        return p.image(outline=mix(r[0], OUT, 0.75))
     base, spot, inner = (rgb(v) for v in CHIPS[name])
     s = size / 16
     c = size / 2
@@ -460,6 +478,100 @@ ITEM_CHIPS = {
 }
 
 
+# Chips im Icon-Stil der Referenzen (v1.68): Rampen aus der Icon-Datenbank (refpal.nearest_ramp), 1 px Kontur in der
+# Chipfarbe getönt, Licht oben links (Glanzbogen und ein Glanzpunkt), Seitenkante mit Streifen, Bodenschatten.
+CHIP_RAMPS = {
+    # name: (Rampe dunkel -> hell, Fleckenfarbe, Fleckenschatten)
+    "white": (["5F5D6D", "9E9BB5", "CFCDE0", "E5E7F9"], "2D79B6", "246293"),
+    "red": (["800214", "AC0A1B", "C81D23", "FA4B2D"], "F6F4EE", "BAB4CA"),
+    "blue": (["246293", "2D79B6", "3EA5F9", "8CCCFA"], "F6F4EE", "BAB4CA"),
+    "green": (["1E5228", "2D753B", "40AA4F", "6FD07E"], "F6F4EE", "BAB4CA"),
+    "purple": (["4E296E", "693798", "873CD6", "A34FF5"], "F6F4EE", "BAB4CA"),
+    "pink": (["8C0630", "BA0458", "D90868", "F82B8D"], "F6F4EE", "BAB4CA"),
+    "gold": (["B68A1B", "CE9020", "F1C227", "FCEB39"], "AC0A1B", "800214"),
+    "dark": (["2A1E44", "3B2C64", "48247A", "6A4AA0"], "F6F4EE", "BAB4CA"),
+    "black": (["16141A", "2E2A34", "48434F", "6A6574"], "F1C227", "B68A1B"),
+}
+
+
+def _ell(p, cx, cy, rx, ry, col, cond=None):
+    for yy in range(p.h):
+        for xx in range(p.w):
+            dx, dy = (xx + 0.5 - cx) / rx, (yy + 0.5 - cy) / ry
+            d = dx * dx + dy * dy
+            if d <= 1.0 and (cond is None or cond(dx, dy, d)):
+                p.put(xx, yy, col)
+
+
+def _chip_layer(p, name, cx, cy, rx, ry, thick, top=True, phase=0):
+    """Ein schräg gesehener Chip: Seitenkante (thick px) mit Streifen, oben Rand mit sechs Flecken, Innenring, Mitte."""
+    ramp, spot, spot_lo = CHIP_RAMPS[name]
+    r = [rgb(c) for c in ramp]
+    sp, sl = rgb(spot), rgb(spot_lo)
+    # Seitenkante: unten dunkel, Streifen in Fleckenfarbe (Schattenseite)
+    for k in range(thick, 0, -1):
+        _ell(p, cx, cy + k, rx, ry, r[0] if k == thick else r[1])
+    for a in ((35, 90, 145) if phase % 2 == 0 else (62, 118)):
+        x = int(round(cx + rx * 0.92 * math.cos(math.radians(a))))
+        for k in range(1, thick + 1):
+            p.put(x, int(cy + ry * math.sin(math.radians(a)) + k), sl)
+            p.put(x + 1, int(cy + ry * math.sin(math.radians(a)) + k), sl)
+    if not top:
+        return
+    _ell(p, cx, cy, rx, ry, r[2])
+    # sechs Randflecken
+    for a in range(0, 360, 60):
+        def spot_cond(dx, dy, d, a=a):
+            ang = math.degrees(math.atan2(dy, dx)) % 360
+            diff = min(abs(ang - a), 360 - abs(ang - a))
+            return d >= 0.55 and diff <= 13
+        _ell(p, cx, cy, rx, ry, sp, spot_cond)
+    # Innenring und Mitte
+    _ell(p, cx, cy, rx * 0.62, ry * 0.62, r[1])
+    _ell(p, cx, cy, rx * 0.5, ry * 0.5, r[3] if name not in ("white",) else r[2])
+    # Licht oben links: Bogen am Rand hell, unten rechts dunkler
+    _ell(p, cx, cy, rx, ry, r[3], lambda dx, dy, d: d >= 0.8 and dx < -0.15 and dy < 0 and
+         min(abs(math.degrees(math.atan2(dy, dx)) % 360 - a0) for a0 in range(0, 360, 60)) > 13)
+    _ell(p, cx, cy, rx, ry, r[1], lambda dx, dy, d: d >= 0.82 and dx > 0.2 and dy > 0.1 and
+         min(abs(math.degrees(math.atan2(dy, dx)) % 360 - a0) for a0 in range(0, 360, 60)) > 13)
+    # Emblem: kleine Raute in Fleckenfarbe, ein Glanzpunkt oben links (Symmetrie bewusst gebrochen)
+    ex, ey = int(cx), int(cy)
+    for dx, dy in ((0, -1), (-1, 0), (0, 0), (1, 0), (0, 1)):
+        if rx >= 6:
+            p.put(ex + dx, ey + dy, sp if name != "white" else r[1])
+    p.put(int(cx - rx * 0.55), int(cy - ry * 0.55), mix(r[3], rgb("FFFFF0"), 0.6))
+
+
+def _shadow(img, cx, cy, rx, ry, alpha=80):
+    sh = Image.new("RGBA", img.size, T)
+    px = sh.load()
+    for y in range(img.height):
+        for x in range(img.width):
+            dx, dy = (x + 0.5 - cx) / rx, (y + 0.5 - cy) / ry
+            if dx * dx + dy * dy <= 1.0:
+                px[x, y] = (0, 0, 0, alpha)
+    sh.alpha_composite(img)
+    return sh
+
+
+def chip_icon32(name):
+    p = Pix(32)
+    _chip_layer(p, name, 16.0, 13.5, 13.0, 8.6, 4)
+    ink = mix(rgb(CHIP_RAMPS[name][0][0]), OUT, 0.75)
+    return _shadow(p.image(outline=ink), 16.0, 27.0, 12.0, 3.0)
+
+
+def stack_icon32(name, layers=4):
+    p = Pix(32)
+    # von unten nach oben, leicht versetzt
+    base_y = 23.0
+    for i in range(layers):
+        off = (1 if i % 2 else 0) - (1 if i == layers - 1 else 0)
+        _chip_layer(p, name, 16.0 + off, base_y - 3.2 * i, 12.0, 6.6, 3, top=(i == layers - 1), phase=i)
+    ink = mix(rgb(CHIP_RAMPS[name][0][0]), OUT, 0.75)
+    return _shadow(p.image(outline=ink), 16.0, 29.0, 12.0, 2.5)
+
+
 def chip_stack(name, layers=4):
     """Chip-Stapel leicht von oben: Seiten mit Streifen, oben die Chip-Fläche mit Randflecken."""
     base, dark, spot, top = (rgb(v) for v in ITEM_CHIPS[name])
@@ -570,8 +682,8 @@ def cashout_tile():
     return p.image(outline=rgb("0E3A1C"))
 
 
-ITEMS = [("stack_" + n, (lambda n=n: chip_stack(n))) for n in ITEM_CHIPS] + [
-    ("chip_" + n, (lambda n=n: chip_single(n))) for n in ITEM_CHIPS] + [
+ITEMS = [("stack_" + n, (lambda n=n: stack_icon32(n))) for n in ITEM_CHIPS] + [
+    ("chip_" + n, (lambda n=n: chip_icon32(n))) for n in ITEM_CHIPS] + [
     ("crash_info", crash_info), ("repeat", repeat_tile), ("cashout", cashout_tile),
     ("los_bronze", lambda: ticket("C8844A", "E8A870", "8A5428", "FFE070")),
     ("los_silber", lambda: ticket("9AA2B0", "C8CED8", "6A7280", "FFFFFF")),

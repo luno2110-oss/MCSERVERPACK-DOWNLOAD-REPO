@@ -289,9 +289,17 @@ class Raster:
         for tri in ((0, 1, 2), (0, 2, 3)):
             self.tri(pts[list(tri)], np.asarray(uvs, dtype=float)[list(tri)], tex, shade, translucent, tint)
 
-    def tri(self, P, UV, tex, shade, translucent, tint):
+    def tri(self, P, UV, tex, shade, translucent, tint, level=0):
         q = self.project(P)
         if np.any(q[:, 2] < 0.05):
+            # große Flächen (z. B. Tischfilz), die hinter die Kamera reichen: unterteilen statt ganz weglassen
+            if np.all(q[:, 2] < 0.05) or level >= 6:
+                return
+            m = [(P[i] + P[(i + 1) % 3]) / 2 for i in range(3)]
+            mu = [(UV[i] + UV[(i + 1) % 3]) / 2 for i in range(3)]
+            for tp, tu in (((P[0], m[0], m[2]), (UV[0], mu[0], mu[2])), ((m[0], P[1], m[1]), (mu[0], UV[1], mu[1])),
+                           ((m[2], m[1], P[2]), (mu[2], mu[1], UV[2])), ((m[0], m[1], m[2]), (mu[0], mu[1], mu[2]))):
+                self.tri(np.asarray(tp), np.asarray(tu), tex, shade, translucent, tint, level + 1)
             return
         x, y = q[:, 0], q[:, 1]
         area = (x[1] - x[0]) * (y[2] - y[0]) - (x[2] - x[0]) * (y[1] - y[0])

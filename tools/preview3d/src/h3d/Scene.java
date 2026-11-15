@@ -45,6 +45,11 @@ public final class Scene {
                 t.rack(2, new long[]{10, 50, 100, 500, 1000, 5000});
                 t.actions(2, new boolean[]{true, true, true, false});
                 t.timer(2, 0.6);
+                t.rack(3, new long[]{10, 50, 100, 500, 1000, 5000});
+                t.controls(3, true, false, Boolean.FALSE);
+                t.bet(1, List.of(500L, 100L), 600);
+                t.result(1, Component.text("GEWONNEN", NamedTextColor.AQUA));
+                t.total(5, "17");
                 t.dealerText(Component.text("Dealer", NamedTextColor.GOLD));
                 t.seatText(0, Component.text("Freier Platz", NamedTextColor.GOLD));
                 Mock.runLater();

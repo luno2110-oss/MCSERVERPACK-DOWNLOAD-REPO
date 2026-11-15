@@ -130,6 +130,29 @@ casino:
     draw-day: SATURDAY
     draw-time: "18:00"
     seven-wins: false
+  # VIPs (Rang "rang" oder höher, oder Recht kuby.casino.juwelen) können mit Juwelen statt Chips spielen
+  # (/casino waehrung). Einsatz min bis max je Spiel und Runde, höchstens volumen-tag Juwelen Einsatz je Tag.
+  juwelen:
+    rang: vip
+    min: 50
+    max: 10000
+    volumen-tag: 50000
+  # Belohnungen in allen Spielen gegen die Bank (Blackjack, Roulette, Slots, Crash, Losbude), nur auf den Reingewinn:
+  # Siegesserie: jeder Sieg in Folge +serie-schritt (1. Sieg x1, 2. x1,2 …) bis serie-max. Niederlage: cashback vom
+  # Verlust zurück; nach comeback-ab Niederlagen in Folge gibt es auf den nächsten Sieg +comeback-bonus.
+  bonus:
+    serie-schritt: 0.2
+    serie-max: 2.5
+    cashback: 0.03
+    comeback-ab: 3
+    comeback-bonus: 0.25
+    max-gesamt: 6.0             # Obergrenze aller Faktoren zusammen (Serie x Goldene Zeit + Comeback)
+  # Goldene Zeit: jeden Tag von "von" bis "bis" Uhr (Europe/Berlin) werden Gewinne mit "faktor" multipliziert
+  goldene-zeit:
+    aktiv: true
+    von: 17
+    bis: 22
+    faktor: 2.0
   vip:
     region: casino-vip
     daily-chips: 500
@@ -159,7 +182,8 @@ casino:
     min-bet: 10                 # kleinster Einsatz je Runde
     max-bet: 100000             # größter Einsatz je Spieler und Runde
     wait-seconds: 10            # Countdown nach dem ersten Einsatz
-    rate: 0.07                  # Tempo: Multiplikator = e^(rate * Sekunden), 2x nach knapp 10 s
+    rate: 0.07                  # Grundtempo
+    beschleunigung: 0.003       # Kurs = e^(rate*s + beschleunigung*s²): je höher, desto schneller (2x ~8 s, 5x ~14 s, 20x ~21 s)
     max-multiplier: 50          # Höchstwert, dort wird automatisch ausgezahlt
     house-edge: 0.03            # Hausvorteil (3 %): Rückfluss 97 %
   slots:

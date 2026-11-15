@@ -13,6 +13,7 @@ import de.kuby.kubyplugins.listener.BlackjackListener;
 import de.kuby.kubyplugins.service.CasinoLog;
 import de.kuby.kubyplugins.service.JackpotDraw;
 import de.kuby.kubyplugins.service.CasinoVip;
+import de.kuby.kubyplugins.service.CasinoPlay;
 import de.kuby.kubyplugins.service.CasinoMusic;
 import de.kuby.kubyplugins.listener.CasinoVipListener;
 import de.kuby.kubyplugins.service.PokerService;
@@ -147,6 +148,7 @@ public final class KubyPlugins extends JavaPlugin {
     private CasinoLog casinoLog;
     private JackpotDraw jackpotDraw;
     private CasinoVip casinoVip;
+    private CasinoPlay casinoPlay;
     private CasinoMusic casinoMusic;
     private de.kuby.kubyplugins.casino.CasinoNpc casinoNpc;
     private PokerService poker;
@@ -221,6 +223,8 @@ public final class KubyPlugins extends JavaPlugin {
         jackpotDraw = new JackpotDraw(this);
         jackpotDraw.start();
         casinoVip = new CasinoVip(this);
+        casinoPlay = new CasinoPlay(this);
+        getServer().getScheduler().runTaskTimer(this, casinoPlay::tick, 40L, 20L);
         casinoMusic = new CasinoMusic(this);
         casinoNpc = new de.kuby.kubyplugins.casino.CasinoNpc(this);
         poker = new PokerService(this);
@@ -571,6 +575,7 @@ public final class KubyPlugins extends JavaPlugin {
         if (cookies != null) cookies.save();
         if (intro != null) intro.save();
         poker.shutdown();
+        if (casinoPlay != null) casinoPlay.shutdown();
         if (hats != null) hats.removeAll();
         if (crates != null) crates.removeLabels();
         saveData();
@@ -625,6 +630,7 @@ public final class KubyPlugins extends JavaPlugin {
         casinoLog.save();
         jackpotDraw.save();
         casinoVip.save();
+        if (casinoPlay != null) casinoPlay.save();
         votes.save();
         achievements.save();
         homes.save();
@@ -973,6 +979,7 @@ public final class KubyPlugins extends JavaPlugin {
     public CasinoLog casinoLog() { return casinoLog; }
     public JackpotDraw jackpotDraw() { return jackpotDraw; }
     public CasinoVip casinoVip() { return casinoVip; }
+    public CasinoPlay casinoPlay() { return casinoPlay; }
     public CasinoMusic casinoMusic() { return casinoMusic; }
     public de.kuby.kubyplugins.casino.CasinoNpc casinoNpc() { return casinoNpc; }
     public PokerService poker() { return poker; }

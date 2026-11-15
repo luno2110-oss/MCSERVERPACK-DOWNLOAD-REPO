@@ -1,0 +1,1 @@
+{"textures": {"top": "kuby:item/casino/hd/ctl_chips", "particle": "kuby:item/casino/hd/ctl_chips"}, "elements": [{"from": [0, 8, 0], "to": [16, 8.02, 16], "faces": {"up": {"texture": "#top", "uv": [0, 0, 16, 16]}}}]}

@@ -142,7 +142,7 @@ public final class RouletteGame implements org.bukkit.event.Listener {
         for (String line : yml.getStringList("offen")) {
             String[] p = line.split(";");
             try {
-                plugin.casino().giveChips(UUID.fromString(p[0]), Long.parseLong(p[1]));
+                plugin.casinoPlay().refund(UUID.fromString(p[0]), "roulette", Long.parseLong(p[1]));
             } catch (RuntimeException ignored) {
             }
         }
@@ -200,7 +200,7 @@ public final class RouletteGame implements org.bukkit.event.Listener {
     }
 
     private void refundAll() {
-        for (Bet b : bets) plugin.casino().giveChips(b.player(), b.amount());
+        for (Bet b : bets) plugin.casinoPlay().refund(b.player(), "roulette", b.amount());
         bets.clear();
         save();
     }
@@ -297,17 +297,15 @@ public final class RouletteGame implements org.bukkit.event.Listener {
         if (closed != null) return closed;
         if (!near(p.getLocation())) return "Geh näher an den Roulette-Tisch.";
         if (phase == Phase.SPINNING || phase == Phase.RESULT) return "Die Kugel rollt – gleich geht's weiter.";
-        if (amount < minBet()) return "Mindesteinsatz " + CasinoText.num(minBet()) + " Chips.";
-        if (placed(p.getUniqueId()) + amount > maxRound()) {
+        boolean jw = plugin.casinoPlay().cur(p.getUniqueId(), "roulette") == de.kuby.kubyplugins.service.CasinoPlay.Cur.JEWELS;
+        if (!jw && amount < minBet()) return "Mindesteinsatz " + CasinoText.num(minBet()) + " Chips.";
+        if (!jw && placed(p.getUniqueId()) + amount > maxRound()) {
             return "Höchstens " + CasinoText.num(maxRound()) + " Chips pro Runde.";
         }
-        if (!plugin.casino().takeChips(p.getUniqueId(), amount)) {
-            return "So viele Chips hast du nicht. Tausch sie an der Kasse.";
-        }
+        String err = plugin.casinoPlay().take(p, "roulette", amount);
+        if (err != null) return err;
         Bet bet = new Bet(p.getUniqueId(), p.getName(), kind, param, amount);
         bets.add(bet);
-        long feed = Math.round(amount * plugin.getConfig().getDouble("casino.jackpot-share", 0.01));
-        if (feed > 0) plugin.casino().addJackpot(feed);
         table.chip(bet.spot(), param, amount);
         p.playSound(p.getLocation(), Sound.BLOCK_AMETHYST_CLUSTER_PLACE, 0.7f, 1.6f);
         if (phase == Phase.IDLE) {
@@ -326,7 +324,7 @@ public final class RouletteGame implements org.bukkit.event.Listener {
         if (s.last.isEmpty()) return "Noch keine letzte Runde.";
         long sum = 0;
         for (Bet b : s.last) sum += b.amount();
-        if (plugin.casino().chips(p.getUniqueId()) < sum) return "Für alle Einsätze der letzten Runde fehlen dir Chips.";
+        if (plugin.casinoPlay().balance(p.getUniqueId(), "roulette") < sum) return "Für alle Einsätze der letzten Runde reicht dein Guthaben nicht.";
         for (Bet b : s.last) {
             String err = place(p, b.kind(), b.param(), b.amount());
             if (err != null) return err;
@@ -344,13 +342,13 @@ public final class RouletteGame implements org.bukkit.event.Listener {
             }
         }
         if (back == 0) return "Du hast in dieser Runde nichts gesetzt.";
-        plugin.casino().giveChips(p.getUniqueId(), back);
+        plugin.casinoPlay().refund(p.getUniqueId(), "roulette", back);
         table.clearChips();
         for (Bet b : bets) table.chip(b.spot(), b.param(), b.amount());
         if (bets.isEmpty()) phase = Phase.IDLE;
         save();
         updateTable();
-        CasinoText.send(p, "Einsätze zurückgenommen: <#F2C94C>+" + CasinoText.chips(back));
+        CasinoText.send(p, "Einsätze zurückgenommen: <#F2C94C>+" + plugin.casinoPlay().unit(p.getUniqueId(), "roulette", back));
         return null;
     }
 
@@ -421,10 +419,10 @@ public final class RouletteGame implements org.bukkit.event.Listener {
         while (history.size() > 100) history.remove(history.size() - 1);
         // Gewinne je Spieler zusammenfassen
         Map<UUID, long[]> sum = new LinkedHashMap<>();
+        Map<UUID, de.kuby.kubyplugins.service.CasinoPlay.Outcome> outcomes = new LinkedHashMap<>();
         Map<UUID, List<Bet>> byPlayer = new LinkedHashMap<>();
         for (Bet b : bets) {
             long paid = b.wins(result) ? b.amount() * b.kind().multiplier : 0;
-            if (paid > 0) plugin.casino().giveChips(b.player(), paid);
             long[] s = sum.computeIfAbsent(b.player(), k -> new long[2]);
             s[0] += b.amount();
             s[1] += paid;
@@ -436,20 +434,25 @@ public final class RouletteGame implements org.bukkit.event.Listener {
         String colorName = result == 0 ? "Grün" : RouletteTable.red(result) ? "Rot" : "Schwarz";
         String colorTag = result == 0 ? "#3FD55C" : RouletteTable.red(result) ? "#FF5A5A" : "#D8D8D8";
         for (Map.Entry<UUID, long[]> e : sum.entrySet()) {
-            long staked = e.getValue()[0], paid = e.getValue()[1];
+            long staked = e.getValue()[0];
+            de.kuby.kubyplugins.service.CasinoPlay.Outcome o = plugin.casinoPlay().settle(e.getKey(), "roulette", staked, e.getValue()[1]);
+            long paid = o.payout();
             long net = paid - staked;
             paidTotal += paid;
             if (paid > 0) winners++;
-            plugin.casinoLog().record("Roulette", e.getKey(), staked, paid);
+            outcomes.put(e.getKey(), o);
             session(e.getKey()).last = new ArrayList<>(byPlayer.get(e.getKey()));
             CasinoFx.Result r = net > 0 ? (byPlayer.get(e.getKey()).stream().anyMatch(b -> b.kind() == Kind.ZAHL && b.wins(result))
                     ? CasinoFx.Result.BIG_WIN : CasinoFx.Result.WIN) : net == 0 ? CasinoFx.Result.PUSH : CasinoFx.Result.LOSE;
             CasinoFx.show(plugin, e.getKey(), fx, r, net);
             Player p = Bukkit.getPlayer(e.getKey());
             if (p != null) {
+                String unitWin = de.kuby.kubyplugins.service.CasinoPlay.unit(o.cur(), paid);
+                String bl = de.kuby.kubyplugins.service.CasinoPlay.bonusLine(o);
                 CasinoText.send(p, "Die Kugel liegt auf <" + colorTag + "><b>" + result + " " + colorName + "</b></" + colorTag + ">"
-                        + (paid > 0 ? " · <green>Du gewinnst +" + CasinoText.chips(paid) : " · <#FF5A5A>Leider verloren (-"
-                        + CasinoText.chips(staked) + ")"));
+                        + (paid > 0 ? " · <green>Du gewinnst +" + unitWin + (bl.isEmpty() ? "" : " <dark_gray>| " + bl)
+                        : " · <#FF5A5A>Leider verloren (-" + de.kuby.kubyplugins.service.CasinoPlay.unit(o.cur(), staked) + ")"));
+                plugin.casinoPlay().feedback(p, o, fx);
             }
         }
         for (Player q : nearby(15)) {

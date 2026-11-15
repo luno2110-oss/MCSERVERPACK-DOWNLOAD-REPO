@@ -26,6 +26,7 @@ import java.util.UUID;
 public final class BlackjackGame {
 
     public static final long[] RACK = {10, 50, 100, 500, 1000, 5000};
+    static final String GAME = "blackjack";
 
     private enum Phase { IDLE, BETTING, DEALING, PLAYING, DEALER, SETTLE }
 
@@ -40,6 +41,9 @@ public final class BlackjackGame {
         UUID player;
         String name;
         final List<Long> stack = new ArrayList<>();
+        final List<Long> lastStack = new ArrayList<>();
+        long[] rackValues = RACK;
+        boolean jewels;
         long bet;
         final List<Hand> hands = new ArrayList<>();
         int active;
@@ -113,8 +117,12 @@ public final class BlackjackGame {
         table.seatText(seat, Component.empty());
         p.playSound(p.getLocation(), Sound.BLOCK_WOOL_PLACE, 0.7f, 1.2f);
         if (phase == Phase.IDLE || phase == Phase.BETTING) {
-            table.rack(seat, RACK);
-            p.sendActionBar(Msg.parse("<gray>Du sitzt am <white>" + name + "</white>. Leg Chips aus dem Rack auf dein Feld."));
+            showRack(seat);
+            p.sendActionBar(Msg.parse("<gray>Du sitzt am <white>" + name + "</white>. Leg Chips aus dem Rack auf dein Feld."
+                    + (plugin.casinoPlay().golden() ? " <gold>✦ Goldene Zeit: Gewinne x" + de.kuby.kubyplugins.service.CasinoPlay.fmt(plugin.casinoPlay().goldenFactor()) : "")));
+            int st = plugin.casinoPlay().streak(p.getUniqueId());
+            if (st >= 1) table.streak(seat, Msg.parse("<#FF8A3D>🔥 Serie " + st + " <gray>· nächster Sieg <white>x"
+                    + de.kuby.kubyplugins.service.CasinoPlay.fmt(plugin.casinoPlay().streakMult(st))));
         } else {
             p.sendActionBar(Msg.parse("<gray>Du sitzt am <white>" + name + "</white>. Die nächste Runde beginnt gleich."));
         }
@@ -126,7 +134,7 @@ public final class BlackjackGame {
         if (seat < 0) return;
         Seat s = seats[seat];
         if (phase == Phase.IDLE || phase == Phase.BETTING) {
-            if (s.bet > 0) plugin.casino().giveChips(id, s.bet);
+            if (s.bet > 0) plugin.casinoPlay().refund(id, GAME, s.bet);
             s.bet = 0;
             s.stack.clear();
             table.bet(seat, s.stack, 0);
@@ -138,6 +146,8 @@ public final class BlackjackGame {
             }
         }
         table.clearRack(seat);
+        table.clearControls(seat);
+        table.streak(seat, Component.empty());
         table.removeVehicle(seat);
         s.player = null;
         s.name = null;
@@ -173,8 +183,8 @@ public final class BlackjackGame {
             else {
                 Player p = Bukkit.getPlayer(seats[i].player);
                 if (p != null) table.seatVehicle(i).addPassenger(p);
-                if (phase == Phase.IDLE || phase == Phase.BETTING) table.rack(i, RACK);
-                table.bet(i, seats[i].stack, seats[i].bet);
+                if (phase == Phase.IDLE || phase == Phase.BETTING) showRack(i);
+                table.bet(i, seats[i].stack, seats[i].bet, seats[i].jewels);
             }
         }
     }
@@ -208,22 +218,25 @@ public final class BlackjackGame {
             CasinoText.error(p, closed);
             return;
         }
-        long v = RACK[index];
         Seat s = seats[seat];
-        if (s.bet + v > maxBet()) {
+        if (index < 0 || index >= s.rackValues.length) return;
+        long v = s.rackValues[index];
+        if (!s.jewels && s.bet + v > maxBet()) {
             CasinoText.error(p, "Höchsteinsatz " + CasinoText.num(maxBet()) + " Chips.");
             return;
         }
-        if (!plugin.casino().takeChips(p.getUniqueId(), v)) {
-            CasinoText.error(p, "So viele Chips hast du nicht. Tausch sie an der Kasse.");
+        String err = plugin.casinoPlay().take(p, GAME, v);
+        if (err != null) {
+            CasinoText.error(p, err);
+            p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5f, 0.6f);
             return;
         }
-        long feed = Math.round(v * plugin.getConfig().getDouble("casino.jackpot-share", 0.01));
-        if (feed > 0) plugin.casino().addJackpot(feed);
         s.bet += v;
         s.stack.add(v);
-        table.bet(seat, s.stack, s.bet);
-        p.playSound(table.field(seat), Sound.BLOCK_AMETHYST_CLUSTER_PLACE, 0.8f, 1.5f);
+        table.flyChip(seat, index, s.rackValues.length, v, s.jewels);
+        later(5, () -> table.bet(seat, s.stack, s.bet, s.jewels));
+        chipSound(table.field(seat), s.stack.size());
+        showControls(seat);
         if (phase == Phase.IDLE) {
             phase = Phase.BETTING;
             countdown = (int) plugin.getConfig().getLong("casino.blackjack.bet-seconds", 8);
@@ -265,8 +278,10 @@ public final class BlackjackGame {
             table.timer(turn, Math.max(0, (double) turnTime / turnMax));
             Player p = seats[turn].player == null ? null : Bukkit.getPlayer(seats[turn].player);
             if (p != null && turnTime > 0) {
-                p.sendActionBar(Msg.parse("<gray>Dein Zug: <green>Karte</green>, <green>Halten</green>, <green>Doppeln</green>"
-                        + " oder <green>Teilen</green> · <white>" + turnTime + " s"));
+                Hand cur = seats[turn].hands.get(seats[turn].active);
+                p.sendActionBar(Msg.parse("<gray>Du hast <white><b>" + label(cur.cards) + "</b></white> · Bank zeigt <white>"
+                        + dealer.get(0).value() + "</white> · " + (turnTime <= 5 ? "<#FF6B6B>" : "<white>") + turnTime + " s"));
+                if (turnTime <= 5) p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_HAT, 0.6f, 1.0f + (5 - turnTime) * 0.15f);
             }
             if (turnTime <= 0) {
                 Hand h = seats[turn].hands.get(seats[turn].active);
@@ -280,12 +295,21 @@ public final class BlackjackGame {
 
     private void deal() {
         phase = Phase.DEALING;
-        if (shoe.needsShuffle()) shoe.shuffle();
+        if (shoe.needsShuffle()) {
+            shoe.shuffle();
+            table.dealerText(Component.text("Neues Deck wird gemischt", NamedTextColor.GRAY));
+            for (int i = 0; i < 6; i++) later(i * 2L, () -> playAll(Sound.ITEM_BOOK_PAGE_TURN, 0.7f, 1.5f + (float) Math.random() * 0.4f));
+        }
         List<Integer> order = new ArrayList<>();
         for (int i = 0; i < seats.length; i++) {
             Seat s = seats[i];
             table.clearRack(i);
-            if (s.bet >= minBet() && s.player != null) {
+            table.clearControls(i);
+            if (s.bet > 0) {
+                s.lastStack.clear();
+                s.lastStack.addAll(s.stack);
+            }
+            if ((s.jewels ? s.bet > 0 : s.bet >= minBet()) && s.player != null) {
                 s.playing = true;
                 Hand h = new Hand();
                 h.bet = s.bet;
@@ -295,7 +319,7 @@ public final class BlackjackGame {
                 order.add(i);
             } else if (s.bet > 0 && s.player != null) {
                 // zu wenig gesetzt: zurück
-                plugin.casino().giveChips(s.player, s.bet);
+                plugin.casinoPlay().refund(s.player, GAME, s.bet);
                 s.bet = 0;
                 s.stack.clear();
                 table.bet(i, s.stack, 0);
@@ -313,7 +337,8 @@ public final class BlackjackGame {
                     BjCards.Card c = shoe.draw();
                     h.cards.add(c);
                     table.card(seat, 0, h.cards.size() - 1, c, 1);
-                    table.total(seat, label(h.cards));
+                    later(10, () -> table.total(seat, label(h.cards)));
+                    table.dealerGesture();
                     cardSound();
                 });
             }
@@ -323,11 +348,12 @@ public final class BlackjackGame {
                 dealer.add(c);
                 ItemDisplay e = table.card(BlackjackTable.SEATS, 0, dealer.size() - 1, hidden ? null : c, 1);
                 if (hidden) holeCard = e;
-                table.total(BlackjackTable.SEATS, hidden ? String.valueOf(dealer.get(0).value()) : label(dealer));
+                later(10, () -> table.total(BlackjackTable.SEATS, hidden ? String.valueOf(dealer.get(0).value()) : label(dealer)));
+                table.dealerGesture();
                 cardSound();
             });
         }
-        run(steps, 7, this::afterDeal);
+        run(steps, 9, this::afterDeal);
     }
 
     private void afterDeal() {
@@ -339,8 +365,21 @@ public final class BlackjackGame {
             later(30, this::settle);
             return;
         }
-        for (Seat s : seats) {
-            for (Hand h : s.hands) if (BjCards.blackjack(h.cards)) h.done = true;
+        for (int i = 0; i < seats.length; i++) {
+            for (Hand h : seats[i].hands) {
+                if (BjCards.blackjack(h.cards)) {
+                    h.done = true;
+                    table.glow(i, 0xFFD34D);
+                    Player bp = seats[i].player == null ? null : Bukkit.getPlayer(seats[i].player);
+                    if (bp != null) {
+                        bp.showTitle(net.kyori.adventure.title.Title.title(Msg.parse("<gradient:#FFE070:#F2A21C><b>BLACKJACK!</b></gradient>"),
+                                Msg.parse("<gray>zahlt <white>3 zu 2</white>"), net.kyori.adventure.title.Title.Times.times(
+                                        java.time.Duration.ofMillis(100), java.time.Duration.ofMillis(1200), java.time.Duration.ofMillis(300))));
+                        bp.playSound(bp.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.7f, 1.4f);
+                    }
+                    de.kuby.kubyplugins.util.Fx.particle(plugin, table.cardsAt(i).add(0, 0.3, 0), org.bukkit.Particle.FIREWORK, 18, 0.25, 0.2, 0.25, 0.04);
+                }
+            }
         }
         phase = Phase.PLAYING;
         turn = -1;
@@ -375,7 +414,7 @@ public final class BlackjackGame {
             next();
             return;
         }
-        long chips = plugin.casino().chips(p.getUniqueId());
+        long chips = plugin.casinoPlay().balance(p.getUniqueId(), GAME);
         boolean two = h.cards.size() == 2;
         boolean canSplit = two && s.hands.size() == 1 && h.cards.get(0).value() == h.cards.get(1).value() && chips >= h.bet;
         boolean canDouble = two && chips >= h.bet && !(h.split && h.cards.get(0).rank() == 1);
@@ -385,6 +424,9 @@ public final class BlackjackGame {
         table.dealerText(Component.text().append(Component.text("Karte für ", NamedTextColor.GRAY))
                 .append(Component.text(s.name, NamedTextColor.WHITE)).append(Component.text("?", NamedTextColor.GRAY)).build());
         p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 0.6f, 1.4f);
+        // Tipp nach der Grundstrategie, dezent in der Actionbar
+        p.sendActionBar(Msg.parse("<gray>Du hast <white><b>" + label(h.cards) + "</b></white> · Bank zeigt <white>"
+                + dealer.get(0).value() + "</white> <dark_gray>· <gray>Tipp: <#9AE6B4>" + hint(h, canDouble, canSplit)));
     }
 
     /** Aktionsfeld angeklickt: 0 Karte, 1 Halten, 2 Doppeln, 3 Teilen. */
@@ -398,28 +440,44 @@ public final class BlackjackGame {
                 int t = BjCards.total(h.cards);
                 if (t > 21) {
                     h.done = true;
-                    p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.6f, 1f);
+                    later(12, () -> {
+                        table.bust(seat);
+                        p.playSound(p.getLocation(), Sound.ENTITY_ITEM_BREAK, 0.6f, 0.7f);
+                        p.sendActionBar(Msg.parse("<#FF6B6B><b>Überkauft!</b> <gray>" + t));
+                    });
                 } else if (t == 21) {
                     h.done = true;
+                    later(12, () -> p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.7f, 1.6f));
                 }
             }
             case 1 -> h.done = true;
             case 2 -> {
-                if (h.cards.size() != 2 || !plugin.casino().takeChips(p.getUniqueId(), h.bet)) return;
+                if (h.cards.size() != 2) return;
+                String err = plugin.casinoPlay().take(p, GAME, h.bet);
+                if (err != null) {
+                    CasinoText.error(p, err);
+                    return;
+                }
                 s.bet += h.bet;
                 h.bet *= 2;
                 h.doubled = true;
                 s.stack.add(h.bet / 2);
-                table.bet(seat, s.stack, s.bet);
+                table.bet(seat, s.stack, s.bet, s.jewels);
+                chipSound(table.field(seat), s.stack.size());
                 draw(seat, h);
                 h.done = true;
             }
             case 3 -> {
                 if (h.cards.size() != 2 || s.hands.size() != 1 || h.cards.get(0).value() != h.cards.get(1).value()) return;
-                if (!plugin.casino().takeChips(p.getUniqueId(), h.bet)) return;
+                String err = plugin.casinoPlay().take(p, GAME, h.bet);
+                if (err != null) {
+                    CasinoText.error(p, err);
+                    return;
+                }
                 s.bet += h.bet;
                 s.stack.add(h.bet);
-                table.bet(seat, s.stack, s.bet);
+                table.bet(seat, s.stack, s.bet, s.jewels);
+                chipSound(table.field(seat), s.stack.size());
                 Hand second = new Hand();
                 second.bet = h.bet;
                 second.split = true;
@@ -446,7 +504,7 @@ public final class BlackjackGame {
         save();
         table.clearActions(seat);
         if (h.done) {
-            later(6, this::next);
+            later(14, this::next);
         } else {
             prompt(seat);
         }
@@ -456,7 +514,9 @@ public final class BlackjackGame {
         BjCards.Card c = shoe.draw();
         h.cards.add(c);
         table.card(seat, h.index, h.cards.size() - 1, c, seats[seat].hands.size());
-        table.total(seat, handsLabel(seats[seat]));
+        Seat st = seats[seat];
+        later(10, () -> table.total(seat, handsLabel(st)));
+        table.dealerGesture();
         cardSound();
     }
 
@@ -487,8 +547,8 @@ public final class BlackjackGame {
             }
         }
         if (holeCard != null) table.reveal(holeCard, dealer.get(1));
-        table.total(BlackjackTable.SEATS, label(dealer));
-        cardSound();
+        later(6, () -> table.total(BlackjackTable.SEATS, label(dealer)));
+        playAll(Sound.ITEM_BOOK_PUT, 0.7f, 1.4f);
         if (!anyLive) {
             later(14, this::settle);
             return;
@@ -503,11 +563,19 @@ public final class BlackjackGame {
             later(14, this::settle);
             return;
         }
-        later(14, () -> {
+        later(18, () -> {
             BjCards.Card c = shoe.draw();
             dealer.add(c);
             table.card(BlackjackTable.SEATS, 0, dealer.size() - 1, c, 1);
-            table.total(BlackjackTable.SEATS, label(dealer));
+            later(10, () -> {
+                table.total(BlackjackTable.SEATS, label(dealer));
+                if (BjCards.total(dealer) > 21) {
+                    table.bust(BlackjackTable.SEATS);
+                    table.dealerText(Component.text("BANK ÜBERKAUFT!", TextColor.color(0x7CFF9A)).decorate(TextDecoration.BOLD));
+                    playAll(Sound.ENTITY_PLAYER_LEVELUP, 0.6f, 1.6f);
+                }
+            });
+            table.dealerGesture();
             cardSound();
             dealerStep();
         });
@@ -560,31 +628,55 @@ public final class BlackjackGame {
             }
             UUID id = s.player != null ? s.player : null;
             UUID owner = id != null ? id : lastOwner(i);
-            if (owner != null && paid > 0) plugin.casino().giveChips(owner, paid);
-            if (owner != null) plugin.casinoLog().record("Blackjack", owner, staked, paid);
-            long net = paid - staked;
+            de.kuby.kubyplugins.service.CasinoPlay.Outcome o = owner == null ? null : plugin.casinoPlay().settle(owner, GAME, staked, paid);
+            long payout = o == null ? paid : o.payout();
+            long net = payout - staked;
+            String unit = s.jewels ? " ◆" : "";
             TextColor col = net > 0 ? TextColor.color(0x4BE0C8) : net == 0 ? NamedTextColor.GRAY : TextColor.color(0xFF5A5A);
-            Component result = Component.text().append(Component.text(best, col).decorate(TextDecoration.BOLD))
-                    .append(Component.newline()).append(Component.text(vs, NamedTextColor.WHITE)).build();
+            String head = best.equals("Blackjack!") ? "BLACKJACK!" : best.equals("Gewonnen") ? "GEWONNEN" : best.equals("Unentschieden")
+                    ? "UNENTSCHIEDEN" : best.equals("Überkauft") ? "ÜBERKAUFT" : "VERLOREN";
+            Component result = Component.text().append(Component.text(head, best.equals("Blackjack!") ? TextColor.color(0xFFD34D) : col)
+                    .decorate(TextDecoration.BOLD)).append(Component.newline()).append(Component.text(vs, NamedTextColor.WHITE)).build();
             table.result(i, Component.text().append(result).append(Component.newline())
-                    .append(paid > 0 ? Component.text("zurück " + CasinoText.chips(paid), TextColor.color(0xF2C94C))
-                            : Component.empty())
-                    .append(net > 0 ? Component.text(" +" + CasinoText.num(net), NamedTextColor.GREEN) : Component.empty()).build());
+                    .append(net > 0 ? Component.text("+" + CasinoText.num(net) + unit, NamedTextColor.GREEN).decorate(TextDecoration.BOLD)
+                            : net < 0 ? Component.text("-" + CasinoText.num(-net) + unit, TextColor.color(0xFF6B6B))
+                            : Component.text("Einsatz zurück", NamedTextColor.GRAY)).build());
+            if (o != null) {
+                String bl = de.kuby.kubyplugins.service.CasinoPlay.bonusLine(o);
+                if (o.win()) table.streak(i, Msg.parse(bl.isEmpty() ? "<gray>Nächster Sieg: <white>x"
+                        + de.kuby.kubyplugins.service.CasinoPlay.fmt(plugin.casinoPlay().streakMult(o.streak())) : bl));
+                else if (!o.push()) table.streak(i, Msg.parse(o.cashback() > 0 ? "<aqua>+" + CasinoText.num(o.cashback()) + " Cashback" : ""));
+            }
+            if (net > 0) table.glow(i, best.equals("Blackjack!") ? 0xFFD34D : 0x7CFF9A);
             single = result;
-            table.sweepChips(i, paid > 0);
+            table.sweepChips(i, payout > 0);
             Player p = owner == null ? null : Bukkit.getPlayer(owner);
-            if (p != null) {
-                CasinoText.send(p, "<white>" + best + "</white> · " + vs + (paid > 0 ? " · zurück <#F2C94C>" + CasinoText.chips(paid)
-                        + "</#F2C94C>" + (net > 0 ? " <green>(+" + CasinoText.num(net) + ")" : "") : " · <#FF5A5A>-" + CasinoText.chips(staked)));
-                CasinoFx.show(plugin, owner, table.field(i).add(0, 0.8, 0), net > 0 ? (best.startsWith("Blackjack")
-                        ? CasinoFx.Result.BIG_WIN : CasinoFx.Result.WIN) : net == 0 ? CasinoFx.Result.PUSH : CasinoFx.Result.LOSE, net);
+            if (p != null && o != null) {
+                String u = de.kuby.kubyplugins.service.CasinoPlay.unit(o.cur(), payout);
+                CasinoText.send(p, "<white>" + best + "</white> · " + vs + (payout > 0 ? " · zurück <#F2C94C>" + u
+                        + "</#F2C94C>" + (net > 0 ? " <green>(+" + CasinoText.num(net) + ")" : "")
+                        : " · <#FF5A5A>-" + de.kuby.kubyplugins.service.CasinoPlay.unit(o.cur(), staked)));
+                plugin.casinoPlay().feedback(p, o, table.cardsAt(i).add(0, 0.4, 0));
+                if (net > 0) {
+                    for (int k = 0; k < 5; k++) later(22 + k * 2L, () -> p.playSound(table.field(seatOfOwner(p)), Sound.BLOCK_CHAIN_PLACE, 0.5f, 1.6f + (float) Math.random() * 0.3f));
+                } else if (net < 0) {
+                    later(4, () -> p.playSound(p.getLocation(), Sound.BLOCK_SAND_STEP, 0.6f, 0.8f));
+                }
+                if (net > 0) CasinoFx.show(plugin, owner, table.cardsAt(i).add(0, 0.9, 0), best.startsWith("Blackjack")
+                        ? CasinoFx.Result.BIG_WIN : CasinoFx.Result.WIN, net);
             }
         }
         if (players == 1 && single != null) table.dealerText(single);
         else table.dealerText(Component.text().append(Component.text("Bank: ", NamedTextColor.GRAY))
                 .append(Component.text(dt > 21 ? "über 21" : String.valueOf(dt), NamedTextColor.WHITE)).build());
         save();
-        later(80, this::cleanup);
+        later(70, table::collectCards);
+        later(90, this::cleanup);
+    }
+
+    private int seatOfOwner(Player p) {
+        int i = seatOf(p.getUniqueId());
+        return i < 0 ? 0 : i;
     }
 
     private static int rank(String r) {
@@ -611,7 +703,14 @@ public final class BlackjackGame {
             table.result(i, Component.empty());
             table.clearChips(i);
             clearSeat(i);
-            if (!free(i)) table.rack(i, RACK);
+            if (!free(i)) {
+                showRack(i);
+                int st = plugin.casinoPlay().streak(seats[i].player);
+                table.streak(i, st >= 1 ? Msg.parse("<#FF8A3D>🔥 Serie " + st + " <gray>· nächster Sieg <white>x"
+                        + de.kuby.kubyplugins.service.CasinoPlay.fmt(plugin.casinoPlay().streakMult(st))) : Component.empty());
+            } else {
+                table.streak(i, Component.empty());
+            }
         }
         phase = Phase.IDLE;
         idleText();
@@ -643,7 +742,16 @@ public final class BlackjackGame {
     }
 
     private void cardSound() {
-        playAll(Sound.ITEM_BOOK_PAGE_TURN, 0.8f, 1.3f);
+        playAll(Sound.ITEM_BOOK_PAGE_TURN, 0.8f, 1.4f + (float) Math.random() * 0.2f);
+        playAll(Sound.ENTITY_PLAYER_ATTACK_SWEEP, 0.12f, 2.0f);
+    }
+
+    /** Chip-Klacken: höher, je höher der Stapel. */
+    private void chipSound(Location at, int height) {
+        if (at.getWorld() == null) return;
+        float pitch = Math.min(2.0f, 1.3f + 0.05f * height);
+        at.getWorld().playSound(at, Sound.BLOCK_AMETHYST_CLUSTER_HIT, 0.7f, pitch);
+        at.getWorld().playSound(at, Sound.BLOCK_STONE_BUTTON_CLICK_ON, 0.35f, 1.9f);
     }
 
     private void playAll(Sound sound, float vol, float pitch) {
@@ -677,7 +785,7 @@ public final class BlackjackGame {
         for (int i = 0; i < seats.length; i++) {
             Seat s = seats[i];
             UUID id = s.player != null ? s.player : owners[i];
-            if (phase != Phase.SETTLE && s.bet > 0 && id != null) plugin.casino().giveChips(id, s.bet);
+            if (phase != Phase.SETTLE && s.bet > 0 && id != null) plugin.casinoPlay().refund(id, GAME, s.bet);
             s.bet = 0;
             if (s.player != null) table.removeVehicle(i);
         }
@@ -691,5 +799,118 @@ public final class BlackjackGame {
 
     public boolean idle() {
         return phase == Phase.IDLE;
+    }
+
+    // =================================================================================================================
+    // Rack, Bedienknöpfe, Hover
+    // =================================================================================================================
+
+    private void showRack(int seat) {
+        Seat s = seats[seat];
+        if (s.player == null) return;
+        s.jewels = plugin.casinoPlay().cur(s.player, GAME) == de.kuby.kubyplugins.service.CasinoPlay.Cur.JEWELS;
+        s.rackValues = plugin.casinoPlay().rack(s.player, GAME, RACK);
+        table.rack(seat, s.rackValues, s.jewels);
+        showControls(seat);
+    }
+
+    private void showControls(int seat) {
+        Seat s = seats[seat];
+        Player p = s.player == null ? null : Bukkit.getPlayer(s.player);
+        if (p == null || (phase != Phase.IDLE && phase != Phase.BETTING)) {
+            table.clearControls(seat);
+            return;
+        }
+        boolean vip = plugin.casinoPlay().vip(p);
+        table.controls(seat, s.bet == 0 && !s.lastStack.isEmpty(), s.bet > 0, vip && s.bet == 0 ? s.jewels : null);
+    }
+
+    /** Knopf auf der Armauflage: repeat, clear oder currency. */
+    public void control(Player p, int seat, String kind) {
+        Seat s = seats[seat];
+        if (s.player == null || !s.player.equals(p.getUniqueId())) return;
+        if (phase != Phase.IDLE && phase != Phase.BETTING) return;
+        switch (kind) {
+            case "repeat" -> {
+                List<Long> again = new ArrayList<>(s.lastStack);
+                for (Long v : again) {
+                    int idx = -1;
+                    for (int k = 0; k < s.rackValues.length; k++) if (s.rackValues[k] == v) idx = k;
+                    if (idx < 0) continue;
+                    int before = s.stack.size();
+                    chip(p, seat, idx);
+                    if (s.stack.size() == before) break;
+                }
+            }
+            case "clear" -> {
+                if (s.bet <= 0) return;
+                plugin.casinoPlay().refund(p.getUniqueId(), GAME, s.bet);
+                CasinoText.send(p, "Einsatz zurückgenommen: <#F2C94C>+" + de.kuby.kubyplugins.service.CasinoPlay.unit(
+                        s.jewels ? de.kuby.kubyplugins.service.CasinoPlay.Cur.JEWELS : de.kuby.kubyplugins.service.CasinoPlay.Cur.CHIPS, s.bet));
+                s.bet = 0;
+                s.stack.clear();
+                table.bet(seat, s.stack, 0);
+                p.playSound(p.getLocation(), Sound.BLOCK_CHAIN_PLACE, 0.6f, 1.2f);
+                if (phase == Phase.BETTING && totalBets() == 0) {
+                    phase = Phase.IDLE;
+                    idleText();
+                }
+                showControls(seat);
+                save();
+            }
+            case "currency" -> {
+                String err = plugin.casinoPlay().toggle(p);
+                if (err != null) {
+                    CasinoText.error(p, err);
+                    return;
+                }
+                boolean jw = plugin.casinoPlay().mode(p.getUniqueId()) == de.kuby.kubyplugins.service.CasinoPlay.Cur.JEWELS;
+                s.lastStack.clear();
+                showRack(seat);
+                p.playSound(p.getLocation(), jw ? Sound.BLOCK_AMETHYST_BLOCK_CHIME : Sound.BLOCK_CHAIN_PLACE, 0.8f, 1.4f);
+                p.sendActionBar(Msg.parse(jw ? "<#7FE3FF>◆ Du spielst jetzt mit Juwelen <gray>(" + CasinoText.num(plugin.casinoPlay().jewelMin())
+                        + " bis " + CasinoText.num(plugin.casinoPlay().jewelMax()) + " je Runde, heute frei: "
+                        + CasinoText.num(plugin.casinoPlay().volumeLeft(p.getUniqueId())) + ")" : "<#F2C94C>● Du spielst jetzt mit Chips"));
+            }
+            default -> {
+            }
+        }
+    }
+
+    /** Alle 2 Ticks: Hover für sitzende Spieler (Knopf unter dem Blick hebt sich). */
+    public void hoverTick() {
+        for (int i = 0; i < seats.length; i++) {
+            Seat s = seats[i];
+            if (s.player == null) continue;
+            Player p = Bukkit.getPlayer(s.player);
+            if (p == null) continue;
+            if (table.hover(i, p.getEyeLocation(), p.getEyeLocation().getDirection())) {
+                p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_HAT, 0.25f, 1.9f);
+            }
+        }
+    }
+
+    /** Grundstrategie (vereinfacht) als Tipp. */
+    private String hint(Hand h, boolean canDouble, boolean canSplit) {
+        int t = BjCards.total(h.cards);
+        int up = dealer.isEmpty() ? 10 : dealer.get(0).value();
+        boolean soft = BjCards.soft(h.cards);
+        if (canSplit) {
+            int v = h.cards.get(0).value();
+            if (v == 11 || v == 8) return "Teilen";
+            if (v == 9 && up != 7 && up < 10) return "Teilen";
+            if ((v == 2 || v == 3 || v == 7) && up <= 7) return "Teilen";
+            if (v == 6 && up <= 6) return "Teilen";
+        }
+        if (canDouble && !soft && (t == 11 || (t == 10 && up <= 9) || (t == 9 && up >= 3 && up <= 6))) return "Doppeln";
+        if (soft) {
+            if (t >= 19) return "Halten";
+            if (t == 18) return up >= 9 ? "Karte" : "Halten";
+            return "Karte";
+        }
+        if (t >= 17) return "Halten";
+        if (t >= 13) return up <= 6 ? "Halten" : "Karte";
+        if (t == 12) return up >= 4 && up <= 6 ? "Halten" : "Karte";
+        return "Karte";
     }
 }

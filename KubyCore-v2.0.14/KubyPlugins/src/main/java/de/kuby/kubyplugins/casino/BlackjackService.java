@@ -59,7 +59,7 @@ public final class BlackjackService implements Listener {
         for (String line : open) {
             String[] p = line.split(";");
             try {
-                plugin.casino().giveChips(UUID.fromString(p[0]), Long.parseLong(p[1]));
+                plugin.casinoPlay().refund(UUID.fromString(p[0]), "blackjack", Long.parseLong(p[1]));
             } catch (RuntimeException ignored) {
             }
         }
@@ -95,6 +95,7 @@ public final class BlackjackService implements Listener {
     public void respawn() {
         if (timer == null) {
             timer = plugin.getServer().getScheduler().runTaskTimer(plugin, () -> games.values().forEach(BlackjackGame::tick), 20L, 20L);
+            plugin.getServer().getScheduler().runTaskTimer(plugin, () -> games.values().forEach(BlackjackGame::hoverTick), 22L, 2L);
         }
         for (String id : raw.keySet()) {
             BlackjackGame g = load(id);
@@ -177,6 +178,7 @@ public final class BlackjackService implements Listener {
             }
             case "chip" -> g.chip(p, seat, Integer.parseInt(parts[3]));
             case "act" -> g.action(p, seat, Integer.parseInt(parts[3]));
+            case "ctl" -> g.control(p, seat, parts[3]);
             case "dealer" -> {
                 if (seated(p.getUniqueId()) != null) {
                     CasinoText.send(p, "Leg Chips aus dem Rack vor dir auf dein Feld. Aufstehen mit Schleichen.");
