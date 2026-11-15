@@ -260,7 +260,8 @@ public final class LoadTestCommand implements CommandExecutor {
             plugin.getLogger().info("[Casino-Regel] keine Spieler online");
             return;
         }
-        Player p = all.get(0);
+        // der letzte Spieler (nach Namen) sitzt nicht am Casino-Spieltest (der nimmt die ersten 6): keine offenen Wetten
+        Player p = all.get(all.size() - 1);
         java.util.UUID id = p.getUniqueId();
         var cp = plugin.casinoPlay();
         if (!"survival".equals(plugin.modes().modeOf(id))) plugin.modes().switchTo(p, "survival");
