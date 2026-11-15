@@ -869,7 +869,7 @@ public final class BlackjackGame {
                 showRack(seat);
                 p.playSound(p.getLocation(), jw ? Sound.BLOCK_AMETHYST_BLOCK_CHIME : Sound.BLOCK_CHAIN_PLACE, 0.8f, 1.4f);
                 p.sendActionBar(Msg.parse(jw ? "<#7FE3FF>◆ Du spielst jetzt mit Juwelen <gray>(" + CasinoText.num(plugin.casinoPlay().jewelMin())
-                        + " bis " + CasinoText.num(plugin.casinoPlay().jewelMax()) + " je Runde, heute frei: "
+                        + " bis " + CasinoText.num(plugin.casinoPlay().jewelMax()) + " je Runde, " + plugin.casinoPlay().volumePeriodLabel() + " frei: "
                         + CasinoText.num(plugin.casinoPlay().volumeLeft(p.getUniqueId())) + ")" : "<#F2C94C>● Du spielst jetzt mit Chips"));
             }
             default -> {
@@ -888,6 +888,43 @@ public final class BlackjackGame {
                 p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_HAT, 0.25f, 1.9f);
             }
         }
+    }
+
+    /** Spieltest: setzt und spielt für die Test-Spieler wie ein Spieler mit Klicks (Rack-Chip, Aktion nach Tipp). */
+    public void autoPlay(java.util.Set<UUID> ids) {
+        for (int i = 0; i < seats.length; i++) {
+            Seat s = seats[i];
+            if (s.player == null || !ids.contains(s.player)) continue;
+            Player p = Bukkit.getPlayer(s.player);
+            if (p == null) continue;
+            if ((phase == Phase.IDLE || phase == Phase.BETTING) && s.bet == 0) chip(p, i, 2);
+        }
+        if (phase == Phase.PLAYING && turn >= 0 && seats[turn].player != null && ids.contains(seats[turn].player)) {
+            Seat s = seats[turn];
+            Player p = Bukkit.getPlayer(s.player);
+            if (p == null) return;
+            Hand h = s.hands.get(s.active);
+            long bal = plugin.casinoPlay().balance(p.getUniqueId(), GAME);
+            boolean two = h.cards.size() == 2;
+            boolean canSplit = two && s.hands.size() == 1 && h.cards.get(0).value() == h.cards.get(1).value() && bal >= h.bet;
+            boolean canDouble = two && bal >= h.bet;
+            String hint = hint(h, canDouble, canSplit);
+            int a = switch (hint) {
+                case "Halten" -> 1;
+                case "Doppeln" -> 2;
+                case "Teilen" -> 3;
+                default -> 0;
+            };
+            plugin.getLogger().info("[Casino-Test] blackjack " + p.getName() + " hat " + label(h.cards) + ", Bank zeigt "
+                    + dealer.get(0).value() + " -> " + hint);
+            action(p, turn, a);
+        }
+    }
+
+    public int seated() {
+        int n = 0;
+        for (Seat s : seats) if (s.player != null) n++;
+        return n;
     }
 
     /** Grundstrategie (vereinfacht) als Tipp. */

@@ -769,6 +769,13 @@ public final class PokerService implements org.bukkit.event.Listener {
     }
 
     private void endHand(Map<Seat, Long> won) {
+        handsPlayed++;
+        if (plugin.casinoPlay() != null && plugin.casinoPlay().testLog) {
+            StringBuilder sb = new StringBuilder();
+            for (Map.Entry<Seat, Long> e : won.entrySet()) sb.append(nameOf(e.getKey().id)).append(" +").append(e.getValue()).append(" ");
+            plugin.getLogger().info("[Casino-Test] poker Hand " + handsPlayed + " fertig, Board " + board.size() + " Karten, Gewinner: "
+                    + sb.toString().trim());
+        }
         Location t = table();
         Location fxAt = t == null ? null : t.clone().add(0, 3.2, 0);
         for (Seat s : seats) {
@@ -985,6 +992,53 @@ public final class PokerService implements org.bukkit.event.Listener {
         }
         return best;
     }
+
+    /** Spieltest: Hinsetzen ohne VIP-Prüfung (der Tisch steht zum Test außerhalb der Lounge). */
+    public synchronized String testSit(Player p, long buyIn, int pos) {
+        if (seat(p.getUniqueId()) != null) return null;
+        if (!free(pos)) return "besetzt";
+        if (!plugin.casino().takeChips(p.getUniqueId(), buyIn)) return "zu wenig Chips";
+        Seat ns = new Seat(p.getUniqueId(), buyIn);
+        ns.pos = pos;
+        seats.add(ns);
+        seats.sort(java.util.Comparator.comparingInt(x -> x.pos));
+        if (phase == Phase.WAITING) nextHandAt = Math.max(nextHandAt, System.currentTimeMillis() + 3000);
+        de.kuby.kubyplugins.casino.PokerTable d = desk();
+        if (d != null && d.ready()) {
+            d.vehicle(pos).addPassenger(p);
+            d.ownPlate(pos, p, true);
+        }
+        save();
+        render();
+        return null;
+    }
+
+    /** Spieltest: wer dran ist, handelt wie über die Knöpfe (meist Check/Mitgehen, manchmal Erhöhen, selten Passen). */
+    public synchronized void testAutoAct(java.util.Set<UUID> ids) {
+        if (phase == Phase.WAITING || turn < 0 || turn >= seats.size()) return;
+        Seat s = seats.get(turn);
+        if (!ids.contains(s.id)) return;
+        Player p = Bukkit.getPlayer(s.id);
+        if (p == null) return;
+        double r = java.util.concurrent.ThreadLocalRandom.current().nextDouble();
+        String err;
+        if (r < 0.06 && currentBet - s.bet > 0) {
+            err = act(p, "fold", 0);
+        } else if (r < 0.22) {
+            act(p, "raisemode", 0);
+            act(p, "plus", 0);
+            err = act(p, "ok", 0);
+        } else {
+            err = act(p, currentBet - s.bet > 0 ? "call" : "check", 0);
+        }
+        plugin.getLogger().info("[Casino-Test] poker " + p.getName() + " (" + phase + "): " + s.last + (err != null ? " – " + err : ""));
+    }
+
+    public synchronized int handsPlayed() {
+        return handsPlayed;
+    }
+
+    private int handsPlayed;
 
     /** Nachkaufen zwischen den Händen bis zum Maximum. */
     public synchronized String topUp(Player p, long amount) {

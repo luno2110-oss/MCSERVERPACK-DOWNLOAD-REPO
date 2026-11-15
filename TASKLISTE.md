@@ -559,12 +559,14 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
 
 ## Casino fertigstellen (v1.68)
 - [x] Gemeinsamer Casino-Kern (`CasinoPlay`) für alle Spiele gegen die Bank (Blackjack, Roulette, Slots, Crash, Losbude):
+  - [x] Juwelen-Volumen wahlweise je Tag, Woche, Monat oder einmalig gesamt (`casino.juwelen.zeitraum`, Standard tag, `casino.juwelen.volumen` 50.000)
   - [x] **Juwelen für VIP** (Rang VIP oder höher, Recht `kuby.casino.juwelen`): `/casino waehrung` oder der Knopf am Blackjack-Platz; Einsatz 50 bis 10.000 Juwelen je Spiel und Runde, höchstens 50.000 Juwelen Spielvolumen am Tag (`casino.juwelen.*`). Die Währung eines offenen Einsatzes ist fest gespeichert (Rückgabe nach Absturz in der richtigen Währung)
   - [x] **Siegesserie**: jeder Sieg in Folge +0,2x auf den Gewinn (1. Sieg x1, 2. x1,2 … bis x2,5), Unentschieden hält die Serie, Titel bei 3/5/8/10 Siegen; `/casino bonus` zeigt Serie, beste Serie, Goldene Zeit
   - [x] **Goldene Zeit** jeden Tag 17–22 Uhr: Gewinne x2, Ansage bei Start und Ende, goldene Bossbar mit Restzeit im Casino (`casino.goldene-zeit.*`)
   - [x] **Belohnend auch bei Verlust**: 3 % Cashback auf jeden Verlust, nach 3 Niederlagen in Folge Comeback-Bonus (+0,25x) auf den nächsten Sieg, „Knapp!“-Hinweis bei Slots, Rückmeldung mit Ton, Partikeln und Actionbar nach jeder Runde (`casino.bonus.*`)
   - [x] Boni gelten nur auf den Reingewinn, alle Faktoren zusammen höchstens x6 (`max-gesamt`)
 - [x] **Crash**: Kurs = e^(0,07·s + 0,003·s²) – je höher, desto schneller (2x nach ~8 s, 5x nach ~14 s, 20x nach ~21 s; `casino.crash.beschleunigung`), Ticken wird mit dem Kurs schneller und höher, ab 5x Herzschlag, Gong bei 2x/5x/10x/25x. Hausvorteil unverändert
+- [x] Casino-Spieltest im Belastungstest (`/kubytest casino`): echte Spieler (Bots) setzen sich an einen echten Blackjack-Tisch (Chip aus dem Rack, Züge nach dem Tipp), an den Pokertisch (Check/Mitgehen/Erhöhen/Passen über die Knopf-Wege) und setzen beim Roulette; jede Abrechnung (Einsatz, Auszahlung, Bonus, Cashback, Serie) steht im Log, der Test scheitert ohne abgerechnete Runden
 - [x] Prüfung v1.68: Build, Server-Test (SELFTEST ohne Fehler), Belastungstest (10 Bots, 504 Menü-Klicks, 0 Fehler, TPS 19,7–20) und Bedrock-Test grün; Tische in der 3D-Vorschau (`tools/preview3d`) aus Spielersicht geprüft. Test im Spiel offen
 - [x] **Blackjack-Tisch neu** (Clean-Look, Texturen in hoher Auflösung, `tools/build_casino_hd.py`): ein durchgehender Filz 512 px mit Goldlinien, Einsatzkreisen und Aufdruck „BLACKJACK ZAHLT 3 ZU 2“, schwarze Leder-Armauflage mit Steppnaht, Sockel Creme-Lack mit Goldband, Barhocker Creme-Leder mit Goldfuß, Chip-Tablett mit echten 3D-Chips, Schlitten und Ablage
   - [x] Tisch 20 cm niedriger (Filz 0,8), Hocker passend; vom Platz aus liegen Karten, Chips und Zahlen frei. Handwert und Einsatz als kleine Plaketten neben Karten und Chips, nie darüber

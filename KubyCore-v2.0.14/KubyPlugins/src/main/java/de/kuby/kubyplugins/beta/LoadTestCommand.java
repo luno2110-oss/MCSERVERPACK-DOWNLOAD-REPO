@@ -3,6 +3,7 @@ package de.kuby.kubyplugins.beta;
 import de.kuby.kubyplugins.KubyPlugins;
 import de.kuby.kubyplugins.ui.UiClicks;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -31,6 +32,8 @@ public final class LoadTestCommand implements CommandExecutor {
             "insel", "combo", "skyblock", "baltop", "ranking", "investments", "regeln", "hilfe", "feedback", "erfolge", "support"};
 
     private final KubyPlugins plugin;
+    /** Spieler im Casino-Spieltest: keine Zufalls-Klicks in Menüs (die könnten sie vom Tisch wegholen). */
+    public static final java.util.Set<java.util.UUID> CASINO = new java.util.HashSet<>();
 
     public LoadTestCommand(KubyPlugins plugin) {
         this.plugin = plugin;
@@ -50,6 +53,7 @@ public final class LoadTestCommand implements CommandExecutor {
                 }
                 int clicks = 0, opened = 0;
                 for (Player p : new ArrayList<>(Bukkit.getOnlinePlayers())) {
+                    if (CASINO.contains(p.getUniqueId())) continue;
                     for (int i = 0; i < n; i++) {
                         if (!p.isOnline()) break;
                         if (UiClicks.randomClick(p)) {
@@ -76,8 +80,90 @@ public final class LoadTestCommand implements CommandExecutor {
                 }
                 plugin.getLogger().info("[Belastungstest] Events ausgelöst: " + String.join(", ", done));
             }
-            default -> sender.sendMessage("/kubytest klicks [n] | events");
+            case "casino" -> casino(args.length > 1 ? Integer.parseInt(args[1]) : 100);
+            default -> sender.sendMessage("/kubytest klicks [n] | events | casino [Sekunden]");
         }
         return true;
+    }
+
+    /**
+     * Casino-Spieltest mit echten Spielern auf dem Server: bis zu 3 setzen sich an einen Blackjack-Tisch (Chip aus dem
+     * Rack, Aktion nach dem Tipp), bis zu 3 an den Pokertisch, die Blackjack-Spieler setzen nebenbei beim Roulette.
+     * Jede Abrechnung steht als "[Casino-Test]"-Zeile im Log, am Ende eine Zusammenfassung.
+     */
+    private void casino(int seconds) {
+        if (!CASINO.isEmpty()) return;
+        List<Player> all = new ArrayList<>(Bukkit.getOnlinePlayers());
+        all.sort(java.util.Comparator.comparing(Player::getName));
+        List<Player> players = all.subList(0, Math.min(6, all.size()));
+        if (players.isEmpty()) {
+            plugin.getLogger().info("[Casino-Test] keine Spieler online");
+            return;
+        }
+        Location spawn = plugin.modes().spawnOf("survival");
+        if (spawn == null) {
+            plugin.getLogger().info("[Casino-Test] kein Survival-Spawn");
+            return;
+        }
+        for (Player p : players) {
+            CASINO.add(p.getUniqueId());
+            p.sendMessage("[Casino-Test] Pause für den Spieltest");
+            if (!"survival".equals(plugin.modes().modeOf(p.getUniqueId()))) plugin.modes().switchTo(p, "survival");
+            plugin.casino().giveChips(p.getUniqueId(), 20000);
+        }
+        plugin.casinoPlay().testLog = true;
+        org.bukkit.World w = spawn.getWorld();
+        int gx = spawn.getBlockX(), gz = spawn.getBlockZ() + 4;
+        double gy = w.getHighestBlockYAt(gx, gz) + 1;
+        Location bjAt = new Location(w, gx + 0.5, gy, gz + 0.5);
+        Location rlAt = new Location(w, gx + 9.5, gy + 1, gz + 0.5);
+        Location pkAt = new Location(w, gx - 9.5, gy, gz + 0.5, 180f, 0f);
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            de.kuby.kubyplugins.casino.BlackjackGame bj = plugin.blackjack().testTable(bjAt, 0f);
+            plugin.roulette().setTable(rlAt, 10, 8, 0f);
+            plugin.poker().setTable(pkAt);
+            int bjSeat = 0, pkSeat = 0;
+            for (int i = 0; i < players.size(); i++) {
+                Player p = players.get(i);
+                if (!p.isOnline()) continue;
+                if (i % 2 == 0 && bj != null && bjSeat < 3) {
+                    p.teleport(bj.table.seatLocation(bjSeat + 1));
+                    bj.sit(p, bjSeat + 1);
+                    bjSeat++;
+                } else {
+                    p.teleport(pkAt);
+                    String err = plugin.poker().testSit(p, 2000, pkSeat++);
+                    if (err != null) plugin.getLogger().info("[Casino-Test] Poker-Platz für " + p.getName() + ": " + err);
+                }
+            }
+            long displays = bj == null ? 0 : w.getNearbyEntities(bjAt, 5, 3, 5).stream().filter(e -> e instanceof org.bukkit.entity.ItemDisplay).count();
+            plugin.getLogger().info("[Casino-Test] Start: " + bjSeat + " am Blackjack-Tisch (" + displays + " Anzeigen), " + pkSeat
+                    + " am Pokertisch, Roulette-Tisch steht");
+            String[] choices = {"rot", "schwarz", "17", "gerade", "1-18", "hoch"};
+            final int[] t = {0};
+            plugin.getServer().getScheduler().runTaskTimer(plugin, task -> {
+                t[0]++;
+                if (bj != null) bj.autoPlay(CASINO);
+                plugin.poker().testAutoAct(CASINO);
+                if (t[0] % 12 == 3) {
+                    for (Player p : players) {
+                        if (!p.isOnline() || plugin.poker().isSeated(p.getUniqueId())) continue;
+                        String err = plugin.roulette().betByName(p, choices[ThreadLocalRandom.current().nextInt(choices.length)], 50);
+                        if (err != null) plugin.getLogger().info("[Casino-Test] roulette " + p.getName() + ": " + err);
+                    }
+                }
+                if (t[0] >= seconds) {
+                    task.cancel();
+                    plugin.getLogger().info("[Casino-Test] Ende: Poker-Hände " + plugin.poker().handsPlayed() + ", am Blackjack-Tisch noch "
+                            + (bj == null ? 0 : bj.seated()));
+                    for (Player p : players) {
+                        plugin.blackjack().leave(p.getUniqueId());
+                        if (plugin.poker().isSeated(p.getUniqueId())) plugin.poker().stand(p.getUniqueId());
+                    }
+                    plugin.casinoPlay().testLog = false;
+                    CASINO.clear();
+                }
+            }, 20L, 20L);
+        }, 50L);
     }
 }

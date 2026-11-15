@@ -119,6 +119,8 @@ jobs:
             sleep 10
             echo "kubytest klicks 3" >&3
             if [ $((i % 4)) -eq 0 ]; then echo "kubytest events" >&3; fi
+            # Casino-Spieltest: Spieler an echten Tischen (Blackjack, Roulette, Poker), 110 Sekunden
+            if [ $i -eq 6 ]; then echo "kubytest casino 110" >&3; fi
             if [ $((i % 3)) -eq 0 ]; then echo "tps" >&3; echo "mspt" >&3; fi
           done
           wait $BOTPID || true
@@ -155,6 +157,23 @@ jobs:
           probs += ["Log: " + l[:250] for l in exc[:40]]
           if tps and min(tps) < 15: probs.append("TPS fiel auf %.1f" % min(tps))
           if clicks == 0: probs.append("Keine Menü-Klicks ausgeführt")
+          # Casino-Spieltest: Abrechnungen je Spiel, Aktionen, Hände
+          cstart = re.findall(r"\[Casino-Test\] Start: (.*)", log)
+          cend = re.findall(r"\[Casino-Test\] Ende: (.*)", log)
+          settle = {}
+          for g in re.findall(r"\[Casino-Test\] (blackjack|roulette|poker|slots|crash) \w+: Einsatz", log): settle[g] = settle.get(g, 0) + 1
+          bjact = len(re.findall(r"\[Casino-Test\] blackjack \w+ hat ", log))
+          pkact = len(re.findall(r"\[Casino-Test\] poker \w+ \(", log))
+          pkhands = len(re.findall(r"\[Casino-Test\] poker Hand \d+ fertig", log))
+          casino_line = ("- Casino-Spieltest (echte Spieler an echten Tischen): %s; Abrechnungen Blackjack %d, Roulette %d; Blackjack-Züge %d,"
+                         " Poker-Aktionen %d, Poker-Hände %d; %s") % ((cstart or ["nicht gestartet"])[0], settle.get("blackjack", 0),
+                         settle.get("roulette", 0), bjact, pkact, pkhands, (cend or ["kein Ende"])[0])
+          bonus = re.findall(r"\[Casino-Test\] \w+ \w+: Einsatz .*?(Bonus \d+[^,]*|Cashback \d+)", log)
+          if not cstart: probs.append("Casino-Spieltest nicht gestartet")
+          else:
+              if settle.get("blackjack", 0) == 0: probs.append("Casino-Spieltest: keine Blackjack-Runde abgerechnet")
+              if settle.get("roulette", 0) == 0: probs.append("Casino-Spieltest: keine Roulette-Runde abgerechnet")
+              if pkhands == 0 and "0 am Pokertisch" not in cstart[0]: probs.append("Casino-Spieltest: keine Poker-Hand zu Ende gespielt")
           if not evruns: probs.append("Keine Events ausgelöst")
           played = [g for g in games if not g[1].startswith("abgebrochen")]
           if not played: probs.append("Angel-Minispiel: keine Runde zu Ende gespielt (gestartet: %d)" % gstarted)
@@ -170,6 +189,8 @@ jobs:
           print("- Menü-Klicks (wie echte Klicks, in den Pack-Dialogen): %d, dabei %d Menüs neu geöffnet" % (clicks, opened))
           print("- Event-Runden: %d (%s)" % (len(evruns), evruns[-1].strip() if evruns else "keine"))
           print("- Angel-Minispiel: %d Runden gestartet, %d beendet (%s); am Server angekommen: %d Linksklicks, %d Rechtsklicks, %d Ticks A, %d Ticks D; Bots spielten %d Runden, Tasten-Pakete %d%s" % (gstarted, len(games), ", ".join("%s %d" % kv for kv in gout.items()) or "keine", gsum[0], gsum[1], gsum[2], gsum[3], r.get("games", 0), r.get("inputPackets", 0), (" (Fehler: %s)" % r["inputErrors"]) if r.get("inputErrors") else ""))
+          print(casino_line)
+          if bonus: print("  - Boni/Trost im Spieltest: " + ", ".join(sorted(set(bonus))[:8]))
           print("- TPS (1 min) gemessen: %s" % (", ".join("%.1f" % t for t in tps) or "keine Messung"))
           print("- Kicks: %d, Verbindungsfehler: %d, Befehlsfehler: %d, Exceptions im Log: %d" % (len(r.get("kicked", [])), len(r.get("errors", [])), len(r.get("cmdErrors", [])), len(exc)))
           open("problems.txt", "w").write("\n".join(probs) if probs else "keine Probleme")

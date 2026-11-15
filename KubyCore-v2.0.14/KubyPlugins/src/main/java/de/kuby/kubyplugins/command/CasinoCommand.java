@@ -50,7 +50,7 @@ public final class CasinoCommand implements CommandExecutor {
                     Msg.send(p, "<red>" + err);
                 } else if (want == de.kuby.kubyplugins.service.CasinoPlay.Cur.JEWELS) {
                     Msg.send(p, "<#7FE3FF>◆ Du spielst jetzt mit Juwelen. <gray>Einsatz " + cp.jewelMin() + " bis " + cp.jewelMax()
-                            + " je Runde, heute noch " + cp.volumeLeft(p.getUniqueId()) + " Juwelen Spielvolumen.");
+                            + " je Runde, " + cp.volumePeriodLabel() + " noch " + cp.volumeLeft(p.getUniqueId()) + " Juwelen Spielvolumen.");
                 } else {
                     Msg.send(p, "<#F2C94C>● Du spielst jetzt mit Chips.");
                 }

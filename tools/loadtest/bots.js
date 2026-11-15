@@ -48,6 +48,7 @@ function create(i, again) {
     if (!again) {
       setTimeout(() => {
         if (Date.now() - start > DURATION - 30000) return;
+        if ((bot.casinoUntil || 0) > Date.now()) return;   // sitzt im Casino-Spieltest
         log(name, 'loggt kurz aus');
         bot.rejoining = true;
         bot.quit('Wiederkommen');
@@ -57,6 +58,8 @@ function create(i, again) {
   });
   bot.on('messagestr', (msg) => {
     stats.chats++;
+    // Casino-Spieltest: der Server setzt den Spieler an einen Tisch, keine eigenen Aktionen mehr bis zum Ende
+    if (msg.includes('[Casino-Test]')) { bot.casinoUntil = Date.now() + 130000; stats.casinoBots = (stats.casinoBots || 0) + 1; log(name, 'Casino-Spieltest'); }
     if (/ANGELN|Fisch|fish/i.test(msg) && stats.fishChat.length < 12) stats.fishChat.push(name + ': ' + msg.slice(0, 160));
     if (/Halte den Fisch|grünen Bereich|green (zone|area)|Keep the fish/i.test(msg)) playFishGame(bot);
     else if (bot.fishing && /entkommen|escaped|got away/i.test(msg)) endFishGame(bot, 'entkommen');
@@ -145,7 +148,7 @@ function endFishGame(bot, how) {
 function loop(bot) {
   const tick = () => {
     if (!bot.entity || bot.rejoining || Date.now() - start > DURATION) return;
-    if (bot.fishing || (bot.fishWaitUntil || 0) > Date.now()) { setTimeout(tick, 1000); return; }
+    if (bot.fishing || (bot.fishWaitUntil || 0) > Date.now() || (bot.casinoUntil || 0) > Date.now()) { setTimeout(tick, 1000); return; }
     try {
       const r = Math.random();
       if (r < 0.55) {

@@ -74,6 +74,8 @@ public final class CasinoPlay {
     private final Map<UUID, Long> volume = new HashMap<>();
     private String volumeDay = "";
     private BossBar goldenBar;
+    /** Spieltest (/kubytest casino): jede Abrechnung als Zeile im Log. */
+    public boolean testLog;
     private boolean goldenWas;
 
     public CasinoPlay(KubyPlugins plugin) {
@@ -99,7 +101,31 @@ public final class CasinoPlay {
     }
 
     public long jewelVolume() {
-        return plugin.getConfig().getLong("casino.juwelen.volumen-tag", 50_000);
+        return plugin.getConfig().getLong("casino.juwelen.volumen", plugin.getConfig().getLong("casino.juwelen.volumen-tag", 50_000));
+    }
+
+    /** Zeitraum des Juwelen-Volumens: "tag" (Standard), "woche", "monat" oder "gesamt". */
+    private String volumePeriod() {
+        return plugin.getConfig().getString("casino.juwelen.zeitraum", "tag").toLowerCase(java.util.Locale.ROOT);
+    }
+
+    private String periodKey() {
+        LocalDate d = LocalDate.now(ZONE);
+        return switch (volumePeriod()) {
+            case "gesamt" -> "gesamt";
+            case "woche" -> d.getYear() + "-W" + d.get(java.time.temporal.IsoFields.WEEK_OF_WEEK_BASED_YEAR);
+            case "monat" -> d.getYear() + "-" + d.getMonthValue();
+            default -> d.toString();
+        };
+    }
+
+    public String volumePeriodLabel() {
+        return switch (volumePeriod()) {
+            case "gesamt" -> "insgesamt";
+            case "woche" -> "diese Woche";
+            case "monat" -> "diesen Monat";
+            default -> "heute";
+        };
     }
 
     /** Serien-Multiplikator für den Sieg nach n Siegen in Folge. */
@@ -264,7 +290,7 @@ public final class CasinoPlay {
     }
 
     private void rollDay() {
-        String today = LocalDate.now(ZONE).toString();
+        String today = periodKey();
         if (!today.equals(volumeDay)) {
             volumeDay = today;
             volume.clear();
@@ -301,7 +327,7 @@ public final class CasinoPlay {
             if (already + amount < jewelMin()) return "Mit Juwelen setzt du mindestens " + unit(c, jewelMin()) + ".";
             if (already + amount > jewelMax()) return "Höchstens " + unit(c, jewelMax()) + " je Runde.";
             if (amount > volumeLeft(id)) {
-                return "Dein Juwelen-Volumen für heute ist aufgebraucht (" + unit(c, jewelVolume()) + " am Tag, frei: "
+                return "Dein Juwelen-Volumen " + volumePeriodLabel() + " ist aufgebraucht (" + unit(c, jewelVolume()) + ", frei: "
                         + unit(c, volumeLeft(id)) + ").";
             }
             if (!plugin.jewels().take(id, amount)) return "So viele Juwelen hast du nicht.";
@@ -395,6 +421,13 @@ public final class CasinoPlay {
             jewelStats(id, stake, payout + cashback);
         }
         save();
+        if (testLog) {
+            String name = Bukkit.getOfflinePlayer(id).getName();
+            plugin.getLogger().info("[Casino-Test] " + game + " " + name + ": Einsatz " + stake + ", Spiel zahlt " + gross
+                    + ", ausgezahlt " + payout + (bonus > 0 ? " (Bonus " + bonus + ", x" + fmt(mult) + ")" : "")
+                    + (cashback > 0 ? ", Cashback " + cashback : "") + ", Serie " + newStreak + (golden ? ", Goldene Zeit" : "")
+                    + ", Währung " + c);
+        }
         return new Outcome(c, stake, gross, payout, bonus, mult, newStreak, golden, comeback, cashback, lost);
     }
 

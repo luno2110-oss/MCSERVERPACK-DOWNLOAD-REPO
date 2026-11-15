@@ -262,6 +262,24 @@ public final class BlackjackService implements Listener {
         return !raw.isEmpty();
     }
 
+    /** Spieltest: Tisch "test" an dieser Stelle (einmal anlegen) und das Spiel dazu. */
+    public BlackjackGame testTable(Location origin, float yaw) {
+        if (!raw.containsKey("test")) {
+            raw.put("test", origin.getWorld().getName() + ";" + origin.getX() + ";" + origin.getY() + ";" + origin.getZ() + ";" + yaw + ";3.0");
+            saveEscrow();
+        }
+        BlackjackGame g = load("test");
+        if (g != null && !g.table.ready()) {
+            g.table.build();
+            g.refreshDisplays();
+        }
+        if (timer == null) {
+            timer = plugin.getServer().getScheduler().runTaskTimer(plugin, () -> games.values().forEach(BlackjackGame::tick), 20L, 20L);
+            plugin.getServer().getScheduler().runTaskTimer(plugin, () -> games.values().forEach(BlackjackGame::hoverTick), 22L, 2L);
+        }
+        return g;
+    }
+
     /** /casino blackjack tisch [Radius] | entfernen | liste */
     public void command(Player p, String[] args) {
         if (!p.hasPermission("kuby.admin")) {
