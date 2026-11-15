@@ -141,6 +141,17 @@ public final class LoadTestCommand implements CommandExecutor {
         plugin.getLogger().info("[Kamera] " + p.getName() + " bei " + where);
     }
 
+    /** Ebene Testfläche: Boden aus poliertem Andesit auf Höhe y-1, darüber 12 Blöcke Luft (keine Bäume vor der Kamera). */
+    private static void flatten(org.bukkit.World w, int x0, int x1, int z0, int z1, int y) {
+        for (int x = x0; x <= x1; x++) {
+            for (int z = z0; z <= z1; z++) {
+                w.getBlockAt(x, y - 1, z).setType((x + z) % 7 == 0 ? org.bukkit.Material.POLISHED_DIORITE
+                        : org.bukkit.Material.POLISHED_ANDESITE, false);
+                for (int k = 0; k < 12; k++) w.getBlockAt(x, y + k, z).setType(org.bukkit.Material.AIR, false);
+            }
+        }
+    }
+
     /**
      * Casino-Spieltest mit echten Spielern auf dem Server: bis zu 3 setzen sich an einen Blackjack-Tisch (Chip aus dem
      * Rack, Aktion nach dem Tipp), bis zu 3 an den Pokertisch, die Blackjack-Spieler setzen nebenbei beim Roulette.
@@ -171,6 +182,7 @@ public final class LoadTestCommand implements CommandExecutor {
         org.bukkit.World w = spawn.getWorld();
         int gx = spawn.getBlockX(), gz = spawn.getBlockZ() + 4;
         double gy = w.getHighestBlockYAt(gx, gz) + 1;
+        flatten(w, gx - 15, gx + 15, gz - 14, gz + 18, (int) gy);
         Location bjAt = new Location(w, gx + 0.5, gy, gz + 0.5);
         Location rlAt = new Location(w, gx + 9.5, gy + 1, gz + 0.5);
         Location pkAt = new Location(w, gx - 9.5, gy, gz + 0.5, 180f, 0f);
@@ -349,8 +361,17 @@ public final class LoadTestCommand implements CommandExecutor {
         // --- echte Crash-Runde (Goldene Zeit bleibt aus, damit die Auszahlung genau 100 x Kurs ist) ---
         Location spawn = plugin.modes().spawnOf("survival");
         org.bukkit.World w = spawn.getWorld();
-        Location scr = new Location(w, spawn.getBlockX() + 0.5, w.getHighestBlockYAt(spawn.getBlockX(), spawn.getBlockZ() + 18) + 3.0,
-                spawn.getBlockZ() + 18.0);
+        Location scr;
+        if (camBj != null) {
+            // dunkle Wand hinter dem Bildschirm am Rand des Testgeländes, Bild zeigt zu den Tischen (-z)
+            int bx = camBj.getBlockX(), by = camBj.getBlockY(), bz = camBj.getBlockZ() + 14;
+            for (int x = bx - 4; x <= bx + 4; x++)
+                for (int y = by; y <= by + 5; y++) w.getBlockAt(x, y, bz).setType(org.bukkit.Material.BLACK_CONCRETE, false);
+            scr = new Location(w, bx + 0.5, by + 2.5, bz - 0.01);
+        } else {
+            scr = new Location(w, spawn.getBlockX() + 0.5, w.getHighestBlockYAt(spawn.getBlockX(), spawn.getBlockZ() + 18) + 3.0,
+                    spawn.getBlockZ() + 18.0);
+        }
         plugin.crash().testScreen(scr, 180f);
         camCrash = scr;
         plugin.crash().testCrashAt = 8.0;

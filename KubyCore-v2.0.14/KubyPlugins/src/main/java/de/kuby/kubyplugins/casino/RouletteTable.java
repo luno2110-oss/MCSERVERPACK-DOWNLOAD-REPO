@@ -147,13 +147,16 @@ public final class RouletteTable {
                 mark(d, "number");
             });
         }
-        Location mid = local(0, 0.15, 0.01);
+        Location mid = local(0, 0.55, 0.01);
         centerText = w.spawn(mid, TextDisplay.class, d -> {
             d.text(Component.empty());
-            // Text liegt flach und ist von vorn (Admin-Seite) lesbar: Oberkante zeigt in Blickrichtung
-            Vector3f f = fwd();
-            flat(d, (float) Math.atan2(-f.x, -f.z), 1.35f, -0.3f);
+            // Schwebt über der Mitte und dreht sich zu jedem Betrachter (rund um das Rad lesbar, nicht nur von einer Seite;
+            // im echten Client gesehen: flach liegend war er von der Spielerseite spiegelverkehrt)
+            d.setBillboard(Display.Billboard.VERTICAL);
+            d.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
+            d.setShadowed(true);
             d.setLineWidth(300);
+            d.setTransformation(scale(1.2f));
             mark(d, "center");
         });
         betsText = w.spawn(local(0, 0.4, 1.9), TextDisplay.class, d -> {

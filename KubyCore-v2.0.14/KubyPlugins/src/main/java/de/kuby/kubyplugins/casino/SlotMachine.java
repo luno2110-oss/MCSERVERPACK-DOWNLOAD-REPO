@@ -518,7 +518,8 @@ public final class SlotMachine {
         b.append(Component.text(de.kuby.kubyplugins.ui.Canvas.titleChars(title, false)).font(Key.key("kuby", "title"))
                 .color(TextColor.color(tcol)));
         b.append(Component.text(String.valueOf(de.kuby.kubyplugins.ui.KitData.SmallIcon.C_RED.c)).font(chip).color(NamedTextColor.WHITE));
-        b.append(Component.newline());
+        // Der Titel-Font ist 23 px hoch (Grundlinie bei 15): eine Leerzeile, damit er nicht in die Jackpot-Zeile ragt
+        b.append(Component.newline()).append(Component.newline());
         b.append(Component.text("Jackpot ", NamedTextColor.GRAY)).append(Component.text(CasinoText.num(jackpot), NamedTextColor.YELLOW)
                 .decorate(TextDecoration.BOLD)).append(Component.text(" Chips", NamedTextColor.YELLOW)).append(Component.newline());
         b.append(Component.text("Einsatz " + CasinoText.num(min) + " bis " + CasinoText.num(max), NamedTextColor.WHITE)).append(Component.newline());

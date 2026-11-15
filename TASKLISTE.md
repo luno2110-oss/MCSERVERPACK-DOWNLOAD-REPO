@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.80** (ungetestet, nicht kompiliert)
+Stand: **v1.81** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -558,6 +558,11 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
 ## Casino fertigstellen (v1.68)
+- [x] **v1.81 Fehler aus den echten Client-Bildern behoben**
+  - [x] Slots: der Titel („GOLDRAUSCH“, „NEON 7“) ragte im Hologramm in die Jackpot-Zeile (Titel-Font 23 px hoch, Grundlinie bei 15) – Leerzeile dazwischen
+  - [x] Roulette: der Text in der Tischmitte lag flach und war von der Spielerseite spiegelverkehrt – schwebt jetzt über der Mitte und dreht sich zu jedem Betrachter
+  - [x] Testgelände im Belastungstest eben (kein Wald vor der Kamera), Crash-Bildschirm vor einer dunklen Wand; Kamera fliegt vor der ersten Aufnahme hin
+  - [x] Nachweis im echten Client: Blackjack (Dealer-Figur, Filz, Karten, Summe, Chips), Poker-Tisch, Roulette-Rad, beide neuen Automaten mit Walzen, Crash-Runde BEREIT → 1,19x → 2,42x → 6,61x mit steiler werdender Kurve und Gewinner-Banner; Regeltest 17 OK, 0 Fehler
 - [x] **v1.80 Casino-Regeltest auf dem echten Server** (`/kubytest regeln`, läuft im Belastungstest der CI mit einem echten Bot-Spieler)
   - [x] Juwelen: ohne VIP gesperrt, VIP darf umstellen, Juwelen nur am Blackjack-Tisch (Roulette bleibt Chips), 49 abgelehnt, 50 angenommen, 10.001 abgelehnt, 5 × 10.000 gespielt, danach Volumen 50.000 erreicht und jeder weitere Einsatz abgelehnt
   - [x] Siegesserie: 10 Siege in Folge zahlen x1 · x1,2 · … · x2,5 (dann gedeckelt), Niederlage setzt zurück; High Roller x1 bis x8 (+0,5)
@@ -565,7 +570,7 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - [x] Crash: echte Runde auf einem echten Bildschirm, Kurs je Tick gemessen; geprüft, dass das Wachstum (% pro Sekunde) mit jeder Stufe x1,5 · x2 · x3 · x5 · x7 steigt; Ausstieg bei x5 zahlt genau 100 × Kurs
   - [x] Slots: echter Hebelzug am Gold-Automaten; nach dem Einrasten zeigt die Mittellinie der Walzen genau das ausgeloste Ergebnis
   - [x] CI-Auswertung: jede Prüfung als ✅/❌ in der Zusammenfassung, ein ❌ lässt den Belastungstest fehlschlagen
-  - [~] Bilder aus dem echten Spiel (CI „Client-Bilder“, `.github/workflows/client-bilder.yml`, `tools/clientshot/prepare.py`): Vanilla-Minecraft-Java-Client 1.21.11 ohne Mods unter Xvfb (Mesa-Software-Grafik), tritt dem Testserver bei, lädt das echte KubyUI-Pack vom Server (ohne Rückfrage), wird per `/kubytest kamera <Ansicht> Kamera` an Blackjack (oben, Platz, Seite), Poker, Roulette, Slots und Crash gestellt, während Bots spielen und der Regeltest eine Crash-Runde und einen Slot-Dreh startet; Bilder als Release „client-bilder“
+  - [x] Bilder aus dem echten Spiel (CI „Client-Bilder“, `.github/workflows/client-bilder.yml`, `tools/clientshot/prepare.py`): Vanilla-Minecraft-Java-Client 1.21.11 ohne Mods unter Xvfb (Mesa-Software-Grafik), tritt dem Testserver bei, lädt das echte KubyUI-Pack vom Server (ohne Rückfrage), wird per `/kubytest kamera <Ansicht> Kamera` an Blackjack (oben, Platz, Seite), Poker, Roulette, Slots und Crash gestellt, während Bots spielen und der Regeltest eine Crash-Runde und einen Slot-Dreh startet; Bilder als Release „client-bilder“
 - [x] **v1.79 Bedrock: 91 fehlende 3D-Modelle (Karten, Filze, Tisch-Knöpfe)**
   - [x] Fehler gefunden: Auf Bedrock fehlten 91 eigene Modelle – alle 53 Spielkarten, Blackjack- und Pokerfilz (grün und weinrot), alle Blackjack-/Poker-Knöpfe, der goldene Slot-Automat und 9 Kino-Effekte. Bedrock-Spieler sahen dort ein Blatt Papier (der Bedrock-Test-Client meldete 6 Anzeigen als „minecraft:paper“)
   - [x] Ursache: flache Platten ohne Inventar-Ansicht ergaben beim Icon-Rendern ein leeres Bild, der Pack-Bauer (`tools/build_bedrock_pack.py`) übersprang dann das ganze Item samt 3D-Modell. Jetzt: Schrägansicht, sonst die Textur als Icon; das 3D-Modell wird immer gebaut. Ergebnis: 914 von 914 eigenen Modellen haben ein Bedrock-Mapping (vorher 823), 465 3D-Attachables (vorher 374)
