@@ -178,5 +178,21 @@
     "name": "kuby:casino/chip3"
    }
   ]
+ },
+ "tour.intro": {
+  "sounds": [
+   {
+    "name": "kuby:tour/intro",
+    "stream": true
+   }
+  ]
+ },
+ "tour.slots": {
+  "sounds": [
+   {
+    "name": "kuby:tour/slots",
+    "stream": true
+   }
+  ]
  }
 }
