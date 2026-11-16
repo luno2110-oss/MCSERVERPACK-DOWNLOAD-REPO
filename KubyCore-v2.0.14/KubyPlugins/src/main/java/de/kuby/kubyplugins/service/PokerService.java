@@ -1254,6 +1254,53 @@ public final class PokerService implements org.bukkit.event.Listener {
         return new ArrayDeque<>(cards);
     }
 
+    /**
+     * Regeltest der Handbewertung für den SELFTEST (v2.02): Rangfolge aller Blattklassen, Kicker, A-2-3-4-5 als kleinste
+     * Straße, bestes Blatt aus 7 Karten, gleiche Blätter teilen. Gibt die Fehler zurück (leer = alles richtig).
+     */
+    public static List<String> selfCheck() {
+        List<String> bad = new ArrayList<>();
+        java.util.function.Function<String, List<Card>> h = txt -> {
+            List<Card> out = new ArrayList<>();
+            for (String t : txt.trim().split("\\s+")) {
+                char r = t.charAt(0), su = t.charAt(1);
+                int rank = switch (r) {
+                    case 'A' -> 14;
+                    case 'K' -> 13;
+                    case 'Q' -> 12;
+                    case 'J' -> 11;
+                    case 'T' -> 10;
+                    default -> r - '0';
+                };
+                out.add(new Card(rank, su));
+            }
+            return out;
+        };
+        java.util.function.Function<String, Long> v = txt -> best(h.apply(txt));
+        // Rangfolge der neun Klassen, je ein typisches Blatt (aufsteigend)
+        String[] ladder = {"Ah Kd 9c 7s 4h", "8h 8d Kc 7s 4h", "8h 8d 4c 4s Kh", "8h 8d 8c 4s Kh", "9h 8d 7c 6s 5h",
+                "Ah Jh 9h 6h 3h", "Kh Kd Kc 4s 4h", "Qh Qd Qc Qs 3h", "Ah Kh Qh Jh Th"};
+        for (int i = 0; i < ladder.length; i++) {
+            long s = v.apply(ladder[i]);
+            if ((int) (s >> 20) != i) bad.add("Klasse falsch: " + ladder[i] + " ist " + CATEGORY[(int) (s >> 20)] + " statt " + CATEGORY[i]);
+            if (i > 0 && s <= v.apply(ladder[i - 1])) bad.add(CATEGORY[i] + " schlägt " + CATEGORY[i - 1] + " nicht");
+        }
+        // A-2-3-4-5 ist eine Straße, aber die kleinste
+        if ((int) (v.apply("Ah 2d 3c 4s 5h") >> 20) != 4) bad.add("A-2-3-4-5 nicht als Straße erkannt");
+        if (v.apply("Ah 2d 3c 4s 5h") >= v.apply("2h 3d 4c 5s 6h")) bad.add("A-2-3-4-5 schlägt 2-6");
+        if ((int) (v.apply("Ah 2h 3h 4h 5h") >> 20) != 8) bad.add("A-2-3-4-5 in einer Farbe nicht als Straight Flush erkannt");
+        // Kicker
+        if (v.apply("Kh Kd 7c 7s Ah") <= v.apply("Kh Kd 7c 7s Qh")) bad.add("Zwei Paare: Kicker A schlägt Q nicht");
+        if (v.apply("Ah Ad Kc 9s 4h") <= v.apply("Ah Ad Qc Js Th")) bad.add("Paar Asse: Kicker K schlägt Q nicht");
+        if (v.apply("Kh Kd Kc 2s 2h") <= v.apply("Qh Qd Qc As Ah")) bad.add("Full House: Drilling zählt nicht vor dem Paar");
+        // bestes Blatt aus 7 Karten (Board-Straße, Hand macht Flush)
+        if ((int) (v.apply("9h 8h 7c 6s 5h Ah 2h") >> 20) != 5) bad.add("bestes Blatt aus 7 Karten nicht gefunden (Flush über Straße)");
+        // beide spielen das Board: gleich, der Pot wird geteilt
+        String board = "Ah Kh Qd Js Tc ";
+        if (!v.apply(board + "2c 3d").equals(v.apply(board + "4c 5d"))) bad.add("Board-Straße: gleiche Blätter nicht gleich (Pot wird nicht geteilt)");
+        return bad;
+    }
+
     /** Bestes Blatt aus 7 Karten. Höhere Zahl = besseres Blatt; die Kategorie steht ab Bit 20. */
     private static long best(List<Card> seven) {
         long best = -1;

@@ -690,6 +690,15 @@ final class SelfTest {
             fails.add("Modus-Welt: " + t);
         }
 
+        // Poker-Regeln (v2.02): Handbewertung mit allen Blattklassen, Kicker, A-2-3-4-5, 7 Karten, geteilter Pot
+        try {
+            List<String> pk = de.kuby.kubyplugins.service.PokerService.selfCheck();
+            if (pk.isEmpty()) ok[0]++;
+            for (String e : pk) fails.add("Poker: " + e);
+        } catch (Throwable t) {
+            fails.add("Poker-Regeln: " + t);
+        }
+
         // Aufstehen von Sitzen (v2.02): Füße auf der Bodenoberkante, nie im Block darunter, Wand vor dem Sitz umgehen
         try {
             org.bukkit.World w0 = org.bukkit.Bukkit.getWorlds().get(0);
