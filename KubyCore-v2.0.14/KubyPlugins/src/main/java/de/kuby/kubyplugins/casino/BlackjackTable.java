@@ -323,7 +323,7 @@ public final class BlackjackTable {
             // auf einer Linie und gingen ineinander über)
             double lift = (s % 2) * 0.3;
             resultText[s] = text(cardsAt(s).add(0, 0.55 + lift, 0), Component.empty(), 0.62f, Display.Billboard.CENTER);
-            streakText[s] = text(cardsAt(s).add(0, 0.47 + lift, 0), Component.empty(), 0.5f, Display.Billboard.CENTER);
+            streakText[s] = privateTo(s, text(cardsAt(s).add(0, 0.47 + lift, 0), Component.empty(), 0.5f, Display.Billboard.CENTER));
             totals[s] = badge(onSeatAxis(s, radius * F_CARDS + 0.12, 0.44, FELT_Y + 0.09)); // weit genug neben der ersten Karte, damit die Zahl aus keinem Winkel Karten verdeckt
         }
         dealerBadge = badge(at(fwd(), radius * F_DEALER_CARDS + 0.05, FELT_Y + 0.1).add(r.x * 0.5, 0, r.z * 0.5));
@@ -733,7 +733,23 @@ public final class BlackjackTable {
 
     /** Spieler am Platz (null = frei). Danach gebaute Chip-Auswahl und Knöpfe sieht nur er. */
     public void owner(int seat, java.util.UUID id) {
+        java.util.UUID old = owner[seat];
         owner[seat] = id;
+        // Serien-Anzeige („Serie 2 · nächster Sieg x1,4“) nur für den Spieler am Platz: im echten Client lagen die
+        // Anzeigen zweier Plätze mit gleicher Serie (gleicher Dealer, oft gleicher Ausgang) übereinander (v2.02)
+        TextDisplay st = streakText[seat];
+        if (st == null || !st.isValid()) return;
+        st.setVisibleByDefault(false);
+        if (old != null && !old.equals(id)) {
+            org.bukkit.entity.Player op = org.bukkit.Bukkit.getPlayer(old);
+            if (op != null) op.hideEntity(plugin, st);
+        }
+        if (id == null) {
+            st.text(Component.empty());
+            return;
+        }
+        org.bukkit.entity.Player np = org.bukkit.Bukkit.getPlayer(id);
+        if (np != null) np.showEntity(plugin, st);
     }
 
     /**

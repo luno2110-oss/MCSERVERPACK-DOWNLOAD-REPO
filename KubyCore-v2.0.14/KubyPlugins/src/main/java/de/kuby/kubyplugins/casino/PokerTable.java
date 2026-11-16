@@ -521,7 +521,9 @@ public final class PokerTable {
     /** Gemeinschaftskarte k (0..4) aufdecken. */
     public void boardCard(int k, String model) {
         Location target = local((k - 2) * 0.36, FELT_Y + 0.006, -0.02);
-        Quaternionf up = facingTop(localDir(0, -1)).rotateY((float) Math.PI);
+        // zur Spielerseite lesbar (wie die Handkarten mit facingTop(inward)); vorher zusätzlich um 180° gedreht, im echten
+        // Client standen die fünf Karten für die Spieler gegenüber der Dealerin auf dem Kopf (v2.02)
+        Quaternionf up = facingTop(localDir(0, -1));
         Location from = local(-0.75, FELT_Y + 0.08, -(R - 0.32));
         ItemDisplay e = item(from, "c3_" + model, new Quaternionf(up).rotateZ((float) Math.PI), CARD, "board");
         e.setTeleportDuration(7);
