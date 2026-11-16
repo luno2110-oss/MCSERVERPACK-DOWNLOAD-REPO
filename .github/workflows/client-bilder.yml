@@ -202,6 +202,12 @@ jobs:
           clip video_slots 30
           for k in 1 2 3; do sleep 1; echo "kubytest dreh Kamera" >&3; sleep 9; done
           sleep 2
+          # Casino-Rundgang (Gastgeber Vincent führt durch alle Stationen) als Video mit Ton
+          echo "kubytest rundgang Kamera" >&3
+          sleep 1
+          clip video_rundgang 95
+          for k in 01 02 03 04 05 06 07 08 09 10 11 12; do sleep 7; shot "40_rundgang_$k"; done
+          sleep 12
           sleep 5
           kill $CPID 2>/dev/null || true
           echo "stop" >&3

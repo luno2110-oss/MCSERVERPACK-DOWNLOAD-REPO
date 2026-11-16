@@ -94,6 +94,18 @@ public final class LoadTestCommand implements CommandExecutor {
                     plugin.getLogger().info("[Kamera] Dreh am Gold-Automaten: " + plugin.slots().testPull(dp, "kgold"));
                 }
             }
+            case "rundgang" -> {
+                // /kubytest rundgang <Spieler>: Casino-Rundgang abspielen (Video aus dem echten Client)
+                Player rp = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : sender instanceof Player sp ? sp : null;
+                if (rp != null) {
+                    if (rp.getGameMode() == org.bukkit.GameMode.SPECTATOR) rp.setGameMode(org.bukkit.GameMode.ADVENTURE);
+                    rp.setAllowFlight(true);
+                    rp.setFlying(false);
+                    if (camBj != null) rp.teleport(camBj.clone().add(0, 0, 6.5).setDirection(new org.bukkit.util.Vector(0, 0, -1)));
+                    boolean ok = plugin.casinoTour() != null && plugin.casinoTour().play(rp);
+                    plugin.getLogger().info("[Kamera] Rundgang gestartet: " + ok);
+                }
+            }
             case "kino" -> {
                 // /kubytest kino <Spieler>: zweimal eine kurze Kino-Szene, Leisten oben vorher/nachher zählen
                 Player kp = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : sender instanceof Player sp ? sp : null;
@@ -302,6 +314,11 @@ public final class LoadTestCommand implements CommandExecutor {
             plugin.blackjack().testTable("test_violett", camBjVio, 0f, de.kuby.kubyplugins.casino.TableTier.VIOLETT);
             plugin.pokerHr().setTable(camPkRot);
             plugin.pokerVio().setTable(camPkVio);
+            // Kasse und Jukebox (für den Rundgang): an der Rückwand, Blick zu den Tischen (-z)
+            if (plugin.casinoNpc().find(de.kuby.kubyplugins.casino.CasinoNpc.Role.KASSE, bjAt, 30).isEmpty()) {
+                plugin.casinoNpc().spawn(de.kuby.kubyplugins.casino.CasinoNpc.Role.KASSE, new Location(w, gx - 12.5, gy, gz + 13.5, 180f, 0f));
+                plugin.casinoNpc().spawn(de.kuby.kubyplugins.casino.CasinoNpc.Role.MUSIK, new Location(w, gx + 12.5, gy, gz + 13.5, 180f, 0f));
+            }
             plugin.roulette().setTable(rlAt, 10, 8, 0f);
             plugin.poker().setTable(pkAt);
             // zwei neue Automaten freistehend (Hocker 1,6 davor, Blick nach +z zum Spieler)
