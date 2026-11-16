@@ -246,7 +246,7 @@ public final class CasinoTourService {
                         "Hier spielen nur die Mutigsten. Und die Serie zahlt bis zum Achtfachen.");
                 default -> station(p, "blackjack", o, f, 3.4, cam, dealer,
                         "Blackjack: Kommen Sie näher an die 21 als die Bank, ohne sich zu überkaufen.",
-                        "Siegesserien lohnen sich – jeder Sieg in Folge zahlt ein Stück mehr, bis x2,5.");
+                        "Siegesserien lohnen sich – jeder Sieg in Folge zahlt ein Stück mehr, bis zum Zweieinhalbfachen.");
             });
         }
         // Poker (normal und weinrot)
@@ -256,7 +256,11 @@ public final class CasinoTourService {
             V3 f = V3.dir(pk.tableYaw(), 0).mul(-1);
             V3 dealer = v(c).add(f.mul(-1.9)).up(1.55);
             // Schnitt: schräg von oben über den Filz (Karten, Pot, Dealer), nicht aus Tischhöhe auf leere Hocker
-            out.add(station(p, "poker", c, f, 2.8, v(c).add(f.mul(2.2)).up(2.6), v(c).add(f.mul(-0.3)).up(0.7),
+            out.add(station(p, switch (pk.tier()) {
+                case ROT -> "poker_rot";
+                case VIOLETT -> "poker_violett";
+                default -> "poker";
+            }, c, f, 2.8, v(c).add(f.mul(2.2)).up(2.6), v(c).add(f.mul(-0.3)).up(0.7),
                     pk.tier() == TableTier.VIOLETT ? "Und ganz oben, in Violett: der Elite-Tisch. Buy-ins bis zu einer Million."
                             : pk.isHighRoller() ? "Texas Hold'em für High Roller – hohe Blinds, große Pots."
                             : "Texas Hold'em gegen andere Spieler – hier zählt nicht nur Glück.",

@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.93** (ungetestet, nicht kompiliert)
+Stand: **v1.94** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -558,6 +558,14 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
 ## Casino fertigstellen (v1.68)
+- [~] **v1.94 Feedback aus dem ersten Test**
+  - [x] Slot-Automaten: Leuchtleisten beim Drehen waren im echten Client texturlos (Gold) bzw. dunkelrot gemustert (Neon) – der Glow-Umriss ersetzte die Textur durch eine flache Farbe. Jetzt schalten die Leisten auf eigene helle Texturen um (`m_hd_gold_lit`, `m_hd_neon_pink_lit`, `m_hd_neon_cyan_lit`)
+  - [x] Blackjack-Hocker: die Fußstütze schwebte vor dem Hocker, jetzt mit einer Strebe fest am Mittelrohr
+  - [x] Casino-Scoreboard: neues Logo – dunkelrotes Schild mit Goldkante liegt ganz hinter „KUBY CASINO“ und umschließt beide Wörter, Kartenfächer dahinter, Chips und Münzen außen (nach der Referenz)
+  - [x] Rundgang ruhiger: Stationen 13 s statt 8 s, Begrüßung und Abschluss länger, Untertitel langsamer; keine harten Schnitte mehr – die Kamera gleitet (zwischen Stationen im Bogen über die Tische, zwischen Vincent und dem Spiel in einer weichen Fahrt)
+  - [~] Vincents Stimme über ElevenLabs (Wiedergabe `kuby:tour.<station>`, Pack-Werkzeug `tools/add_tour_voice.py`); Aufnahmen folgen
+  - [ ] Zwei luxuriöse Piano-Jazz-Tracks
+  - [x] Inventar-Test erwartet in geteilten Welten (wie im CI-Server) keine Lobby-Sperre
 - [x] **v1.93 Fehler: Items hingen im Slot fest** (Bericht des Besitzers: nichts verschieben, droppen oder aus dem Kreativ-Menü nehmen, Items sprangen zurück)
   - [x] Ursache: die Lobby-Sperre in der Hub-Welt brach jeden Inventar-Klick, Drop, Tausch und jedes Aufheben ab – für alle, auch Admins im Kreativmodus (nur der Bearbeitungsmodus war ausgenommen). Teilt sich der Hub die Welt mit einem Spielmodus, war damit der ganze Modus gesperrt
   - [x] Jetzt nie gesperrt: im Kreativmodus, im Bearbeitungsmodus, wenn der Hub die Welt mit einem Modus teilt, oder mit `lobby.inventar-sperre: false`. Admins sehen in der Lobby einen Hinweis, wenn die Sperre greift

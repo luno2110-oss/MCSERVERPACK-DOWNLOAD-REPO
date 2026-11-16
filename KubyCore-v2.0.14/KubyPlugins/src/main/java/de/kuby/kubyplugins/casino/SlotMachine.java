@@ -562,11 +562,17 @@ public final class SlotMachine {
     public void lamps(boolean on) {
         if (center.getWorld() == null) return;
         if (!style.equals("klassik")) {
-            int c = style.equals("gold") ? 0xFFE070 : 0xFF4FA8;
+            // Leuchtleisten: beim Drehen auf die helle Textur (…_lit) umschalten. Früher Glow-Umriss: im echten Client
+            // ersetzte der die Textur durch eine flache Farbe (beim Gold-Automaten texturlos, beim Neon dunkelrot).
             for (ItemDisplay l : lights) {
                 if (!l.isValid()) continue;
-                l.setGlowing(on);
-                l.setGlowColorOverride(org.bukkit.Color.fromRGB(c));
+                l.setGlowing(false);
+                ItemStack it = l.getItemStack();
+                if (it == null || !it.hasItemMeta() || !it.getItemMeta().hasItemModel()) continue;
+                String key = it.getItemMeta().getItemModel().getKey();       // casino/m_hd_gold(_lit)
+                if (!key.startsWith("casino/m_hd_gold") && !key.startsWith("casino/m_hd_neon_")) continue;
+                String base = key.substring("casino/".length()).replace("_lit", "");
+                l.setItemStack(model(on ? base + "_lit" : base));
             }
             return;
         }

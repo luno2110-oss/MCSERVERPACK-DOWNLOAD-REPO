@@ -70,7 +70,11 @@ public final class CasinoTour implements Script {
 
     private static final String WHO = "<#F2C94C>Vincent: <white>";
 
-    static final int INTRO = 150, PER = 160, OUTRO = 110;
+    static final int INTRO = 210, PER = 260, OUTRO = 160;
+    /** Zeitmaß der Stationen: alle Zeitpunkte unten sind für 160 Ticks geschrieben und werden auf PER gestreckt. */
+    private static int st(int t160) {
+        return (int) Math.round(t160 * PER / 160.0);
+    }
     private final V3 start, startDir;
     private final List<Station> stations;
     private final V3 overview;
@@ -133,38 +137,67 @@ public final class CasinoTour implements Script {
         // Vincent kommt auf den Spieler zu und begrüßt ihn
         V3 hostEnd = start.add(startDir.mul(1.6));
         V3 hostStart = hostEnd.add(startDir.mul(2.2)).add(right.mul(0.6));
-        double w = seg(t, 60, 100);
+        double w = seg(t, 90, 140);
         V3 host = hostStart.lerp(hostEnd, Ease.inOutSine(w));
         double hyaw = V3.yawOf(start.sub(host));
         float[] hp = w > 0 && w < 1 ? Rig.walk(t / 18.0) : Rig.stand();
-        if (t >= 104 && t < 130) {
-            double b = Math.sin(seg(t, 104, 130) * Math.PI);
+        if (t >= 146 && t < 176) {
+            double b = Math.sin(seg(t, 146, 176) * Math.PI);
             hp = Rig.set(hp, Rig.TP, (float) (18 * b), Rig.HP, (float) (10 * b), Rig.RSX, -40, Rig.RSZ, 30, Rig.REX, -88);
         }
         Rig.props(fr, "host", "dealer", host, hyaw, hp, 2);
         fr.actor = start;
         fr.actorYaw = V3.yawOf(startDir);
         fr.headYaw = fr.actorYaw;
-        if (t < 60) {
-            // Kranfahrt über das Casino, senkt sich zum Eingang
-            double u = Ease.inOutSine(t / 60.0);
+        if (t < 90) {
+            // Kranfahrt über das Casino, senkt sich zum Eingang (langsam, ohne Schnitt in die Begrüßung)
+            double u = Ease.inOutSine(t / 90.0);
             V3 high = overview.up(9).add(startDir.mul(-6));
             V3 low = start.up(2.6).add(startDir.mul(-3.2)).add(right.mul(1.4));
             fr.cam = high.lerp(low, u);
             fr.look(overview.lerp(start.add(startDir.mul(2)), u).up(1));
-            fr.card = t > 8 && t < 56 ? "KUBY CASINO" : null;
+            fr.card = t > 10 && t < 80 ? "KUBY CASINO" : null;
         } else {
-            fr.cam = start.up(1.7).add(startDir.mul(-1.4)).add(right.mul(0.9));
-            fr.look(host.up(1.45));
-            fr.cut = t == 60;
-            String sub = subAt(t, 96, INTRO, chunks("Willkommen im Kuby Casino!", "Ich bin Vincent – darf ich Sie herumführen?"));
+            // gleitet vom Ende der Kranfahrt in die Begrüßung (vorher harter Schnitt)
+            V3 low = start.up(2.6).add(startDir.mul(-3.2)).add(right.mul(1.4));
+            V3 near = start.up(1.7).add(startDir.mul(-1.4)).add(right.mul(0.9));
+            double g = Ease.inOutSine(seg(t, 90, 125));
+            fr.cam = low.lerp(near, g);
+            fr.look(start.add(startDir.mul(2)).up(1).lerp(host.up(1.45), g));
+            if (t == 130) fr.ev(new Ev.Sound("kuby:tour.intro", 1.0f, 1.0f));
+            String sub = subAt(t, 130, INTRO, chunks("Willkommen im Kuby Casino!", "Ich bin Vincent – darf ich Sie herumführen?"));
             if (sub != null) fr.cardSub = WHO + sub;
         }
         if (t == 0) fr.ev(new Ev.Sound("minecraft:block.note_block.chime", 0.8f, 1.0f));
         // leise Lounge-Musik unter dem ganzen Rundgang (endet mit der Szene)
         if (t == 8) fr.ev(new Ev.Sound("minecraft:music_disc.cat", 0.22f, 1.0f));
-        if (t == 60) fr.ev(new Ev.Sound("minecraft:block.note_block.bell", 0.6f, 1.2f));
+        if (t == 90) fr.ev(new Ev.Sound("minecraft:block.note_block.bell", 0.6f, 1.2f));
         if (w > 0 && w < 1 && t % 7 == 0) fr.ev(new Ev.Sound("minecraft:block.wood.step", 0.3f, 1.0f));
+    }
+
+    /** Kamera der Zweier-Einstellung einer Station (Stelle vorab in der Welt geprüft: nicht in einer Wand). */
+    private V3[] twoShot(int i) {
+        Station s = stations.get(i);
+        V3 f = s.front().flat();
+        V3 r = f.right();
+        V3 spot = s.focus().add(f.mul(s.dist()));
+        V3 host = spot.add(r.mul(0.9)), me = spot.add(r.mul(-0.4));
+        V3 cam = s.twoCam() != null ? s.twoCam() : spot.add(f.mul(2.6)).add(r.mul(2.2)).up(1.75);
+        return new V3[]{cam, host.lerp(me, 0.4).up(1.45).lerp(s.focus().up(1.0), 0.25)};
+    }
+
+    /** Wo die Kamera vor Station i stand (Ende der vorigen Station bzw. der Begrüßung). */
+    private V3[] before(int i) {
+        if (i > 0) return twoShot(i - 1);
+        V3 right = startDir.right();
+        V3 host = start.add(startDir.mul(1.6));
+        return new V3[]{start.up(1.7).add(startDir.mul(-1.4)).add(right.mul(0.9)), host.up(1.45)};
+    }
+
+    private static V3 arc(V3 a, V3 b, double t) {
+        // leichter Bogen nach oben, damit die Fahrt über Tische und Automaten geht statt hindurch
+        double lift = Math.min(3.0, a.dist(b) * 0.25) * Math.sin(t * Math.PI);
+        return a.lerp(b, t).up(lift);
     }
 
     private void station(int u, int i, Frame fr) {
@@ -175,70 +208,94 @@ public final class CasinoTour implements Script {
         V3 hostSpot = spot.add(r.mul(0.9));
         V3 playerSpot = spot.add(r.mul(-0.4));
         // ankommen: beide gehen die letzten Schritte heran
-        double w = seg(u, 0, 34);
+        double w = seg(u, 0, st(34));
         V3 back = f.mul(2.4);
         V3 host = hostSpot.add(back).lerp(hostSpot, Ease.inOutSine(w));
-        V3 me = playerSpot.add(back).lerp(playerSpot, Ease.inOutSine(seg(u, 4, 38)));
+        V3 me = playerSpot.add(back).lerp(playerSpot, Ease.inOutSine(seg(u, st(4), st(38))));
         boolean walking = w > 0 && w < 1;
         double faceStation = V3.yawOf(s.focus().sub(host));
         double faceMe = V3.yawOf(me.sub(host));
-        double hyaw = u < 40 ? faceStation : faceMe + 25;
+        double hyaw = u < st(40) ? faceStation : faceMe + 25;
         float[] hp = walking ? Rig.walk(u / 18.0) : Rig.stand();
-        if (u >= 40 && u < 120) {
-            double a = Math.sin(Math.min(1, seg(u, 40, 58)) * Math.PI / 2) * (u > 100 ? 1 - seg(u, 100, 120) : 1);
+        if (u >= st(40) && u < st(120)) {
+            double a = Math.sin(Math.min(1, seg(u, st(40), st(58))) * Math.PI / 2) * (u > st(100) ? 1 - seg(u, st(100), st(120)) : 1);
             hp = point(hp, host, hyaw, s.focus(), a);
         }
         Rig.props(fr, "host", "dealer", host.up(walking ? Rig.bob(u / 18.0) : 0), hyaw, hp, 2);
         fr.actor = me;
         fr.actorYaw = V3.yawOf(s.focus().sub(me));
-        fr.headYaw = u > 40 && u < 70 ? (float) faceMe : fr.actorYaw;
-        // Kamera
-        if (u < 66 || u >= 124) {
-            // Zweier: schräg von vorn auf Vincent und den Spieler, die Station im Hintergrund (Stelle vorab in der Welt
-            // geprüft: nicht in einer Wand)
-            V3 cam = s.twoCam() != null ? s.twoCam() : spot.add(f.mul(2.6)).add(r.mul(2.2)).up(1.75);
-            fr.cam = cam;
-            fr.look(host.lerp(me, 0.4).up(1.45).lerp(s.focus().up(1.0), 0.25));
-            fr.cut = u == 0 || u == 124;
+        fr.headYaw = u > st(40) && u < st(70) ? (float) faceMe : fr.actorYaw;
+        // Kamera: keine harten Schnitte mehr (im echten Client ruckelte jeder Perspektivwechsel), sondern Fahrten
+        V3[] two = twoShot(i), prev = before(i);
+        V3 bLook = s.brollLook();
+        V3 bCam = s.brollCam().lerp(s.brollCam().lerp(bLook, 0.18), Ease.inOutSine(seg(u, st(78), st(118))));
+        int glideIn = st(42), toB0 = st(62), toB1 = st(82), back0 = st(118), back1 = st(140);
+        if (u < glideIn) {
+            // von der vorigen Station herüber, im Bogen, während die beiden gehen
+            double g = Ease.inOutSine(u / (double) glideIn);
+            fr.cam = arc(prev[0], two[0], g);
+            fr.look(prev[1].lerp(two[1], g));
+        } else if (u < toB0 || u >= back1) {
+            fr.cam = two[0];
+            fr.look(two[1]);
+        } else if (u < toB1) {
+            double g = Ease.inOutSine(seg(u, toB0, toB1));
+            fr.cam = two[0].lerp(bCam, g);
+            fr.look(two[1].lerp(bLook, g));
+        } else if (u < back0) {
+            fr.cam = bCam;
+            fr.look(bLook);
         } else {
-            // Schnitt auf das Geschehen (Dealer, Walzen, Rad, Bildschirm) oder einen Spieler, Vincent spricht weiter
-            double d = seg(u, 66, 124);
-            fr.cam = s.brollCam().lerp(s.brollCam().lerp(s.brollLook(), 0.18), Ease.inOutSine(d));
-            fr.look(s.brollLook());
-            fr.cut = u == 66;
+            double g = Ease.inOutSine(seg(u, back0, back1));
+            fr.cam = bCam.lerp(two[0], g);
+            fr.look(bLook.lerp(two[1], g));
         }
-        // Text
-        String sub = subAt(u, 38, 154, chunks(s.lines()));
+        fr.cut = false;
+        // Text: ruhiger verteilt (langsamere Untertitel)
+        String sub = subAt(u, st(38), st(156), chunks(s.lines()));
         if (sub != null) fr.cardSub = WHO + sub;
         if (u == 4 && s.name() != null) fr.ev(new Ev.Sound("minecraft:block.note_block.pling", 0.4f, 1.5f));
+        // Vincents Stimme (ElevenLabs, im Pack unter kuby:tour.<station>); Untertitel laufen im selben Fenster mit
+        if (u == st(38) && s.name() != null) fr.ev(new Ev.Sound("kuby:tour." + s.name(), 1.0f, 1.0f));
         if (walking && u % 7 == 0) fr.ev(new Ev.Sound("minecraft:block.wood.step", 0.3f, 1.0f));
-        if (u >= 40 && u < 100) fr.card = null;
+        if (u >= st(40) && u < st(100)) fr.card = null;
     }
 
     private void outro(int u, Frame fr, V3 right) {
         V3 host = start.add(startDir.mul(1.6));
         double hyaw = V3.yawOf(start.sub(host));
         float[] hp = Rig.stand();
-        if (u >= 50 && u < 80) {
-            double b = Math.sin(seg(u, 50, 80) * Math.PI);
+        if (u >= 90 && u < 120) {
+            double b = Math.sin(seg(u, 90, 120) * Math.PI);
             hp = Rig.set(hp, Rig.TP, (float) (22 * b), Rig.HP, (float) (12 * b), Rig.RSX, -40, Rig.RSZ, 30, Rig.REX, -88);
         }
         Rig.props(fr, "host", "dealer", host, hyaw, hp, 2);
         fr.actor = start;
         fr.actorYaw = V3.yawOf(startDir);
         fr.headYaw = fr.actorYaw;
-        double d = Ease.outCubic(seg(u, 0, OUTRO));
-        fr.cam = start.up(1.6).add(startDir.mul(-1.3)).add(right.mul(1.2)).lerp(start.up(2.4).add(startDir.mul(-2.6)).add(right.mul(2.0)), d);
-        fr.look(host.up(1.3));
-        fr.cut = u == 0;
-        if (u < 50) {
-            String sub = subAt(u, 0, 50, chunks("Kleiner Tipp: Von 17 bis 22 Uhr ist Goldene Zeit –", "da zählen Gewinne doppelt."));
+        double d = Ease.outCubic(seg(u, 40, OUTRO));
+        V3 a = start.up(1.6).add(startDir.mul(-1.3)).add(right.mul(1.2));
+        V3 cam = a.lerp(start.up(2.4).add(startDir.mul(-2.6)).add(right.mul(2.0)), d);
+        if (!stations.isEmpty() && u < 40) {
+            // zurück zum Eingang gleiten statt schneiden
+            V3[] last = twoShot(stations.size() - 1);
+            double g = Ease.inOutSine(u / 40.0);
+            fr.cam = arc(last[0], a, g);
+            fr.look(last[1].lerp(host.up(1.3), g));
+        } else {
+            fr.cam = cam;
+            fr.look(host.up(1.3));
+        }
+        fr.cut = false;
+        if (u == 20) fr.ev(new Ev.Sound("kuby:tour.outro", 1.0f, 1.0f));
+        if (u < 90) {
+            String sub = subAt(u, 20, 90, chunks("Kleiner Tipp: Von 17 bis 22 Uhr ist Goldene Zeit –", "da zählen Gewinne doppelt."));
             if (sub != null) fr.cardSub = WHO + sub;
-        } else if (u < 96) {
+        } else if (u < 150) {
             fr.card = "VIEL ERFOLG";
             fr.cardSub = "<gray>Rundgang wiederholen: <white>/casino rundgang";
         }
-        if (u == 52) fr.ev(new Ev.Sound("minecraft:ui.toast.challenge_complete", 0.6f, 1.3f));
-        fr.grade = u > 50 ? "gold" : "soft";
+        if (u == 92) fr.ev(new Ev.Sound("minecraft:ui.toast.challenge_complete", 0.6f, 1.3f));
+        fr.grade = u > 90 ? "gold" : "soft";
     }
 }

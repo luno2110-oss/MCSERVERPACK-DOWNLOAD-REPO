@@ -12,7 +12,7 @@ from build_sb_pack import rgb, new, shade, ramp, stamp
 RED = [(0.0, rgb("A81410")), (0.35, rgb("C42A16")), (0.7, rgb("E04C18")), (1.0, rgb("F27A20"))]
 DRED = [(0.0, rgb("3E0604")), (0.5, rgb("5C0C06")), (1.0, rgb("701808"))]
 DECO_EXT = 1          # Deko sitzt innen in den unteren Ecken
-CARD_EXT = 11         # Logo ragt für die Karten 11 px weiter nach oben
+CARD_EXT = 16         # Logo ragt für Karten und Schild 16 px weiter nach oben
 
 
 def band(b, g):
@@ -217,28 +217,82 @@ def coin_stack(n):
     return img
 
 
+def plate(w, h, x0, x1, y0, y1, arch):
+    """Schild hinter dem Schriftzug (wie in der Referenz): oben ein Bogen, unten abgerundet, dunkelrot mit Goldkante.
+    Liegt ganz hinter "KUBY" und "CASINO" und umschließt beide; Licht oben links, Schatten unten rechts kühler."""
+    img = new(w, h)
+    px = img.load()
+    cx = (x0 + x1) / 2
+    half = (x1 - x0) / 2
+
+    def inside(x, y):
+        if x < x0 or x > x1 or y > y1:
+            return False
+        # Bogen oben: Ellipse über die volle Breite, Höhe arch
+        t = (x + 0.5 - cx) / half
+        top = y0 + arch * (1 - math.sqrt(max(0.0, 1 - t * t)))
+        if y + 0.5 < top:
+            return False
+        # untere Ecken abrunden (Radius 3)
+        for ccx in (x0 + 3, x1 - 3):
+            if (x < x0 + 3 or x > x1 - 3) and y > y1 - 3 and math.hypot(x - ccx, y - (y1 - 3)) > 3.3:
+                return False
+        return True
+
+    body = [rgb(c) for c in ("4A0806", "5C0C06", "6E1408", "84200C")]
+    for y in range(h):
+        for x in range(w):
+            if not inside(x, y):
+                continue
+            edge = not all(inside(x + dx, y + dy) for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))
+            edge2 = not all(inside(x + dx, y + dy) for dx in (-2, 0, 2) for dy in (-2, 0, 2))
+            if edge:
+                # Goldkante: oben/links hell, unten/rechts dunkler
+                light = (x - cx) < 0 or y < (y0 + y1) / 2
+                px[x, y] = rgb("F2C23A") if light else rgb("B57E0C")
+            elif edge2:
+                px[x, y] = rgb("2A0402")
+            else:
+                g = (y - y0) / max(1, (y1 - y0))
+                i = 3 if g < 0.18 else 2 if g < 0.45 else 1 if g < 0.8 else 0
+                # schräger Lichtschein oben links
+                if (x - x0) + (y - y0) * 1.5 < 14 and i < 3:
+                    i += 1
+                px[x, y] = body[i]
+    return img
+
+
 def logo():
     w, h = sb.TEX_W, sb.LOGO_H + CARD_EXT
     img = new(w, h)
     top = CARD_EXT                       # Zeile, die beim normalen Logo 0 wäre
     mid = sb.M + sb.FRAME_W // 2
-    # Karten-Fächer (hinter dem Schriftzug)
+    big = sb.block_word("KUBY", sb.BIG, sb.GOLD_PAL)
+    small = sb.block_word("CASINO", SMALL_EXTRA, sb.SILVER_PAL)
+    by = top + sb.ry(0) - big.height + 1
+    sy = top + sb.ry(-2)
+    # Schild: ganz hinter beiden Wörtern, seitlich 6 px Luft, oben ein Bogen bis zwischen die Karten
+    half = max(big.width, small.width) // 2 + 6
+    x0, x1 = mid - half, mid + half - 1
+    y0, y1 = by - 9, sy + small.height + 1
+    img.alpha_composite(outline(plate(w, h, x0, x1, y0, y1, 7)))
+    # Karten-Fächer: steckt hinter dem Schriftzug im Schild, nur die oberen Hälften schauen heraus
     cards = new(w, h)
-    for i, (suit, dx, dy) in enumerate((("club", -21, 3), ("heart", -10, 0), ("spade", 1, 0), ("diamond", 12, 3))):
-        cards.alpha_composite(card(suit), (mid + dx - 1, dy + 1))
+    for suit, dx, dy in (("club", -22, 5), ("heart", -11, 1), ("spade", 0, 0), ("diamond", 11, 1), ("heart", 22, 5)):
+        if abs(dx) == 22 and suit == "heart":
+            suit = "spade"
+        cards.alpha_composite(card(suit), (mid + dx - 5, y0 - 6 + dy))
     img.alpha_composite(outline(cards))
     text = new(w, h)
-    big = sb.block_word("KUBY", sb.BIG, sb.GOLD_PAL)
-    text.alpha_composite(big, (sb.M + (sb.FRAME_W - big.width) // 2, top + sb.ry(0) - big.height + 1))
-    small = sb.block_word("CASINO", SMALL_EXTRA, sb.SILVER_PAL)
-    text.alpha_composite(small, (sb.M + (sb.FRAME_W - small.width) // 2, top + sb.ry(-2)))
-    # Chips und Münzen links und rechts vom Schriftzug
+    text.alpha_composite(big, (sb.M + (sb.FRAME_W - big.width) // 2, by))
+    text.alpha_composite(small, (sb.M + (sb.FRAME_W - small.width) // 2, sy))
+    # Chips und Münzen links und rechts am Schild (vorn, wie in der Referenz)
     deco = new(w, h)
-    y0 = top + sb.ry(0) - 9
-    deco.alpha_composite(chip("1E2A6A", "8CA8F8"), (sb.M + 8, y0 - 2))
-    deco.alpha_composite(coin_stack(3), (sb.M + 15, y0))
-    deco.alpha_composite(chip("1E5A2A", "8CF0A8"), (sb.M + sb.FRAME_W - 15, y0 - 2))
-    deco.alpha_composite(coin_stack(3), (sb.M + sb.FRAME_W - 23, y0))
+    yc = (by + sy + small.height) // 2 - 3
+    deco.alpha_composite(chip("1E2A6A", "8CA8F8"), (x0 - 10, yc - 1))
+    deco.alpha_composite(coin_stack(3), (x0 - 4, yc + 1))
+    deco.alpha_composite(chip("1E5A2A", "8CF0A8"), (x1 + 4, yc - 1))
+    deco.alpha_composite(coin_stack(3), (x1 - 3, yc + 1))
     text.alpha_composite(outline(deco))
     img.alpha_composite(sb.drop_shadow(text))
     img.load()[w - 1, h - 1] = (0, 0, 0, 1)

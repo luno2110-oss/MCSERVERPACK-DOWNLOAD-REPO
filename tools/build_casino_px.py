@@ -254,6 +254,11 @@ MATERIALS = {
     "hd_velvet": lambda: mat_ramp(VELVET), "hd_purple": lambda: mat_ramp(PURPLE),
     "hd_neon_pink": lambda: mat_ramp(NEON_P, True), "hd_neon_cyan": lambda: mat_ramp(NEON_C, True),
     "hd_edge": lambda: _mat(lambda x, y: PAPER[2]),
+    # Leuchtleisten der Slot-Automaten im eingeschalteten Zustand (beim Drehen): hellere Rampe mit fast weißem Kern.
+    # Früher leuchteten sie über den Glow-Umriss, der im echten Client die Textur durch eine flache Farbe ersetzte.
+    "hd_gold_lit": lambda: mat_ramp([rgb(c) for c in ("D9A11A", "F2C23A", "FFE48A", "FFF8DC")], True),
+    "hd_neon_pink_lit": lambda: mat_ramp([rgb(c) for c in ("D0207A", "FF6FB8", "FFC0E0", "FFF2F8")], True),
+    "hd_neon_cyan_lit": lambda: mat_ramp([rgb(c) for c in ("12A8C0", "52EEF6", "C2FAFC", "F2FFFF")], True),
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

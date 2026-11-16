@@ -166,10 +166,16 @@ public final class LoadTestCommand implements CommandExecutor {
         List<String> res = new ArrayList<>();
         boolean ok = true;
         Location surv = plugin.modes().spawnOf("survival"), hub = plugin.modes().spawnOf("hub");
+        // teilt sich der Hub die Welt mit einem Modus (wie hier im Test: alles in "world"), gilt keine Lobby-Sperre
+        String hubWorld = plugin.modes().worldOf("hub");
+        boolean shared = false;
+        var sec = plugin.getConfig().getConfigurationSection("modes");
+        if (sec != null) for (String m : sec.getKeys(false)) if (!m.equals("hub") && hubWorld.equals(plugin.modes().worldOf(m))) shared = true;
         Object[][] cases = {{"Survival-Welt, Survival", surv, org.bukkit.GameMode.SURVIVAL, false},
                 {"Survival-Welt, Kreativ", surv, org.bukkit.GameMode.CREATIVE, false},
                 {"Hub, Kreativ", hub, org.bukkit.GameMode.CREATIVE, false},
-                {"Hub, Survival (Lobby-Sperre)", hub, org.bukkit.GameMode.SURVIVAL, true}};
+                {shared ? "Hub teilt die Welt mit einem Modus, Survival (keine Sperre)" : "Hub, Survival (Lobby-Sperre)", hub,
+                        org.bukkit.GameMode.SURVIVAL, !shared}};
         for (Object[] c : cases) {
             Location at = (Location) c[1];
             if (at == null) {

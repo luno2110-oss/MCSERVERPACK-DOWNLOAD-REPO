@@ -802,8 +802,8 @@
   {
    "type": "bitmap",
    "file": "kubyplugins:sb/logo_casino.png",
-   "height": 43,
-   "ascent": 42,
+   "height": 48,
+   "ascent": 47,
    "chars": [
     "\ue053"
    ]

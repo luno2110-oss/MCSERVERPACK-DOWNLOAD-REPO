@@ -335,8 +335,9 @@ public final class BlackjackTable {
         box(base.clone().add(0, 0.55, 0), ang, 0.54f, 0.03f, 0.54f, "hd_gold");
         box(base.clone().add(0, 0.28, 0), ang + (float) (Math.PI / 4), 0.07f, 0.52f, 0.07f, "hd_gold");
         box(base.clone().add(0, 0.015, 0), ang + (float) (Math.PI / 4), 0.36f, 0.03f, 0.36f, "hd_gold");
-        // Fußring vorn (zum Tisch hin), etwas höher
+        // Fußstütze vorn (zum Tisch hin), mit einer Strebe fest am Mittelrohr (schwebte vorher frei vor dem Hocker)
         box(base.clone().add(-d.x * 0.17, 0.24, -d.z * 0.17), ang, 0.34f, 0.03f, 0.03f, "hd_gold");
+        box(base.clone().add(-d.x * 0.095, 0.24, -d.z * 0.095), ang, 0.03f, 0.03f, 0.16f, "hd_gold");
         base.getWorld().spawn(base.clone(), Interaction.class, e -> {
             e.setInteractionWidth(0.6f);
             e.setInteractionHeight(0.75f);
