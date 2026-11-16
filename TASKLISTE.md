@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.99** (ungetestet, nicht kompiliert)
+Stand: **v2.00** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -558,6 +558,11 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
 ## Casino fertigstellen (v1.68)
+- [x] **v2.00 Roulette-Kessel mit echter Tiefe** (Feedback des Besitzers: „sieht aus wie eine flache Textur“ – stimmte, Kessel und Rotor waren flache Bilder)
+  - [x] Kessel aus 16 3D-Segmenten: erhöhter Holzrand (12 cm über dem Filz) mit schmaler Goldkante innen und außen, dunkle Kugelbahn 22,5° nach innen geneigt, Holzschräge hinunter zum Rotor, acht goldene Rauten als echte Körper auf der Schräge
+  - [x] Rotor in der Mulde: Fächerboden liegt tiefer, außen ein erhöhter Zahlenring mit Goldlippe, innen ein gestufter Holzkegel (drei Sechzehnecke) mit dem Drehkreuz obendrauf – alles ein Modell, das sich als Ganzes dreht
+  - [x] Kugel folgt der Form: rollt oben an der Randwand auf der geneigten Bahn, fällt über Schräge und Rauten nach innen und liegt im vertieften Fach
+  - [x] Gehäuse-Zwölfeck sitzt jetzt unter dem Kessel (sichtbare Holzstufe außen), der alte flache Kessel (rv_bowl) ist aus dem Pack entfernt
 - [x] **v1.99 Cutscenes und Animationen überarbeitet (Ziel des Besitzers: nicht generisch, nicht verklemmt, Figuren gehen mit der Umgebung um)**
   - [x] Geprüft mit einem Kino-Vorschau-Harness (echte Tische + Szene Bild für Bild, tools/preview3d): Rundgang, Jackpot-Szene, Kisten-Szene
   - [x] Rundgang: Vincent und der Spieler drehen sich nicht mehr ruckartig (alle Drehungen weich), Gehen blendet ein und aus, beide atmen und verlagern das Gewicht, Vincent gestikuliert beim Sprechen mit der freien Hand und nickt im Satzrhythmus, zeigt mit Richtung UND Höhe auf das Geschehen (z. B. nach oben auf den Crash-Bildschirm), der Spieler schaut ihn an, wenn er zu reden beginnt, dann dorthin, wohin er zeigt

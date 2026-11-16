@@ -321,6 +321,86 @@ def turret(gold_tex):
     return {"textures": {"t": gold_tex, "particle": gold_tex}, "elements": els}
 
 
+# ---------------------------------------------------------------------------------------------------------------------
+# 3D-Kessel (v2.00, Wunsch des Besitzers: „mehr Tiefe, keine flache Textur“)
+# Maße in Blöcken stehen in RouletteTable.java (Kessel-Konstanten); hier in Modell-Einheiten umgerechnet.
+# ---------------------------------------------------------------------------------------------------------------------
+BOWL_SCALE = 1.5            # Anzeige-Größe eines Kessel-Segments: 16 Einheiten = 1,5 Blöcke
+ROTOR_SCALE = 1.0226        # Rotor: 16 Einheiten = 1,0226 Blöcke (Fächer im Bild bei r 32..42 px von 48)
+
+
+def _el(x0, y0, z0, x1, y1, z1, tex, rot=None):
+    e = box_el(x0, y0, z0, x1, y1, z1, tex)
+    if rot:
+        e["rotation"] = rot
+    return e
+
+
+def bowl_segment(diamond):
+    """Ein Sechzehntel des Kessels, radial entlang +x (Mitte des Modells = Kesselmitte, y 8 = Filzhöhe).
+
+    Von außen nach innen: Holzrand (Wand, an der die Kugel läuft) mit Goldlippe, dunkle Kugelbahn 22,5° nach innen
+    geneigt, Holzschräge (ebenfalls 22,5°) hinunter zum Rotor, auf jedem zweiten Segment eine goldene Raute.
+    """
+    u = 0.09375 * BOWL_SCALE / 1.5          # Blöcke je Einheit
+    y = lambda h: 8 + h / u                 # Höhe über dem Filz -> Modell-y
+    r = lambda b: 8 + b / u                 # Radius -> Modell-x
+    els = [
+        _el(r(0.69), y(-0.04), 8 - 1.65, r(0.75), y(0.15), 8 + 1.65, "#w"),                 # Randwand
+        _el(r(0.684), y(0.15), 8 - 1.6, r(0.70), y(0.158), 8 + 1.6, "#g"),                   # Goldkante innen
+        _el(r(0.744), y(0.15), 8 - 1.72, r(0.756), y(0.156), 8 + 1.72, "#g"),                # Goldkante außen
+        _el(r(0.60), y(0.10) - 0.3, 8 - 1.5, r(0.69), y(0.10), 8 + 1.5, "#d",                 # Kugelbahn
+            {"origin": [r(0.69), y(0.10), 8], "axis": "z", "angle": 22.5}),
+        _el(r(0.484), y(0.0628) - 0.3, 8 - 1.3, r(0.607), y(0.0628), 8 + 1.3, "#w",           # Schräge zum Rotor
+            {"origin": [r(0.607), y(0.0628), 8], "axis": "z", "angle": 22.5}),
+    ]
+    if diamond:
+        c = r(0.55)
+        els.append(_el(c - 0.32, y(0.025), 7.68, c + 0.32, y(0.075), 8.32, "#g",
+                       {"origin": [c, y(0.05), 8], "axis": "y", "angle": 45}))
+    return {"textures": {"w": "kuby:block/casino/hd_walnut", "d": "kuby:block/casino/hd_dark", "g": "kuby:block/casino/hd_gold",
+                         "particle": "kuby:block/casino/hd_walnut"}, "elements": els}
+
+
+def _ring16(r0, r1, y0, y1, tex):
+    """Sechzehneck-Ring aus 16 tangentialen Teilen (Elemente dürfen nur um 0/±22,5/45° drehen)."""
+    out = []
+    half = r1 * math.tan(math.radians(11.25)) * 1.04
+    for k in range(16):
+        q, res = divmod(k, 4)
+        ang = [0, 22.5, 45, -22.5][res]
+        if res == 3:
+            q += 1
+        q %= 4
+        # Teil in Richtung der Quadranten-Achse anlegen, dann um ang drehen
+        if q == 0:
+            box = (8 + r0, y0, 8 - half, 8 + r1, y1, 8 + half)
+        elif q == 1:
+            box = (8 - half, y0, 8 + r0, 8 + half, y1, 8 + r1)
+        elif q == 2:
+            box = (8 - r1, y0, 8 - half, 8 - r0, y1, 8 + half)
+        else:
+            box = (8 - half, y0, 8 - r1, 8 + half, y1, 8 - r0)
+        rot = {"origin": [8, y0, 8], "axis": "y", "angle": ang} if ang else None
+        out.append(_el(*box, tex, rot))
+    return out
+
+
+def rotor3d(tex):
+    """Rotor mit Tiefe: Fächer-Bild als Boden einer Rinne, außen erhöhter Zahlenring mit Goldlippe, innen ein
+    gestufter Holzkegel (drei Sechzehnecke). Mitte = Kesselmitte, y 8 = Fächerboden."""
+    u = 0.0639 * ROTOR_SCALE / 1.0226
+    h = lambda b: 8 + b / u
+    rr = lambda b: b / u
+    els = [{"from": [0, 8, 0], "to": [16, 8.01, 16], "faces": {"up": {"texture": "#top", "uv": [0, 0, 16, 16]}}}]
+    els += _ring16(rr(0.445), rr(0.478), 8, h(0.033), "#w")
+    els += _ring16(rr(0.44), rr(0.482), h(0.033), h(0.042), "#g")
+    for top, rad in ((0.035, 0.33), (0.065, 0.24), (0.09, 0.14)):
+        els += _ring16(0, rr(rad), 8, h(top), "#w")
+    return {"textures": {"top": tex, "w": "kuby:block/casino/hd_walnut", "g": "kuby:block/casino/hd_gold", "particle": tex},
+            "elements": els}
+
+
 def write(out):
     a = os.path.join(out, "assets/kuby")
     tex = os.path.join(a, "textures/block/casino")
@@ -338,12 +418,16 @@ def write(out):
 
     layout().save(os.path.join(tex, "rv_layout.png"))
     rotor().save(os.path.join(tex, "rv_rotor.png"))
-    bowl().save(os.path.join(tex, "rv_bowl.png"))
+    # alter flacher Kessel (bis v1.99) wird nicht mehr gebraucht
+    for old in (os.path.join(tex, "rv_bowl.png"), os.path.join(models, "rv_bowl.json"), os.path.join(items, "rv_bowl.json")):
+        if os.path.exists(old):
+            os.remove(old)
     ball_tex().save(os.path.join(tex, "rv_ball.png"))
     dolly_tex().save(os.path.join(tex, "rv_dolly.png"))
     item("rv_layout", flat(B + "rv_layout"))
-    item("rv_rotor", flat(B + "rv_rotor"))
-    item("rv_bowl", flat(B + "rv_bowl"))
+    item("rv_rotor", rotor3d(B + "rv_rotor"))
+    item("rv_bowlseg", bowl_segment(False))
+    item("rv_bowlseg_d", bowl_segment(True))
     item("rv_turret", turret(B + "hd_gold"))
     item("rv_ball", {"textures": {"t": B + "rv_ball", "particle": B + "rv_ball"}, "elements": [box_el(0, 0, 0, 16, 16, 16)]})
     # Filz um das Tableau (Croupier-Streifen, Kesselseite): einfarbig, gleiche Grundstufe wie das Tableau

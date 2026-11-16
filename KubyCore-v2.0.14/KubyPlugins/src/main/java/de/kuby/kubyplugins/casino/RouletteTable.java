@@ -70,8 +70,14 @@ public final class RouletteTable {
     private static final int Y_ZERO = 2, Y_NUM = 15, Y_COL = Y_NUM + 12 * ROW_H, Y_END = Y_COL + 11;
     private static final double WU = -2.3, WV = 0.0;
     private static final float BOWL = 1.5f, ROTOR = 1.0226f, TURRET = 0.24f, BALL = 0.055f;
-    private static final double H_ROTOR = FELT + 0.055, H_BOWL = FELT + 0.07;
-    private static final double R_TRACK = 0.59, R_POCKET = 0.395;
+    /**
+     * Kessel mit Tiefe (v2.00): Randwand bis FELT + 0,15, Kugelbahn (22,5° nach innen) von r 0,69 auf 0,60,
+     * Schräge hinunter bis r 0,49, Rotor-Fächerboden FELT - 0,01 mit Zahlenring (+0,033) und Kegel (bis +0,09).
+     * Kugel-Mitte: in der Bahn r 0,655 bei FELT + 0,113 (läuft an der Randwand), im Fach r 0,395 knapp über dem Boden.
+     */
+    private static final double H_ROTOR = FELT - 0.01, H_BALL = FELT;
+    private static final double R_TRACK = 0.655, R_POCKET = 0.395;
+    private static final double Y_TRACK = 0.113, Y_POCKET = H_ROTOR - FELT + 0.0225, CONE_TOP = 0.09;
     private static final double CU = -1.25, CV = 1.58;
     private static final float CHIP = 0.21f;
     private static final double RACK_U = 0.15, RACK_V = 0.935;
@@ -290,27 +296,25 @@ public final class RouletteTable {
         slab(-1.52, 2.68, -0.84, -0.83, FELT - 0.002, FELT + 0.03, "hd_gold");
         slab(-1.52, 2.68, 1.04, 1.1, FELT - 0.06, FELT + 0.02, "hd_walnut");
         slab(-1.52, 2.68, 1.04, 1.1, FELT + 0.02, FELT + 0.03, "hd_gold");
-        // --- Kessel: Zwölfeck aus drei gedrehten Quadern, Goldlippe, Kessel-Bild, Rotor, Drehkreuz, Kugel ---
+        // --- Kessel: Gehäuse (Zwölfeck), Kessel aus 16 Segmenten mit Tiefe, Rotor in der Mulde, Drehkreuz, Kugel ---
         Location wc = local(WU, WV, 0);
-        // Gehäuse: zwölf Seitenteile tangential (ein Zwölfeck, keine Sternzacken) und ein Füllstück darunter
-        display(wc.clone().add(0, FELT - 0.04, 0), "m_hd_walnut", base(), new Vector3f(0.84f, 0.16f, 0.84f), "static");
+        // Gehäuse: zwölf Seitenteile tangential und ein Füllstück, Oberkante knapp unter dem Filz (Kessel sitzt darauf)
+        display(wc.clone().add(0, FELT - 0.12, 0), "m_hd_walnut", base(), new Vector3f(0.84f, 0.16f, 0.84f), "static");
         for (int k = 0; k < 12; k++) {
             double a = Math.toRadians(30 * k);
             Vector3f d = rotate(new Vector3f((float) Math.sin(a), 0, (float) -Math.cos(a)));
-            Location at = wc.clone().add(d.x * 0.665, FELT - 0.04, d.z * 0.665);
+            Location at = wc.clone().add(d.x * 0.665, FELT - 0.12, d.z * 0.665);
             display(at, "m_hd_walnut", yawTo(d), new Vector3f(0.44f, 0.16f, 0.27f), "static");
         }
-        for (int k = 0; k < 12; k++) {
-            double a = Math.toRadians(15 + 30 * k);
-            Vector3f d = rotate(new Vector3f((float) Math.sin(a), 0, (float) -Math.cos(a)));
-            Location at = wc.clone().add(d.x * 0.765, H_BOWL + 0.018, d.z * 0.765);
-            display(at, "m_hd_gold", yawTo(d), new Vector3f(0.425f, 0.036f, 0.03f), "static");
+        // Kessel: Randwand mit Goldlippe, geneigte Kugelbahn, Schräge zum Rotor, acht Rauten (jedes zweite Segment)
+        for (int k = 0; k < 16; k++) {
+            Quaternionf q = base().rotateY((float) Math.toRadians(22.5 * k));
+            display(local(WU, WV, FELT), k % 2 == 0 ? "rv_bowlseg_d" : "rv_bowlseg", q, new Vector3f(BOWL, BOWL, BOWL), "static");
         }
-        display(local(WU, WV, H_BOWL), "rv_bowl", pic(), new Vector3f(BOWL, 1f, BOWL), "static");
-        rotor = display(local(WU, WV, H_ROTOR), "rv_rotor", rotorRot(rho), new Vector3f(ROTOR, 1f, ROTOR), "rotor");
-        turret = display(local(WU, WV, H_ROTOR + TURRET * 0.5), "rv_turret", rotorRot(rho),
+        rotor = display(local(WU, WV, H_ROTOR), "rv_rotor", rotorRot(rho), new Vector3f(ROTOR, ROTOR, ROTOR), "rotor");
+        turret = display(local(WU, WV, H_ROTOR + CONE_TOP + TURRET * 0.5), "rv_turret", rotorRot(rho),
                 new Vector3f(TURRET, TURRET, TURRET), "rotor");
-        ball = display(local(WU, WV, H_BOWL), "rv_ball", new Quaternionf(), new Vector3f(BALL, BALL, BALL), "ball");
+        ball = display(local(WU, WV, H_BALL), "rv_ball", new Quaternionf(), new Vector3f(BALL, BALL, BALL), "ball");
         ball.setViewRange(0.5f);
         placeBall(ballOffset(wheelAngle(ballPocket) + rho, R_POCKET, ballLift(false)), 0);
         // --- Croupier mit Chip-Ablage ---
@@ -816,7 +820,7 @@ public final class RouletteTable {
     }
 
     private static double ballLift(boolean onTrack) {
-        return onTrack ? BALL / 2 + 0.002 : H_ROTOR - H_BOWL + BALL / 2 - 0.005;
+        return onTrack ? Y_TRACK : Y_POCKET;
     }
 
     private void placeBall(Vector3f offset, int interp) {
@@ -908,7 +912,7 @@ public final class RouletteTable {
         placeRotor(2);
         if (t < T_LAUNCH) {
             // Croupier nimmt die Kugel aus dem Fach
-            placeBall(new Vector3f(0, -0.2f, 0), 2);
+            placeBall(new Vector3f(0, -0.25f, 0), 2);
         } else if (t <= T_LAND) {
             double s = t - T_LAUNCH;
             double beta = beta0 - kScale * travel(s);
