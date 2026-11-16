@@ -122,7 +122,10 @@ def main():
             "fov:0.0",
             "renderClouds:\"false\"",
             "narrator:0",
-            "soundCategory_master:0.0",
+            "soundCategory_master:0.8",   # Ton für die Videos (virtuelle Soundkarte in der CI)
+            "soundCategory_music:0.0",
+            "soundCategory_ambient:0.2",
+            "soundCategory_weather:0.0",
             "chatOpacity:0.0",
             "chatVisibility:2",
             "showSubtitles:false",

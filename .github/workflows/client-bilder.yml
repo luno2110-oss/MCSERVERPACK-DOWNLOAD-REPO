@@ -37,7 +37,7 @@ jobs:
       - name: Xvfb, Mesa und Werkzeuge
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq xvfb libgl1-mesa-dri libglx-mesa0 mesa-utils imagemagick xdotool \
+          sudo apt-get install -y -qq xvfb libgl1-mesa-dri libglx-mesa0 mesa-utils imagemagick xdotool ffmpeg pulseaudio \
             libxrandr2 libxinerama1 libxcursor1 libxi6 libxxf86vm1 libxtst6 > /dev/null
           pip install -q pillow pyyaml
 
@@ -143,6 +143,13 @@ jobs:
           for i in $(seq 1 300); do grep -q "Done (" server.log && break; kill -0 $PID 2>/dev/null || break; sleep 1; done
           Xvfb :99 -screen 0 1600x900x24 -nolisten tcp > xvfb.log 2>&1 &
           export DISPLAY=:99 LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe
+          # virtuelle Soundkarte: der Client spielt seine Töne hinein, ffmpeg nimmt sie für die Videos auf
+          pulseaudio --start --exit-idle-time=-1 2>/dev/null || pulseaudio -D --exit-idle-time=-1 || true
+          pactl load-module module-null-sink sink_name=rec sink_properties=device.description=rec > /dev/null 2>&1 || true
+          pactl set-default-sink rec 2>/dev/null || true
+          pactl info 2>/dev/null | grep -i "default sink" || echo "kein PulseAudio"
+          clip() { ffmpeg -loglevel error -y -f x11grab -framerate 15 -video_size 1600x900 -i :99 -f pulse -i rec.monitor \
+            -t "$2" -c:v libx264 -preset ultrafast -crf 30 -pix_fmt yuv420p -vf scale=1280:720 -c:a aac -b:a 128k "shots/$1.mp4" > /dev/null 2>&1 & }
           sleep 2
           glxinfo -B 2>/dev/null | grep -E "OpenGL (renderer|core profile version)" || true
           ../client/launch.sh > client.log 2>&1 &
@@ -168,6 +175,7 @@ jobs:
           # Blackjack-Runden vom Platz: Austeilen, Zug, Ergebnis (GEWONNEN/VERLOREN, Serie, Bonus)
           echo "kubytest kamera bj_platz Kamera" >&3
           sleep 4
+          clip video_blackjack 24
           for k in 01 02 03 04 05 06 07 08 09 10; do sleep 2; shot "11_bj_platz_$k"; done
           # Poker nah: Karten auf dem Tisch, Pot, Knöpfe
           echo "kubytest kamera poker_nah Kamera" >&3
@@ -183,9 +191,12 @@ jobs:
           echo "kubytest regeln" >&3
           sleep 6
           echo "kubytest kamera crash Kamera" >&3
+          clip video_crash 20
           for k in 1 2 3 4 5 6; do sleep 3; shot "20_crash_$k"; done
           echo "kubytest kamera slots Kamera" >&3
+          clip video_slots 18
           for k in 1 2 3 4 5 6 7 8; do sleep 2; shot "30_slots_$k"; done
+          sleep 4
           sleep 5
           kill $CPID 2>/dev/null || true
           echo "stop" >&3
@@ -211,6 +222,14 @@ jobs:
               print("- %s: %dx%d, Helligkeit %.0f, Kontrast %.0f" % (os.path.basename(f), im.width, im.height, sum(st.mean) / 3, spread))
               if spread < 4: probs.append("%s ist einfarbig (kein Bild)" % os.path.basename(f))
           if not shots: probs.append("keine Bilder")
+          import subprocess, re as _re
+          for f in sorted(glob.glob("shots/*.mp4")):
+              info = subprocess.run(["ffmpeg", "-hide_banner", "-i", f, "-af", "volumedetect", "-f", "null", "-"], capture_output=True, text=True).stderr
+              dur = _re.search(r"Duration: (\S+),", info)
+              mean = _re.search(r"mean_volume: (\S+) dB", info)
+              peak = _re.search(r"max_volume: (\S+) dB", info)
+              print("- Video %s: Länge %s, Ton Mittel %s dB, Spitze %s dB" % (os.path.basename(f), dur.group(1) if dur else "?",
+                    mean.group(1) if mean else "?", peak.group(1) if peak else "?"))
           log = open("server.log", encoding="utf-8", errors="replace").read()
           if "Kamera" not in log: probs.append("Client ist dem Server nicht beigetreten")
           import re
@@ -238,6 +257,8 @@ jobs:
           gh release view client-bilder -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
             gh release create client-bilder -R "$GITHUB_REPOSITORY" --title "Client-Bilder" --notes "Bilder aus dem echten Minecraft-Client (Vanilla, Xvfb)" --prerelease
           (cd shots 2>/dev/null && zip -q ../client-bilder.zip *.png) || true
+          (cd shots 2>/dev/null && ls *.mp4 >/dev/null 2>&1 && zip -q ../client-videos.zip *.mp4) || true
+          [ -f client-videos.zip ] && gh release upload client-bilder client-videos.zip -R "$GITHUB_REPOSITORY" --clobber || true
           gh release upload client-bilder client.log server.log summary.md problems.txt -R "$GITHUB_REPOSITORY" --clobber
           [ -f client-bilder.zip ] && gh release upload client-bilder client-bilder.zip -R "$GITHUB_REPOSITORY" --clobber || true
           if ! grep -q "keine Probleme" problems.txt; then cat problems.txt; exit 1; fi
