@@ -172,6 +172,10 @@ public final class LoadTestCommand implements CommandExecutor {
                 Player kp = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : sender instanceof Player sp ? sp : null;
                 if (kp != null) cinemaBars(kp, 0, new ArrayList<>());
             }
+            case "crash" -> {
+                Player xp = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : sender instanceof Player sp ? sp : null;
+                if (xp != null) crashShow(xp);
+            }
             case "roulette" -> {
                 // /kubytest roulette <Spieler>: Spieler setzt (Rot + eine Zahl), Countdown springt auf 1 – ein ganzer Wurf
                 Player rp = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : sender instanceof Player sp ? sp : null;
@@ -694,21 +698,7 @@ public final class LoadTestCommand implements CommandExecutor {
         cp.testReset(id);
 
         // --- echte Crash-Runde (Goldene Zeit bleibt aus, damit die Auszahlung genau 100 x Kurs ist) ---
-        Location spawn = plugin.modes().spawnOf("survival");
-        org.bukkit.World w = spawn.getWorld();
-        Location scr;
-        if (camBj != null) {
-            // dunkle Wand hinter dem Bildschirm am Rand des Testgeländes, Bild zeigt zu den Tischen (-z)
-            int bx = camBj.getBlockX(), by = camBj.getBlockY(), bz = camBj.getBlockZ() + 14;
-            for (int x = bx - 4; x <= bx + 4; x++)
-                for (int y = by; y <= by + 5; y++) w.getBlockAt(x, y, bz).setType(org.bukkit.Material.BLACK_CONCRETE, false);
-            scr = new Location(w, bx + 0.5, by + 2.5, bz - 0.01);
-        } else {
-            scr = new Location(w, spawn.getBlockX() + 0.5, w.getHighestBlockYAt(spawn.getBlockX(), spawn.getBlockZ() + 18) + 3.0,
-                    spawn.getBlockZ() + 18.0);
-        }
-        plugin.crash().testScreen(scr, 180f);
-        camCrash = scr;
+        crashScreenForTest();
         plugin.crash().testCrashAt = 8.0;
         long chips0 = plugin.casino().chips(id);
         String bet = plugin.crash().bet(p, 100);
@@ -727,6 +717,52 @@ public final class LoadTestCommand implements CommandExecutor {
             } else if (!samples.isEmpty()) {
                 task.cancel();
                 crashReport(p, samples, cashed[0], cashAt[0], chips0);
+            }
+        }, 1L, 1L);
+    }
+
+    /** Crash-Bildschirm am Rand des Testgeländes (dunkle Wand, Bild zeigt zu den Tischen), Kamera-Punkt merken. */
+    private void crashScreenForTest() {
+        Location spawn = plugin.modes().spawnOf("survival");
+        org.bukkit.World w = spawn.getWorld();
+        Location scr;
+        if (camBj != null) {
+            int bx = camBj.getBlockX(), by = camBj.getBlockY(), bz = camBj.getBlockZ() + 14;
+            for (int x = bx - 4; x <= bx + 4; x++)
+                for (int y = by; y <= by + 5; y++) w.getBlockAt(x, y, bz).setType(org.bukkit.Material.BLACK_CONCRETE, false);
+            scr = new Location(w, bx + 0.5, by + 2.5, bz - 0.01);
+        } else {
+            scr = new Location(w, spawn.getBlockX() + 0.5, w.getHighestBlockYAt(spawn.getBlockX(), spawn.getBlockZ() + 18) + 3.0,
+                    spawn.getBlockZ() + 18.0);
+        }
+        if (camCrash == null || !camCrash.equals(scr)) plugin.crash().testScreen(scr, 180f);
+        camCrash = scr;
+    }
+
+    /**
+     * /kubytest crash &lt;Spieler&gt;: Crash-Runde für die Bilder aus dem echten Client (der Regeltest läuft dort ohne Bots
+     * nicht): Bildschirm aufbauen, Spieler setzt 100, Runde steigt bis x7 und crasht; Kurs jede Sekunde ins Log.
+     */
+    private void crashShow(Player p) {
+        crashScreenForTest();
+        plugin.casino().giveChips(p.getUniqueId(), 5000);
+        plugin.crash().testCrashAt = 7.0;
+        String err = plugin.crash().bet(p, 100);
+        plugin.getLogger().info("[Crash-Test] Einsatz: " + (err == null ? "ok" : err));
+        final int[] t = {0};
+        final double[] last = {0};
+        plugin.getServer().getScheduler().runTaskTimer(plugin, task -> {
+            var ph = plugin.crash().phase();
+            t[0]++;
+            if (ph == de.kuby.kubyplugins.casino.CrashGame.Phase.RUNNING) {
+                last[0] = plugin.crash().current();
+                if (t[0] % 20 == 0) plugin.getLogger().info("[Crash-Test] Kurs x" + de.kuby.kubyplugins.service.CasinoPlay.fmt(last[0]));
+            } else if (last[0] > 0) {
+                task.cancel();
+                plugin.getLogger().info("[Crash-Test] gecrasht bei x" + de.kuby.kubyplugins.service.CasinoPlay.fmt(last[0]));
+            } else if (t[0] > 20 * 60) {
+                task.cancel();
+                plugin.getLogger().info("[Crash-Test] Runde startete nicht");
             }
         }, 1L, 1L);
     }

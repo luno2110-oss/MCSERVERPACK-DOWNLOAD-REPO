@@ -558,6 +558,7 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
 ## Casino fertigstellen (v1.68)
+- [x] **v2.00 CI: Crash im echten Client** – der Regeltest baute den Crash-Bildschirm, lief im Client-Bilder-Test aber ohne Bots nicht an („keine Spieler online“), darum zeigten die Crash-Bilder nur den Spieler. Jetzt `/kubytest crash`: eigener Bildschirm, Kamera-Spieler setzt, Kurs steigt bis x7 und crasht, Kurs jede Sekunde im Log und im Bericht
 - [x] **v2.00 Roulette-Kessel mit echter Tiefe** (Feedback des Besitzers: „sieht aus wie eine flache Textur“ – stimmte, Kessel und Rotor waren flache Bilder)
   - [x] Kessel aus 16 3D-Segmenten: erhöhter Holzrand (12 cm über dem Filz) mit schmaler Goldkante innen und außen, dunkle Kugelbahn 22,5° nach innen geneigt, Holzschräge hinunter zum Rotor, acht goldene Rauten als echte Körper auf der Schräge
   - [x] Rotor in der Mulde: Fächerboden liegt tiefer, außen ein erhöhter Zahlenring mit Goldlippe, innen ein gestufter Holzkegel (drei Sechzehnecke) mit dem Drehkreuz obendrauf – alles ein Modell, das sich als Ganzes dreht

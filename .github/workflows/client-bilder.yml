@@ -207,9 +207,12 @@ jobs:
           echo "kubytest einrichten Kamera" >&3
           sleep 12
           shot "14_casino_eingerichtet"
+          # Crash: eigene Runde für die Bilder (der Regeltest hat hier keine Bots mehr), Kurs bis x7, dann Crash
+          echo "kubytest crash Kamera" >&3
+          sleep 1
           echo "kubytest kamera crash Kamera" >&3
-          clip video_crash 20
-          for k in 1 2 3 4 5 6; do sleep 3; shot "20_crash_$k"; done
+          clip video_crash 30
+          for k in 1 2 3 4 5 6 7 8 9; do sleep 3; shot "20_crash_$k"; done
           echo "kubytest kamera slots Kamera" >&3
           for k in 1 2 3 4 5 6 7 8; do sleep 2; shot "30_slots_$k"; done
           sleep 4
@@ -303,6 +306,10 @@ jobs:
           ein = re.findall(r"\[Einrichten-Test\] (OK|FEHLER) (.*)", log)
           print("- Casino einrichten (Bereich, Spawnpunkt, /casino, Musik): " + ("; ".join(k[0] + " " + k[1] for k in ein) if ein else "nicht gelaufen"))
           if not ein or ein[-1][0] != "OK": probs.append("Casino einrichten: " + (ein[-1][1] if ein else "Test nicht gelaufen"))
+          ck = re.findall(r"\[Crash-Test\] Kurs x([\d,]+)", log)
+          cc = re.findall(r"\[Crash-Test\] (gecrasht bei x[\d,]+|Runde startete nicht|Einsatz: .*)", log)
+          print("- Crash im echten Client: Kurs " + " → ".join(ck[:12]) + "; " + "; ".join(cc))
+          if not any(x.startswith("gecrasht") for x in cc): probs.append("Crash: Runde lief nicht bis zum Crash (" + "; ".join(cc) + ")")
           rl = re.findall(r"\[Roulette-Test\] (.*)", log)
           rk = re.findall(r"\[Roulette\] Kugel liegt auf (\d+)", log)
           print("- Roulette (Las Vegas): " + (rl[-1] if rl else "nicht gelaufen") + "; Kugel lag auf: " + (", ".join(rk) or "-"))
