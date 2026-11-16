@@ -194,9 +194,14 @@ jobs:
           clip video_crash 20
           for k in 1 2 3 4 5 6; do sleep 3; shot "20_crash_$k"; done
           echo "kubytest kamera slots Kamera" >&3
-          clip video_slots 18
           for k in 1 2 3 4 5 6 7 8; do sleep 2; shot "30_slots_$k"; done
           sleep 4
+          # Slot-Video: der Kamera-Spieler zieht dreimal selbst den Hebel (Walzen, Einrasten, ggf. Spannungs-Kamera)
+          echo "kubytest kamera slots Kamera" >&3
+          sleep 3
+          clip video_slots 30
+          for k in 1 2 3; do sleep 1; echo "kubytest dreh Kamera" >&3; sleep 9; done
+          sleep 2
           sleep 5
           kill $CPID 2>/dev/null || true
           echo "stop" >&3

@@ -82,6 +82,18 @@ public final class LoadTestCommand implements CommandExecutor {
             }
             case "casino" -> casino(args.length > 1 ? Integer.parseInt(args[1]) : 100);
             case "regeln" -> rules();
+            case "dreh" -> {
+                // /kubytest dreh <Spieler>: Hebel am Gold-Automaten ziehen (für das Slot-Video im echten Client)
+                Player dp = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : sender instanceof Player sp ? sp : null;
+                if (dp != null) {
+                    if (dp.getGameMode() == org.bukkit.GameMode.SPECTATOR) dp.setGameMode(org.bukkit.GameMode.ADVENTURE);
+                    dp.setAllowFlight(true);
+                    dp.setFlying(true);
+                    plugin.casino().giveChips(dp.getUniqueId(), 10_000);
+                    plugin.casinoPlay().testLog = true;
+                    plugin.getLogger().info("[Kamera] Dreh am Gold-Automaten: " + plugin.slots().testPull(dp, "kgold"));
+                }
+            }
             case "kino" -> {
                 // /kubytest kino <Spieler>: zweimal eine kurze Kino-Szene, Leisten oben vorher/nachher zählen
                 Player kp = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : sender instanceof Player sp ? sp : null;
