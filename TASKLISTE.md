@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.89** (ungetestet, nicht kompiliert)
+Stand: **v1.90** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -558,6 +558,7 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
 ## Casino fertigstellen (v1.68)
+- [x] **v1.90 Rundgang: Schilder an den Blackjack-Tischen** – das Dealer-Schild stand weiter weg als der Kamera-Abstand und hing in v1.89 noch hinter Vincent im Bild; jetzt sind Dealer- und Platz-Schilder an den drei Blackjack-Stationen während des Rundgangs aus
 - [x] **v1.89 Rundgang: Dealer-Schild am Elite-Tisch** – in der Zweier-Einstellung hing „Rechtsklick · Spielen“ noch oben im Bild (galt als Teil der Station); dort werden jetzt alle Schilder in Kameranähe (3,4 Blöcke) ausgeblendet
 - [x] **v1.88 Casino einrichten mit Werkzeugen (`/casino einrichten`)** – im echten Client geprüft: Region 31 x 33, `/casino` bringt zum Spawnpunkt, Musik läuft, Casino-Scoreboard erscheint
   - [x] Ursache für „Scoreboard wechselt nicht“ und „Musik: nicht im Casino“: Musik, Casino-Scoreboard und Rundgang hängen an der Region `casino`; die ließ sich bisher nur im Bearbeitungsmodus anlegen, und der geht nur in der Hub-Welt. Im Survival gab es die Region also nie, `/casino` brachte nur zur Kasse

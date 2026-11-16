@@ -98,6 +98,11 @@ public final class CasinoTourService {
             cams.add(new V3[]{s.brollCam(), s.brollLook()});
             // Zweier-Einstellung zeigt Vincent und den Spieler, keine Schilder: dort alles in Kameranähe ausblenden
             if (s.twoCam() != null) cams.add(new V3[]{s.twoCam(), null});
+            // Blackjack-Tische: Dealer- und Platz-Schilder („Rechtsklick · Spielen“, „Freier Platz“) hängen sonst groß
+            // hinter Vincent im Bild (im echten Client am Elite-Tisch gesehen); der Schnitt zeigt den Dealer selbst
+            if (s.name() != null && java.util.Set.of("blackjack", "highroller", "elite").contains(s.name())) {
+                cams.add(new V3[]{s.brollLook(), null});
+            }
         }
         cams.add(new V3[]{start.up(1.7), null});
         for (org.bukkit.entity.TextDisplay td : p.getWorld().getEntitiesByClass(org.bukkit.entity.TextDisplay.class)) {
