@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.83** (ungetestet, nicht kompiliert)
+Stand: **v1.84** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -558,6 +558,7 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
 ## Casino fertigstellen (v1.68)
+- [x] **v1.84 Blackjack-Ergebnisse in der Höhe gestaffelt**: Nachbarplätze stehen abwechselnd 0,3 Blöcke höher, damit sich die Ergebnisse auch von der Tischmitte aus nicht berühren (im echten Client gesehen)
 - [x] **v1.83 Blackjack-Ergebnisse aufgeräumt (aus den echten Client-Bildern)**
   - [x] Beim Ergebnis überlagerten sich die Texte der Nachbarplätze („ÜBERKAUFT“, „UNENTSCHIEDEN“, „Tester02 +400 Chips“, „-100 … zurück“, „+3 Cashback“): am Platz jetzt nur zwei Zeilen (Ergebnis und Betrag), der schwebende Banner nur noch beim Blackjack und höher über dem Tisch, sonst nur der Gewinn-Ton (Betrag steht ja am Platz); „19 gegen 17“ im Chat
   - [x] Crash im Regeltest prüft die echte Abrechnung der Runde (Einsatz, 100 × Kurs, Auszahlung) statt des Kontostands, den andere Spieler nebenbei ändern
