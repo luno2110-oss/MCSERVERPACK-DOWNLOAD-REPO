@@ -106,6 +106,25 @@ public final class LoadTestCommand implements CommandExecutor {
                     plugin.getLogger().info("[Kamera] Rundgang gestartet: " + ok);
                 }
             }
+            case "modelle" -> {
+                // /kubytest modelle: alle Item-Modelle, die gerade irgendwo angezeigt werden (Tische, Karten, Automaten,
+                // NPC-Figuren, Effekte) – die CI prüft jedes gegen das Pack
+                java.util.TreeSet<String> keys = new java.util.TreeSet<>();
+                int n = 0;
+                for (org.bukkit.World w : Bukkit.getWorlds()) {
+                    for (org.bukkit.entity.ItemDisplay d : w.getEntitiesByClass(org.bukkit.entity.ItemDisplay.class)) {
+                        n++;
+                        var it = d.getItemStack();
+                        if (it != null && it.hasItemMeta() && it.getItemMeta().hasItemModel()) keys.add(it.getItemMeta().getItemModel().toString());
+                    }
+                    for (org.bukkit.entity.Player pl : w.getPlayers()) {
+                        for (var it : pl.getInventory().getContents()) {
+                            if (it != null && it.hasItemMeta() && it.getItemMeta().hasItemModel()) keys.add(it.getItemMeta().getItemModel().toString());
+                        }
+                    }
+                }
+                plugin.getLogger().info("[Modell-Test] " + n + " Anzeigen, " + keys.size() + " Modelle: " + String.join(",", keys));
+            }
             case "inventar" -> {
                 // /kubytest inventar <Spieler>: echte Klick-, Kreativ- und Drop-Events auslösen und prüfen, ob ein Plugin sie
                 // abbricht (Fehlerbericht: Items sprangen in den Slot zurück, nichts ließ sich droppen)

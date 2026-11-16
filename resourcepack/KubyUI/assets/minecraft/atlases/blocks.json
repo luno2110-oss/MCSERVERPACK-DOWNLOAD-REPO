@@ -1,0 +1,14 @@
+{
+ "sources": [
+  {
+   "type": "minecraft:directory",
+   "source": "cine",
+   "prefix": "cine/"
+  },
+  {
+   "type": "minecraft:directory",
+   "source": "fx",
+   "prefix": "fx/"
+  }
+ ]
+}

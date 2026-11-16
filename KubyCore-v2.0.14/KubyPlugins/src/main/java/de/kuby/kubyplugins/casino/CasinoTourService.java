@@ -32,6 +32,15 @@ public final class CasinoTourService {
 
     public CasinoTourService(KubyPlugins plugin) {
         this.plugin = plugin;
+        try (var in = plugin.getResource("casino/tour-voice.txt")) {
+            if (in != null) {
+                for (String l : new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8).split("\\R")) {
+                    if (!l.isBlank()) CasinoTour.VOICES.add(l.trim());
+                }
+            }
+        } catch (IOException ignored) {
+            // ohne Liste: Rundgang ohne Stimme (nur Untertitel)
+        }
         this.file = new File(plugin.getDataFolder(), "casino-tour.yml");
         YamlConfiguration y = YamlConfiguration.loadConfiguration(file);
         for (String s : y.getStringList("gesehen")) {

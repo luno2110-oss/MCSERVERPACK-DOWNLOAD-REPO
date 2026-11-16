@@ -32,6 +32,12 @@ def main():
         print(name, os.path.getsize(dest) // 1024, "KB")
     with open(sj, "w", encoding="utf-8") as fh:
         json.dump(data, fh, indent=1)
+    # Liste für das Plugin: nur diese Stationen bekommen Stimme (sonst „unknown soundEvent“ beim Client)
+    ids = sorted(k[len("tour."):] for k in data if k.startswith("tour."))
+    res = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "KubyCore-v2.0.14", "KubyPlugins", "src", "main",
+                       "resources", "casino", "tour-voice.txt")
+    with open(res, "w", encoding="utf-8") as fh:
+        fh.write("\n".join(ids) + "\n")
 
 
 if __name__ == "__main__":

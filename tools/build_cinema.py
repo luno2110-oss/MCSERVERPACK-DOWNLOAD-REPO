@@ -643,11 +643,30 @@ def build_fonts():
     write("font/cine_card.json", {"providers": card})
 
 
+def build_atlas():
+    """Texturen der Kino- und Effekt-Modelle liegen in textures/cine und textures/fx. Minecraft nimmt für Modelle nur
+    block/ und item/ in den Block-Atlas auf; ohne diese Quellen erschienen Schwert, Stein, Strahlen, Ringe und Wolken im
+    echten Client als lila-schwarze „fehlende Textur“ (Client-Log: „Missing textures in model kuby:fx/…“)."""
+    path = os.path.join(OUT, "assets/minecraft/atlases/blocks.json")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    data = {"sources": []}
+    if os.path.exists(path):
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+    have = {(s.get("type"), s.get("source")) for s in data.get("sources", [])}
+    for d in ("cine", "fx"):
+        if ("minecraft:directory", d) not in have and ("directory", d) not in have:
+            data["sources"].append({"type": "minecraft:directory", "source": d, "prefix": d + "/"})
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=1)
+
+
 def main():
     build_fonts()
     icon = build_sword()
     build_stone()
     build_fx()
+    build_atlas()
     print("Kino-Grafik ok:", OUT)
     return icon
 

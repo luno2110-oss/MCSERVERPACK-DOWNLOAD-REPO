@@ -70,6 +70,13 @@ public final class CasinoTour implements Script {
 
     private static final String WHO = "<#F2C94C>Vincent: <white>";
 
+    /** Stationen mit Sprachaufnahme im Pack (casino/tour-voice.txt, von tools/add_tour_voice.py geschrieben). */
+    public static final java.util.Set<String> VOICES = new java.util.HashSet<>();
+
+    private static Ev.Sound voice(String id) {
+        return VOICES.contains(id) ? new Ev.Sound("kuby:tour." + id, 1.0f, 1.0f) : null;
+    }
+
     static final int INTRO = 210, PER = 260, OUTRO = 160;
     /** Zeitmaß der Stationen: alle Zeitpunkte unten sind für 160 Ticks geschrieben und werden auf PER gestreckt. */
     private static int st(int t160) {
@@ -164,7 +171,7 @@ public final class CasinoTour implements Script {
             double g = Ease.inOutSine(seg(t, 90, 125));
             fr.cam = low.lerp(near, g);
             fr.look(start.add(startDir.mul(2)).up(1).lerp(host.up(1.45), g));
-            if (t == 130) fr.ev(new Ev.Sound("kuby:tour.intro", 1.0f, 1.0f));
+            if (t == 130 && voice("intro") != null) fr.ev(voice("intro"));
             String sub = subAt(t, 130, INTRO, chunks("Willkommen im Kuby Casino!", "Ich bin Vincent – darf ich Sie herumführen?"));
             if (sub != null) fr.cardSub = WHO + sub;
         }
@@ -256,7 +263,7 @@ public final class CasinoTour implements Script {
         if (sub != null) fr.cardSub = WHO + sub;
         if (u == 4 && s.name() != null) fr.ev(new Ev.Sound("minecraft:block.note_block.pling", 0.4f, 1.5f));
         // Vincents Stimme (ElevenLabs, im Pack unter kuby:tour.<station>); Untertitel laufen im selben Fenster mit
-        if (u == st(38) && s.name() != null) fr.ev(new Ev.Sound("kuby:tour." + s.name(), 1.0f, 1.0f));
+        if (u == st(38) && s.name() != null && voice(s.name()) != null) fr.ev(voice(s.name()));
         if (walking && u % 7 == 0) fr.ev(new Ev.Sound("minecraft:block.wood.step", 0.3f, 1.0f));
         if (u >= st(40) && u < st(100)) fr.card = null;
     }
@@ -287,7 +294,7 @@ public final class CasinoTour implements Script {
             fr.look(host.up(1.3));
         }
         fr.cut = false;
-        if (u == 20) fr.ev(new Ev.Sound("kuby:tour.outro", 1.0f, 1.0f));
+        if (u == 20 && voice("outro") != null) fr.ev(voice("outro"));
         if (u < 90) {
             String sub = subAt(u, 20, 90, chunks("Kleiner Tipp: Von 17 bis 22 Uhr ist Goldene Zeit –", "da zählen Gewinne doppelt."));
             if (sub != null) fr.cardSub = WHO + sub;

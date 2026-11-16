@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.96** (ungetestet, nicht kompiliert)
+Stand: **v1.97** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -558,6 +558,11 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
 ## Casino fertigstellen (v1.68)
+- [~] **v1.97 Casino-Prüfung: fehlende Dateien, Bugs, Exploits (Ziel des Besitzers, läuft)**
+  - [x] Fehlende Texturen: der echte Client meldete 25 Modelle ohne Textur (Schwert, Stein, Strahlen, Ringe, Wolken, Kuppeln der Kino-Szenen). Ursache: Texturen in textures/fx und textures/cine stehen nicht im Block-Atlas (Minecraft nimmt nur block/ und item/ auf) – jetzt `assets/minecraft/atlases/blocks.json` mit beiden Ordnern (tools/build_cinema.py)
+  - [x] Rundgang fordert nur Sprachaufnahmen an, die im Pack liegen (casino/tour-voice.txt aus tools/add_tour_voice.py); vorher „unknown soundEvent kuby:tour.*“ im Client
+  - [x] CI „Client-Bilder“: `/kubytest modelle` sammelt jedes angezeigte Item-Modell und gleicht es mit dem Pack ab; dazu werden „Missing textures“ und „unknown soundEvent“ aus dem Client-Log als Fehler gewertet
+- [x] **v1.96 Bedrock-CI belegt**: 120 Kamera-Befehle beim Bedrock-Client während einer Kino-Szene (2× zurückgesetzt), kein roher MiniMessage-Text, keine Kästchen; Diagnose erkennt GeyserDisplayEntity und beide Packs
 - [~] **v1.96 Bedrock: Test auf einem echten Gerät (Video des Besitzers)**
   - [x] Gesehen: Casino-Modelle (Tische, Dealer, Hocker, Karten, Automaten-Gehäuse) unsichtbar, nur echte Blöcke und Schriften; Rundgang ohne Kamera (Spieler von hinten), Kästchen oben und über der Hotbar, roher Text „<hover:show_teXt…>“ im Chat
   - [x] Hover-Fehler: die Bedrock-Umwandlung der Kapitälchen machte aus jedem „x“ ein „X“ (show_text → show_teXt) und zerbrach alle Hover-Tags. Jetzt bleiben Tags unberührt und x nur zwischen Kapitälchen
