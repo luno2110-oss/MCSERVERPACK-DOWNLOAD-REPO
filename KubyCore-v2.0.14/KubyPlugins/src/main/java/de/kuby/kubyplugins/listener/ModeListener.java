@@ -72,6 +72,17 @@ public final class ModeListener implements Listener {
     public void onJoin(PlayerJoinEvent e) {
         plugin.modes().onJoin(e.getPlayer());
         plugin.markers().applyVisibility(e.getPlayer());
+        // Admins (Java oder Bedrock): fehlt etwas für Bedrock-3D-Modelle, sofort sagen statt still unsichtbar
+        Player p = e.getPlayer();
+        if (p.hasPermission("kuby.admin")) {
+            plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                if (!p.isOnline()) return;
+                java.util.List<String> probs = new java.util.ArrayList<>();
+                de.kuby.kubyplugins.bedrock.Bedrock.diagnose(probs);
+                if (probs.isEmpty() || !org.bukkit.Bukkit.getPluginManager().isPluginEnabled("Geyser-Spigot")) return;
+                de.kuby.kubyplugins.util.Msg.send(p, "<gold>Bedrock:</gold> <gray>" + probs.size() + " Punkt(e) fehlen für 3D-Modelle – <click:run_command:'/kp bedrock'><white>[/kp bedrock]</white></click>");
+            }, 120L);
+        }
     }
 
     /** MONITOR: erst speichern, wenn alle anderen Plugins fertig sind (z. B. Kampf-Logout leert das Inventar,

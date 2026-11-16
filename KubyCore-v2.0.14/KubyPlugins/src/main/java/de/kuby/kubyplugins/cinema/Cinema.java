@@ -160,6 +160,8 @@ public final class Cinema implements Listener {
         int flashUntil;
         String hand;
         boolean crouch, raise, glow, hidden;
+        /** Bedrock: kein Zuschauer-Ziel, keine Java-Grafikschrift; Kamera über Geyser oder Teleport. */
+        boolean bedrock;
 
         Run(Player p, Script s, Options o) {
             this.p = p;
@@ -176,6 +178,7 @@ public final class Cinema implements Listener {
     public boolean play(Player p, Script s, Options o) {
         if (runs.containsKey(p.getUniqueId()) || !p.isOnline()) return false;
         Run r = new Run(p, s, o);
+        r.bedrock = de.kuby.kubyplugins.bedrock.Bedrock.is(p);
         r.mode = p.getGameMode();
         r.back = p.getLocation();
         r.allowFlight = p.getAllowFlight();
@@ -196,11 +199,11 @@ public final class Cinema implements Listener {
         });
         p.showEntity(plugin, r.cam);
         for (Entity e : o.shared) if (e != null && e.isValid()) p.hideEntity(plugin, e);
-        // schwarz, solange der Wechsel in die Kamera läuft
-        p.showTitle(Title.title(flashComp(0), Component.empty(), Title.Times.times(Duration.ZERO, Duration.ofMillis(400), Duration.ZERO)));
+        // schwarz, solange der Wechsel in die Kamera läuft (Bedrock kennt die Grafikschrift nicht: dort ohne)
+        if (!r.bedrock) p.showTitle(Title.title(flashComp(0), Component.empty(), Title.Times.times(Duration.ZERO, Duration.ofMillis(400), Duration.ZERO)));
         for (BossBar b : p.activeBossBars()) r.hiddenBars.add(b);
         for (BossBar b : r.hiddenBars) p.hideBossBar(b);
-        p.showBossBar(r.top);
+        if (!r.bedrock) p.showBossBar(r.top);
         p.setGameMode(GameMode.SPECTATOR);
         p.teleport(cl);
         return true;
@@ -222,6 +225,7 @@ public final class Cinema implements Listener {
         cleanup(r);
         // offline: der gespeicherte Stand (PDC) setzt beim nächsten Login zurück
         if (p.isOnline()) {
+            if (r.bedrock) de.kuby.kubyplugins.bedrock.BedrockCamera.clear(p.getUniqueId());
             p.setSpectatorTarget(null);
             p.setGameMode(r.mode);
             Location end = res == Result.DONE && r.o.endAt != null ? r.o.endAt : r.back;
@@ -285,7 +289,7 @@ public final class Cinema implements Listener {
             return;
         }
         if (r.t < 0) {
-            if (r.t == -1) p.setSpectatorTarget(r.cam);
+            if (r.t == -1 && !r.bedrock) p.setSpectatorTarget(r.cam);
             r.t++;
             return;
         }
@@ -310,7 +314,7 @@ public final class Cinema implements Listener {
             r.cam.setTeleportDuration(dur);
             r.camDur = dur;
         }
-        if (p.getSpectatorTarget() == null || !p.getSpectatorTarget().equals(r.cam)) p.setSpectatorTarget(r.cam);
+        if (!r.bedrock && (p.getSpectatorTarget() == null || !p.getSpectatorTarget().equals(r.cam))) p.setSpectatorTarget(r.cam);
         r.t++;
     }
 
@@ -320,6 +324,7 @@ public final class Cinema implements Listener {
 
     private void apply(Run r, Frame f) {
         r.cam.teleport(loc(r, f.cam, f.camYaw, f.camPitch));
+        if (r.bedrock) bedrockCamera(r, f);
         actor(r, f);
         props(r, f.props);
         for (Object e : f.events) event(r, e);
@@ -529,6 +534,9 @@ public final class Cinema implements Listener {
                     s.pos().x(), s.pos().y(), s.pos().z());
             case Ev.Silence s -> p.stopSound(SoundStop.source(Sound.Source.MASTER));
             case Ev.Particle pa -> particle(p, pa);
+            case Ev.Flash fl when r.bedrock -> {
+                // Bedrock: Blitzbild braucht die Kino-Schrift, also weglassen
+            }
             case Ev.Flash fl -> {
                 p.showTitle(Title.title(flashComp(fl.rgb()), Component.empty(), Title.Times.times(Duration.ofMillis(fl.in() * 50L),
                         Duration.ofMillis(fl.stay() * 50L), Duration.ofMillis(fl.out() * 50L))));
@@ -666,8 +674,37 @@ public final class Cinema implements Listener {
         return glyph(FLASH, FLASH_ADV, FONT, rgb);
     }
 
+    /**
+     * Bedrock: Kamera über Geyser setzen (weich, 0,15 s); geht das nicht, den Spieler (Zuschauer) selbst an die Kamera
+     * teleportieren. Der Spieler bleibt dabei in der Nähe, damit die Welt um die Kamera geladen ist.
+     */
+    private void bedrockCamera(Run r, Frame f) {
+        Player p = r.p;
+        boolean cut = f.cut;
+        boolean ok = de.kuby.kubyplugins.bedrock.BedrockCamera.set(p.getUniqueId(), f.cam.x(), f.cam.y(), f.cam.z(), f.camYaw, f.camPitch,
+                cut ? 0f : 0.15f);
+        Location at = loc(r, f.cam, f.camYaw, f.camPitch);
+        if (!ok) {
+            p.teleport(at);
+        } else if (r.t % 20 == 0 && (!p.getWorld().equals(at.getWorld()) || p.getLocation().distanceSquared(at) > 64)) {
+            p.teleport(at.clone().add(0, -1.6, 0));
+        }
+    }
+
     private void overlay(Run r, Frame f) {
         Player p = r.p;
+        if (r.bedrock) {
+            // ohne Kino-Schrift: Titelkarte als normaler Titel, Untertitel als Untertitel-Zeile
+            if (!Objects.equals(f.card, r.card) || !Objects.equals(f.cardSub, r.cardSub)) {
+                r.card = f.card;
+                r.cardSub = f.cardSub;
+                if (f.card == null && f.cardSub == null) p.clearTitle();
+                else p.showTitle(Title.title(f.card == null ? Component.empty() : Component.text(f.card, NamedTextColor.GOLD),
+                        f.cardSub == null ? Component.empty() : Msg.parse(f.cardSub),
+                        Title.Times.times(Duration.ofMillis(300), Duration.ofSeconds(60), Duration.ofMillis(300))));
+            }
+            return;
+        }
         int level = (int) Math.round(Ease.clamp01(f.bars) * 4);
         boolean dirty = false;
         if (level != r.barLevel) {

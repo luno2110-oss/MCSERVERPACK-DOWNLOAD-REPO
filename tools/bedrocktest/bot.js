@@ -10,7 +10,8 @@ const HOST = process.env.HOST || '127.0.0.1';
 const PORT = +(process.env.PORT || 19132);
 const VERSION = process.env.VERSION || '1.26.60';
 const DURATION = +(process.env.DURATION || 90) * 1000;
-const COMMANDS = ['/menu', '/feedback', '/shop', '/settings', '/freunde', '/feedback', '/support', '/menu', '/modus survival', '/angeln'];
+const COMMANDS = ['/menu', '/feedback', '/shop', '/settings', '/freunde', '/feedback', '/support', '/menu', '/modus survival', '/angeln',
+  '/poker'];
 
 const PACK_UUID = (process.env.PACK_UUID || '').toLowerCase();
 // bedrock-protocol liest die UUID im Pack-Info-Paket als zwei Little-Endian-Hälften: dieselbe UUID in dieser Schreibweise
@@ -24,7 +25,8 @@ function swapped(u) {
 const PACK_UUID_WIRE = PACK_UUID ? swapped(PACK_UUID) : '';
 const res = { pack: { offered: false, requested: false, chunks: 0, chunkCount: 0, size: 0, sha256ok: null, saved: null },
   version: VERSION, joined: false, spawned: false, packs: [], forms: [], clicks: 0, commands: [], chat: [],
-  sidebarTitle: null, sidebarLines: [], errors: [], disconnect: null, schema: {}, entityTypes: {}, displays: [], displayItems: {} };
+  sidebarTitle: null, sidebarLines: [], errors: [], disconnect: null, schema: {}, entityTypes: {}, displays: [], displayItems: {},
+  camera: 0, cameraClear: 0, rawTags: [], boxChars: [] };
 const start = Date.now();
 const log = (...a) => console.log(`[${((Date.now() - start) / 1000).toFixed(1).padStart(5)}s]`, ...a);
 
@@ -231,8 +233,22 @@ client.on('set_display_objective', (p) => {
 client.on('set_score', (p) => {
   for (const e of p.entries || []) if (e.custom_name && res.sidebarLines.length < 40) res.sidebarLines.push(e.custom_name);
 });
+// Kino-Szenen auf Bedrock: Kamera-Befehle (Geyser-Kamera) zählen
+client.on('camera_instruction', (p) => {
+  if (p && (p.clear === true || (p.instruction_set === undefined && p.clear))) res.cameraClear++;
+  else res.camera++;
+});
+// sichtbarer Text: keine rohen MiniMessage-Tags, keine Java-Grafikzeichen (Kino-Schrift E1xx/E2xx = Kästchen)
+function checkText(where, m) {
+  if (/<(hover|click|gradient|color|#[0-9a-f]{6})[:>]/i.test(m) && res.rawTags.length < 10) res.rawTags.push(where + ': ' + m.slice(0, 160));
+  const bad = [...m].filter((ch) => { const c = ch.codePointAt(0); return c >= 0xE000 && c < 0xE300; });
+  if (bad.length && res.boxChars.length < 10) res.boxChars.push(where + ': ' + bad.slice(0, 4).map((c) => c.codePointAt(0).toString(16)).join(','));
+}
+client.on('set_title', (p) => checkText('Titel', String(p.text || '')));
+client.on('boss_event', (p) => { if (p.title) checkText('Bossleiste', String(p.title)); });
 client.on('text', (p) => {
   const m = p.message || '';
+  checkText('Chat/' + (p.type || ''), m);
   if (res.chat.length < 60) res.chat.push(m.slice(0, 200));
   if (/error|fehler|exception/i.test(m)) log('Chat:', m.slice(0, 160));
 });

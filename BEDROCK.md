@@ -62,7 +62,12 @@ ViaVersion 5.12.2 auf unserem Paper-1.21.11-Server. Den aktuellen Stand zeigt au
    - nach dem ersten Start in `plugins/Geyser-Spigot/extensions/geyserdisplayentity/config.yml`:
      `hide-unmapped-vanilla-displays: false` (sonst bleiben Anzeigen mit normalen Items unsichtbar). `y-offset: -0.5`
      so lassen, unsere Modelle sind darauf gerechnet.
-   - Ohne die Erweiterung läuft alles weiter, Bedrock-Spieler sehen dann nur die Texte und Figuren der Tische.
+   - Ohne die Erweiterung läuft alles weiter, Bedrock-Spieler sehen dann aber **keine 3D-Modelle** (Tische, Karten,
+     Chips, Automaten, Keks, Möbel), nur Texte und echte Blöcke – so im ersten Test auf einem echten Gerät gesehen.
+   - Prüfen: `/kp bedrock` (oder das Server-Log beim Start, Zeilen „[Bedrock]“) zeigt geladene Geyser-Erweiterungen,
+     Packs und Mappings und nennt, was fehlt. Admins bekommen beim Beitreten einen Hinweis, wenn etwas fehlt.
+   - Geyser auf einem Proxy (Velocity/BungeeCord): Erweiterung, Packs und Mappings gehören dann in den Geyser-Ordner
+     des Proxys.
 5. Server neu starten. Im Log: Geyser lädt das Pack und die Items („custom items“). Bedrock-Spieler laden das Pack beim
    ersten Beitreten (ca. 6 MB).
 6. Bedrock-Spieler heißen auf dem Server mit Punkt davor (`.Name`, Floodgate-Standard). Rechte, Ränge und Befehle mit

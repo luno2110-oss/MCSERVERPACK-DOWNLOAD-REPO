@@ -85,6 +85,13 @@ public final class KpCommand implements CommandExecutor {
                 if (err != null) Msg.send(p, "<red>" + err);
             }
             case "region" -> region(p, args);
+            case "bedrock" -> {
+                // Einrichtung für Bedrock prüfen (3D-Modelle brauchen GeyserDisplayEntity samt Pack)
+                java.util.List<String> probs = new java.util.ArrayList<>();
+                for (String l : de.kuby.kubyplugins.bedrock.Bedrock.diagnose(probs)) Msg.send(p, "<gray>" + Msg.escape(l));
+                if (probs.isEmpty()) Msg.send(p, "<green>Bedrock-Einrichtung vollständig.");
+                for (String l : probs) Msg.send(p, "<red>✘ " + Msg.escape(l));
+            }
             case "shop" -> {
                 if (args.length >= 3 && args[1].equalsIgnoreCase("editor")) {
                     String m = args[2].toLowerCase(Locale.ROOT);
@@ -181,6 +188,7 @@ public final class KpCommand implements CommandExecutor {
         Msg.send(p, "<gray>/kp module list <dark_gray>- <gray>Installierte Module");
         Msg.send(p, "<gray>/kp module store download <id> <quelle> <dark_gray>- <gray>Modul laden");
         Msg.send(p, "<gray>/kp edit <dark_gray>- <gray>Bearbeitungsmodus starten");
+        Msg.send(p, "<gray>/kp bedrock <dark_gray>- <gray>Bedrock-Einrichtung prüfen (3D-Modelle, Pack, Mappings)");
         Msg.send(p, "<gray>/kp region create|delete|list <dark_gray>- <gray>Schutzbereiche verwalten");
         Msg.send(p, "<gray>/kp hub editor <dark_gray>- <gray>Hub-Einstellungen");
         Msg.send(p, "<gray>/kp angel pos|zone ... <dark_gray>- <gray>Angelzonen verwalten");

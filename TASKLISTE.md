@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.95** (ungetestet, nicht kompiliert)
+Stand: **v1.96** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -558,6 +558,13 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
 ## Casino fertigstellen (v1.68)
+- [~] **v1.96 Bedrock: Test auf einem echten Gerät (Video des Besitzers)**
+  - [x] Gesehen: Casino-Modelle (Tische, Dealer, Hocker, Karten, Automaten-Gehäuse) unsichtbar, nur echte Blöcke und Schriften; Rundgang ohne Kamera (Spieler von hinten), Kästchen oben und über der Hotbar, roher Text „<hover:show_teXt…>“ im Chat
+  - [x] Hover-Fehler: die Bedrock-Umwandlung der Kapitälchen machte aus jedem „x“ ein „X“ (show_text → show_teXt) und zerbrach alle Hover-Tags. Jetzt bleiben Tags unberührt und x nur zwischen Kapitälchen
+  - [x] Kino-Szenen auf Bedrock: Kamera über die Geyser-Kamera (Position und Blick mit weichem Übergang, am Ende zurück), sonst Teleport des Zuschauers; keine Kino-Grafikschrift (Balken, Blitzbilder) – Titel und Untertitel als normaler Text
+  - [x] Diagnose: beim Start und für Admins beim Beitreten wird geprüft, ob GeyserDisplayEntity samt Pack, KubyBedrock.mcpack und KubyBedrock-Items.json da sind (ohne GeyserDisplayEntity zeigt Bedrock keine Item-Anzeigen, also keine 3D-Modelle); `/kp bedrock` zeigt den Stand
+  - [x] Bedrock-CI zählt jetzt Kamera-Befehle bei einer Kino-Szene und schlägt an bei rohem MiniMessage-Text und Java-Grafikzeichen (Kästchen) in Chat, Titel und Bossleiste
+  - [ ] Besitzer: GeyserDisplayEntity + GeyserDisplayEntityPack.mcpack auf dem Server prüfen (`/kp bedrock`), dann Gerät erneut testen
 - [~] **v1.94–v1.95 Feedback aus dem ersten Test**
   - [x] Slot-Automaten: Leuchtleisten beim Drehen waren im echten Client texturlos (Gold) bzw. dunkelrot gemustert (Neon) – der Glow-Umriss ersetzte die Textur durch eine flache Farbe. Jetzt schalten die Leisten auf eigene helle Texturen um (`m_hd_gold_lit`, `m_hd_neon_pink_lit`, `m_hd_neon_cyan_lit`)
   - [x] Blackjack-Hocker: die Fußstütze schwebte vor dem Hocker, jetzt mit einer Strebe fest am Mittelrohr

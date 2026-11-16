@@ -26,4 +26,20 @@ final class GeyserBridge {
         Method m = api.getClass().getMethod("sendForm", UUID.class, formClass);
         return (Boolean) m.invoke(api, id, form);
     }
+
+    /** Namen der geladenen Geyser-Erweiterungen (z. B. GeyserDisplayEntity). */
+    static java.util.List<String> extensions() throws Exception {
+        Object api = api();
+        Object em = api.getClass().getMethod("extensionManager").invoke(api);
+        java.util.Collection<?> all = (java.util.Collection<?>) em.getClass().getMethod("extensions").invoke(em);
+        java.util.List<String> out = new java.util.ArrayList<>();
+        for (Object e : all) {
+            try {
+                out.add(String.valueOf(e.getClass().getMethod("name").invoke(e)));
+            } catch (ReflectiveOperationException ex) {
+                out.add(e.getClass().getSimpleName());
+            }
+        }
+        return out;
+    }
 }

@@ -126,7 +126,7 @@ jobs:
       - name: Server starten, Bedrock-Client spielen lassen
         working-directory: server
         env:
-          DURATION: '100'
+          DURATION: '130'
         run: |
           mkfifo console
           # Geyser: RakNet (Port 19132, für den Test-Client) und NetherNet (19133) zugleich
@@ -144,6 +144,8 @@ jobs:
           # UUID unseres Packs (der Client lädt genau dieses wie ein Gerät herunter)
           export PACK_UUID=$(unzip -p kuby/KubyBedrock.mcpack manifest.json | python3 -c "import json,sys;print(json.load(sys.stdin)['header']['uuid'])")
           echo "Pack-UUID $PACK_UUID"
+          # Kino-Szene für den Bedrock-Client (Kamera über Geyser, Untertitel ohne Grafikschrift)
+          (sleep 70; echo "kubytest kino .KubyBedrock" >&3) &
           (cd ../tools/bedrocktest && node bot.js > ../../server/bot.log 2>&1) || true
           cp ../tools/bedrocktest/bedrock-result.json . || echo '{}' > bedrock-result.json
           cp ../tools/bedrocktest/downloaded.mcpack . || touch downloaded.mcpack
@@ -168,8 +170,15 @@ jobs:
           if not r.get("spawned"): probs.append("Bedrock-Client nicht gespawnt (%s)" % (r.get("disconnect") or "; ".join(r.get("errors", [])[:3])))
           if r.get("spawned") and len(simple) < 2: probs.append("Zu wenige Kuby-Formulare (%d)" % len(simple))
           if simple and imgs == 0: probs.append("Formulare ohne Bilder")
+          # Kino auf Bedrock: Geyser-Kamera muss Befehle schicken; kein roher MiniMessage-Text, keine Kästchen-Zeichen
+          kino = re.findall(r"\[Kino-Test\] (OK|FEHLER)", log)
+          print_cam = "Kamera-Befehle beim Bedrock-Client: %d (zurückgesetzt: %d)%s" % (r.get("camera", 0), r.get("cameraClear", 0), "" if kino else " – Kino-Test lief nicht")
+          if kino and r.get("camera", 0) == 0: probs.append("Bedrock-Kino: keine Kamera-Befehle angekommen (Geyser-Kamera)")
+          for t in r.get("rawTags", []): probs.append("Roher MiniMessage-Text beim Bedrock-Client: " + t)
+          for t in r.get("boxChars", []): probs.append("Java-Grafikzeichen (Kästchen) beim Bedrock-Client: " + t)
           probs += ["Log: " + l[:250] for l in exc[:30]]
           print("## Bedrock-Test (Bedrock %s über Geyser)" % r.get("version"))
+          print("- " + print_cam)
           try:
               gv = [re.sub(r"^\[[^\]]*\] *(\[[^\]]*\] *)?", "", l).strip() for l in open("geyser-version.txt", encoding="utf-8", errors="replace")]
               gv = [l for l in gv if re.search(r"(?i)running Geyser version", l)]

@@ -51,8 +51,20 @@ public final class FormModel {
     public static String unsmall(String s) {
         if (s == null) return "";
         StringBuilder b = new StringBuilder(s.length());
-        for (char c : s.toCharArray()) {
+        boolean tag = false;
+        for (int k = 0; k < s.length(); k++) {
+            char c = s.charAt(k);
+            // MiniMessage-Tags (<hover:show_text:…>, <click:…>) unverändert lassen
+            if (c == '<') tag = true;
+            if (tag) {
+                b.append(c);
+                if (c == '>') tag = false;
+                continue;
+            }
             int i = SMALL.indexOf(c);
+            // "x" hat kein eigenes Kapitälchen (steht als normales x in SMALL): nur zwischen Kapitälchen umwandeln,
+            // sonst wurde jedes x groß (im echten Bedrock-Client: show_teXt, die Hover-Tags gingen kaputt)
+            if (c == 'x' && !(small(s, k - 1) || small(s, k + 1))) i = -1;
             if (i >= 0) b.append(Character.toUpperCase("abcdefghijklmnopqrstuvwxyz".charAt(i)));
             else if (c == '\ue0f0') b.append('Ä');
             else if (c == '\ue0f1') b.append('Ö');
@@ -60,6 +72,10 @@ public final class FormModel {
             else b.append(c);
         }
         return b.toString();
+    }
+
+    private static boolean small(String s, int k) {
+        return k >= 0 && k < s.length() && s.charAt(k) != 'x' && SMALL.indexOf(s.charAt(k)) >= 0;
     }
 
     private static final int[][] LEGACY = {
