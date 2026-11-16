@@ -87,6 +87,11 @@ def text_img(s, col, narrow=False):
     return im
 
 
+def up(small):
+    """Text so drehen, dass seine Oberkante zum Croupier zeigt (im Bild nach +x): Leserichtung dann entlang +y."""
+    return small.rotate(-90, expand=True)
+
+
 def paste_center(img, small, cx, cy):
     img.alpha_composite(small, (int(round(cx - small.width / 2)), int(round(cy - small.height / 2))))
 
@@ -114,22 +119,23 @@ def layout():
     for k in range(3):   # angeschrägte Ecken oben
         fill(img, X_NUM + 1, Y_ZERO + 1 + k, X_NUM + 4 - k, Y_ZERO + 2 + k, FELT[2])
         fill(img, X_END - 3 + k, Y_ZERO + 1 + k, X_END, Y_ZERO + 2 + k, FELT[2])
-    paste_center(img, text_img("0", CREAM), (X_NUM + X_END) / 2, (Y_ZERO + Y_NUM) / 2 + 0.5)
+    # Schrift liegt so, dass man sie von der Spielerseite liest: Oberkante zum Croupier (Bild +x)
+    paste_center(img, up(text_img("0", CREAM)), (X_NUM + X_END) / 2 + 0.5, (Y_ZERO + Y_NUM) / 2)
     # Zahlen 1–36: Reihe r (0 am Kessel) hat 3r+1, 3r+2, 3r+3; Kolonne c = 0, 1, 2 quer
     for r in range(12):
         for c in range(3):
             n = 3 * r + c + 1
             x0, y0 = X_NUM + c * CELL_W, Y_NUM + r * ROW_H
             cell(img, x0 + 1, y0 + 1, x0 + CELL_W, y0 + ROW_H, num_color(n))
-            paste_center(img, text_img(str(n), CREAM), x0 + (CELL_W + 1) / 2, y0 + (ROW_H + 1) / 2)
+            paste_center(img, up(text_img(str(n), CREAM)), x0 + (CELL_W + 1) / 2, y0 + (ROW_H + 1) / 2)
     # Kolonnen „2 TO 1“ (gedreht, damit es in 11 px passt: „2:1“)
     for c in range(3):
         x0 = X_NUM + c * CELL_W
-        paste_center(img, text_img("2:1", gold, True), x0 + (CELL_W + 1) / 2, Y_COL + 5.5)
+        paste_center(img, up(text_img("2:1", gold, True)), x0 + (CELL_W + 1) / 2, Y_COL + 5.5)
     # Dutzende: je 4 Reihen, Schrift quer gedreht (liest sich von der Spielerseite)
     for d in range(3):
         y0 = Y_NUM + d * 4 * ROW_H
-        lab = text_img(("1ST", "2ND", "3RD")[d] + " 12", CREAM).rotate(90, expand=True)
+        lab = up(text_img(("1ST", "2ND", "3RD")[d] + " 12", CREAM))
         paste_center(img, lab, (X_DOZ + X_NUM) / 2 + 0.5, y0 + 2 * ROW_H + 0.5)
     # Einfache Chancen: je 2 Reihen
     outs = ["1-18", "EVEN", "R", "B", "ODD", "19-36"]
@@ -147,7 +153,7 @@ def layout():
                         col = gold
                     p[int(cx + dx), int(cy + dy)] = col
         else:
-            paste_center(img, text_img(o, CREAM, True).rotate(90, expand=True), cx, cy + 0.5)
+            paste_center(img, up(text_img(o, CREAM, True)), cx, cy + 0.5)
     # Goldlinien: Außenrahmen und Raster
     for x in (X_OUT, X_DOZ, X_NUM, X_NUM + CELL_W, X_NUM + 2 * CELL_W, X_END):
         y_top = Y_ZERO if x >= X_NUM else Y_NUM
@@ -162,15 +168,15 @@ def layout():
         hline(img, X_DOZ, X_NUM, Y_NUM + d * 4 * ROW_H, gold)
     for k in range(7):
         hline(img, X_OUT, X_DOZ, Y_NUM + k * 2 * ROW_H, gold)
-    # Hausmarke unten: kleines „KUBY“ in Gold mit Rauten links und rechts (die rechte eine Stufe dunkler: Licht von links)
+    # Abschluss unten: drei goldene Rauten (die mittlere größer, Licht von oben links: obere Hälfte heller)
     mx = (X_NUM + X_END) / 2
-    paste_center(img, text_img("KUBY", GOLD[2]), mx, Y_END + 7)
-    for side, col in ((-1, GOLD[3]), (1, GOLD[1])):
-        cx = int(mx + side * 13)
-        for dy in range(-2, 3):
-            hw = 2 - abs(dy)
+    for side, big in ((-1, 0), (0, 1), (1, 0)):
+        cx, cy = int(mx + side * 9), Y_END + 6
+        r = 2 + big
+        for dy in range(-r, r + 1):
+            hw = r - abs(dy)
             for dx in range(-hw, hw + 1):
-                p[cx + dx, Y_END + 7 + dy] = col
+                p[cx + dx, cy + dy] = GOLD[3] if dy < 0 or (dy == 0 and dx < 0) else GOLD[1]
     # Rand: dunkler Filz-Saum, damit die Kante zur Reling sauber ist
     for y in range(LH):
         for x in range(LW):

@@ -493,6 +493,10 @@ public final class RouletteGame implements org.bukkit.event.Listener {
         if (phase != Phase.BETTING || throwWait <= 0) return "Gerade gibt es keine Kugel zu werfen.";
         if (!p.getUniqueId().equals(thrower)) return "Die Kugel wirft, wer am meisten gesetzt hat.";
         throwWait = 0;
+        if (table.croupier() != null) {
+            table.croupier().lookAt(p.getEyeLocation());
+            table.croupier().nod();
+        }
         Location c = table.wheel();
         if (c != null) {
             c.getWorld().playSound(c, Sound.ENTITY_SNOWBALL_THROW, 0.5f, 1.4f);
@@ -654,6 +658,14 @@ public final class RouletteGame implements org.bukkit.event.Listener {
                 to.getWorld().playSound(to, "kuby:casino.chip", org.bukkit.SoundCategory.PLAYERS, 0.9f, 0.85f);
             }
         });
+        // Volltreffer auf eine Zahl: der Croupier applaudiert dem Gewinner (schaut ihn dabei an)
+        Bet straight = round.stream().filter(b -> b.kind() == Kind.ZAHL && b.wins(result)).findFirst().orElse(null);
+        if (straight != null) {
+            later(96, () -> {
+                Player w = Bukkit.getPlayer(straight.player());
+                if (c != null) c.applaud(w != null ? w.getEyeLocation() : cell);
+            });
+        }
         plugin.getServer().getScheduler().runTaskTimer(plugin, new Consumer<BukkitTask>() {
             int n;
 

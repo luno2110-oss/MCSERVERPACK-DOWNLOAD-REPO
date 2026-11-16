@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.98** (ungetestet, nicht kompiliert)
+Stand: **v1.99** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -558,7 +558,20 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
 ## Casino fertigstellen (v1.68)
+- [x] **v1.99 Cutscenes und Animationen überarbeitet (Ziel des Besitzers: nicht generisch, nicht verklemmt, Figuren gehen mit der Umgebung um)**
+  - [x] Geprüft mit einem Kino-Vorschau-Harness (echte Tische + Szene Bild für Bild, tools/preview3d): Rundgang, Jackpot-Szene, Kisten-Szene
+  - [x] Rundgang: Vincent und der Spieler drehen sich nicht mehr ruckartig (alle Drehungen weich), Gehen blendet ein und aus, beide atmen und verlagern das Gewicht, Vincent gestikuliert beim Sprechen mit der freien Hand und nickt im Satzrhythmus, zeigt mit Richtung UND Höhe auf das Geschehen (z. B. nach oben auf den Crash-Bildschirm), der Spieler schaut ihn an, wenn er zu reden beginnt, dann dorthin, wohin er zeigt
+  - [x] Rundgang-Übergänge: am Ende einer Station drehen sich beide zur nächsten und gehen los, die Kamera fährt im Bogen mit, der Blick dreht voraus; der Sprung zur nächsten Station passiert hoch oben in der Fahrt, wo die Figuren klein/aus dem Bild sind (vorher sprangen sie sichtbar quer durchs Casino). Sie kommen von der offenen Seite vor dem Tisch ins Bild. Gilt auch für Begrüßung und Abschluss (beide kommen zum Eingang zurück, Verbeugung)
+  - [x] Rundgang-Fehler: die Roulette-Zwischenkamera stand genau in Vincents Kopf (beide stehen auf der Spielerseite) – jetzt flach von der Kesselseite über Rotor und Kugel mit Croupier dahinter; Nahaufnahmen (Dealer-Gesicht) fahren weniger nah heran
+  - [x] Jackpot-Szene: die Bürotür ist jetzt eine echte Flügeltür, die beim Klopf-Ton nach innen aufgeht (Knäufe drehen mit); der Geschäftsführer sitzt anfangs am Schreibtisch (Hände auf dem Tisch, liest), schaut auf, als die Tür aufgeht, steht auf (lehnt sich vor, Stuhl knarzt) und kommt um den Tisch; Ecken weich statt 90°-Sprüngen; Handschlag auf echter Armlänge (vorher fast ein Meter Lücke); der Gastgeber stellt mit offener Hand vor statt sich vom Chef wegzudrehen, steht danach wie ein Kellner und verbeugt sich am Ende; der Spieler dreht sich zum Chef; der goldene Chip wandert von Hand zu Hand; Über-die-Schulter-Kamera ohne angeschnittenen Gastgeber
+  - [x] Kisten-Szene: Figur lehnt sich beim Leuchten vor, zuckt beim Knall einen halben Schritt zurück, hebt den Blick weich zum Gewinn
+  - [x] Roulette-Croupier: applaudiert bei einem Volltreffer auf eine Zahl (schaut den Gewinner an), schaut den Spieler an, der die Kugel wirft
+- [x] **v1.99 Roulette-Korrekturen nach den echten Client-Bildern (CI v1.98)**
+  - [x] Tableau lag 180° verdreht (Null weg vom Kessel): der Client dreht Item-Anzeigen um 180°, Bild-Modelle (Tableau, Kessel, Rotor) heben das jetzt auf; alle Beschriftungen (Zahlen, 2:1, Dutzende, einfache Chancen) lesen sich von der Spielerseite
+  - [x] Kesselsockel wirkte wie ein Stern (drei gedrehte Quadrate): jetzt echtes Zwölfeck aus zwölf Seitenteilen
+  - [x] 3D-Vorschau: hohe Texturen wurden wie Animationen abgeschnitten (nur mit .mcmeta wie im Client); Vorschau kann den neuen Tisch und jeden Tick eines Wurfs zeigen (roulette, roulette_spin, roulette_dolly)
 - [x] **v1.98 Neuer Roulette-Tisch wie in Las Vegas** (Wunsch des Besitzers; ersetzt das Feld-Oval aus v1.6x)
+  - [x] CI v1.98 grün (alle 5 Läufe): echter Client zeigt Tisch, Kessel mit Kugel, Croupier-Gesten, „Nichts geht mehr“ mit Blitz-Zahlen und Ergebnis („16 ROT · 3 Gewinner“); 49/49 Felder treffen; Kugel lag auf 32, 28, 2, 28
   - [x] Freistehender Tisch aus Anzeigen: Nussholz-Korpus mit Sockelleiste und Goldband, Platte, grüner Filz, Polster-Reling mit Goldkante auf der Spielerseite und am Ende, Holzkante zum Croupier
   - [x] Tableau (eigene Grafik rv_layout, 1,6 x 4,0 Blöcke): Null mit angeschrägten Ecken am Kessel, 1–36 in drei Reihen rot/schwarz mit hellen Ziffern, „2:1“ je Kolonne, Dutzende („1ST/2ND/3RD 12“), einfache Chancen (1-18, EVEN, rote und schwarze Raute, ODD, 19-36), Goldlinien, „KUBY“ mit Rauten
   - [x] Kessel: Zwölfeck aus Nussholz, Goldlippe, Kessel-Bild mit Holzrand, dunkler Kugelbahn und acht Rauten (eine einmal größer), Rotor mit 37 Fächern in europäischer Reihenfolge und Goldstegen, Holzkegel mit Speichen, 3D-Drehkreuz

@@ -69,10 +69,14 @@ public final class CrateReveal implements Script {
         int col = COLORS[level(t)];
         V3 top = C.up(1.0);
         // ---------- Figur ----------
-        fr.actor = P;
+        // Figur reagiert: schaut gebannt auf die Kiste, lehnt sich beim Leuchten leicht vor, zuckt beim Knall einen halben
+        // Schritt zurück und hebt den Blick zum Gewinn (weich, nicht mit einem Ruck)
+        double lean = 0.08 * Ease.smooth(Ease.seg(t, 60, BURST - 4));
+        double recoil = 0.22 * Math.sin(Ease.seg(t, BURST, BURST + 16) * Math.PI) * (t >= BURST ? 1 : 0);
+        fr.actor = P.add(d.mul(lean)).add(f.mul(recoil));
         fr.actorYaw = V3.yawOf(d);
-        fr.headYaw = fr.actorYaw;
-        fr.headPitch = t < BURST ? 18 : -12;
+        fr.headYaw = (float) (fr.actorYaw + 4 * Math.sin(t * 0.07) * (t < 40 ? 1 : 0));
+        fr.headPitch = (float) Ease.lerp(18, -12, Ease.smooth(Ease.seg(t, BURST - 2, BURST + 7)));
         if (t >= BURST && t < CLOSE + 50) fr.hand = "kuby:cine/empty|block";
         // ---------- Kamera ----------
         V3 cam;

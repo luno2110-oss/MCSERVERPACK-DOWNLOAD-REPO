@@ -223,16 +223,34 @@ public final class Scene {
                 t.dealerText(Component.text("POKER", NamedTextColor.GOLD));
                 Mock.runLater();
             }
-            case "roulette" -> {
-                RouletteTable t = new RouletteTable(tag);
-                t.geometry(new Location(w, 0.5, 1.0, 0.5), 3.75, 2.75, 0f);
+            case "roulette", "roulette_spin", "roulette_dolly" -> {
+                // Las-Vegas-Tisch (v1.98): args[2] = Tick im Wurf (roulette_spin), Ergebnis 17
+                RouletteTable t = new RouletteTable(Mock.plugin(), tag);
+                t.geometry(new Location(w, 0.5, 0, 0.5), 0f);
                 t.build();
-                t.center(Component.text("ROULETTE", NamedTextColor.WHITE).append(Component.newline()).append(Component.text("Warte auf Einsätze..", NamedTextColor.YELLOW)));
-                t.chip("zahl", 17, 100);
-                t.chip("zahl", 17, 50);
-                t.chip("rot", 0, 500);
-                t.chip("dutzend2", 0, 1000);
-                t.light(RouletteTable.position(17), true);
+                t.center(Component.text("ROULETTE", NamedTextColor.WHITE).append(Component.newline())
+                        .append(Component.text("Faites vos jeux!", NamedTextColor.YELLOW)));
+                t.history(List.of(17, 0, 32, 5, 22, 36, 11, 7, 30, 19, 2));
+                RouletteTable.Spot n17 = new RouletteTable.Spot("ZAHL", 17);
+                for (int k = 0; k < 3; k++) t.chip(n17, "red");
+                t.chip(n17, "blue");
+                t.chip(new RouletteTable.Spot("ROT", 0), "red");
+                t.chip(new RouletteTable.Spot("ROT", 0), "red");
+                for (int k = 0; k < 4; k++) t.chip(new RouletteTable.Spot("DUTZEND", 2), "green");
+                t.chip(new RouletteTable.Spot("KOLONNE", 3), "purple");
+                t.chip(new RouletteTable.Spot("ZAHL", 0), "gold");
+                t.chip(new RouletteTable.Spot("UNGERADE", 0), "blue");
+                t.blitz(java.util.Map.of(17, 3, 29, 5));
+                Mock.runLater();
+                if (args[0].equals("roulette_spin")) {
+                    int tick = args.length > 2 ? Integer.parseInt(args[2]) : 60;
+                    t.spin(17, () -> { }, () -> { });
+                    for (int k = 0; k <= tick; k++) t.previewTick();
+                }
+                if (args[0].equals("roulette_dolly")) {
+                    t.dolly(17);
+                    Mock.runLater();
+                }
             }
             case "crash", "crash_bereit", "crash_crash" -> {
                 de.kuby.kubyplugins.casino.CrashScreen c = new de.kuby.kubyplugins.casino.CrashScreen(

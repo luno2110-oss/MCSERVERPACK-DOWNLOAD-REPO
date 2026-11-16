@@ -136,6 +136,7 @@ public final class Mock {
             if (m.getName().equals("getServer")) return server();
             if (m.getName().equals("getLogger")) return Logger.getLogger("mock");
             if (m.getName().equals("getName")) return "Kuby";
+            if (m.getName().equals("namespace")) return "kuby";
             return defaultFor(m.getReturnType());
         });
         return (org.bukkit.plugin.Plugin) plugin;

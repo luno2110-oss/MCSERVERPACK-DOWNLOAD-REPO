@@ -53,76 +53,119 @@ public final class ManagerVisit implements Script {
     @Override
     public void frame(int t, Frame fr) {
         set(fr);
+        door(fr, t);
         // ---------- Figuren ----------
-        // Gastgeber (Dealer): kommt herein, tritt zur Seite, verbeugt sich, schaut dann zum Geschäftsführer
-        double hu = seg(t, 40, 82);
-        V3 host = at(-0.6, 0, -1.5).lerp(at(-0.6, 0, 2.4), Ease.inOutSine(hu));
-        double hs = seg(t, 82, 96);
-        host = host.lerp(at(-1.7, 0, 3.0), Ease.inOutSine(hs));
-        float[] hp = hu > 0 && hu < 1 || hs > 0 && hs < 1 ? Rig.walk(t / 18.0) : Rig.stand();
-        double hyaw = hs > 0 && hs < 1 ? -60 : t > 96 ? 160 : 0;
-        if (t >= 98 && t < 122) {
-            double b = Math.sin(seg(t, 98, 122) * Math.PI);
-            hp = Rig.set(hp, Rig.TP, (float) (24 * b), Rig.HP, (float) (14 * b), Rig.RSX, -40, Rig.RSZ, 30, Rig.REX, -88);
-        }
-        Rig.props(fr, "host", "dealer", host.up(Rig.bob(t / 18.0) * (hu > 0 && hu < 1 ? 1 : 0)), hyaw, hp, 2);
-
-        // Spieler: folgt dem Gastgeber, bleibt vor dem Schreibtisch stehen
+        // Spieler: folgt dem Gastgeber, bleibt vor dem Schreibtisch stehen, wendet sich dem Geschäftsführer zu
         double pu = seg(t, 48, 94);
-        fr.actor = at(0.2, 0, -1.8).lerp(at(-0.35, 0, 2.8), Ease.inOutSine(pu));
-        fr.actorYaw = 0;
-        fr.headYaw = t > 130 && t < 300 ? -8 : 0;
-        fr.headPitch = 2;
-        fr.swing = t == 172 || t == 182 || t == 192;
+        V3 me = at(0.2, 0, -1.8).lerp(at(-0.35, 0, 2.8), Ease.inOutSine(pu));
+        V3 bossEnd = at(0.05, 0, 3.45);
 
-        // Geschäftsführer: hinter dem Schreibtisch, kommt um den Tisch, Handschlag, spricht, überreicht den Chip
+        // Geschäftsführer: sitzt am Schreibtisch (Hände auf dem Tisch, liest), schaut auf, als die Tür aufgeht, steht auf,
+        // kommt um den Tisch, Handschlag auf Armlänge, spricht mit Gesten, überreicht den goldenen Chip
         V3 m;
         float[] mp;
-        double myaw = 180;
-        double w1 = seg(t, 122, 140), w2 = seg(t, 140, 152), w3 = seg(t, 152, 166);
-        if (t < 122) {
-            m = at(0, 0, 6.4);
-            mp = Rig.set(Rig.stand(), Rig.RSX, -24, Rig.RSZ, 20, Rig.REX, -58, Rig.LSX, -24, Rig.LSZ, -20, Rig.LEX, -58);
+        double myaw;
+        V3 sit = at(0, -0.2, 6.95), stand = at(0, 0, 6.4);
+        if (t < 108) {
+            m = sit;
+            myaw = 180;
+            float look = (float) (14 - 16 * Ease.smooth(seg(t, 46, 60)));
+            mp = Rig.set(Rig.stand(), Rig.RLX, -90, Rig.LLX, -90, Rig.RSX, -52, Rig.REX, -34, Rig.RSZ, 6, Rig.LSX, -52, Rig.LEX, -34,
+                    Rig.LSZ, -6, Rig.HP, look, Rig.TP, 4);
+            mp = alive(mp, t);
+        } else if (t < 122) {
+            // aufstehen: nach vorn lehnen, Beine strecken, vom Stuhl hoch
+            double k = Ease.smooth(seg(t, 108, 122));
+            m = sit.lerp(stand, k);
+            myaw = 180;
+            float[] sitP = Rig.set(Rig.stand(), Rig.RLX, -90, Rig.LLX, -90, Rig.RSX, -52, Rig.REX, -34, Rig.LSX, -52, Rig.LEX, -34);
+            mp = Rig.mix(sitP, Rig.stand(), k);
+            mp = Rig.set(mp, Rig.TP, (float) (24 * Math.sin(k * Math.PI)));
         } else if (t < 166) {
+            double w1 = seg(t, 122, 140), w2 = seg(t, 140, 152), w3 = seg(t, 152, 166);
+            V3 c1 = at(1.9, 0, 6.3), c2 = at(1.9, 0, 4.3);
             if (t < 140) {
-                m = at(0, 0, 6.4).lerp(at(1.9, 0, 6.3), Ease.inOutSine(w1));
-                myaw = -90;
+                m = stand.lerp(c1, Ease.inOutSine(w1));
+                myaw = turn(180, V3.yawOf(c1.sub(stand)), seg(t, 122, 128));
             } else if (t < 152) {
-                m = at(1.9, 0, 6.3).lerp(at(1.9, 0, 4.3), Ease.inOutSine(w2));
-                myaw = 180;
+                m = c1.lerp(c2, Ease.inOutSine(w2));
+                myaw = turn(V3.yawOf(c1.sub(stand)), V3.yawOf(c2.sub(c1)), seg(t, 138, 145));
             } else {
-                m = at(1.9, 0, 4.3).lerp(at(0.45, 0, 3.75), Ease.inOutSine(w3));
-                myaw = 140;
+                m = c2.lerp(bossEnd, Ease.inOutSine(w3));
+                myaw = turn(V3.yawOf(c2.sub(c1)), V3.yawOf(bossEnd.sub(c2)), seg(t, 150, 156));
             }
-            mp = Rig.walk(t / 17.0);
+            mp = Rig.mix(Rig.stand(), Rig.walk(t / 17.0), Math.min(1, Math.min(seg(t, 122, 128), 1 - seg(t, 160, 166))));
             m = m.up(Rig.bob(t / 17.0));
         } else {
-            m = at(0.45, 0, 3.75);
-            myaw = 165;
-            mp = Rig.stand();
+            m = bossEnd;
+            myaw = turn(V3.yawOf(bossEnd.sub(at(1.9, 0, 4.3))), V3.yawOf(me.sub(bossEnd)), seg(t, 160, 170));
+            mp = alive(Rig.stand(), t);
             if (t < 205) {
-                // Handschlag: Hand vor, auf und ab
-                double s = Math.sin((t - 166) * 0.55);
-                mp = Rig.set(mp, Rig.RSX, (float) (-62 + 6 * s), Rig.RSZ, 8, Rig.REX, (float) (-14 + 8 * s), Rig.TP, 4);
+                // Handschlag: Hand auf Armlänge vor, drei Mal auf und ab, Kopf leicht geneigt
+                double in = Ease.smooth(seg(t, 166, 172)) * (1 - Ease.smooth(seg(t, 198, 205)));
+                double sh = Math.sin((t - 166) * 0.55) * (t > 172 && t < 196 ? 1 : 0);
+                mp = Rig.set(mp, Rig.RSX, (float) (-5 - 62 * in + 6 * sh), Rig.RSZ, (float) (8 * in), Rig.REX, (float) (-12 - 4 * in + 8 * sh),
+                        Rig.TP, (float) (5 * in), Rig.HP, (float) (6 * in));
             } else if (t < 255) {
-                // spricht: kleine Handgesten, Kopf nickt mit
-                double g = Math.sin((t - 205) * 0.21);
-                mp = Rig.set(mp, Rig.LSX, (float) (-34 + 10 * g), Rig.LSZ, -14, Rig.LEX, (float) (-64 + 12 * g),
-                        Rig.HP, (float) (4 + 3 * Math.sin((t - 205) * 0.4)));
+                mp = talk(mp, t, seg(t, 205, 212));
             } else if (t < 300) {
-                // überreicht den goldenen Chip
-                double h = Ease.smooth(seg(t, 255, 272));
-                mp = Rig.set(mp, Rig.RSX, (float) (-20 - 48 * h), Rig.RSZ, 6, Rig.REX, (float) (-60 + 44 * h), Rig.HP, 10);
+                // überreicht den goldenen Chip: Hand mit dem Chip vor, hält ihn hin, gibt ihn ab
+                double h = Ease.smooth(seg(t, 255, 272)) * (1 - Ease.smooth(seg(t, 290, 300)));
+                mp = Rig.set(mp, Rig.RSX, (float) (-20 - 48 * h), Rig.RSZ, 6, Rig.REX, (float) (-60 + 44 * h), Rig.HP, (float) (4 + 6 * h));
             } else {
                 mp = Rig.set(mp, Rig.RSX, -24, Rig.RSZ, 20, Rig.REX, -58, Rig.LSX, -24, Rig.LSZ, -20, Rig.LEX, -58, Rig.TP, -4);
             }
         }
         Rig.props(fr, "boss", "manager", m, myaw, mp, 2);
 
-        // goldener Chip in der Hand des Geschäftsführers, schwebt zum Spieler
+        // Gastgeber (Dealer): kommt herein, tritt zur Seite, stellt mit offener Hand vor, steht dann wie ein Kellner da
+        // (Hände übereinander) und schaut zu, wer gerade spricht
+        double hu = seg(t, 40, 82);
+        V3 host = at(-0.6, 0, -1.5).lerp(at(-0.6, 0, 2.4), Ease.inOutSine(hu));
+        double hs = seg(t, 82, 96);
+        V3 aside = at(-1.7, 0, 3.0);
+        host = host.lerp(aside, Ease.inOutSine(hs));
+        boolean hWalk = hu > 0 && hu < 1 || hs > 0 && hs < 1;
+        float[] hp = hWalk ? Rig.mix(Rig.stand(), Rig.walk(t / 18.0), Math.min(1, Math.min(seg(t, 40, 46), 1 - seg(t, 90, 96))))
+                : alive(Rig.stand(), t + 31);
+        V3 bossHead = m.up(1.5);
+        double hyaw;
+        if (t < 82) {
+            hyaw = 0;
+        } else if (t < 96) {
+            hyaw = turn(0, V3.yawOf(aside.sub(at(-0.6, 0, 2.4))), seg(t, 82, 88));
+        } else {
+            hyaw = turn(V3.yawOf(aside.sub(at(-0.6, 0, 2.4))), V3.yawOf(bossHead.sub(host)), seg(t, 94, 102));
+        }
+        if (t >= 98 && t < 140) {
+            // „Darf ich vorstellen“: offene Hand zum Geschäftsführer, kurzes Nicken
+            double a = Math.sin(Math.min(1, seg(t, 98, 108)) * Math.PI / 2) * (1 - seg(t, 128, 140));
+            hp = Rig.set(hp, Rig.RSX, (float) (-5 - 50 * a), Rig.RSZ, (float) (-14 * a), Rig.REX, (float) (-12 - 18 * a),
+                    Rig.HP, (float) (4 * Math.sin(seg(t, 100, 112) * Math.PI)));
+        } else if (t >= 140) {
+            double a = Ease.smooth(seg(t, 140, 150));
+            hp = Rig.set(hp, Rig.RSX, (float) (-5 - 19 * a), Rig.RSZ, (float) (20 * a), Rig.REX, (float) (-12 - 46 * a),
+                    Rig.LSX, (float) (-5 - 19 * a), Rig.LSZ, (float) (-20 * a), Rig.LEX, (float) (-12 - 46 * a));
+            if (t >= 300 && t < 324) {
+                double bw = Math.sin(seg(t, 300, 324) * Math.PI);
+                hp = Rig.set(hp, Rig.TP, (float) (16 * bw), Rig.HP, (float) (10 * bw));
+            }
+        }
+        Rig.props(fr, "host", "dealer", host.up(hWalk ? Rig.bob(t / 18.0) : 0), hyaw, hp, 2);
+
+        fr.actor = me;
+        double myawP = t < 150 ? 0 : turn(0, V3.yawOf(bossEnd.sub(me)), seg(t, 150, 162));
+        fr.actorYaw = (float) myawP;
+        fr.headYaw = (float) (t > 96 && t < 150 ? turn(0, V3.yawOf(m.sub(me)), seg(t, 96, 104)) : myawP);
+        fr.headPitch = 2;
+        fr.swing = t == 175 || t == 184 || t == 193;
+
+        // goldener Chip: aus der Hand des Geschäftsführers in die Hand des Spielers
         if (t >= 262 && t < 312) {
-            double c = Ease.inOutSine(seg(t, 270, 296));
-            V3 chip = m.add(-0.25, 1.15, -0.45).lerp(at(-0.25, 1.25, 3.1), c);
+            double c = Ease.inOutSine(seg(t, 272, 294));
+            V3 from = m.add(V3.dir(myaw, 0).mul(0.5)).up(1.12).add(V3.dir(myaw, 0).right().mul(0.25));
+            V3 to = me.add(V3.dir(myawP, 0).mul(0.4)).up(1.0).add(V3.dir(myawP, 0).right().mul(0.32));
+            V3 chip = from.lerp(to, c).up(0.12 * Math.sin(c * Math.PI));
             fr.prop(Prop.item("chip", "kuby:casino/c3chip_gold", chip, 0.55).rotated(new double[]{
                     Math.sin(t * 0.12) * Math.sqrt(0.5), 0, 0, Math.cos(t * 0.12)}).lit(15).snap(2));
             fr.prop(Prop.item("chipglow", "kuby:fx/glow", chip, 0.5).tint(0xFFC83A).lit(15).board(1).snap(2));
@@ -139,8 +182,9 @@ public final class ManagerVisit implements Script {
             look = host.up(1.4).lerp(fr.actor.up(1.4), 0.4);
             fr.cut = t == 40;
         } else if (t < 126) {
-            cam = fr.actor.add(0.75, 1.95, -1.3);
-            look = at(0, 1.5, 6.4);
+            // über die linke Schulter des Spielers (rechts stünde der Gastgeber halb im Bild)
+            cam = fr.actor.add(1.0, 1.9, -1.0);
+            look = m.up(t < 112 ? 1.15 : 1.45);
             fr.cut = t == 96;
         } else if (t < 166) {
             cam = at(3.6, 2.0, 3.6);
@@ -197,6 +241,7 @@ public final class ManagerVisit implements Script {
         if ((t > 40 && t < 96 || t > 122 && t < 166) && t % 7 == 0)
             fr.ev(new Ev.Sound("minecraft:block.wood.step", 0.35f, 0.9f + (t % 3) * 0.05f));
         if (t == 104) fr.ev(new Ev.Sound("minecraft:entity.villager.ambient", 0.25f, 0.6f));
+        if (t == 110) fr.ev(new Ev.SoundAt("minecraft:block.wood.place", at(0, 0.5, 6.9), 0.6f, 0.8f));
         if (t == 170) fr.ev(new Ev.Sound("minecraft:entity.player.levelup", 0.4f, 1.6f));
         if (t == 276) fr.ev(new Ev.Sound("minecraft:block.amethyst_block.chime", 1f, 1.2f));
         if (t == 300) {
@@ -204,6 +249,25 @@ public final class ManagerVisit implements Script {
             fr.ev(new Ev.Sound("minecraft:ui.toast.challenge_complete", 1f, 1.0f));
             fr.ev(new Ev.Sound("minecraft:entity.firework_rocket.twinkle", 0.8f, 1.0f));
         }
+    }
+
+    private static double turn(double from, double to, double k) {
+        return Ease.lerpAngle(from, to, Ease.smooth(Ease.clamp01(k)));
+    }
+
+    /** Atmen und leichtes Verlagern des Gewichts. */
+    private static float[] alive(float[] p, int t) {
+        return Rig.set(p, Rig.TP, (float) (p[Rig.TP] + 1.2 * Math.sin(t * Math.PI * 2 / 80)),
+                Rig.TR, (float) (p[Rig.TR] + 1.4 * Math.sin(t * Math.PI * 2 / 160)));
+    }
+
+    /** Sprechen: Kopf nickt im Satzrhythmus, linke Hand öffnet sich zur Geste. */
+    private static float[] talk(float[] p, int t, double a) {
+        double beat = (t % 44) / 44.0;
+        double g = beat < 0.55 ? Math.sin(beat / 0.55 * Math.PI) : 0;
+        return Rig.set(p, Rig.HP, (float) (p[Rig.HP] + a * (4 + 3 * Math.sin(t * 0.4))),
+                Rig.LSX, (float) (p[Rig.LSX] - a * (22 + 14 * g)), Rig.LSZ, (float) (p[Rig.LSZ] + a * (-8 + 18 * g)),
+                Rig.LEX, (float) (p[Rig.LEX] - a * (40 + 16 * g)), Rig.TY, (float) (p[Rig.TY] + a * 3 * g));
     }
 
     /** Die Kulisse: Büro des Geschäftsführers (Block-Teile, beleuchtet). */
@@ -233,6 +297,24 @@ public final class ManagerVisit implements Script {
         block(fr, "safe", "minecraft:gold_block", 3, 0, 6.6, 0.8, 1, 0.8, 14);
         block(fr, "lamp", "minecraft:lantern", 0.75, 0.93, 5.45, 0.4, 0.4, 0.4, 15);
         block(fr, "plant", "minecraft:potted_fern", 3.1, 0, 0.6, 0.8, 0.8, 0.8, 11);
+    }
+
+    /** Flügeltür (zwei Flügel, Scharniere außen), geht ab Tick 40 nach innen auf. */
+    private void door(Frame fr, int t) {
+        double open = Ease.inOutSine(seg(t, 40, 54)) * 90;
+        for (int side = -1; side <= 1; side += 2) {
+            // Blockanzeige dreht um ihre Ecke: Scharnier bei x = ±1, Flügel ragt zur Mitte
+            double ang = side < 0 ? -open : 180 + open;
+            double r = Math.toRadians(ang) / 2;
+            fr.prop(Prop.block("door" + side, "minecraft:dark_oak_planks", at(side, 0, -0.04), 1)
+                    .scaled(new V3(1.0, 2.6, 0.08)).rotated(new double[]{0, Math.sin(r), 0, Math.cos(r)}).lit(10).snap(2));
+            // Knauf dreht mit dem Flügel (die Verschiebung einer Anzeige dreht nicht mit, darum selbst drehen)
+            double a = Math.toRadians(ang);
+            V3 knob = new V3(0.82 * Math.cos(a) - 0.03 * Math.sin(a), 1.15, -0.82 * Math.sin(a) - 0.03 * Math.cos(a));
+            fr.prop(Prop.block("knob" + side, "minecraft:gold_block", at(side, 0, -0.04), 1)
+                    .moved(knob).scaled(new V3(0.08, 0.08, 0.14))
+                    .rotated(new double[]{0, Math.sin(r), 0, Math.cos(r)}).lit(14).snap(2));
+        }
     }
 
     private void block(Frame fr, String id, String data, double x, double y, double z, double sx, double sy, double sz, int light) {

@@ -204,6 +204,14 @@ public final class RouletteTable {
         return new Quaternionf().rotateY((float) Math.atan2(-f.z, f.x));
     }
 
+    /**
+     * Drehung für Bild-Modelle (Tableau, Kessel, Rotor): der Client dreht Item-Anzeigen um 180° um die Hochachse,
+     * das hebt diese Drehung wieder auf (sonst läge die Null am falschen Ende).
+     */
+    private Quaternionf pic() {
+        return base().rotateY((float) Math.PI);
+    }
+
     private static Quaternionf yawTo(Vector3f d) {
         return new Quaternionf().rotateY((float) Math.atan2(d.x, d.z));
     }
@@ -275,7 +283,7 @@ public final class RouletteTable {
         slab(-2.92, -1.68, -0.57, 0.57, 0, 0.06, "hd_dark");
         slab(-1.55, 2.9, -1.05, 1.1, FELT - 0.12, FELT - 0.06, "hd_walnut");
         slab(-1.52, 2.68, -0.85, 1.04, FELT - 0.06, FELT - 0.003, "rv_felt");
-        display(layoutCenter(), "rv_layout", base(), new Vector3f((float) (LW * PX), 1f, (float) (LH * PX)), "static");
+        display(layoutCenter(), "rv_layout", pic(), new Vector3f((float) (LW * PX), 1f, (float) (LH * PX)), "static");
         // Polster-Reling auf der Spielerseite und am Ende, Goldkante innen; Croupier-Seite Holzkante mit Goldleiste
         slab(-1.52, 2.9, -1.05, -0.83, FELT - 0.04, FELT + 0.09, "hd_leather");
         slab(2.68, 2.9, -0.83, 1.1, FELT - 0.04, FELT + 0.09, "hd_leather");
@@ -284,9 +292,13 @@ public final class RouletteTable {
         slab(-1.52, 2.68, 1.04, 1.1, FELT + 0.02, FELT + 0.03, "hd_gold");
         // --- Kessel: Zwölfeck aus drei gedrehten Quadern, Goldlippe, Kessel-Bild, Rotor, Drehkreuz, Kugel ---
         Location wc = local(WU, WV, 0);
-        for (int k = 0; k < 3; k++) {
-            Quaternionf q = base().rotateY((float) Math.toRadians(30 * k));
-            display(wc.clone().add(0, FELT - 0.04, 0), "m_hd_walnut", q, new Vector3f(1.56f, 0.16f, 1.56f), "static");
+        // Gehäuse: zwölf Seitenteile tangential (ein Zwölfeck, keine Sternzacken) und ein Füllstück darunter
+        display(wc.clone().add(0, FELT - 0.04, 0), "m_hd_walnut", base(), new Vector3f(0.84f, 0.16f, 0.84f), "static");
+        for (int k = 0; k < 12; k++) {
+            double a = Math.toRadians(30 * k);
+            Vector3f d = rotate(new Vector3f((float) Math.sin(a), 0, (float) -Math.cos(a)));
+            Location at = wc.clone().add(d.x * 0.665, FELT - 0.04, d.z * 0.665);
+            display(at, "m_hd_walnut", yawTo(d), new Vector3f(0.44f, 0.16f, 0.27f), "static");
         }
         for (int k = 0; k < 12; k++) {
             double a = Math.toRadians(15 + 30 * k);
@@ -294,7 +306,7 @@ public final class RouletteTable {
             Location at = wc.clone().add(d.x * 0.765, H_BOWL + 0.018, d.z * 0.765);
             display(at, "m_hd_gold", yawTo(d), new Vector3f(0.425f, 0.036f, 0.03f), "static");
         }
-        display(local(WU, WV, H_BOWL), "rv_bowl", base(), new Vector3f(BOWL, 1f, BOWL), "static");
+        display(local(WU, WV, H_BOWL), "rv_bowl", pic(), new Vector3f(BOWL, 1f, BOWL), "static");
         rotor = display(local(WU, WV, H_ROTOR), "rv_rotor", rotorRot(rho), new Vector3f(ROTOR, 1f, ROTOR), "rotor");
         turret = display(local(WU, WV, H_ROTOR + TURRET * 0.5), "rv_turret", rotorRot(rho),
                 new Vector3f(TURRET, TURRET, TURRET), "rotor");
@@ -794,7 +806,7 @@ public final class RouletteTable {
     }
 
     private Quaternionf rotorRot(double rhoDeg) {
-        return base().rotateY((float) Math.toRadians(-rhoDeg));
+        return pic().rotateY((float) Math.toRadians(-rhoDeg));
     }
 
     /** Kugel-Versatz zur Kesselmitte (Weltachsen): Winkel im Uhrzeigersinn, Radius, Höhe über der Kesselebene. */
@@ -870,6 +882,11 @@ public final class RouletteTable {
         double S = T_LAND - T_LAUNCH, a = 24;
         s = Math.max(0, Math.min(S, s));
         return a * s - a * s * s / (2 * S);
+    }
+
+    /** Ein Kessel-Tick ohne Scheduler (3D-Vorschau tools/preview3d). */
+    public void previewTick() {
+        wheelStep();
     }
 
     private void wheelStep() {

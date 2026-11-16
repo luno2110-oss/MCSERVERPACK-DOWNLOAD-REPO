@@ -280,8 +280,9 @@ public final class CasinoTourService {
         if (rt != null && rt.center() != null && near(rt.center(), me)) {
             Location c = rt.center();
             V3 f = V3.dir(rt.yaw(), 0).mul(-1);   // zur Spielerseite (der Croupier steht gegenüber)
-            // Schnitt: von der Spielerseite schräg über Kessel und Tableau, Croupier im Hintergrund
-            out.add(station(p, "roulette", c, f, 3.0, v(rt.local(-1.0, -2.5, 2.2)), v(rt.local(-1.2, 0.15, 0.95)),
+            // Schnitt: von der Kesselseite flach über den Kessel (Rotor, Kugel), Tableau und Croupier dahinter;
+            // nicht von der Spielerseite – dort stehen Vincent und der Spieler
+            out.add(station(p, "roulette", c, f, 3.0, v(rt.local(-3.35, -1.45, 1.55)), v(rt.local(-1.8, 0.05, 0.92)),
                     "Rot oder Schwarz? Am Roulette entscheidet eine einzige Kugel.",
                     "Achten Sie auf die Blitz-Zahlen – die zahlen in manchen Runden ein Vielfaches."));
         }

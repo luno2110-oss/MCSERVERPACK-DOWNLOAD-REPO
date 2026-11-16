@@ -100,7 +100,7 @@ def texture(ident):
             img[1, 0, :3] = 0
         else:
             im = Image.open(f).convert("RGBA")
-            if im.height > im.width:  # animierte Textur: erstes Bild
+            if im.height > im.width and os.path.exists(f + ".mcmeta"):  # animierte Textur: erstes Bild (wie der Client nur mit .mcmeta)
                 im = im.crop((0, 0, im.width, im.width))
             img = np.asarray(im, dtype=float) / 255.0
         TEX[ident] = img
