@@ -1043,6 +1043,11 @@ public final class RouletteGame implements org.bukkit.event.Listener {
     // Test (kubytest roulette)
     // =================================================================================================================
 
+    /** Nimmt der Tisch gerade Einsätze an (keine Kugel unterwegs, kein Ergebnis auf dem Tisch)? */
+    public boolean acceptsBets() {
+        return phase == Phase.IDLE || (phase == Phase.BETTING && throwWait <= 0 && !wheelBusy);
+    }
+
     /** Countdown sofort ablaufen lassen. */
     public void testFastForward() {
         if (phase == Phase.BETTING && throwWait <= 0) countdown = 1;

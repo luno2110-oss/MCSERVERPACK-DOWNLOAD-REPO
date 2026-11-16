@@ -177,12 +177,28 @@ public final class LoadTestCommand implements CommandExecutor {
                 Player rp = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : sender instanceof Player sp ? sp : null;
                 if (rp != null) {
                     plugin.casino().giveChips(rp.getUniqueId(), 5000);
-                    String e1 = plugin.roulette().betByName(rp, "rot", 100);
-                    String e2 = plugin.roulette().betByName(rp, "17", 50);
-                    String e3 = plugin.roulette().betByName(rp, "gerade", 100);
-                    plugin.roulette().testFastForward();
-                    plugin.getLogger().info("[Roulette-Test] Einsätze: " + (e1 == null ? "rot ok" : e1) + ", " + (e2 == null ? "17 ok" : e2)
-                            + ", " + (e3 == null ? "gerade ok" : e3) + "; Tableau-Treffer: " + plugin.roulette().testHits());
+                    // läuft gerade eine Runde der Test-Spieler (Kugel rollt, Ergebnis liegt), erst warten (höchstens 30 s)
+                    Player fp = rp;
+                    plugin.getServer().getScheduler().runTaskTimer(plugin, new java.util.function.Consumer<org.bukkit.scheduler.BukkitTask>() {
+                        int tries;
+
+                        @Override
+                        public void accept(org.bukkit.scheduler.BukkitTask task) {
+                            if (!fp.isOnline()) {
+                                task.cancel();
+                                return;
+                            }
+                            if (!plugin.roulette().acceptsBets() && ++tries < 60) return;
+                            task.cancel();
+                            String e1 = plugin.roulette().betByName(fp, "rot", 100);
+                            String e2 = plugin.roulette().betByName(fp, "17", 50);
+                            String e3 = plugin.roulette().betByName(fp, "gerade", 100);
+                            plugin.roulette().testFastForward();
+                            plugin.getLogger().info("[Roulette-Test] Einsätze: " + (e1 == null ? "rot ok" : e1) + ", " + (e2 == null ? "17 ok" : e2)
+                                    + ", " + (e3 == null ? "gerade ok" : e3) + "; gewartet " + tries / 2.0 + " s; Tableau-Treffer: "
+                                    + plugin.roulette().testHits());
+                        }
+                    }, 0L, 10L);
                 }
             }
             case "kamera" -> {

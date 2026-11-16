@@ -187,6 +187,8 @@ jobs:
           echo "kubytest kamera roulette_rad Kamera" >&3
           sleep 6
           echo "kubytest roulette Kamera" >&3
+          # läuft gerade noch eine Runde der Test-Spieler, wartet der Test, bis der Tisch wieder offen ist
+          for i in $(seq 1 35); do grep -q "\[Roulette-Test\]" server.log && break; sleep 1; done
           clip video_roulette 26
           for k in 1 2 3 4 5 6; do sleep 2; shot "15_roulette_rad_$k"; done
           echo "kubytest kamera roulette_tableau Kamera" >&3
