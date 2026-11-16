@@ -92,6 +92,7 @@ public final class ScoreboardService {
     }
 
     public void quit(UUID id) {
+        belowSent.remove(id);
         boards.remove(id);
         counters.remove(id);
         lastLines.remove(id);
@@ -105,6 +106,7 @@ public final class ScoreboardService {
      */
     private void tick() {
         tickNo++;
+        if (tickNo % 10 == 5) belowTick();
         if (tickNo % 10 == 1) {
             int n = 0;
             if (plugin.casinoMusic() != null) {
@@ -429,6 +431,114 @@ public final class ScoreboardService {
         counts = m;
         countsAt = now;
         return m;
+    }
+
+    // =================================================================================================================
+    // Zeile unter dem Namen (v2.01, Wunsch des Besitzers)
+    // Casino: Chips · Survival: Geld und Level · SMP: Geld und Trophäen · Skyblock: Team und Insel-Level ·
+    // Hub: nichts, nur Team (Admin, Moderator, Team) und Media/Streamer (kuby.media).
+    // Steht in jedem Scoreboard als BELOW_NAME: Minecraft zeigt sie unter dem Namensschild und blendet sie beim
+    // Schleichen, Verstecken und Unsichtbarsein selbst mit aus. Wer keine Zeile hat, bekommt ein leeres Format.
+    // =================================================================================================================
+
+    private static final String BELOW = "kp_below";
+    /** Je Betrachter: zuletzt gesendete Zeile je Spielername (nur Änderungen schicken). */
+    private final Map<UUID, Map<String, String>> belowSent = new HashMap<>();
+
+    /** Zeile für Spieler t; bedrock: ohne Kapitälchen (die Bedrock-Schrift kennt sie nicht). null = keine Zeile. */
+    private String belowLine(Player t, boolean bedrock) {
+        UUID id = t.getUniqueId();
+        java.util.function.UnaryOperator<String> w = x -> bedrock ? x : SmallCaps.of(x);
+        String mode = plugin.modes().modeOf(id);
+        if (ModeService.SURVIVAL.equals(mode) && plugin.casinoMusic() != null && plugin.casinoMusic().inCasino(t.getLocation())) {
+            return "<#F2C94C>" + ScoreboardText.number(plugin.casino().chips(id)) + " <white>" + w.apply("Chips");
+        }
+        return switch (mode) {
+            case ModeService.SURVIVAL -> "<#7CE07C>" + ScoreboardText.money(plugin.economy().balance(id)) + " <dark_gray>· <aqua>"
+                    + w.apply("Level") + " " + (plugin.hasStat("player_level") ? plugin.statValue("player_level", id) : 1);
+            case ModeService.SMP -> "<#7CE07C>" + ScoreboardText.money(plugin.economy().balance(id)) + " <dark_gray>· <#8C78FF>"
+                    + ScoreboardText.number(plugin.stats().get(id).trophies) + " " + w.apply("Trophäen");
+            case ModeService.SKYBLOCK -> {
+                TeamService.Team team = plugin.teams().of(id);
+                long lvl = plugin.hasStat("island_level") ? plugin.statValue("island_level", id) : 0;
+                yield "<white>" + (team == null ? "<gray>" + w.apply("Kein Team") : team.name()) + " <dark_gray>· <gold>"
+                        + w.apply("Insel-Level") + " " + lvl;
+            }
+            case ModeService.HUB -> {
+                var role = plugin.staff() == null ? null : plugin.staff().role(t);
+                if (role != null) yield "<" + role.color + ">" + w.apply(role.label);
+                if (t.hasPermission("kuby.media")) yield "<#B57BFF>" + w.apply("Media");
+                yield null;
+            }
+            default -> null;
+        };
+    }
+
+    /** Wert für Clients ohne Zahlenformat (z. B. ältere Bedrock-Brücken): die wichtigste Zahl der Zeile. */
+    private int belowValue(Player t) {
+        UUID id = t.getUniqueId();
+        String mode = plugin.modes().modeOf(id);
+        long v;
+        if (ModeService.SURVIVAL.equals(mode) && plugin.casinoMusic() != null && plugin.casinoMusic().inCasino(t.getLocation())) {
+            v = plugin.casino().chips(id);
+        } else if (ModeService.SURVIVAL.equals(mode) || ModeService.SMP.equals(mode)) {
+            v = plugin.economy().balance(id);
+        } else if (ModeService.SKYBLOCK.equals(mode)) {
+            v = plugin.hasStat("island_level") ? plugin.statValue("island_level", id) : 0;
+        } else {
+            v = 0;
+        }
+        return (int) Math.max(Integer.MIN_VALUE, Math.min(Integer.MAX_VALUE, v));
+    }
+
+    private void belowTick() {
+        if (!addon.getConfig().getBoolean("unter-dem-namen", true)) return;
+        List<Player> online = new ArrayList<>(Bukkit.getOnlinePlayers());
+        Map<UUID, String> javaLine = new HashMap<>(), bedLine = new HashMap<>();
+        Map<UUID, Integer> value = new HashMap<>();
+        for (Player t : online) {
+            javaLine.put(t.getUniqueId(), belowLine(t, false));
+            bedLine.put(t.getUniqueId(), belowLine(t, true));
+            value.put(t.getUniqueId(), belowValue(t));
+        }
+        for (Player v : online) {
+            Scoreboard sb = v.getScoreboard();
+            Scoreboard own = boards.get(v.getUniqueId());
+            boolean personal = own != null && own == sb;
+            if (!personal && sb == Bukkit.getScoreboardManager().getMainScoreboard() && v != online.get(0)) continue;  // Hauptboard nur einmal
+            Objective o = sb.getObjective(BELOW);
+            if (o == null) {
+                o = sb.registerNewObjective(BELOW, Criteria.DUMMY, net.kyori.adventure.text.Component.empty());
+                o.numberFormat(NumberFormat.blank());
+                o.setDisplaySlot(DisplaySlot.BELOW_NAME);
+            } else if (o.getDisplaySlot() != DisplaySlot.BELOW_NAME) {
+                o.setDisplaySlot(DisplaySlot.BELOW_NAME);
+            }
+            boolean bedrock = personal && de.kuby.kubyplugins.bedrock.Bedrock.is(v);
+            Map<String, String> sent = belowSent.computeIfAbsent(personal ? v.getUniqueId() : new UUID(0, 0), k -> new HashMap<>());
+            java.util.Set<String> names = new java.util.HashSet<>();
+            for (Player t : online) {
+                String line = (bedrock ? bedLine : javaLine).get(t.getUniqueId());
+                String name = t.getName();
+                names.add(name);
+                String key = line == null ? null : line + "|" + value.get(t.getUniqueId());
+                if (java.util.Objects.equals(sent.get(name), key)) continue;
+                if (line == null) {
+                    o.getScore(name).resetScore();
+                    sent.remove(name);
+                } else {
+                    Score sc = o.getScore(name);
+                    sc.setScore(value.get(t.getUniqueId()));
+                    sc.numberFormat(NumberFormat.fixed(Msg.parse(line)));
+                    sent.put(name, key);
+                }
+            }
+            for (String gone : new ArrayList<>(sent.keySet())) {
+                if (names.contains(gone)) continue;
+                o.getScore(gone).resetScore();
+                sent.remove(gone);
+            }
+        }
     }
 
     private String rank(Player p) {

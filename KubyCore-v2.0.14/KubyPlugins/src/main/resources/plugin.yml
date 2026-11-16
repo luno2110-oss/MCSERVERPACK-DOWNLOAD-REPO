@@ -264,6 +264,9 @@ permissions:
   kuby.staff:
     description: "Team-Bereich (/tb): Kanäle, Meldungen, Spieler-Akten (Rolle Team)"
     default: op
+  kuby.media:
+    description: "Media/Streamer: im Hub steht „Media“ unter dem Namen"
+    default: false
   kuby.report.see:
     description: Sieht Meldungen von /report
     default: op

@@ -391,10 +391,23 @@ public final class PokerTable {
 
     /** Das eigene Namensschild schwebt über dem Kopf des Sitzenden: für ihn ausblenden, für alle anderen zeigen. */
     public void ownPlate(int seat, Player p, boolean seated) {
+        if (p != null) owner[seat] = seated ? p.getUniqueId() : null;
         TextDisplay t = plates[seat];
         if (t == null || !t.isValid() || p == null) return;
         if (seated) p.hideEntity(plugin, t);
         else p.showEntity(plugin, t);
+    }
+
+    /** Wer an welchem Platz sitzt: dessen Knöpfe (Passen, Mitgehen, Erhöhen mit Betrag) sieht nur er (v2.01). */
+    private final UUID[] owner = new UUID[SEATS];
+
+    private <T extends Entity> T privateTo(int seat, T e) {
+        UUID o = seat >= 0 && seat < owner.length ? owner[seat] : null;
+        if (o == null || e == null) return e;
+        e.setVisibleByDefault(false);
+        Player p = org.bukkit.Bukkit.getPlayer(o);
+        if (p != null) p.showEntity(plugin, e);
+        return e;
     }
 
     public ArmorStand vehicle(int seat) {
@@ -605,21 +618,21 @@ public final class PokerTable {
             double side = (i - (n - 1) / 2.0) * 0.27;   // positive Seite = vom Spieler aus rechts
             Location l = seatPoint(seat, -0.07, side, RIM_TOP + 0.004);
             float sc = name.equals("minus") || name.equals("plus") ? 0.17f : 0.25f;
-            ItemDisplay disp = item(l, "pk_btn_" + name, facingTop(in), sc, "btn");
+            ItemDisplay disp = privateTo(seat, item(l, "pk_btn_" + name, facingTop(in), sc, "btn"));
             BlackjackTable.Button b = new BlackjackTable.Button(disp, l.clone(), disp.getTransformation());
             b.parts.add(disp);
-            b.parts.add(l.getWorld().spawn(l.clone().add(0, -0.03, 0), Interaction.class, e -> {
+            b.parts.add(privateTo(seat, l.getWorld().spawn(l.clone().add(0, -0.03, 0), Interaction.class, e -> {
                 e.setInteractionWidth(0.24f);
                 e.setInteractionHeight(0.08f);
                 e.setResponsive(true);
                 mark(e, "btn");
                 e.getPersistentDataContainer().set(click, PersistentDataType.STRING, id + ":act:" + seat + ":" + name);
-            }));
+            })));
             hoverables.get(seat).add(b);
             buttons.get(seat).addAll(b.parts);
         }
         if (raiseLabel != null) {
-            TextDisplay t = badge(seatPoint(seat, -0.3, 0, FELT_Y + 0.2), 0.4f);
+            TextDisplay t = privateTo(seat, badge(seatPoint(seat, -0.3, 0, FELT_Y + 0.2), 0.4f));
             badgeText(t, raiseLabel);
             buttons.get(seat).add(t);
         }

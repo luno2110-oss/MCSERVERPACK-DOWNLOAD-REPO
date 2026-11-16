@@ -78,6 +78,8 @@ public final class BlackjackTable {
     private final TextDisplay[] streakText = new TextDisplay[SEATS];
     private final TextDisplay[] totals = new TextDisplay[SEATS];
     private final ArmorStand[] seatVehicle = new ArmorStand[SEATS];
+    /** Wer an welchem Platz sitzt: Chip-Auswahl, Bedienknöpfe und Aktionsfelder sieht nur er (v2.01). */
+    private final java.util.UUID[] owner = new java.util.UUID[SEATS];
     private final List<List<Entity>> cards = new ArrayList<>();
     private final List<List<Entity>> chips = new ArrayList<>();
     private final List<List<Button>> rack = new ArrayList<>();
@@ -667,7 +669,8 @@ public final class BlackjackTable {
             float rot = (float) (i * Math.PI / 8); // 22,5°-Schritte: Kanten der Chips liegen übereinander
             chips.get(seat).add(item(l, "c3chip_" + chipColor(v, jw), new Quaternionf().rotateY(rot), CHIP_SCALE, "chip"));
         }
-        TextDisplay t = badge(onSeatAxis(seat, radius * F_BET + 0.06, -0.3, FELT_Y + 0.05));
+        // Summe schwebt über dem obersten Chip (vorher seitlich am Stapel: hohe Stapel verdeckten sie)
+        TextDisplay t = badge(f.clone().add(0, 0.012 + chipStep(CHIP_SCALE) * shown + 0.075, 0));
         badgeText(t, Component.text(" " + CasinoText.num(total) + (jw ? " ◆" : "") + " ", TextColor.color(jw ? 0x7FE3FF : 0xF2C94C))
                 .decorate(TextDecoration.BOLD));
         mark(t, "chip");
@@ -728,6 +731,24 @@ public final class BlackjackTable {
     // Rack, Bedienknöpfe und Aktionen (mit Hover)
     // =================================================================================================================
 
+    /** Spieler am Platz (null = frei). Danach gebaute Chip-Auswahl und Knöpfe sieht nur er. */
+    public void owner(int seat, java.util.UUID id) {
+        owner[seat] = id;
+    }
+
+    /**
+     * Nur für den Spieler am Platz sichtbar (und klickbar): die Chip-Auswahl und Knöpfe benachbarter Plätze lagen sonst
+     * übereinander. Unsichtbare Klickflächen kann auch niemand sonst treffen.
+     */
+    private <T extends Entity> T privateTo(int seat, T e) {
+        java.util.UUID o = owner[seat];
+        if (o == null || e == null) return e;
+        e.setVisibleByDefault(false);
+        org.bukkit.entity.Player p = org.bukkit.Bukkit.getPlayer(o);
+        if (p != null) p.showEntity(plugin, e);
+        return e;
+    }
+
     private Location rackSpot(int seat, int i, int count) {
         double side = ((count - 1) / 2.0 - i) * 0.2;
         return onSeatAxis(seat, radius * F_RACK, side, FELT_Y + 0.01);
@@ -744,8 +765,8 @@ public final class BlackjackTable {
         for (int i = 0; i < values.length; i++) {
             long v = values[i];
             Location l = rackSpot(seat, i, values.length);
-            ItemDisplay chip = item(l.clone().add(0, 0.012, 0), "c3chip_" + chipColor(v, jw),
-                    new Quaternionf().rotateY((float) (i * 0.6)), 0.24f, "rack");
+            ItemDisplay chip = privateTo(seat, item(l.clone().add(0, 0.012, 0), "c3chip_" + chipColor(v, jw),
+                    new Quaternionf().rotateY((float) (i * 0.6)), 0.24f, "rack"));
             Button b = new Button(chip, l.clone().add(0, 0.02, 0), chip.getTransformation());
             b.parts.add(chip);
             TextDisplay t = l.getWorld().spawn(l.clone().add(0, 0.085, 0), TextDisplay.class, e -> {
@@ -756,15 +777,16 @@ public final class BlackjackTable {
                 e.setTransformation(new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(0.24f, 0.24f, 0.24f), new Quaternionf()));
                 mark(e, "rack");
             });
+            privateTo(seat, t);
             b.parts.add(t);
             int k = i;
-            b.parts.add(l.getWorld().spawn(l.clone().add(0, -0.02, 0), Interaction.class, e -> {
+            b.parts.add(privateTo(seat, l.getWorld().spawn(l.clone().add(0, -0.02, 0), Interaction.class, e -> {
                 e.setInteractionWidth(0.18f);
                 e.setInteractionHeight(0.12f);
                 e.setResponsive(true);
                 mark(e, "rack");
                 e.getPersistentDataContainer().set(click, PersistentDataType.STRING, id + ":chip:" + seat + ":" + k);
-            }));
+            })));
             rack.get(seat).add(b);
         }
     }
@@ -794,17 +816,17 @@ public final class BlackjackTable {
         for (int i = 0; i < list.length; i++) {
             if (list[i][1] == null) continue;
             Location l = onSeatAxis(seat, (radius * F_RIM_IN + radius + 0.04) / 2, (1 - i) * 0.24, RIM_TOP + 0.004);
-            ItemDisplay disp = item(l, list[i][1], facing(d), 0.2f, "ctl");
+            ItemDisplay disp = privateTo(seat, item(l, list[i][1], facing(d), 0.2f, "ctl"));
             Button b = new Button(disp, l.clone(), disp.getTransformation());
             b.parts.add(disp);
             int k = i;
-            b.parts.add(l.getWorld().spawn(l.clone().add(0, -0.03, 0), Interaction.class, e -> {
+            b.parts.add(privateTo(seat, l.getWorld().spawn(l.clone().add(0, -0.03, 0), Interaction.class, e -> {
                 e.setInteractionWidth(0.2f);
                 e.setInteractionHeight(0.07f);
                 e.setResponsive(true);
                 mark(e, "ctl");
                 e.getPersistentDataContainer().set(click, PersistentDataType.STRING, id + ":ctl:" + seat + ":" + list[k][0]);
-            }));
+            })));
             controls.get(seat).add(b);
         }
     }
@@ -824,17 +846,17 @@ public final class BlackjackTable {
             if (!allowed[i]) continue;
             double side = (1.5 - i) * 0.27;
             Location l = onSeatAxis(seat, radius * F_RACK, side, FELT_Y + 0.008);
-            ItemDisplay disp = item(l, ACTION_MODELS[i], facing(d), 0.25f, "action");
+            ItemDisplay disp = privateTo(seat, item(l, ACTION_MODELS[i], facing(d), 0.25f, "action"));
             Button b = new Button(disp, l.clone(), disp.getTransformation());
             b.parts.add(disp);
             int k = i;
-            b.parts.add(l.getWorld().spawn(l.clone().add(0, -0.03, 0), Interaction.class, e -> {
+            b.parts.add(privateTo(seat, l.getWorld().spawn(l.clone().add(0, -0.03, 0), Interaction.class, e -> {
                 e.setInteractionWidth(0.24f);
                 e.setInteractionHeight(0.08f);
                 e.setResponsive(true);
                 mark(e, "action");
                 e.getPersistentDataContainer().set(click, PersistentDataType.STRING, id + ":act:" + seat + ":" + k);
-            }));
+            })));
             actions.get(seat).add(b);
         }
         Location bl = onSeatAxis(seat, (radius * F_RIM_IN + radius + 0.04) / 2, 0, RIM_TOP + 0.004);

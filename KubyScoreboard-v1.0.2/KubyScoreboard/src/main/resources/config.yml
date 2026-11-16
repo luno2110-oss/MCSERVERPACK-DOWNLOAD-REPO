@@ -20,3 +20,6 @@ scoreboard:
 resource-pack:
   url: ""
   sha1: ""
+# Zeile unter dem Spielernamen: Casino Chips, Survival Geld und Level, SMP Geld und Trophäen, Skyblock Team und
+# Insel-Level, Hub nur Team und Media/Streamer (Permission kuby.media)
+unter-dem-namen: true

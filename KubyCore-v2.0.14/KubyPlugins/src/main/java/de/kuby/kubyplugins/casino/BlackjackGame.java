@@ -117,6 +117,7 @@ public final class BlackjackGame {
         Seat s = seats[seat];
         s.player = p.getUniqueId();
         s.name = p.getName();
+        table.owner(seat, p.getUniqueId());
         table.seatVehicle(seat).addPassenger(p);
         table.seatText(seat, Component.empty());
         p.playSound(p.getLocation(), Sound.BLOCK_WOOL_PLACE, 0.7f, 1.2f);
@@ -153,6 +154,7 @@ public final class BlackjackGame {
         table.clearControls(seat);
         table.streak(seat, Component.empty());
         table.removeVehicle(seat);
+        table.owner(seat, null);
         s.player = null;
         s.name = null;
         if (!s.playing) clearSeat(seat);

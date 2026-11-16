@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v2.00** (ungetestet, nicht kompiliert)
+Stand: **v2.01** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -558,6 +558,12 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
 ## Casino fertigstellen (v1.68)
+- [x] **v2.01 Zwischenwünsche des Besitzers**
+  - [x] Blackjack: Chip-Auswahl (Rack), Bedienknöpfe (Wie zuletzt, Zurücknehmen, Chips/Juwelen) und Aktionsfelder (Karte, Halten, Doppeln, Teilen) sieht nur noch der Spieler am Platz – vorher lagen die Racks benachbarter Plätze übereinander. Unsichtbare Klickflächen kann auch niemand sonst treffen. Der Zeitbalken bleibt für alle sichtbar (wer ist dran)
+  - [x] Poker: die Knöpfe (Passen, Mitgehen/Schieben, Erhöhen, All-in, beim Erhöhen −/½/Pot/+/OK und der Betrag) sieht nur der Spieler am Platz. Handkarten waren schon privat (nur der Besitzer sieht sie offen, alle anderen die Rückseiten)
+  - [x] Blackjack-Karten bleiben für alle sichtbar: im normalen Casino-Blackjack (Schlitten) liegen die Spielerkarten offen, nur die zweite Dealer-Karte ist verdeckt
+  - [x] Blackjack: die Einsatz-Summe schwebt jetzt über dem obersten Chip (vorher seitlich am Stapel, hohe Stapel verdeckten sie)
+  - [x] Zeile unter dem Spielernamen: im Casino die Chips, Survival Geld und Level, SMP Geld und Trophäen, Skyblock Team und Insel-Level, Hub nur Team-Rolle (Admin, Moderator, Team) und Media (neue Permission `kuby.media`). Über die Below-Name-Anzeige von Minecraft (blendet sich beim Schleichen und Verstecken selbst aus), Bedrock bekommt die Zeile ohne Kapitälchen; abschaltbar mit `unter-dem-namen: false` (KubyScoreboard)
 - [x] **v2.00 CI: Crash im echten Client** – der Regeltest baute den Crash-Bildschirm, lief im Client-Bilder-Test aber ohne Bots nicht an („keine Spieler online“), darum zeigten die Crash-Bilder nur den Spieler. Jetzt `/kubytest crash`: eigener Bildschirm, Kamera-Spieler setzt, Kurs steigt bis x7 und crasht, Kurs jede Sekunde im Log und im Bericht
 - [x] **v2.00 Roulette-Kessel mit echter Tiefe** (Feedback des Besitzers: „sieht aus wie eine flache Textur“ – stimmte, Kessel und Rotor waren flache Bilder)
   - [x] Kessel aus 16 3D-Segmenten: erhöhter Holzrand (12 cm über dem Filz) mit schmaler Goldkante innen und außen, dunkle Kugelbahn 22,5° nach innen geneigt, Holzschräge hinunter zum Rotor, acht goldene Rauten als echte Körper auf der Schräge
