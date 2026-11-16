@@ -116,6 +116,7 @@ jobs:
               c["modes"][m]["world"] = "world"
               c["modes"][m]["spawn"] = "world;%d;110;0;0;0" % (i * 300)
           c.setdefault("beta", {})["alle-tester"] = True
+          c.setdefault("kubytest", {})["erlaubt"] = True   # Testbefehle nur im Testserver
           c.setdefault("casino", {}).setdefault("rundgang", {})["aktiv"] = False   # keine Kino-Szenen für die Kamera
           c.setdefault("einfuehrung", {})["aktiv"] = False
           # Goldene Zeit mit der echten Uhr: Zeitzone wählen, in der es jetzt 18 Uhr ist (kein Test-Schalter)

@@ -91,6 +91,8 @@ public final class SlotsService implements Listener {
 
     public SlotsService(KubyPlugins plugin) {
         this.plugin = plugin;
+        // Drehungen überleben keinen Neustart: offene Slot-Einsätze von vorher zurück
+        plugin.casinoPlay().refundOpen("slots");
         this.file = new File(plugin.getDataFolder(), "slots-automaten.yml");
         this.tag = new NamespacedKey(plugin, "slot_machine");
         this.click = new NamespacedKey(plugin, "slot_click");
@@ -266,8 +268,10 @@ public final class SlotsService implements Listener {
             @Override
             public void accept(org.bukkit.scheduler.BukkitTask task) {
                 if (!s.machine.ready()) {
+                    // Automat mitten in der Drehung abgebaut/entladen: Einsatz zurück (vorher ging er verloren)
                     task.cancel();
                     s.busy = false;
+                    plugin.casinoPlay().refund(pid, "slots", bet);
                     return;
                 }
                 boolean fast = false;

@@ -74,6 +74,13 @@ public final class CasinoPlay {
     private final Map<UUID, Integer> best = new HashMap<>();
     private final Map<UUID, Integer> losses = new HashMap<>();
     private final Map<UUID, Long> volume = new HashMap<>();
+    /** Kleinster Einsatz unter den Siegen der laufenden Serie: der Serien-Bonus gilt höchstens auf diesen Anteil. */
+    private final Map<UUID, Long> streakStake = new HashMap<>();
+    /** Summe der verlorenen Einsätze der laufenden Pechsträhne: Obergrenze für den Comeback-Bonus. */
+    private final Map<UUID, Long> lossStake = new HashMap<>();
+    /** Heute schon ausgezahlter Bonus der Goldenen Zeit je Spieler (Chips, Juwelen), Tagesdeckel. */
+    private final Map<UUID, Long> goldenUsed = new HashMap<>();
+    private final Map<UUID, Long> goldenUsedJ = new HashMap<>();
     private String volumeDay = "";
     private BossBar goldenBar;
     /** Spieltest (/kubytest casino): jede Abrechnung als Zeile im Log. */
@@ -364,6 +371,8 @@ public final class CasinoPlay {
         if (!today.equals(volumeDay)) {
             volumeDay = today;
             volume.clear();
+            goldenUsed.clear();
+            goldenUsedJ.clear();
         }
     }
 
@@ -374,6 +383,10 @@ public final class CasinoPlay {
     public synchronized void testReset(UUID id) {
         streak.remove(id);
         losses.remove(id);
+        streakStake.remove(id);
+        lossStake.remove(id);
+        goldenUsed.remove(id);
+        goldenUsedJ.remove(id);
         volume.remove(id);
         mode.remove(id);
         String pre = id + "|";
@@ -385,6 +398,27 @@ public final class CasinoPlay {
     public synchronized long volumeLeft(UUID id) {
         rollDay();
         return Math.max(0, jewelVolume() - volume.getOrDefault(id, 0L));
+    }
+
+    /**
+     * Alle offenen Einsätze eines Spiels zurückgeben, das seinen Stand nicht selbst speichert (Slots: eine Drehung dauert
+     * Sekunden; stoppt der Server mittendrin, blieb der Einsatz sonst für immer offen). Gibt die Zahl der Erstattungen zurück.
+     */
+    public synchronized int refundOpen(String game) {
+        int n = 0;
+        for (String k : new java.util.ArrayList<>(open.keySet())) {
+            int bar = k.indexOf('|');
+            if (bar < 0 || !k.substring(bar + 1).equals(game)) continue;
+            try {
+                refund(UUID.fromString(k.substring(0, bar)), game, open.getOrDefault(k, 0L));
+                n++;
+            } catch (IllegalArgumentException ignored) {
+                open.remove(k);
+                bound.remove(k);
+            }
+        }
+        if (n > 0) plugin.getLogger().info("Casino: " + n + " offene " + game + "-Einsätze nach Neustart erstattet.");
+        return n;
     }
 
     /** Offener Einsatz des Spielers in diesem Spiel. */
@@ -474,30 +508,55 @@ public final class CasinoPlay {
         int newStreak = before;
         if (gross > stake) {
             long profit = gross - stake;
-            mult = streakMult(game, before);
-            if (golden()) {
-                golden = true;
-                mult *= goldenFactor();
+            // Exploit-Schutz (Prüfung v1.97): früher multiplizierten Serie, Comeback und Goldene Zeit jeden Gewinn voll –
+            // Serie mit 10-Chip-Wetten (oder Crash bei x1,01) aufbauen, dann Höchsteinsatz mit bis zu +70 % Erwartungswert.
+            // Jetzt: Serien-Bonus nur auf den Anteil bis zum kleinsten Einsatz der Serie, Comeback höchstens bis zu den
+            // verlorenen Einsätzen, Goldene Zeit mit Tagesdeckel; für die Serie zählen nur echte Siege (ab 1,8-fachem Einsatz).
+            double sm = streakMult(game, before);
+            long streakBonus = 0;
+            if (before > 0 && sm > 1) {
+                long base = Math.min(stake, streakStake.getOrDefault(id, stake));
+                streakBonus = Math.round(profit * (double) base / stake * (sm - 1));
             }
+            long comebackBonus = 0;
             if (lost >= (int) cfg("comeback-ab", 3)) {
                 comeback = true;
-                mult += cfg("comeback-bonus", 0.25);
+                long base = Math.min(stake, lossStake.getOrDefault(id, stake));
+                comebackBonus = Math.round(profit * (double) base / stake * cfg("comeback-bonus", 0.25));
             }
-            mult = Math.min(mult, highRoller(game) ? plugin.getConfig().getDouble("casino.highroller.max-gesamt", 16.0)
-                    : cfg("max-gesamt", 6.0));
-            bonus = Math.round(profit * (mult - 1));
-            newStreak = before + 1;
-            streak.put(id, newStreak);
-            best.merge(id, newStreak, Math::max);
+            long goldenBonus = 0;
+            if (golden()) {
+                golden = true;
+                goldenBonus = Math.round((profit + streakBonus + comebackBonus) * (goldenFactor() - 1));
+                rollDay();
+                Map<UUID, Long> used = c == Cur.JEWELS ? goldenUsedJ : goldenUsed;
+                long cap = c == Cur.JEWELS ? plugin.getConfig().getLong("casino.goldene-zeit.max-bonus-tag-juwelen", 5_000)
+                        : plugin.getConfig().getLong("casino.goldene-zeit.max-bonus-tag", 250_000);
+                goldenBonus = Math.max(0, Math.min(goldenBonus, cap - used.getOrDefault(id, 0L)));
+                if (goldenBonus > 0) used.merge(id, goldenBonus, Long::sum);
+            }
+            double maxMult = highRoller(game) ? plugin.getConfig().getDouble("casino.highroller.max-gesamt", 16.0) : cfg("max-gesamt", 6.0);
+            bonus = Math.min(streakBonus + comebackBonus + goldenBonus, Math.round(profit * (maxMult - 1)));
+            mult = 1 + (double) bonus / profit;
+            // nur echte Siege bauen die Serie auf (Gewinn mindestens 1,8-facher Einsatz); kleine Gewinne lassen sie stehen
+            if (gross * 100 >= stake * Math.round(cfg("serie-mindestquote", 1.8) * 100)) {
+                newStreak = before + 1;
+                streak.put(id, newStreak);
+                streakStake.put(id, before == 0 ? stake : Math.min(stake, streakStake.getOrDefault(id, stake)));
+                best.merge(id, newStreak, Math::max);
+            }
             losses.remove(id);
+            lossStake.remove(id);
             lost = 0;
         } else if (gross < stake) {
             cashback = Math.round((stake - gross) * cfg("cashback", 0.03));
             if (cashback <= 0 && stake - gross >= 20) cashback = 1;
             newStreak = 0;
             streak.remove(id);
+            streakStake.remove(id);
             lost++;
             losses.put(id, lost);
+            lossStake.merge(id, stake - gross, Long::sum);
         }
         long payout = gross + bonus;
         pay(id, c, payout + cashback);
@@ -640,6 +699,10 @@ public final class CasinoPlay {
         readMap(y.getConfigurationSection("best"), (k, v) -> best.put(UUID.fromString(k), ((Number) v).intValue()));
         readMap(y.getConfigurationSection("losses"), (k, v) -> losses.put(UUID.fromString(k), ((Number) v).intValue()));
         readMap(y.getConfigurationSection("volume"), (k, v) -> volume.put(UUID.fromString(k), ((Number) v).longValue()));
+        readMap(y.getConfigurationSection("streak-stake"), (k, v) -> streakStake.put(UUID.fromString(k), ((Number) v).longValue()));
+        readMap(y.getConfigurationSection("loss-stake"), (k, v) -> lossStake.put(UUID.fromString(k), ((Number) v).longValue()));
+        readMap(y.getConfigurationSection("golden-used"), (k, v) -> goldenUsed.put(UUID.fromString(k), ((Number) v).longValue()));
+        readMap(y.getConfigurationSection("golden-used-j"), (k, v) -> goldenUsedJ.put(UUID.fromString(k), ((Number) v).longValue()));
         for (String line : y.getStringList("open")) {
             String[] p = line.split(";");
             if (p.length != 3) continue;
@@ -679,6 +742,10 @@ public final class CasinoPlay {
         best.forEach((k, v) -> y.set("best." + k, v));
         losses.forEach((k, v) -> y.set("losses." + k, v));
         volume.forEach((k, v) -> y.set("volume." + k, v));
+        streakStake.forEach((k, v) -> y.set("streak-stake." + k, v));
+        lossStake.forEach((k, v) -> y.set("loss-stake." + k, v));
+        goldenUsed.forEach((k, v) -> y.set("golden-used." + k, v));
+        goldenUsedJ.forEach((k, v) -> y.set("golden-used-j." + k, v));
         jewelTotals.forEach((k, v) -> y.set("jewel-totals." + k, v[0] + ";" + v[1]));
         java.util.List<String> o = new java.util.ArrayList<>();
         open.forEach((k, v) -> o.add(k + ";" + bound.getOrDefault(k, Cur.CHIPS).name() + ";" + v));

@@ -685,7 +685,9 @@ public final class BlackjackGame {
                         : " · <#FF5A5A>-" + de.kuby.kubyplugins.service.CasinoPlay.unit(o.cur(), staked)));
                 plugin.casinoPlay().feedback(p, o, table.cardsAt(i).add(0, 0.4, 0));
                 if (net > 0) {
-                    for (int k = 0; k < 5; k++) later(22 + k * 2L, () -> p.playSound(table.field(seatOfOwner(p)), Sound.BLOCK_CHAIN_PLACE, 0.5f, 1.6f + (float) Math.random() * 0.3f));
+                    // Platz des Gewinners fest merken (stand er inzwischen auf, war seatOfOwner -1 → Fehler im Takt)
+                    final int fs = i;
+                    for (int k = 0; k < 5; k++) later(22 + k * 2L, () -> { if (p.isOnline()) p.playSound(table.field(fs), Sound.BLOCK_CHAIN_PLACE, 0.5f, 1.6f + (float) Math.random() * 0.3f); });
                 } else if (net < 0) {
                     later(4, () -> p.playSound(p.getLocation(), Sound.BLOCK_SAND_STEP, 0.6f, 0.8f));
                 }

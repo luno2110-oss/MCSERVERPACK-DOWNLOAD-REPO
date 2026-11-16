@@ -94,6 +94,7 @@ jobs:
               c["modes"][m]["world"] = "world"
               c["modes"][m]["spawn"] = "world;%d;110;0;0;0" % (i * 300)
           c.setdefault("beta", {})["alle-tester"] = True
+          c.setdefault("kubytest", {})["erlaubt"] = True   # Testbefehle nur im Testserver
           # Bots laden kein Resource Pack: trotzdem die echten Pack-Dialoge (wie echte Spieler mit Pack)
           c.setdefault("ui", {})["custom-textures"] = "on"
           yaml.safe_dump(c, open(p, "w", encoding="utf-8"), allow_unicode=True, sort_keys=False)

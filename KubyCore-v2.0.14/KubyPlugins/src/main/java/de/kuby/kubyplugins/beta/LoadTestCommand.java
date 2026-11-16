@@ -42,6 +42,12 @@ public final class LoadTestCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (sender instanceof Player p && !p.hasPermission("kuby.admin")) return true;
+        // Testbefehle verändern die Welt (Testgelände am Survival-Spawn wird planiert) und geben Chips aus:
+        // nur auf Testservern (kubytest.erlaubt: true, setzen die CI-Tests), nie aus Versehen auf dem echten Server
+        if (!plugin.getConfig().getBoolean("kubytest.erlaubt", false)) {
+            sender.sendMessage("/kubytest ist nur für Testserver (kubytest.erlaubt: true in der config.yml).");
+            return true;
+        }
         String sub = args.length > 0 ? args[0].toLowerCase(java.util.Locale.ROOT) : "";
         switch (sub) {
             case "klicks" -> {
@@ -589,6 +595,35 @@ public final class LoadTestCommand implements CommandExecutor {
             if (i % 3 == 0 || i == 15) hr.append("x").append(de.kuby.kubyplugins.service.CasinoPlay.fmt(o.mult())).append(' ');
         }
         check("High Roller: +0,5 je Sieg bis x8", hrOk, hr.toString().trim());
+
+        // --- Exploit-Schutz (v1.97): Serie mit Mini-Einsätzen, kleine Gewinne, Tagesdeckel Goldene Zeit ---
+        cp.testReset(id);
+        plugin.casino().giveChips(id, 3_000_000);
+        for (int i = 0; i < 3; i++) {
+            cp.take(p, "blackjack", 10);
+            cp.settle(id, "blackjack", 10, 20);
+        }
+        cp.take(p, "blackjack", 10_000);
+        var big = cp.settle(id, "blackjack", 10_000, 20_000);
+        check("Serie mit 10-Chip-Wetten aufgebaut: Bonus beim Großeinsatz nur auf 10 Chips", big.bonus() <= 10,
+                "Serie " + (big.streak() - 1) + ", Einsatz 10.000, Bonus " + big.bonus() + " (ohne Schutz wären es 6.000)");
+        cp.testReset(id);
+        for (int i = 0; i < 3; i++) {
+            cp.take(p, "crash", 100);
+            cp.settle(id, "crash", 100, 101);
+        }
+        check("Kleine Gewinne (Crash x1,01) bauen keine Serie auf", cp.streak(id) == 0, "Serie " + cp.streak(id));
+        cp.testReset(id);
+        cp.testGolden = true;
+        cp.take(p, "blackjack", 400_000);
+        var g1 = cp.settle(id, "blackjack", 400_000, 800_000);
+        cp.take(p, "blackjack", 400_000);
+        var g2 = cp.settle(id, "blackjack", 400_000, 800_000);
+        long cap = plugin.getConfig().getLong("casino.goldene-zeit.max-bonus-tag", 250_000);
+        check("Goldene Zeit: Tagesdeckel " + cap + " Chips Bonus je Spieler", g1.bonus() <= cap && g1.bonus() + g2.bonus() <= cap + Math.round(400_000 * 0.2) + 1,
+                "1. Gewinn Bonus " + g1.bonus() + ", 2. Gewinn Bonus " + g2.bonus());
+        cp.testGolden = false;
+        cp.testReset(id);
 
         // --- Goldene Zeit ---
         cp.testReset(id);

@@ -117,6 +117,7 @@ jobs:
               c["modes"][m]["world"] = "world"
               c["modes"][m]["spawn"] = "world;%d;110;0;0;0" % (i * 300)
           c.setdefault("beta", {})["alle-tester"] = True
+          c.setdefault("kubytest", {})["erlaubt"] = True   # Testbefehle nur im Testserver
           yaml.safe_dump(c, open(k, "w", encoding="utf-8"), allow_unicode=True, sort_keys=False)
           # Blackjack-Tisch direkt am Spawn: der Bedrock-Client soll die 3D-Anzeigen (Filz, Kante, Hocker, Chips) bekommen
           yaml.safe_dump({"tische": {"t1": "world;0.5;110.0;4.5;180.0;3.0"}, "offen": []},

@@ -149,6 +149,9 @@ casino:
     comeback-ab: 3
     comeback-bonus: 0.25
     max-gesamt: 6.0             # Obergrenze aller Faktoren zusammen (Serie x Goldene Zeit + Comeback)
+    # Exploit-Schutz: nur Gewinne ab diesem Vielfachen des Einsatzes bauen die Serie auf (Crash bei x1,01 nicht);
+    # der Serien-Bonus gilt nur bis zum kleinsten Einsatz der Serie, der Comeback-Bonus bis zu den verlorenen Einsätzen
+    serie-mindestquote: 1.8
   # Rundgang beim ersten Betreten der Casino-Region (Gastgeber Vincent zeigt alle aufgebauten Stationen); /casino rundgang
   rundgang:
     aktiv: true
@@ -167,6 +170,10 @@ casino:
     bis: 22
     faktor: 2.0
     zeitzone: Europe/Berlin   # Uhrzeit der Goldenen Zeit (z. B. America/New_York für Server mit US-Spielern)
+    # Tagesdeckel je Spieler für den Bonus der Goldenen Zeit (doppelte Gewinne machen jedes Spiel zum Gewinn für den
+    # Spieler – ohne Deckel wäre das Casino fünf Stunden am Tag eine Gelddruckmaschine)
+    max-bonus-tag: 250000
+    max-bonus-tag-juwelen: 5000
   vip:
     region: casino-vip
     daily-chips: 500
@@ -797,6 +804,10 @@ kits:
     icon: GOLDEN_CHESTPLATE
     cooldown-minutes: 240
     items: []
+
+# Testbefehle (/kubytest): planieren ein Testgelände am Survival-Spawn und geben Chips aus – nur für Testserver.
+kubytest:
+  erlaubt: false
 
 # Lobby (Hub-Welt): Inventar gesperrt, damit die Lobby-Items (Kompass, Sichtbarkeit) an ihrem Platz bleiben.
 # Nie gesperrt: im Kreativmodus, im Bearbeitungsmodus (/kp edit) und wenn der Hub die Welt mit einem Spielmodus teilt.
