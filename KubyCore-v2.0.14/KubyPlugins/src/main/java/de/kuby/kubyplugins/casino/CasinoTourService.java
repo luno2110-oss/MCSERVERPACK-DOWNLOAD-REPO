@@ -286,7 +286,7 @@ public final class CasinoTourService {
         if (cs != null && near(cs.center(), me)) {
             V3 f = V3.dir(cs.frontYaw(), 0);
             Location c = cs.center();
-            out.add(station(p, "crash", c, f, 4.0, v(c).add(f.mul(3.8)).add(f.right().mul(1.2)).up(-0.6), v(c).up(-0.2),
+            out.add(station(p, "crash", c, f, 4.0, v(c).add(f.mul(Math.max(5.5, cs.width() * 1.1))).add(f.right().mul(1.4)).up(-0.4), v(c).up(-0.2),
                     "Crash: Der Kurs steigt – und je höher er steigt, desto schneller wird er.",
                     "Steigen Sie rechtzeitig aus. Wer zu gierig ist, verliert alles."));
         }

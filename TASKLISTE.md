@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.90** (ungetestet, nicht kompiliert)
+Stand: **v1.91** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -558,6 +558,22 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
 ## Casino fertigstellen (v1.68)
+- [x] **v1.91 Feinschliff nach dem echten Client**
+  - [x] Blackjack: „Freier Platz / Rechtsklick zum Hinsetzen“ nur noch aus ~11 Blöcken, Dealer-Schild aus ~19 Blöcken sichtbar (aus der Ferne überlagerten sich die Schilder aller Tische zu einem Textbrei)
+  - [x] Rundgang: Crash-Schnitt mit Abstand nach Bildschirmbreite (mind. 5,5 Blöcke), damit Rahmen und Kurs ganz ins Bild passen
+- [x] **Casino-Ziel – Stand je Punkt (Code und CI-Prüfung)**
+  - [x] Blackjack-Tisch neu (CA2, v1.6x–v1.85): neuer Filz in Pixel-Grafik mit Weißraum (`bj_felt*`, tools/build_casino_px.py), niedrigere Tischhöhe, Kartenwert-Plaketten seitlich versetzt statt unter Karten/Einsatz, Ergebnis gestaffelt; im echten Client fotografiert (CI „Client-Bilder“: bj_oben, bj_platz, bj_seite)
+  - [x] Belohnend auch bei Verlust: Siegesserie, Comeback-Bonus ab 3 Niederlagen, Cashback auf Verluste, Goldene Zeit, Ergebnis-Banner, Münzregen (CasinoPlay.settle)
+  - [x] VIP mit Juwelen: 50 bis 10.000 je Runde, Spielvolumen 50.000 (`casino.juwelen.*`, CasinoPlay; SELFTEST prüft Grenzen und Volumen)
+  - [x] Siegesserie +0,2 je Sieg bis x2,5 (High Roller bis x8) – CasinoPlay.streakMult, Regeltest 18/18 in der CI
+  - [x] SFX: Karte austeilen, Chip setzen, Glocke, Gewinn, Verlust, Roulette – im Belastungstest gezählt (Karte 985, Chip 567, Glocke 19, Gewinn 251, Verlust 42, Roulette 31)
+  - [x] Chip-Icons neu im Icon-Stil (`chip_*`, `c3chip_*`, 9 Farben bis Pink ab 100k)
+  - [x] Goldene Zeit 17–22 Uhr, Gewinne x2 (`casino.goldene-zeit`, Zeitzone einstellbar; CI prüft sie mit der echten Uhr)
+  - [x] Poker komplett: Texas Hold'em mit Blinds, Setzrunden, All-in/Side-Pots, Showdown-Wertung, 3D-Karten (`card_*`, `c3_*`, 52 + Rückseite), drei Stufen grün/rot/violett
+  - [x] Zwei neue Slot-Automaten (Goldrausch, Neon 7: `sl_gold`, `sl_neon`, `m_hd_neon_*`) mit echten drehenden Walzen
+  - [x] Roulette überarbeitet: Blitz-Zahlen, Kugel-Animation, Ergebnis in der Mitte, Gerade Zahl 31:1 (kein Spieler-Vorteil mehr)
+  - [x] Bedrock: 3D-Modelle als Attachables über GeyserDisplayEntity, jedes eigene Java-Modell hat ein Bedrock-Mapping (CI „Bedrock-Test“ prüft: keine Papier-Anzeigen, keine Modelle ohne Mapping) – auf einem echten Bedrock-Gerät noch vom Besitzer zu prüfen
+  - [x] Crash: Kurs e^(rate·t + beschleunigung·t²), steigt immer schneller; Ticken und Herzschlag werden mit dem Kurs schneller
 - [x] **v1.90 Rundgang: Schilder an den Blackjack-Tischen** – das Dealer-Schild stand weiter weg als der Kamera-Abstand und hing in v1.89 noch hinter Vincent im Bild; jetzt sind Dealer- und Platz-Schilder an den drei Blackjack-Stationen während des Rundgangs aus
 - [x] **v1.89 Rundgang: Dealer-Schild am Elite-Tisch** – in der Zweier-Einstellung hing „Rechtsklick · Spielen“ noch oben im Bild (galt als Teil der Station); dort werden jetzt alle Schilder in Kameranähe (3,4 Blöcke) ausgeblendet
 - [x] **v1.88 Casino einrichten mit Werkzeugen (`/casino einrichten`)** – im echten Client geprüft: Region 31 x 33, `/casino` bringt zum Spawnpunkt, Musik läuft, Casino-Scoreboard erscheint

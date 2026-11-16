@@ -287,6 +287,7 @@ public final class BlackjackTable {
         anim = new DealerAnim(plugin, w, dealerAt, yaw, e -> mark(e, "dealer"),
                 hb -> hb.getPersistentDataContainer().set(click, PersistentDataType.STRING, id + ":dealer:0"));
         dealerText = text(at(fwd(), -0.6, 2.25), Component.empty(), 0.85f, Display.Billboard.VERTICAL);
+        dealerText.setViewRange(0.3f);      // ~19 Blöcke: aus der Ferne überlagern sich die Schilder vieler Tische
         // Chip-Tablett der Bank: schwarz glänzend, sechs Stapel echter 3D-Chips
         Vector3f r = right();
         Location trayAt = origin.clone().add(fwd().x * 0.2, FELT_Y + 0.02, fwd().z * 0.2);
@@ -315,6 +316,7 @@ public final class BlackjackTable {
         }
         for (int s = 0; s < SEATS; s++) {
             seatText[s] = text(seatLocation(s).add(0, 1.45, 0), Component.empty(), 0.65f, Display.Billboard.VERTICAL);
+            seatText[s].setViewRange(0.18f);  // ~11 Blöcke: „Freier Platz“ nur aus der Nähe (im echten Client überlagerten sie sich)
             // Nachbarplätze in der Höhe versetzt (im echten Client lagen die Ergebnisse von der Tischmitte aus nebeneinander
             // auf einer Linie und gingen ineinander über)
             double lift = (s % 2) * 0.3;
