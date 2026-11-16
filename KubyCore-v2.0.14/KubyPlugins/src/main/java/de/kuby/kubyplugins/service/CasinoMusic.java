@@ -183,6 +183,11 @@ public final class CasinoMusic {
         if (!inside && on) stop(p);
     }
 
+    /** Läuft gerade Casino-Musik für diesen Spieler? */
+    public synchronized boolean playing(UUID id) {
+        return listening.containsKey(id);
+    }
+
     /** Beim Ausloggen: nächstes Betreten zählt wieder als neu. */
     public synchronized void forget(Player p) {
         present.remove(p.getUniqueId());
@@ -213,6 +218,9 @@ public final class CasinoMusic {
     public void openMenu(Player p) {
         if (!inCasino(p.getLocation())) {
             CasinoText.error(p, "Musik aussuchen geht nur im Casino.");
+            if (p.hasPermission("kuby.admin") && plugin.regions().find(CasinoService.REGION) == null) {
+                CasinoText.send(p, "<gray>Es gibt noch keinen Casino-Bereich. Einrichten: <click:run_command:'/casino einrichten'><white>/casino einrichten</white></click>");
+            }
             return;
         }
         List<CasinoScreens.Song> list = new ArrayList<>();

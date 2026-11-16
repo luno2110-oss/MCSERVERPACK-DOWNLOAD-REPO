@@ -106,6 +106,36 @@ public final class LoadTestCommand implements CommandExecutor {
                     plugin.getLogger().info("[Kamera] Rundgang gestartet: " + ok);
                 }
             }
+            case "einrichten" -> {
+                // /kubytest einrichten <Spieler>: Casino-Bereich über das Testgelände und Spawnpunkt wie mit den Werkzeugen
+                Player ep = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : sender instanceof Player sp ? sp : null;
+                if (ep == null || arenaA == null) {
+                    plugin.getLogger().info("[Einrichten-Test] FEHLER Spieltest läuft nicht oder Spieler fehlt");
+                } else {
+                    if (!"survival".equals(plugin.modes().modeOf(ep.getUniqueId()))) plugin.modes().switchTo(ep, "survival");
+                    if (ep.getGameMode() == org.bukkit.GameMode.SPECTATOR) ep.setGameMode(org.bukkit.GameMode.ADVENTURE);
+                    ep.setAllowFlight(true);
+                    ep.setFlying(false);
+                    Location sp = camBj.clone().add(0, 0, 6.5);
+                    sp.setYaw(180f);
+                    sp.setPitch(10f);
+                    // erst auf den Boden neben den Spawnpunkt stellen (sonst bricht der Teleport mit Wartezeit ab)
+                    ep.teleport(sp.clone().add(3, 0, 2));
+                    String err = plugin.casinoSetup().test(ep, arenaA, arenaB, sp);
+                    Player fp = ep;
+                    plugin.getServer().getScheduler().runTaskLater(plugin, () -> plugin.casino().travel(fp), 20L);
+                    plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                        String e2 = err;
+                        if (e2 == null && fp.getLocation().distanceSquared(sp) > 1) e2 = "/casino bringt nicht zum Spawnpunkt (" + fp.getLocation().toVector() + ")";
+                        if (e2 == null && !plugin.casinoMusic().inCasino(fp.getLocation())) e2 = "Spieler gilt am Spawnpunkt nicht als im Casino";
+                        if (e2 == null && !plugin.casinoMusic().playing(fp.getUniqueId())) e2 = "keine Casino-Musik am Spawnpunkt";
+                        var r = plugin.regions().find(de.kuby.kubyplugins.service.CasinoService.REGION);
+                        plugin.getLogger().info("[Einrichten-Test] " + (e2 == null ? "OK" : "FEHLER") + " "
+                                + (e2 == null ? "Region " + (r.x2() - r.x1() + 1) + "x" + (r.z2() - r.z1() + 1) + " Höhe " + r.y1() + "-" + r.y2()
+                                + ", /casino bringt zum Spawnpunkt, Musik läuft" : e2));
+                    }, 160L);
+                }
+            }
             case "kino" -> {
                 // /kubytest kino <Spieler>: zweimal eine kurze Kino-Szene, Leisten oben vorher/nachher zählen
                 Player kp = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : sender instanceof Player sp ? sp : null;
@@ -121,6 +151,7 @@ public final class LoadTestCommand implements CommandExecutor {
         return true;
     }
 
+    private static Location arenaA, arenaB;
     private static Location camBj, camRl, camPk, camSlots, camCrash, camBjRot, camBjVio, camPkRot, camPkVio;
 
     /** Kamera-Punkte für Screenshots aus dem echten Client (CI "Client-Bilder"). */
@@ -294,6 +325,8 @@ public final class LoadTestCommand implements CommandExecutor {
         int gx = spawn.getBlockX(), gz = spawn.getBlockZ() + 4;
         double gy = w.getHighestBlockYAt(gx, gz) + 1;
         flatten(w, gx - 15, gx + 15, gz - 14, gz + 18, (int) gy);
+        arenaA = new Location(w, gx - 15, gy - 1, gz - 14);
+        arenaB = new Location(w, gx + 15, gy - 1, gz + 18);
         Location bjAt = new Location(w, gx + 0.5, gy, gz + 0.5);
         Location rlAt = new Location(w, gx + 9.5, gy + 1, gz + 0.5);
         Location pkAt = new Location(w, gx - 9.5, gy, gz + 0.5, 180f, 0f);

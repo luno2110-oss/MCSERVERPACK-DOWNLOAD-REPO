@@ -45,7 +45,9 @@ public final class RegionListener implements Listener {
         if (e.getAction() != Action.RIGHT_CLICK_BLOCK || e.getClickedBlock() == null) return;
         if (plugin.regions().protects(e.getPlayer(), e.getClickedBlock().getLocation())) {
             e.setCancelled(true);
-            deny(e.getPlayer());
+            // Im Casino sind Kasse, Roulette-Tisch und Crash-Schilder Blöcke zum Anklicken: dort keine Schutz-Meldung
+            var r = plugin.regions().at(e.getClickedBlock().getLocation());
+            if (r == null || !de.kuby.kubyplugins.service.CasinoService.REGION.equals(r.id())) deny(e.getPlayer());
         }
     }
 

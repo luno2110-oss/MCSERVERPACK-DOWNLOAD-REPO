@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.87** (ungetestet, nicht kompiliert)
+Stand: **v1.88** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -558,6 +558,12 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
 ## Casino fertigstellen (v1.68)
+- [x] **v1.88 Casino einrichten mit Werkzeugen (`/casino einrichten`)**
+  - [x] Ursache für „Scoreboard wechselt nicht“ und „Musik: nicht im Casino“: Musik, Casino-Scoreboard und Rundgang hängen an der Region `casino`; die ließ sich bisher nur im Bearbeitungsmodus anlegen, und der geht nur in der Hub-Welt. Im Survival gab es die Region also nie, `/casino` brachte nur zur Kasse
+  - [x] `/casino einrichten` (Admins): Stab „Casino-Bereich“ ins Inventar, Linksklick = Ecke 1, Rechtsklick = Ecke 2, Rahmen als Partikel; im Chat [Bestätigen] / [Neu setzen] / [Abbrechen]. Ecken fast auf einer Höhe (Boden angeklickt) → Bereich automatisch 5 nach unten und 30 nach oben
+  - [x] Danach Feder „Casino-Spawn“: Rechtsklick an der Stelle (mit Blickrichtung), im Chat bestätigen; `/casino` bringt Spieler jetzt dorthin (ohne Spawnpunkt wie bisher zur Kasse). Werkzeuge verschwinden am Ende, Abschluss mit Klick-Links zu NPC, Tischen, Automat, Rundgang
+  - [x] Wer beim Bestätigen schon drinsteht, bekommt Musik und Casino-Scoreboard sofort; der Schutz meldet im Casino beim Anklicken von Kasse und Roulette kein „geschützt“ mehr
+  - [x] CI-Test `/kubytest einrichten` im echten Client: Bereich über das Testgelände, Spawnpunkt, `/casino`, Ankunft am Spawnpunkt, Musik läuft, Bild mit Casino-Scoreboard
 - [x] **v1.87 Rundgang: zweite Runde im echten Client**
   - [x] Schwebende Hinweise („Rechtsklick · Spielen“, „Freier Platz“), die direkt vor einer Kamera stehen, werden für den Zuschauer während des Rundgangs ausgeblendet (hingen riesig oben im Bild); was die Kamera zeigen soll, bleibt sichtbar
   - [x] Jukebox-Schnitt halbnah von schräg vorn (vorher 1,5 Blöcke vor dem NPC: nur Stoff im Bild), Crash-Schnitt weiter weg mit Rahmen statt bildfüllendem Bildschirm

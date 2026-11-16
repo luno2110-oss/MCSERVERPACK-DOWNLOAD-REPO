@@ -107,6 +107,7 @@ public final class CasinoCommand implements CommandExecutor, org.bukkit.command.
                 if (!plugin.casinoTour().play(p)) Msg.send(p, "<red>Hier gibt es nichts zu zeigen – stell dich ins Casino (im Umkreis von 90 Blöcken).");
             }
             case "npc" -> plugin.casinoNpc().command(p, args);
+            case "einrichten", "setup" -> plugin.casinoSetup().command(p, args);
             case "wechseln", "chips" -> {
                 String blocked = plugin.casino().checkUse(p);
                 if (blocked != null) Msg.send(p, "<red>" + blocked);
@@ -288,9 +289,11 @@ public final class CasinoCommand implements CommandExecutor, org.bukkit.command.
             opts.addAll(java.util.List.of("status", "kaufen", "verkaufen", "waehrung", "serie", "jackpot", "regeln", "stats", "rundgang",
                     "cashout", "hilfe"));
             if (admin) opts.addAll(java.util.List.of("blackjack", "poker-tisch", "roulette-tisch", "automat", "slots", "crash", "npc",
-                    "holo", "kasse", "barkeeper", "admin"));
+                    "holo", "kasse", "barkeeper", "admin", "einrichten"));
         } else if (admin && args.length == 2 && args[0].equalsIgnoreCase("blackjack")) {
             opts.addAll(java.util.List.of("tisch", "entfernen", "liste"));
+        } else if (admin && args.length == 2 && args[0].equalsIgnoreCase("einrichten")) {
+            opts.addAll(java.util.List.of("ok", "spawn", "neu", "abbrechen"));
         } else if (admin && args.length == 2 && args[0].equalsIgnoreCase("poker-tisch")) {
             opts.addAll(java.util.List.of("gruen", "rot", "violett"));
         } else if (admin && args.length >= 3 && args[0].equalsIgnoreCase("blackjack") && args[1].equalsIgnoreCase("tisch")) {

@@ -190,6 +190,10 @@ jobs:
           shot "13_leisten_nach_2_szenen"
           echo "kubytest regeln" >&3
           sleep 6
+          # Casino einrichten (Bereich, Spawnpunkt) wie mit den Werkzeugen, dann /casino: Scoreboard und Musik im Casino
+          echo "kubytest einrichten Kamera" >&3
+          sleep 12
+          shot "14_casino_eingerichtet"
           echo "kubytest kamera crash Kamera" >&3
           clip video_crash 20
           for k in 1 2 3 4 5 6; do sleep 3; shot "20_crash_$k"; done
@@ -249,6 +253,9 @@ jobs:
           print("- Goldene Zeit (echte Uhr, Zeitzone auf 18 Uhr gestellt): %d Abrechnungen mit Goldener Zeit von %d" % (gold, wins))
           for l in re.findall(r"\[Casino-Regel\] (?:OK|FEHLER) Goldene Zeit nach echter Uhr.*", log): print("  - " + l)
           if wins and gold == 0: probs.append("Goldene Zeit: keine Abrechnung mit Bonus, obwohl es 18 Uhr ist")
+          ein = re.findall(r"\[Einrichten-Test\] (OK|FEHLER) (.*)", log)
+          print("- Casino einrichten (Bereich, Spawnpunkt, /casino, Musik): " + ("; ".join(k[0] + " " + k[1] for k in ein) if ein else "nicht gelaufen"))
+          if not ein or ein[-1][0] != "OK": probs.append("Casino einrichten: " + (ein[-1][1] if ein else "Test nicht gelaufen"))
           kino = re.findall(r"\[Kino-Test\] (OK|FEHLER) (.*)", log)
           print("- Leisten oben nach Kino-Szenen: " + ("; ".join(k[0] + " " + k[1] for k in kino) if kino else "nicht gelaufen"))
           if not kino or kino[-1][0] != "OK": probs.append("Leisten oben nach Kino-Szenen: " + (kino[-1][1] if kino else "Test nicht gelaufen"))

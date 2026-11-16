@@ -341,6 +341,8 @@ public final class KubyPlugins extends JavaPlugin {
         // Casino-Rundgang beim ersten Betreten (Gastgeber Vincent)
         casinoTour = new de.kuby.kubyplugins.casino.CasinoTourService(this);
         casinoTour.start();
+        casinoSetup = new de.kuby.kubyplugins.casino.CasinoSetup(this);
+        getServer().getPluginManager().registerEvents(casinoSetup, this);
         // Einführung für neue Spieler (erster Join: Kamerafahrt und Tour, je Modus Aufgaben mit Belohnung)
         intro = new de.kuby.kubyplugins.intro.IntroService(this);
         intro.samples(this::registerSelfTestCanvas);
@@ -1048,6 +1050,8 @@ public final class KubyPlugins extends JavaPlugin {
     public de.kuby.kubyplugins.cinema.Cinema cinema() { return cinema; }
     private de.kuby.kubyplugins.casino.CasinoTourService casinoTour;
     public de.kuby.kubyplugins.casino.CasinoTourService casinoTour() { return casinoTour; }
+    private de.kuby.kubyplugins.casino.CasinoSetup casinoSetup;
+    public de.kuby.kubyplugins.casino.CasinoSetup casinoSetup() { return casinoSetup; }
     private de.kuby.kubyplugins.staff.StaffService staff;
     /** Team-Bereich (Kanäle, Meldungen, Verwarnungen); null, solange das Plugin startet. */
     public de.kuby.kubyplugins.staff.StaffService staff() { return staff; }

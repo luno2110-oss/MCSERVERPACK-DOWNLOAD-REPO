@@ -34,6 +34,8 @@ public final class CasinoService {
     private long jackpot;
     private String kasse;
     private String tisch;
+    /** Spawnpunkt für /casino (Welt;x;y;z;yaw;pitch), gesetzt mit /casino einrichten. */
+    private String spawn;
 
     public CasinoService(KubyPlugins plugin) {
         this.plugin = plugin;
@@ -52,6 +54,7 @@ public final class CasinoService {
         jackpot = yml.getLong("jackpot", plugin.getConfig().getLong("casino.jackpot-start", 10000));
         kasse = yml.getString("kasse");
         tisch = yml.getString("tisch");
+        spawn = yml.getString("spawn");
         migrateChipUnit(yml);
     }
 
@@ -231,14 +234,38 @@ public final class CasinoService {
             Msg.send(p, "<red>Das Casino gibt es nur in Survival. Wechsle erst den Modus.");
             return;
         }
-        Location k = kasseLocation();
-        if (k == null) {
-            Msg.send(p, "<red>Das Casino ist noch nicht eingerichtet.");
-            return;
+        Location target = spawn();
+        if (target == null) {
+            Location k = kasseLocation();
+            if (k == null) {
+                Msg.send(p, "<red>Das Casino ist noch nicht eingerichtet." + (p.hasPermission("kuby.admin") ? " <gray>Admins: <white>/casino einrichten" : ""));
+                return;
+            }
+            target = k.clone().add(0, 1, 0);
+            target.setDirection(p.getLocation().getDirection());
         }
-        Location target = k.clone().add(0, 1, 0);
-        target.setDirection(p.getLocation().getDirection());
         de.kuby.kubyplugins.util.Teleports.delayed(plugin, p, target, "Casino");
+    }
+
+    /** Spawnpunkt für /casino setzen (mit Blickrichtung). */
+    public synchronized void setSpawn(Location l) {
+        spawn = l.getWorld().getName() + ";" + l.getX() + ";" + l.getY() + ";" + l.getZ() + ";" + l.getYaw() + ";" + l.getPitch();
+        save();
+    }
+
+    /** Spawnpunkt für /casino, null wenn nicht gesetzt oder die Welt fehlt. */
+    public Location spawn() {
+        if (spawn == null) return null;
+        String[] p = spawn.split(";");
+        if (p.length < 6) return null;
+        World w = Bukkit.getWorld(p[0]);
+        if (w == null) return null;
+        try {
+            return new Location(w, Double.parseDouble(p[1]), Double.parseDouble(p[2]), Double.parseDouble(p[3]),
+                    Float.parseFloat(p[4]), Float.parseFloat(p[5]));
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     /** True, wenn der Ort genau der Block des Kassentischs ist. */
@@ -308,6 +335,7 @@ public final class CasinoService {
         out.set("chip-unit", 1);
         if (kasse != null) out.set("kasse", kasse);
         if (tisch != null) out.set("tisch", tisch);
+        if (spawn != null) out.set("spawn", spawn);
         try {
             plugin.getDataFolder().mkdirs();
             out.save(file);
