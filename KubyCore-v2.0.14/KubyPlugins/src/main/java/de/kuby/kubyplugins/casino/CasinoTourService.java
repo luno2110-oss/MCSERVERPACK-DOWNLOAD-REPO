@@ -80,10 +80,36 @@ public final class CasinoTourService {
         Cinema.Options o = new Cinema.Options();
         o.anchor = l;
         o.skippable = true;
+        hideNearCams(p, st, start, o);
         o.onEnd = (pp, res) -> {
             if (res != Cinema.Result.ABORTED) CasinoText.send(pp, "<gold>Viel Glück!</gold> <gray>Rundgang wiederholen: <white>/casino rundgang");
         };
         return plugin.cinema().play(p, new CasinoTour(start, dir, st), o);
+    }
+
+    /**
+     * Schwebende Schriften (Tisch- und NPC-Hinweise wie „Rechtsklick · Spielen“), die direkt vor einer Kamera stehen,
+     * für den Zuschauer ausblenden: im echten Client hingen sie riesig oben im Bild. Was die Kamera zeigen soll (der
+     * Crash-Bildschirm, das Schild der Station), bleibt sichtbar. Am Ende der Szene ist alles wieder da.
+     */
+    private static void hideNearCams(Player p, List<CasinoTour.Station> st, V3 start, Cinema.Options o) {
+        List<V3[]> cams = new ArrayList<>();      // {Kamera, Ziel}
+        for (CasinoTour.Station s : st) {
+            cams.add(new V3[]{s.brollCam(), s.brollLook()});
+            if (s.twoCam() != null) cams.add(new V3[]{s.twoCam(), s.focus().up(1.5)});
+        }
+        cams.add(new V3[]{start.up(1.7), start.up(1.5)});
+        for (org.bukkit.entity.TextDisplay td : p.getWorld().getEntitiesByClass(org.bukkit.entity.TextDisplay.class)) {
+            Location l = td.getLocation();
+            if (l.distanceSquared(p.getLocation()) > (RANGE + 10) * (RANGE + 10)) continue;
+            V3 t = v(l);
+            for (V3[] c : cams) {
+                if (t.dist(c[0]) < 2.6 && t.dist(c[1]) > 1.3) {
+                    o.shared.add(td);
+                    break;
+                }
+            }
+        }
     }
 
     // =================================================================================================================
@@ -254,7 +280,7 @@ public final class CasinoTourService {
         if (cs != null && near(cs.center(), me)) {
             V3 f = V3.dir(cs.frontYaw(), 0);
             Location c = cs.center();
-            out.add(station(p, "crash", c, f, 4.0, v(c).add(f.mul(2.4)).up(-0.3), v(c),
+            out.add(station(p, "crash", c, f, 4.0, v(c).add(f.mul(3.8)).add(f.right().mul(1.2)).up(-0.6), v(c).up(-0.2),
                     "Crash: Der Kurs steigt – und je höher er steigt, desto schneller wird er.",
                     "Steigen Sie rechtzeitig aus. Wer zu gierig ist, verliert alles."));
         }
@@ -262,8 +288,9 @@ public final class CasinoTourService {
         Entity juke = nearest(plugin.casinoNpc().find(CasinoNpc.Role.MUSIK, me, RANGE), Entity::getLocation, me);
         if (juke != null) {
             V3 f = V3.dir(juke.getLocation().getYaw(), 0);
-            V3 mid = v(juke.getLocation()).up(1.1);
-            out.add(station(p, "musik", juke.getLocation(), f, 2.0, mid.add(f.mul(1.5)).add(f.right().mul(0.4)), mid,
+            // Halbnah von schräg vorn auf Kopf und Oberkörper (im echten Client war 1,5 Blöcke nur noch Stoff im Bild)
+            V3 head = v(juke.getLocation()).up(1.45);
+            out.add(station(p, "musik", juke.getLocation(), f, 2.0, head.add(f.mul(2.8)).add(f.right().mul(1.1)).up(0.15), head.up(-0.2),
                     "Und für die richtige Stimmung: unsere Jukebox.",
                     "Wünschen Sie sich ein Lied – hier spielt, was Ihnen gefällt."));
         }

@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.86** (ungetestet, nicht kompiliert)
+Stand: **v1.87** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -558,6 +558,9 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
 ## Casino fertigstellen (v1.68)
+- [x] **v1.87 Rundgang: zweite Runde im echten Client**
+  - [x] Schwebende Hinweise („Rechtsklick · Spielen“, „Freier Platz“), die direkt vor einer Kamera stehen, werden für den Zuschauer während des Rundgangs ausgeblendet (hingen riesig oben im Bild); was die Kamera zeigen soll, bleibt sichtbar
+  - [x] Jukebox-Schnitt halbnah von schräg vorn (vorher 1,5 Blöcke vor dem NPC: nur Stoff im Bild), Crash-Schnitt weiter weg mit Rahmen statt bildfüllendem Bildschirm
 - [x] **v1.86 Casino-Rundgang im echten Client angesehen und nachgeschliffen**
   - [x] Rundgang als Video aus dem echten Client (CI „Client-Bilder“, `video_rundgang.mp4`), im Testgelände mit Kasse und Jukebox
   - [x] Untertitel liefen über den Bildrand („…desto schneller wird e“): Sätze werden in Häppchen von höchstens 46 Zeichen geteilt und nach Länge über die Station verteilt
