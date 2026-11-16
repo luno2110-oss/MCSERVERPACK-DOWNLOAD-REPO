@@ -315,7 +315,7 @@ public final class BlackjackTable {
                     CARD_SCALE * 0.82f, "static");
         }
         for (int s = 0; s < SEATS; s++) {
-            seatText[s] = text(seatLocation(s).add(0, 1.45, 0), Component.empty(), 0.65f, Display.Billboard.VERTICAL);
+            seatText[s] = text(seatLocation(s).add(0, 1.4 + (s % 2) * 0.22, 0), Component.empty(), 0.5f, Display.Billboard.VERTICAL);
             seatText[s].setViewRange(0.18f);  // ~11 Blöcke: „Freier Platz“ nur aus der Nähe (im echten Client überlagerten sie sich)
             // Nachbarplätze in der Höhe versetzt (im echten Client lagen die Ergebnisse von der Tischmitte aus nebeneinander
             // auf einer Linie und gingen ineinander über)

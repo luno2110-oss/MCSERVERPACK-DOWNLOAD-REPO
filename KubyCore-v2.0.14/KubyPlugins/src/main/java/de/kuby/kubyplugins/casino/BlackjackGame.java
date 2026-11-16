@@ -170,8 +170,9 @@ public final class BlackjackGame {
     }
 
     private void freeSeatText(int seat) {
-        table.seatText(seat, Component.text().append(Component.text("Freier Platz", TextColor.color(0xF2B829)))
-                .append(Component.newline()).append(Component.text("Rechtsklick zum Hinsetzen", NamedTextColor.GRAY)).build());
+        // eine Zeile (zwei Zeilen je Platz überlagerten sich im echten Client mit den Nachbarplätzen)
+        table.seatText(seat, Component.text().append(Component.text("Frei", TextColor.color(0xF2B829)))
+                .append(Component.text(" · Rechtsklick", NamedTextColor.GRAY)).build());
     }
 
     private void idleText() {

@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.91** (ungetestet, nicht kompiliert)
+Stand: **v1.92** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -558,6 +558,7 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
 ## Casino fertigstellen (v1.68)
+- [x] **v1.92 Blackjack-Platzschilder einzeilig** – „Frei · Rechtsklick“ statt zwei Zeilen, kleiner, Nachbarplätze in der Höhe versetzt (am nahen Tisch überlagerten sich die vier Schilder noch)
 - [x] **v1.91 Feinschliff nach dem echten Client**
   - [x] Blackjack: „Freier Platz / Rechtsklick zum Hinsetzen“ nur noch aus ~11 Blöcken, Dealer-Schild aus ~19 Blöcken sichtbar (aus der Ferne überlagerten sich die Schilder aller Tische zu einem Textbrei)
   - [x] Rundgang: Crash-Schnitt mit Abstand nach Bildschirmbreite (mind. 5,5 Blöcke), damit Rahmen und Kurs ganz ins Bild passen
