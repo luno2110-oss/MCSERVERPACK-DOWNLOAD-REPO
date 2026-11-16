@@ -24,6 +24,7 @@ jobs:
           sparse-checkout: |
             tools/clientshot
             tools/loadtest
+            resourcepack/KubyUI/assets/kuby/items
 
       - uses: actions/setup-java@v4
         with:
@@ -182,6 +183,15 @@ jobs:
           echo "kubytest kamera poker_nah Kamera" >&3
           sleep 6
           for k in 1 2 3 4 5; do sleep 3; shot "12_poker_nah_$k"; done
+          # Roulette (Las Vegas): ein ganzer Wurf am Kessel (Rotor, Kugel, Rauten, Fach), danach das Tableau (Spielerfarbe, Marker)
+          echo "kubytest kamera roulette_rad Kamera" >&3
+          sleep 6
+          echo "kubytest roulette Kamera" >&3
+          clip video_roulette 26
+          for k in 1 2 3 4 5 6; do sleep 2; shot "15_roulette_rad_$k"; done
+          echo "kubytest kamera roulette_tableau Kamera" >&3
+          for k in 1 2 3 4 5 6; do sleep 2; shot "15_roulette_tableau_$k"; done
+          sleep 4
           # Leisten oben (Geld, Juwelen, Quests) vor und nach zwei Kino-Szenen: dürfen sich nicht verdoppeln
           echo "kubytest kamera bj_oben Kamera" >&3
           sleep 4
@@ -291,6 +301,11 @@ jobs:
           ein = re.findall(r"\[Einrichten-Test\] (OK|FEHLER) (.*)", log)
           print("- Casino einrichten (Bereich, Spawnpunkt, /casino, Musik): " + ("; ".join(k[0] + " " + k[1] for k in ein) if ein else "nicht gelaufen"))
           if not ein or ein[-1][0] != "OK": probs.append("Casino einrichten: " + (ein[-1][1] if ein else "Test nicht gelaufen"))
+          rl = re.findall(r"\[Roulette-Test\] (.*)", log)
+          rk = re.findall(r"\[Roulette\] Kugel liegt auf (\d+)", log)
+          print("- Roulette (Las Vegas): " + (rl[-1] if rl else "nicht gelaufen") + "; Kugel lag auf: " + (", ".join(rk) or "-"))
+          if not rl or "49/49" not in rl[-1] or "rot ok" not in rl[-1]: probs.append("Roulette: " + (rl[-1] if rl else "Test nicht gelaufen"))
+          elif not rk: probs.append("Roulette: Wurf nicht beendet (keine Kugel im Fach)")
           kino = re.findall(r"\[Kino-Test\] (OK|FEHLER) (.*)", log)
           print("- Leisten oben nach Kino-Szenen: " + ("; ".join(k[0] + " " + k[1] for k in kino) if kino else "nicht gelaufen"))
           if not kino or kino[-1][0] != "OK": probs.append("Leisten oben nach Kino-Szenen: " + (kino[-1][1] if kino else "Test nicht gelaufen"))

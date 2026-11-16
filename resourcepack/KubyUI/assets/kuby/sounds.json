@@ -158,5 +158,25 @@
     "stream": true
    }
   ]
+ },
+ "casino.roulette_spin": {
+  "sounds": [
+   {
+    "name": "kuby:casino/roulette_spin"
+   }
+  ]
+ },
+ "casino.chip": {
+  "sounds": [
+   {
+    "name": "kuby:casino/chip1"
+   },
+   {
+    "name": "kuby:casino/chip2"
+   },
+   {
+    "name": "kuby:casino/chip3"
+   }
+  ]
  }
 }

@@ -172,6 +172,19 @@ public final class LoadTestCommand implements CommandExecutor {
                 Player kp = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : sender instanceof Player sp ? sp : null;
                 if (kp != null) cinemaBars(kp, 0, new ArrayList<>());
             }
+            case "roulette" -> {
+                // /kubytest roulette <Spieler>: Spieler setzt (Rot + eine Zahl), Countdown springt auf 1 – ein ganzer Wurf
+                Player rp = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : sender instanceof Player sp ? sp : null;
+                if (rp != null) {
+                    plugin.casino().giveChips(rp.getUniqueId(), 5000);
+                    String e1 = plugin.roulette().betByName(rp, "rot", 100);
+                    String e2 = plugin.roulette().betByName(rp, "17", 50);
+                    String e3 = plugin.roulette().betByName(rp, "gerade", 100);
+                    plugin.roulette().testFastForward();
+                    plugin.getLogger().info("[Roulette-Test] Einsätze: " + (e1 == null ? "rot ok" : e1) + ", " + (e2 == null ? "17 ok" : e2)
+                            + ", " + (e3 == null ? "gerade ok" : e3) + "; Tableau-Treffer: " + plugin.roulette().testHits());
+                }
+            }
             case "kamera" -> {
                 // /kubytest kamera <wo> [Spieler] – auch von der Konsole (CI "Client-Bilder" mit echtem Client)
                 Player cam = args.length > 2 ? Bukkit.getPlayerExact(args[2]) : sender instanceof Player p ? p : null;
@@ -296,8 +309,22 @@ public final class LoadTestCommand implements CommandExecutor {
                 to = camPk.clone().add(0, 0.8, 0);
             }
             case "roulette" -> {
-                from = camRl.clone().add(0, 2.6, 6.0);
-                to = camRl.clone().add(0, 0, 0.5);
+                // Las-Vegas-Tisch von der Spielerseite: Tableau, Kessel, Croupier und Tafel
+                var rt = plugin.roulette().table();
+                from = rt.local(-0.4, -3.3, 2.5);
+                to = rt.local(-0.4, 0.1, 0.85);
+            }
+            case "roulette_rad" -> {
+                // nah auf den Kessel (Rotor, Kugel, Rauten)
+                var rt = plugin.roulette().table();
+                from = rt.local(-2.3, -1.05, 1.75);
+                to = rt.local(-2.3, 0.05, 0.9);
+            }
+            case "roulette_tableau" -> {
+                // von oben auf das Tableau (Chips in Spielerfarbe, Marker auf der Gewinnzahl)
+                var rt = plugin.roulette().table();
+                from = rt.local(0.6, -1.7, 2.2);
+                to = rt.local(0.4, -0.05, 0.86);
             }
             default -> {
                 from = camSlots.clone().add(0, 1.7, 4.4);
@@ -421,7 +448,7 @@ public final class LoadTestCommand implements CommandExecutor {
         arenaA = new Location(w, gx - 15, gy - 1, gz - 14);
         arenaB = new Location(w, gx + 15, gy - 1, gz + 18);
         Location bjAt = new Location(w, gx + 0.5, gy, gz + 0.5);
-        Location rlAt = new Location(w, gx + 9.5, gy + 1, gz + 0.5);
+        Location rlAt = new Location(w, gx + 9.5, gy, gz + 0.5);
         Location pkAt = new Location(w, gx - 9.5, gy, gz + 0.5, 180f, 0f);
         Location slotA = new Location(w, gx + 0.5, gy + 1.5, gz - 7.5);
         Location slotB = new Location(w, gx + 4.5, gy + 1.5, gz - 7.5);
@@ -445,7 +472,7 @@ public final class LoadTestCommand implements CommandExecutor {
                 plugin.casinoNpc().spawn(de.kuby.kubyplugins.casino.CasinoNpc.Role.KASSE, new Location(w, gx - 12.5, gy, gz + 13.5, 180f, 0f));
                 plugin.casinoNpc().spawn(de.kuby.kubyplugins.casino.CasinoNpc.Role.MUSIK, new Location(w, gx + 12.5, gy, gz + 13.5, 180f, 0f));
             }
-            plugin.roulette().setTable(rlAt, 10, 8, 0f);
+            plugin.roulette().setTable(rlAt, 0f);
             plugin.poker().setTable(pkAt);
             // zwei neue Automaten freistehend (Hocker 1,6 davor, Blick nach +z zum Spieler)
             plugin.slots().testMachine("kgold", slotA, 0f, new Location(w, slotA.getX(), gy, slotA.getZ() + 1.6), "gold");

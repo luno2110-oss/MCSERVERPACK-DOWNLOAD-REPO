@@ -246,7 +246,10 @@ public final class CasinoCommand implements CommandExecutor, org.bukkit.command.
                 + Msg.escape(args[2]) + ".");
     }
 
-    /** /casino roulette-tisch [breite] [tiefe]: Mitte = Block, auf den du schaust; Breite quer zu deinem Blick. */
+    /**
+     * /casino roulette-tisch [entfernen]: Las-Vegas-Tisch vor dir. Du stehst auf der Spielerseite und schaust zum Croupier;
+     * die Tischmitte liegt 2 Blöcke vor dir, der Kessel links, Platzbedarf 6,3 x 3,5 Blöcke (mit Croupier und Tafel).
+     */
     private void rouletteTable(Player p, String[] args) {
         if (!p.hasPermission("kuby.admin")) {
             Msg.send(p, "<red>Nur Admins können den Roulette-Tisch setzen.");
@@ -257,26 +260,14 @@ public final class CasinoCommand implements CommandExecutor, org.bukkit.command.
             Msg.send(p, "<green>Anzeigen des Roulette-Tischs entfernt (bis zum nächsten Setzen).");
             return;
         }
-        Block target = p.getTargetBlockExact(8);
-        if (target == null) {
-            Msg.send(p, "<red>Schau auf die Mitte der Tischplatte.");
-            return;
-        }
-        double width = 10, depth = 8;
-        try {
-            if (args.length > 1) width = Double.parseDouble(args[1].replace(',', '.'));
-            if (args.length > 2) depth = Double.parseDouble(args[2].replace(',', '.'));
-        } catch (NumberFormatException e) {
-            Msg.send(p, "<red>Nutzung: /casino roulette-tisch [Breite] [Tiefe]");
-            return;
-        }
-        Location center = target.getLocation().add(0.5, 1.0, 0.5);
-        if (Math.abs(target.getBoundingBox().getMaxY() - target.getY() - 1.0) > 0.01) {
-            center.setY(target.getBoundingBox().getMaxY());
-        }
         float yaw = Math.round(p.getLocation().getYaw() / 90f) * 90f;
-        plugin.roulette().setTable(center, width, depth, yaw);
-        Msg.send(p, "<green>Roulette-Tisch aufgebaut (" + width + " x " + depth + " Blöcke). Croupier: /casino npc croupier");
+        double r = Math.toRadians(yaw);
+        Location feet = p.getLocation();
+        Location center = new Location(feet.getWorld(), feet.getBlockX() + 0.5 - Math.sin(r) * 2.0, feet.getY(),
+                feet.getBlockZ() + 0.5 + Math.cos(r) * 2.0);
+        plugin.roulette().setTable(center, yaw);
+        Msg.send(p, "<green>Roulette-Tisch (Las Vegas) aufgebaut: Kessel links, Croupier gegenüber. Gesetzt wird per Rechtsklick "
+                + "aufs Tableau, Linksklick nimmt Chips zurück, Schleichen + Rechtsklick öffnet das Menü.");
     }
 
 

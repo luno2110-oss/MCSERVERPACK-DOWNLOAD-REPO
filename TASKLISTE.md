@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.97** (ungetestet, nicht kompiliert)
+Stand: **v1.98** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -558,7 +558,22 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
 ## Casino fertigstellen (v1.68)
+- [x] **v1.98 Neuer Roulette-Tisch wie in Las Vegas** (Wunsch des Besitzers; ersetzt das Feld-Oval aus v1.6x)
+  - [x] Freistehender Tisch aus Anzeigen: Nussholz-Korpus mit Sockelleiste und Goldband, Platte, grüner Filz, Polster-Reling mit Goldkante auf der Spielerseite und am Ende, Holzkante zum Croupier
+  - [x] Tableau (eigene Grafik rv_layout, 1,6 x 4,0 Blöcke): Null mit angeschrägten Ecken am Kessel, 1–36 in drei Reihen rot/schwarz mit hellen Ziffern, „2:1“ je Kolonne, Dutzende („1ST/2ND/3RD 12“), einfache Chancen (1-18, EVEN, rote und schwarze Raute, ODD, 19-36), Goldlinien, „KUBY“ mit Rauten
+  - [x] Kessel: Zwölfeck aus Nussholz, Goldlippe, Kessel-Bild mit Holzrand, dunkler Kugelbahn und acht Rauten (eine einmal größer), Rotor mit 37 Fächern in europäischer Reihenfolge und Goldstegen, Holzkegel mit Speichen, 3D-Drehkreuz
+  - [x] Echter Wurf: Croupier stößt den Rotor an (Uhrzeigersinn, läuft langsam aus), wirft die Kugel von seiner Seite gegen die Drehrichtung; sie rollt 5,5 s in der Bahn, wird langsamer, verlässt die Bahn, trifft zwei Rauten, springt über die Stege und bleibt nach 7,5 s im Fach der Gewinnzahl liegen, wackelt kurz nach und dreht dann mit dem Rotor weiter. Ruhezustand: Rotor dreht langsam, Kugel liegt im letzten Fach. Die Bahn wird so gestreckt (höchstens 21 % schneller, unsichtbar), dass sie genau im richtigen Fach endet
+  - [x] Eigener Ton `kuby:casino.roulette_spin` (8,4 s, mono, zeitgleich zur Animation): Rotor-Anstoß, Einwurf-Klick, Rollen mit Puls je Umdrehung, zwei metallische Rauten-Treffer, Klackern über die Stege, Nachklappern; dazu `kuby:casino.chip` (drei Varianten Tonchip auf Tonchip). Gebaut mit `tools/build_roulette_sfx.py`
+  - [x] Setzen direkt auf dem Tisch: Rechtsklick legt den gewählten Chip auf das Feld unter dem Fadenkreuz (Strahl vom Auge auf den Filz), Linksklick nimmt die eigenen Chips davon zurück, Schleichen + Rechtsklick öffnet den Dialog; Kessel und Croupier öffnen den Dialog (Schleichen: Regeln). Goldrahmen um das Feld unter dem Fadenkreuz, nur für dich sichtbar, dazu in der Actionbar Feld, Quote (z. B. „Zahl 17 zahlt 31:1“, Blitz-Zahl), Chipwert und eigener Einsatz darauf
+  - [x] Jeder Spieler setzt mit eigener Chip-Farbe (wie am echten Tisch: Rot, Blau, Grün, Lila, Pink, Weiß, Schwarz, Gold); 3D-Chips fallen auf den Stapel, mehrere Farben auf einem Feld stehen nebeneinander; Einsatz-Hologramm mit farbigem Punkt je Spieler
+  - [x] Croupier (Gelenkfigur wie beim Blackjack) mit Chip-Ablage: schaut zu den Spielern, wischt bei „Letzte Einsätze“ und „Nichts geht mehr“ über den Tisch, stößt den Rotor an, zeigt auf die Gewinnzahl und stellt den Glas-Marker („Dolly“) darauf, zieht verlorene Chips zur Ablage, schiebt Gewinnstapel neben die Gewinner, am Ende gehen alle Chips über die Reling zu den Spielern
+  - [x] Anzeigetafel (Marquee) an der Kesselseite, schräg zu den Spielern: letzte 9 Zahlen (rot links, schwarz rechts, Null mittig, neueste fett), darüber „HEISS“ und Rot/Schwarz in Prozent
+  - [x] Blitz-Zahlen leuchten auf dem Tableau (Goldrahmen mit Glühen und „⚡x3“ über dem Feld)
+  - [x] Aufbau: `/casino roulette-tisch` (auf der Spielerseite stehen, zum Croupier schauen; Mitte 2 Blöcke vor dir, Platzbedarf etwa 6,3 x 3,5), `entfernen`. Alter Tisch aus roulette-tisch.yml wird übernommen (Hinweis im Log: alte Block-Tischplatte entfernen und neu setzen). Tisch mitten in der Runde abgebaut: alle Einsätze zurück
+  - [x] Glitches behoben: Chips verschwanden beim Neuaufbau des Tischs (Chunk neu geladen) – werden jetzt wieder aufgelegt; Wurf läuft bei entladenem Chunk zu Ende und zahlt aus; Rundgang zeigt den neuen Tisch von der Spielerseite
+  - [x] CI: `/kubytest roulette` setzt und lässt einen ganzen Wurf laufen, prüft für alle 49 Felder, dass der Blick von oben genau dieses Feld trifft, Video vom Kessel und Bilder vom Tableau; Modell-Test fand das Pack wegen „sparse checkout“ nicht (Fehlalarm, behoben)
 - [~] **v1.97 Casino-Prüfung: fehlende Dateien, Bugs, Exploits (Ziel des Besitzers, läuft)**
+  - [x] CI-Lauf v1.97: Client meldet keine fehlenden Texturen und keine unbekannten Töne mehr; Regeltest 21 OK (mit den drei neuen Exploit-Prüfungen); Inventar, Casino einrichten, Leisten nach Kino-Szenen OK
   - [x] Fehlende Texturen: der echte Client meldete 25 Modelle ohne Textur (Schwert, Stein, Strahlen, Ringe, Wolken, Kuppeln der Kino-Szenen). Ursache: Texturen in textures/fx und textures/cine stehen nicht im Block-Atlas (Minecraft nimmt nur block/ und item/ auf) – jetzt `assets/minecraft/atlases/blocks.json` mit beiden Ordnern (tools/build_cinema.py)
   - [x] Rundgang fordert nur Sprachaufnahmen an, die im Pack liegen (casino/tour-voice.txt aus tools/add_tour_voice.py); vorher „unknown soundEvent kuby:tour.*“ im Client
   - [x] **Exploit Belohnungen**: Serie, Comeback und Goldene Zeit multiplizierten jeden Gewinn voll. Serie mit 10-Chip-Wetten oder Crash bei x1,01 aufbauen, dann Höchsteinsatz auf Rot: bis zu +70 % Erwartungswert; Goldene Zeit allein machte Rot/Schwarz und Blackjack zu +46 %. Jetzt: Serien-Bonus nur bis zum kleinsten Einsatz der Serie, für die Serie zählen nur Gewinne ab 1,8-fachem Einsatz (`casino.bonus.serie-mindestquote`), Comeback-Bonus höchstens bis zu den verlorenen Einsätzen, Goldene Zeit mit Tagesdeckel je Spieler (250.000 Chips / 5.000 Juwelen Bonus, `casino.goldene-zeit.max-bonus-tag[-juwelen]`). Regeltest prüft alle drei Fälle

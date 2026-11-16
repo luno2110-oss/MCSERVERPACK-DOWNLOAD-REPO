@@ -279,9 +279,9 @@ public final class CasinoTourService {
         RouletteTable rt = plugin.roulette().table();
         if (rt != null && rt.center() != null && near(rt.center(), me)) {
             Location c = rt.center();
-            V3 f = V3.dir(rt.yaw(), 0);
-            // Schnitt: Totale von schräg oben auf das ganze Rad (nicht nah am Text in der Mitte)
-            out.add(station(p, "roulette", c, f, 3.0, v(c).add(f.mul(3.4)).up(3.0), v(c).up(0.2),
+            V3 f = V3.dir(rt.yaw(), 0).mul(-1);   // zur Spielerseite (der Croupier steht gegenüber)
+            // Schnitt: von der Spielerseite schräg über Kessel und Tableau, Croupier im Hintergrund
+            out.add(station(p, "roulette", c, f, 3.0, v(rt.local(-1.0, -2.5, 2.2)), v(rt.local(-1.2, 0.15, 0.95)),
                     "Rot oder Schwarz? Am Roulette entscheidet eine einzige Kugel.",
                     "Achten Sie auf die Blitz-Zahlen – die zahlen in manchen Runden ein Vielfaches."));
         }
