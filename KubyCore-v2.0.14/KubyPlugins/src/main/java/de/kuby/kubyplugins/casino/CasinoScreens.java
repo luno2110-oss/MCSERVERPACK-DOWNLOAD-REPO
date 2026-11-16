@@ -459,7 +459,7 @@ public final class CasinoScreens {
             if (choice == -1) {
                 c.text(15, y + 4, "⤨", WHITE, false);
                 name = "Alle Songs";
-                desc = "Die " + (v.songs().size() == 3 ? "drei" : v.songs().size()) + " Songs wechseln sich ab.";
+                desc = "Alle " + v.songs().size() + " Songs wechseln sich ab.";
             } else if (choice == -2) {
                 c.smallIcon(15, y + 4, KitData.SmallIcon.S_MUTE);
                 name = "Musik aus";

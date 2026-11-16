@@ -142,5 +142,21 @@
     "stream": false
    }
   ]
+ },
+ "music.velvet": {
+  "sounds": [
+   {
+    "name": "kuby:music/velvet",
+    "stream": true
+   }
+  ]
+ },
+ "music.golden": {
+  "sounds": [
+   {
+    "name": "kuby:music/golden",
+    "stream": true
+   }
+  ]
  }
 }

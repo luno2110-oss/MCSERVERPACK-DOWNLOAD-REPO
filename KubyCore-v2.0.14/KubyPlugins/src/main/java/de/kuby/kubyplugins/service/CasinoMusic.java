@@ -27,7 +27,8 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 /**
- * Casino-Musik wie im Clip: drei Notenblock-Songs (Brisk Casino Swing, Mid-Night Lounge, Late-night Lounge), die im
+ * Casino-Musik: zwei Piano-Jazz-Aufnahmen (Velvet Lounge, Golden Hour Swing; tools/build_casino_jazz.py) und drei
+ * Notenblock-Songs wie im Clip (Brisk Casino Swing, Mid-Night Lounge, Late-night Lounge), die im
  * Casino für jeden Spieler einzeln laufen (Kategorie Jukebox/Notenblöcke). Wahl: alle Songs im Wechsel, ein Song in
  * Dauerschleife oder aus. /music oder DJ Mia öffnen die Auswahl.
  */
@@ -35,7 +36,8 @@ public final class CasinoMusic {
 
     private record Note(Sound sound, float pitch, float volume) {}
 
-    private record Track(String name, int length, Note[][] notes) {
+    /** audio != null: echtes Musikstück aus dem Pack (Sound-Key, z. B. kuby:music.velvet), sonst Notenblock-Song. */
+    private record Track(String name, int length, Note[][] notes, String audio) {
         String time() {
             int s = length / 20;
             return (s / 60) + ":" + String.format("%02d", s % 60);
@@ -46,7 +48,7 @@ public final class CasinoMusic {
     public static final int ALL = -1;
     /** Wahl: Musik aus. */
     public static final int OFF = -2;
-    private static final String[] IDS = {"brisk", "midnight", "latenight"};
+    private static final String[] IDS = {"velvet", "golden", "brisk", "midnight", "latenight"};
 
     private final KubyPlugins plugin;
     private final File file;
@@ -77,6 +79,15 @@ public final class CasinoMusic {
     }
 
     private Track load(String id) {
+        // Piano-Jazz als echte Aufnahme (tools/build_casino_jazz.py): "Name|Länge in Ticks|Sound-Key"
+        try (InputStream in = plugin.getResource("casino/songs/" + id + ".audio")) {
+            if (in != null) {
+                String[] head = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8)).readLine().split("\\|");
+                return new Track(head[0].trim(), Integer.parseInt(head[1].trim()), new Note[0][], head[2].trim());
+            }
+        } catch (IOException | RuntimeException e) {
+            plugin.getLogger().warning("Casino-Song " + id + " (Audio) konnte nicht geladen werden: " + e.getMessage());
+        }
         try (InputStream in = plugin.getResource("casino/songs/" + id + ".txt")) {
             if (in == null) return null;
             BufferedReader r = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
@@ -97,7 +108,7 @@ public final class CasinoMusic {
             }
             Note[][] notes = new Note[length][];
             for (int i = 0; i < length; i++) notes[i] = byTick.get(i).toArray(new Note[0]);
-            return new Track(head[0].trim(), length, notes);
+            return new Track(head[0].trim(), length, notes, null);
         } catch (IOException | RuntimeException e) {
             plugin.getLogger().warning("Casino-Song " + id + " konnte nicht geladen werden: " + e.getMessage());
             return null;
@@ -153,7 +164,11 @@ public final class CasinoMusic {
             }
             int[] st = e.getValue();
             Track t = songs.get(Math.min(st[0], songs.size() - 1));
-            for (Note n : t.notes()[st[1]]) p.playSound(p, n.sound(), SoundCategory.RECORDS, n.volume() * master, n.pitch());
+            if (t.audio() != null) {
+                if (st[1] == 0) p.playSound(p, t.audio(), SoundCategory.RECORDS, master, 1f);
+            } else {
+                for (Note n : t.notes()[st[1]]) p.playSound(p, n.sound(), SoundCategory.RECORDS, n.volume() * master, n.pitch());
+            }
             st[1]++;
             if (st[1] >= t.length()) {
                 st[1] = 0;
@@ -194,7 +209,14 @@ public final class CasinoMusic {
     }
 
     public synchronized void stop(Player p) {
-        listening.remove(p.getUniqueId());
+        silence(p, listening.remove(p.getUniqueId()));
+    }
+
+    /** Laufende Aufnahme (Piano-Jazz) beim Spieler anhalten; Notenblock-Songs hören von selbst auf. */
+    private void silence(Player p, int[] st) {
+        if (st == null || songs.isEmpty()) return;
+        Track t = songs.get(Math.min(st[0], songs.size() - 1));
+        if (t.audio() != null) p.stopSound(t.audio(), SoundCategory.RECORDS);
     }
 
     /** Startet die Wahl des Spielers; index &gt;= 0 erzwingt diesen Song (bei "Alle Songs"). */
@@ -206,7 +228,7 @@ public final class CasinoMusic {
             return;
         }
         int song = c >= 0 ? c : index >= 0 ? index : (int) (Math.random() * songs.size());
-        listening.put(p.getUniqueId(), new int[]{song, 0});
+        silence(p, listening.put(p.getUniqueId(), new int[]{song, 0}));
         nowPlaying(p, song);
     }
 
@@ -243,6 +265,7 @@ public final class CasinoMusic {
                 return pl -> {
                     int[] s = listening.get(pl.getUniqueId());
                     if (s != null && !songs.isEmpty()) {
+                        silence(pl, s);
                         s[0] = (s[0] + 1) % songs.size();
                         s[1] = 0;
                         nowPlaying(pl, s[0]);
@@ -257,7 +280,7 @@ public final class CasinoMusic {
         choice.put(p.getUniqueId(), c);
         save();
         if (c == OFF) {
-            listening.remove(p.getUniqueId());
+            silence(p, listening.remove(p.getUniqueId()));
             CasinoText.send(p, "Casino-Musik aus. Im Casino bleibt es ruhig.");
             return;
         }

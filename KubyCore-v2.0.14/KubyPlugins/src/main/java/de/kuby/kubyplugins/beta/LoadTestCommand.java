@@ -234,6 +234,18 @@ public final class LoadTestCommand implements CommandExecutor {
                 from = o.clone().add(0, 3.0, 4.6);
                 to = o.clone().add(0, 0.8, 0.8);
             }
+            case "bj_hocker" -> {
+                // Nahaufnahme eines freien Hockers am violetten Tisch (Fußstütze mit Strebe am Mittelrohr)
+                if (camBjVio == null) return;
+                var g = plugin.blackjack().games().stream()
+                        .filter(x -> x.table.tier() == de.kuby.kubyplugins.casino.TableTier.VIOLETT).findFirst().orElse(null);
+                if (g == null) return;
+                Location seat = g.table.seatLocation(2);
+                org.bukkit.util.Vector d = seat.toVector().subtract(camBjVio.toVector()).setY(0).normalize();
+                org.bukkit.util.Vector side = new org.bukkit.util.Vector(-d.getZ(), 0, d.getX());
+                from = seat.clone().add(d.clone().multiply(1.3)).add(side.clone().multiply(0.9)).add(0, 0.75, 0);
+                to = seat.clone().add(0, 0.3, 0);
+            }
             case "poker_rot", "poker_violett" -> {
                 Location o = where.equals("poker_rot") ? camPkRot : camPkVio;
                 if (o == null) return;
