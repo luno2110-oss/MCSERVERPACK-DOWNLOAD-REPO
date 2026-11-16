@@ -96,15 +96,16 @@ public final class CasinoTourService {
         List<V3[]> cams = new ArrayList<>();      // {Kamera, Ziel}
         for (CasinoTour.Station s : st) {
             cams.add(new V3[]{s.brollCam(), s.brollLook()});
-            if (s.twoCam() != null) cams.add(new V3[]{s.twoCam(), s.focus().up(1.5)});
+            // Zweier-Einstellung zeigt Vincent und den Spieler, keine Schilder: dort alles in Kameranähe ausblenden
+            if (s.twoCam() != null) cams.add(new V3[]{s.twoCam(), null});
         }
-        cams.add(new V3[]{start.up(1.7), start.up(1.5)});
+        cams.add(new V3[]{start.up(1.7), null});
         for (org.bukkit.entity.TextDisplay td : p.getWorld().getEntitiesByClass(org.bukkit.entity.TextDisplay.class)) {
             Location l = td.getLocation();
             if (l.distanceSquared(p.getLocation()) > (RANGE + 10) * (RANGE + 10)) continue;
             V3 t = v(l);
             for (V3[] c : cams) {
-                if (t.dist(c[0]) < 2.6 && t.dist(c[1]) > 1.3) {
+                if (t.dist(c[0]) < 3.4 && (c[1] == null || t.dist(c[1]) > 1.3)) {
                     o.shared.add(td);
                     break;
                 }
