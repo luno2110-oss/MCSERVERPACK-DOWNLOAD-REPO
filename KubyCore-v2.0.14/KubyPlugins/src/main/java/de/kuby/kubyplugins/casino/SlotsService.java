@@ -518,6 +518,11 @@ public final class SlotsService implements Listener {
         if (!(e.getEntity() instanceof Player p)) return;
         String v = e.getDismounted().getPersistentDataContainer().get(tag, PersistentDataType.STRING);
         if (v == null || !v.endsWith(":vehicle")) return;
+        // hinter dem Hocker auf den Boden stellen (nicht im Hocker oder Tisch stehen bleiben)
+        Location stand = e.getDismounted().getLocation();
+        Location floor = stand.clone().add(0, -0.6, 0);
+        de.kuby.kubyplugins.util.SafeStand.later(plugin, p, floor,
+                de.kuby.kubyplugins.util.SafeStand.facing(stand.getYaw()).multiply(-0.7));
         for (State s : machines.values()) if (p.getUniqueId().equals(s.seated)) s.seated = null;
     }
 

@@ -1207,6 +1207,11 @@ public final class PokerService implements org.bukkit.event.Listener {
         if (!(e.getEntity() instanceof Player p)) return;
         String v = e.getDismounted().getPersistentDataContainer().get(ptag, PersistentDataType.STRING);
         if (v == null || !v.endsWith(":vehicle")) return;
+        // hinter dem Hocker auf den Boden stellen (nicht im Hocker oder Tisch stehen bleiben)
+        org.bukkit.Location stand = e.getDismounted().getLocation();
+        org.bukkit.Location floor = stand.clone().add(0, -0.58, 0);
+        de.kuby.kubyplugins.util.SafeStand.later(plugin, p, floor,
+                de.kuby.kubyplugins.util.SafeStand.facing(stand.getYaw()).multiply(-0.7));
         synchronized (this) {
             if (seat(p.getUniqueId()) != null) stand(p.getUniqueId());
         }

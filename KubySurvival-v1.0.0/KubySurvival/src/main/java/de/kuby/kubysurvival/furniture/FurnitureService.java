@@ -3,6 +3,7 @@ package de.kuby.kubysurvival.furniture;
 import de.kuby.kubyplugins.KubyPlugins;
 import de.kuby.kubyplugins.service.ModeService;
 import de.kuby.kubyplugins.util.Msg;
+import de.kuby.kubyplugins.util.SafeStand;
 import de.kuby.kubysurvival.KubySurvival;
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import org.bukkit.Bukkit;
@@ -85,7 +86,7 @@ public final class FurnitureService implements Listener {
     private final KubySurvival addon;
     private final KubyPlugins core;
     private final File file;
-    private final NamespacedKey itemKey, partKey, seatKey;
+    private final NamespacedKey itemKey, partKey, seatKey, floorKey;
     private final Map<String, Placed> placed = new LinkedHashMap<>();
     /** Belegte Blöcke "welt:x:y:z" -> Möbel-ID. */
     private final Map<String, String> cells = new HashMap<>();
@@ -100,6 +101,7 @@ public final class FurnitureService implements Listener {
         this.itemKey = new NamespacedKey(addon, "furniture_item");
         this.partKey = new NamespacedKey(addon, "furniture");
         this.seatKey = new NamespacedKey(addon, "seat");
+        this.floorKey = new NamespacedKey(addon, "seat_floor");
         load();
     }
 
@@ -412,10 +414,11 @@ public final class FurnitureService implements Listener {
             }
         }
         // Reiter sitzt 0,6 unter dem Sitzpunkt, Hüfte 0,7 über seinen Füßen: Hüfte genau auf der Sitzfläche
-        seat(p, seat.clone().add(0, -0.1, 0), f.yaw, f.id);
+        seat(p, seat.clone().add(0, -0.1, 0), f.yaw, f.id, f.at.getY());
     }
 
-    private void seat(Player p, Location l, float yaw, String tag) {
+    /** floor = Höhe der Füße beim Aufstehen (Boden unter dem Sitz). */
+    private void seat(Player p, Location l, float yaw, String tag, double floor) {
         l.setYaw(yaw);
         l.setPitch(0);
         ArmorStand a = l.getWorld().spawn(l, ArmorStand.class, s -> {
@@ -426,6 +429,7 @@ public final class FurnitureService implements Listener {
             s.setInvulnerable(true);
             s.setPersistent(false);
             s.getPersistentDataContainer().set(seatKey, PersistentDataType.STRING, tag);
+            s.getPersistentDataContainer().set(floorKey, PersistentDataType.DOUBLE, floor);
         });
         if (!a.addPassenger(p)) a.remove();
     }
@@ -441,7 +445,7 @@ public final class FurnitureService implements Listener {
             send(p, "<red>Hinsetzen geht nur, wenn du auf dem Boden stehst.");
             return;
         }
-        seat(p, p.getLocation().add(0, -0.1, 0), p.getLocation().getYaw(), "boden");
+        seat(p, p.getLocation().add(0, -0.1, 0), p.getLocation().getYaw(), "boden", p.getLocation().getY());
         p.sendActionBar(Msg.parse("<gray>Aufstehen: <white>Schleichen"));
     }
 
@@ -477,20 +481,19 @@ public final class FurnitureService implements Listener {
         if (!(e.getDismounted() instanceof ArmorStand a)) return;
         String tag = a.getPersistentDataContainer().get(seatKey, PersistentDataType.STRING);
         if (tag == null) return;
-        Location stand = a.getLocation();
-        float yaw = a.getLocation().getYaw();
-        addon.getServer().getScheduler().runTask(addon, () -> {
-            a.remove();
-            if (e.getEntity() instanceof Player p && p.isOnline() && !"boden".equals(tag)) {
-                // vor dem Möbel aufstehen
-                Vector front = new Vector(-Math.sin(Math.toRadians(yaw)), 0, Math.cos(Math.toRadians(yaw))).multiply(0.7);
-                Location out = stand.clone().add(front);
-                out.setY(Math.floor(stand.getY() + 0.1));
-                out.setYaw(p.getLocation().getYaw());
-                out.setPitch(p.getLocation().getPitch());
-                if (out.getBlock().isPassable() && out.clone().add(0, 1, 0).getBlock().isPassable()) p.teleport(out);
-            }
-        });
+        Location floor = standFloor(a);
+        Vector front = "boden".equals(tag) ? null : SafeStand.facing(a.getLocation().getYaw()).multiply(0.7);
+        addon.getServer().getScheduler().runTask(addon, a::remove);
+        // Minecraft stellt den Spieler auf die Höhe des Ständers (bei /sit 0,1 im Boden): auf den Boden davor stellen
+        SafeStand.later(addon, e.getEntity(), floor, front);
+    }
+
+    /** Bodenhöhe unter einem Sitz (ältere Sitze ohne Angabe: 0,42 unter dem Ständer, wie bei Möbeln). */
+    private Location standFloor(ArmorStand a) {
+        Location l = a.getLocation();
+        Double y = a.getPersistentDataContainer().get(floorKey, PersistentDataType.DOUBLE);
+        l.setY(y != null ? y : l.getY() - 0.42);
+        return l;
     }
 
     @EventHandler
@@ -526,8 +529,11 @@ public final class FurnitureService implements Listener {
         Player p = e.getPlayer();
         standUp(p);
         if (p.getVehicle() instanceof ArmorStand a && a.getPersistentDataContainer().has(seatKey, PersistentDataType.STRING)) {
+            Location floor = standFloor(a);
             p.leaveVehicle();
             a.remove();
+            // sonst wird die Position im Boden gespeichert und man steckt beim nächsten Join fest
+            SafeStand.now(p, floor, null);
         }
     }
 

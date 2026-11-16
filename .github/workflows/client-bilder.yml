@@ -207,6 +207,10 @@ jobs:
           echo "kubytest einrichten Kamera" >&3
           sleep 12
           shot "14_casino_eingerichtet"
+          # Aufstehen (v2.02): /sit und Casino-Hocker, danach Füße auf dem Boden, nicht im Block darunter
+          echo "kubytest aufstehen Kamera" >&3
+          sleep 6
+          shot "15_aufgestanden"
           # Crash: eigene Runde für die Bilder (der Regeltest hat hier keine Bots mehr), Kurs bis x7, dann Crash
           echo "kubytest crash Kamera" >&3
           sleep 1
@@ -315,6 +319,9 @@ jobs:
           print("- Roulette (Las Vegas): " + (rl[-1] if rl else "nicht gelaufen") + "; Kugel lag auf: " + (", ".join(rk) or "-"))
           if not rl or "49/49" not in rl[-1] or "rot ok" not in rl[-1]: probs.append("Roulette: " + (rl[-1] if rl else "Test nicht gelaufen"))
           elif not rk: probs.append("Roulette: Wurf nicht beendet (keine Kugel im Fach)")
+          auf = re.findall(r"\[Aufstehen-Test\] (OK|FEHLER) (.*)", log)
+          print("- Aufstehen von /sit und Hocker: " + ("; ".join(k[0] + " " + k[1] for k in auf) if auf else "nicht gelaufen"))
+          if not auf or auf[-1][0] != "OK": probs.append("Aufstehen: " + (auf[-1][1] if auf else "Test nicht gelaufen"))
           kino = re.findall(r"\[Kino-Test\] (OK|FEHLER) (.*)", log)
           print("- Leisten oben nach Kino-Szenen: " + ("; ".join(k[0] + " " + k[1] for k in kino) if kino else "nicht gelaufen"))
           if not kino or kino[-1][0] != "OK": probs.append("Leisten oben nach Kino-Szenen: " + (kino[-1][1] if kino else "Test nicht gelaufen"))

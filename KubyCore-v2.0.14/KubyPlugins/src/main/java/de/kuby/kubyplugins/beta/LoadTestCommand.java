@@ -172,6 +172,13 @@ public final class LoadTestCommand implements CommandExecutor {
                 Player kp = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : sender instanceof Player sp ? sp : null;
                 if (kp != null) cinemaBars(kp, 0, new ArrayList<>());
             }
+            case "aufstehen" -> {
+                // /kubytest aufstehen <Spieler>: wie /sit (Ständer 0,1 unter den Füßen) und wie ein Blackjack-Hocker
+                // hinsetzen, absteigen, dann muss der Spieler mit den Füßen auf dem Boden stehen und darf nirgends stecken
+                Player ap = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : sender instanceof Player sp ? sp : null;
+                if (ap == null || arenaA == null) plugin.getLogger().info("[Aufstehen-Test] FEHLER Spieltest läuft nicht oder Spieler fehlt");
+                else standUpTest(ap);
+            }
             case "crash" -> {
                 Player xp = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : sender instanceof Player sp ? sp : null;
                 if (xp != null) crashShow(xp);
@@ -743,6 +750,81 @@ public final class LoadTestCommand implements CommandExecutor {
      * /kubytest crash &lt;Spieler&gt;: Crash-Runde für die Bilder aus dem echten Client (der Regeltest läuft dort ohne Bots
      * nicht): Bildschirm aufbauen, Spieler setzt 100, Runde steigt bis x7 und crasht; Kurs jede Sekunde ins Log.
      */
+    /** Ein Sitz für den Aufstehen-Test: unsichtbarer Marker-Ständer wie bei /sit, Möbeln und Casino-Hockern. */
+    private org.bukkit.entity.ArmorStand testSeat(Location l, org.bukkit.NamespacedKey key, String value,
+                                                  org.bukkit.NamespacedKey floorKey, double floor) {
+        return l.getWorld().spawn(l, org.bukkit.entity.ArmorStand.class, e -> {
+            e.setInvisible(true);
+            e.setMarker(true);
+            e.setGravity(false);
+            e.setSmall(true);
+            e.setPersistent(false);
+            e.getPersistentDataContainer().set(key, org.bukkit.persistence.PersistentDataType.STRING, value);
+            if (floorKey != null) e.getPersistentDataContainer().set(floorKey, org.bukkit.persistence.PersistentDataType.DOUBLE, floor);
+        });
+    }
+
+    private void standUpTest(Player p) {
+        if (p.getGameMode() == org.bukkit.GameMode.SPECTATOR) p.setGameMode(org.bukkit.GameMode.ADVENTURE);
+        p.setFlying(false);
+        // freie Stelle im Testgelände (zwischen Slots und Rand), Boden = Oberkante der eingeebneten Fläche
+        Location base = arenaA.clone().add(13.5, 1, 1.5);
+        base.setYaw(0f);
+        base.setPitch(20f);
+        p.teleport(base);
+        List<String> res = new ArrayList<>();
+        boolean[] bad = {false};
+        java.util.function.BiConsumer<String, Location> check = (name, want) -> {
+            Location at = p.getLocation();
+            org.bukkit.util.BoundingBox box = p.getBoundingBox().clone().expand(-0.02, -0.02, -0.02);
+            boolean stuck = p.getWorld().hasCollisionsIn(box);
+            boolean ok = !p.isInsideVehicle() && !stuck && Math.abs(at.getY() - want.getY()) < 0.01
+                    && (want.getX() != want.getX() || Math.hypot(at.getX() - want.getX(), at.getZ() - want.getZ()) < 0.2);
+            if (!ok) bad[0] = true;
+            res.add(name + (ok ? " ok" : " FALSCH") + String.format(java.util.Locale.ROOT, " (Füße y=%.3f, Boden y=%.3f%s)",
+                    at.getY(), want.getY(), stuck ? ", steckt im Block" : ""));
+        };
+        org.bukkit.plugin.Plugin surv = Bukkit.getPluginManager().getPlugin("KubySurvival");
+        var sched = plugin.getServer().getScheduler();
+        // 1) /sit: Ständer 0,1 unter den Füßen (früher: nach dem Aufstehen 0,1 im Boden)
+        sched.runTaskLater(plugin, () -> {
+            if (surv == null || !surv.isEnabled()) {
+                res.add("sit übersprungen (KubySurvival fehlt)");
+                return;
+            }
+            Location at = p.getLocation();
+            var a = testSeat(at.clone().add(0, -0.1, 0), new org.bukkit.NamespacedKey(surv, "seat"), "boden",
+                    new org.bukkit.NamespacedKey(surv, "seat_floor"), at.getY());
+            a.addPassenger(p);
+            sched.runTaskLater(plugin, () -> {
+                if (!p.isInsideVehicle()) res.add("sit: Spieler saß nicht");
+                p.leaveVehicle();
+                Location want = at.clone();
+                sched.runTaskLater(plugin, () -> check.accept("sit", want), 6L);
+            }, 20L);
+        }, 10L);
+        // 2) Blackjack-Hocker: Ständer 0,58 über dem Boden, Aufstehen hinter den Hocker (Blick +Z, also nach -Z)
+        sched.runTaskLater(plugin, () -> {
+            Location stool = base.clone().add(3, 0, 0);
+            p.teleport(stool);
+            Location st = stool.clone().add(0, 0.58, 0);
+            st.setYaw(0f);
+            var a = testSeat(st, new org.bukkit.NamespacedKey(plugin, "bj_table"), "aufstehtest:vehicle", null, 0);
+            sched.runTaskLater(plugin, () -> {
+                a.addPassenger(p);
+                sched.runTaskLater(plugin, () -> {
+                    if (!p.isInsideVehicle()) res.add("hocker: Spieler saß nicht");
+                    p.leaveVehicle();
+                    sched.runTaskLater(plugin, () -> {
+                        a.remove();
+                        check.accept("hocker", stool.clone().add(0, 0, -0.7));
+                        plugin.getLogger().info("[Aufstehen-Test] " + (bad[0] ? "FEHLER " : "OK ") + String.join("; ", res));
+                    }, 6L);
+                }, 20L);
+            }, 4L);
+        }, 50L);
+    }
+
     private void crashShow(Player p) {
         crashScreenForTest();
         plugin.casino().giveChips(p.getUniqueId(), 5000);

@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v2.01** (ungetestet, nicht kompiliert)
+Stand: **v2.02** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -558,6 +558,11 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
 ## Casino fertigstellen (v1.68)
+- [x] **v2.02 Aufstehen ohne im Block zu stecken** (Meldung des Besitzers: nach dem Aufstehen von Stühlen und nach /sit steckte man im Block darunter)
+  - Ursache: Sitze sind unsichtbare Rüstungsständer, Minecraft stellt den Spieler beim Absteigen auf deren Höhe. Bei /sit liegt der Ständer 0,1 unter den Füßen (sonst schwebt man), also landete man 0,1 im Boden. Bei Möbeln wurde nur umgesetzt, wenn genau vor dem Möbel frei war (Teppich galt als „nicht frei“)
+  - Neu `SafeStand` (gemeinsam für alle Sitze): einen Tick nach dem Absteigen auf die Oberkante des Bodens stellen (auch Teppich, Stufe, Platte), Körper und Kopf müssen frei sein, keine Lava/Feuer/Magma. Reihenfolge: bevorzugte Seite, genau am Sitz, ringsum, notfalls darüber
+  - /sit: genau an der Stelle wieder hoch. Möbel: vor das Möbel (Wand davor: daneben). Blackjack-, Poker- und Slots-Hocker: hinter den Hocker statt in Hocker oder Tisch. Ausloggen im Sitzen speichert die Position nicht mehr im Boden
+  - Prüfung: SELFTEST (/sit, Teppich, Wand vor dem Sitz) und im echten Client `/kubytest aufstehen` (/sit und Blackjack-Hocker: Füße genau auf dem Boden, steckt nirgends)
 - [x] **v2.01 Zwischenwünsche des Besitzers**
   - [x] Blackjack: Chip-Auswahl (Rack), Bedienknöpfe (Wie zuletzt, Zurücknehmen, Chips/Juwelen) und Aktionsfelder (Karte, Halten, Doppeln, Teilen) sieht nur noch der Spieler am Platz – vorher lagen die Racks benachbarter Plätze übereinander. Unsichtbare Klickflächen kann auch niemand sonst treffen. Der Zeitbalken bleibt für alle sichtbar (wer ist dran)
   - [x] Poker: die Knöpfe (Passen, Mitgehen/Schieben, Erhöhen, All-in, beim Erhöhen −/½/Pot/+/OK und der Betrag) sieht nur der Spieler am Platz. Handkarten waren schon privat (nur der Besitzer sieht sie offen, alle anderen die Rückseiten)

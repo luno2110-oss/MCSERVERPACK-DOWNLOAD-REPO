@@ -690,6 +690,50 @@ final class SelfTest {
             fails.add("Modus-Welt: " + t);
         }
 
+        // Aufstehen von Sitzen (v2.02): Füße auf der Bodenoberkante, nie im Block darunter, Wand vor dem Sitz umgehen
+        try {
+            org.bukkit.World w0 = org.bukkit.Bukkit.getWorlds().get(0);
+            org.bukkit.Location sp = w0.getSpawnLocation();
+            int x0 = sp.getBlockX(), z0 = sp.getBlockZ(), y0 = w0.getMaxHeight() - 12;
+            java.util.Map<org.bukkit.block.Block, org.bukkit.block.data.BlockData> keep = new java.util.LinkedHashMap<>();
+            java.util.function.BiConsumer<org.bukkit.block.Block, org.bukkit.Material> put = (b, m) -> {
+                keep.putIfAbsent(b, b.getBlockData());
+                b.setType(m, false);
+            };
+            try {
+                for (int dx = -2; dx <= 2; dx++) {
+                    for (int dz = -2; dz <= 2; dz++) {
+                        put.accept(w0.getBlockAt(x0 + dx, y0, z0 + dz), org.bukkit.Material.STONE);
+                        for (int dy = 1; dy <= 3; dy++) put.accept(w0.getBlockAt(x0 + dx, y0 + dy, z0 + dz), org.bukkit.Material.AIR);
+                    }
+                }
+                org.bukkit.Location seat = new org.bukkit.Location(w0, x0 + 0.5, y0 + 1, z0 + 0.5);
+                // /sit: Ständer 0,1 unter den Füßen -> Füße wieder genau auf den Stein
+                org.bukkit.Location r1 = de.kuby.kubyplugins.util.SafeStand.find(seat, null);
+                if (r1 == null || Math.abs(r1.getY() - (y0 + 1)) > 1e-6 || r1.distanceSquared(seat) > 1e-6) {
+                    fails.add("Aufstehen: /sit landet bei " + r1 + " statt auf dem Boden");
+                } else ok[0]++;
+                // Teppich: auf den Teppich, nicht hinein
+                put.accept(w0.getBlockAt(x0, y0 + 1, z0), org.bukkit.Material.RED_CARPET);
+                org.bukkit.Location r2 = de.kuby.kubyplugins.util.SafeStand.find(seat, null);
+                if (r2 == null || Math.abs(r2.getY() - (y0 + 1.0625)) > 1e-6) fails.add("Aufstehen: Teppich -> " + r2);
+                else ok[0]++;
+                // Wand vor dem Möbel (+X): nicht in die Wand, sondern daneben auf den Boden
+                for (int dy = 1; dy <= 2; dy++) put.accept(w0.getBlockAt(x0 + 1, y0 + dy, z0), org.bukkit.Material.STONE);
+                org.bukkit.Location r3 = de.kuby.kubyplugins.util.SafeStand.find(seat, new org.bukkit.util.Vector(0.7, 0, 0));
+                boolean inWall = r3 != null && w0.hasCollisionsIn(new org.bukkit.util.BoundingBox(r3.getX() - 0.3, r3.getY() + 0.001,
+                        r3.getZ() - 0.3, r3.getX() + 0.3, r3.getY() + 1.8, r3.getZ() + 0.3));
+                if (r3 == null || inWall || r3.getY() < y0 + 1 - 1e-6) fails.add("Aufstehen: Wand vor dem Sitz -> " + r3);
+                else ok[0]++;
+            } finally {
+                java.util.List<org.bukkit.block.Block> order = new java.util.ArrayList<>(keep.keySet());
+                java.util.Collections.reverse(order);
+                for (org.bukkit.block.Block b : order) b.setBlockData(keep.get(b), false);
+            }
+        } catch (Throwable t) {
+            fails.add("Aufstehen: " + t);
+        }
+
         // Backup: Packen und Entpacken einmal echt ausprobieren
         try {
             String err = de.kuby.kubyplugins.service.BackupService.selfCheck(plugin);
