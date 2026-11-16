@@ -31,6 +31,8 @@ GOLD = [rgb(c) for c in ("8A5A08", "B57E0C", "D9A11A", "F2C23A", "FAE07A")]
 FELT = [rgb(c) for c in ("163F27", "1B4D31", "215C3A", "2A6B44", "347A50")]
 # Weinrot für die High-Roller-Tische
 FELT_RED = [rgb(c) for c in ("3C0A14", "4E0F1C", "621624", "761E2E", "8A2A3A")]
+# Violett (höchste Stufe): gedecktes Königsviolett, Licht wärmer (ins Rosa), Schatten kühler (ins Blau)
+FELT_VIOLET = [rgb(c) for c in ("231238", "30194C", "3F2262", "512E78", "653D8E")]
 LEATHER = [rgb(c) for c in ("0E0C12", "1A171F", "26222C", "38333F")]
 CREAM = [rgb(c) for c in ("B4A890", "CFC4AC", "E2D9C4", "F0EADB")]
 WALNUT = [rgb(c) for c in ("2A170C", "3E2614", "52341C", "684426")]
@@ -515,6 +517,10 @@ def write(out):
     item("bj_felt_red", flat_model(B + "bj_felt_red", 0, 8, 16, 16))
     felt_poker(FELT=FELT_RED, label="HIGH ROLLER").save(os.path.join(tex, "pk_felt_red.png"))
     item("pk_felt_red", flat_model(B + "pk_felt_red", 0, 4, 16, 12))
+    felt_blackjack(FELT=FELT_VIOLET).save(os.path.join(tex, "bj_felt_violet.png"))
+    item("bj_felt_violet", flat_model(B + "bj_felt_violet", 0, 8, 16, 16))
+    felt_poker(FELT=FELT_VIOLET, label="ELITE").save(os.path.join(tex, "pk_felt_violet.png"))
+    item("pk_felt_violet", flat_model(B + "pk_felt_violet", 0, 4, 16, 12))
     for name, fn in MATERIALS.items():
         fn().save(os.path.join(tex, name + ".png"))
         item("m_" + name, cube_model(B + name))

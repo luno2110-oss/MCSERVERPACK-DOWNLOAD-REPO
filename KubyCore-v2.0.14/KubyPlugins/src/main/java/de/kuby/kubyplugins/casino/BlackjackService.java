@@ -87,10 +87,10 @@ public final class BlackjackService implements Listener {
         if (w == null) return null;
         try {
             Location o = new Location(w, Double.parseDouble(p[1]), Double.parseDouble(p[2]), Double.parseDouble(p[3]));
-            boolean hr = p.length >= 7 && p[6].equals("rot");
+            TableTier tier = p.length >= 7 && TableTier.parse(p[6]) != null ? TableTier.parse(p[6]) : TableTier.GRUEN;
             BlackjackTable table = new BlackjackTable(plugin, id, o, Float.parseFloat(p[4]), Double.parseDouble(p[5]), tag, click)
-                    .highRoller(hr);
-            g = new BlackjackGame(plugin, table, (hr ? "High-Roller-Tisch " : "Blackjack-Tisch ")
+                    .tier(tier);
+            g = new BlackjackGame(plugin, table, tier.tableName + " "
                     + (new ArrayList<>(raw.keySet()).indexOf(id) + 1));
             games.put(id, g);
             return g;
@@ -272,11 +272,17 @@ public final class BlackjackService implements Listener {
 
     /** Spieltest: Tisch "test" an dieser Stelle (einmal anlegen) und das Spiel dazu. */
     public BlackjackGame testTable(Location origin, float yaw) {
-        if (!raw.containsKey("test")) {
-            raw.put("test", origin.getWorld().getName() + ";" + origin.getX() + ";" + origin.getY() + ";" + origin.getZ() + ";" + yaw + ";3.0");
+        return testTable("test", origin, yaw, TableTier.GRUEN);
+    }
+
+    /** Test-Tisch (Belastungstest, Client-Bilder) in einer Farbe aufbauen. */
+    public BlackjackGame testTable(String id, Location origin, float yaw, TableTier tier) {
+        if (!raw.containsKey(id)) {
+            raw.put(id, origin.getWorld().getName() + ";" + origin.getX() + ";" + origin.getY() + ";" + origin.getZ() + ";" + yaw + ";3.0"
+                    + (tier == TableTier.GRUEN ? "" : ";" + tier.key));
             saveEscrow();
         }
-        BlackjackGame g = load("test");
+        BlackjackGame g = load(id);
         if (g != null && !g.table.ready()) {
             g.table.build();
             g.refreshDisplays();
@@ -298,17 +304,17 @@ public final class BlackjackService implements Listener {
         switch (sub) {
             case "tisch" -> {
                 double radius = 3.0;
-                boolean hr = false;
+                TableTier tier = TableTier.GRUEN;
                 for (int i = 2; i < args.length; i++) {
                     String a = args[i].toLowerCase();
-                    if (a.equals("rot") || a.equals("weinrot") || a.equals("highroller")) {
-                        hr = true;
+                    if (TableTier.parse(a) != null) {
+                        tier = TableTier.parse(a);
                         continue;
                     }
                     try {
                         radius = Math.max(2.2, Math.min(4.5, Double.parseDouble(a.replace(',', '.'))));
                     } catch (NumberFormatException ex) {
-                        Msg.send(p, "<red>Nutzung: /casino blackjack tisch [Radius 2,2–4,5] [rot]");
+                        Msg.send(p, "<red>Nutzung: /casino blackjack tisch [Radius 2,2–4,5] [gruen|rot|violett]");
                         return;
                     }
                 }
@@ -317,7 +323,7 @@ public final class BlackjackService implements Listener {
                 Location o = new Location(l.getWorld(), l.getBlockX() + 0.5, l.getBlockY(), l.getBlockZ() + 0.5);
                 String id = "t" + System.currentTimeMillis() % 100000;
                 raw.put(id, o.getWorld().getName() + ";" + o.getX() + ";" + o.getY() + ";" + o.getZ() + ";" + yaw + ";" + radius
-                        + (hr ? ";rot" : ""));
+                        + (tier == TableTier.GRUEN ? "" : ";" + tier.key));
                 saveEscrow();
                 BlackjackGame g = load(id);
                 if (g != null) {

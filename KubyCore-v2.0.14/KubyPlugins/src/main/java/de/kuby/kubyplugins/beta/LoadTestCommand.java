@@ -82,6 +82,11 @@ public final class LoadTestCommand implements CommandExecutor {
             }
             case "casino" -> casino(args.length > 1 ? Integer.parseInt(args[1]) : 100);
             case "regeln" -> rules();
+            case "kino" -> {
+                // /kubytest kino <Spieler>: zweimal eine kurze Kino-Szene, Leisten oben vorher/nachher zählen
+                Player kp = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : sender instanceof Player sp ? sp : null;
+                if (kp != null) cinemaBars(kp, 0, new ArrayList<>());
+            }
             case "kamera" -> {
                 // /kubytest kamera <wo> [Spieler] – auch von der Konsole (CI "Client-Bilder" mit echtem Client)
                 Player cam = args.length > 2 ? Bukkit.getPlayerExact(args[2]) : sender instanceof Player p ? p : null;
@@ -92,7 +97,7 @@ public final class LoadTestCommand implements CommandExecutor {
         return true;
     }
 
-    private static Location camBj, camRl, camPk, camSlots, camCrash;
+    private static Location camBj, camRl, camPk, camSlots, camCrash, camBjRot, camBjVio, camPkRot, camPkVio;
 
     /** Kamera-Punkte für Screenshots aus dem echten Client (CI "Client-Bilder"). */
     private void camera(Player p, String where) {
@@ -111,6 +116,18 @@ public final class LoadTestCommand implements CommandExecutor {
                 // Blick eines Spielers auf dem mittleren Platz: eigene Karten, Summe, Einsatz, Dealer
                 from = camBj.clone().add(0, 1.75, 2.4);
                 to = camBj.clone().add(0, 0.8, 0.2);
+            }
+            case "bj_rot", "bj_violett" -> {
+                Location o = where.equals("bj_rot") ? camBjRot : camBjVio;
+                if (o == null) return;
+                from = o.clone().add(0, 3.0, 4.6);
+                to = o.clone().add(0, 0.8, 0.8);
+            }
+            case "poker_rot", "poker_violett" -> {
+                Location o = where.equals("poker_rot") ? camPkRot : camPkVio;
+                if (o == null) return;
+                from = o.clone().add(0, 2.8, 3.4);
+                to = o.clone().add(0, 0.8, -0.2);
             }
             case "poker_nah" -> {
                 // nah über dem Pokertisch: Gemeinschaftskarten, Pot, Einsätze, eigene Karten
@@ -173,6 +190,41 @@ public final class LoadTestCommand implements CommandExecutor {
         }
     }
 
+    private static int bars(Player p) {
+        int n = 0;
+        for (var ignored : p.activeBossBars()) n++;
+        return n;
+    }
+
+    /** Spielt zweimal eine kurze Kino-Szene und zählt die Leisten oben (Geld, Juwelen, Quests): sie dürfen nicht mehr werden. */
+    private void cinemaBars(Player p, int round, List<Integer> counts) {
+        if (!p.isOnline() || plugin.cinema() == null) return;
+        counts.add(bars(p));
+        if (round == 2) {
+            boolean ok = counts.get(1).equals(counts.get(0)) && counts.get(2).equals(counts.get(0));
+            plugin.getLogger().info("[Kino-Test] " + (ok ? "OK" : "FEHLER") + " Leisten oben vorher " + counts.get(0) + ", nach 1. Szene "
+                    + counts.get(1) + ", nach 2. Szene " + counts.get(2));
+            return;
+        }
+        Location base = p.getLocation();
+        de.kuby.kubyplugins.cinema.Script script = new de.kuby.kubyplugins.cinema.Script() {
+            @Override
+            public int length() {
+                return 60;
+            }
+
+            @Override
+            public void frame(int t, de.kuby.kubyplugins.cinema.Frame f) {
+                f.cam = new de.kuby.kubyplugins.cinema.V3(base.getX() + 3, base.getY() + 2, base.getZ() + 3);
+                f.look(new de.kuby.kubyplugins.cinema.V3(base.getX(), base.getY() + 1, base.getZ()));
+            }
+        };
+        de.kuby.kubyplugins.cinema.Cinema.Options o = new de.kuby.kubyplugins.cinema.Cinema.Options();
+        o.anchor = base;
+        o.onEnd = (pp, res) -> plugin.getServer().getScheduler().runTaskLater(plugin, () -> cinemaBars(p, round + 1, counts), 40L);
+        if (!plugin.cinema().play(p, script, o)) plugin.getLogger().info("[Kino-Test] Szene startet nicht");
+    }
+
     /** Ebene Testfläche: Boden aus poliertem Andesit auf Höhe y-1, darüber 12 Blöcke Luft (keine Bäume vor der Kamera). */
     private static void flatten(org.bukkit.World w, int x0, int x1, int z0, int z1, int y) {
         for (int x = x0; x <= x1; x++) {
@@ -229,6 +281,15 @@ public final class LoadTestCommand implements CommandExecutor {
         camSlots = new Location(w, gx + 2.5, gy, gz - 7.5);
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             de.kuby.kubyplugins.casino.BlackjackGame bj = plugin.blackjack().testTable(bjAt, 0f);
+            // die anderen Tisch-Farben daneben (rot, violett) – für die Bilder aus dem echten Client
+            camBjRot = new Location(w, gx - 5.5, gy, gz + 9.5);
+            camBjVio = new Location(w, gx + 6.5, gy, gz + 9.5);
+            camPkRot = new Location(w, gx - 10.5, gy, gz - 9.5, 180f, 0f);
+            camPkVio = new Location(w, gx + 11.5, gy, gz - 9.5, 180f, 0f);
+            plugin.blackjack().testTable("test_rot", camBjRot, 0f, de.kuby.kubyplugins.casino.TableTier.ROT);
+            plugin.blackjack().testTable("test_violett", camBjVio, 0f, de.kuby.kubyplugins.casino.TableTier.VIOLETT);
+            plugin.pokerHr().setTable(camPkRot);
+            plugin.pokerVio().setTable(camPkVio);
             plugin.roulette().setTable(rlAt, 10, 8, 0f);
             plugin.poker().setTable(pkAt);
             // zwei neue Automaten freistehend (Hocker 1,6 davor, Blick nach +z zum Spieler)

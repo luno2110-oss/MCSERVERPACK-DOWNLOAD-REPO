@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.84** (ungetestet, nicht kompiliert)
+Stand: **v1.85** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -558,6 +558,12 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
 ## Casino fertigstellen (v1.68)
+- [x] **v1.85 Tisch-Stufen Grün/Rot/Violett, Leisten-Fehler nach Cutscenes**
+  - [x] Fehler: nach jeder Kino-Szene (z. B. Slots mit drei gleichen) verdoppelten sich die Leisten oben (Geld, Juwelen, Quests): die Info-Leiste (Survival, Skyblock) baute ihre Leisten während der Szene neu, die Szene zeigte am Ende zusätzlich die alten wieder. Jetzt rührt die Info-Leiste während einer Szene nichts an; CI-Test `/kubytest kino` zählt die Leisten im echten Client vor und nach zwei Szenen
+  - [x] Neue violette Stufe (Elite) für Blackjack und Poker, eigener Filz (Pixel-Look, Königsviolett, Poker mit „ELITE“)
+  - [x] Grenzen je Stufe (`casino.tische.<gruen|rot|violett>`): Grün Pflichteinsatz 10 / Höchsteinsatz 100.000, Rot 10.000 / 500.000, Violett 50.000 / 1.000.000 Chips. Blackjack: je Platz und Runde, Chip-Ständer passend (bis 10k, bis 100k, bis 500k; neue Chipfarben Gold ab 25k, Pink ab 100k). Poker: Big Blind = Pflichteinsatz (Small Blind die Hälfte), größtes Buy-in = Höchsteinsatz
+  - [x] Aufbauen: `/casino blackjack tisch [Radius] gruen|rot|violett`, `/casino poker-tisch gruen|rot|violett`; Tab-Ergänzung für /casino (Farben waren bisher nur bekannt, wenn man das Wort kannte); Rundgang, Regeln, /poker-Hilfe und SELFTEST kennen alle drei Stufen
+  - [x] Rote und violette Tische im CI-Spieltest aufgebaut und im echten Client fotografiert
 - [x] **v1.84 Blackjack-Ergebnisse in der Höhe gestaffelt**: Nachbarplätze stehen abwechselnd 0,3 Blöcke höher, damit sich die Ergebnisse auch von der Tischmitte aus nicht berühren (im echten Client gesehen)
 - [x] **v1.83 Blackjack-Ergebnisse aufgeräumt (aus den echten Client-Bildern)**
   - [x] Beim Ergebnis überlagerten sich die Texte der Nachbarplätze („ÜBERKAUFT“, „UNENTSCHIEDEN“, „Tester02 +400 Chips“, „-100 … zurück“, „+3 Cashback“): am Platz jetzt nur zwei Zeilen (Ergebnis und Betrag), der schwebende Banner nur noch beim Blackjack und höher über dem Tisch, sonst nur der Gewinn-Ton (Betrag steht ja am Platz); „19 gegen 17“ im Chat

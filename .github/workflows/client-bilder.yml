@@ -160,7 +160,7 @@ jobs:
           # vorab hinfliegen, damit Chunks und Anzeigen geladen sind (Software-Grafik braucht etwas)
           echo "kubytest kamera bj_oben Kamera" >&3
           sleep 25
-          for v in bj_oben bj_platz bj_seite poker roulette slots; do
+          for v in bj_oben bj_platz bj_seite poker roulette slots bj_rot bj_violett poker_rot poker_violett; do
             echo "kubytest kamera $v Kamera" >&3
             sleep 9
             shot "10_$v"
@@ -173,6 +173,13 @@ jobs:
           echo "kubytest kamera poker_nah Kamera" >&3
           sleep 6
           for k in 1 2 3 4 5; do sleep 3; shot "12_poker_nah_$k"; done
+          # Leisten oben (Geld, Juwelen, Quests) vor und nach zwei Kino-Szenen: dürfen sich nicht verdoppeln
+          echo "kubytest kamera bj_oben Kamera" >&3
+          sleep 4
+          shot "13_leisten_vorher"
+          echo "kubytest kino Kamera" >&3
+          sleep 16
+          shot "13_leisten_nach_2_szenen"
           echo "kubytest regeln" >&3
           sleep 6
           echo "kubytest kamera crash Kamera" >&3
@@ -212,6 +219,9 @@ jobs:
           print("- Goldene Zeit (echte Uhr, Zeitzone auf 18 Uhr gestellt): %d Abrechnungen mit Goldener Zeit von %d" % (gold, wins))
           for l in re.findall(r"\[Casino-Regel\] (?:OK|FEHLER) Goldene Zeit nach echter Uhr.*", log): print("  - " + l)
           if wins and gold == 0: probs.append("Goldene Zeit: keine Abrechnung mit Bonus, obwohl es 18 Uhr ist")
+          kino = re.findall(r"\[Kino-Test\] (OK|FEHLER) (.*)", log)
+          print("- Leisten oben nach Kino-Szenen: " + ("; ".join(k[0] + " " + k[1] for k in kino) if kino else "nicht gelaufen"))
+          if not kino or kino[-1][0] != "OK": probs.append("Leisten oben nach Kino-Szenen: " + (kino[-1][1] if kino else "Test nicht gelaufen"))
           open("problems.txt", "w").write("\n".join(probs) if probs else "keine Probleme")
           for p in probs: print("- Problem: " + p)
           EOF

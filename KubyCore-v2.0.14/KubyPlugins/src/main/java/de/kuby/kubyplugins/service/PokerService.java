@@ -105,21 +105,39 @@ public final class PokerService implements org.bukkit.event.Listener {
     private final NamespacedKey ptag;
     private final NamespacedKey pclick;
 
-    /** Weinroter High-Roller-Tisch: eigene Datei, eigene Schlüssel, Werte aus casino.poker-rot (sonst casino.poker). */
+    /**
+     * Tisch-Stufe (grün, rot, violett): eigene Datei, eigene Schlüssel; Blinds und Höchst-Buy-in aus casino.tische.&lt;stufe&gt;
+     * (Pflichteinsatz = Big Blind), übrige Werte aus casino.poker-&lt;stufe&gt; (sonst casino.poker).
+     */
+    private final de.kuby.kubyplugins.casino.TableTier tier;
     private final boolean highRoller;
 
     public PokerService(KubyPlugins plugin) {
-        this(plugin, false);
+        this(plugin, de.kuby.kubyplugins.casino.TableTier.GRUEN);
     }
 
     public PokerService(KubyPlugins plugin, boolean highRoller) {
+        this(plugin, highRoller ? de.kuby.kubyplugins.casino.TableTier.ROT : de.kuby.kubyplugins.casino.TableTier.GRUEN);
+    }
+
+    public PokerService(KubyPlugins plugin, de.kuby.kubyplugins.casino.TableTier tier) {
         this.plugin = plugin;
-        this.highRoller = highRoller;
-        String k = highRoller ? "poker-rot" : "poker";
+        this.tier = tier;
+        this.highRoller = tier.highRoller();
+        String k = switch (tier) {
+            case GRUEN -> "poker";
+            case ROT -> "poker-rot";
+            case VIOLETT -> "poker-violett";
+        };
+        String t = switch (tier) {
+            case GRUEN -> "kp_poker";
+            case ROT -> "kp_pokerr";
+            case VIOLETT -> "kp_pokerv";
+        };
         this.file = new File(plugin.getDataFolder(), k + ".yml");
-        this.tag = new NamespacedKey(plugin, highRoller ? "kp_pokerr" : "kp_poker");
-        this.ptag = new NamespacedKey(plugin, highRoller ? "kp_pokerr_t" : "kp_poker_t");
-        this.pclick = new NamespacedKey(plugin, highRoller ? "kp_pokerr_c" : "kp_poker_c");
+        this.tag = new NamespacedKey(plugin, t);
+        this.ptag = new NamespacedKey(plugin, t + "_t");
+        this.pclick = new NamespacedKey(plugin, t + "_c");
         YamlConfiguration yml = YamlConfiguration.loadConfiguration(file);
         tisch = yml.getString("tisch");
         // Nach einem Absturz: alles, was am Tisch lag, zurückgeben.
@@ -141,10 +159,26 @@ public final class PokerService implements org.bukkit.event.Listener {
         return highRoller;
     }
 
-    /** Poker-Einstellung: am High-Roller-Tisch casino.poker-rot.<key>, sonst (und als Rückfall) casino.poker.<key>. */
+    public de.kuby.kubyplugins.casino.TableTier tier() {
+        return tier;
+    }
+
+    /** Poker-Einstellung: casino.poker-<stufe>.<key>, sonst (und als Rückfall) casino.poker.<key>. */
     private long cfg(String key, long def) {
         long base = plugin.getConfig().getLong("casino.poker." + key, def);
-        return highRoller ? plugin.getConfig().getLong("casino.poker-rot." + key, base) : base;
+        return tier == de.kuby.kubyplugins.casino.TableTier.GRUEN ? base
+                : plugin.getConfig().getLong("casino.poker-" + tier.key + "." + key, base);
+    }
+
+    /** Größtes Buy-in: Höchsteinsatz der Stufe (x3 nach dem ersten Jackpot). */
+    private long maxBuyIn(UUID id) {
+        long m = tier.maxBet(plugin);
+        return id == null ? m : plugin.casinoPlay().maxFor(id, m);
+    }
+
+    /** Kleinstes Buy-in: 40 Big Blinds, höchstens die Hälfte des größten Buy-ins. */
+    private long minBuyIn() {
+        return Math.min(bigBlind() * cfg("min-buyin-bb", 40), tier.maxBet(plugin) / 2);
     }
 
     public void start() {
@@ -174,7 +208,7 @@ public final class PokerService implements org.bukkit.event.Listener {
         if (t == null) return null;
         String[] p = tisch.split(";");
         float yaw = p.length > 4 ? Float.parseFloat(p[4]) : 0f;
-        desk = new de.kuby.kubyplugins.casino.PokerTable(plugin, highRoller ? "pkr" : "pk", t, yaw, ptag, pclick).highRoller(highRoller);
+        desk = new de.kuby.kubyplugins.casino.PokerTable(plugin, tier == de.kuby.kubyplugins.casino.TableTier.GRUEN ? "pk" : tier == de.kuby.kubyplugins.casino.TableTier.ROT ? "pkr" : "pkv", t, yaw, ptag, pclick).tier(tier);
         return desk;
     }
 
@@ -231,9 +265,8 @@ public final class PokerService implements org.bukkit.event.Listener {
         if (!near(p, t)) return "Geh näher an den Poker-Tisch.";
         if (seat(id) != null) return "Du sitzt schon am Tisch.";
         if (activeSeats() >= MAX_SEATS) return "Der Tisch ist voll (" + MAX_SEATS + " Plätze).";
-        long bb = bigBlind();
-        long min = bb * cfg("min-buyin-bb", 40);
-        long max = plugin.casinoPlay().maxFor(id, bb * cfg("max-buyin-bb", 200));
+        long min = minBuyIn();
+        long max = maxBuyIn(id);
         if (buyIn < min || buyIn > max) return "Buy-in zwischen " + min + " und " + max + " Chips.";
         int at = pos >= 0 && free(pos) ? pos : nearestFree(p.getLocation());
         if (at < 0) return "Alle Plätze sind besetzt.";
@@ -906,7 +939,7 @@ public final class PokerService implements org.bukkit.event.Listener {
                 e.getPersistentDataContainer().set(tag, PersistentDataType.BYTE, (byte) 1);
             });
         }
-        StringBuilder sb = new StringBuilder((highRoller ? "<#C8283A><b>HIGH ROLLER POKER</b>" : "<gold><b>POKER</b>") + " <gray>Blinds " + smallBlind() + "/" + bigBlind());
+        StringBuilder sb = new StringBuilder(tier.pokerTitle() + " <gray>Blinds " + smallBlind() + "/" + bigBlind());
         if (phase == Phase.WAITING) {
             sb.append("\n<gray>").append(eligible() < 2 ? "Warte auf Spieler · /poker sitzen" : "Nächste Hand gleich ...");
         } else {
@@ -938,7 +971,7 @@ public final class PokerService implements org.bukkit.event.Listener {
                 if (!used[k]) desk.plate(k, Msg.parse("<#F2B829>Freier Platz\n<gray>Rechtsklick zum Hinsetzen"));
             }
             if (phase == Phase.WAITING) {
-                desk.dealerText(Msg.parse((highRoller ? "<#E04A5A><b>HIGH ROLLER</b>" : "<gold><b>POKER</b>") + "\n<gray>Blinds " + smallBlind() + "/" + bigBlind() + " · "
+                desk.dealerText(Msg.parse(tier.pokerTitle() + "\n<gray>Blinds " + smallBlind() + "/" + bigBlind() + " · "
                         + (eligible() < 2 ? "Warte auf Spieler" : "Nächste Hand gleich")));
             }
         }
@@ -1098,7 +1131,7 @@ public final class PokerService implements org.bukkit.event.Listener {
         Seat s = seat(p.getUniqueId());
         if (s == null) return "Du sitzt nicht am Tisch.";
         if (s.inHand && phase != Phase.WAITING) return "Nachkaufen geht nur zwischen den Händen.";
-        long max = plugin.casinoPlay().maxFor(p.getUniqueId(), bigBlind() * cfg("max-buyin-bb", 200));
+        long max = maxBuyIn(p.getUniqueId());
         long add = Math.min(amount, max - s.stack);
         if (add <= 0) return "Dein Stack ist schon beim Maximum (" + max + ").";
         if (!plugin.casino().takeChips(p.getUniqueId(), add)) return "Du hast nicht genug Chips.";
@@ -1123,8 +1156,8 @@ public final class PokerService implements org.bukkit.event.Listener {
                     err = "Der Platz ist besetzt.";
                 } else {
                     long bb = bigBlind();
-                    long min = bb * cfg("min-buyin-bb", 40);
-                    long max = bb * cfg("max-buyin-bb", 200);
+                    long min = minBuyIn();
+                    long max = maxBuyIn(p.getUniqueId());
                     StringBuilder sb = new StringBuilder("<gold>Poker: <gray>Mit wie vielen Chips setzt du dich? ");
                     for (long amt : new long[]{min, bb * 100, max}) {
                         sb.append("<click:run_command:'/poker sitzen ").append(amt).append(" ").append(pos).append("'><hover:show_text:'")
@@ -1278,12 +1311,14 @@ public final class PokerService implements org.bukkit.event.Listener {
 
     // ---------- Hilfen ----------
 
+    /** Small Blind: halber Pflichteinsatz der Stufe. */
     private long smallBlind() {
-        return cfg("small-blind", 10);
+        return Math.max(1, bigBlind() / 2);
     }
 
+    /** Big Blind = Pflichteinsatz der Stufe (grün 10, rot 10.000, violett 50.000). */
     private long bigBlind() {
-        return cfg("big-blind", 20);
+        return tier.minBet(plugin);
     }
 
     private long pot() {

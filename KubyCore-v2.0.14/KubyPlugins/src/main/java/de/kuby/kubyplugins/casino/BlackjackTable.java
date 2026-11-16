@@ -102,15 +102,24 @@ public final class BlackjackTable {
     }
 
     /** Weinroter High-Roller-Tisch (höhere Einsätze, Serie bis x8). */
-    private boolean highRoller;
+    private TableTier tier = TableTier.GRUEN;
 
     public BlackjackTable highRoller(boolean hr) {
-        this.highRoller = hr;
+        this.tier = hr ? TableTier.ROT : TableTier.GRUEN;
         return this;
     }
 
+    public BlackjackTable tier(TableTier t) {
+        this.tier = t == null ? TableTier.GRUEN : t;
+        return this;
+    }
+
+    public TableTier tier() {
+        return tier;
+    }
+
     public boolean isHighRoller() {
-        return highRoller;
+        return tier.highRoller();
     }
 
     public BlackjackTable(org.bukkit.plugin.Plugin plugin, String id, Location origin, float yaw, double radius,
@@ -248,7 +257,7 @@ public final class BlackjackTable {
         removeAll();
         // Filz: eine Fläche, Halbkreis mit Radius R, Bankkante bei z = 0
         origin.getWorld().spawn(origin.clone().add(0, FELT_Y, 0), ItemDisplay.class, e -> {
-            e.setItemStack(model(highRoller ? "bj_felt_red" : "bj_felt"));
+            e.setItemStack(model(tier.feltBlackjack()));
             e.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
             e.setTransformation(new Transformation(new Vector3f(), facing(fwd()),
                     new Vector3f((float) (2 * radius), 1f, (float) (2 * radius)), new Quaternionf()));
@@ -622,7 +631,7 @@ public final class BlackjackTable {
     // =================================================================================================================
 
     public static String chipColor(long amount) {
-        return amount >= 5000 ? "purple" : amount >= 1000 ? "black" : amount >= 500 ? "green" : amount >= 100 ? "blue"
+        return amount >= 100_000 ? "pink" : amount >= 25_000 ? "gold" : amount >= 5000 ? "purple" : amount >= 1000 ? "black" : amount >= 500 ? "green" : amount >= 100 ? "blue"
                 : amount >= 50 ? "red" : "white";
     }
 

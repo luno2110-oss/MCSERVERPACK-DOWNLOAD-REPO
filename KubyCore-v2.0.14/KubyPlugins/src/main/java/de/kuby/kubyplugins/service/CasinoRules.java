@@ -98,10 +98,10 @@ public final class CasinoRules {
                         + plugin.getConfig().getLong("casino.vip.daily-chips", 500) + " Chips. Rein darfst du mit dem Legend-Rang"
                         + " oder als einer der besten " + plugin.getConfig().getInt("casino.vip.top", 10)
                         + " in der Casino-Rangliste \"Am meisten Plus\".",
-                "In der VIP-Lounge steht ein Pokertisch: Texas Hold'em gegen andere Spieler, Blinds ab "
-                        + plugin.getConfig().getLong("casino.poker.small-blind", 10) + "/" + plugin.getConfig().getLong("casino.poker.big-blind", 20)
-                        + " Chips. Du setzt dich mit " + plugin.getConfig().getLong("casino.poker.min-buyin-bb", 40) + " bis "
-                        + plugin.getConfig().getLong("casino.poker.max-buyin-bb", 200) + " Big Blinds hin und nimmst deinen Stack beim Aufstehen wieder mit.",
+                "In der VIP-Lounge stehen Pokertische in drei Farben: grün (Big Blind " + de.kuby.kubyplugins.casino.TableTier.GRUEN.minBet(plugin)
+                        + ", Buy-in bis " + de.kuby.kubyplugins.casino.TableTier.GRUEN.maxBet(plugin) + "), rot (" + de.kuby.kubyplugins.casino.TableTier.ROT.minBet(plugin) + " / "
+                        + de.kuby.kubyplugins.casino.TableTier.ROT.maxBet(plugin) + ") und violett (" + de.kuby.kubyplugins.casino.TableTier.VIOLETT.minBet(plugin) + " / " + de.kuby.kubyplugins.casino.TableTier.VIOLETT.maxBet(plugin)
+                        + "). Deinen Stack nimmst du beim Aufstehen wieder mit.",
                 "Das Casino gibt es nur in Survival.",
                 "Schleichen + Rechtsklick auf einen Tisch zeigt die Regeln dieses Spiels.");
         List<String[]> commands = List.of(
@@ -128,7 +128,12 @@ public final class CasinoRules {
                 icon = de.kuby.kubyplugins.ui.KitData.Icon.CHIP_BLACK;
                 how = List.of(
                         "Rechtsklick auf einen Hocker oder den Dealer: hinsetzen. Klick Chips aus dem Rack vor dir auf dein Feld ("
-                                + c.getLong("casino.blackjack.min-bet", 10) + " bis " + de.kuby.kubyplugins.casino.CasinoText.num(c.getLong("casino.blackjack.max-bet", 10000))
+                                + "grüner Tisch " + de.kuby.kubyplugins.casino.CasinoText.num(de.kuby.kubyplugins.casino.TableTier.GRUEN.minBet(plugin)) + " bis "
+                                + de.kuby.kubyplugins.casino.CasinoText.num(de.kuby.kubyplugins.casino.TableTier.GRUEN.maxBet(plugin)) + ", roter "
+                                + de.kuby.kubyplugins.casino.CasinoText.num(de.kuby.kubyplugins.casino.TableTier.ROT.minBet(plugin)) + " bis "
+                                + de.kuby.kubyplugins.casino.CasinoText.num(de.kuby.kubyplugins.casino.TableTier.ROT.maxBet(plugin)) + ", violetter "
+                                + de.kuby.kubyplugins.casino.CasinoText.num(de.kuby.kubyplugins.casino.TableTier.VIOLETT.minBet(plugin)) + " bis "
+                                + de.kuby.kubyplugins.casino.CasinoText.num(de.kuby.kubyplugins.casino.TableTier.VIOLETT.maxBet(plugin))
                                 + " Chips), der erste Einsatz startet die Runde.",
                         "Bildkarten zählen 10, Asse 1 oder 11. Bist du dran, klickst du Karte, Halten, Doppeln oder Teilen."
                                 + " Der Dealer zieht bis 17.",

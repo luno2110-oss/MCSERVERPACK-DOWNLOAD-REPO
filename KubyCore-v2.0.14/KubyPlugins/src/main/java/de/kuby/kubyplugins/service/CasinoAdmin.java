@@ -29,7 +29,7 @@ public final class CasinoAdmin {
     private record Setting(String key, String path, String label, float min, float max, float step, double def, double scale) {}
 
     private static final List<Setting> SETTINGS = List.of(
-            new Setting("bj_max", "casino.blackjack.max-bet", "Blackjack-Höchsteinsatz (Chips)", 100, 100000, 100, 10000, 1),
+            new Setting("bj_max", "casino.tische.gruen.max-einsatz", "Grüner Tisch: Höchsteinsatz (Chips)", 1000, 1000000, 1000, 100000, 1),
             new Setting("roulette_max", "casino.roulette.max-bet", "Roulette-Höchsteinsatz (Chips)", 100, 100000, 100, 5000, 1),
             new Setting("roulette_wait", "casino.roulette.wait-seconds", "Roulette-Wartezeit (Sekunden)", 5, 120, 5, 20, 1),
             new Setting("slots_share", "casino.slots.jackpot-share", "Slots-Jackpot-Anteil (%)", 0, 10, 0.5f, 0.02, 100),
@@ -64,7 +64,7 @@ public final class CasinoAdmin {
                 + " " + mark("Roulette", plugin.roulette().hasTable())
                 + " " + mark("Slots", plugin.slots().hasMachine())
                 + " " + mark("Crash", plugin.crash().hasScreen())
-                + " " + mark("Poker", plugin.poker().hasTable()) + " " + mark("Poker rot", plugin.pokerHr().hasTable())));
+                + " " + mark("Poker", plugin.poker().hasTable()) + " " + mark("Poker rot", plugin.pokerHr().hasTable()) + " " + mark("Poker violett", plugin.pokerVio().hasTable())));
 
         StringBuilder payout = new StringBuilder("<red><b>AUSZAHLUNG</b></red>");
         Map<String, CasinoLog.Totals> totals = plugin.casinoLog().totals();

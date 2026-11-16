@@ -55,7 +55,6 @@ public final class SkyblockHud implements Listener {
     /** Leiste nur in Skyblock und nur mit geladenem Pack. */
     private boolean wants(Player p) {
         UUID id = p.getUniqueId();
-        if (de.kuby.kubyplugins.cinema.Cinema.busy(id)) return false;
         if (!addon.getConfig().getBoolean("leiste.aktiv", true) || !core.infoBar().on(id) || !skyblock(p)
                 || !core.uiPack().javaPack(p)) return false;
         for (Element e : Element.group(true)) if (core.infoBar().visible(id, e, true)) return true;
@@ -65,6 +64,9 @@ public final class SkyblockHud implements Listener {
     private void tick() {
         for (Player p : Bukkit.getOnlinePlayers()) {
             UUID id = p.getUniqueId();
+            // Während einer Kino-Szene nichts anfassen: die Szene blendet unsere Leisten aus und am Ende genau diese wieder
+            // ein. Früher wurden sie hier entfernt und neu gebaut – nach jeder Szene stand die Leiste dann doppelt da.
+            if (de.kuby.kubyplugins.cinema.Cinema.busy(id)) continue;
             BossBar bar = bars.get(id);
             if (!wants(p)) {
                 if (bar != null) {

@@ -23,12 +23,12 @@ public final class PokerCommand implements CommandExecutor {
             return true;
         }
         if (args.length == 0) {
-            long bb = plugin.getConfig().getLong("casino.poker.big-blind", 20);
-            Msg.send(p, "<gold>Poker <gray>(Texas Hold'em in der VIP-Lounge, Blinds "
-                    + plugin.getConfig().getLong("casino.poker.small-blind", 10) + "/" + bb + ")");
-            Msg.send(p, "<white>/poker sitzen <Chips> <gray>Hinsetzen ("
-                    + bb * plugin.getConfig().getLong("casino.poker.min-buyin-bb", 40) + " bis "
-                    + bb * plugin.getConfig().getLong("casino.poker.max-buyin-bb", 200) + " Chips)");
+            Msg.send(p, "<gold>Poker <gray>(Texas Hold'em in der VIP-Lounge)");
+            for (de.kuby.kubyplugins.casino.TableTier t : de.kuby.kubyplugins.casino.TableTier.values()) {
+                long bb = t.minBet(plugin);
+                Msg.send(p, "<gray>Tisch " + t.key + ": <white>Blinds " + Math.max(1, bb / 2) + "/" + bb + "<gray>, Buy-in bis <white>" + t.maxBet(plugin));
+            }
+            Msg.send(p, "<white>/poker sitzen <Chips> <gray>Hinsetzen am nächsten Tisch");
             Msg.send(p, "<white>/poker aufstehen <gray>Aufstehen, du nimmst deinen Stack mit");
             Msg.send(p, "<white>/poker fold | check | call | raise <Betrag> | allin <gray>Wenn du dran bist (oder Knöpfe auf dem Tisch)");
             Msg.send(p, "<white>/poker pause <gray>Hände aussetzen, Platz behalten · <white>/poker nachkaufen [Chips] <gray>zwischen den Händen"
@@ -38,7 +38,7 @@ public final class PokerCommand implements CommandExecutor {
         String sub = args[0].toLowerCase();
         String err = switch (sub) {
             case "sitzen", "sit" -> {
-                long bb = plugin.getConfig().getLong("casino.poker.big-blind", 20);
+                long bb = plugin.pokerFor(p).tier().minBet(plugin);
                 long buyIn = bb * 100;
                 if (args.length > 1) {
                     try {
@@ -61,7 +61,7 @@ public final class PokerCommand implements CommandExecutor {
             case "zeigen", "show" -> plugin.pokerFor(p).act(p, "show", 0);
             case "pause", "sitout" -> plugin.pokerFor(p).act(p, "sitout", 0);
             case "nachkaufen", "rebuy" -> {
-                long bb = plugin.getConfig().getLong("casino.poker.big-blind", 20);
+                long bb = plugin.pokerFor(p).tier().minBet(plugin);
                 long amt = bb * 100;
                 if (args.length > 1) {
                     try {

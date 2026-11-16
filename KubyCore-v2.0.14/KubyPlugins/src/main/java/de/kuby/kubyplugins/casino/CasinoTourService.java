@@ -164,29 +164,34 @@ public final class CasinoTourService {
         }
         // Blackjack (normal und weinrot)
         List<BlackjackGame> games = new ArrayList<>(plugin.blackjack().games());
-        for (boolean hr : new boolean[]{false, true}) {
-            BlackjackGame g = nearest(games.stream().filter(x -> x.table.isHighRoller() == hr).toList(), x -> x.table.origin(), me);
+        for (TableTier tt : TableTier.values()) {
+            BlackjackGame g = nearest(games.stream().filter(x -> x.table.tier() == tt).toList(), x -> x.table.origin(), me);
             if (g == null) continue;
             Location o = g.table.origin();
             V3 f = V3.dir(g.table.yaw(), 0);
             V3 dealer = v(o).add(f.mul(-0.6)).up(1.55);
             V3 cam = v(o).add(f.mul(0.9)).add(f.right().mul(0.6)).up(1.45);
-            out.add(hr
-                    ? station(p, "highroller", o, f, 3.4, cam, dealer,
-                    "Und hier, in Weinrot: unsere High-Roller-Tische. Höhere Einsätze für Mutige.",
-                    "Jeder Sieg in Folge zahlt mehr – bis zum Achtfachen.")
-                    : station(p, "blackjack", o, f, 3.4, cam, dealer,
-                    "Blackjack: Kommen Sie näher an die 21 als die Bank, ohne sich zu überkaufen.",
-                    "Siegesserien lohnen sich – jeder Sieg in Folge zahlt ein Stück mehr, bis x2,5."));
+            out.add(switch (tt) {
+                case ROT -> station(p, "highroller", o, f, 3.4, cam, dealer,
+                        "Und hier, in Weinrot: unsere High-Roller-Tische. Höhere Einsätze für Mutige.",
+                        "Jeder Sieg in Folge zahlt mehr – bis zum Achtfachen.");
+                case VIOLETT -> station(p, "elite", o, f, 3.4, cam, dealer,
+                        "Violett: der Elite-Tisch. Ab 50.000 Chips – bis zu einer Million je Runde.",
+                        "Hier spielen nur die Mutigsten. Und die Serie zahlt bis zum Achtfachen.");
+                default -> station(p, "blackjack", o, f, 3.4, cam, dealer,
+                        "Blackjack: Kommen Sie näher an die 21 als die Bank, ohne sich zu überkaufen.",
+                        "Siegesserien lohnen sich – jeder Sieg in Folge zahlt ein Stück mehr, bis x2,5.");
+            });
         }
         // Poker (normal und weinrot)
-        for (var pk : new de.kuby.kubyplugins.service.PokerService[]{plugin.poker(), plugin.pokerHr()}) {
+        for (var pk : plugin.pokerTables()) {
             Location c = pk.tableLocation();
             if (c == null || !near(c, me)) continue;
             V3 f = V3.dir(pk.tableYaw(), 0).mul(-1);
             V3 dealer = v(c).add(f.mul(-1.9)).up(1.55);
             out.add(station(p, "poker", c, f, 2.8, v(c).add(f.mul(0.6)).up(1.5), dealer,
-                    pk.isHighRoller() ? "Texas Hold'em für High Roller – hohe Blinds, große Pots."
+                    pk.tier() == TableTier.VIOLETT ? "Und ganz oben, in Violett: der Elite-Tisch. Buy-ins bis zu einer Million."
+                            : pk.isHighRoller() ? "Texas Hold'em für High Roller – hohe Blinds, große Pots."
                             : "Texas Hold'em gegen andere Spieler – hier zählt nicht nur Glück.",
                     "Lesen Sie Ihre Gegner. Und manchmal gewinnt der, der zuerst passt."));
         }

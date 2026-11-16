@@ -73,7 +73,6 @@ public final class SurvivalHud implements Listener {
     /** Leiste nur in Survival und nur mit geladenem Pack (sonst bleibt die Anzeige über der Hotbar). */
     private boolean wants(Player p) {
         UUID id = p.getUniqueId();
-        if (de.kuby.kubyplugins.cinema.Cinema.busy(id)) return false;
         if (!core.getConfig().getBoolean("survival-hud.enabled", true) || !core.infoBar().on(id) || !survival(p)
                 || !core.uiPack().javaPack(p)) return false;
         for (Element e : Element.group(false)) if (!e.row() && core.infoBar().visible(id, e)) return true;
@@ -83,6 +82,9 @@ public final class SurvivalHud implements Listener {
     private void tick() {
         for (Player p : Bukkit.getOnlinePlayers()) {
             UUID id = p.getUniqueId();
+            // Während einer Kino-Szene nichts anfassen: die Szene blendet unsere Leisten aus und am Ende genau diese wieder
+            // ein. Früher wurden sie hier entfernt und neu gebaut – nach jeder Szene stand die Leiste dann doppelt da.
+            if (de.kuby.kubyplugins.cinema.Cinema.busy(id)) continue;
             BossBar bar = bars.get(id);
             boolean added = false;
             if (!wants(p)) {

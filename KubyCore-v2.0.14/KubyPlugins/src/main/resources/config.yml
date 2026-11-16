@@ -176,20 +176,27 @@ casino:
       - kuby.rank.legend
   music:
     volume: 0.6
-  poker:
-    small-blind: 10
-    big-blind: 20
-    min-buyin-bb: 40
-    max-buyin-bb: 200
+  poker:                        # Blinds und Höchst-Buy-in kommen aus casino.tische (Stufe des Tisches)
+    min-buyin-bb: 40            # kleinstes Buy-in in Big Blinds (höchstens die Hälfte des größten Buy-ins)
     turn-seconds: 30
-  poker-rot:                    # weinroter High-Roller-Pokertisch (fehlende Werte wie bei poker)
-    small-blind: 250
-    big-blind: 500
+  # Tisch-Stufen für Blackjack und Poker (Filzfarbe). Blackjack: Pflicht- und Höchsteinsatz je Platz und Runde.
+  # Poker: min-einsatz = Big Blind (Small Blind = Hälfte), max-einsatz = größtes Buy-in.
+  # Aufbauen: /casino blackjack tisch [Radius] gruen|rot|violett · /casino poker-tisch gruen|rot|violett
+  tische:
+    gruen:
+      min-einsatz: 10
+      max-einsatz: 100000
+    rot:
+      min-einsatz: 10000
+      max-einsatz: 500000
+    violett:
+      min-einsatz: 50000
+      max-einsatz: 1000000
+  poker-rot:                    # weitere Werte für den roten Pokertisch (fehlende wie bei poker)
+    turn-seconds: 30
+  poker-violett:                # weitere Werte für den violetten Pokertisch
+    turn-seconds: 40
   blackjack:
-    min-bet: 10
-    max-bet: 10000              # je Platz und Runde (vor Doppeln/Teilen)
-    hr-min-bet: 500             # weinroter High-Roller-Tisch
-    hr-max-bet: 250000
     bet-seconds: 8              # Countdown nach dem ersten Einsatz
     turn-seconds: 15            # Zeit pro Zug, danach wird gehalten
   roulette:

@@ -618,6 +618,16 @@ final class SelfTest {
                 if (!cp.jewelGame("blackjack_hr")) fails.add("High-Roller-Blackjack erlaubt keine Juwelen");
             }
             if (plugin.pokerHr() == null || !plugin.pokerHr().isHighRoller()) fails.add("High-Roller-Pokertisch fehlt");
+            if (plugin.pokerVio() == null || plugin.pokerVio().tier() != de.kuby.kubyplugins.casino.TableTier.VIOLETT) fails.add("Violetter Pokertisch fehlt");
+            // Tisch-Stufen: Pflicht- und Höchsteinsatz wie vorgegeben (grün 10/100k, rot 10k/500k, violett 50k/1 Mio.)
+            long[][] want = {{10, 100_000}, {10_000, 500_000}, {50_000, 1_000_000}};
+            for (var t : de.kuby.kubyplugins.casino.TableTier.values()) {
+                long[] w = want[t.ordinal()];
+                if (t.minBet(plugin) != w[0] || t.maxBet(plugin) != w[1])
+                    fails.add("Tisch-Stufe " + t.key + ": " + t.minBet(plugin) + "–" + t.maxBet(plugin) + " statt " + w[0] + "–" + w[1]);
+                if (!cp.jewelGame("blackjack" + t.suffix)) fails.add("Juwelen am Blackjack-Tisch " + t.key + " nicht erlaubt");
+            }
+            if (Math.abs(cp.streakMult("blackjack_violett_hr", 14) - 8.0) > 1e-9) fails.add("Violette Serie nicht bis x8");
         } catch (Throwable t) {
             fails.add("High-Roller: " + t);
         }

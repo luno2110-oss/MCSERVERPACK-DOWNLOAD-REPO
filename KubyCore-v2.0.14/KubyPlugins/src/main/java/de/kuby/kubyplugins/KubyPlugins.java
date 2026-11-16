@@ -153,6 +153,7 @@ public final class KubyPlugins extends JavaPlugin {
     private de.kuby.kubyplugins.casino.CasinoNpc casinoNpc;
     private PokerService poker;
     private PokerService pokerHr;
+    private PokerService pokerVio;
     private VoteService votes;
     private AchievementService achievements;
     private UiPackService uiPack;
@@ -231,6 +232,9 @@ public final class KubyPlugins extends JavaPlugin {
         // weinroter High-Roller-Pokertisch (eigene Blinds, eigene Datei poker-rot.yml)
         pokerHr = new PokerService(this, true);
         pokerHr.start();
+        // violetter Elite-Pokertisch (Blinds 25.000/50.000, Buy-in bis 1 Mio., Datei poker-violett.yml)
+        pokerVio = new PokerService(this, de.kuby.kubyplugins.casino.TableTier.VIOLETT);
+        pokerVio.start();
         votes = new VoteService(this);
         achievements = new AchievementService(this);
         achievements.start();
@@ -282,7 +286,8 @@ public final class KubyPlugins extends JavaPlugin {
         modes.registerBusyCheck(p -> pvp().inCombat(p.getUniqueId()));
         modes.registerBusyCheck(p -> rtpQueue().inQueue(p.getUniqueId()));
         modes.registerBusyCheck(p -> blackjack.inGame(p.getUniqueId()));
-        modes.registerBusyCheck(p -> poker.isSeated(p.getUniqueId()) || pokerHr.isSeated(p.getUniqueId()));
+        modes.registerBusyCheck(p -> poker.isSeated(p.getUniqueId()) || pokerHr.isSeated(p.getUniqueId())
+                || pokerVio.isSeated(p.getUniqueId()));
         modes.registerExtras(java.util.List.of(homes, battlepass, cosmetics, kits, tags, daily, investments, shopStorage));
         keys = new KeyService(this);
         crates = new de.kuby.kubyplugins.service.CrateService(this);
@@ -532,6 +537,7 @@ public final class KubyPlugins extends JavaPlugin {
             casinoHolos.respawnAll();
             poker.respawn();
             pokerHr.respawn();
+            pokerVio.respawn();
             votes.hook();
             hubSettings.applyAll();
         }, 40L);
@@ -582,6 +588,7 @@ public final class KubyPlugins extends JavaPlugin {
         if (intro != null) intro.save();
         poker.shutdown();
         pokerHr.shutdown();
+        pokerVio.shutdown();
         if (casinoPlay != null) casinoPlay.shutdown();
         if (hats != null) hats.removeAll();
         if (crates != null) crates.removeLabels();
@@ -989,18 +996,29 @@ public final class KubyPlugins extends JavaPlugin {
     public de.kuby.kubyplugins.casino.CasinoNpc casinoNpc() { return casinoNpc; }
     public PokerService poker() { return poker; }
     public PokerService pokerHr() { return pokerHr; }
+    public PokerService pokerVio() { return pokerVio; }
 
-    /** Pokertisch für einen Spieler: an dem er sitzt, sonst der nächste aufgebaute (normal oder weinrot). */
+    /** Alle Pokertische (grün, rot, violett). */
+    public java.util.List<PokerService> pokerTables() {
+        return java.util.List.of(poker, pokerHr, pokerVio);
+    }
+
+    /** Pokertisch für einen Spieler: an dem er sitzt, sonst der nächste aufgebaute (grün, rot oder violett). */
     public PokerService pokerFor(org.bukkit.entity.Player p) {
-        if (pokerHr.isSeated(p.getUniqueId())) return pokerHr;
-        if (poker.isSeated(p.getUniqueId())) return poker;
-        org.bukkit.Location a = poker.tableLocation(), b = pokerHr.tableLocation();
-        if (b == null) return poker;
-        if (a == null) return pokerHr;
+        for (PokerService s : pokerTables()) if (s.isSeated(p.getUniqueId())) return s;
+        PokerService best = poker;
+        double bd = Double.MAX_VALUE;
         org.bukkit.Location me = p.getLocation();
-        double da = a.getWorld().equals(me.getWorld()) ? a.distanceSquared(me) : Double.MAX_VALUE;
-        double db = b.getWorld().equals(me.getWorld()) ? b.distanceSquared(me) : Double.MAX_VALUE;
-        return db < da ? pokerHr : poker;
+        for (PokerService s : pokerTables()) {
+            org.bukkit.Location l = s.tableLocation();
+            if (l == null || !l.getWorld().equals(me.getWorld())) continue;
+            double d = l.distanceSquared(me);
+            if (d < bd) {
+                bd = d;
+                best = s;
+            }
+        }
+        return best;
     }
     public VoteService votes() { return votes; }
     public AchievementService achievements() { return achievements; }

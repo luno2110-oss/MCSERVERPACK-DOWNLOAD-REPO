@@ -70,7 +70,7 @@ public final class BlackjackGame {
         this.plugin = plugin;
         this.table = table;
         this.name = name;
-        this.GAME = table.isHighRoller() ? "blackjack_hr" : "blackjack";
+        this.GAME = "blackjack" + table.tier().suffix;
         for (int i = 0; i < seats.length; i++) seats[i] = new Seat();
     }
 
@@ -198,13 +198,11 @@ public final class BlackjackGame {
     // =================================================================================================================
 
     private long maxBet() {
-        return table.isHighRoller() ? plugin.getConfig().getLong("casino.blackjack.hr-max-bet", 250_000)
-                : plugin.getConfig().getLong("casino.blackjack.max-bet", 10_000);
+        return table.tier().maxBet(plugin);
     }
 
     private long minBet() {
-        return table.isHighRoller() ? plugin.getConfig().getLong("casino.blackjack.hr-min-bet", 500)
-                : plugin.getConfig().getLong("casino.blackjack.min-bet", 10);
+        return table.tier().minBet(plugin);
     }
 
     private long totalBets() {
@@ -839,7 +837,7 @@ public final class BlackjackGame {
         Seat s = seats[seat];
         if (s.player == null) return;
         s.jewels = plugin.casinoPlay().cur(s.player, GAME) == de.kuby.kubyplugins.service.CasinoPlay.Cur.JEWELS;
-        s.rackValues = plugin.casinoPlay().rack(s.player, GAME, table.isHighRoller() ? RACK_HR : RACK);
+        s.rackValues = plugin.casinoPlay().rack(s.player, GAME, table.tier().rack);
         table.rack(seat, s.rackValues, s.jewels);
         showControls(seat);
     }

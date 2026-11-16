@@ -98,7 +98,8 @@ public final class CasinoPlay {
     public boolean jewelGame(String game) {
         java.util.List<String> l = plugin.getConfig().getStringList("casino.juwelen.spiele");
         if (l.isEmpty()) l = java.util.List.of("blackjack");
-        String base = game.endsWith("_hr") ? game.substring(0, game.length() - 3) : game;
+        // Stufe abschneiden: blackjack_hr, blackjack_violett_hr → blackjack
+        String base = game.contains("_") ? game.substring(0, game.indexOf('_')) : game;
         for (String g : l) if (g.equalsIgnoreCase(base)) return true;
         return false;
     }

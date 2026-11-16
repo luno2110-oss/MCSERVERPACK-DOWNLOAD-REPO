@@ -14,7 +14,7 @@ import org.bukkit.entity.Player;
  * /casino: Chips kaufen und verkaufen, Jackpot ansehen.
  * Admins: /casino kasse (auf einen Block schauen), /casino jackpot <Betrag>.
  */
-public final class CasinoCommand implements CommandExecutor {
+public final class CasinoCommand implements CommandExecutor, org.bukkit.command.TabCompleter {
 
     private final KubyPlugins plugin;
 
@@ -76,12 +76,18 @@ public final class CasinoCommand implements CommandExecutor {
                 if (!p.hasPermission("kuby.admin")) {
                     Msg.send(p, "<red>Nur Admins können den Poker-Tisch setzen.");
                 } else {
-                    boolean hr = args.length > 1 && (args[1].equalsIgnoreCase("rot") || args[1].equalsIgnoreCase("weinrot")
-                            || args[1].equalsIgnoreCase("highroller"));
-                    (hr ? plugin.pokerHr() : plugin.poker()).setTable(p.getLocation());
-                    Msg.send(p, "<green>" + (hr ? "High-Roller-Pokertisch (weinrot)" : "Poker-Tisch") + " aufgebaut: Mitte da, wo du stehst,"
-                            + " der Dealer an der Seite, auf die du schaust (Tisch 5,4 x 2,7 Blöcke, sechs Plätze)."
-                            + " Spieler: Hocker anklicken oder /poker sitzen <Chips>." + (hr ? "" : " Weinrot: /casino poker-tisch rot"));
+                    de.kuby.kubyplugins.casino.TableTier tier = args.length > 1 && de.kuby.kubyplugins.casino.TableTier.parse(args[1]) != null
+                            ? de.kuby.kubyplugins.casino.TableTier.parse(args[1]) : de.kuby.kubyplugins.casino.TableTier.GRUEN;
+                    de.kuby.kubyplugins.service.PokerService pk = switch (tier) {
+                        case GRUEN -> plugin.poker();
+                        case ROT -> plugin.pokerHr();
+                        case VIOLETT -> plugin.pokerVio();
+                    };
+                    pk.setTable(p.getLocation());
+                    Msg.send(p, "<green>Poker-Tisch (" + tier.key + ") aufgebaut: Mitte da, wo du stehst,"
+                            + " der Dealer an der Seite, auf die du schaust (Tisch 5,4 x 2,7 Blöcke, sechs Plätze). Big Blind "
+                            + tier.minBet(plugin) + ", Buy-in bis " + tier.maxBet(plugin) + " Chips."
+                            + " Andere Farben: /casino poker-tisch gruen|rot|violett");
                 }
             }
             case "barkeeper" -> {
@@ -272,4 +278,26 @@ public final class CasinoCommand implements CommandExecutor {
         Msg.send(p, "<green>Roulette-Tisch aufgebaut (" + width + " x " + depth + " Blöcke). Croupier: /casino npc croupier");
     }
 
+
+    /** Tab-Ergänzung: Unterbefehle, für Admins auch Tisch-Aufbau mit Farbe (grün, rot, violett). */
+    @Override
+    public java.util.List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
+        boolean admin = sender.hasPermission("kuby.admin");
+        java.util.List<String> opts = new java.util.ArrayList<>();
+        if (args.length == 1) {
+            opts.addAll(java.util.List.of("status", "kaufen", "verkaufen", "waehrung", "serie", "jackpot", "regeln", "stats", "rundgang",
+                    "cashout", "hilfe"));
+            if (admin) opts.addAll(java.util.List.of("blackjack", "poker-tisch", "roulette-tisch", "automat", "slots", "crash", "npc",
+                    "holo", "kasse", "barkeeper", "admin"));
+        } else if (admin && args.length == 2 && args[0].equalsIgnoreCase("blackjack")) {
+            opts.addAll(java.util.List.of("tisch", "entfernen", "liste"));
+        } else if (admin && args.length == 2 && args[0].equalsIgnoreCase("poker-tisch")) {
+            opts.addAll(java.util.List.of("gruen", "rot", "violett"));
+        } else if (admin && args.length >= 3 && args[0].equalsIgnoreCase("blackjack") && args[1].equalsIgnoreCase("tisch")) {
+            opts.addAll(java.util.List.of("gruen", "rot", "violett", "3"));
+        }
+        String last = args.length == 0 ? "" : args[args.length - 1].toLowerCase(java.util.Locale.ROOT);
+        opts.removeIf(o -> !o.startsWith(last));
+        return opts;
+    }
 }
