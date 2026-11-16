@@ -347,7 +347,11 @@ public final class RouletteGame implements org.bukkit.event.Listener {
         String err = plugin.casinoPlay().take(p, "roulette", amount);
         if (err != null) return err;
         Bet bet = new Bet(p.getUniqueId(), p.getName(), kind, param, amount);
-        bets.add(bet);
+        // gleicher Platz desselben Spielers: zusammenfassen (sonst wachsen Liste und roulette-tisch.yml mit jedem Klick)
+        int same = -1;
+        for (int i = 0; i < bets.size(); i++) if (bets.get(i).player().equals(bet.player()) && bets.get(i).same(bet)) same = i;
+        if (same >= 0) bets.set(same, new Bet(bet.player(), bet.name(), kind, param, bets.get(same).amount() + amount));
+        else bets.add(bet);
         table.chip(spotOf(bet), chipColor(p.getUniqueId()));
         Location at = table.spotCenter(spotOf(bet));
         if (at != null) at.getWorld().playSound(at, "kuby:casino.chip", org.bukkit.SoundCategory.PLAYERS, 0.8f, 0.95f + RNG.nextFloat() * 0.1f);
@@ -756,8 +760,14 @@ public final class RouletteGame implements org.bukkit.event.Listener {
         };
     }
 
+    /** Letzter Klick je Spieler (Dauerklicken mit Makros bremsen: höchstens alle 120 ms ein Chip). */
+    private final Map<UUID, Long> lastClick = new HashMap<>();
+
     /** Klick auf Tableau, Kessel oder Croupier (Interaction-Flächen des Tischs). */
     public void onTableClick(Player p, String what, boolean attack) {
+        long now = System.currentTimeMillis();
+        Long before = lastClick.put(p.getUniqueId(), now);
+        if (before != null && now - before < 120) return;
         String blocked = plugin.casino().checkMode(p);
         if (blocked != null) {
             CasinoText.error(p, blocked);
@@ -801,6 +811,7 @@ public final class RouletteGame implements org.bukkit.event.Listener {
     @org.bukkit.event.EventHandler
     public void onQuit(org.bukkit.event.player.PlayerQuitEvent e) {
         hovering.remove(e.getPlayer().getUniqueId());
+        lastClick.remove(e.getPlayer().getUniqueId());
         table.hoverOff(e.getPlayer().getUniqueId());
     }
 
