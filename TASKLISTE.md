@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.85** (ungetestet, nicht kompiliert)
+Stand: **v1.86** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -558,6 +558,12 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
 ## Casino fertigstellen (v1.68)
+- [x] **v1.86 Casino-Rundgang im echten Client angesehen und nachgeschliffen**
+  - [x] Rundgang als Video aus dem echten Client (CI „Client-Bilder“, `video_rundgang.mp4`), im Testgelände mit Kasse und Jukebox
+  - [x] Untertitel liefen über den Bildrand („…desto schneller wird e“): Sätze werden in Häppchen von höchstens 46 Zeichen geteilt und nach Länge über die Station verteilt
+  - [x] Kamera steckte bei Tischen an der Wand im Block (halbes Bild schwarz): jede Kameraposition wird vorab in der Welt geprüft, zur Gegenseite gespiegelt oder zum Ziel hin gezogen
+  - [x] Poker-Schnitt jetzt schräg von oben über den Filz (vorher aus Tischhöhe auf leere Hocker), Roulette-Schnitt als Totale aufs ganze Rad (vorher nah am Mitteltext)
+  - [x] Leise Lounge-Musik unter dem Rundgang; violetter Elite-Tisch mit eigenem Text
 - [x] **v1.85 Tisch-Stufen Grün/Rot/Violett, Leisten-Fehler nach Cutscenes**
   - [x] Fehler: nach jeder Kino-Szene (z. B. Slots mit drei gleichen) verdoppelten sich die Leisten oben (Geld, Juwelen, Quests): die Info-Leiste (Survival, Skyblock) baute ihre Leisten während der Szene neu, die Szene zeigte am Ende zusätzlich die alten wieder. Jetzt rührt die Info-Leiste während einer Szene nichts an; CI-Test `/kubytest kino` zählt die Leisten im echten Client vor und nach zwei Szenen
   - [x] Neue violette Stufe (Elite) für Blackjack und Poker, eigener Filz (Pixel-Look, Königsviolett, Poker mit „ELITE“)

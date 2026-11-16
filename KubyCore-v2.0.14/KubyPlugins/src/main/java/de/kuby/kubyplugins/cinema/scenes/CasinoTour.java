@@ -28,8 +28,47 @@ public final class CasinoTour implements Script {
      * Eine Station: focus = Mitte des Geschehens, front = waagerechte Richtung von dort zum Betrachter, dist = Abstand
      * der Standpunkte, broll = Kamera und Ziel für den Schnitt (z. B. auf einen Spieler), lines = zwei Sätze.
      */
-    public record Station(String name, V3 focus, V3 front, double dist, V3 brollCam, V3 brollLook, String[] lines) {
+    public record Station(String name, V3 focus, V3 front, double dist, V3 brollCam, V3 brollLook, String[] lines, V3 twoCam) {
+        public Station(String name, V3 focus, V3 front, double dist, V3 brollCam, V3 brollLook, String[] lines) {
+            this(name, focus, front, dist, brollCam, brollLook, lines, null);
+        }
     }
+
+    /** Höchstlänge eines Untertitels (sichtbare Zeichen): längere Sätze laufen sonst über den Bildrand. */
+    static final int SUB_MAX = 46;
+
+    /** Teilt Sätze an Wortgrenzen in Untertitel von höchstens SUB_MAX Zeichen. */
+    static java.util.List<String> chunks(String... lines) {
+        java.util.List<String> out = new java.util.ArrayList<>();
+        for (String line : lines) {
+            StringBuilder cur = new StringBuilder();
+            for (String w : line.split(" ")) {
+                if (cur.length() > 0 && cur.length() + 1 + w.length() > SUB_MAX) {
+                    out.add(cur.toString());
+                    cur.setLength(0);
+                }
+                if (cur.length() > 0) cur.append(' ');
+                cur.append(w);
+            }
+            if (cur.length() > 0) out.add(cur.toString());
+        }
+        return out;
+    }
+
+    /** Untertitel für Tick u im Fenster [from, to): die Häppchen nach ihrer Länge über das Fenster verteilt. */
+    static String subAt(int u, int from, int to, java.util.List<String> parts) {
+        if (u < from || u >= to || parts.isEmpty()) return null;
+        int total = 0;
+        for (String s : parts) total += s.length() + 8;
+        double at = (u - from) / (double) (to - from) * total;
+        for (String s : parts) {
+            at -= s.length() + 8;
+            if (at < 0) return s;
+        }
+        return parts.get(parts.size() - 1);
+    }
+
+    private static final String WHO = "<#F2C94C>Vincent: <white>";
 
     static final int INTRO = 150, PER = 160, OUTRO = 110;
     private final V3 start, startDir;
@@ -118,9 +157,12 @@ public final class CasinoTour implements Script {
             fr.cam = start.up(1.7).add(startDir.mul(-1.4)).add(right.mul(0.9));
             fr.look(host.up(1.45));
             fr.cut = t == 60;
-            if (t >= 96) fr.cardSub = "<#F2C94C>Vincent: <white>Willkommen im Kuby Casino! Ich bin Vincent – darf ich Sie herumführen?";
+            String sub = subAt(t, 96, INTRO, chunks("Willkommen im Kuby Casino!", "Ich bin Vincent – darf ich Sie herumführen?"));
+            if (sub != null) fr.cardSub = WHO + sub;
         }
         if (t == 0) fr.ev(new Ev.Sound("minecraft:block.note_block.chime", 0.8f, 1.0f));
+        // leise Lounge-Musik unter dem ganzen Rundgang (endet mit der Szene)
+        if (t == 8) fr.ev(new Ev.Sound("minecraft:music_disc.cat", 0.22f, 1.0f));
         if (t == 60) fr.ev(new Ev.Sound("minecraft:block.note_block.bell", 0.6f, 1.2f));
         if (w > 0 && w < 1 && t % 7 == 0) fr.ev(new Ev.Sound("minecraft:block.wood.step", 0.3f, 1.0f));
     }
@@ -152,8 +194,9 @@ public final class CasinoTour implements Script {
         fr.headYaw = u > 40 && u < 70 ? (float) faceMe : fr.actorYaw;
         // Kamera
         if (u < 66 || u >= 124) {
-            // Zweier: schräg von vorn auf Vincent und den Spieler, die Station im Hintergrund
-            V3 cam = spot.add(f.mul(2.6)).add(r.mul(2.2)).up(1.75);
+            // Zweier: schräg von vorn auf Vincent und den Spieler, die Station im Hintergrund (Stelle vorab in der Welt
+            // geprüft: nicht in einer Wand)
+            V3 cam = s.twoCam() != null ? s.twoCam() : spot.add(f.mul(2.6)).add(r.mul(2.2)).up(1.75);
             fr.cam = cam;
             fr.look(host.lerp(me, 0.4).up(1.45).lerp(s.focus().up(1.0), 0.25));
             fr.cut = u == 0 || u == 124;
@@ -165,8 +208,8 @@ public final class CasinoTour implements Script {
             fr.cut = u == 66;
         }
         // Text
-        if (u >= 38 && u < 92) fr.cardSub = "<#F2C94C>Vincent: <white>" + s.lines()[0];
-        else if (u >= 92 && u < 152) fr.cardSub = "<#F2C94C>Vincent: <white>" + s.lines()[1];
+        String sub = subAt(u, 38, 154, chunks(s.lines()));
+        if (sub != null) fr.cardSub = WHO + sub;
         if (u == 4 && s.name() != null) fr.ev(new Ev.Sound("minecraft:block.note_block.pling", 0.4f, 1.5f));
         if (walking && u % 7 == 0) fr.ev(new Ev.Sound("minecraft:block.wood.step", 0.3f, 1.0f));
         if (u >= 40 && u < 100) fr.card = null;
@@ -188,8 +231,10 @@ public final class CasinoTour implements Script {
         fr.cam = start.up(1.6).add(startDir.mul(-1.3)).add(right.mul(1.2)).lerp(start.up(2.4).add(startDir.mul(-2.6)).add(right.mul(2.0)), d);
         fr.look(host.up(1.3));
         fr.cut = u == 0;
-        if (u < 50) fr.cardSub = "<#F2C94C>Vincent: <white>Kleiner Tipp: Von 17 bis 22 Uhr ist Goldene Zeit – da zählen Gewinne doppelt.";
-        else if (u < 96) {
+        if (u < 50) {
+            String sub = subAt(u, 0, 50, chunks("Kleiner Tipp: Von 17 bis 22 Uhr ist Goldene Zeit –", "da zählen Gewinne doppelt."));
+            if (sub != null) fr.cardSub = WHO + sub;
+        } else if (u < 96) {
             fr.card = "VIEL ERFOLG";
             fr.cardSub = "<gray>Rundgang wiederholen: <white>/casino rundgang";
         }

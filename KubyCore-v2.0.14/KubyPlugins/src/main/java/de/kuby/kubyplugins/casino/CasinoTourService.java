@@ -121,18 +121,52 @@ public final class CasinoTourService {
         return null;
     }
 
+    /** Ist an dieser Stelle (mit etwas Abstand rundherum) kein undurchsichtiger Block? Sonst sieht die Kamera schwarz. */
+    private static boolean clear(org.bukkit.World w, V3 c) {
+        for (double dx : new double[]{-0.25, 0, 0.25}) {
+            for (double dz : new double[]{-0.25, 0, 0.25}) {
+                for (double dy : new double[]{-0.2, 0, 0.2}) {
+                    Block b = w.getBlockAt((int) Math.floor(c.x() + dx), (int) Math.floor(c.y() + dy), (int) Math.floor(c.z() + dz));
+                    if (b.getType().isOccluding() || b.getType().isSolid() && !b.isPassable()) return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Kamera aus Wänden und Decken holen (im echten Client gesehen: bei Tischen an der Wand war das halbe Bild schwarz).
+     * Erst die Gegenseite (gespiegelt um die Blickachse), sonst schrittweise zum Ziel hin.
+     */
+    private static V3 safeCam(org.bukkit.World w, V3 cam, V3 look, V3 mirror) {
+        if (clear(w, cam)) return cam;
+        if (mirror != null && clear(w, mirror)) return mirror;
+        for (int i = 1; i <= 16; i++) {
+            V3 c = cam.lerp(look, i / 20.0);
+            if (clear(w, c)) return c;
+        }
+        return cam;
+    }
+
     private CasinoTour.Station station(Player viewer, String name, Location at, V3 front, double dist, V3 bCam, V3 bLook,
                                        String a, String b) {
         V3 focus = floor(at);
+        org.bukkit.World w = at.getWorld();
+        V3 f = front.flat();
+        V3 r = f.right();
         Player other = playerAt(viewer, at);
         if (other != null) {
             // mitten im Satz auf einen echten Spieler schneiden
             V3 eye = v(other.getEyeLocation());
-            V3 f = front.flat();
-            bCam = eye.add(f.mul(1.6)).add(f.right().mul(0.8)).up(0.15);
+            bCam = eye.add(f.mul(1.6)).add(r.mul(0.8)).up(0.15);
             bLook = eye.up(-0.15);
         }
-        return new CasinoTour.Station(name, focus, front, dist, bCam, bLook, new String[]{a, b});
+        bCam = safeCam(w, bCam, bLook, null);
+        // Zweier-Einstellung (Vincent und Spieler, Station dahinter): erst rechts, sonst links, sonst näher heran
+        V3 spot = focus.add(f.mul(dist));
+        V3 lookTwo = spot.up(1.45);
+        V3 two = safeCam(w, spot.add(f.mul(2.6)).add(r.mul(2.2)).up(1.75), lookTwo, spot.add(f.mul(2.6)).add(r.mul(-2.2)).up(1.75));
+        return new CasinoTour.Station(name, focus, front, dist, bCam, bLook, new String[]{a, b}, two);
     }
 
     private <T> T nearest(List<T> list, java.util.function.Function<T, Location> loc, Location from) {
@@ -189,7 +223,8 @@ public final class CasinoTourService {
             if (c == null || !near(c, me)) continue;
             V3 f = V3.dir(pk.tableYaw(), 0).mul(-1);
             V3 dealer = v(c).add(f.mul(-1.9)).up(1.55);
-            out.add(station(p, "poker", c, f, 2.8, v(c).add(f.mul(0.6)).up(1.5), dealer,
+            // Schnitt: schräg von oben über den Filz (Karten, Pot, Dealer), nicht aus Tischhöhe auf leere Hocker
+            out.add(station(p, "poker", c, f, 2.8, v(c).add(f.mul(2.2)).up(2.6), v(c).add(f.mul(-0.3)).up(0.7),
                     pk.tier() == TableTier.VIOLETT ? "Und ganz oben, in Violett: der Elite-Tisch. Buy-ins bis zu einer Million."
                             : pk.isHighRoller() ? "Texas Hold'em für High Roller – hohe Blinds, große Pots."
                             : "Texas Hold'em gegen andere Spieler – hier zählt nicht nur Glück.",
@@ -200,7 +235,8 @@ public final class CasinoTourService {
         if (rt != null && rt.center() != null && near(rt.center(), me)) {
             Location c = rt.center();
             V3 f = V3.dir(rt.yaw(), 0);
-            out.add(station(p, "roulette", c, f, 3.0, v(c).add(f.mul(0.9)).up(1.4), v(c).up(0.1),
+            // Schnitt: Totale von schräg oben auf das ganze Rad (nicht nah am Text in der Mitte)
+            out.add(station(p, "roulette", c, f, 3.0, v(c).add(f.mul(3.4)).up(3.0), v(c).up(0.2),
                     "Rot oder Schwarz? Am Roulette entscheidet eine einzige Kugel.",
                     "Achten Sie auf die Blitz-Zahlen – die zahlen in manchen Runden ein Vielfaches."));
         }
