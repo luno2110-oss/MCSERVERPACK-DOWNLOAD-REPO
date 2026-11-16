@@ -212,6 +212,9 @@ jobs:
           clip video_rundgang 95
           for k in 01 02 03 04 05 06 07 08 09 10 11 12; do sleep 7; shot "40_rundgang_$k"; done
           sleep 12
+          # Inventar: echte Klick-, Kreativ- und Drop-Events in Survival und Hub (Items durften nicht im Slot festhängen)
+          echo "kubytest inventar Kamera" >&3
+          sleep 8
           sleep 5
           kill $CPID 2>/dev/null || true
           echo "stop" >&3
@@ -253,6 +256,9 @@ jobs:
           print("- Goldene Zeit (echte Uhr, Zeitzone auf 18 Uhr gestellt): %d Abrechnungen mit Goldener Zeit von %d" % (gold, wins))
           for l in re.findall(r"\[Casino-Regel\] (?:OK|FEHLER) Goldene Zeit nach echter Uhr.*", log): print("  - " + l)
           if wins and gold == 0: probs.append("Goldene Zeit: keine Abrechnung mit Bonus, obwohl es 18 Uhr ist")
+          inv = re.findall(r"\[Inventar-Test\] (OK|FEHLER) (.*)", log)
+          print("- Inventar (Klicken, Kreativ-Menü, Droppen): " + ("; ".join(k[0] + " " + k[1] for k in inv) if inv else "nicht gelaufen"))
+          if not inv or inv[-1][0] != "OK": probs.append("Inventar: " + (inv[-1][1] if inv else "Test nicht gelaufen"))
           ein = re.findall(r"\[Einrichten-Test\] (OK|FEHLER) (.*)", log)
           print("- Casino einrichten (Bereich, Spawnpunkt, /casino, Musik): " + ("; ".join(k[0] + " " + k[1] for k in ein) if ein else "nicht gelaufen"))
           if not ein or ein[-1][0] != "OK": probs.append("Casino einrichten: " + (ein[-1][1] if ein else "Test nicht gelaufen"))

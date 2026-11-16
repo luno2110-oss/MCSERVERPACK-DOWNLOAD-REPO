@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v1.92** (ungetestet, nicht kompiliert)
+Stand: **v1.93** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -558,6 +558,10 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Ergebnis: alle 389 Dialoge ohne Layout-Fehler
 
 ## Casino fertigstellen (v1.68)
+- [x] **v1.93 Fehler: Items hingen im Slot fest** (Bericht des Besitzers: nichts verschieben, droppen oder aus dem Kreativ-Menü nehmen, Items sprangen zurück)
+  - [x] Ursache: die Lobby-Sperre in der Hub-Welt brach jeden Inventar-Klick, Drop, Tausch und jedes Aufheben ab – für alle, auch Admins im Kreativmodus (nur der Bearbeitungsmodus war ausgenommen). Teilt sich der Hub die Welt mit einem Spielmodus, war damit der ganze Modus gesperrt
+  - [x] Jetzt nie gesperrt: im Kreativmodus, im Bearbeitungsmodus, wenn der Hub die Welt mit einem Modus teilt, oder mit `lobby.inventar-sperre: false`. Admins sehen in der Lobby einen Hinweis, wenn die Sperre greift
+  - [x] CI-Test `/kubytest inventar` mit echtem Spieler: Klick, Kreativ-Menü und Drop in der Survival-Welt (Survival und Kreativ), im Hub im Kreativmodus (frei) und im Hub im Survival-Modus (gesperrt)
 - [x] **v1.92 Blackjack-Platzschilder einzeilig** – „Frei · Rechtsklick“ statt zwei Zeilen, kleiner, Nachbarplätze in der Höhe versetzt (am nahen Tisch überlagerten sich die vier Schilder noch)
 - [x] **v1.91 Feinschliff nach dem echten Client**
   - [x] Blackjack: „Freier Platz / Rechtsklick zum Hinsetzen“ nur noch aus ~11 Blöcken, Dealer-Schild aus ~19 Blöcken sichtbar (aus der Ferne überlagerten sich die Schilder aller Tische zu einem Textbrei)

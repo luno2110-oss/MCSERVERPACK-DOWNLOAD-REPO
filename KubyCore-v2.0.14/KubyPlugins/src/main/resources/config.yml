@@ -798,6 +798,11 @@ kits:
     cooldown-minutes: 240
     items: []
 
+# Lobby (Hub-Welt): Inventar gesperrt, damit die Lobby-Items (Kompass, Sichtbarkeit) an ihrem Platz bleiben.
+# Nie gesperrt: im Kreativmodus, im Bearbeitungsmodus (/kp edit) und wenn der Hub die Welt mit einem Spielmodus teilt.
+lobby:
+  inventar-sperre: true
+
 modes:
   hub:
     world: hub

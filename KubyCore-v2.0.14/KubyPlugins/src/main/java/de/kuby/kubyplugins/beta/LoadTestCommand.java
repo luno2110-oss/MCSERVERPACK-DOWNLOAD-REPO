@@ -106,6 +106,12 @@ public final class LoadTestCommand implements CommandExecutor {
                     plugin.getLogger().info("[Kamera] Rundgang gestartet: " + ok);
                 }
             }
+            case "inventar" -> {
+                // /kubytest inventar <Spieler>: echte Klick-, Kreativ- und Drop-Events auslösen und prüfen, ob ein Plugin sie
+                // abbricht (Fehlerbericht: Items sprangen in den Slot zurück, nichts ließ sich droppen)
+                Player ip = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : sender instanceof Player sp ? sp : null;
+                if (ip != null) inventoryTest(ip);
+            }
             case "einrichten" -> {
                 // /kubytest einrichten <Spieler>: Casino-Bereich über das Testgelände und Spawnpunkt wie mit den Werkzeugen
                 Player ep = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : sender instanceof Player sp ? sp : null;
@@ -152,6 +158,50 @@ public final class LoadTestCommand implements CommandExecutor {
     }
 
     private static Location arenaA, arenaB;
+
+    /** Drei Lagen: Survival (frei), Hub im Kreativmodus (frei), Hub im Survival-Modus (Lobby-Sperre). */
+    private void inventoryTest(Player p) {
+        org.bukkit.GameMode before = p.getGameMode();
+        Location back = p.getLocation();
+        List<String> res = new ArrayList<>();
+        boolean ok = true;
+        Location surv = plugin.modes().spawnOf("survival"), hub = plugin.modes().spawnOf("hub");
+        Object[][] cases = {{"Survival-Welt, Survival", surv, org.bukkit.GameMode.SURVIVAL, false},
+                {"Survival-Welt, Kreativ", surv, org.bukkit.GameMode.CREATIVE, false},
+                {"Hub, Kreativ", hub, org.bukkit.GameMode.CREATIVE, false},
+                {"Hub, Survival (Lobby-Sperre)", hub, org.bukkit.GameMode.SURVIVAL, true}};
+        for (Object[] c : cases) {
+            Location at = (Location) c[1];
+            if (at == null) {
+                res.add(c[0] + ": Welt fehlt");
+                continue;
+            }
+            p.teleport(at);
+            p.setGameMode((org.bukkit.GameMode) c[2]);
+            p.getInventory().setItem(9, new org.bukkit.inventory.ItemStack(org.bukkit.Material.OAK_PLANKS, 8));
+            var view = p.getOpenInventory();
+            var click = new org.bukkit.event.inventory.InventoryClickEvent(view, org.bukkit.event.inventory.InventoryType.SlotType.CONTAINER,
+                    9, org.bukkit.event.inventory.ClickType.LEFT, org.bukkit.event.inventory.InventoryAction.PICKUP_ALL);
+            Bukkit.getPluginManager().callEvent(click);
+            var creative = new org.bukkit.event.inventory.InventoryCreativeEvent(view, org.bukkit.event.inventory.InventoryType.SlotType.QUICKBAR,
+                    36, new org.bukkit.inventory.ItemStack(org.bukkit.Material.STONE, 64));
+            Bukkit.getPluginManager().callEvent(creative);
+            org.bukkit.entity.Item drop = p.getWorld().dropItem(p.getLocation(), new org.bukkit.inventory.ItemStack(org.bukkit.Material.OAK_PLANKS));
+            var dropEv = new org.bukkit.event.player.PlayerDropItemEvent(p, drop);
+            Bukkit.getPluginManager().callEvent(dropEv);
+            drop.remove();
+            p.getInventory().setItem(9, null);
+            boolean want = (Boolean) c[3];
+            boolean got = click.isCancelled() || dropEv.isCancelled() || (p.getGameMode() == org.bukkit.GameMode.CREATIVE && creative.isCancelled());
+            boolean pass = got == want;
+            ok &= pass;
+            res.add((pass ? "✅ " : "❌ ") + c[0] + ": Klick " + (click.isCancelled() ? "gesperrt" : "frei") + ", Kreativ-Menü "
+                    + (creative.isCancelled() ? "gesperrt" : "frei") + ", Droppen " + (dropEv.isCancelled() ? "gesperrt" : "frei"));
+        }
+        p.setGameMode(before);
+        p.teleport(back);
+        plugin.getLogger().info("[Inventar-Test] " + (ok ? "OK" : "FEHLER") + " " + String.join(" | ", res));
+    }
     private static Location camBj, camRl, camPk, camSlots, camCrash, camBjRot, camBjVio, camPkRot, camPkVio;
 
     /** Kamera-Punkte für Screenshots aus dem echten Client (CI "Client-Bilder"). */

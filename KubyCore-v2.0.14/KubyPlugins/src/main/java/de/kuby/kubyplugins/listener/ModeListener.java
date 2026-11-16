@@ -35,9 +35,37 @@ public final class ModeListener implements Listener {
         return plugin.modes().isHub(p.getWorld()) && !p.hasPermission("kuby.admin") && !plugin.modes().hasActivity(p);
     }
 
-    /** Inventar in der Lobby: für alle gesperrt (auch Admins und Ops), außer im Bearbeitungsmodus oder bei Aktivitäten. */
+    /**
+     * Inventar in der Lobby: gesperrt (Lobby-Items bleiben an ihrem Platz), außer im Kreativmodus, im Bearbeitungsmodus,
+     * bei Aktivitäten oder wenn lobby.inventar-sperre aus ist. Früher galt die Sperre auch im Kreativmodus: Items
+     * sprangen in den Slot zurück, nichts ließ sich verschieben, droppen oder aus dem Kreativ-Menü nehmen.
+     */
     private boolean locked(Player p) {
-        return plugin.modes().isHub(p.getWorld()) && !plugin.edit().isEditing(p.getUniqueId()) && !plugin.modes().hasActivity(p);
+        return plugin.modes().isHub(p.getWorld()) && plugin.getConfig().getBoolean("lobby.inventar-sperre", true)
+                && !sharedHubWorld()
+                && p.getGameMode() != org.bukkit.GameMode.CREATIVE
+                && !plugin.edit().isEditing(p.getUniqueId()) && !plugin.modes().hasActivity(p);
+    }
+
+    /**
+     * Teilt sich der Hub die Welt mit einem Spielmodus (z. B. hub und survival beide in "world"), ist es keine reine
+     * Lobby: dann keine Inventar-Sperre, sonst wäre im ganzen Modus kein Item mehr beweglich.
+     */
+    private boolean sharedHubWorld() {
+        String hub = plugin.modes().worldOf(de.kuby.kubyplugins.service.ModeService.HUB);
+        var sec = plugin.getConfig().getConfigurationSection("modes");
+        if (sec == null) return false;
+        for (String mode : sec.getKeys(false)) {
+            if (!mode.equals(de.kuby.kubyplugins.service.ModeService.HUB) && hub.equals(plugin.modes().worldOf(mode))) return true;
+        }
+        return false;
+    }
+
+    /** Admins sehen, warum ihr Inventar nicht reagiert (und wie es geht). */
+    private void lockHint(Player p) {
+        if (p.hasPermission("kuby.admin")) {
+            p.sendActionBar(de.kuby.kubyplugins.util.Msg.parse("<gray>Lobby: Inventar gesperrt <dark_gray>·</dark_gray> frei im <white>Kreativmodus</white> oder mit <white>/kp edit</white>"));
+        }
     }
 
     @EventHandler
@@ -107,7 +135,10 @@ public final class ModeListener implements Listener {
     @EventHandler(priority = org.bukkit.event.EventPriority.LOW)
     public void onClick(InventoryClickEvent e) {
         if (!(e.getWhoClicked() instanceof Player p)) return;
-        if (locked(p)) e.setCancelled(true);
+        if (locked(p)) {
+            e.setCancelled(true);
+            lockHint(p);
+        }
         if (!plugin.modes().isHub(p.getWorld()) || plugin.edit().isEditing(p.getUniqueId())) return;
         if (e.getClickedInventory() == null || e.getClickedInventory() != p.getInventory()) return;
         ItemStack it = e.getCurrentItem();
@@ -147,7 +178,10 @@ public final class ModeListener implements Listener {
 
     @EventHandler
     public void onDrop(PlayerDropItemEvent e) {
-        if (locked(e.getPlayer())) e.setCancelled(true);
+        if (locked(e.getPlayer())) {
+            e.setCancelled(true);
+            lockHint(e.getPlayer());
+        }
     }
 
     @EventHandler
