@@ -229,9 +229,20 @@ public final class CasinoService {
     }
 
     /** Teleportiert den Spieler mit Wartezeit zum Kassentisch. Nur in Survival. */
+    /** Bedrock-Spieler sind vorerst ausgesperrt (Grafiken fehlen dort noch); abschaltbar mit casino.bedrock-gesperrt: false. */
+    public boolean bedrockBlocked(Player p) {
+        return plugin.getConfig().getBoolean("casino.bedrock-gesperrt", true) && de.kuby.kubyplugins.bedrock.Bedrock.is(p);
+    }
+
+    public static final String BEDROCK_MSG = "<red>Das Casino gibt es vorerst nur in der Java-Edition. <gray>Auf Bedrock fehlen dort noch Grafiken – wir arbeiten daran.";
+
     public void travel(Player p) {
         if (!SURVIVAL.equals(plugin.modes().modeOf(p.getUniqueId()))) {
             Msg.send(p, "<red>Das Casino gibt es nur in Survival. Wechsle erst den Modus.");
+            return;
+        }
+        if (bedrockBlocked(p)) {
+            Msg.send(p, BEDROCK_MSG);
             return;
         }
         Location target = spawn();

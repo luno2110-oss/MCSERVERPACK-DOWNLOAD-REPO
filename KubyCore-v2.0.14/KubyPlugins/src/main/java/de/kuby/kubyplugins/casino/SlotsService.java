@@ -297,7 +297,7 @@ public final class SlotsService implements Listener {
                 }
                 if (fast && t % 3 == 0) fx.getWorld().playSound(fx, Sound.BLOCK_NOTE_BLOCK_HAT, 0.3f, 1.7f);
                 // Spannung: Kamera auf die letzte Walze, sobald die zweite das zweite gleiche Symbol zeigt
-                if (tension && t == spin[1].arrive) tensionCam(p, s, spin[2].arrive - t, SlotMachine.SYMBOLS[result[0]], win, pid);
+                if (tension && t == spin[1].arrive) tensionCam(p, s, spin[2].arrive - t, SlotMachine.SYMBOLS[result[0]], win, pid, spin[2], t);
                 if (t == spin[2].arrive && win) {
                     s.machine.coinBurst(plugin, three ? 70 : 14);
                     s.machine.shake(plugin, three ? 28 : 10, three ? 0.06 : 0.022);
@@ -324,7 +324,7 @@ public final class SlotsService implements Listener {
     }
 
     /** Kino-Kamera auf die letzte Walze (nur für den Spieler am Automaten); danach wieder auf den Hocker. */
-    private void tensionCam(Player p, State s, int snap, String sym, boolean win, java.util.UUID pid) {
+    private void tensionCam(Player p, State s, int snap, String sym, boolean win, java.util.UUID pid, SlotSpin last, int tNow) {
         if (!p.isOnline() || plugin.cinema() == null || de.kuby.kubyplugins.cinema.Cinema.busy(pid)) return;
         if (!plugin.getConfig().getBoolean("casino.slots.kino", true)) return;
         de.kuby.kubyplugins.cinema.V3[] faces = new de.kuby.kubyplugins.cinema.V3[3];
@@ -333,8 +333,20 @@ public final class SlotsService implements Listener {
             faces[i] = new de.kuby.kubyplugins.cinema.V3(f.getX(), f.getY(), f.getZ());
         }
         org.bukkit.util.Vector n = s.machine.frontVector();
+        // was die letzte Walze in jedem Bild der Szene auf der Gewinnlinie zeigt (das Licht folgt dem Symbol, v2.02);
+        // die Szene beginnt einen Tick später als jetzt
+        int n2 = Math.max(20, snap) + 40;
+        String[] reelSym = new String[n2];
+        double[] reelCenter = new double[n2];
+        for (int k = 0; k < n2; k++) {
+            int gt = Math.min(last.length() - 1, tNow + 1 + k);
+            double a = last.angle[Math.max(0, gt)];
+            reelSym[k] = SlotMachine.visible(2, a)[1];
+            double x = -a / 36.0;
+            reelCenter[k] = 1 - 2 * Math.abs(x - Math.round(x));
+        }
         var script = new de.kuby.kubyplugins.cinema.scenes.SlotTension(faces,
-                new de.kuby.kubyplugins.cinema.V3(n.getX(), 0, n.getZ()), snap, sym, win, null, System.nanoTime());
+                new de.kuby.kubyplugins.cinema.V3(n.getX(), 0, n.getZ()), snap, sym, win, null, System.nanoTime(), reelSym, reelCenter);
         de.kuby.kubyplugins.cinema.Cinema.Options o = new de.kuby.kubyplugins.cinema.Cinema.Options();
         o.anchor = s.machine.center();
         o.skippable = false;

@@ -145,6 +145,9 @@ commands:
   schwert:
     description: "Heiliges Schwert: Infos, Szene ansehen; Admin: setzen, entfernen, testen, geben, zuruecksetzen"
     usage: "/schwert [ansehen|setzen|entfernen|testen|geben|zuruecksetzen]"
+  szene:
+    description: "Laufende Szene (z. B. Casino-Rundgang) überspringen"
+    usage: "/szene überspringen"
   kino:
     description: "Laufende Cutscene beenden (Admin)"
     permission: kuby.admin

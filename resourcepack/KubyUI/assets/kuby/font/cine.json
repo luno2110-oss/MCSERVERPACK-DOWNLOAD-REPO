@@ -90,8 +90,8 @@
   {
    "type": "bitmap",
    "file": "kuby:cine/grade_red.png",
-   "height": 700,
-   "ascent": 560,
+   "height": 256,
+   "ascent": 125,
    "chars": [
     ""
    ]
@@ -99,8 +99,8 @@
   {
    "type": "bitmap",
    "file": "kuby:cine/grade_warm.png",
-   "height": 700,
-   "ascent": 560,
+   "height": 256,
+   "ascent": 125,
    "chars": [
     ""
    ]
@@ -108,8 +108,8 @@
   {
    "type": "bitmap",
    "file": "kuby:cine/grade_space.png",
-   "height": 700,
-   "ascent": 560,
+   "height": 256,
+   "ascent": 125,
    "chars": [
     ""
    ]
@@ -117,8 +117,8 @@
   {
    "type": "bitmap",
    "file": "kuby:cine/grade_dark.png",
-   "height": 700,
-   "ascent": 560,
+   "height": 256,
+   "ascent": 125,
    "chars": [
     ""
    ]
@@ -126,8 +126,8 @@
   {
    "type": "bitmap",
    "file": "kuby:cine/grade_gold.png",
-   "height": 700,
-   "ascent": 560,
+   "height": 256,
+   "ascent": 125,
    "chars": [
     ""
    ]
@@ -135,8 +135,8 @@
   {
    "type": "bitmap",
    "file": "kuby:cine/grade_white.png",
-   "height": 700,
-   "ascent": 560,
+   "height": 256,
+   "ascent": 125,
    "chars": [
     ""
    ]
@@ -144,8 +144,8 @@
   {
    "type": "bitmap",
    "file": "kuby:cine/grade_cold.png",
-   "height": 700,
-   "ascent": 560,
+   "height": 256,
+   "ascent": 125,
    "chars": [
     ""
    ]
@@ -153,8 +153,8 @@
   {
    "type": "bitmap",
    "file": "kuby:cine/grade_purple.png",
-   "height": 700,
-   "ascent": 560,
+   "height": 256,
+   "ascent": 125,
    "chars": [
     ""
    ]
@@ -162,8 +162,8 @@
   {
    "type": "bitmap",
    "file": "kuby:cine/grade_green.png",
-   "height": 700,
-   "ascent": 560,
+   "height": 256,
+   "ascent": 125,
    "chars": [
     ""
    ]
@@ -171,8 +171,8 @@
   {
    "type": "bitmap",
    "file": "kuby:cine/grade_soft.png",
-   "height": 700,
-   "ascent": 560,
+   "height": 256,
+   "ascent": 125,
    "chars": [
     ""
    ]

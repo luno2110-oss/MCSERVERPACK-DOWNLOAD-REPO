@@ -76,6 +76,7 @@ public final class BlackjackTable {
     private final TextDisplay[] seatText = new TextDisplay[SEATS];
     private final TextDisplay[] resultText = new TextDisplay[SEATS];
     private final TextDisplay[] streakText = new TextDisplay[SEATS];
+    private final boolean[] betLabelHidden = new boolean[SEATS];
     private final TextDisplay[] totals = new TextDisplay[SEATS];
     private final ArmorStand[] seatVehicle = new ArmorStand[SEATS];
     /** Wer an welchem Platz sitzt: Chip-Auswahl, Bedienknöpfe und Aktionsfelder sieht nur er (v2.01). */
@@ -657,6 +658,22 @@ public final class BlackjackTable {
         bet(seat, stack, total, false);
     }
 
+    /**
+     * Einsatz-Summe über dem Stapel ab dem Austeilen ausblenden (v2.02): vom Platz aus lag sie genau vor den Karten und dem
+     * Handwert. Die Chips bleiben liegen; beim Setzen der nächsten Runde ist die Summe wieder da.
+     */
+    public void hideBetLabels(boolean hide) {
+        java.util.Arrays.fill(betLabelHidden, hide);
+        if (!hide) return;
+        for (List<Entity> l : chips) {
+            l.removeIf(e -> {
+                if (!(e instanceof TextDisplay)) return false;
+                if (e.isValid()) e.remove();
+                return true;
+            });
+        }
+    }
+
     public void bet(int seat, List<Long> stack, long total, boolean jw) {
         for (Entity e : chips.get(seat)) if (e.isValid()) e.remove();
         chips.get(seat).clear();
@@ -669,6 +686,7 @@ public final class BlackjackTable {
             float rot = (float) (i * Math.PI / 8); // 22,5°-Schritte: Kanten der Chips liegen übereinander
             chips.get(seat).add(item(l, "c3chip_" + chipColor(v, jw), new Quaternionf().rotateY(rot), CHIP_SCALE, "chip"));
         }
+        if (betLabelHidden[seat]) return;
         // Summe schwebt über dem obersten Chip (vorher seitlich am Stapel: hohe Stapel verdeckten sie)
         TextDisplay t = badge(f.clone().add(0, 0.012 + chipStep(CHIP_SCALE) * shown + 0.075, 0));
         badgeText(t, Component.text(" " + CasinoText.num(total) + (jw ? " ◆" : "") + " ", TextColor.color(jw ? 0x7FE3FF : 0xF2C94C))

@@ -246,6 +246,7 @@ public final class BlackjackGame {
         showControls(seat);
         if (phase == Phase.IDLE) {
             phase = Phase.BETTING;
+            table.hideBetLabels(false);
             countdown = (int) plugin.getConfig().getLong("casino.blackjack.bet-seconds", 8);
         } else if (countdown < 3) {
             countdown = 3;
@@ -310,6 +311,7 @@ public final class BlackjackGame {
 
     private void deal() {
         phase = Phase.DEALING;
+        table.hideBetLabels(true);
         if (shoe.needsShuffle()) {
             shoe.shuffle();
             table.dealerText(Component.text("Neues Deck wird gemischt", NamedTextColor.GRAY));
@@ -730,6 +732,7 @@ public final class BlackjackGame {
 
     private void cleanup() {
         table.clearCards();
+        table.hideBetLabels(false);
         dealer.clear();
         holeCard = null;
         for (int i = 0; i < seats.length; i++) {

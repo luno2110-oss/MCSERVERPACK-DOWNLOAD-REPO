@@ -357,6 +357,13 @@ public final class KubyPlugins extends JavaPlugin {
         registerKpSub("einfuehrung", (pl, args) -> intro.admin(pl, args));
         weapons = new de.kuby.kubyplugins.weapon.WeaponService(this);
         setAll(weapons, "schwert", "kino");
+        PluginCommand skipCmd = getCommand("szene");
+        if (skipCmd != null) skipCmd.setExecutor((sender, c, l, args) -> {
+            if (sender instanceof org.bukkit.entity.Player pl && (cinema == null || !cinema.skip(pl))) {
+                de.kuby.kubyplugins.util.Msg.send(pl, "<gray>Gerade läuft keine Szene, die man überspringen kann.");
+            }
+            return true;
+        });
         for (String c : new String[]{"schwert", "kino"}) {
             PluginCommand pc = getCommand(c);
             if (pc != null) pc.setTabCompleter(weapons);

@@ -118,6 +118,8 @@ jewels:
 
 casino:
   open: true
+  # Bedrock-Spieler (Geyser) kommen vorerst nicht ins Casino: viele Casino-Grafiken fehlen dort noch (v2.02)
+  bedrock-gesperrt: true
   # 1 Chip = 1 Coin (wie im Referenz-Clip). Alte Stände mit 100 Coins je Chip werden beim Start einmalig umgerechnet.
   cashout-tax-percent: 5        # Steuer beim Rücktausch Chips -> Coins (Farmpass: keine)
   jackpot-start: 10000

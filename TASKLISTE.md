@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v2.02** (ungetestet, nicht kompiliert)
+Stand: **v2.03** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -565,6 +565,14 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Prüfung: SELFTEST (/sit, Teppich, Wand vor dem Sitz) und im echten Client `/kubytest aufstehen` (/sit und Blackjack-Hocker: Füße genau auf dem Boden, steckt nirgends)
 - [x] **v2.02 Zwei Fehler aus den Client-Bildern**: (1) Blackjack: die Serien-Anzeige „Serie 2 · nächster Sieg x1,4“ zweier Plätze lag übereinander (gleicher Dealer, oft gleiche Serie) – sie ist jetzt wie die Chip-Auswahl nur für den Spieler am Platz sichtbar. (2) Poker: die fünf Gemeinschaftskarten lagen für die Spieler gegenüber der Dealerin auf dem Kopf (zusätzliche 180°-Drehung) – jetzt wie die Handkarten zur Spielerseite lesbar
 - [x] **v2.02 Poker-Regeltest im SELFTEST**: Handbewertung wird bei jedem Serverstart geprüft – Rangfolge aller neun Blattklassen (Höchste Karte bis Straight Flush/Royal Flush), Kicker bei Paar und zwei Paaren, Full House nach Drilling vor Paar, A-2-3-4-5 als kleinste Straße (auch als Straight Flush), bestes Blatt aus 7 Karten, gleiche Blätter teilen den Pot
+- [~] **v2.03 Testrunde des Besitzers (Java zuerst, Bedrock zweitrangig)**
+  - [x] Casino für Bedrock-Spieler gesperrt (Betreten, /casino, Login im Casino → Survival-Spawn), Hinweis „nur Java-Edition“; abschaltbar mit `casino.bedrock-gesperrt: false`
+  - [x] Blackjack: Einsatz-Summe über dem Stapel verschwindet beim Austeilen (lag vom Platz aus vor Karten und Handwert), kommt mit der nächsten Setzrunde zurück
+  - [x] Slots-Spannung: Kamera genau mittig vor den drei Walzen, gerade Fahrt ohne seitliches Schwanken (vorher auf die letzte Walze ausgerichtet und verschob sich); beim Einrasten ein kurzer mittiger Stoß statt Schnitt. Das Licht auf der drehenden Walze hat die Farbe des Symbols, das gerade an der Linie vorbeikommt, und leuchtet auf, wenn es genau auf der Linie steht
+  - [x] Vignette/Farbstimmung sitzt jetzt immer mittig: als Titel-Zeichen (Titel werden um die Bildmitte gezeichnet) statt in der Actionbar (dort lag die Mitte je nach GUI-Größe zu hoch); weicher, elliptischer Verlauf
+  - [x] Rundgang: Film-Vignette entfernt (schwarze Balken bleiben), Untertitel unten auf Hotbar-Höhe, kurze Schwarzblende beim Versetzen von Vincent und Spieler zur nächsten Station (vorher sah man sie verschwinden und wieder auftauchen), Überspringen per Knopf im Chat („[⏭ Szene überspringen]“, `/szene überspringen`) oder Schleichen, Hinweis in der Untertitelzeile
+  - [ ] Roulette: Kugel-Physik, unterschiedlich langes Springen über den Fächern, neue Töne, Board am Kessel entfernen
+  - [ ] Flackernde Texturen
 - [x] **v2.02 Kino-Töne an der Kamera**: Töne und Stimmen in Kino-Szenen hingen am Spieler-Körper, der beim Zuschauen im Client am Startpunkt stehen bleibt – an weit entfernten Stationen (Poker-Tische, Roulette) war Vincents Stimme in der Client-Aufnahme nicht zu hören, Slots 13 dB leiser. Jetzt klingen sie an der Kamera (Bedrock wie bisher am Spieler). Die Casino-Musik geht während einer Szene nicht mehr aus, wenn die Kamera den Casino-Bereich kurz verlässt
 - [x] **v2.02 Rundgang mit Stimme (ElevenLabs, Stimme „Leander“)**: alle 13 Sätze im Pack (`sounds/tour/*.ogg`, `casino/tour-voice.txt`): Begrüßung, Kasse, Blackjack, High Roller, Elite, Poker (grün, rot, violett), Roulette, Slots, Crash, Jukebox, Schluss (3,9 bis 10,8 s). Die letzten neun als eine Sammelaufnahme erzeugt und an den acht Pausen (je 1,2 bis 2,0 s) geschnitten. Im echten Client geprüft: Begrüßung, Blackjack und Slots sind in der Rundgang-Aufnahme eindeutig zu hören (Korrelation 0,68 bis 0,85, Gegenprobe 0,15)
 - [x] **v2.01 Zwischenwünsche des Besitzers**

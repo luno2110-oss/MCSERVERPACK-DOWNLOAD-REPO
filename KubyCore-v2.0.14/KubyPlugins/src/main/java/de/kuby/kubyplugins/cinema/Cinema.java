@@ -103,7 +103,7 @@ public final class Cinema implements Listener {
     /** Blitz: 64 x 16, Höhe 300 → 1200 breit. */
     static final int FLASH_ADV = 1201;
     /** Stimmung: 64 x 16, Höhe 700 → 2800 breit. */
-    static final int GRADE_ADV = 2801;
+    static final int GRADE_ADV = 513;
     static final char TOP = '', BOTTOM = '', FLASH = '';
     static final Map<String, Character> GRADES = Map.of("red", '', "warm", '', "space", '', "dark", '',
             "gold", '', "white", '', "cold", '', "purple", '', "green", '', "soft", '');
@@ -157,6 +157,10 @@ public final class Cinema implements Listener {
         int barLevel = -1;
         String grade = "-";
         String card, cardSub;
+        /** zuletzt gesendeter Titel (Farbstimmung + Titelkarte); null = neu senden. */
+        String titleKey = "";
+        /** Untertitel in der Actionbar (über der Hotbar). */
+        String lowSub;
         int flashUntil;
         String hand;
         boolean crouch, raise, glow, hidden;
@@ -186,6 +190,15 @@ public final class Cinema implements Listener {
         p.getPersistentDataContainer().set(restoreKey, PersistentDataType.STRING, serialize(r.back, r.mode, r.allowFlight));
         BUSY.add(p.getUniqueId());
         runs.put(p.getUniqueId(), r);
+        if (o.skippable && s.skippableFrom() >= 0) {
+            // Knopf zum Überspringen im Chat (T drücken, anklicken); Schleichen geht ebenfalls
+            p.sendMessage(Component.text()
+                    .append(Component.text("[⏭ Szene überspringen]", NamedTextColor.GOLD)
+                            .clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/szene überspringen"))
+                            .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(Component.text("Klicken, um die Szene zu beenden", NamedTextColor.GRAY))))
+                    .append(Component.text("  oder Schleichen (Shift)", NamedTextColor.DARK_GRAY))
+                    .build());
+        }
 
         Frame f0 = new Frame();
         s.frame(0, f0);
@@ -547,6 +560,7 @@ public final class Cinema implements Listener {
                 r.flashUntil = r.t + fl.in() + fl.stay() + fl.out();
                 r.card = null;
                 r.cardSub = null;
+                r.titleKey = null;
             }
             case Ev.Sky sk -> {
                 if (sk.time() >= 0) p.setPlayerTime(sk.time(), false);
@@ -716,28 +730,39 @@ public final class Cinema implements Listener {
             r.barLevel = level;
             dirty = true;
         }
-        String g = f.grade == null ? "" : f.grade;
-        if (!g.equals(r.grade)) {
-            r.grade = g;
+        // Untertitel ohne Titelkarte sitzen unten auf Hotbar-Höhe (Actionbar, auf dem unteren Kinobalken); mit Titelkarte
+        // bleiben sie die Unterzeile des Titels (v2.02)
+        String low = f.card == null ? f.cardSub : null;
+        if (low == null && skipHint(r)) low = "<dark_gray>⏭</dark_gray> <gray>Überspringen: <white>Schleichen</white> <dark_gray>·</dark_gray> <gray>oder der Knopf im Chat";
+        if (!Objects.equals(low, r.lowSub)) {
+            r.lowSub = low;
             dirty = true;
         }
         if (dirty || r.t % 8 == 0) {
             var b = Component.text();
             if (level > 0) b.append(glyph((char) (BOTTOM + level - 1), BAR_ADV, FONT, 0xFFFFFF));
-            Character gc = GRADES.get(g);
-            if (gc != null) b.append(glyph(gc, GRADE_ADV, FONT, 0xFFFFFF));
+            if (low != null) b.append(Msg.parse(low));
             p.sendActionBar(b.build());
         }
-        // Titelkarte (nicht während eines Blitzbilds)
-        if (r.t >= r.flashUntil && (!Objects.equals(f.card, r.card) || !Objects.equals(f.cardSub, r.cardSub))) {
+        // Titel: Farbstimmung (bildmittig, v2.02) und Titelkarte; nicht während eines Blitzbilds
+        String g = f.grade == null ? "" : f.grade;
+        r.grade = g;
+        String key = g + "|" + f.card + "|" + (f.card != null ? f.cardSub : "");
+        if (r.t >= r.flashUntil && !key.equals(r.titleKey)) {
+            r.titleKey = key;
             r.card = f.card;
             r.cardSub = f.cardSub;
-            if (f.card == null && f.cardSub == null) p.clearTitle();
-            else {
-                Component title = f.card == null ? Component.empty() : Component.text(de.kuby.kubyplugins.ui.Canvas.titleChars(f.card, true))
-                        .font(CARD_FONT).color(NamedTextColor.WHITE).shadowColor(ShadowColor.none());
-                Component sub = f.cardSub == null ? Component.empty() : Msg.parse(f.cardSub);
-                p.showTitle(Title.title(title, sub, Title.Times.times(Duration.ofMillis(500), Duration.ofSeconds(60), Duration.ofMillis(500))));
+            Character gc = GRADES.get(g);
+            if (gc == null && f.card == null) {
+                p.clearTitle();
+            } else {
+                var title = Component.text();
+                if (gc != null) title.append(glyph(gc, GRADE_ADV, FONT, 0xFFFFFF));
+                if (f.card != null) title.append(Component.text(de.kuby.kubyplugins.ui.Canvas.titleChars(f.card, true))
+                        .font(CARD_FONT).color(NamedTextColor.WHITE).shadowColor(ShadowColor.none()));
+                Component sub = f.card != null && f.cardSub != null ? Msg.parse(f.cardSub) : Component.empty();
+                p.showTitle(Title.title(title.build(), sub, Title.Times.times(Duration.ofMillis(gc != null && f.card == null ? 250 : 500),
+                        Duration.ofSeconds(60), Duration.ofMillis(500))));
             }
         }
     }
@@ -754,10 +779,20 @@ public final class Cinema implements Listener {
 
     @EventHandler
     public void onSneak(PlayerToggleSneakEvent e) {
-        if (!e.isSneaking()) return;
-        Run r = runs.get(e.getPlayer().getUniqueId());
-        if (r == null || !r.o.skippable || r.s.skippableFrom() < 0 || r.t < r.s.skippableFrom()) return;
+        if (e.isSneaking()) skip(e.getPlayer());
+    }
+
+    /** Szene überspringen (Schleichen oder /szene überspringen, auch der Knopf im Chat). false, wenn nichts zu überspringen ist. */
+    public boolean skip(Player p) {
+        Run r = runs.get(p.getUniqueId());
+        if (r == null || !r.o.skippable || r.s.skippableFrom() < 0) return false;
+        if (r.t < r.s.skippableFrom()) return true;   // gleich zu Beginn noch nicht (Doppelklick vom Betreten)
         finish(r, Result.SKIPPED);
+        return true;
+    }
+
+    private static boolean skipHint(Run r) {
+        return r.o.skippable && r.s.skippableFrom() >= 0 && r.t >= r.s.skippableFrom() && r.t < r.s.skippableFrom() + 90;
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
@@ -770,6 +805,7 @@ public final class Cinema implements Listener {
         if (!busy(e.getPlayer().getUniqueId())) return;
         String m = e.getMessage().toLowerCase(java.util.Locale.ROOT);
         if (m.startsWith("/kino") && e.getPlayer().hasPermission("kuby.admin")) return;
+        if (m.equals("/szene") || m.startsWith("/szene ")) return;
         e.setCancelled(true);
         Msg.send(e.getPlayer(), "<gray>Während der Szene geht das nicht.");
     }

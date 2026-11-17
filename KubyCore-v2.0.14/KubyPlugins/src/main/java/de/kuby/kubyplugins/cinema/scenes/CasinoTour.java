@@ -222,6 +222,16 @@ public final class CasinoTour implements Script {
         return G > 0.25 && G < 0.4;
     }
 
+    /**
+     * Kurze Schwarzblende über dem Moment, in dem Vincent und der Spieler zur nächsten Station versetzt werden (v2.02):
+     * vorher sah man sie mitten in der Fahrt verschwinden und wieder auftauchen. k = Ticks seit Beginn des Übergangs,
+     * total = Länge des Übergangs (TAIL + Fahrt danach). 3 Ticks abblenden, schwarz bis nach dem Versetzen, 4 aufblenden.
+     */
+    private static void dip(Frame fr, int k, int total) {
+        int start = (int) Math.floor(0.25 * total) - 3;
+        if (k == start) fr.ev(new Ev.Flash(0x000000, 3, (int) Math.ceil(0.15 * total) + 3, 4));
+    }
+
     /** Losgehen am Ende von Abschnitt i: beide drehen sich zur nächsten Station und gehen 0,9 Blöcke. */
     private V3[] leave(int i, int k, V3 host, V3 me) {
         V3 dir = hostRest(i + 1).sub(hostRest(i)).flat();
@@ -242,7 +252,8 @@ public final class CasinoTour implements Script {
         }
         fr.cut = false;
         fr.bars = t < 10 ? Ease.smooth(t / 10.0) : t > length() - 12 ? Ease.smooth((length() - t) / 12.0) : 1;
-        if (fr.grade == null) fr.grade = "soft";
+        // keine Film-Vignette im Rundgang (Wunsch des Besitzers, v2.02); die schwarzen Balken bleiben
+        fr.grade = null;
     }
 
     private void intro(int t, Frame fr, V3 right) {
@@ -275,6 +286,7 @@ public final class CasinoTour implements Script {
             hp = Rig.mix(hp, Rig.walk(t / 18.0), Math.min(1, k / 6.0));
             double G = k / (double) (TAIL + glide(0));
             hidden = hiddenIn(G);
+            dip(fr, k, TAIL + glide(0));
         }
         if (!hidden) {
             Rig.props(fr, "host", "dealer", host.up(w > 0 && w < 1 ? Rig.bob(t / 18.0) : 0), hyaw, hp, 2);
@@ -373,6 +385,7 @@ public final class CasinoTour implements Script {
             hp = Rig.mix(hp, Rig.walk(u / 18.0), Math.min(1, k / 6.0));
             walking = true;
             hidden = hiddenIn(k / (double) (TAIL + glide(i + 1)));
+            dip(fr, k, TAIL + glide(i + 1));
         }
         if (!hidden) {
             Rig.props(fr, "host", "dealer", host.up(walking ? Rig.bob(u / 18.0) : 0), hyaw, hp, 2);
@@ -457,6 +470,5 @@ public final class CasinoTour implements Script {
             fr.cardSub = "<gray>Rundgang wiederholen: <white>/casino rundgang";
         }
         if (u == 92) fr.ev(new Ev.Sound("minecraft:ui.toast.challenge_complete", 0.6f, 1.3f));
-        fr.grade = u > 90 ? "gold" : "soft";
     }
 }

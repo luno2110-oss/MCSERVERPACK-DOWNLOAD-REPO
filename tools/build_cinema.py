@@ -8,7 +8,7 @@ Erzeugt im Pack (Standard resourcepack/KubyUI):
   Modelle kuby:fx/...     Druckwellen-Ring, Himmelskuppel, Wolken, Bodenrisse, Strahl, Stern, Glühen, Funkeln
   Item kuby:weapons/heiliges_schwert  Waffe: im Inventar ein Pixel-Icon, in der Hand das 3D-Modell
 
-Breiten der Glyphen müssen zu Cinema.java passen (BAR_ADV 2049, FLASH_ADV 1201, GRADE_ADV 2801).
+Breiten der Glyphen müssen zu Cinema.java passen (BAR_ADV 2049, FLASH_ADV 1201, GRADE_ADV 513).
 Stil: tools/icon_db/STYLE.md (Rampen aus materials.py, Licht oben links, Glühen von innen).
 Aufruf: python3 tools/build_cinema.py [pack-ordner]
 """
@@ -608,25 +608,33 @@ def build_fonts():
     }
     codes = {"red": 0xE030, "warm": 0xE031, "space": 0xE032, "dark": 0xE033, "gold": 0xE034, "white": 0xE035, "cold": 0xE036,
              "purple": 0xE037, "green": 0xE038, "soft": 0xE039}
+    # v2.02: Farbstimmungen liegen im TITEL (vierfach vergrößert, immer um die Bildmitte gezeichnet), nicht mehr in der
+    # Actionbar: dort hing die Mitte an einem festen Abstand zum unteren Rand und lag je nach GUI-Größe zu hoch.
+    # 1 Pixel = 1 Titel-Einheit = 4 GUI-Pixel; Höhe 256 und Oberlänge 125 legen die Bildmitte genau auf die Bildschirmmitte
+    # (Titelzeile bei y = -10, Grundlinie 7 tiefer). Ellipse auf 16:9 bei GUI-Größe 3 (halbe Breite 80, halbe Höhe 45).
+    import numpy as np
+    W, H = 512, 256
+    ys, xs = np.mgrid[0:H, 0:W]
+    u = (xs + 0.5 - W / 2) / 80.0
+    v = (ys + 0.5 - H / 2) / 45.0
+    rr = np.hypot(u, v)
     for name, (cm, ce, am, ae) in grades.items():
-        W, H = 256, 64
-        im = Image.new("RGBA", (W, H))
-        for y in range(H):
-            for x in range(W):
-                # sichtbarer Bereich etwa Mitte (Breite je nach Bildschirm 34 bis 70 Prozent)
-                u = (x + 0.5 - W / 2) / (W * 0.21)
-                v = (y + 0.5 - H / 2) / (H * 0.4)
-                r = min(1.6, math.hypot(u, v * 1.05))
-                if name == "soft":
-                    q = max(0, min(1, (r - 0.3) / 1.2))
-                    k = q * q * (3 - 2 * q)
-                else:
-                    k = max(0, min(1, (r - 0.55) / 0.85)) ** 1.5
-                a = am + (ae - am) * k
-                c = tuple(int(cm[i] + (ce[i] - cm[i]) * k) for i in range(3))
-                im.putpixel((x, y), c + (int(255 * a) if a >= (0.02 if name == "soft" else 0.1) else 0,))
-        save(im, "cine/grade_" + name)
-        prov.append({"type": "bitmap", "file": "kuby:cine/grade_%s.png" % name, "height": 700, "ascent": 560, "chars": [chr(codes[name])]})
+        if name == "soft":
+            q = np.clip((rr - 0.55) / 0.95, 0, 1)
+            ae = 0.42
+        else:
+            q = np.clip((rr - 0.5) / 1.0, 0, 1)
+        k = q * q * (3 - 2 * q)          # weicher Verlauf ohne Kante
+        a = am + (ae - am) * k
+        rgb = [cm[i] + (ce[i] - cm[i]) * k for i in range(3)]
+        arr = np.zeros((H, W, 4), dtype=np.uint8)
+        for i in range(3):
+            arr[..., i] = np.clip(rgb[i], 0, 255).astype(np.uint8)
+        alpha = np.clip(255 * a, 0, 255)
+        alpha[a < 0.02] = 0
+        arr[..., 3] = alpha.astype(np.uint8)
+        save(Image.fromarray(arr, "RGBA"), "cine/grade_" + name)
+        prov.append({"type": "bitmap", "file": "kuby:cine/grade_%s.png" % name, "height": 256, "ascent": 125, "chars": [chr(codes[name])]})
     write("font/cine.json", {"providers": prov})
     # Titelkarte: die Gold-Titelschrift klein
     with open(os.path.join(A, "font/title.json"), encoding="utf-8") as f:

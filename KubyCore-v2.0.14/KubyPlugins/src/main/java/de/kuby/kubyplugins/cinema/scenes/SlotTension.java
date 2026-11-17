@@ -36,7 +36,10 @@ public final class SlotTension implements Script {
 
     private static final int AFTER = 38;
 
-    private final V3 face, n, r;
+    private final V3 face, mid, n, r;
+    /** je Bild: Symbol der letzten Walze auf der Gewinnlinie und wie mittig es steht (1 = genau auf der Linie). */
+    private final String[] reelSym;
+    private final double[] reelCenter;
     private final V3[] lights;
     private final int color;
     private final int snap;
@@ -47,7 +50,14 @@ public final class SlotTension implements Script {
     private final boolean[] beat;
 
     public SlotTension(V3[] faces, V3 front, int snap, String sym, boolean win, String pay, long seed) {
+        this(faces, front, snap, sym, win, pay, seed, null, null);
+    }
+
+    public SlotTension(V3[] faces, V3 front, int snap, String sym, boolean win, String pay, long seed, String[] reelSym, double[] reelCenter) {
         this.face = faces[2];
+        this.mid = faces[1];
+        this.reelSym = reelSym;
+        this.reelCenter = reelCenter;
         this.lights = faces;
         this.color = colorOf(sym);
         this.n = front.flat();
@@ -120,10 +130,17 @@ public final class SlotTension implements Script {
         }
         V3 at = face.add(n.mul(0.07));
         if (t < snap) {
-            // die drehende Walze: Lichter huschen vorbei (heller, kleiner, unruhig)
-            double s = (0.22 + 0.12 * rnd.nextDouble()) * fade;
-            int c = rnd.nextInt(3) == 0 ? color : 0xFFF2D8;
-            fr.prop(Prop.item("glow2", "kuby:fx/glow", at.up((rnd.nextDouble() - 0.5) * 0.18), s).tint(c).lit(15).board(1).snap(1));
+            // die drehende Walze: das Licht hat die Farbe des Symbols, das gerade an der Linie vorbeikommt, und leuchtet auf,
+            // wenn es genau auf der Linie steht (v2.02: vorher zufällig, passte nicht zum angezeigten Symbol)
+            if (reelSym != null && t < reelSym.length) {
+                double c = reelCenter[t];
+                double s = (0.16 + 0.24 * c * c) * fade;
+                fr.prop(Prop.item("glow2", "kuby:fx/glow", at, s).tint(colorOf(reelSym[t])).lit(15).board(1).snap(1));
+            } else {
+                double s = (0.22 + 0.12 * rnd.nextDouble()) * fade;
+                int c = rnd.nextInt(3) == 0 ? color : 0xFFF2D8;
+                fr.prop(Prop.item("glow2", "kuby:fx/glow", at.up((rnd.nextDouble() - 0.5) * 0.18), s).tint(c).lit(15).board(1).snap(1));
+            }
         } else {
             int a = t - snap;
             double bloom = win ? 0.6 * Math.exp(-a * 0.06) + 0.32 : 0.4 * Math.exp(-a * 0.15);
@@ -146,24 +163,24 @@ public final class SlotTension implements Script {
     public void frame(int t, Frame fr) {
         Random rnd = new Random(seed * 31 + t);
         V3 cam;
+        // Kamera (v2.02): genau mittig vor den drei Walzen, gerade Fahrt ohne seitliches Schwanken (vorher auf die letzte
+        // Walze ausgerichtet und mit Handkamera-Schwanken: wirkte schief und verschob sich mitten in der Fahrt)
         if (t < snap) {
             double u = Ease.inOutSine(t / (double) snap);
-            double dist = 1.45 - 0.7 * u;
-            double sway = Math.sin(t * 0.07) * 0.035 + Math.sin(t * 0.19) * 0.008;
-            double bob = Math.sin(t * 0.11) * 0.012;
-            cam = face.add(n.mul(dist)).add(r.mul(sway)).up(0.14 - 0.08 * u + bob);
+            double dist = 1.75 - 0.55 * u;
+            cam = mid.add(n.mul(dist)).up(0.10 - 0.05 * u);
             fr.cam = cam;
-            fr.look(face.up(-0.02).add(r.mul(sway * 0.3)));
+            fr.look(mid.up(-0.01));
         } else {
+            // Einrasten: kurzer Stoß nach vorn (mittig), Wackeln klingt ab, dann ruhig zurück
             int a = t - snap;
-            double back = Ease.outCubic(Math.min(1, a / 30.0));
-            double dist = 0.52 + 0.9 * back;
-            double shake = a < 22 ? 0.065 * (1 - a / 22.0) : 0;
+            double punch = a < 4 ? Ease.outCubic(a / 4.0) : 1 - Ease.inOutSine(Math.min(1, (a - 4) / 26.0));
+            double dist = 1.2 - 0.32 * punch;
+            double shake = a < 18 ? 0.035 * (1 - a / 18.0) : 0;
             V3 jitter = new V3((rnd.nextDouble() * 2 - 1) * shake, (rnd.nextDouble() * 2 - 1) * shake, (rnd.nextDouble() * 2 - 1) * shake);
-            cam = face.add(n.mul(dist)).up(0.05 + 0.25 * back).add(jitter);
+            cam = mid.add(n.mul(dist)).up(0.05).add(jitter);
             fr.cam = cam;
-            fr.look(face.up(0.08 * back).add(jitter.mul(0.5)));
-            fr.cut = a == 0;
+            fr.look(mid.up(0.0).add(jitter.mul(0.4)));
         }
         // Bild
         fr.bars = t < 10 ? Ease.smooth(t / 10.0) : t > length() - 10 ? Ease.smooth((length() - t) / 10.0) : 1;

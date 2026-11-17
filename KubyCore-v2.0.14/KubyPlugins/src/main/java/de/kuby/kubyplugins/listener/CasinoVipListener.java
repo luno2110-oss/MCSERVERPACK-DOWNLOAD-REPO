@@ -50,7 +50,15 @@ public final class CasinoVipListener implements Listener {
     public void onJoin(PlayerJoinEvent e) {
         Player p = e.getPlayer();
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
-            if (p.isOnline()) plugin.casinoMusic().update(p, p.getLocation());
+            if (!p.isOnline()) return;
+            // Bedrock-Spieler, die im Casino ausgeloggt hatten: hinaus zum Survival-Spawn (Casino vorerst nur Java)
+            if (plugin.casino().bedrockBlocked(p) && plugin.casinoMusic().inCasino(p.getLocation())) {
+                Location out = plugin.modes().spawnOf("survival");
+                if (out != null) p.teleport(out);
+                Msg.send(p, de.kuby.kubyplugins.service.CasinoService.BEDROCK_MSG);
+                return;
+            }
+            plugin.casinoMusic().update(p, p.getLocation());
         }, 40L);
     }
 
@@ -76,6 +84,11 @@ public final class CasinoVipListener implements Listener {
 
     /** True, wenn der Spieler die VIP-Lounge betreten will, aber nicht darf. */
     private boolean blocked(Player p, Location from, Location to) {
+        if (to != null && plugin.casino().bedrockBlocked(p) && plugin.casinoMusic().inCasino(to)
+                && (from == null || !plugin.casinoMusic().inCasino(from))) {
+            p.sendActionBar(Msg.parse(de.kuby.kubyplugins.service.CasinoService.BEDROCK_MSG));
+            return true;
+        }
         if (to == null || !plugin.casinoVip().inLounge(to)) return false;
         if (from != null && plugin.casinoVip().inLounge(from)) return false;
         if (plugin.casinoVip().allowed(p)) return false;
