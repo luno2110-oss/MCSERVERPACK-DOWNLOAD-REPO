@@ -529,7 +529,11 @@ public final class Cinema implements Listener {
     private void event(Run r, Object e) {
         Player p = r.p;
         switch (e) {
-            case Ev.Sound s -> p.playSound(Sound.sound(Key.key(s.key()), Sound.Source.MASTER, s.volume(), s.pitch()), Sound.Emitter.self());
+            // an der Kamera, nicht am Spieler: beim Zuschauen bleibt der Spieler-Körper im Client am Startpunkt stehen,
+            // gehört wird an der Kamera. Mit Emitter.self wurden Stimme und Töne an entfernten Stationen leise bis stumm
+            // (im echten Client: Poker und Roulette im Rundgang nicht zu hören, Slots 13 dB leiser) – v2.02
+            case Ev.Sound s -> p.playSound(Sound.sound(Key.key(s.key()), Sound.Source.MASTER, s.volume(), s.pitch()),
+                    !r.bedrock && r.cam != null && r.cam.isValid() ? r.cam : Sound.Emitter.self());
             case Ev.SoundAt s -> p.playSound(Sound.sound(Key.key(s.key()), Sound.Source.MASTER, s.volume(), s.pitch()),
                     s.pos().x(), s.pos().y(), s.pos().z());
             case Ev.Silence s -> p.stopSound(SoundStop.source(Sound.Source.MASTER));

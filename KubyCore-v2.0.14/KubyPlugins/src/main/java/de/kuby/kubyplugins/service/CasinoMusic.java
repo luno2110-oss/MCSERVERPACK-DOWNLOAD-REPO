@@ -186,6 +186,9 @@ public final class CasinoMusic {
 
     /** Startet die Musik, wenn der Spieler im Casino steht, sonst stoppt sie. */
     public synchronized void update(Player p, Location at) {
+        // während einer Kino-Szene (z. B. Rundgang) folgt der Spieler der Kamera; fährt sie an den Rand des Casinos,
+        // soll die Musik nicht aus- und wieder angehen (v2.02: im Rundgang fehlte die Musik an den Poker-Tischen)
+        if (de.kuby.kubyplugins.cinema.Cinema.busy(p.getUniqueId())) return;
         boolean inside = at != null && inCasino(at);
         if (inside && present.add(p.getUniqueId())) {
             CasinoText.send(p, "Dein Stand <#F2C94C>" + CasinoText.chips(plugin.casino().chips(p.getUniqueId()))
