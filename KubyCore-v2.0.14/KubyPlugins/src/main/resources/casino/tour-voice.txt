@@ -1,4 +1,13 @@
 blackjack
+crash
+elite
+highroller
 intro
+kasse
+musik
+outro
+poker
+poker_rot
+poker_violett
 roulette
 slots

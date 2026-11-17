@@ -210,5 +210,77 @@
     "stream": true
    }
   ]
+ },
+ "tour.crash": {
+  "sounds": [
+   {
+    "name": "kuby:tour/crash",
+    "stream": true
+   }
+  ]
+ },
+ "tour.elite": {
+  "sounds": [
+   {
+    "name": "kuby:tour/elite",
+    "stream": true
+   }
+  ]
+ },
+ "tour.highroller": {
+  "sounds": [
+   {
+    "name": "kuby:tour/highroller",
+    "stream": true
+   }
+  ]
+ },
+ "tour.kasse": {
+  "sounds": [
+   {
+    "name": "kuby:tour/kasse",
+    "stream": true
+   }
+  ]
+ },
+ "tour.musik": {
+  "sounds": [
+   {
+    "name": "kuby:tour/musik",
+    "stream": true
+   }
+  ]
+ },
+ "tour.outro": {
+  "sounds": [
+   {
+    "name": "kuby:tour/outro",
+    "stream": true
+   }
+  ]
+ },
+ "tour.poker": {
+  "sounds": [
+   {
+    "name": "kuby:tour/poker",
+    "stream": true
+   }
+  ]
+ },
+ "tour.poker_rot": {
+  "sounds": [
+   {
+    "name": "kuby:tour/poker_rot",
+    "stream": true
+   }
+  ]
+ },
+ "tour.poker_violett": {
+  "sounds": [
+   {
+    "name": "kuby:tour/poker_violett",
+    "stream": true
+   }
+  ]
  }
 }
