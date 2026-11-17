@@ -194,5 +194,21 @@
     "stream": true
    }
   ]
+ },
+ "tour.blackjack": {
+  "sounds": [
+   {
+    "name": "kuby:tour/blackjack",
+    "stream": true
+   }
+  ]
+ },
+ "tour.roulette": {
+  "sounds": [
+   {
+    "name": "kuby:tour/roulette",
+    "stream": true
+   }
+  ]
  }
 }
