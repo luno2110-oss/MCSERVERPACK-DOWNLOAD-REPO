@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v2.03** (ungetestet, nicht kompiliert)
+Stand: **v2.04** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -572,7 +572,13 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - [x] Vignette/Farbstimmung sitzt jetzt immer mittig: als Titel-Zeichen (Titel werden um die Bildmitte gezeichnet) statt in der Actionbar (dort lag die Mitte je nach GUI-Größe zu hoch); weicher, elliptischer Verlauf
   - [x] Nachtrag v2.04: die Farbstimmungs-Bilder waren 512 px breit, Minecraft legt Schrift-Zeichen aber auf 256er-Seiten (größere fehlen im Spiel). Die Schriftprüfung im Build hat das erkannt und den Build von v2.03 gestoppt. Jetzt 254 x 127 Pixel, doppelt so groß gezeichnet (gleiche Bildschirmgröße)
   - [x] Rundgang: Film-Vignette entfernt (schwarze Balken bleiben), Untertitel unten auf Hotbar-Höhe, kurze Schwarzblende beim Versetzen von Vincent und Spieler zur nächsten Station (vorher sah man sie verschwinden und wieder auftauchen), Überspringen per Knopf im Chat („[⏭ Szene überspringen]“, `/szene überspringen`) oder Schleichen, Hinweis in der Untertitelzeile
-  - [ ] Roulette: Kugel-Physik, unterschiedlich langes Springen über den Fächern, neue Töne, Board am Kessel entfernen
+  - [x] **v2.04 Roulette: Kugel-Physik** (Feedback: „Flugbahn wirkt steif und generisch“, „manchmal 1 s, manchmal 3 oder 5 s hüpfen“)
+    - Bahn: Reibung dω/dt = −A − B·ω² (Luft bremst schnell stärker), die Kugel hält sich an der Randwand, solange die Fliehkraft reicht (ω²·r·cos θ ≥ g·sin θ, bei 22,5° Neigung rund 7,1°/Tick, je Wurf ±0,4 Streuung), klappert kurz vor dem Absturz auf der Bahn
+    - Schräge: fällt beschleunigt nach innen und wird dabei schneller; in rund 55 % der Würfe trifft sie eine der acht Rauten genau an ihrem Winkel, springt hoch, wird nach außen gestoßen und verliert 30–85 % Tempo
+    - Rotor: trifft den Zahlenring, springt darüber und hüpft im Bezugssystem des Rotors über die Fächer – Sprünge werden kürzer und flacher (Höhe ~ Dauer²), manchmal stößt ein Steg sie zurück oder wirft sie neu hoch. Dauer je Wurf gewürfelt: 22 % bleibt sofort liegen, 30 % rund 1 s, 30 % rund 3 s, 18 % rund 5 s; danach schaukelt sie kurz im Fach nach
+    - Ergebnis bleibt fair (RouletteGame würfelt vorher): gesucht wird die Wurfstärke (21–33°/Tick) und bei einer Raute deren Bremswirkung, bei der die Kugel genau im Fach liegt. SELFTEST „Roulette-Physik“: 400 Würfe, alle im richtigen Fach, Kugel immer im Kessel, keine Sprünge zwischen zwei Ticks, alle vier Sprungdauern und Rauten kommen vor (lokal: 0 Fehler, sofort 76 / ~1 s 103 / ~3 s 125 / ~5 s 96, Raute 219)
+  - [x] **v2.04 Roulette-Töne aus einer echten Aufnahme** (Erlaubnis des Besitzers, Töne aus dem Internet zu nehmen): „Roulette - SoundCloud - Beeld en Geluid.ogg“ (Niederländisches Institut für Bild und Ton, Wikimedia Commons, CC BY-SA 3.0, Namensnennung in `sounds/casino/roulette/LIZENZ.txt`). 82 echte Würfe automatisch zerlegt (Brummen herausgefiltert): 8 Rollgeräusche ab dem Einwurf, 2 Rauten-Treffer, je 8–10 große/mittlere/kleine Aufschläge, 6× Liegenbleiben. Jeder Ton gehört zu einem Ereignis der Physik: Rollen (Tonhöhe so gewählt, dass es genau beim Aufprall am Rotor endet), Raute, Ring, jede Landung nach Sprunghöhe, Liegenbleiben. Der alte synthetische Wurf-Ton und der Schneeball-Wurf sind weg. Werkzeug: `tools/build_roulette_sfx.py`
+  - [x] **v2.04 Roulette-Board entfernt** (Tafel mit den letzten Zahlen an der Kesselseite samt Mast und Statistik); die letzten Zahlen stehen weiter im Text über dem Tisch
   - [ ] Flackernde Texturen
 - [x] **v2.02 Kino-Töne an der Kamera**: Töne und Stimmen in Kino-Szenen hingen am Spieler-Körper, der beim Zuschauen im Client am Startpunkt stehen bleibt – an weit entfernten Stationen (Poker-Tische, Roulette) war Vincents Stimme in der Client-Aufnahme nicht zu hören, Slots 13 dB leiser. Jetzt klingen sie an der Kamera (Bedrock wie bisher am Spieler). Die Casino-Musik geht während einer Szene nicht mehr aus, wenn die Kamera den Casino-Bereich kurz verlässt
 - [x] **v2.02 Rundgang mit Stimme (ElevenLabs, Stimme „Leander“)**: alle 13 Sätze im Pack (`sounds/tour/*.ogg`, `casino/tour-voice.txt`): Begrüßung, Kasse, Blackjack, High Roller, Elite, Poker (grün, rot, violett), Roulette, Slots, Crash, Jukebox, Schluss (3,9 bis 10,8 s). Die letzten neun als eine Sammelaufnahme erzeugt und an den acht Pausen (je 1,2 bis 2,0 s) geschnitten. Im echten Client geprüft: Begrüßung, Blackjack und Slots sind in der Rundgang-Aufnahme eindeutig zu hören (Korrelation 0,68 bis 0,85, Gegenprobe 0,15)

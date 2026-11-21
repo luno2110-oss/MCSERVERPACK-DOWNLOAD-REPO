@@ -699,6 +699,17 @@ final class SelfTest {
             fails.add("Poker-Regeln: " + t);
         }
 
+        // Roulette-Physik (v2.04): 400 Würfe, jede Kugel im richtigen Fach, im Kessel, ohne Sprünge, Sprungdauer 0–5 s
+        try {
+            List<String> rl = de.kuby.kubyplugins.casino.RouletteTable.selfCheck();
+            if (rl.isEmpty()) ok[0]++;
+            for (String e : rl) fails.add("Roulette-Physik: " + e);
+            plugin.getLogger().info("[Roulette-Physik] " + (rl.isEmpty() ? "ok, " : rl.size() + " Fehler, ")
+                    + de.kuby.kubyplugins.casino.RouletteTable.lastStats);
+        } catch (Throwable t) {
+            fails.add("Roulette-Physik: " + t);
+        }
+
         // Aufstehen von Sitzen (v2.02): Füße auf der Bodenoberkante, nie im Block darunter, Wand vor dem Sitz umgehen
         try {
             org.bukkit.World w0 = org.bukkit.Bukkit.getWorlds().get(0);

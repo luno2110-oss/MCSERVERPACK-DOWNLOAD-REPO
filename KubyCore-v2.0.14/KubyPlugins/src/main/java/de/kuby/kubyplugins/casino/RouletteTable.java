@@ -1,7 +1,6 @@
 package de.kuby.kubyplugins.casino;
 
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Color;
@@ -42,10 +41,10 @@ import java.util.function.Predicate;
  *       einfache Chancen auf der Spielerseite. Gesetzt wird direkt auf dem Tisch: Rechtsklick legt den gewählten Chip
  *       auf das Feld unter dem Fadenkreuz, Linksklick nimmt die eigenen Chips von dem Feld zurück.</li>
  *   <li>Kessel mit Holzrand und Rauten, drehender Rotor mit 37 Fächern, Drehkreuz und echter Kugel: Sie rollt gegen den
- *       Rotor in der Bahn, wird langsamer, trifft Rauten, springt über die Stege und bleibt im Fach liegen, das sich
- *       danach mit dem Rotor weiterdreht. Ton kuby:casino.roulette_spin läuft zeitgleich (tools/build_roulette_sfx.py).</li>
- *   <li>Croupier (Gelenkfigur wie beim Blackjack) auf der Kesselseite, Chip-Ablage vor ihm, Anzeigetafel mit den
- *       letzten Zahlen (rot links, schwarz rechts, Null mittig) wie an jedem Tisch in Vegas.</li>
+ *       Rotor in der Bahn, wird durch Reibung langsamer, fällt ab, trifft manchmal eine Raute, springt über den Zahlenring
+ *       und hüpft je Wurf unterschiedlich lange über die Fächer (Physik in {@link Throw}, v2.04). Töne aus einer echten
+ *       Aufnahme je Ereignis (tools/build_roulette_sfx.py).</li>
+ *   <li>Croupier (Gelenkfigur wie beim Blackjack) auf der Kesselseite, Chip-Ablage vor ihm.</li>
  *   <li>Jeder Spieler setzt mit eigener Chip-Farbe (wie am echten Tisch), der Croupier stellt den Marker („Dolly“) auf
  *       die Gewinnzahl, zieht verlorene Chips ein und schiebt Gewinne zu.</li>
  * </ul>
@@ -59,8 +58,6 @@ public final class RouletteTable {
     public static final int[] WHEEL = {0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24,
             16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26};
 
-    /** Ablauf eines Wurfs in Ticks (passt zum Ton): Einwurf, Kugel verlässt die Bahn, liegt im Fach, Ende. */
-    public static final int T_LAUNCH = 10, T_DROP = 120, T_LAND = 150, T_END = 175;
 
     static final double FELT = 0.86;
     private static final double PX = 0.025;
@@ -81,9 +78,6 @@ public final class RouletteTable {
     private static final double CU = -1.25, CV = 1.58;
     private static final float CHIP = 0.21f;
     private static final double RACK_U = 0.15, RACK_V = 0.935;
-    /** Aufschläge der Kugel nach dem Verlassen der Bahn (Ticks ab T_DROP) und Sprunghöhe danach. */
-    private static final int[] HITS = {0, 5, 16, 23, 27, 30};
-    private static final double[] HOP = {0.05, 0.045, 0.028, 0.014, 0.007};
 
     /** Chip-Farben der Spieler (wie die Farbchips am echten Tisch) und ihre Textfarbe. */
     public static final String[] COLORS = {"red", "blue", "green", "purple", "pink", "white", "black", "gold"};
@@ -106,8 +100,6 @@ public final class RouletteTable {
     private DealerAnim croupier;
     private TextDisplay status;
     private TextDisplay betsText;
-    private TextDisplay board;
-    private TextDisplay boardStats;
     private ItemDisplay rotor;
     private ItemDisplay turret;
     private ItemDisplay ball;
@@ -129,8 +121,8 @@ public final class RouletteTable {
     private double omega = 0.35;
     private int ballPocket;
     private int spinTick = -1;
-    private double[] rhoAt;
-    private double beta0, kScale;
+    private Throw thr;
+    private int evIdx;
     private int target;
     private Runnable onLand;
     private Runnable onDone;
@@ -331,24 +323,8 @@ public final class RouletteTable {
                 display(c, "c3chip_" + COLORS[i], new Quaternionf().rotateY((float) (k * 0.7 + i)), new Vector3f(CHIP, CHIP, CHIP), "static");
             }
         }
-        // --- Anzeigetafel (Marquee) an der Kesselseite, schräg zu den Spielern ---
-        Location pole = local(-2.95, 0.8, 0);
-        slab(-3.08, -2.82, 0.67, 0.93, 0, 0.03, "hd_dark");
-        slab(-2.97, -2.93, 0.78, 0.82, 0.03, 2.34, "hd_gold");
-        Vector3f toPlayers = new Vector3f(local(0.4, -1.6, 0).toVector().subtract(pole.toVector()).toVector3f());
-        toPlayers.y = 0;
-        toPlayers.normalize();
-        Quaternionf face = yawTo(toPlayers);
-        display(pole.clone().add(0, 1.8, 0), "m_hd_dark", face, new Vector3f(0.62f, 1.06f, 0.07f), "static");
-        display(pole.clone().add(0, 2.34, 0), "m_hd_gold", face, new Vector3f(0.66f, 0.03f, 0.08f), "static");
-        display(pole.clone().add(0, 1.26, 0), "m_hd_gold", face, new Vector3f(0.66f, 0.03f, 0.08f), "static");
-        Location boardAt = pole.clone().add(toPlayers.x * 0.045, 1.31, toPlayers.z * 0.045);
-        board = text(boardAt, 0.4f, Display.Billboard.FIXED, face, "board");
-        board.setLineWidth(120);
-        board.setShadowed(false);
-        board.setBrightness(new Display.Brightness(15, 15));
-        boardStats = text(local(-2.95, 0.8, 2.42).add(toPlayers.x * 0.05, 0, toPlayers.z * 0.05), 0.3f, Display.Billboard.FIXED, face, "board");
-        boardStats.setBrightness(new Display.Brightness(15, 15));
+        // (v2.04: die Anzeigetafel an der Kesselseite ist entfernt, Wunsch des Besitzers; die letzten Zahlen stehen im
+        // Text über dem Tisch)
         // --- Texte ---
         status = text(local(CU, CV, 2.4), 0.8f, Display.Billboard.VERTICAL, null, "status");
         status.setViewRange(0.4f);
@@ -395,12 +371,12 @@ public final class RouletteTable {
         hoverKey.clear();
         status = null;
         betsText = null;
-        board = null;
         rotor = null;
         ball = null;
         dolly = null;
         // Abbau mitten im Wurf: kein Rückruf mehr (das Spiel erstattet offene Einsätze selbst, siehe RouletteGame.abortRound)
         spinTick = -1;
+        thr = null;
         onLand = null;
         onDone = null;
     }
@@ -757,47 +733,6 @@ public final class RouletteTable {
         if (betsText != null && betsText.isValid()) betsText.text(text);
     }
 
-    /** Anzeigetafel: neueste Zahl oben (fett), rot links, schwarz rechts, Null in der Mitte; darüber heiße Zahlen. */
-    public void history(List<Integer> last) {
-        if (board == null || !board.isValid()) return;
-        TextComponent.Builder b = Component.text();
-        b.append(Component.text("KUBY", TextColor.color(0xF2C94C)).decorate(TextDecoration.BOLD));
-        for (int i = 0; i < Math.min(9, last.size()); i++) {
-            int n = last.get(i);
-            String num = (n < 10 ? " " : "") + n;
-            String line = n == 0 ? "    " + num + "    " : red(n) ? num + "         " : "         " + num;
-            TextColor col = TextColor.color(n == 0 ? 0x3FD55C : red(n) ? 0xFF4A4A : 0xE8E8E8);
-            Component c = Component.text(line, col);
-            if (i == 0) c = c.decorate(TextDecoration.BOLD);
-            b.append(Component.newline()).append(c);
-        }
-        board.text(b.build());
-        if (boardStats != null && boardStats.isValid()) {
-            int[] count = new int[37];
-            int red = 0, black = 0, n = Math.min(100, last.size());
-            for (int i = 0; i < n; i++) {
-                int x = last.get(i);
-                count[x]++;
-                if (x != 0 && red(x)) red++;
-                else if (x != 0) black++;
-            }
-            List<Integer> hot = new ArrayList<>();
-            for (int k = 0; k < 3 && n > 0; k++) {
-                int best = -1;
-                for (int x = 0; x < 37; x++) if (!hot.contains(x) && count[x] > 0 && (best < 0 || count[x] > count[best])) best = x;
-                if (best >= 0) hot.add(best);
-            }
-            TextComponent.Builder s = Component.text();
-            s.append(Component.text("HEISS ", TextColor.color(0xFF8A3A)).decorate(TextDecoration.BOLD));
-            for (int h : hot) s.append(Component.text(h + " ", TextColor.color(h == 0 ? 0x3FD55C : red(h) ? 0xFF4A4A : 0xE8E8E8)));
-            if (n > 0) {
-                s.append(Component.newline()).append(Component.text("ROT " + Math.round(100.0 * red / n) + "%  ", TextColor.color(0xFF4A4A)))
-                        .append(Component.text("SCHWARZ " + Math.round(100.0 * black / n) + "%", TextColor.color(0xE8E8E8)));
-            }
-            boardStats.text(s.build());
-        }
-    }
-
     // =================================================================================================================
     // Kessel: Rotor, Kugel, Wurf
     // =================================================================================================================
@@ -852,40 +787,20 @@ public final class RouletteTable {
     }
 
     /**
-     * Wurf: Croupier stößt den Rotor an, nach T_LAUNCH Ticks rollt die Kugel gegen die Drehrichtung in der Bahn,
-     * verlässt sie bei T_DROP, springt über Rauten und Stege und liegt bei T_LAND im Fach von result.
-     * land läuft beim Liegenbleiben, done am Ende (T_END).
+     * Wurf: Croupier stößt den Rotor an, nach Throw.LAUNCH Ticks rollt die Kugel gegen die Drehrichtung in der Bahn, wird
+     * durch Reibung langsamer, fällt ab, wenn die Fliehkraft sie nicht mehr an der Wand hält, trifft manchmal eine Raute,
+     * springt über den Zahlenring und hüpft unterschiedlich lange über die Fächer (sofort bis rund 5 s), bis sie im Fach von
+     * result liegt. land läuft beim Liegenbleiben, done gut eine Sekunde danach. Die Töne sind echte Aufnahmen und folgen
+     * jedem Ereignis (Rollen in der Bahn, Raute, Ring, jeder Aufprall nach Sprunghöhe, Liegenbleiben).
      */
     public void spin(int result, Runnable land, Runnable done) {
         target = position(result);
         onLand = land;
         onDone = done;
-        // Rotorwinkel vorausberechnen: kurz anschieben (8 Ticks), dann langsam auslaufen
-        rhoAt = new double[T_END + 1];
-        double r = rho, om = omega, decay = Math.exp(-1 / 260.0);
-        for (int t = 0; t <= T_END; t++) {
-            om = t < 8 ? omega + (5.0 - omega) * (t + 1) / 8.0 : om * decay;
-            r += om;
-            rhoAt[t] = r;
-        }
-        // Kugel kommt von der Croupier-Seite (Modell +X = 90°), Geschwindigkeit fällt linear bis zum Liegenbleiben
-        beta0 = 90 + (rnd.nextDouble() - 0.5) * 50;
-        double fS = travel(T_LAND - T_LAUNCH);
-        double want = wheelAngle(target) + rhoAt[T_LAND];
-        // Zusatzweg 0..360°, damit die Kugel genau im Fach landet: auf die ganze Bahn verteilt (bis 21 % schneller, unsichtbar)
-        double c = ((beta0 - fS - want) % 360 + 360) % 360;
-        kScale = (fS + c) / fS;
+        thr = new Throw(rnd, rho, omega, target);
+        evIdx = 0;
         spinTick = 0;
-        Location w = wheel();
-        if (w != null) w.getWorld().playSound(w, "kuby:casino.roulette_spin", SoundCategory.BLOCKS, 1.0f, 1.0f);
-        if (croupier != null) croupier.deal(w);
-    }
-
-    /** Strecke der Kugel (Grad) nach s Ticks in der Bahn: Geschwindigkeit 24°/Tick, fällt linear auf 0 bei T_LAND. */
-    private static double travel(double s) {
-        double S = T_LAND - T_LAUNCH, a = 24;
-        s = Math.max(0, Math.min(S, s));
-        return a * s - a * s * s / (2 * S);
+        if (croupier != null) croupier.deal(wheel());
     }
 
     /** Ein Kessel-Tick ohne Scheduler (3D-Vorschau tools/preview3d). */
@@ -893,11 +808,13 @@ public final class RouletteTable {
         wheelStep();
     }
 
+    private final double[] pose = new double[3];
+
     private void wheelStep() {
         wheelTick++;
         // Chunk entladen: Anzeigen sind weg, ein laufender Wurf läuft trotzdem zu Ende (Auszahlung)
         if ((rotor == null || !rotor.isValid()) && spinTick < 0) return;
-        if (spinTick < 0) {
+        if (spinTick < 0 || thr == null) {
             // Ruhe: Rotor läuft langsam aus, die Kugel liegt im Fach und dreht mit (alle 10 Ticks, Client glättet)
             omega = Math.max(0.35, omega * Math.exp(-1 / 260.0));
             rho += omega;
@@ -908,52 +825,463 @@ public final class RouletteTable {
             return;
         }
         int t = spinTick;
-        rho = rhoAt[Math.min(t, T_END)];
+        rho = thr.rotor(t);
         placeRotor(2);
-        if (t < T_LAUNCH) {
+        if (t < Throw.LAUNCH) {
             // Croupier nimmt die Kugel aus dem Fach
             placeBall(new Vector3f(0, -0.25f, 0), 2);
-        } else if (t <= T_LAND) {
-            double s = t - T_LAUNCH;
-            double beta = beta0 - kScale * travel(s);
-            double rad = R_TRACK, lift = ballLift(true);
-            if (t >= T_DROP) {
-                double u = (t - T_DROP) / (double) (T_LAND - T_DROP);
-                double e = u * u * (3 - 2 * u);
-                rad = R_TRACK + (R_POCKET - R_TRACK) * e;
-                lift = ballLift(true) + (ballLift(false) - ballLift(true)) * e;
-                int k = t - T_DROP;
-                for (int i = 0; i + 1 < HITS.length; i++) {
-                    if (k >= HITS[i] && k < HITS[i + 1]) {
-                        double x = (k - HITS[i]) / (double) (HITS[i + 1] - HITS[i]);
-                        double hop = HOP[i] * 4 * x * (1 - x);
-                        lift += hop;
-                        rad += hop * 0.6;
-                    }
-                }
-            }
-            placeBall(ballOffset(beta, rad, lift), t == T_LAUNCH ? 0 : 2);
         } else {
-            // im Fach: dreht mit, wackelt kurz nach
-            double since = t - T_LAND;
-            double wob = 4.5 * Math.sin(since * 1.3) * Math.exp(-since / 4.0);
-            placeBall(ballOffset(wheelAngle(target) + rho + wob, R_POCKET, ballLift(false)), 2);
+            thr.pose(t, pose);
+            placeBall(ballOffset(pose[0], pose[1], pose[2]), t == Throw.LAUNCH ? 0 : 2);
         }
-        if (t == T_LAND && onLand != null) {
+        Location w = wheel();
+        while (evIdx < thr.events.size() && thr.events.get(evIdx).tick() <= t) {
+            Ev e = thr.events.get(evIdx++);
+            if (w != null && w.getWorld() != null) {
+                w.getWorld().playSound(w, "kuby:casino.roulette_" + e.key(), SoundCategory.BLOCKS, e.volume(), e.pitch());
+            }
+        }
+        if (t == thr.landTick && onLand != null) {
             Runnable r = onLand;
             onLand = null;
             r.run();
         }
         spinTick++;
-        if (spinTick > T_END) {
+        if (spinTick > thr.end) {
             spinTick = -1;
             ballPocket = target;
-            omega = Math.max(0.35, (rhoAt[T_END] - rhoAt[T_END - 1]));
+            omega = Math.max(0.35, thr.rotorSpeed(thr.end));
+            thr = null;
             Runnable d = onDone;
             onDone = null;
             if (d != null) d.run();
         }
     }
+
+    // =================================================================================================================
+    // Wurf-Physik (v2.04)
+    // =================================================================================================================
+
+    /** Länge der Roll-Aufnahmen im Pack in Sekunden (tools/build_roulette_sfx.py, ROLL_LEN). */
+    static final double ROLL_SECONDS = 4.20;
+    /** Radius der Kugelmitte, wenn sie eine Raute (Mitte r 0,55, halbe Diagonale 0,04) berührt, und am Zahlenring. */
+    private static final double R_DIAMOND = 0.605, R_RING = 0.49;
+    /** Kugel-Halbmesser über der Lauffläche. */
+    private static final double BALL_R = 0.027;
+
+    /** Höhe der Kugelmitte über dem Filz auf Bahn (r ≥ 0,60) oder Schräge, beide 22,5° geneigt (build_roulette_vegas.py). */
+    static double slopeLift(double r) {
+        double s = r >= 0.60 ? 0.10 - (0.69 - r) * 0.41421 : 0.0628 - (0.607 - r) * 0.41421;
+        return s + BALL_R;
+    }
+
+    /** Ein Ton im Wurf: Tick, Ereignis (kuby:casino.roulette_&lt;key&gt;), Lautstärke, Tonhöhe. */
+    record Ev(int tick, String key, float volume, float pitch) {
+    }
+
+    /**
+     * Ein vorausberechneter Wurf, reine Rechnung ohne Bukkit (SELFTEST prüft Hunderte davon). Zeit t in Ticks ab dem
+     * Anstoßen, Winkel in Grad im Uhrzeigersinn von oben; die Kugel läuft mit fallendem Winkel, der Rotor mit steigendem.
+     * <ol>
+     *   <li>Rotor: Croupier stößt an (8 Ticks auf wP = 3,6–4,6°/Tick), danach Auslauf mit 260 Ticks Zeitkonstante.</li>
+     *   <li>Bahn: Reibung dω/dt = −A − B·ω² (Rollreibung und Luft, schnell am Anfang stärker). Die Kugel hält sich an der
+     *       Randwand, solange ω²·r·cos θ ≥ g·sin θ – mit r 0,655, θ 22,5° und g 9,81 m/s² (1 Block = 1 m) sind das rund
+     *       7,1°/Tick; weil keine Bahn perfekt ist, streut der Wert je Wurf um ±0,4. Kurz davor klappert sie auf der Bahn.</li>
+     *   <li>Schräge: fällt beschleunigt nach innen (r ~ t²) und wird dabei schneller (Drehimpuls). In gut der Hälfte der Würfe
+     *       trifft sie eine der acht Rauten (genau an deren Winkel): springt hoch, wird nach außen gestoßen, verliert viel
+     *       Tempo.</li>
+     *   <li>Rotor: trifft den Zahlenring (relativ zum Rotor schnell, beide drehen gegeneinander), springt darüber und hüpft
+     *       im Bezugssystem des Rotors über die Fächer. Je Aufprall wird der Sprung kürzer (Höhe ~ Dauer²) und langsamer,
+     *       manchmal stößt ein Steg sie zurück oder ein Steg wirft sie neu hoch. Die Dauer wird je Wurf gewürfelt:
+     *       22 % liegt sofort, 30 % rund 1 s, 30 % rund 3 s, 18 % rund 5 s.</li>
+     *   <li>Ziel: das Fach steht vorher fest (RouletteGame würfelt fair). Gesucht wird die Einwurf-Geschwindigkeit v0
+     *       (21–33°/Tick, also wie fest der Croupier wirft), bei der die Kugel genau dort liegen bleibt.</li>
+     * </ol>
+     */
+    static final class Throw {
+        static final int LAUNCH = 10;
+        static final double FA = 0.06, FB = 0.0009, W_CRIT = 7.1;
+        static final double K = Math.sqrt(FA / FB), C = Math.sqrt(FA * FB);
+        static final double V_MIN = 21, V_MAX = 33, SETTLE = 25;
+
+        final double rho0, wI, wP;
+        final int target;
+        final double beta0, wc, trackPhase, tdPlain, hopHit, hopHitH, td2, kickOut, entryDur, entryH, entryFrac;
+        double entryR, lossHit;
+        boolean diamondWanted;
+        final double wantBounce;
+        final double[] hopDur, hopH, hopR, hopW;
+        final boolean[] hopRel;
+        // Ergebnis für das gewählte v0
+        double v0, th0, sDrop, tDrop, betaDrop, tdUsed, tHit, betaHit, wAfter, tContact, betaContact, wContact;
+        double phiContact, we, tRest, phiRest;
+        boolean diamond;
+        final double[] hopStart, hopPhi0, hopWabs;
+        int landTick, end;
+        final List<Ev> events = new ArrayList<>();
+
+        Throw(Random rnd, double rho0, double wI, int target) {
+            this.rho0 = rho0;
+            this.wI = wI;
+            this.target = target;
+            wP = 3.6 + rnd.nextDouble();
+            beta0 = 90 + (rnd.nextDouble() - 0.5) * 50;
+            wc = W_CRIT + (rnd.nextDouble() - 0.5) * 0.8;
+            trackPhase = rnd.nextDouble() * 6.283;
+            tdPlain = 12 + rnd.nextDouble() * 5;
+            diamondWanted = rnd.nextDouble() < 0.55;
+            hopHit = 5 + rnd.nextDouble() * 3;
+            hopHitH = 0.03 + rnd.nextDouble() * 0.03;
+            lossHit = 0.4 + rnd.nextDouble() * 0.35;
+            td2 = 8 + rnd.nextDouble() * 5;
+            kickOut = 0.02 + rnd.nextDouble() * 0.015;
+            entryDur = 5 + rnd.nextDouble() * 3;
+            entryH = 0.045 + rnd.nextDouble() * 0.025;
+            entryFrac = 0.35 + rnd.nextDouble() * 0.25;
+            // Springen über den Fächern: wie lange (Ticks), dann Stöße mit abklingender Dauer, Höhe und Geschwindigkeit
+            double c = rnd.nextDouble();
+            wantBounce = c < 0.22 ? 0 : c < 0.52 ? 14 + rnd.nextDouble() * 12 : c < 0.82 ? 50 + rnd.nextDouble() * 20
+                    : 90 + rnd.nextDouble() * 20;
+            List<double[]> hl = new ArrayList<>();
+            double total = 0, prevR = 0.395;
+            boolean first = true;
+            while (true) {
+                double tau = first ? (wantBounce >= 40 ? 8 + rnd.nextDouble() * 3 : wantBounce >= 10 ? 6 + rnd.nextDouble() * 2
+                        : 2.4 + rnd.nextDouble() * 0.8) : 5 + rnd.nextDouble() * 6;
+                // erster Stoß: Anteil der Geschwindigkeit beim Eintritt; spätere Stöße: ein Steg wirft sie neu (absolut)
+                double w = first ? 0.55 + rnd.nextDouble() * 0.25 : (rnd.nextDouble() < 0.7 ? 1 : -1) * (1.5 + rnd.nextDouble() * 3.5);
+                while (tau >= 1.8) {
+                    double h = Math.min(0.09, 0.00075 * tau * tau * (0.8 + rnd.nextDouble() * 0.4));
+                    double r = h > 0.02 ? 0.37 + rnd.nextDouble() * 0.05 : Math.max(0.38, Math.min(0.41, prevR + (rnd.nextDouble() - 0.5) * 0.01));
+                    hl.add(new double[]{tau, h, r, w, first ? 1 : 0});
+                    prevR = r;
+                    total += tau;
+                    tau *= 0.62 + rnd.nextDouble() * 0.18;
+                    w *= 0.55 + rnd.nextDouble() * 0.25;
+                    if (rnd.nextDouble() < 0.15) w = -w * (0.3 + rnd.nextDouble() * 0.2);
+                }
+                first = false;
+                if (total >= wantBounce - 4) break;
+            }
+            int n = hl.size();
+            hopDur = new double[n];
+            hopH = new double[n];
+            hopR = new double[n];
+            hopW = new double[n];
+            hopRel = new boolean[n];
+            for (int i = 0; i < n; i++) {
+                double[] h = hl.get(i);
+                hopDur[i] = h[0];
+                hopH[i] = h[1];
+                hopR[i] = h[2];
+                hopW[i] = h[3];
+                hopRel[i] = h[4] > 0;
+            }
+            if (n > 0) hopR[n - 1] = R_POCKET;
+            entryR = n == 0 ? R_POCKET : 0.385 + rnd.nextDouble() * 0.03;
+            hopStart = new double[n];
+            hopPhi0 = new double[n];
+            hopWabs = new double[n];
+            // Einwurf-Stärke (und bei einer Raute deren Bremswirkung) suchen, bei der die Kugel im Ziel-Fach liegen bleibt
+            double v = diamondWanted ? findWithDiamond(rnd) : Double.NaN;
+            if (Double.isNaN(v)) {
+                diamondWanted = false;
+                v = findV0(rnd);
+            }
+            if (Double.isNaN(v)) v = (V_MIN + V_MAX) / 2;     // kommt praktisch nicht vor (SELFTEST prüft es)
+            solve(v);
+            // Rest (Bisektion, Bruchteile eines Grades) im letzten Sprung ausgleichen: genau Fach-Mitte
+            double res = err(phiRest);
+            if (n > 0) hopWabs[n - 1] += res / hopDur[n - 1];
+            else we += res / entryDur;
+            phiRest -= res;
+            landTick = (int) Math.ceil(tRest);
+            end = (int) Math.ceil(tRest + SETTLE);
+            sounds(rnd);
+        }
+
+        private double err(double phi) {
+            double d = (phi - wheelAngle(target)) % 360;
+            if (d > 180) d -= 360;
+            if (d <= -180) d += 360;
+            return d;
+        }
+
+        private double findV0(Random rnd) {
+            List<Double> roots = new ArrayList<>();
+            int steps = 600;
+            double pv = V_MIN, pe = err(solve(V_MIN));
+            for (int i = 1; i <= steps; i++) {
+                double v = V_MIN + (V_MAX - V_MIN) * i / steps;
+                double e = err(solve(v));
+                if (Math.signum(e) != Math.signum(pe) && Math.abs(e - pe) < 90) {
+                    double a = pv, b = v, ea = pe;
+                    for (int k = 0; k < 40; k++) {
+                        double m = (a + b) / 2, em = err(solve(m));
+                        if (Math.signum(em) == Math.signum(ea)) {
+                            a = m;
+                            ea = em;
+                        } else {
+                            b = m;
+                        }
+                    }
+                    double r = (a + b) / 2;
+                    if (Math.abs(err(solve(r))) < 0.5) roots.add(r);
+                }
+                pv = v;
+                pe = e;
+            }
+            return roots.isEmpty() ? Double.NaN : roots.get(rnd.nextInt(roots.size()));
+        }
+
+        /**
+         * Mit Raute legt der Treffer den Winkel fest (die Kugel ist genau an der Raute); danach entscheidet, wie viel Tempo
+         * sie dort verliert (30–85 %, hängt in echt vom Auftreffwinkel ab). Gesucht wird über Einwurf-Stärke und Verlust.
+         */
+        private double findWithDiamond(Random rnd) {
+            List<double[]> roots = new ArrayList<>();
+            int nv = 60, nl = 24;
+            for (int i = 0; i < nv; i++) {
+                double v = V_MIN + (V_MAX - V_MIN) * (i + 0.5) / nv;
+                lossHit = 0.3;
+                double pl = 0.3, pe = err(solve(v));
+                if (!diamond) continue;
+                for (int j = 1; j <= nl; j++) {
+                    lossHit = 0.3 + 0.55 * j / nl;
+                    double e = err(solve(v));
+                    if (Math.signum(e) != Math.signum(pe) && Math.abs(e - pe) < 90) {
+                        double a = pl, b = lossHit, ea = pe;
+                        for (int k = 0; k < 40; k++) {
+                            lossHit = (a + b) / 2;
+                            double em = err(solve(v));
+                            if (Math.signum(em) == Math.signum(ea)) {
+                                a = lossHit;
+                                ea = em;
+                            } else {
+                                b = lossHit;
+                            }
+                        }
+                        lossHit = (a + b) / 2;
+                        if (diamond && Math.abs(err(solve(v))) < 0.5) roots.add(new double[]{v, lossHit});
+                        lossHit = 0.3 + 0.55 * j / nl;
+                    }
+                    pl = lossHit;
+                    pe = e;
+                }
+            }
+            if (roots.isEmpty()) return Double.NaN;
+            double[] r = roots.get(rnd.nextInt(roots.size()));
+            lossHit = r[1];
+            return r[0];
+        }
+
+        double rotor(double t) {
+            if (t <= 8) return rho0 + wI * t + (wP - wI) * t * t / 16;
+            return rho0 + wI * 8 + (wP - wI) * 4 + wP * 260 * (1 - Math.exp(-(t - 8) / 260));
+        }
+
+        double rotorSpeed(double t) {
+            return t <= 8 ? wI + (wP - wI) * t / 8 : wP * Math.exp(-(t - 8) / 260);
+        }
+
+        private double trackTravel(double s) {
+            return Math.log(Math.cos(th0 - C * s) / Math.cos(th0)) / FB;
+        }
+
+        /** Rechnet den Wurf für die Einwurf-Geschwindigkeit v (Grad/Tick) und gibt den Ruhewinkel relativ zum Rotor. */
+        double solve(double v) {
+            v0 = v;
+            th0 = Math.atan(v / K);
+            sDrop = (th0 - Math.atan(wc / K)) / C;
+            tDrop = LAUNCH + sDrop;
+            betaDrop = beta0 - trackTravel(sDrop);
+            diamond = false;
+            if (diamondWanted) {
+                double uh = Math.sqrt((R_TRACK - R_DIAMOND) / (R_TRACK - R_RING));
+                double f = uh + 0.15 * uh * uh;
+                // Raute (Vielfaches von 45°), die mit einer Fallzeit von 9–22 Ticks genau erreicht wird, möglichst nahe 14
+                double lo = betaDrop - wc * f * 22, hi = betaDrop - wc * f * 9;
+                double best = Double.NaN, bestTd = 0;
+                for (double d = Math.ceil(lo / 45) * 45; d <= hi; d += 45) {
+                    double td = (betaDrop - d) / (wc * f);
+                    if (Double.isNaN(best) || Math.abs(td - 14) < Math.abs(bestTd - 14)) {
+                        best = d;
+                        bestTd = td;
+                    }
+                }
+                if (!Double.isNaN(best)) {
+                    diamond = true;
+                    tdUsed = bestTd;
+                    tHit = tDrop + uh * tdUsed;
+                    betaHit = best;
+                    wAfter = wc * (1 + 0.3 * uh) * lossHit;
+                    tContact = tHit + td2;
+                    betaContact = betaHit - wAfter * td2 * 1.15;
+                    wContact = wAfter * 1.3;
+                }
+            }
+            if (!diamond) {
+                tdUsed = tdPlain;
+                tContact = tDrop + tdUsed;
+                betaContact = betaDrop - wc * tdUsed * 1.15;
+                wContact = wc * 1.3;
+            }
+            phiContact = betaContact - rotor(tContact);
+            we = (wContact + rotorSpeed(tContact)) * entryFrac;
+            double phi = phiContact - we * entryDur, t = tContact + entryDur;
+            for (int i = 0; i < hopDur.length; i++) {
+                hopStart[i] = t;
+                hopPhi0[i] = phi;
+                hopWabs[i] = hopRel[i] ? we * hopW[i] : hopW[i];
+                phi -= hopWabs[i] * hopDur[i];
+                t += hopDur[i];
+            }
+            tRest = t;
+            phiRest = phi;
+            return phi;
+        }
+
+        /** Kugel zur Zeit t: o[0] Winkel (Welt), o[1] Radius, o[2] Höhe der Mitte über dem Filz. */
+        void pose(double t, double[] o) {
+            if (t <= tDrop) {
+                double s = Math.max(0, t - LAUNCH);
+                o[0] = beta0 - trackTravel(s);
+                // klappert in den letzten 20 Ticks vor dem Absturz immer stärker auf der Bahn
+                double k = Math.max(0, 1 - (tDrop - t) / 20.0);
+                double ph = Math.abs(Math.sin(s * 1.9 + trackPhase)) * k * k;
+                o[1] = R_TRACK - 0.012 * ph;
+                o[2] = slopeLift(o[1]) + 0.01 * ph;
+                return;
+            }
+            if (t < tContact) {
+                if (diamond && t >= tHit) {
+                    double x = (t - tHit) / td2, xh = (t - tHit) / hopHit;
+                    o[1] = R_DIAMOND - (R_DIAMOND - R_RING) * x * x + kickOut * Math.sin(Math.PI * x) * (1 - x);
+                    o[0] = betaHit - wAfter * td2 * (x + 0.15 * x * x);
+                    o[2] = slopeLift(o[1]) + (xh < 1 ? hopHitH * 4 * xh * (1 - xh) : 0);
+                } else {
+                    double u = (t - tDrop) / tdUsed;
+                    o[1] = R_TRACK - (R_TRACK - R_RING) * u * u;
+                    o[0] = betaDrop - wc * tdUsed * (u + 0.15 * u * u);
+                    o[2] = slopeLift(o[1]);
+                }
+                return;
+            }
+            double phi, r, lift;
+            double te = tContact + entryDur;
+            if (t < te) {
+                // über den Zahlenring ins Fächerfeld
+                double x = (t - tContact) / entryDur;
+                phi = phiContact - we * (t - tContact);
+                r = R_RING + (entryR - R_RING) * x;
+                lift = slopeLift(R_RING) + (Y_POCKET - slopeLift(R_RING)) * x + entryH * 4 * x * (1 - x);
+            } else if (t < tRest) {
+                int i = hopDur.length - 1;
+                while (i > 0 && hopStart[i] > t) i--;
+                double x = (t - hopStart[i]) / hopDur[i];
+                phi = hopPhi0[i] - hopWabs[i] * (t - hopStart[i]);
+                double r0 = i == 0 ? entryR : hopR[i - 1];
+                r = r0 + (hopR[i] - r0) * x;
+                lift = Y_POCKET + hopH[i] * 4 * x * (1 - x);
+            } else {
+                // liegt: schaukelt kurz im Fach nach
+                double since = t - tRest, damp = Math.exp(-since / 4.0);
+                phi = phiRest + 1.6 * Math.sin(since * 1.4) * damp;
+                r = R_POCKET + 0.006 * Math.sin(since * 1.1) * damp;
+                lift = Y_POCKET;
+            }
+            o[0] = phi + rotor(t);
+            o[1] = r;
+            o[2] = lift;
+        }
+
+        /** Töne zu den Ereignissen (echte Aufnahmen, tools/build_roulette_sfx.py). */
+        private void sounds(Random rnd) {
+            float rollPitch = (float) Math.max(0.5, Math.min(2.0, ROLL_SECONDS * 20 / (tContact - LAUNCH)));
+            events.add(new Ev(LAUNCH, "roll", 1.0f, rollPitch));
+            if (diamond) events.add(new Ev((int) Math.round(tHit), "diamond", 0.95f, 0.92f + rnd.nextFloat() * 0.16f));
+            events.add(new Ev((int) Math.round(tContact), "hit_big", 1.0f, 0.95f + rnd.nextFloat() * 0.1f));
+            if (hopDur.length > 0) {
+                landing(rnd, tContact + entryDur, entryH);
+                for (int i = 0; i + 1 < hopDur.length; i++) landing(rnd, hopStart[i] + hopDur[i], hopH[i]);
+            }
+            events.add(new Ev((int) Math.round(tRest), "settle", 0.8f, 0.95f + rnd.nextFloat() * 0.1f));
+            events.sort(java.util.Comparator.comparingInt(Ev::tick));
+        }
+
+        private void landing(Random rnd, double t, double h) {
+            String key = h >= 0.03 ? "hit_big" : h >= 0.008 ? "hit" : "tick";
+            float vol = (float) Math.max(0.35, Math.min(1.0, h >= 0.03 ? 0.75 + h * 3 : h >= 0.008 ? 0.55 + h * 8 : 0.4 + h * 20));
+            events.add(new Ev((int) Math.round(t), key, vol, 0.9f + rnd.nextFloat() * 0.2f));
+        }
+
+        /** Sprungzeit über den Fächern in Ticks (ohne den Sprung über den Ring). */
+        double bounceTicks() {
+            return tRest - tContact - entryDur;
+        }
+    }
+
+    /**
+     * SELFTEST (v2.04): 400 Würfe mit zufälligem Ziel. Jede Kugel liegt genau in ihrem Fach, Bahn und Sprünge bleiben im
+     * Kessel, keine Sprünge zwischen zwei Ticks, Rollton passt (Tonhöhe 0,6–1,6), Sprungdauern decken sofort/1/3/5 s ab.
+     * Leere Liste = alles in Ordnung; stats() fasst die Verteilung zusammen.
+     */
+    public static List<String> selfCheck() {
+        List<String> errs = new ArrayList<>();
+        Random r = new Random(2026);
+        int[] bins = new int[4];
+        int diamonds = 0;
+        double[] o = new double[3], p = new double[3];
+        double minRoll = 99, maxRoll = 0;
+        for (int k = 0; k < 400 && errs.size() < 8; k++) {
+            int tgt = r.nextInt(37);
+            Throw th = new Throw(new Random(r.nextLong()), r.nextDouble() * 360, 0.35 + r.nextDouble() * 0.5, tgt);
+            if (Math.abs(th.err(th.phiRest)) > 0.01) errs.add("Wurf " + k + ": liegt " + String.format(java.util.Locale.ROOT, "%.1f", th.err(th.phiRest)) + "° neben Fach " + tgt);
+            th.pose(th.end, o);
+            double rel = ((o[0] - th.rotor(th.end)) % 360 + 360) % 360;
+            int pocket = (int) Math.floor((rel + SLOT / 2) / SLOT) % 37;
+            if (pocket != tgt) errs.add("Wurf " + k + ": Kugel am Ende in Fach " + pocket + " statt " + tgt);
+            if (th.end > 400 || th.landTick >= th.end) errs.add("Wurf " + k + ": Ablauf " + th.landTick + "/" + th.end);
+            double prevX = Double.NaN, prevZ = 0, prevY = 0;
+            for (int t = Throw.LAUNCH; t <= th.end; t++) {
+                th.pose(t, p);
+                if (Double.isNaN(p[0] + p[1] + p[2])) {
+                    errs.add("Wurf " + k + ": NaN bei Tick " + t);
+                    break;
+                }
+                if (p[1] < 0.33 || p[1] > 0.69 || p[2] < 0 || p[2] > 0.2) {
+                    errs.add("Wurf " + k + " Tick " + t + ": Kugel außerhalb (r " + String.format(java.util.Locale.ROOT, "%.3f h %.3f", p[1], p[2]) + ")");
+                    break;
+                }
+                double b = Math.toRadians(p[0]), x = p[1] * Math.sin(b), z = -p[1] * Math.cos(b);
+                if (!Double.isNaN(prevX)) {
+                    double d = Math.sqrt((x - prevX) * (x - prevX) + (z - prevZ) * (z - prevZ) + (p[2] - prevY) * (p[2] - prevY));
+                    if (d > 0.42) {
+                        errs.add("Wurf " + k + " Tick " + t + ": Sprung " + String.format(java.util.Locale.ROOT, "%.2f", d) + " Blöcke");
+                        break;
+                    }
+                }
+                prevX = x;
+                prevZ = z;
+                prevY = p[2];
+            }
+            float rp = th.events.get(0).pitch();
+            minRoll = Math.min(minRoll, rp);
+            maxRoll = Math.max(maxRoll, rp);
+            if (rp < 0.6f || rp > 1.6f) errs.add("Wurf " + k + ": Rollton-Tonhöhe " + rp);
+            double s = th.bounceTicks() / 20.0;
+            bins[s < 0.5 ? 0 : s < 2 ? 1 : s < 4 ? 2 : 3]++;
+            if (th.diamond) diamonds++;
+        }
+        for (int i = 0; i < 4; i++) if (bins[i] == 0) errs.add("keine Würfe mit Sprungdauer " + new String[]{"sofort", "~1 s", "~3 s", "~5 s"}[i]);
+        if (diamonds == 0) errs.add("keine Raute getroffen");
+        lastStats = String.format(java.util.Locale.ROOT, "400 Würfe: sofort %d, ~1 s %d, ~3 s %d, ~5 s %d, Raute %d, Rollton %.2f–%.2f",
+                bins[0], bins[1], bins[2], bins[3], diamonds, minRoll, maxRoll);
+        return errs;
+    }
+
+    /** Zusammenfassung des letzten selfCheck (für das Log). */
+    public static String lastStats = "";
 
     // =================================================================================================================
     // Hilfen

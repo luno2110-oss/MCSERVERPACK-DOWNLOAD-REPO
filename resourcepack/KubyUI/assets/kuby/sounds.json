@@ -159,13 +159,6 @@
    }
   ]
  },
- "casino.roulette_spin": {
-  "sounds": [
-   {
-    "name": "kuby:casino/roulette_spin"
-   }
-  ]
- },
  "casino.chip": {
   "sounds": [
    {
@@ -280,6 +273,162 @@
    {
     "name": "kuby:tour/poker_violett",
     "stream": true
+   }
+  ]
+ },
+ "casino.roulette_diamond": {
+  "sounds": [
+   {
+    "name": "kuby:casino/roulette/diamond1"
+   },
+   {
+    "name": "kuby:casino/roulette/diamond2"
+   }
+  ]
+ },
+ "casino.roulette_hit_big": {
+  "sounds": [
+   {
+    "name": "kuby:casino/roulette/hit_big1"
+   },
+   {
+    "name": "kuby:casino/roulette/hit_big2"
+   },
+   {
+    "name": "kuby:casino/roulette/hit_big3"
+   },
+   {
+    "name": "kuby:casino/roulette/hit_big4"
+   },
+   {
+    "name": "kuby:casino/roulette/hit_big5"
+   },
+   {
+    "name": "kuby:casino/roulette/hit_big6"
+   },
+   {
+    "name": "kuby:casino/roulette/hit_big7"
+   },
+   {
+    "name": "kuby:casino/roulette/hit_big8"
+   }
+  ]
+ },
+ "casino.roulette_hit": {
+  "sounds": [
+   {
+    "name": "kuby:casino/roulette/hit1"
+   },
+   {
+    "name": "kuby:casino/roulette/hit2"
+   },
+   {
+    "name": "kuby:casino/roulette/hit3"
+   },
+   {
+    "name": "kuby:casino/roulette/hit4"
+   },
+   {
+    "name": "kuby:casino/roulette/hit5"
+   },
+   {
+    "name": "kuby:casino/roulette/hit6"
+   },
+   {
+    "name": "kuby:casino/roulette/hit7"
+   },
+   {
+    "name": "kuby:casino/roulette/hit8"
+   },
+   {
+    "name": "kuby:casino/roulette/hit9"
+   },
+   {
+    "name": "kuby:casino/roulette/hit10"
+   }
+  ]
+ },
+ "casino.roulette_tick": {
+  "sounds": [
+   {
+    "name": "kuby:casino/roulette/tick1"
+   },
+   {
+    "name": "kuby:casino/roulette/tick2"
+   },
+   {
+    "name": "kuby:casino/roulette/tick3"
+   },
+   {
+    "name": "kuby:casino/roulette/tick4"
+   },
+   {
+    "name": "kuby:casino/roulette/tick5"
+   },
+   {
+    "name": "kuby:casino/roulette/tick6"
+   },
+   {
+    "name": "kuby:casino/roulette/tick7"
+   },
+   {
+    "name": "kuby:casino/roulette/tick8"
+   },
+   {
+    "name": "kuby:casino/roulette/tick9"
+   },
+   {
+    "name": "kuby:casino/roulette/tick10"
+   }
+  ]
+ },
+ "casino.roulette_settle": {
+  "sounds": [
+   {
+    "name": "kuby:casino/roulette/settle1"
+   },
+   {
+    "name": "kuby:casino/roulette/settle2"
+   },
+   {
+    "name": "kuby:casino/roulette/settle3"
+   },
+   {
+    "name": "kuby:casino/roulette/settle4"
+   },
+   {
+    "name": "kuby:casino/roulette/settle5"
+   },
+   {
+    "name": "kuby:casino/roulette/settle6"
+   }
+  ]
+ },
+ "casino.roulette_roll": {
+  "sounds": [
+   {
+    "name": "kuby:casino/roulette/roll1"
+   },
+   {
+    "name": "kuby:casino/roulette/roll2"
+   },
+   {
+    "name": "kuby:casino/roulette/roll3"
+   },
+   {
+    "name": "kuby:casino/roulette/roll4"
+   },
+   {
+    "name": "kuby:casino/roulette/roll5"
+   },
+   {
+    "name": "kuby:casino/roulette/roll6"
+   },
+   {
+    "name": "kuby:casino/roulette/roll7"
+   },
+   {
+    "name": "kuby:casino/roulette/roll8"
    }
   ]
  }

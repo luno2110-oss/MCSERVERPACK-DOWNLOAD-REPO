@@ -230,7 +230,6 @@ public final class Scene {
                 t.build();
                 t.center(Component.text("ROULETTE", NamedTextColor.WHITE).append(Component.newline())
                         .append(Component.text("Faites vos jeux!", NamedTextColor.YELLOW)));
-                t.history(List.of(17, 0, 32, 5, 22, 36, 11, 7, 30, 19, 2));
                 RouletteTable.Spot n17 = new RouletteTable.Spot("ZAHL", 17);
                 for (int k = 0; k < 3; k++) t.chip(n17, "red");
                 t.chip(n17, "blue");

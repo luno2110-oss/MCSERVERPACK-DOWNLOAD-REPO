@@ -188,7 +188,6 @@ public final class RouletteGame implements org.bukkit.event.Listener {
         if (!c.getWorld().isChunkLoaded(c.getBlockX() >> 4, c.getBlockZ() >> 4)) return;
         table.build();
         for (Bet b : bets) table.chip(spotOf(b), chipColor(b.player()));
-        table.history(history);
         if (phase == Phase.BETTING && throwWait > 0) table.blitz(blitz);
         updateTable();
         if (hoverTask == null) hoverTask = plugin.getServer().getScheduler().runTaskTimer(plugin, this::hoverTick, 5L, 3L);
@@ -503,7 +502,7 @@ public final class RouletteGame implements org.bukkit.event.Listener {
         }
         Location c = table.wheel();
         if (c != null) {
-            c.getWorld().playSound(c, Sound.ENTITY_SNOWBALL_THROW, 0.5f, 1.4f);
+            // kein eigener Wurf-Ton mehr: die echte Roll-Aufnahme beginnt mit dem Einwurf (v2.04)
             for (Player q : nearby(15)) q.sendActionBar(Msg.parse("<white>" + Msg.escape(p.getName()) + " <gray>wirft die Kugel!"));
         }
         startSpin();
@@ -518,7 +517,7 @@ public final class RouletteGame implements org.bukkit.event.Listener {
         int result = RNG.nextInt(37);
         updateTable();
         if (table.ready()) {
-            // Croupier stößt den Rotor an und wirft die Kugel; sie liegt nach T_LAND Ticks im Fach
+            // Croupier stößt den Rotor an und wirft die Kugel; sie liegt nach 5 bis 11 s im Fach (RouletteTable.Throw)
             table.spin(result, () -> finish(result), () -> {
                 wheelBusy = false;
                 if (!table.ready()) respawn();
@@ -623,7 +622,6 @@ public final class RouletteGame implements org.bukkit.event.Listener {
             if (winners > 0) de.kuby.kubyplugins.util.Fx.particle(plugin, fx, org.bukkit.Particle.FIREWORK, 30, 0.8, 0.4, 0.8, 0.05);
         }
         table.bets(Component.empty());
-        table.history(history);
         presentResult(result, round);
     }
 

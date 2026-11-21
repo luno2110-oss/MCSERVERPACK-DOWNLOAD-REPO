@@ -1,0 +1,14 @@
+Roulette-Töne (roll, diamond, hit_big, hit, tick, settle)
+
+Ausschnitte aus „Roulette - SoundCloud - Beeld en Geluid.ogg“ von Beeld en Geluid
+(Niederländisches Institut für Bild und Ton), Wikimedia Commons:
+https://commons.wikimedia.org/wiki/File:Roulette_-_SoundCloud_-_Beeld_en_Geluid.ogg
+Lizenz: Creative Commons Namensnennung – Weitergabe unter gleichen Bedingungen 3.0 (CC BY-SA 3.0)
+https://creativecommons.org/licenses/by-sa/3.0/deed.de
+
+Änderungen: Netzbrummen herausgefiltert, in einzelne Ereignisse geschnitten (Rollen, Aufschläge, Liegenbleiben),
+mono, Pegel angeglichen, Rollgeräusche auf 4,20 s gekürzt. Diese bearbeiteten Ausschnitte stehen ebenfalls
+unter CC BY-SA 3.0. Werkzeug: tools/build_roulette_sfx.py
+
+Sounds cut from "Roulette - SoundCloud - Beeld en Geluid.ogg" by Beeld en Geluid, licensed CC BY-SA 3.0;
+the excerpts are likewise licensed CC BY-SA 3.0.
