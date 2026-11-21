@@ -304,7 +304,7 @@ def box_el(x0, y0, z0, x1, y1, z1, tex="#t"):
 
 
 def turret(gold_tex):
-    els = [box_el(7, 0, 7, 9, 7, 9), box_el(6.5, 6, 6.5, 9.5, 7, 9.5)]
+    els = [box_el(7, 0, 7, 9, 6.9, 9), box_el(6.5, 6, 6.5, 9.5, 7, 9.5)]     # Säule endet in der Kappe (v2.04)
     # vier Arme mit Kugelenden (ein Arm minimal länger: Griff des Croupiers)
     for k, (dx, dz) in enumerate(((1, 0), (-1, 0), (0, 1), (0, -1))):
         ln = 6.6 if k == 0 else 6.0
@@ -393,12 +393,61 @@ def rotor3d(tex):
     h = lambda b: 8 + b / u
     rr = lambda b: b / u
     els = [{"from": [0, 8, 0], "to": [16, 8.01, 16], "faces": {"up": {"texture": "#top", "uv": [0, 0, 16, 16]}}}]
-    els += _ring16(rr(0.445), rr(0.478), 8, h(0.033), "#w")
-    els += _ring16(rr(0.44), rr(0.482), h(0.033), h(0.042), "#g")
-    for top, rad in ((0.035, 0.33), (0.065, 0.24), (0.09, 0.14)):
-        els += _ring16(0, rr(rad), 8, h(top), "#w")
-    return {"textures": {"top": tex, "w": "kuby:block/casino/hd_walnut", "g": "kuby:block/casino/hd_gold", "particle": tex},
-            "elements": els}
+    # v2.04 gegen Z-Fighting (der Rotor dreht sich, darum flackerte es ständig): die 16 Teile eines Rings überlappen
+    # sich an den Stößen, die 16 Speichen einer Kegelstufe sogar alle in der Mitte – gleiche Oberkante = gleiche Ebene.
+    # Holzring: Oberseite liegt unter der Goldlippe, entfällt. Goldlippe: jedes zweite Teil 0,012 (0,8 mm) höher.
+    ring = _ring16(rr(0.445), rr(0.478), 8, h(0.033), "#w")
+    for e in ring:
+        e["faces"].pop("up", None)
+        e["faces"].pop("down", None)      # liegt auf dem Fächerboden, nie sichtbar
+    els += ring
+    lip = _ring16(rr(0.44), rr(0.482), h(0.033), h(0.042), "#g")
+    for k, e in enumerate(lip):
+        if k % 2:
+            e["to"][1] += 0.012
+            e["from"][1] -= 0.012
+    els += lip
+    # Kegelstufen: Speichen ohne Oberseite, oben je eine flache Deckplatte mit Sechzehneck-Textur (außen durchsichtig)
+    for i, (top, rad) in enumerate(CONE_TIERS):
+        spokes = _ring16(0, rr(rad), 8, h(top), "#w")
+        for e in spokes:
+            e["faces"].pop("up", None)
+            e["faces"].pop("down", None)
+            # Stirnfläche in der Kegelmitte (liegt bei x = 8 oder z = 8) ist immer verdeckt
+            f, t = e["from"], e["to"]
+            inner = "west" if f[0] == 8 else "east" if t[0] == 8 else "north" if f[2] == 8 else "south" if t[2] == 8 else None
+            if inner:
+                e["faces"].pop(inner, None)
+        els += spokes
+        r = rr(rad) * CAP_PAD
+        els.append({"from": [8 - r, h(top), 8 - r], "to": [8 + r, h(top), 8 + r],
+                    "faces": {"up": {"texture": "#c%d" % i, "uv": [0, 0, 16, 16]}}})
+    textures = {"top": tex, "w": "kuby:block/casino/hd_walnut", "g": "kuby:block/casino/hd_gold", "particle": tex}
+    for i in range(len(CONE_TIERS)):
+        textures["c%d" % i] = "kuby:block/casino/rv_cap%d" % i
+    return {"textures": textures, "elements": els}
+
+
+CONE_TIERS = ((0.035, 0.33), (0.065, 0.24), (0.09, 0.14))
+CAP_PAD = 1.12          # Deckplatte etwas größer als der Umkreis des Sechzehnecks (Ecken der Speichen ragen 2 % heraus)
+
+
+def cone_cap(walnut):
+    """Deckplatte einer Kegelstufe (64 x 64): Nussholz, außerhalb des Sechzehnecks der Speichen durchsichtig.
+    Speiche k zeigt in Richtung k·22,5°, ihre Stirnfläche liegt im Abstand r (Apothem); Platte = 2·r·CAP_PAD breit."""
+    n = 64
+    wood = walnut.convert("RGBA").resize((n, n), Image.NEAREST)
+    out = Image.new("RGBA", (n, n), T)
+    px, src = out.load(), wood.load()
+    for y in range(n):
+        for x in range(n):
+            dx = ((x + 0.5) / n * 2 - 1) * CAP_PAD
+            dz = ((y + 0.5) / n * 2 - 1) * CAP_PAD
+            inside = all(dx * math.cos(math.radians(22.5 * k)) + dz * math.sin(math.radians(22.5 * k)) <= 1.004
+                         for k in range(16))
+            if inside:
+                px[x, y] = src[x, y]
+    return out
 
 
 def write(out):
@@ -425,6 +474,9 @@ def write(out):
     ball_tex().save(os.path.join(tex, "rv_ball.png"))
     dolly_tex().save(os.path.join(tex, "rv_dolly.png"))
     item("rv_layout", flat(B + "rv_layout"))
+    walnut = px.mat_walnut()
+    for i in range(len(CONE_TIERS)):
+        cone_cap(walnut).save(os.path.join(tex, "rv_cap%d.png" % i))
     item("rv_rotor", rotor3d(B + "rv_rotor"))
     item("rv_bowlseg", bowl_segment(False))
     item("rv_bowlseg_d", bowl_segment(True))

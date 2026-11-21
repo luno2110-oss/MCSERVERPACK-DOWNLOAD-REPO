@@ -216,7 +216,8 @@ public final class SlotMachine {
         }
         // Stege zwischen den Walzen, Leisten oben und unten
         float depth = (float) (rad * 0.92);
-        for (int i = 0; i < 2; i++) box(off((i - 0.5) * s, 0, depth / 2), face, 0.06f, (float) (2 * rad + 0.04), depth, "black");
+        // Rückseite 2 mm vor der der Leisten (lag in derselben Ebene, v2.04)
+        for (int i = 0; i < 2; i++) box(off((i - 0.5) * s, 0, depth / 2 + 0.002), face, 0.06f, (float) (2 * rad + 0.04), depth, "black");
         float barW = (float) (3 * s + 0.12);
         box(off(0, rad + 0.035, (rad + 0.1) / 2), face, barW, 0.05f, (float) (rad + 0.1), "gold");
         box(off(0, -rad - 0.035, (rad + 0.1) / 2), face, barW, 0.05f, (float) (rad + 0.1), "gold");
@@ -331,7 +332,8 @@ public final class SlotMachine {
             lights.add(box(off(x, DESK_TOP + colH / 2, depth - 0.04), face, 0.05f, (float) (colH - 0.1), 0.03f, side < 0 ? trim : trim2));
         }
         // Dach über dem Fenster und Zierleiste darunter
-        box(off(0, top + 0.06, depth / 2 - 0.05), face, (float) (W + 2 * colW), 0.12f, (float) depth, body);
+        // Dach 2 mm größer als die Säulen außen: gleiche Seitenflächen flackerten (v2.04)
+        box(off(0, top + 0.06, depth / 2 - 0.05), face, (float) (W + 2 * colW + 0.004), 0.12f, (float) depth + 0.004f, body);
         lights.add(box(off(0, top - 0.01, depth - 0.03), face, (float) (W + 2 * colW), 0.03f, 0.03f, trim2));
         // Leuchtschild über dem Dach (senkrecht, Vorderseite zum Spieler)
         double signW = W + 2 * colW;
@@ -346,11 +348,12 @@ public final class SlotMachine {
         });
         lights.add(sign);
         box(off(0, top + 0.12 + signH / 2, depth / 2 - 0.04), face, (float) signW, (float) signH, 0.05f, body);
-        lights.add(box(off(0, top + 0.13 + signH, depth / 2), face, (float) signW, 0.03f, 0.08f, trim));
+        lights.add(box(off(0, top + 0.13 + signH, depth / 2), face, (float) signW + 0.004f, 0.03f, 0.08f, trim));
         // Pultplatte und Pultfront
         if (desk > 0) {
             double d = desk;
-            box(off(0, DESK_TOP + 0.01, d / 2 + 0.02), face, (float) (W + 2 * colW), 0.02f, (float) d, body);
+            // Pultplatte 2 mm breiter und 1,2 mm tiefer: Unterkante lag bündig mit Säulen, Hebel- und Knopfsockel (v2.04)
+            box(off(0, DESK_TOP + 0.01 - 0.0012, d / 2 + 0.02), face, (float) (W + 2 * colW + 0.004), 0.02f, (float) d, body);
             lights.add(box(off(0, DESK_TOP + 0.025, d + 0.02), face, (float) (W + 2 * colW), 0.03f, 0.03f, trim));
             Quaternionf frontQ = new Quaternionf(face).rotateX((float) Math.toRadians(90)).rotateY((float) Math.PI);
             float fw = (float) (W + 2 * colW);
@@ -428,7 +431,8 @@ public final class SlotMachine {
             // Kachel zeigt nach (hoch sin a, vor cos a); das Modell liegt bei +Z, die Anzeige dreht es um 180°
             Quaternionf q = new Quaternionf(face).rotateX((float) -a).rotateY((float) Math.PI);
             if (swap) d.setItemStack(model("sr_" + symbolAt(i, k) + (blur ? "_blur" : "")));
-            d.setTransformation(new Transformation(new Vector3f(), q, new Vector3f(rw, sc, sc), new Quaternionf()));
+            // jede zweite Kachel 0,15 % schmaler: die Stirnseiten liegen sonst in einer Ebene und überlappen (v2.04)
+            d.setTransformation(new Transformation(new Vector3f(), q, new Vector3f(k % 2 == 0 ? rw : rw * 0.9985f, sc, sc), new Quaternionf()));
             d.setInterpolationDelay(0);
             d.setInterpolationDuration(interp);
         }

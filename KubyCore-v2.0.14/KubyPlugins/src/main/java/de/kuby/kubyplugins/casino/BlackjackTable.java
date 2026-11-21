@@ -58,6 +58,9 @@ public final class BlackjackTable {
     public static final float TRAY_CHIP = 0.19f;
 
     /** Höhe eines 3D-Chips bei dieser Skalierung (Modell 1,28 / 16): Stapel liegen lückenlos, ohne Überlappung. */
+    /** Kleinster Versatz gegen Z-Fighting (1,2 mm), siehe tools/preview3d/zfight.py (v2.04). */
+    static final double ZF = 0.0012;
+
     public static double chipStep(float scale) {
         return 0.08 * scale;
     }
@@ -276,13 +279,15 @@ public final class BlackjackTable {
             float ang = angleOf(d);
             double rimMid = (rimIn + rimOut) / 2;
             float rimLen = (float) (2 * rimOut * Math.tan(Math.toRadians(step / 2)) * 1.02);
-            box(at(d, rimMid, RIM_TOP - 0.08), ang, rimLen, 0.16f, (float) (rimOut - rimIn), "hd_leather");
+            // Nachbarstücke überlappen sich (gleiche Ober-/Unterkante = Z-Fighting): jedes zweite 1,2 mm höher (v2.04)
+            double zf = ZF * (i % 2);
+            box(at(d, rimMid, RIM_TOP - 0.08 + zf), ang, rimLen, 0.16f, (float) (rimOut - rimIn), "hd_leather");
             float baseLen = (float) (2 * (radius - 0.1) * Math.tan(Math.toRadians(step / 2)) * 1.03);
-            box(at(d, radius - 0.16, (FELT_Y - 0.02) / 2), ang, baseLen, (float) (FELT_Y - 0.02), 0.2f, "hd_cream");
+            box(at(d, radius - 0.16, (FELT_Y - 0.02) / 2 + zf), ang, baseLen, (float) (FELT_Y - 0.02), 0.2f, "hd_cream");
         }
         // gerade Kante (Dealer-Seite): Nussholz mit Goldleiste
         box(origin.clone().add(0, (FELT_Y + 0.05) / 2, 0), angleOf(fwd()), (float) (2 * radius + 0.08), (float) (FELT_Y + 0.05), 0.14f, "hd_walnut");
-        box(origin.clone().add(0, FELT_Y + 0.055, 0), angleOf(fwd()), (float) (2 * radius + 0.08), 0.012f, 0.15f, "hd_gold");
+        box(origin.clone().add(0, FELT_Y + 0.055, 0), angleOf(fwd()), (float) (2 * radius + 0.084), 0.012f, 0.15f, "hd_gold");
         for (int s = 0; s < SEATS; s++) stool(s);
         // Dealer
         Location dealerAt = at(fwd(), -0.6, 0);
@@ -295,13 +300,14 @@ public final class BlackjackTable {
         Vector3f r = right();
         Location trayAt = origin.clone().add(fwd().x * 0.2, FELT_Y + 0.02, fwd().z * 0.2);
         box(trayAt, angleOf(fwd()), 1.02f, 0.04f, 0.24f, "hd_dark");
-        box(trayAt.clone().add(fwd().x * 0.12, 0.01, fwd().z * 0.12), angleOf(fwd()), 1.02f, 0.05f, 0.012f, "hd_gold");
+        box(trayAt.clone().add(fwd().x * 0.12, 0.01, fwd().z * 0.12), angleOf(fwd()), 1.024f, 0.05f, 0.012f, "hd_gold");
         String[] stacks = {"white", "red", "blue", "green", "black", "purple"};
         for (int i = 0; i < stacks.length; i++) {
             double side = (i - 2.5) * 0.16;
             for (int k = 0; k < 3; k++) {
-                Location c = trayAt.clone().add(r.x * side, 0.03 + chipStep(TRAY_CHIP) * k, r.z * side);
-                item(c, "c3chip_" + stacks[i], new Quaternionf().rotateY((float) (k * Math.PI / 8)), TRAY_CHIP, "static");
+                // Nachbarstapel überlappen sich: jeder zweite 1,2 mm höher und jeder Stapel anders gedreht (v2.04)
+                Location c = trayAt.clone().add(r.x * side, 0.03 + chipStep(TRAY_CHIP) * k + ZF * (i % 2), r.z * side);
+                item(c, "c3chip_" + stacks[i], new Quaternionf().rotateY((float) (k * Math.PI / 8 + i * 0.41)), TRAY_CHIP, "static");
             }
         }
         // Kartenschlitten (aus Spielersicht links) und Ablage (rechts)
@@ -340,7 +346,7 @@ public final class BlackjackTable {
         box(base.clone().add(0, 0.015, 0), ang + (float) (Math.PI / 4), 0.36f, 0.03f, 0.36f, "hd_gold");
         // Fußstütze vorn (zum Tisch hin), mit einer Strebe fest am Mittelrohr (schwebte vorher frei vor dem Hocker)
         box(base.clone().add(-d.x * 0.17, 0.24, -d.z * 0.17), ang, 0.34f, 0.03f, 0.03f, "hd_gold");
-        box(base.clone().add(-d.x * 0.095, 0.24, -d.z * 0.095), ang, 0.03f, 0.03f, 0.16f, "hd_gold");
+        box(base.clone().add(-d.x * 0.095, 0.24, -d.z * 0.095), ang, 0.03f, 0.027f, 0.16f, "hd_gold");   // dünner: kein Z-Fighting mit der Stütze
         base.getWorld().spawn(base.clone(), Interaction.class, e -> {
             e.setInteractionWidth(0.6f);
             e.setInteractionHeight(0.75f);
@@ -799,7 +805,7 @@ public final class BlackjackTable {
         for (int i = 0; i < values.length; i++) {
             long v = values[i];
             Location l = rackSpot(seat, i, values.length);
-            ItemDisplay chip = privateTo(seat, item(l.clone().add(0, 0.012, 0), "c3chip_" + chipColor(v, jw),
+            ItemDisplay chip = privateTo(seat, item(l.clone().add(0, 0.012 + ZF * (i % 2), 0), "c3chip_" + chipColor(v, jw),
                     new Quaternionf().rotateY((float) (i * 0.6)), 0.24f, "rack"));
             Button b = new Button(chip, l.clone().add(0, 0.02, 0), chip.getTransformation());
             b.parts.add(chip);

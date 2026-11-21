@@ -60,6 +60,8 @@ public final class RouletteTable {
 
 
     static final double FELT = 0.86;
+    /** Kleinster Versatz gegen Z-Fighting (1,2 mm): Tiefenpuffer in 20 Blöcken Abstand rund 0,5 mm genau (v2.04). */
+    static final double ZF = 0.0012;
     private static final double PX = 0.025;
     private static final double LAY_U0 = -1.35, LAY_V0 = -0.8;
     private static final int LW = 64, LH = 160;
@@ -280,12 +282,12 @@ public final class RouletteTable {
         slab(-2.95, -1.65, -0.6, 0.6, 0.06, FELT - 0.1, "hd_walnut");
         slab(-2.92, -1.68, -0.57, 0.57, 0, 0.06, "hd_dark");
         slab(-1.55, 2.9, -1.05, 1.1, FELT - 0.12, FELT - 0.06, "hd_walnut");
-        slab(-1.52, 2.68, -0.85, 1.04, FELT - 0.06, FELT - 0.003, "rv_felt");
+        slab(-1.518, 2.68, -0.85, 1.04, FELT - 0.06, FELT - 0.003, "rv_felt");     // Ende 2 mm hinter dem Polster
         display(layoutCenter(), "rv_layout", pic(), new Vector3f((float) (LW * PX), 1f, (float) (LH * PX)), "static");
         // Polster-Reling auf der Spielerseite und am Ende, Goldkante innen; Croupier-Seite Holzkante mit Goldleiste
         slab(-1.52, 2.9, -1.05, -0.83, FELT - 0.04, FELT + 0.09, "hd_leather");
         slab(2.68, 2.9, -0.83, 1.1, FELT - 0.04, FELT + 0.09, "hd_leather");
-        slab(-1.52, 2.68, -0.84, -0.83, FELT - 0.002, FELT + 0.03, "hd_gold");
+        slab(-1.518, 2.68, -0.84, -0.828, FELT - 0.002, FELT + 0.03, "hd_gold");     // 2 mm vor dem Polster (v2.04: lag bündig)
         slab(-1.52, 2.68, 1.04, 1.1, FELT - 0.06, FELT + 0.02, "hd_walnut");
         slab(-1.52, 2.68, 1.04, 1.1, FELT + 0.02, FELT + 0.03, "hd_gold");
         // --- Kessel: Gehäuse (Zwölfeck), Kessel aus 16 Segmenten mit Tiefe, Rotor in der Mulde, Drehkreuz, Kugel ---
@@ -295,13 +297,15 @@ public final class RouletteTable {
         for (int k = 0; k < 12; k++) {
             double a = Math.toRadians(30 * k);
             Vector3f d = rotate(new Vector3f((float) Math.sin(a), 0, (float) -Math.cos(a)));
-            Location at = wc.clone().add(d.x * 0.665, FELT - 0.12, d.z * 0.665);
+            // Seitenteile überlappen sich an den Ecken: abwechselnd 1,2 / 2,4 mm höher, sonst flackern die Stöße (v2.04)
+            Location at = wc.clone().add(d.x * 0.665, FELT - 0.12 + ZF * (1 + k % 2), d.z * 0.665);
             display(at, "m_hd_walnut", yawTo(d), new Vector3f(0.44f, 0.16f, 0.27f), "static");
         }
         // Kessel: Randwand mit Goldlippe, geneigte Kugelbahn, Schräge zum Rotor, acht Rauten (jedes zweite Segment)
         for (int k = 0; k < 16; k++) {
             Quaternionf q = base().rotateY((float) Math.toRadians(22.5 * k));
-            display(local(WU, WV, FELT), k % 2 == 0 ? "rv_bowlseg_d" : "rv_bowlseg", q, new Vector3f(BOWL, BOWL, BOWL), "static");
+            // Nachbar-Segmente überlappen sich am Rand (gleiche Oberkante): jedes zweite 1,2 mm höher (v2.04)
+            display(local(WU, WV, FELT + ZF * (k % 2)), k % 2 == 0 ? "rv_bowlseg_d" : "rv_bowlseg", q, new Vector3f(BOWL, BOWL, BOWL), "static");
         }
         rotor = display(local(WU, WV, H_ROTOR), "rv_rotor", rotorRot(rho), new Vector3f(ROTOR, ROTOR, ROTOR), "rotor");
         turret = display(local(WU, WV, H_ROTOR + CONE_TOP + TURRET * 0.5), "rv_turret", rotorRot(rho),
@@ -346,7 +350,8 @@ public final class RouletteTable {
     }
 
     private Location rackSpot(int colorIndex) {
-        return local(RACK_U + (colorIndex - 3.5) * 0.15, RACK_V, FELT + 0.035 + BlackjackTable.chipStep(CHIP) * 0.5);
+        // Nachbar-Stapel überlappen sich (Abstand 0,15, Chip 0,21): jeder zweite 1,2 mm höher (v2.04, Z-Fighting)
+        return local(RACK_U + (colorIndex - 3.5) * 0.15, RACK_V, FELT + 0.035 + BlackjackTable.chipStep(CHIP) * 0.5 + ZF * (colorIndex % 2));
     }
 
     public void removeAll() {
@@ -491,10 +496,10 @@ public final class RouletteTable {
         if (c == null) return;
         double[] sz = spotSize(s);
         double dv = sz[0] / 2, du = sz[1] / 2;
-        float th = 0.014f, h = 0.006f;
+        float th = 0.014f, h = 0.006f, h2 = h + 2 * (float) ZF;   // Querleisten dicker: Ecken überlappen (v2.04)
         Vector3f r = right(), fw = fwd();
         double[][] pos = {{0, dv}, {0, -dv}, {du, 0}, {-du, 0}};
-        float[][] scale = {{th, h, (float) (sz[1] + th)}, {th, h, (float) (sz[1] + th)}, {(float) (sz[0] + th), h, th}, {(float) (sz[0] + th), h, th}};
+        float[][] scale = {{th, h, (float) (sz[1] + th)}, {th, h, (float) (sz[1] + th)}, {(float) (sz[0] + th + 0.003), h2, th}, {(float) (sz[0] + th + 0.003), h2, th}};
         for (int i = 0; i < 4; i++) {
             ItemDisplay d = f[i];
             if (d == null || !d.isValid()) continue;
@@ -520,7 +525,8 @@ public final class RouletteTable {
         if (st.size() >= 12) return;
         int slot = new ArrayList<>(at.keySet()).indexOf(color);
         Location base = stackBase(s, c, slot);
-        Location place = base.clone().add((rnd.nextDouble() - 0.5) * 0.008, BlackjackTable.chipStep(CHIP) * (st.size() + 0.5),
+        // Stapel verschiedener Spieler überlappen sich auf kleinen Feldern: je Stapel 1,2 mm höher (v2.04, Z-Fighting)
+        Location place = base.clone().add((rnd.nextDouble() - 0.5) * 0.008, BlackjackTable.chipStep(CHIP) * (st.size() + 0.5) + ZF * (slot % 3),
                 (rnd.nextDouble() - 0.5) * 0.008);
         ItemDisplay d = place.getWorld().spawn(place, ItemDisplay.class, e -> {
             e.setItemStack(BlackjackTable.model("c3chip_" + color));

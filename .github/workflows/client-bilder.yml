@@ -230,7 +230,16 @@ jobs:
           echo "kubytest rundgang Kamera" >&3
           sleep 1
           clip video_rundgang 160
-          for k in 01 02 03 04 05 06 07 08 09 10 11 12; do sleep 12; shot "40_rundgang_$k"; done
+          # Stationswechsel blenden kurz schwarz ab (v2.03, rund 0,8 s alle 13 s); der 12-s-Takt der Bilder lief
+          # in diese Blenden hinein. Fast schwarzes Bild: nach 1,2 s noch einmal aufnehmen (höchstens zweimal)
+          for k in 01 02 03 04 05 06 07 08 09 10 11 12; do
+            sleep 12; shot "40_rundgang_$k"
+            for r in 1 2; do
+              m=$(convert "shots/40_rundgang_$k.png" -colorspace Gray -format "%[fx:mean]" info: 2>/dev/null || echo 1)
+              awk -v m="$m" 'BEGIN { exit !(m < 0.03) }' || break
+              echo "Bild 40_rundgang_$k in der Schwarzblende, neu"; sleep 1.2; shot "40_rundgang_$k"
+            done
+          done
           sleep 20
           # alle gerade angezeigten Item-Modelle gegen das Pack prüfen
           echo "kubytest modelle" >&3

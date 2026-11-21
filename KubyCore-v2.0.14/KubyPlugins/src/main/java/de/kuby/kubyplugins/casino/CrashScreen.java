@@ -240,7 +240,8 @@ public final class CrashScreen {
                 Vector3f tr = new Vector3f((float) (r.x * mx), (float) my, (float) (r.z * mx));
                 // Drehung in der Bildebene: Leiste zeigt nach "rechts" und wird um die Normale gedreht
                 Quaternionf q = new Quaternionf(face).rotateZ(ang);
-                next = new Transformation(tr, q, new Vector3f((float) len + THICK * 0.8f, THICK, 0.02f), new Quaternionf());
+                // Nachbarleisten überlappen sich am Knick in derselben Ebene: jede zweite 1,2 mm je Seite dicker (v2.04)
+                next = new Transformation(tr, q, new Vector3f((float) len + THICK * 0.8f, THICK, 0.02f + (i % 2) * 0.0024f), new Quaternionf());
             } else {
                 next = new Transformation(new Vector3f(), face, new Vector3f(0, 0, 0), new Quaternionf());
             }

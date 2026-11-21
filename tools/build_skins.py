@@ -656,6 +656,21 @@ def rig_part_model(tex, part, img=None):
     faces["down"] = ({"texture": "#skin", "uv": uv(u + d + w, v, w, d)} if cap_bottom
                      else {"texture": "#skin", "uv": uv(u + d, side_y + rows - 1, w, 1)})
     els = [{"from": [8 + lo[0], 8 + lo[1], 8 + lo[2]], "to": [8 + hi[0], 8 + hi[1], 8 + hi[2]], "faces": faces}]
+    # v2.04 gegen Z-Fighting zwischen Gliedern: wo zwei Teile sich berühren und gleiche Seitenebenen haben (Hals am
+    # Rumpf, Hüfte am Rumpf, Ellbogen), wird das eine minimal schmaler (0,02–0,03 px, unsichtbar)
+    f, t = els[0]["from"], els[0]["to"]
+    if part == "head":
+        f[0] += 0.03
+        t[0] -= 0.03
+    elif part == "rleg":
+        t[0] -= 0.03
+    elif part == "lleg":
+        f[0] += 0.03
+    elif part in ("rarm_lo", "larm_lo"):
+        f[0] += 0.02
+        t[0] -= 0.02
+        f[2] += 0.02
+        t[2] -= 0.02
     if img is not None:
         els += rig_layers(part, img)
     return {"textures": {"skin": tex, "particle": tex}, "elements": els}
@@ -843,7 +858,8 @@ def rig_layers(part, img):
             if c in COLLAR and row < 2:
                 return 0.25
             return 0
-        return [_shell(part, 0, 12.25, (0, 24), (0.25, 0.25, 0.25, 0.25), top=True, bottom=23)] + \
+        # v2.04: Unterkante 0,08 unter dem Rumpf (lag genau auf dessen Unterseite: Z-Fighting)
+        return [_shell(part, -0.08, 12.25, (0, 24), (0.25, 0.25, 0.25, 0.25), top=True, bottom=23)] + \
             _relief(part, img, -2.25, -4.25, 4.25, 12, (0, 24), dep)
     if part == "head":
         # Haarkappe: obere 2 px rundum 0,5 dicker, Deckel angehoben
@@ -852,12 +868,15 @@ def rig_layers(part, img):
         return [_shell(part, -5, 1.3, (0, 12), (0.3, 0.3, 0.3, 0.3), top=True)]
     if part in ("rarm_lo", "larm_lo"):
         # Sakko-Ärmel bis zum Saum (Texel 12..18 der Ärmel), darunter schaut die Manschette heraus
-        return [_shell(part, -3, 0, (12, 18), (0.3, 0.3, 0.3, 0.3), bottom=17)]
+        # 0,36 statt 0,3: am Ellbogen überlappt der Ärmel die Oberarm-Schale (gleiche Dicke = gleiche Ebene, Flackern)
+        return [_shell(part, -3, 0, (12, 18), (0.36, 0.36, 0.36, 0.36), bottom=17)]
     if part in ("rleg", "lleg"):
-        outer = (0, 0.2) if part == "rleg" else (0.2, 0)
-        shoe_out = (0, 0.3) if part == "rleg" else (0.3, 0)
+        # v2.04: zur Innenseite (zum anderen Bein) 0,05 zurückgesetzt – bündig lagen Hose/Schuh genau auf dem Bein,
+        # nach außen versetzt hätten sich beide Beine überlappt (beides Z-Fighting)
+        outer = (-0.05, 0.2) if part == "rleg" else (0.2, -0.05)
+        shoe_out = (-0.05, 0.3) if part == "rleg" else (0.3, -0.05)
         trousers = _shell(part, -10, 0, (0, 20), (outer[0], outer[1], 0.2, 0.2), bottom=19)
-        shoe = _shell(part, -12, -10, (20, 24), (shoe_out[0], shoe_out[1], 1.0, 0.3), top=True)
+        shoe = _shell(part, -12.05, -10, (20, 24), (shoe_out[0], shoe_out[1], 1.0, 0.3), top=True)
         shoe["faces"]["up"] = {"texture": "#skin", "uv": _uv8(*_regions(part)["north"][:2], 1, 1)}
         x, y, w, h = _regions(part)["north"]
         shoe["faces"]["up"]["uv"] = _uv8(x, y + 21, w, 1)

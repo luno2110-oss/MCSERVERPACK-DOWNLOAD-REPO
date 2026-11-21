@@ -263,9 +263,12 @@ public final class PokerTable {
             float ang = angleOf(out);
             float segLen = (float) (len / n * 1.08);
             double[] rim = edge(t, -0.05);
-            box(local(rim[0], RIM_TOP - 0.08, rim[1]), ang, segLen * 1.05f, 0.16f, 0.24f, "hd_leather");
+            // Nachbarstücke überlappen sich (gleiche Ober-/Unterkante = Z-Fighting): jedes zweite 1,2 mm höher (v2.04)
+            double zf = BlackjackTable.ZF * (i % 2);
+            // an den geraden Seiten zeigen Nachbarn gleich: ungerade auch 1,2 mm je Seite dicker (Innen-/Außenfläche)
+            box(local(rim[0], RIM_TOP - 0.08 + zf, rim[1]), ang, segLen * 1.05f, 0.16f, (float) (0.24 + 2 * zf), "hd_leather");
             double[] base = edge(t, -0.2);
-            box(local(base[0], (FELT_Y - 0.02) / 2, base[1]), ang, segLen * 0.9f, (float) (FELT_Y - 0.02), 0.2f, "hd_cream");
+            box(local(base[0], (FELT_Y - 0.02) / 2 + zf, base[1]), ang, segLen * 0.9f, (float) (FELT_Y - 0.02), (float) (0.2 + 2 * zf), "hd_cream");
         }
         for (int s = 0; s < SEATS; s++) stool(s);
         // Dealerin an der Längsseite (-fwd), schaut zur Mitte
@@ -276,17 +279,20 @@ public final class PokerTable {
         dealerText = text(local(0, 2.25, -(R + 0.55)), Component.empty(), 0.85f, Display.Billboard.VERTICAL);
         // Chip-Tablett der Dealerin
         Location tray = local(0, FELT_Y + 0.02, -(R - 0.28));
-        box(tray, a0, 0.9f, 0.04f, 0.22f, "hd_dark");
+        box(tray, a0, 0.9f, 0.04f, 0.216f, "hd_dark");      // 2 mm vor dem Polster (lag bündig, v2.04)
         String[] stacks = {"white", "red", "blue", "green", "black"};
         for (int i = 0; i < stacks.length; i++) {
             for (int k = 0; k < 3; k++) {
-                item(local((i - 2) * 0.16, FELT_Y + 0.05 + BlackjackTable.chipStep(BlackjackTable.TRAY_CHIP) * k, -(R - 0.28)), "c3chip_" + stacks[i],
-                        new Quaternionf().rotateY((float) (k * Math.PI / 8)), BlackjackTable.TRAY_CHIP, "static");
+                // Nachbarstapel überlappen sich: jeder zweite 1,2 mm höher, jeder Stapel anders gedreht (v2.04)
+                item(local((i - 2) * 0.16, FELT_Y + 0.05 + BlackjackTable.chipStep(BlackjackTable.TRAY_CHIP) * k + BlackjackTable.ZF * (i % 2), -(R - 0.28)),
+                        "c3chip_" + stacks[i], new Quaternionf().rotateY((float) (k * Math.PI / 8 + i * 0.41)), BlackjackTable.TRAY_CHIP, "static");
             }
         }
         // Stapel verdeckter Karten links der Dealerin
         for (int k = 0; k < 5; k++) {
-            item(local(-0.75, FELT_Y + 0.006 + 0.006 * k, -(R - 0.32)), "c3_back", facingTop(localDir(0, -1)).rotateZ((float) Math.PI),
+            // jede Karte minimal verdreht: sonst liegen die Kanten bündig übereinander und flackern (v2.04)
+            item(local(-0.75, FELT_Y + 0.006 + 0.006 * k, -(R - 0.32)), "c3_back",
+                    new Quaternionf().rotateY((float) ((k % 2 == 0 ? 1 : -1) * 0.02 * (k + 1))).mul(facingTop(localDir(0, -1)).rotateZ((float) Math.PI)),
                     CARD * 0.95f, "static");
         }
         potBadge = badge(local(0.55, FELT_Y + 0.1, 0.5), 0.55f);
@@ -379,8 +385,10 @@ public final class PokerTable {
         for (int i = 0; i < stacks; i++) {
             int h = 2 + (int) ((amount >> i) % 4);
             for (int k = 0; k < h; k++) {
-                pot.add(item(local((i - (stacks - 1) / 2.0) * 0.15, FELT_Y + 0.012 + BlackjackTable.chipStep(BlackjackTable.TRAY_CHIP) * k, 0.5 + (i % 2) * 0.08),
-                        "c3chip_" + new String[]{"black", "green", "blue", "red", "white"}[i], new Quaternionf().rotateY((float) (k * Math.PI / 8)), BlackjackTable.TRAY_CHIP, "pot"));
+                pot.add(item(local((i - (stacks - 1) / 2.0) * 0.15, FELT_Y + 0.012 + BlackjackTable.chipStep(BlackjackTable.TRAY_CHIP) * k
+                                + BlackjackTable.ZF * (i % 2), 0.5 + (i % 2) * 0.08),
+                        "c3chip_" + new String[]{"black", "green", "blue", "red", "white"}[i],
+                        new Quaternionf().rotateY((float) (k * Math.PI / 8 + i * 0.41)), BlackjackTable.TRAY_CHIP, "pot"));
             }
         }
     }
