@@ -613,10 +613,12 @@ def build_fonts():
     # 1 Pixel = 1 Titel-Einheit = 4 GUI-Pixel; Höhe 256 und Oberlänge 125 legen die Bildmitte genau auf die Bildschirmmitte
     # (Titelzeile bei y = -10, Grundlinie 7 tiefer). Ellipse auf 16:9 bei GUI-Größe 3 (halbe Breite 80, halbe Höhe 45).
     import numpy as np
-    W, H = 512, 256
+    # v2.04: Bild nur 254 x 127 Pixel (Schrift-Seiten fassen höchstens 256 px, größere Zeichen fehlen im Spiel),
+    # Höhe 256 zeichnet es doppelt so groß: 512 x 256 Titel-Einheiten wie geplant (Vorschub 513 = Cinema.GRADE_ADV).
+    W, H = 254, 127
     ys, xs = np.mgrid[0:H, 0:W]
-    u = (xs + 0.5 - W / 2) / 80.0
-    v = (ys + 0.5 - H / 2) / 45.0
+    u = ((xs + 0.5) / W * 512 - 256) / 80.0
+    v = ((ys + 0.5) / H * 256 - 128) / 45.0
     rr = np.hypot(u, v)
     for name, (cm, ce, am, ae) in grades.items():
         if name == "soft":
