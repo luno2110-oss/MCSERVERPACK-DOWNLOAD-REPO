@@ -1120,5 +1120,9 @@ def build(out):
     import build_plinko
     if out:
         build_plinko.write(out)
-    big = [(n, f()) for n, f in BIG] + [("plinko_big", build_plinko.icon())]
+    # Pferderennen (v2.05): Pixel-Pferde, Bahn-Materialien und Icon
+    import build_race
+    if out:
+        build_race.write(out)
+    big = [(n, f()) for n, f in BIG] + [("plinko_big", build_plinko.icon()), ("race_big", build_race.icon())]
     return ([(n, f()) for n, f in ICONS16], small, big)

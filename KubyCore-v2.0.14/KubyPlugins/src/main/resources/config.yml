@@ -229,6 +229,10 @@ casino:
   plinko:                       # Plinko-Bretter (/casino plinko automat [Größe]), Rückfluss je Risiko rund 96 %
     min-bet: 10
     max-bet: 5000               # eigener Einsatz bis hierhin (nach dem ersten Jackpot dreifach)
+  rennen:                       # Pferderennen-Bildschirm (/casino rennen bildschirm [Größe]), Quoten mit 5 % Hausvorteil
+    wait-seconds: 25            # Countdown ab der ersten Wette
+    min-bet: 10
+    max-round: 20000            # höchstens so viel je Spieler und Rennen (nach dem ersten Jackpot dreifach)
 
 coinflip:
   max-bet: 5000

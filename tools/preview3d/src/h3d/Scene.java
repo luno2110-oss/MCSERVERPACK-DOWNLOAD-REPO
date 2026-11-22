@@ -254,6 +254,32 @@ public final class Scene {
                     Mock.runLater();
                 }
             }
+            case "rennen" -> {
+                // Pferderennen-Bildschirm (v2.05) an der Wand bei z = 0, Blick nach +z; args[2] = Tick im Rennen (-1 = Start)
+                int at = args.length > 2 ? Integer.parseInt(args[2]) : 200;
+                de.kuby.kubyplugins.casino.RaceBoard b = new de.kuby.kubyplugins.casino.RaceBoard("r1",
+                        new Location(w, 0.5, 2.2, 0.0), 0f, 0.7, tag, click);
+                b.build();
+                java.util.Random r = new java.util.Random(11);
+                var f = de.kuby.kubyplugins.casino.HorseRace.field(r);
+                int[] order = de.kuby.kubyplugins.casino.HorseRace.order(f.win(), r);
+                var plan = de.kuby.kubyplugins.casino.HorseRace.plan(order, r);
+                b.history(java.util.List.of(2, 0, 4, 2, 1, 5, 3));
+                if (at < 0) {
+                    b.toto(f, null);
+                    b.gates(false);
+                    b.positions(new double[6], null);
+                    b.status(Component.text("Wetten offen · Start in 18 s", NamedTextColor.WHITE));
+                } else {
+                    b.toto(f, null);
+                    b.gates(true);
+                    double[] x = new double[6];
+                    for (int h = 0; h < 6; h++) x[h] = plan.x()[h][Math.min(at, plan.length() - 1)];
+                    b.positions(x, plan.standing(Math.min(at, plan.length() - 1)));
+                    b.status(Component.text("Rennen läuft · Führung #" + (plan.leader(at) + 1) + " "
+                            + de.kuby.kubyplugins.casino.HorseRace.NAMES[plan.leader(at)], NamedTextColor.WHITE));
+                }
+            }
             case "plinko" -> {
                 // Plinko-Brett (v2.05) an der Wand bei z = 0, Blick nach +z; drei Kugeln im Fall, Verlauf, Risiko Mittel.
                 // args[2] = Größe (Standard 0,8)

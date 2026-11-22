@@ -105,6 +105,25 @@ final class SelfTest {
             canvas.accept("Plinko " + rk.label, () -> CasinoScreens.plinko(new CasinoScreens.PlinkoView(12_345_678, rk, 5000,
                     de.kuby.kubyplugins.casino.PlinkoService.LEVELS, 5, "3 Kugeln im Fall", rec, 10, 15_000), pla));
         }
+        CasinoScreens.RaceActions rca = new CasinoScreens.RaceActions() {
+            public Consumer<Player> bet(int lane, boolean place) { return NO; }
+            public Consumer<Player> chip(int index) { return NO; }
+            public Consumer<Player> custom() { return NO; }
+            public Consumer<Player> clear() { return NO; }
+        };
+        {
+            java.util.Random rr = new java.util.Random(3);
+            var rf = de.kuby.kubyplugins.casino.HorseRace.field(rr);
+            long[][] stake = new long[6][2];
+            stake[2][0] = 1000;
+            stake[4][1] = 250;
+            List<CasinoScreens.RaceBetLine> mine = List.of(new CasinoScreens.RaceBetLine(2, false, 1000, rf.winOdds()[2]),
+                    new CasinoScreens.RaceBetLine(4, true, 250, rf.placeOdds()[4]), new CasinoScreens.RaceBetLine(4, false, 15000, rf.winOdds()[4]));
+            canvas.accept("Pferderennen offen", () -> CasinoScreens.race(new CasinoScreens.RaceView(12_345_678, rf, stake, mine, 5, 15000,
+                    "Wetten offen · Start in 23 s", true, List.of(2, 0, 4, 2, 1, 5, 3, 0, 1, 2, 3), 10, 60_000), rca));
+            canvas.accept("Pferderennen läuft", () -> CasinoScreens.race(new CasinoScreens.RaceView(0, rf, new long[6][2], List.of(), 2, 100,
+                    "Das Rennen läuft", false, List.of(), 10, 20_000), rca));
+        }
         canvas.accept("Plinko leer, eigener Einsatz", () -> CasinoScreens.plinko(new CasinoScreens.PlinkoView(0, de.kuby.kubyplugins.casino.Plinko.Risk.MITTEL,
                 2500, new long[]{10, 50, 100, 500, 1000, 5000, 15000}, -1, "Wähle Risiko und Einsatz, dann BALL", List.of(), 10, 15_000), pla));
         FriendsScreen.Actions fa = new FriendsScreen.Actions() {
@@ -615,7 +634,7 @@ final class SelfTest {
             var cp = plugin.casinoPlay();
             if (cp != null) {
                 if (!cp.jewelGame("blackjack")) fails.add("Casino: Blackjack muss Juwelen erlauben");
-                for (String g : new String[]{"roulette", "slots", "crash", "plinko", "losbude"}) {
+                for (String g : new String[]{"roulette", "slots", "crash", "plinko", "rennen", "losbude"}) {
                     if (cp.jewelGame(g)) fails.add("Casino: " + g + " darf keine Juwelen erlauben");
                     if (cp.cur(java.util.UUID.randomUUID(), g) != de.kuby.kubyplugins.service.CasinoPlay.Cur.CHIPS)
                         fails.add("Casino: " + g + " spielt nicht mit Chips");
@@ -725,6 +744,16 @@ final class SelfTest {
                     + de.kuby.kubyplugins.casino.RouletteTable.lastStats);
         } catch (Throwable t) {
             fails.add("Roulette-Physik: " + t);
+        }
+
+        // Pferderennen (v2.05): Quoten höchstens 95 % je Wette, Platz-Chancen stimmen, 300 Rennen wie geplant
+        try {
+            List<String> hr = de.kuby.kubyplugins.casino.HorseRace.selfCheck();
+            if (hr.isEmpty()) ok[0]++;
+            for (String e : hr) fails.add("Pferderennen: " + e);
+            plugin.getLogger().info("[Pferderennen] " + (hr.isEmpty() ? "ok, " : hr.size() + " Fehler, ") + de.kuby.kubyplugins.casino.HorseRace.lastStats);
+        } catch (Throwable t) {
+            fails.add("Pferderennen: " + t);
         }
 
         // Plinko (v2.05): drei Risikostufen mit 95–97 % Rückfluss, 600 Bahnen im richtigen Fach, nie durch einen Stift

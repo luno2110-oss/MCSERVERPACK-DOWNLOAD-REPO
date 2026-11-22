@@ -26,7 +26,7 @@ import java.util.function.Consumer;
  */
 public final class CasinoRules {
 
-    public static final List<String> GAMES = List.of("blackjack", "roulette", "slots", "crash", "plinko", "losbude");
+    public static final List<String> GAMES = List.of("blackjack", "roulette", "slots", "crash", "plinko", "rennen", "losbude");
 
     private static final int WIDTH = 320;
     /** Platzhalter für Icons im Text. Ohne Grafik-Pack werden daraus normale Zeichen. */
@@ -43,7 +43,7 @@ public final class CasinoRules {
     }
 
     /** Reihenfolge der Seiten zum Blättern (wie in der Hilfe-Referenz: "< vorherige | Hinreisen | nächste >"). */
-    private static final List<String> ORDER = List.of("casino", "blackjack", "roulette", "slots", "crash", "plinko", "losbude", "rangliste");
+    private static final List<String> ORDER = List.of("casino", "blackjack", "roulette", "slots", "crash", "plinko", "rennen", "losbude", "rangliste");
 
     private CasinoRules() {
     }
@@ -86,7 +86,7 @@ public final class CasinoRules {
 
     private static Page overview(KubyPlugins plugin) {
         List<String> how = List.of(
-                "Im Casino spielst du mit Chips an Slots, Roulette, Blackjack, Crash und Plinko. In der VIP-Lounge gibt es Poker.",
+                "Im Casino spielst du mit Chips an Slots, Roulette, Blackjack, Crash, Plinko und beim Pferderennen. In der VIP-Lounge gibt es Poker.",
                 "Chips tauschst du an der Kasse gegen Coins und wieder zurück. 1 Chip = 1 Coin, beim Auszahlen "
                         + plugin.getConfig().getInt("casino.cashout-tax-percent", 5) + " % Steuer.",
                 "Jeden " + drawDay(plugin) + " um " + plugin.getConfig().getString("casino.jackpot.draw-time", "18:00")
@@ -174,6 +174,19 @@ public final class CasinoRules {
                         "Klick aufs Brett öffnet das Plinko-Fenster: Gewinne je Fach mit Chance, eigener Einsatz und deine letzten Kugeln.",
                         "Ein Spieler hat das Brett für sich, bis er 30 Sekunden keine Kugel mehr wirft oder weggeht.");
                 commands.add(new String[]{"/casino plinko", "Plinko-Fenster am nächsten Brett"});
+            }
+            case "rennen" -> {
+                subtitle = "Pferderennen: Sieg oder Platz";
+                icon = de.kuby.kubyplugins.ui.KitData.Icon.RACE_BIG;
+                how = List.of(
+                        "Rechtsklick auf den Rennbildschirm öffnet die Wetten. Jedes Rennen hat neue Quoten: Favoriten zahlen wenig,"
+                                + " Außenseiter viel. Die Sterne zeigen die Form.",
+                        "Sieg: dein Pferd wird Erster. Platz: dein Pferd kommt unter die ersten zwei (kleinere Quote). Chip wählen, dann"
+                                + " auf die Quote klicken; mehrere Wetten pro Rennen sind erlaubt.",
+                        "Die erste Wette startet den Countdown (" + c.getLong("casino.rennen.wait-seconds", 25) + " s), dann öffnen die Startboxen."
+                                + " Ausgezahlt wird, sobald der Zweite im Ziel ist: Einsatz mal Quote.",
+                        "Bis zum Start kannst du deine Wetten zurücknehmen.");
+                commands.add(new String[]{"/casino rennen", "Wetten am Rennbildschirm"});
             }
             case "losbude" -> {
                 subtitle = "Rubbellose für Chips";
@@ -318,6 +331,7 @@ public final class CasinoRules {
             case "slots" -> "Slots";
             case "losbude" -> "Losbude";
             case "plinko" -> "Plinko";
+            case "rennen" -> "Rennen";
             default -> "Crash";
         };
     }

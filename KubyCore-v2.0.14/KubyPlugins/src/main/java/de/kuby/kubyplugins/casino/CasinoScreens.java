@@ -525,6 +525,145 @@ public final class CasinoScreens {
         return c;
     }
 
+    // =================================================================================================================
+    // Pferderennen (v2.05)
+    // =================================================================================================================
+
+    /** Eine eigene Wette: Spur, Platzwette?, Betrag, Quote. */
+    public record RaceBetLine(int lane, boolean place, long amount, double odds) {}
+
+    /**
+     * @param stake eigene Einsätze je Spur: [spur][0] Sieg, [spur][1] Platz
+     * @param chip gewählter Chip (0–4, 5 = eigener Betrag)
+     * @param open Wetten möglich (vor dem Start)
+     * @param winners letzte Sieger (Spur), neuester zuerst
+     */
+    public record RaceView(long chips, HorseRace.Field field, long[][] stake, List<RaceBetLine> mine, int chip, long chipValue,
+                           String status, boolean open, List<Integer> winners, long minBet, long maxRound) {}
+
+    public interface RaceActions {
+        Consumer<Player> bet(int lane, boolean place);
+
+        Consumer<Player> chip(int index);
+
+        Consumer<Player> custom();
+
+        Consumer<Player> clear();
+    }
+
+    /** Spurfarbe: Rot als rotes Feld, sonst kleine Knöpfe (Blau, Gold, Grün, Violett, Orange). */
+    private static final KitData.Small[] LANE_STYLE = {null, KitData.Small.SET_BLUE, KitData.Small.GOLD_ON, KitData.Small.GREEN,
+            KitData.Small.SET_VIOLET, KitData.Small.SET_ORANGE};
+
+    private static void laneCell(Canvas c, int x, int y, int w, int lane) {
+        if (LANE_STYLE[lane] == null) c.box(x, y, w, 16, KitData.Box.FIELD_RED, Canvas.Z_BOX + 1);
+        else c.smallButton(x, y, w, LANE_STYLE[lane]);
+    }
+
+    public static Canvas race(RaceView v, RaceActions a) {
+        Canvas c = new Canvas(W).heading("Pferderennen", net.kyori.adventure.text.format.TextColor.color(0xF2B829));
+        head(c, KitData.Icon.RACE_BIG, "PFERDERENNEN", v.status());
+        int nw = Canvas.width(num(v.chips()), true);
+        int lx = Math.min(315, 378 - nw - 4 - Canvas.width("Chips", false));
+        c.smallIcon(lx - 16, 21, KitData.SmallIcon.S_CHIP_RED);
+        c.text(lx, 16, "Deine", GRAY);
+        c.text(lx, 26, "Chips", GRAY);
+        c.textRight(378, 21, num(v.chips()), GOLD, true);
+
+        // Pferde mit Form und Quoten
+        HorseRace.Field f = v.field();
+        int py = 54;
+        int rowH = 20;
+        c.box(0, py, W, 24 + HorseRace.HORSES * rowH + 2, KitData.Box.FELT);
+        c.text(12, py + 8, Canvas.caps("Pferde"), WHITE, true);
+        c.textRight(378, py + 8, List.of(Canvas.Span.of("Sieg = Erster · Platz = unter den ersten zwei", GRAY)));
+        for (int lane = 0; lane < HorseRace.HORSES; lane++) {
+            int ry = py + 22 + lane * rowH;
+            laneCell(c, 10, ry, 20, lane);
+            c.textCenter(20, ry + 4, String.valueOf(lane + 1), WHITE, true);
+            c.text(36, ry + 4, HorseRace.NAMES[lane], WHITE, true);
+            for (int k = 0; k < f.form()[lane]; k++) c.smallIcon(126 + k * 11, ry + 3, KitData.SmallIcon.S_STAR);
+            for (int kind = 0; kind < 2; kind++) {
+                boolean place = kind == 1;
+                int bx = kind == 0 ? 190 : 288;
+                double odds = place ? f.placeOdds()[lane] : f.winOdds()[lane];
+                long mineHere = v.stake()[lane][kind];
+                KitData.Small st = !v.open() ? KitData.Small.GOLD_GRAY : mineHere > 0 ? KitData.Small.GOLD_ON : KitData.Small.GOLD;
+                String label = (place ? "Platz " : "Sieg ") + HorseRace.fmt(odds);
+                c.smallButton(bx, ry, 92, st, label, mineHere > 0 ? ON_GOLD : v.open() ? GOLD_SOFT : BTN_GRAY, true);
+                double chance = place ? f.place()[lane] : f.win()[lane];
+                String hover1 = "<white>" + (place ? "Platz" : "Sieg") + " · #" + (lane + 1) + " " + HorseRace.NAMES[lane];
+                String hover2 = "<gray>Chance <white>" + String.format(java.util.Locale.GERMAN, "%.0f", chance * 100) + " %"
+                        + " <gray>· zahlt das <#F2DA90>" + HorseRace.fmt(odds) + "-fache";
+                String hover3 = v.open() ? (v.chipValue() > 0 ? "<gray>Klick setzt <yellow>" + num(v.chipValue()) + " Chips" : "<gray>Erst einen Chip wählen")
+                        : "<gray>Das Rennen läuft";
+                String hover4 = mineHere > 0 ? "<gray>Deine Wette hier: <#F2C94C>" + num(mineHere) + " Chips" : null;
+                c.action(bx, ry, 92, 16, v.open() ? a.bet(lane, place) : null, tip(hover1, hover2, hover3, hover4));
+            }
+        }
+
+        // Chip wählen
+        int cy = py + 24 + HorseRace.HORSES * rowH + 5;
+        c.box(0, cy, W, 60, KitData.Box.CASINO_DARK);
+        c.text(12, cy + 8, Canvas.caps("Chip wählen"), WHITE, true);
+        c.textRight(378, cy + 8, List.of(Canvas.Span.of("Jeder Klick setzt ", GRAY),
+                Canvas.Span.bold(v.chipValue() > 0 ? num(v.chipValue()) : "-", GOLD)));
+        String[] chipNames = {"white", "red", "blue", "green", "black", "purple"};
+        String[] labels = {"10", "50", "100", "500", "1.000", "EIGEN"};
+        for (int i = 0; i < 6; i++) {
+            int x = 38 + 62 * i;
+            boolean sel = i == v.chip();
+            c.smallIcon(x - 9, cy + (sel ? 21 : 24), small("c_" + chipNames[i]));
+            String label = i == 5 ? (sel && v.chipValue() > 0 ? num(v.chipValue()) : Canvas.caps("Eigen")) : labels[i];
+            c.textCenter(x + 1, cy + 44, label, sel ? GOLD : GRAY, sel);
+            c.action(x - 26, cy + 20, 52, 34, i == 5 ? a.custom() : a.chip(i), i == 5
+                    ? tip("Eigenen Betrag eingeben", "<gray>" + num(v.minBet()) + " bis " + num(v.maxRound()) + " Chips je Rennen")
+                    : tip("Jeder Klick setzt <yellow>" + labels[i] + " Chips"));
+        }
+
+        // Deine Wetten
+        int ey = cy + 63;
+        int rows = Math.max(1, v.mine().size());
+        int eh = 22 + 10 * rows + 6;
+        c.box(0, ey, W, eh, KitData.Box.CASINO_DARK);
+        c.smallIcon(13, ey + 8, KitData.SmallIcon.S_COIN);
+        c.text(26, ey + 8, Canvas.caps("Deine Wetten"), WHITE, true);
+        if (v.mine().isEmpty()) {
+            c.text(26, ey + 20, v.open() ? "Chip wählen, dann auf Sieg oder Platz klicken." : "Keine Wetten in diesem Rennen.", LIGHT);
+        } else {
+            long sum = 0;
+            for (RaceBetLine b : v.mine()) sum += b.amount();
+            if (v.open()) {
+                int bw = Canvas.width("✗ Zurücknehmen", true) + 14;
+                c.smallButton(378 - bw, ey + 4, bw, KitData.Small.DARK, "✗ Zurücknehmen", BTN_GRAY, true);
+                c.action(378 - bw, ey + 4, bw, 16, a.clear(), "Gibt dir alle Wetten dieses Rennens zurück");
+            } else {
+                c.textRight(378, ey + 8, List.of(Canvas.Span.of("Gesamt ", GRAY), Canvas.Span.bold(num(sum), GOLD)));
+            }
+            int y = ey + 20;
+            for (RaceBetLine b : v.mine()) {
+                c.text(26, y, "#" + (b.lane() + 1) + " " + HorseRace.NAMES[b.lane()], RaceBoard.color(b.lane()), true);
+                c.text(140, y, (b.place() ? "Platz" : "Sieg") + " zu " + HorseRace.fmt(b.odds()), LIGHT, false);
+                c.textRight(378, y, List.of(Canvas.Span.of(num(b.amount()) + " → ", GRAY),
+                        Canvas.Span.bold(num(Math.round(b.amount() * b.odds())), GOLD_SOFT)));
+                y += 10;
+            }
+        }
+
+        // Letzte Sieger
+        int hy = ey + eh + 3;
+        c.box(0, hy, W, 30, KitData.Box.CASINO_DARK);
+        c.text(12, hy + 10, Canvas.caps("Letzte Sieger"), WHITE, true);
+        if (v.winners().isEmpty()) c.text(120, hy + 10, "Noch kein Rennen gelaufen.", LIGHT);
+        for (int i = 0; i < Math.min(10, v.winners().size()); i++) {
+            int lane = v.winners().get(i);
+            int x = 120 + i * 26;
+            laneCell(c, x, hy + 7, 22, lane);
+            c.textCenter(x + 11, hy + 11, String.valueOf(lane + 1), WHITE, true);
+        }
+        return c;
+    }
+
     /** 1000 → „1k“, 5000 → „5k“, 2500 → „2,5k“, sonst „500“. */
     private static String shortNum(long v) {
         if (v >= 1000 && v % 100 == 0) {

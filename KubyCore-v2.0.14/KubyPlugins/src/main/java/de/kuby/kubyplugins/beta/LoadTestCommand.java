@@ -183,6 +183,28 @@ public final class LoadTestCommand implements CommandExecutor {
                 Player xp = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : sender instanceof Player sp ? sp : null;
                 if (xp != null) crashShow(xp);
             }
+            case "rennen" -> {
+                // /kubytest rennen <Spieler>: Kamera-Spieler wettet (Sieg auf drei Pferde, Platz auf den Favoriten),
+                // Countdown springt auf 1 s – ein ganzes Rennen für Bilder und Video
+                Player rp = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : sender instanceof Player sp ? sp : null;
+                if (rp != null) {
+                    plugin.casino().giveChips(rp.getUniqueId(), 20_000);
+                    plugin.casinoPlay().testLog = true;
+                    plugin.race().testLog = true;
+                    var rf = plugin.race().field();
+                    int fav = 0;
+                    for (int i = 1; i < 6; i++) if (rf.win()[i] > rf.win()[fav]) fav = i;
+                    StringBuilder res = new StringBuilder();
+                    for (int lane : new int[]{0, 2, 4}) {
+                        String err = plugin.race().testBet(rp, lane, false, 100);
+                        res.append("Sieg #").append(lane + 1).append(err == null ? " ok" : " " + err).append(", ");
+                    }
+                    String err = plugin.race().testBet(rp, fav, true, 200);
+                    res.append("Platz #").append(fav + 1).append(err == null ? " ok" : " " + err);
+                    plugin.race().testFastForward();
+                    plugin.getLogger().info("[Rennen-Test] Wetten: " + res);
+                }
+            }
             case "plinko" -> {
                 // /kubytest plinko <Spieler> [niedrig|mittel|hoch] [Anzahl]: Kamera-Spieler wirft Kugeln am Test-Brett
                 // (alle 8 Ticks eine, Einsatz 100), jede Abrechnung als "[Casino-Test] plinko"-Zeile im Log
@@ -292,7 +314,7 @@ public final class LoadTestCommand implements CommandExecutor {
         p.teleport(back);
         plugin.getLogger().info("[Inventar-Test] " + (ok ? "OK" : "FEHLER") + " " + String.join(" | ", res));
     }
-    private static Location camBj, camRl, camPk, camSlots, camSlotsKlein, camPlinko, camCrash, camBjRot, camBjVio, camPkRot, camPkVio;
+    private static Location camBj, camRl, camPk, camSlots, camSlotsKlein, camPlinko, camRennen, camCrash, camBjRot, camBjVio, camPkRot, camPkVio;
 
     /** Kamera-Punkte für Screenshots aus dem echten Client (CI "Client-Bilder"). */
     private void camera(Player p, String where) {
@@ -317,6 +339,18 @@ public final class LoadTestCommand implements CommandExecutor {
                 if (o == null) return;
                 from = o.clone().add(0, 3.0, 4.6);
                 to = o.clone().add(0, 0.8, 0.8);
+            }
+            case "rennen" -> {
+                // Pferderennen-Bildschirm (v2.05) an der Südwand, Blick nach Süden, ganzer Bildschirm im Bild
+                if (camRennen == null) return;
+                from = camRennen.clone().add(0, -0.55, -4.4);
+                to = camRennen.clone().add(0, -0.1, 0);
+            }
+            case "rennen_nah" -> {
+                // Zielgerade und Toto-Tafel (rechts aus Sicht der Zuschauer = Westen)
+                if (camRennen == null) return;
+                from = camRennen.clone().add(-1.2, -0.7, -2.3);
+                to = camRennen.clone().add(-1.6, -0.1, 0);
             }
             case "plinko" -> {
                 // Plinko-Brett (v2.05) von vorn aus Spielerhöhe, ganzes Brett im Bild
@@ -526,6 +560,11 @@ public final class LoadTestCommand implements CommandExecutor {
             for (int y = 0; y < 6; y++) w.getBlockAt(x, (int) gy + y, gz - 12).setType(org.bukkit.Material.POLISHED_BLACKSTONE_BRICKS, false);
         }
         camPlinko = new Location(w, gx + 11.0, gy + 0.75 + 2.45 * 0.8, gz - 11);
+        // Pferderennen (v2.05): Wand an der Südkante (9 breit, 5 hoch), Bildschirm davor, Blick nach Norden
+        for (int x = gx - 4; x <= gx + 5; x++) {
+            for (int y = 0; y < 5; y++) w.getBlockAt(x, (int) gy + y, gz + 18).setType(org.bukkit.Material.POLISHED_BLACKSTONE_BRICKS, false);
+        }
+        camRennen = new Location(w, gx + 1.0, gy + 0.9 + 1.95 * 0.7, gz + 18);
         camSlotsKlein = new Location(w, gx - 3.5, gy, gz - 7.5);
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             de.kuby.kubyplugins.casino.BlackjackGame bj = plugin.blackjack().testTable(bjAt, 0f);
@@ -552,6 +591,7 @@ public final class LoadTestCommand implements CommandExecutor {
             plugin.slots().testMachine("kozean", slotC, 0f, new Location(w, slotC.getX(), gy, slotC.getZ() + 1.6), "ozean",
                     1.35, de.kuby.kubyplugins.casino.SlotTheme.OZEAN);
             plugin.plinko().testBoard("kplinko", camPlinko, 0f, 0.8);
+            plugin.race().testBoard(camRennen, 180f, 0.7);
             int bjSeat = 0, pkSeat = 0;
             for (int i = 0; i < players.size(); i++) {
                 Player p = players.get(i);
@@ -924,6 +964,29 @@ public final class LoadTestCommand implements CommandExecutor {
         plugin.casino().giveChips(p.getUniqueId(), 10_000);
         boolean pulled = plugin.slots().testPull(p, "kgold");
         check("Slots: Hebel am Gold-Automaten gezogen", pulled, null);
+        // --- Pferderennen (v2.05): Sieg auf #1, Platz auf #2 (je 100), Countdown auf 1 s, nach dem Rennen prüfen:
+        // Auszahlung = Einsatz × Quote für jede gewonnene Wette (Sieger / unter den ersten zwei) ---
+        plugin.race().testLog = true;
+        var rf = plugin.race().field();
+        String re1 = plugin.race().testBet(p, 0, false, 100);
+        String re2 = plugin.race().testBet(p, 1, true, 100);
+        check("Pferderennen: Sieg- und Platzwette angenommen", re1 == null && re2 == null, re1 != null ? re1 : re2);
+        plugin.race().testFastForward();
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            var ro = plugin.casinoPlay().testLast.get(p.getUniqueId() + "|rennen");
+            int[] order = plugin.race().lastOrder();
+            long want = -1;
+            if (order != null) {
+                want = (order[0] == 0 ? Math.round(100 * rf.winOdds()[0]) : 0)
+                        + (order[0] == 1 || order[1] == 1 ? Math.round(100 * rf.placeOdds()[1]) : 0);
+            }
+            check("Pferderennen: Rennen gelaufen und abgerechnet (Einsatz × Quote)", ro != null && order != null && ro.stake() == 200
+                            && ro.gross() == want && ro.payout() >= ro.gross(),
+                    ro == null || order == null ? "keine Abrechnung nach 25 s" : "Einlauf #" + (order[0] + 1) + " vor #" + (order[1] + 1)
+                            + ", Quoten Sieg #1 " + de.kuby.kubyplugins.casino.HorseRace.fmt(rf.winOdds()[0]) + " / Platz #2 "
+                            + de.kuby.kubyplugins.casino.HorseRace.fmt(rf.placeOdds()[1]) + ", Spiel zahlt " + ro.gross() + " (erwartet " + want
+                            + "), ausgezahlt " + ro.payout());
+        }, 500L);
         // --- Plinko (v2.05): eine Kugel am Test-Brett, Risiko Hoch, Einsatz 100; Auszahlung = 100 × Faktor eines Fachs ---
         plugin.plinko().testLog = true;
         String perr = plugin.plinko().testDrop(p, "kplinko", de.kuby.kubyplugins.casino.Plinko.Risk.HOCH, 1);

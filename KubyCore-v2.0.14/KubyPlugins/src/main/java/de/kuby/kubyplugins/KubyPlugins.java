@@ -145,6 +145,7 @@ public final class KubyPlugins extends JavaPlugin {
     private de.kuby.kubyplugins.casino.SlotsService slots;
     private de.kuby.kubyplugins.casino.CrashGame crash;
     private de.kuby.kubyplugins.casino.PlinkoService plinko;
+    private de.kuby.kubyplugins.casino.RaceService race;
     private de.kuby.kubyplugins.casino.CasinoHolos casinoHolos;
     private CasinoLog casinoLog;
     private JackpotDraw jackpotDraw;
@@ -274,6 +275,7 @@ public final class KubyPlugins extends JavaPlugin {
         slots = new de.kuby.kubyplugins.casino.SlotsService(this);
         crash = new de.kuby.kubyplugins.casino.CrashGame(this);
         plinko = new de.kuby.kubyplugins.casino.PlinkoService(this);
+        race = new de.kuby.kubyplugins.casino.RaceService(this);
         casinoHolos = new de.kuby.kubyplugins.casino.CasinoHolos(this);
         edit = new EditModeService(this);
         regions = new RegionService(this);
@@ -534,6 +536,7 @@ public final class KubyPlugins extends JavaPlugin {
         getServer().getPluginManager().registerEvents(slots, this);
         getServer().getPluginManager().registerEvents(crash, this);
         getServer().getPluginManager().registerEvents(plinko, this);
+        getServer().getPluginManager().registerEvents(race, this);
         getServer().getPluginManager().registerEvents(casinoHolos, this);
         getServer().getPluginManager().registerEvents(new CasinoVipListener(this), this);
         getServer().getPluginManager().registerEvents(votes, this);
@@ -547,6 +550,7 @@ public final class KubyPlugins extends JavaPlugin {
             slots.respawn();
             crash.respawn();
             plinko.respawn();
+            race.respawn();
             casinoHolos.respawnAll();
             poker.respawn();
             pokerHr.respawn();
@@ -596,6 +600,7 @@ public final class KubyPlugins extends JavaPlugin {
         slots.shutdown();
         crash.shutdown();
         plinko.shutdown();
+        race.shutdown();
         casinoHolos.shutdown();
         if (cookieStation != null) cookieStation.despawn();
         if (cookies != null) cookies.save();
@@ -1002,6 +1007,7 @@ public final class KubyPlugins extends JavaPlugin {
     public de.kuby.kubyplugins.casino.SlotsService slots() { return slots; }
     public de.kuby.kubyplugins.casino.CrashGame crash() { return crash; }
     public de.kuby.kubyplugins.casino.PlinkoService plinko() { return plinko; }
+    public de.kuby.kubyplugins.casino.RaceService race() { return race; }
     public de.kuby.kubyplugins.casino.CasinoHolos casinoHolos() { return casinoHolos; }
     public CasinoLog casinoLog() { return casinoLog; }
     public JackpotDraw jackpotDraw() { return jackpotDraw; }

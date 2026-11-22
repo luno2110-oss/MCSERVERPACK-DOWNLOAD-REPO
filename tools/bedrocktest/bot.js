@@ -227,6 +227,21 @@ function answer(id, form) {
   setTimeout(() => { if (Date.now() - lastCommandAt > 4000) nextCommand(); }, 2500);
 }
 
+// Manche Knöpfe öffnen eine Java-Truhe (z. B. Shop → Verkaufen). Bleibt sie offen, zeigt der Bedrock-Client keine
+// Formulare mehr an (v2.05: so fehlte im CI das Casino-Hinweisfenster). Truhe nach 1,5 s schließen und weitermachen.
+client.on('container_open', (p) => {
+  res.containers = (res.containers || 0) + 1;
+  log('Truhe geöffnet', p.window_id, p.window_type);
+  setTimeout(() => {
+    const f = fieldsOf('packet_container_close') || ['window_id', 'server'];
+    const msg = { window_id: p.window_id, server: false };
+    if (f.includes('window_type')) msg.window_type = p.window_type;
+    send('container_close', msg);
+    log('  schließe Truhe', p.window_id);
+    setTimeout(() => { if (Date.now() - lastCommandAt > 4000) nextCommand(); }, 2000);
+  }, 1500);
+});
+
 client.on('set_display_objective', (p) => {
   if (p.display_slot === 'sidebar') { res.sidebarTitle = p.display_name; log('Scoreboard-Titel:', JSON.stringify(p.display_name)); }
 });
