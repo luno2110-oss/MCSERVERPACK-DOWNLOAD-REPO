@@ -347,9 +347,13 @@ public final class CasinoScreens {
     // Slots: Gewinnplan
     // =================================================================================================================
 
-    public static Canvas slotsPaytable(long jackpot, long bet) {
+    /**
+     * Gewinnplan eines Automaten (v2.05: je Thema eigene Symbole und Quoten). Drei gleiche nach Gewinn sortiert in zwei
+     * Spalten, dazu „2 × kleines Symbol“, „kleines Symbol genau einmal“ und die Jackpot-Zeile mit dem Symbol 9.
+     */
+    public static Canvas slotsPaytable(SlotTheme th, long jackpot, long bet) {
         Canvas c = new Canvas(W).heading("Slots", net.kyori.adventure.text.format.TextColor.color(0xF2B829));
-        head(c, KitData.Icon.SLOT_BIG, "SLOTS", "Gewinnplan · gewertet wird die Mittellinie");
+        head(c, KitData.Icon.SLOT_BIG, th.title, "Gewinnplan · gewertet wird die Mittellinie");
         c.text(315, 16, "Jackpot", GRAY);
         c.textRight(378, 26, num(jackpot), GOLD, true);
         int y = 54;
@@ -357,40 +361,49 @@ public final class CasinoScreens {
         c.box(0, y, W, 22 + rows * 20 + 4, KitData.Box.CASINO_DARK);
         c.text(12, y + 8, Canvas.caps("Drei gleiche"), WHITE, true);
         c.textRight(378, y + 8, List.of(Canvas.Span.of("Dein Einsatz ", GRAY), Canvas.Span.bold(num(bet), GOLD)));
-        String[] ids = {"diamond", "coin", "bell", "clover", "star", "chip", "cherry", "lemon", "banana"};
-        int[] idx = {8, 7, 3, 5, 4, 6, 0, 1, 2};
-        for (int i = 0; i < ids.length; i++) {
+        Integer[] order = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+        java.util.Arrays.sort(order, (i, j) -> Double.compare(th.three[j], th.three[i]));
+        for (int i = 0; i < order.length; i++) {
             int col = i < 5 ? 0 : 1;
             int row = i < 5 ? i : i - 5;
             int x = 12 + col * 190, ry = y + 22 + row * 20;
-            KitData.SmallIcon ic = small("y_" + ids[i]);
+            KitData.SmallIcon ic = small("y_" + th.symbols[order[i]]);
             for (int k = 0; k < 3; k++) c.smallIcon(x + k * 17, ry, ic);
-            int mult = SlotsService.THREE[idx[i]];
-            c.text(x + 56, ry + 4, SlotsService.NAMES[idx[i]], LIGHT, false);
-            c.textRight(x + 170, ry + 4, List.of(Canvas.Span.bold(mult + "x", GOLD_SOFT),
-                    Canvas.Span.of(" = " + num(bet * mult), GRAY)));
+            payRow(c, x, ry, th.names[order[i]], th.three[order[i]], bet);
         }
-        // Kirschen
+        // zwei kleine Symbole
         int ky = y + 22 + 4 * 20;
         int x = 12 + 190;
-        c.smallIcon(x, ky, small("y_cherry"));
-        c.smallIcon(x + 17, ky, small("y_cherry"));
-        c.text(x + 56, ky + 4, "2 Kirschen", LIGHT, false);
-        c.textRight(x + 170, ky + 4, List.of(Canvas.Span.bold("4x", GOLD_SOFT), Canvas.Span.of(" = " + num(bet * 4), GRAY)));
+        KitData.SmallIcon s0 = small("y_" + th.symbols[0]);
+        c.smallIcon(x, ky, s0);
+        c.smallIcon(x + 17, ky, s0);
+        payRow(c, x, ky, "2 " + th.plurals[0], th.two, bet);
         int y2 = y + 22 + rows * 20 + 7;
         c.box(0, y2, W, 33, KitData.Box.CASINO_DARK);
-        c.smallIcon(12, y2 + 8, small("y_cherry"));
-        c.text(32, y2 + 8, "Eine Kirsche irgendwo auf der Linie", LIGHT, false);
-        c.textRight(378, y2 + 8, List.of(Canvas.Span.bold("2x", GOLD_SOFT), Canvas.Span.of(" = " + num(bet * 2), GRAY)));
+        c.smallIcon(12, y2 + 8, s0);
+        c.text(32, y2 + 8, th.names[0] + " genau einmal auf der Linie", LIGHT, false);
+        c.textRight(378, y2 + 8, List.of(Canvas.Span.bold(SlotTheme.mult(th.one), GOLD_SOFT),
+                Canvas.Span.of(" = " + num(Math.round(bet * th.one)), GRAY)));
         c.text(32, y2 + 19, "Ansonsten ist der Einsatz weg.", GRAY, false);
         int y3 = y2 + 36;
         c.box(0, y3, W, 44, KitData.Box.FELT);
-        for (int k = 0; k < 3; k++) c.smallIcon(12 + k * 17, y3 + 8, small("y_seven"));
-        c.text(68, y3 + 8, Canvas.caps("Jackpot"), WHITE, true);
+        KitData.SmallIcon jp = small("y_" + th.symbols[9]);
+        for (int k = 0; k < 3; k++) c.smallIcon(12 + k * 17, y3 + 8, jp);
+        c.text(68, y3 + 8, List.of(Canvas.Span.bold(Canvas.caps("Jackpot"), WHITE), Canvas.Span.of("  3 " + th.plurals[9], LIGHT)));
         c.text(68, y3 + 19, "Bei 5.000 Einsatz der ganze Topf, sonst anteilig (mind. 100x)", LIGHT, false);
         c.text(68, y3 + 29, "Jeder Dreh füllt den Topf.", GRAY, false);
         c.textCenter(W / 2, y3 + 50, "Einsatz: Knopf = höher · Schleichen + Knopf = tiefer", GRAY, false);
         return c;
+    }
+
+    /** Eine Zeile im Gewinnplan: Name links, „20x = 2.000“ rechts; wird es zu eng, fällt der Betrag weg. */
+    private static void payRow(Canvas c, int x, int ry, String name, double mult, long bet) {
+        String m = SlotTheme.mult(mult);
+        String sum = " = " + num(Math.round(bet * mult));
+        boolean fits = Canvas.width(name, false) + Canvas.width(m, true) + Canvas.width(sum, false) + 6 <= 114;
+        c.text(x + 56, ry + 4, name, LIGHT, false);
+        c.textRight(x + 170, ry + 4, fits ? List.of(Canvas.Span.bold(m, GOLD_SOFT), Canvas.Span.of(sum, GRAY))
+                : List.of(Canvas.Span.bold(m, GOLD_SOFT)));
     }
 
     private static void field(Canvas c, int x, int y, KitData.Box style, String label, String quote, Consumer<Player> click,

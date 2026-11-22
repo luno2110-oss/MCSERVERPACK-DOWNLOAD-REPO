@@ -171,6 +171,10 @@ jobs:
           if not r.get("spawned"): probs.append("Bedrock-Client nicht gespawnt (%s)" % (r.get("disconnect") or "; ".join(r.get("errors", [])[:3])))
           if r.get("spawned") and len(simple) < 2: probs.append("Zu wenige Kuby-Formulare (%d)" % len(simple))
           if simple and imgs == 0: probs.append("Formulare ohne Bilder")
+          # Casino für Bedrock gesperrt (v2.05): /poker muss das Hinweisfenster mit dem Grund öffnen statt des Spiels
+          sperre = [f for f in simple if "nur Java-Edition" in re.sub("§.", "", f.get("title") or "")]
+          if r.get("spawned") and any(c.startswith("/poker") for c in r.get("commands", [])) and not sperre:
+              probs.append("Casino-Sperre: kein Hinweisfenster „Casino – nur Java-Edition“ nach /poker")
           # Kino auf Bedrock: Geyser-Kamera muss Befehle schicken; kein roher MiniMessage-Text, keine Kästchen-Zeichen
           kino = re.findall(r"\[Kino-Test\] (OK|FEHLER)", log)
           print_cam = "Kamera-Befehle beim Bedrock-Client: %d (zurückgesetzt: %d)%s" % (r.get("camera", 0), r.get("cameraClear", 0), "" if kino else " – Kino-Test lief nicht")
@@ -193,6 +197,9 @@ jobs:
           for f in forms[:14]:
               print("  - %s „%s“: %s Knöpfe (%s mit Bild) %s" % (f.get("type"), re.sub("§.", "", f.get("title") or ""), f.get("buttonCount"),
                     f.get("images"), "/ " + "; ".join(re.sub("§.", "", (b.get("text") or "")).replace("\n", " ")[:40] for b in f.get("buttons", [])[:4])))
+          print("- Casino-Sperre für Bedrock: " + ("Hinweisfenster erhalten – „%s“ (%d Zeichen Erklärung, Knopf „%s“)" % (
+                re.sub("§.", "", sperre[0].get("title") or ""), len(sperre[0].get("content") or ""),
+                re.sub("§.", "", (sperre[0].get("buttons") or [{}])[0].get("text") or "")) if sperre else "kein Hinweisfenster"))
           print("- Scoreboard: Titel %s, %d Zeilen, Bedrock-Icons: %s" % (json.dumps(r.get("sidebarTitle")), len(r.get("sidebarLines", [])), "ja" if glyph else "nein"))
           print("- Exceptions im Log: %d, Client-Fehler: %d" % (len(exc), len(r.get("errors", []))))
           open("problems.txt", "w").write("\n".join(probs) if probs else "keine Probleme")

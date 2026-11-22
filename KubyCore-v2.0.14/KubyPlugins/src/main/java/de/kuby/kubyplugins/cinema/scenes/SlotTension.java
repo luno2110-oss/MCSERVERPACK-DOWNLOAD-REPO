@@ -77,33 +77,14 @@ public final class SlotTension implements Script {
         }
     }
 
-    /** Lichtfarbe je Symbol. */
+    /** Lichtfarbe je Symbol (aus dem Thema des Automaten, v2.05). */
     public static int colorOf(String sym) {
-        return switch (sym) {
-            case "cherry" -> 0xFF3A46;
-            case "chip" -> 0xFF4A6A;
-            case "seven" -> 0xFF5A2A;
-            case "lemon" -> 0xFFE45A;
-            case "banana" -> 0xFFD640;
-            case "bell" -> 0xFFB838;
-            case "coin" -> 0xFFC848;
-            case "clover" -> 0x58FF78;
-            case "diamond" -> 0x58C0FF;
-            case "star" -> 0xFFFFFF;
-            default -> 0xFFD08A;
-        };
+        return de.kuby.kubyplugins.casino.SlotTheme.colorOf(sym);
     }
 
     /** Farbstimmung je Symbol (Glyphen aus tools/build_cinema.py). */
     public static String gradeOf(String sym) {
-        return switch (sym) {
-            case "cherry", "chip", "seven" -> "red";
-            case "lemon", "banana", "bell", "coin" -> "gold";
-            case "clover" -> "green";
-            case "diamond" -> "cold";
-            case "star" -> "white";
-            default -> "warm";
-        };
+        return de.kuby.kubyplugins.casino.SlotTheme.gradeOf(sym);
     }
 
     /** Herzschlag-Puls 0..1 (springt beim Schlag hoch und klingt ab). */

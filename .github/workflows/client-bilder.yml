@@ -169,7 +169,7 @@ jobs:
           # vorab hinfliegen, damit Chunks und Anzeigen geladen sind (Software-Grafik braucht etwas)
           echo "kubytest kamera bj_oben Kamera" >&3
           sleep 25
-          for v in bj_oben bj_platz bj_seite poker roulette slots bj_rot bj_violett bj_hocker poker_rot poker_violett; do
+          for v in bj_oben bj_platz bj_seite poker roulette slots slots_klein bj_rot bj_violett bj_hocker poker_rot poker_violett; do
             echo "kubytest kamera $v Kamera" >&3
             sleep 9
             shot "10_$v"

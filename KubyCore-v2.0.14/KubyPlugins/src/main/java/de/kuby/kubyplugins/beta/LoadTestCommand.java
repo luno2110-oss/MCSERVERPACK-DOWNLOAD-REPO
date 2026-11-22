@@ -273,7 +273,7 @@ public final class LoadTestCommand implements CommandExecutor {
         p.teleport(back);
         plugin.getLogger().info("[Inventar-Test] " + (ok ? "OK" : "FEHLER") + " " + String.join(" | ", res));
     }
-    private static Location camBj, camRl, camPk, camSlots, camCrash, camBjRot, camBjVio, camPkRot, camPkVio;
+    private static Location camBj, camRl, camPk, camSlots, camSlotsKlein, camCrash, camBjRot, camBjVio, camPkRot, camPkVio;
 
     /** Kamera-Punkte für Screenshots aus dem echten Client (CI "Client-Bilder"). */
     private void camera(Player p, String where) {
@@ -298,6 +298,12 @@ public final class LoadTestCommand implements CommandExecutor {
                 if (o == null) return;
                 from = o.clone().add(0, 3.0, 4.6);
                 to = o.clone().add(0, 0.8, 0.8);
+            }
+            case "slots_klein" -> {
+                // kleiner Tiefsee-Automat (v2.05) schräg von vorn, Hocker im Bild
+                if (camSlotsKlein == null) return;
+                from = camSlotsKlein.clone().add(1.3, 1.9, 3.1);
+                to = camSlotsKlein.clone().add(0, 1.15, 0);
             }
             case "bj_hocker" -> {
                 // Nahaufnahme eines freien Hockers am violetten Tisch (Fußstütze mit Strebe am Mittelrohr)
@@ -483,6 +489,8 @@ public final class LoadTestCommand implements CommandExecutor {
         camRl = rlAt;
         camPk = pkAt;
         camSlots = new Location(w, gx + 2.5, gy, gz - 7.5);
+        Location slotC = new Location(w, gx - 3.5, gy + 1.5, gz - 7.5);
+        camSlotsKlein = new Location(w, gx - 3.5, gy, gz - 7.5);
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             de.kuby.kubyplugins.casino.BlackjackGame bj = plugin.blackjack().testTable(bjAt, 0f);
             // die anderen Tisch-Farben daneben (rot, violett) – für die Bilder aus dem echten Client
@@ -504,6 +512,9 @@ public final class LoadTestCommand implements CommandExecutor {
             // zwei neue Automaten freistehend (Hocker 1,6 davor, Blick nach +z zum Spieler)
             plugin.slots().testMachine("kgold", slotA, 0f, new Location(w, slotA.getX(), gy, slotA.getZ() + 1.6), "gold");
             plugin.slots().testMachine("kneon", slotB, 0f, new Location(w, slotB.getX(), gy, slotB.getZ() + 1.6), "neon");
+            // kleine Ausführung (v2.05): halbe Breite, eigenes Thema Tiefsee (Muscheln, Fische, Dreizack)
+            plugin.slots().testMachine("kozean", slotC, 0f, new Location(w, slotC.getX(), gy, slotC.getZ() + 1.6), "ozean",
+                    1.35, de.kuby.kubyplugins.casino.SlotTheme.OZEAN);
             int bjSeat = 0, pkSeat = 0;
             for (int i = 0; i < players.size(); i++) {
                 Player p = players.get(i);

@@ -46,6 +46,26 @@ public final class CasinoVipListener implements Listener {
         plugin.casinoMusic().update(e.getPlayer(), e.getTo());
     }
 
+    /** Casino-Befehle, die Bedrock-Spieler trotz Sperre nutzen dürfen (nur lesen, nichts spielen). */
+    private static final java.util.Set<String> BEDROCK_OK = java.util.Set.of("hilfe", "regeln", "stats", "status");
+    private static final java.util.Set<String> CASINO_ROOTS = java.util.Set.of("casino", "poker", "roulette", "cashout", "plinko");
+
+    /** Bedrock-Sperre auch für Befehle (von außerhalb setzen, Chips tauschen, Crash, Poker …), Admins ausgenommen. */
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onCasinoCommand(org.bukkit.event.player.PlayerCommandPreprocessEvent e) {
+        Player p = e.getPlayer();
+        if (!plugin.casino().bedrockBlocked(p) || p.hasPermission("kuby.admin")) return;
+        String[] parts = e.getMessage().substring(1).trim().split("\\s+");
+        if (parts.length == 0) return;
+        String root = parts[0].toLowerCase(java.util.Locale.ROOT);
+        int colon = root.indexOf(':');
+        if (colon >= 0) root = root.substring(colon + 1);
+        if (!CASINO_ROOTS.contains(root)) return;
+        if (root.equals("casino") && parts.length > 1 && BEDROCK_OK.contains(parts[1].toLowerCase(java.util.Locale.ROOT))) return;
+        e.setCancelled(true);
+        plugin.casino().bedrockNotice(p);
+    }
+
     @EventHandler
     public void onJoin(PlayerJoinEvent e) {
         Player p = e.getPlayer();
@@ -55,7 +75,7 @@ public final class CasinoVipListener implements Listener {
             if (plugin.casino().bedrockBlocked(p) && plugin.casinoMusic().inCasino(p.getLocation())) {
                 Location out = plugin.modes().spawnOf("survival");
                 if (out != null) p.teleport(out);
-                Msg.send(p, de.kuby.kubyplugins.service.CasinoService.BEDROCK_MSG);
+                plugin.casino().bedrockNotice(p);
                 return;
             }
             plugin.casinoMusic().update(p, p.getLocation());
@@ -67,6 +87,7 @@ public final class CasinoVipListener implements Listener {
         plugin.casinoMusic().stop(e.getPlayer());
         plugin.casinoMusic().forget(e.getPlayer());
         plugin.casinoHolos().forget(e.getPlayer());
+        plugin.casino().forgetBedrockNotice(e.getPlayer().getUniqueId());
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -86,7 +107,7 @@ public final class CasinoVipListener implements Listener {
     private boolean blocked(Player p, Location from, Location to) {
         if (to != null && plugin.casino().bedrockBlocked(p) && plugin.casinoMusic().inCasino(to)
                 && (from == null || !plugin.casinoMusic().inCasino(from))) {
-            p.sendActionBar(Msg.parse(de.kuby.kubyplugins.service.CasinoService.BEDROCK_MSG));
+            plugin.casino().bedrockNotice(p);
             return true;
         }
         if (to == null || !plugin.casinoVip().inLounge(to)) return false;

@@ -20,12 +20,15 @@ public final class Scene {
         NamespacedKey tag = new NamespacedKey("kuby", "tag");
         NamespacedKey click = new NamespacedKey("kuby", "click");
         switch (args[0]) {
-            case "slots", "slots_gold", "slots_neon" -> {
+            case "slots", "slots_gold", "slots_neon", "slots_ozean" -> {
                 double width = args.length > 2 ? Double.parseDouble(args[2]) : 2.7;
                 String style = args[0].equals("slots") ? "klassik" : args[0].substring(6);
+                // Hocker so nah wie im Spiel (SlotsService.closeStool: Pultkante + 0,25 + Abstand 0,07)
+                double stoolZ = args.length > 3 ? Double.parseDouble(args[3]) : 1.6;
                 SlotMachine m = new SlotMachine("s1", new Location(w, 0.5, 1.5, 0.03), 0f, width, 1,
-                        new Location(w, 0.5, 0, 1.6), tag, click, style);
-                String[][] start = {{"cherry", "seven", "bell"}, {"lemon", "seven", "diamond"}, {"star", "seven", "coin"}};
+                        new Location(w, 0.5, 0, stoolZ), tag, click, style);
+                String[] sy = m.theme().symbols;
+                String[][] start = {{sy[0], sy[9], sy[3]}, {sy[1], sy[9], sy[8]}, {sy[4], sy[9], sy[7]}};
                 m.build(start);
                 m.panel(new long[]{10, 50, 100, 500, 1000, 5000}, 2);
                 m.holo(20080, 10, 5000);
@@ -47,7 +50,7 @@ public final class Scene {
                 int[] arrive = {32, 46, tension ? 46 + 66 : 60};
                 de.kuby.kubyplugins.casino.SlotSpin[] spin = new de.kuby.kubyplugins.casino.SlotSpin[3];
                 for (int i = 0; i < 3; i++) spin[i] = de.kuby.kubyplugins.casino.SlotSpin.plan(m.reelAngle(i),
-                        SlotMachine.stopAngle(i, SlotMachine.SYMBOLS[result[i]]), arrive[i], tension && i == 2 ? arrive[1] + 6 : -1);
+                        m.stopAngle(i, SlotMachine.SYMBOLS[result[i]]), arrive[i], tension && i == 2 ? arrive[1] + 6 : -1);
                 int start = spin[1].arrive;
                 de.kuby.kubyplugins.cinema.V3[] faces = new de.kuby.kubyplugins.cinema.V3[3];
                 for (int i = 0; i < 3; i++) {

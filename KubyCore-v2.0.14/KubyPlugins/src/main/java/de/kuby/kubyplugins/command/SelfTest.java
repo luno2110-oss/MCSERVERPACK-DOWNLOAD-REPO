@@ -88,7 +88,10 @@ final class SelfTest {
             int k = i;
             canvas.accept("Hilfe " + SurvivalHelp.pageIds().get(i), () -> SurvivalHelp.screen(k, ha));
         }
-        canvas.accept("Casino-Gewinntabelle", () -> CasinoScreens.slotsPaytable(100000, 100));
+        for (de.kuby.kubyplugins.casino.SlotTheme th : de.kuby.kubyplugins.casino.SlotTheme.ALL) {
+            canvas.accept("Casino-Gewinntabelle " + th.key, () -> CasinoScreens.slotsPaytable(th, 100000, 100));
+            canvas.accept("Casino-Gewinntabelle " + th.key + " 5000", () -> CasinoScreens.slotsPaytable(th, 2500000, 5000));
+        }
         canvas.accept("Roulette-Verlauf", () -> CasinoScreens.rouletteHistory(List.of(0, 17, 32), NO));
         FriendsScreen.Actions fa = new FriendsScreen.Actions() {
             public Consumer<Player> tab(FriendsScreen.Tab t, boolean sent) { return NO; }
@@ -708,6 +711,17 @@ final class SelfTest {
                     + de.kuby.kubyplugins.casino.RouletteTable.lastStats);
         } catch (Throwable t) {
             fails.add("Roulette-Physik: " + t);
+        }
+
+        // Slot-Themen (v2.05): je Automat eigene Symbole und Gewinne, jede Tabelle mit 93–97 % Rückfluss
+        try {
+            List<String> st = de.kuby.kubyplugins.casino.SlotTheme.selfCheck();
+            if (st.isEmpty()) ok[0]++;
+            for (String e : st) fails.add("Slot-Themen: " + e);
+            plugin.getLogger().info("[Slot-Themen] " + (st.isEmpty() ? "ok, " : st.size() + " Fehler, ")
+                    + de.kuby.kubyplugins.casino.SlotTheme.stats());
+        } catch (Throwable t) {
+            fails.add("Slot-Themen: " + t);
         }
 
         // Aufstehen von Sitzen (v2.02): Füße auf der Bodenoberkante, nie im Block darunter, Wand vor dem Sitz umgehen

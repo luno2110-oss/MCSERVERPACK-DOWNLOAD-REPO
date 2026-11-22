@@ -46,20 +46,8 @@ import java.util.UUID;
 public final class SlotsService implements Listener {
 
     public static final long[] LEVELS = {10, 50, 100, 500, 1000, 5000};
-    /** Gewichte der Symbole auf jeder Walze (Reihenfolge wie SlotMachine.SYMBOLS). */
-    private static final int[] WEIGHTS = {6, 8, 8, 4, 5, 4, 5, 3, 2, 1};
-    /** Auszahlung für drei gleiche (Vielfaches des Einsatzes); Siebener = Jackpot. */
-    public static final int[] THREE = {10, 8, 8, 20, 12, 20, 12, 40, 80, 0};
-    public static final String[] NAMES = {"Kirsche", "Zitrone", "Banane", "Glocke", "Stern", "Kleeblatt", "Chip", "Münze",
-            "Diamant", "Sieben"};
+    /** Symbole, Gewichte und Gewinne kommen je Automat aus seinem Thema (SlotTheme, v2.05). */
     private static final SecureRandom RNG = new SecureRandom();
-    private static final int TOTAL;
-
-    static {
-        int t = 0;
-        for (int w : WEIGHTS) t += w;
-        TOTAL = t;
-    }
 
     private static final class State {
         final SlotMachine machine;
@@ -69,7 +57,7 @@ public final class SlotsService implements Listener {
 
         State(SlotMachine m) {
             this.machine = m;
-            for (int i = 0; i < 3; i++) for (int k = 0; k < 3; k++) shown[i][k] = SlotMachine.SYMBOLS[pick()];
+            for (int i = 0; i < 3; i++) for (int k = 0; k < 3; k++) shown[i][k] = m.theme().symbols[m.theme().pick(RNG)];
         }
     }
 
@@ -106,13 +94,16 @@ public final class SlotsService implements Listener {
         return plugin.getConfig().getLong("casino.slots.jackpot-start", 20000);
     }
 
-    private static int pick() {
-        int r = RNG.nextInt(TOTAL);
-        for (int i = 0; i < WEIGHTS.length; i++) {
-            r -= WEIGHTS[i];
-            if (r < 0) return i;
-        }
-        return 0;
+    /**
+     * Hocker direkt vor das Pult (v2.05, Wunsch des Besitzers: „Hocker näher dran“): auf der Mittelachse des Automaten,
+     * Sitzfläche (0,5 breit) endet casino.slots.hocker-abstand vor der Pultkante. Vorher stand er dort, wo der Admin beim
+     * Aufbauen stand – meist gut einen Block zu weit weg. Höhe bleibt die gespeicherte (Boden).
+     */
+    private Location closeStool(Location center, float yaw, int desk, double floorY) {
+        double r = Math.toRadians(yaw);
+        double gap = plugin.getConfig().getDouble("casino.slots.hocker-abstand", 0.07);
+        double dist = desk > 0 ? desk - 0.03 + 0.25 + gap : 0.85;
+        return new Location(center.getWorld(), center.getX() - Math.sin(r) * dist, floorY, center.getZ() + Math.cos(r) * dist);
     }
 
     private State load(String id) {
@@ -128,7 +119,10 @@ public final class SlotsService implements Listener {
             Location stool = p.length >= 9 ? new Location(w, Double.parseDouble(p[6]), Double.parseDouble(p[7]), Double.parseDouble(p[8])) : null;
             int desk = p.length >= 10 ? Integer.parseInt(p[9]) : 1;
             String style = p.length >= 11 ? p[10] : "klassik";
-            s = new State(new SlotMachine(id, c, Float.parseFloat(p[4]), Double.parseDouble(p[5]), desk, stool, tag, click, style));
+            SlotTheme theme = p.length >= 12 ? SlotTheme.byName(p[11]) : null;
+            float yaw = Float.parseFloat(p[4]);
+            if (stool != null) stool = closeStool(c, yaw, desk, stool.getY());
+            s = new State(new SlotMachine(id, c, yaw, Double.parseDouble(p[5]), desk, stool, tag, click, style, theme));
             machines.put(id, s);
             return s;
         } catch (NumberFormatException e) {
@@ -238,7 +232,8 @@ public final class SlotsService implements Listener {
         }
         if (!jw) jackpot += Math.max(1, Math.round(bet * plugin.getConfig().getDouble("casino.slots.jackpot-share", 0.02)));
         s.busy = true;
-        int[] result = {pick(), pick(), pick()};
+        SlotTheme th = s.machine.theme();
+        int[] result = {th.pick(RNG), th.pick(RNG), th.pick(RNG)};
         s.machine.lever(true);
         s.machine.lamps(true);
         Location fx = s.machine.effectLocation();
@@ -255,7 +250,7 @@ public final class SlotsService implements Listener {
         SlotSpin[] spin = new SlotSpin[3];
         for (int i = 0; i < 3; i++) {
             double from = s.machine.reelAngle(i);
-            double to = SlotMachine.stopAngle(i, SlotMachine.SYMBOLS[result[i]]);
+            double to = s.machine.stopAngle(i, th.symbols[result[i]]);
             spin[i] = SlotSpin.plan(from, to, arrive[i], tension && i == 2 ? arrive[1] + 6 : -1);
         }
         int len = 0;
@@ -293,11 +288,11 @@ public final class SlotsService implements Listener {
                         s.machine.shake(plugin, 4, 0.012);
                         de.kuby.kubyplugins.util.Fx.particle(plugin, s.machine.reelFront(i), Particle.CRIT, 6, 0.15, 0.1, 0.05, 0.05);
                     }
-                    if (t == sp.length() - 1) s.shown[i] = SlotMachine.visible(i, sp.angle[t]);
+                    if (t == sp.length() - 1) s.shown[i] = s.machine.visible(i, sp.angle[t]);
                 }
                 if (fast && t % 3 == 0) fx.getWorld().playSound(fx, Sound.BLOCK_NOTE_BLOCK_HAT, 0.3f, 1.7f);
                 // Spannung: Kamera auf die letzte Walze, sobald die zweite das zweite gleiche Symbol zeigt
-                if (tension && t == spin[1].arrive) tensionCam(p, s, spin[2].arrive - t, SlotMachine.SYMBOLS[result[0]], win, pid, spin[2], t);
+                if (tension && t == spin[1].arrive) tensionCam(p, s, spin[2].arrive - t, th.symbols[result[0]], win, pid, spin[2], t);
                 if (t == spin[2].arrive && win) {
                     s.machine.coinBurst(plugin, three ? 70 : 14);
                     s.machine.shake(plugin, three ? 28 : 10, three ? 0.06 : 0.022);
@@ -311,7 +306,7 @@ public final class SlotsService implements Listener {
                     if (plugin.casinoPlay().testLog) {
                         StringBuilder want = new StringBuilder(), got = new StringBuilder();
                         for (int i = 0; i < 3; i++) {
-                            want.append(SlotMachine.SYMBOLS[result[i]]).append(' ');
+                            want.append(th.symbols[result[i]]).append(' ');
                             got.append(s.shown[i][1]).append(' ');
                         }
                         plugin.getLogger().info("[Casino-Test] slots Walzen: Ergebnis " + want.toString().trim() + " | Mittellinie nach dem Einrasten "
@@ -341,7 +336,7 @@ public final class SlotsService implements Listener {
         for (int k = 0; k < n2; k++) {
             int gt = Math.min(last.length() - 1, tNow + 1 + k);
             double a = last.angle[Math.max(0, gt)];
-            reelSym[k] = SlotMachine.visible(2, a)[1];
+            reelSym[k] = s.machine.visible(2, a)[1];
             double x = -a / 36.0;
             reelCenter[k] = 1 - 2 * Math.abs(x - Math.round(x));
         }
@@ -382,30 +377,31 @@ public final class SlotsService implements Listener {
         long pay;
         String what;
         boolean jack = false;
+        SlotTheme th = s.machine.theme();
         int cherries = 0;
         for (int x : r) if (x == 0) cherries++;
         if (r[0] == r[1] && r[1] == r[2]) {
             if (r[0] == 9 && jw) {
                 pay = bet * 100;
-                what = "Drei Siebener!";
+                what = "Drei " + th.plurals[9] + "!";
             } else if (r[0] == 9) {
                 long share = Math.max(bet * 100, jackpot * bet / LEVELS[LEVELS.length - 1]);
                 share = Math.min(share, jackpot);
                 pay = share;
                 jackpot -= share;
                 if (jackpot < startJackpot()) jackpot = startJackpot();
-                what = "JACKPOT! Drei Siebener";
+                what = "JACKPOT! Drei " + th.plurals[9];
                 jack = true;
             } else {
-                pay = bet * THREE[r[0]];
-                what = "Drei " + plural(r[0]) + "!";
+                pay = Math.round(bet * th.three[r[0]]);
+                what = "Drei " + th.plurals[r[0]] + "!";
             }
         } else if (cherries == 2) {
-            pay = bet * 4;
-            what = "Zwei Kirschen!";
+            pay = Math.round(bet * th.two);
+            what = "Zwei " + th.plurals[0] + "!";
         } else if (cherries == 1) {
-            pay = bet * 2;
-            what = "Eine Kirsche!";
+            pay = Math.round(bet * th.one);
+            what = th.names[0] + " auf der Linie!";
         } else {
             pay = 0;
             what = null;
@@ -450,20 +446,6 @@ public final class SlotsService implements Listener {
         save();
     }
 
-    private static String plural(int i) {
-        return switch (i) {
-            case 0 -> "Kirschen";
-            case 1 -> "Zitronen";
-            case 2 -> "Bananen";
-            case 3 -> "Glocken";
-            case 4 -> "Sterne";
-            case 5 -> "Kleeblätter";
-            case 6 -> "Chips";
-            case 7 -> "Münzen";
-            case 8 -> "Diamanten";
-            default -> "Siebener";
-        };
-    }
 
     // =================================================================================================================
     // Klicks
@@ -491,7 +473,7 @@ public final class SlotsService implements Listener {
                 p.sendActionBar(Msg.parse("<gray>Einsatz: <white>" + plugin.casinoPlay().unit(p.getUniqueId(), "slots", levels(p)[l])
                         + "</white> · Knopf: höher, Schleichen + Knopf: tiefer"));
             }
-            case "panel", "sign" -> UiDialog.show(p, CasinoScreens.slotsPaytable(jackpot, levels(p)[levelOf(p)]));
+            case "panel", "sign" -> UiDialog.show(p, CasinoScreens.slotsPaytable(s.machine.theme(), jackpot, levels(p)[levelOf(p)]));
             case "seat" -> {
                 if (s.seated != null && !s.seated.equals(p.getUniqueId())) {
                     CasinoText.error(p, "Der Hocker ist besetzt.");
@@ -558,15 +540,20 @@ public final class SlotsService implements Listener {
     }
 
     public void testMachine(String id, Location center, float yaw, Location stool, String style) {
-        raw.put(id, center.getWorld().getName() + ";" + center.getX() + ";" + center.getY() + ";" + center.getZ() + ";" + yaw + ";2.7;"
-                + stool.getX() + ";" + stool.getY() + ";" + stool.getZ() + ";1;" + style);
+        testMachine(id, center, yaw, stool, style, 2.7, null);
+    }
+
+    public void testMachine(String id, Location center, float yaw, Location stool, String style, double width, SlotTheme theme) {
+        SlotTheme th = theme != null ? theme : SlotTheme.forStyle(style);
+        raw.put(id, center.getWorld().getName() + ";" + center.getX() + ";" + center.getY() + ";" + center.getZ() + ";" + yaw + ";" + width + ";"
+                + stool.getX() + ";" + stool.getY() + ";" + stool.getZ() + ";1;" + style + ";" + th.key);
         save();
         machines.remove(id);
         State s = load(id);
         if (s != null) build(s);
     }
 
-    /** /casino slots automat [Breite] | entfernen | liste */
+    /** /casino slots automat [Breite|klein] [Stil] [symbole=Thema] | reihe <Anzahl> … | entfernen | jackpot */
     public void command(Player p, String[] args) {
         if (!p.hasPermission("kuby.admin")) {
             Msg.send(p, "<red>Nur Admins.");
@@ -574,19 +561,41 @@ public final class SlotsService implements Listener {
         }
         String sub = args.length > 1 ? args[1].toLowerCase() : "";
         switch (sub) {
-            case "automat" -> {
+            case "automat", "reihe" -> {
+                boolean row = sub.equals("reihe");
+                int count = 1;
                 double width = 2.7;
-                String style = "klassik";
-                for (int ai = 2; ai < args.length; ai++) {
-                    String a0 = args[ai].toLowerCase();
-                    if (a0.equals("gold") || a0.equals("goldrausch")) style = "gold";
+                String style = row ? null : "klassik";
+                SlotTheme theme = null;
+                int ai = 2;
+                if (row) {
+                    try {
+                        count = Math.max(1, Math.min(8, Integer.parseInt(args[2])));
+                        ai = 3;
+                    } catch (RuntimeException ex) {
+                        Msg.send(p, "<red>Nutzung: /casino slots reihe <Anzahl 1–8> [Breite|klein] [gold|neon|ozean|klassik] [symbole=Thema]");
+                        return;
+                    }
+                    width = 1.35;
+                }
+                for (; ai < args.length; ai++) {
+                    String a0 = args[ai].toLowerCase(java.util.Locale.ROOT);
+                    if (a0.startsWith("symbole=") || a0.startsWith("thema=")) {
+                        theme = SlotTheme.byName(a0.substring(a0.indexOf('=') + 1));
+                        if (theme == null) {
+                            Msg.send(p, "<red>Unbekanntes Thema. Möglich: frucht, gold, neon, ozean");
+                            return;
+                        }
+                    } else if (a0.equals("klein") || a0.equals("kompakt") || a0.equals("mini")) width = 1.35;
+                    else if (a0.equals("gold") || a0.equals("goldrausch")) style = "gold";
                     else if (a0.equals("neon")) style = "neon";
+                    else if (a0.equals("ozean") || a0.equals("tiefsee")) style = "ozean";
                     else if (a0.equals("klassik")) style = "klassik";
                     else {
                         try {
                             width = Math.max(1.2, Math.min(3.6, Double.parseDouble(a0.replace(',', '.'))));
                         } catch (NumberFormatException ex) {
-                            Msg.send(p, "<red>Nutzung: /casino slots automat [Breite 1,2–3,6] [klassik|gold|neon]");
+                            Msg.send(p, "<red>Nutzung: /casino slots automat [Breite 1,2–3,6|klein] [klassik|gold|neon|ozean] [symbole=Thema]");
                             return;
                         }
                     }
@@ -609,24 +618,42 @@ public final class SlotsService implements Listener {
                 pos.add(along.clone().multiply(snapped - a));
                 pos.setY(Math.floor(pos.getY()) + 0.5);
                 float yaw = (float) Math.toDegrees(Math.atan2(-n.getX(), n.getZ()));
-                // Pult: feste Blöcke vor der Wand unter dem Fenster
-                int desk = 0;
-                org.bukkit.block.Block wall = hit.getHitBlock();
-                for (int k = 1; k <= 3; k++) {
-                    org.bukkit.block.Block b = wall.getRelative(n.getBlockX() * k, -1, n.getBlockZ() * k);
-                    if (!b.getType().isSolid()) break;
-                    desk = k;
+                // Reihe: Gehäuse breit = Walzen + Säulen (0,48) + 0,22 Luft, auf halbe Blöcke gerundet; Themen wechseln
+                double step = Math.ceil((width + 0.7) * 2) / 2.0;
+                String[] cycle = {"gold", "neon", "ozean"};
+                StringBuilder made = new StringBuilder();
+                int built = 0;
+                for (int k = 0; k < count; k++) {
+                    Vector at = pos.clone().add(along.clone().multiply(k * step));
+                    String st = style != null ? style : cycle[k % cycle.length];
+                    // Pult: feste Blöcke vor der Wand unter dem Fenster (je Automat neu gemessen)
+                    org.bukkit.block.Block wall = p.getWorld().getBlockAt(at.clone().subtract(n.clone().multiply(0.5)).toLocation(p.getWorld()));
+                    int desk = 0;
+                    for (int d = 1; d <= 3; d++) {
+                        org.bukkit.block.Block bl = wall.getRelative(n.getBlockX() * d, -1, n.getBlockZ() * d);
+                        if (!bl.getType().isSolid()) break;
+                        desk = d;
+                    }
+                    if (row && desk == 0 && !wall.getType().isSolid()) {
+                        Msg.send(p, "<yellow>Automat " + (k + 1) + ": keine Wand – Reihe hier beendet.");
+                        break;
+                    }
+                    SlotTheme th = theme != null ? theme : SlotTheme.forStyle(st);
+                    String id = "s" + (System.currentTimeMillis() + k) % 100000;
+                    double floorY = p.getLocation().getBlockY();
+                    Location stool = closeStool(at.toLocation(p.getWorld()), yaw, desk, floorY);
+                    raw.put(id, p.getWorld().getName() + ";" + at.getX() + ";" + at.getY() + ";" + at.getZ() + ";" + yaw + ";" + width
+                            + ";" + stool.getX() + ";" + stool.getY() + ";" + stool.getZ() + ";" + desk + ";" + st + ";" + th.key);
+                    State s = load(id);
+                    if (s != null) build(s);
+                    if (made.length() > 0) made.append(", ");
+                    made.append(th.title.charAt(0)).append(th.title.substring(1).toLowerCase(java.util.Locale.ROOT));
+                    built++;
                 }
-                Location stool = new Location(p.getWorld(), p.getLocation().getBlockX() + 0.5, p.getLocation().getBlockY(),
-                        p.getLocation().getBlockZ() + 0.5);
-                String id = "s" + System.currentTimeMillis() % 100000;
-                raw.put(id, p.getWorld().getName() + ";" + pos.getX() + ";" + pos.getY() + ";" + pos.getZ() + ";" + yaw + ";" + width
-                        + ";" + stool.getX() + ";" + stool.getY() + ";" + stool.getZ() + ";" + desk + ";" + style);
                 save();
-                State s = load(id);
-                if (s != null) build(s);
-                Msg.send(p, "<green>Slot-Automat " + (style.equals("gold") ? "„Goldrausch“ " : style.equals("neon") ? "„Neon 7“ " : "") + "aufgebaut (Breite " + String.format(java.util.Locale.GERMAN, "%.1f", width) + ", Pult "
-                        + desk + " Block tief), Hocker an deiner Position. Entfernen: /casino slots entfernen");
+                Msg.send(p, "<green>" + (built == 1 ? "Slot-Automat" : built + " Slot-Automaten") + " aufgebaut (Breite "
+                        + String.format(java.util.Locale.GERMAN, "%.2f", width) + "): <white>" + made + "<green>. Hocker direkt vor dem Pult."
+                        + " Entfernen: /casino slots entfernen");
             }
             case "entfernen" -> {
                 String best = null;
@@ -663,9 +690,11 @@ public final class SlotsService implements Listener {
                 }
                 Msg.send(p, "<gold>Slots-Jackpot: <yellow>" + CasinoText.chips(jackpot));
             }
-            default -> Msg.send(p, "<gray>" + raw.size() + " Slot-Automaten. Aufbauen: Pult (1 Block hoch, 3 breit) vor eine Wand bauen, dort"
-                    + " hinstellen, wo der Hocker hin soll, auf die Wand direkt über der Pult-Mitte schauen und"
-                    + " <white>/casino slots automat [Breite] [klassik|gold|neon]</white> (Standard 2,7, klassik). Weiter: entfernen, jackpot [Betrag]");
+            default -> Msg.send(p, "<gray>" + raw.size() + " Slot-Automaten. Aufbauen: Pult (1 Block hoch) vor eine Wand bauen, auf die"
+                    + " Wand direkt über der Pult-Mitte schauen und <white>/casino slots automat [Breite|klein] [klassik|gold|neon|ozean]"
+                    + " [symbole=frucht|gold|neon|ozean]</white> (Standard 2,7, klassik; Hocker kommt selbst vors Pult). Mehrere nebeneinander:"
+                    + " <white>/casino slots reihe <Anzahl> [klein|Breite] [Stil]</white> (ohne Stil wechseln Goldrausch, Neon 7, Tiefsee)."
+                    + " Weiter: entfernen, jackpot [Betrag]");
         }
     }
 }

@@ -37,7 +37,8 @@ import org.joml.Vector3f;
  */
 public final class SlotMachine {
 
-    public static final String[] SYMBOLS = {"cherry", "lemon", "banana", "bell", "star", "clover", "chip", "coin", "diamond", "seven"};
+    /** Früchte-Klassik (für ältere Aufrufer); die Symbole eines Automaten kommen aus seinem Thema ({@link #theme()}). */
+    public static final String[] SYMBOLS = SlotTheme.FRUCHT.symbols;
     /** Kacheln je Walze (Trommel aus 10 Symbolen, 36° je Kachel). */
     public static final int FACES = 10;
     /** Reihenfolge der Symbole auf den drei Walzen (jede Walze anders, jedes Symbol genau einmal). */
@@ -55,8 +56,10 @@ public final class SlotMachine {
     private final double width;
     private final int desk;
 
-    /** Stil: "klassik" (vor gebautem Gehäuse wie im Clip), "gold" (Goldrausch) oder "neon" (Neon 7). */
+    /** Stil: "klassik" (vor gebautem Gehäuse wie im Clip), "gold" (Goldrausch), "neon" (Neon 7) oder "ozean" (Tiefsee). */
     private final String style;
+    /** Symbole, Walzenfarbe und Gewinntabelle (v2.05: je Automat eigenes Thema). */
+    private final SlotTheme theme;
     private final java.util.List<ItemDisplay> lights = new java.util.ArrayList<>();
     /** Walzen: je 10 Kacheln, alle mit ihrer Mitte auf der Walzenachse (drehen auf dem Kreis). */
     private final ItemDisplay[][] reels = new ItemDisplay[3][FACES];
@@ -76,7 +79,13 @@ public final class SlotMachine {
 
     public SlotMachine(String id, Location center, float frontYaw, double width, int desk, Location stool, NamespacedKey tag,
                        NamespacedKey click, String style) {
+        this(id, center, frontYaw, width, desk, stool, tag, click, style, null);
+    }
+
+    public SlotMachine(String id, Location center, float frontYaw, double width, int desk, Location stool, NamespacedKey tag,
+                       NamespacedKey click, String style, SlotTheme theme) {
         this.style = style == null ? "klassik" : style;
+        this.theme = theme == null ? SlotTheme.forStyle(this.style) : theme;
         this.id = id;
         this.center = center.clone();
         this.frontYaw = frontYaw;
@@ -105,6 +114,14 @@ public final class SlotMachine {
 
     public String style() {
         return style;
+    }
+
+    public SlotTheme theme() {
+        return theme;
+    }
+
+    public int desk() {
+        return desk;
     }
 
     private Vector3f front() {
@@ -202,7 +219,7 @@ public final class SlotMachine {
         for (int i = 0; i < 3; i++) {
             Location axis = off((i - 1) * s, 0, 0);
             for (int k = 0; k < FACES; k++) {
-                String sym = SYMBOLS[STRIPS[i][k]];
+                String sym = theme.symbols[STRIPS[i][k]];
                 int col = i, fk = k;
                 reels[i][k] = center.getWorld().spawn(axis, ItemDisplay.class, e -> {
                     e.setItemStack(model("sr_" + sym));
@@ -211,7 +228,7 @@ public final class SlotMachine {
                 });
             }
             reelBlur[i] = false;
-            String mid = start == null ? SYMBOLS[STRIPS[i][0]] : start[i][1];
+            String mid = start == null ? theme.symbols[STRIPS[i][0]] : start[i][1];
             reel(i, stopAngle(i, mid), false, 0);
         }
         // Stege zwischen den Walzen, Leisten oben und unten
@@ -251,9 +268,16 @@ public final class SlotMachine {
         interaction(off(0, DESK_TOP - 0.02, front - 0.1), 0.4f, 0.08f, "panel");
         double ctrl = rad + 0.26;
         // Hebel und Knopf an den Enden des Pults: vom Hocker aus verdecken sie keine Symbole
-        Location lb = off(-(1.5 * s - 0.17), DESK_TOP + 0.09, ctrl);
+        double lx = 1.5 * s - 0.17, lz = ctrl;
+        if (s < 0.7) {
+            // kleiner Automat (v2.05): der Hebel stand vor der linken Walze und verdeckte vom Hocker aus die Mittellinie.
+            // Jetzt außen neben dem Walzenfenster, 2 mm innerhalb der Pultkante; beim Gehäuse vor den Säulen-Leuchtleisten
+            lx = 1.5 * s + 0.068;
+            if (!style.equals("klassik")) lz = Math.max(ctrl, Math.max(rad + 0.12, 0.5) + 0.13);
+        }
+        Location lb = off(-lx, DESK_TOP + 0.09, lz);
         if (style.equals("klassik")) block(lb, face, Material.POLISHED_ANDESITE, 0.34f, 0.18f, 0.3f);
-        else box(lb, face, 0.34f, 0.18f, 0.3f, style.equals("gold") ? "hd_gold" : "hd_dark");
+        else box(lb, face, 0.34f, 0.18f, 0.3f, style.equals("gold") ? "hd_gold" : style.equals("ozean") ? "hd_ocean" : "hd_dark");
         lever = lb.getWorld().spawn(lb.clone().add(0, 0.09, 0), BlockDisplay.class, e -> {
             Switch data = (Switch) Bukkit.createBlockData(Material.LEVER);
             data.setAttachedFace(org.bukkit.block.data.FaceAttachable.AttachedFace.FLOOR);
@@ -277,9 +301,9 @@ public final class SlotMachine {
         if (desk > 0) {
             Location sl = off(0, DESK_TOP - 0.5, desk + 0.02);
             box(sl, face, (float) Math.min(1.2, 3 * s * 0.45), 0.42f, 0.04f,
-                    style.equals("gold") ? "hd_gold" : style.equals("neon") ? "hd_neon_cyan" : "rack");
+                    style.equals("gold") ? "hd_gold" : style.equals("neon") || style.equals("ozean") ? "hd_neon_cyan" : "rack");
             box(sl.clone().add(0, 0, 0), face, (float) Math.min(1.12, 3 * s * 0.45 - 0.08), 0.34f, 0.05f,
-                    style.equals("gold") ? "hd_dark" : style.equals("neon") ? "hd_purple" : "wood");
+                    style.equals("gold") ? "hd_dark" : style.equals("neon") ? "hd_purple" : style.equals("ozean") ? "hd_ocean" : "wood");
             Vector3f n = front();
             interaction(sl.clone().add(n.x * 0.1, -0.25, n.z * 0.1), 0.5f, 0.5f, "sign");
         }
@@ -297,8 +321,8 @@ public final class SlotMachine {
         // Hocker
         if (stool != null) {
             Quaternionf sq = new Quaternionf().rotateY(faceAngle());
-            String leg = style.equals("gold") ? "hd_gold" : style.equals("neon") ? "hd_dark" : "white";
-            String top = style.equals("gold") ? "hd_velvet" : style.equals("neon") ? "hd_purple" : "white";
+            String leg = style.equals("gold") || style.equals("ozean") ? "hd_gold" : style.equals("neon") ? "hd_dark" : "white";
+            String top = style.equals("gold") ? "hd_velvet" : style.equals("neon") ? "hd_purple" : style.equals("ozean") ? "hd_ocean" : "white";
             box(stool.clone().add(0, 0.03, 0), sq, 0.42f, 0.06f, 0.42f, leg);
             box(stool.clone().add(0, 0.33, 0), sq, 0.12f, 0.56f, 0.12f, leg);
             box(stool.clone().add(0, 0.64, 0), sq, 0.5f, 0.1f, 0.5f, top);
@@ -314,9 +338,10 @@ public final class SlotMachine {
      */
     private void cabinet(Quaternionf face, double s, double rad, double front) {
         boolean gold = style.equals("gold");
-        String body = gold ? "hd_dark" : "hd_purple";
-        String trim = gold ? "hd_gold" : "hd_neon_pink";
-        String trim2 = gold ? "hd_gold" : "hd_neon_cyan";
+        boolean ozean = style.equals("ozean");
+        String body = gold ? "hd_dark" : ozean ? "hd_ocean" : "hd_purple";
+        String trim = gold ? "hd_gold" : ozean ? "hd_neon_cyan" : "hd_neon_pink";
+        String trim2 = gold || ozean ? "hd_gold" : "hd_neon_cyan";
         double W = 3 * s + 0.16;
         double colW = 0.16;
         double top = rad + 0.25;
@@ -392,18 +417,18 @@ public final class SlotMachine {
     // ---------- Walzen ----------
 
     /** Symbol auf Kachel k der Walze i. */
-    public static String symbolAt(int reel, int k) {
-        return SYMBOLS[STRIPS[reel][((k % FACES) + FACES) % FACES]];
+    public String symbolAt(int reel, int k) {
+        return theme.symbols[STRIPS[reel][((k % FACES) + FACES) % FACES]];
     }
 
     /** Walzenwinkel, bei dem sym genau auf der Gewinnlinie steht (Kachel k bei θ + 36k = 0). */
-    public static double stopAngle(int reel, String sym) {
+    public double stopAngle(int reel, String sym) {
         for (int k = 0; k < FACES; k++) if (symbolAt(reel, k).equals(sym)) return -36.0 * k;
         return 0;
     }
 
     /** Was die Walze bei diesem Winkel oben, in der Mitte und unten zeigt. */
-    public static String[] visible(int reel, double angle) {
+    public String[] visible(int reel, double angle) {
         int mid = (int) Math.round(-angle / 36.0);
         return new String[]{symbolAt(reel, mid - 1), symbolAt(reel, mid), symbolAt(reel, mid + 1)};
     }
@@ -431,8 +456,9 @@ public final class SlotMachine {
             // Kachel zeigt nach (hoch sin a, vor cos a); das Modell liegt bei +Z, die Anzeige dreht es um 180°
             Quaternionf q = new Quaternionf(face).rotateX((float) -a).rotateY((float) Math.PI);
             if (swap) d.setItemStack(model("sr_" + symbolAt(i, k) + (blur ? "_blur" : "")));
-            // jede zweite Kachel 0,15 % schmaler: die Stirnseiten liegen sonst in einer Ebene und überlappen (v2.04)
-            d.setTransformation(new Transformation(new Vector3f(), q, new Vector3f(k % 2 == 0 ? rw : rw * 0.9985f, sc, sc), new Quaternionf()));
+            // jede zweite Kachel 2,4 mm schmaler (je Seite 1,2 mm): die Stirnseiten liegen sonst in einer Ebene und
+            // überlappen (v2.04). Fester Abstand statt 0,15 %: beim kleinen Automaten war der Versatz zu klein (v2.05)
+            d.setTransformation(new Transformation(new Vector3f(), q, new Vector3f(k % 2 == 0 ? rw : rw - 0.0024f, sc, sc), new Quaternionf()));
             d.setInterpolationDelay(0);
             d.setInterpolationDuration(interp);
         }
@@ -517,8 +543,8 @@ public final class SlotMachine {
         Key chip = Key.key("kuby", "k/i-5");
         TextComponent.Builder b = Component.text();
         b.append(Component.text(String.valueOf(de.kuby.kubyplugins.ui.KitData.SmallIcon.C_RED.c)).font(chip).color(NamedTextColor.WHITE));
-        String title = style.equals("gold") ? " GOLDRAUSCH " : style.equals("neon") ? " NEON 7 " : " SLOTS ";
-        int tcol = style.equals("gold") ? 0xF2C23A : style.equals("neon") ? 0xFF4FA8 : 0xF0303E;
+        String title = " " + theme.title + " ";
+        int tcol = theme == SlotTheme.GOLD ? 0xF2C23A : theme == SlotTheme.NEON ? 0xFF4FA8 : theme == SlotTheme.OZEAN ? 0x3EC4E4 : 0xF0303E;
         b.append(Component.text(de.kuby.kubyplugins.ui.Canvas.titleChars(title, false)).font(Key.key("kuby", "title"))
                 .color(TextColor.color(tcol)));
         b.append(Component.text(String.valueOf(de.kuby.kubyplugins.ui.KitData.SmallIcon.C_RED.c)).font(chip).color(NamedTextColor.WHITE));

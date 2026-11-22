@@ -132,6 +132,21 @@ public final class Bedrock {
         }
     }
 
+    /**
+     * Hinweisfenster mit einem Knopf (z. B. „Verstanden“): Titel, Text (Bedrock-Farbcodes mit §), sonst nichts.
+     * Gibt false zurück, wenn es nicht gesendet werden konnte (kein Bedrock-Spieler, kein Floodgate/Geyser).
+     */
+    public static boolean notice(Player p, String title, String content, String button) {
+        if (plugin == null || !is(p) || !(floodgate() || geyser())) return false;
+        FormModel.Model m = new FormModel.Model(title, content, java.util.List.of(new FormModel.Button(button, null, null, null, null)));
+        try {
+            return FormSender.send(plugin, p, m, null, floodgate());
+        } catch (Throwable t) {
+            plugin.getLogger().warning("Bedrock-Hinweis für " + p.getName() + " fehlgeschlagen: " + t);
+            return false;
+        }
+    }
+
     /** Vom FormSender: Formular beantwortet oder geschlossen. */
     static void answered(UUID id) {
         OPEN.remove(id);

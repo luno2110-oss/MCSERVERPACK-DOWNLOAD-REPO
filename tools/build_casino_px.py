@@ -40,6 +40,8 @@ VELVET = [rgb(c) for c in ("4A0610", "6E0A18", "961224", "B82434")]
 NEON_P = [rgb(c) for c in ("8A1050", "D0207A", "FF4FA8", "FFB0D8")]
 NEON_C = [rgb(c) for c in ("0A6A7A", "12A8C0", "3FE6F0", "B8F6FA")]
 PURPLE = [rgb(c) for c in ("140A20", "1E0E30", "2C1646", "40205E")]
+# Tiefsee-Automat (v2.05): tiefes, gedecktes Petrol statt flacher Sättigung
+OCEAN = [rgb(c) for c in ("08202E", "0C3244", "14495E", "1E6478")]
 PAPER = [rgb(c) for c in ("C8C2B4", "E6E1D6", "F6F3EC")]
 INK = rgb("0C0907")
 
@@ -254,6 +256,7 @@ MATERIALS = {
     "hd_velvet": lambda: mat_ramp(VELVET), "hd_purple": lambda: mat_ramp(PURPLE),
     "hd_neon_pink": lambda: mat_ramp(NEON_P, True), "hd_neon_cyan": lambda: mat_ramp(NEON_C, True),
     "hd_edge": lambda: _mat(lambda x, y: PAPER[2]),
+    "hd_ocean": lambda: mat_ramp(OCEAN),
     # Leuchtleisten der Slot-Automaten im eingeschalteten Zustand (beim Drehen): hellere Rampe mit fast weißem Kern.
     # Früher leuchteten sie über den Glow-Umriss, der im echten Client die Textur durch eine flache Farbe ersetzte.
     "hd_gold_lit": lambda: mat_ramp([rgb(c) for c in ("D9A11A", "F2C23A", "FFE48A", "FFF8DC")], True),
@@ -446,6 +449,30 @@ def slot_top(style):
         label = "GOLDRAUSCH"
         draw_text(img, (w - text_width(label)) // 2, 10, label, GOLD[4], outline=VELVET[0])
         return img
+    if style == "ozean":
+        # Tiefsee: Goldrahmen mit Nieten an den Ecken, innen Wasser von hell (oben) nach tief (unten), zwei Wellen,
+        # aufsteigende Luftblasen (eine Spalte bewusst ohne), Schrift hell-türkis mit dunkler Kontur
+        for y in range(h):
+            for x in range(w):
+                edge = x in (0, w - 1) or y in (0, h - 1)
+                frame = x in (1, w - 2) or y in (1, h - 2)
+                if edge:
+                    px[x, y] = GOLD[1]
+                elif frame:
+                    px[x, y] = GOLD[3] if y < h // 2 else GOLD[2]
+                else:
+                    px[x, y] = OCEAN[3] if y < 6 else OCEAN[2] if y < 14 else OCEAN[1]
+        for cx, cy in ((1, 1), (w - 2, 1), (1, h - 2), (w - 2, h - 2)):
+            px[cx, cy] = GOLD[4] if cy == 1 else GOLD[1]
+        # Wellen: oben hell (Wasseroberfläche), unten dunkel (Strömung), gleicher Takt von 6 px, gegeneinander versetzt
+        for x in range(2, w - 2):
+            px[x, 4 if x % 6 < 3 else 5] = NEON_C[1] if x % 6 in (2, 5) else NEON_C[2]
+            px[x, 19 if (x + 3) % 6 < 3 else 20] = OCEAN[3]
+        for bx, by in ((5, 15), (6, 12), (5, 9), (57, 16), (58, 13)):
+            px[bx, by] = NEON_C[3]
+        label = "TIEFSEE"
+        draw_text(img, (w - text_width(label)) // 2, 9, label, NEON_C[3], outline=OCEAN[0])
+        return img
     for y in range(h):
         for x in range(w):
             frame = x in (2, w - 3) or y in (2, h - 3)
@@ -468,6 +495,7 @@ def slot_front(style):
     img = Image.new("RGBA", (w, h), T)
     px = img.load()
     base, hi, frame, gem = ((LEATHER[1], LEATHER[2], GOLD[2], GOLD[3]) if style == "gold"
+                            else (OCEAN[1], OCEAN[2], GOLD[2], NEON_C[2]) if style == "ozean"
                             else (PURPLE[1], PURPLE[2], NEON_C[2], NEON_P[2]))
     for y in range(h):
         for x in range(w):
@@ -477,7 +505,7 @@ def slot_front(style):
             for x in range(w):
                 if abs(x - cx) + abs(y - 8) <= r:
                     px[x, y] = gem
-        px[cx, 8 - r] = GOLD[4] if style == "gold" else NEON_P[3]
+        px[cx, 8 - r] = GOLD[4] if style == "gold" else NEON_C[3] if style == "ozean" else NEON_P[3]
     return img
 
 
@@ -569,7 +597,7 @@ def write(out):
     jukebox_front().save(os.path.join(tex, "jukebox_front.png"))
     jukebox_side().save(os.path.join(tex, "jukebox_side.png"))
     item("jukebox", jukebox_model())
-    for style in ("gold", "neon"):
+    for style in ("gold", "neon", "ozean"):
         slot_top(style).save(os.path.join(tex, "sl_" + style + "_top.png"))
         item("sl_" + style + "_top", flat_model(B + "sl_" + style + "_top", 0, 5, 16, 11))
         slot_front(style).save(os.path.join(tex, "sl_" + style + "_front.png"))

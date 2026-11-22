@@ -1109,4 +1109,11 @@ def build(out):
         write_items(out)
         write_cards_and_materials(out)
         write_slot_symbols(out)
-    return ([(n, f()) for n, f in ICONS16], [(n, f()) for n, f in SMALL], [(n, f()) for n, f in BIG])
+    # Slot-Themen (v2.05): Walzen-Bilder und kleine y_-Icons für den Gewinnplan jedes Automaten
+    import build_slot_themes as st
+    if out:
+        st.write(out)
+    small = [(n, f()) for n, f in SMALL]
+    for syms, _plate in st.THEMES.values():
+        small += [("y_" + n, _small_symbol(fn)) for n, fn in syms]
+    return ([(n, f()) for n, f in ICONS16], small, [(n, f()) for n, f in BIG])

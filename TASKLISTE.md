@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v2.04** (ungetestet, nicht kompiliert)
+Stand: **v2.05** (ungetestet, nicht kompiliert)
 
 ---
 
@@ -565,6 +565,19 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Prüfung: SELFTEST (/sit, Teppich, Wand vor dem Sitz) und im echten Client `/kubytest aufstehen` (/sit und Blackjack-Hocker: Füße genau auf dem Boden, steckt nirgends)
 - [x] **v2.02 Zwei Fehler aus den Client-Bildern**: (1) Blackjack: die Serien-Anzeige „Serie 2 · nächster Sieg x1,4“ zweier Plätze lag übereinander (gleicher Dealer, oft gleiche Serie) – sie ist jetzt wie die Chip-Auswahl nur für den Spieler am Platz sichtbar. (2) Poker: die fünf Gemeinschaftskarten lagen für die Spieler gegenüber der Dealerin auf dem Kopf (zusätzliche 180°-Drehung) – jetzt wie die Handkarten zur Spielerseite lesbar
 - [x] **v2.02 Poker-Regeltest im SELFTEST**: Handbewertung wird bei jedem Serverstart geprüft – Rangfolge aller neun Blattklassen (Höchste Karte bis Straight Flush/Royal Flush), Kicker bei Paar und zwei Paaren, Full House nach Drilling vor Paar, A-2-3-4-5 als kleinste Straße (auch als Straight Flush), bestes Blatt aus 7 Karten, gleiche Blätter teilen den Pot
+- [~] **v2.05 Casino-Wünsche des Besitzers**
+  - [x] **Bedrock: verständliche Sperrmeldung** („Bedrock erstmal raus fürs Casino, mit Fehlermeldung, damit Bedrock-Spieler verstehen, warum es nicht geht“): Beim Betreten, Hinreisen, Einloggen im Casino und bei jedem Casino-Befehl (/casino, /poker, /roulette, /cashout, /plinko; erlaubt bleiben /casino hilfe, regeln, stats, status) bekommt ein Bedrock-Spieler die Actionbar „Casino nur für Java-Edition“, einen Titel „Casino gesperrt“ und drei Chatzeilen mit dem Grund (3D-Tische, Karten, Chips und Effekte werden auf Bedrock nicht richtig angezeigt – man sähe weder Karten noch Einsätze noch Gewinne; alles andere auf Kuby geht; das Casino öffnet für Bedrock, sobald es dort richtig aussieht). Dazu ein Fenster (Bedrock-Formular) „Casino – nur Java-Edition“ mit Knopf „Verstanden“. Alle 30 s höchstens einmal, damit es nicht nervt. Bedrock-Test in der CI prüft, dass das Fenster nach /poker kommt
+  - [x] **Slots: jeder Automat mit eigenen Symbolen und Gewinnen** („pro Slot-Maschine unterschiedliche Icons und Gewinne“). Vier Themen (`SlotTheme`), je zehn eigene Walzen-Symbole (32 px, gezeichnet nach `tools/icon_db/STYLE.md`, Kontaktbogen geprüft), eigene Walzenfarbe und eigener Gewinnplan, alle bei rund 95 % Rückfluss (ohne Jackpot), aber mit anderem Spielgefühl:
+    - Früchte-Klassik „SLOTS“ (bisher): 95,1 %, Gewinn in 36 % der Drehs, bis 80x
+    - Goldrausch (Gold-Gehäuse): Nugget, Spitzhacke, Grubenlampe, Hufeisen, Dynamit, Goldbarren, Geldsack, Krone, Rubin, Schatztruhe (Jackpot) – 94,8 %, selten, aber groß (bis 300x)
+    - Neon 7 (Neon-Gehäuse): Neon-Kirsche, BAR, Doppel-BAR, Dreifach-BAR, Herz, Blitz, Würfel, Stern, blaue 7, Neon-7 (Jackpot) – 94,8 %, bis 100x
+    - Tiefsee (neues Gehäuse in tiefem Petrol mit Goldrahmen, Schild „TIEFSEE“ mit Wellen und Luftblasen): Muschel, Seestern, Fisch, Krabbe, Anker, Krake, Steuerrad, Perle, Goldfisch, Dreizack (Jackpot) – 94,6 %, oft kleine Gewinne (44 % der Drehs)
+    - Kleines Symbol (Index 0) zahlt einzeln/doppelt auf der Linie wie die Kirsche, drei Jackpot-Symbole knacken den gemeinsamen Slots-Jackpot. Gewinnplan-Dialog zeigt die Symbole und Quoten des jeweiligen Automaten (sortiert nach Gewinn, „1,5x“ mit deutschem Komma). Spannungs-Licht und Farbstimmung kennen alle Symbole. SELFTEST „Slot-Themen“ rechnet die Quote jedes Themas exakt über alle 1.000 Linien (Soll 93–97 %)
+  - [x] **Slots: kleine Ausführung** („Testweise eine kleinere Version“): halbe Breite (1,35 statt 2,7), gleiche Teile. Der Hebel steht beim kleinen Automaten außen neben dem Walzenfenster (sonst verdeckte er vom Hocker aus die linke Walze). Walzenkacheln jetzt mit festem Versatz von 1,2 mm statt 0,15 % (bei halber Größe flackerten sonst die Stirnseiten)
+    - Aufbau: `/casino slots automat [Breite|klein] [klassik|gold|neon|ozean] [symbole=frucht|gold|neon|ozean]` (Symbole sonst passend zum Gehäuse), mehrere nebeneinander: `/casino slots reihe <Anzahl 1–8> [Breite]` (Standard klein, Stile wechseln Gold → Neon → Tiefsee, Pult-Tiefe je Platz gemessen, stoppt ohne Wand)
+  - [x] **Slots: Hocker näher am Automaten**: steht jetzt direkt an der Pultfront (Pultkante + 0,25 + 7 cm Luft), gilt auch für alle schon gebauten Automaten. Einstellbar mit `casino.slots.hocker-abstand` (Standard 0,07)
+  - [x] Prüfung: alle vier Gehäuse in groß und klein ohne Z-Fighting (zfight.py: 0 Paare), Blick vom Hocker auf alle drei Walzen frei. CI-Client-Bild `10_slots_klein` (kleiner Tiefsee-Automat neben Gold und Neon)
+  - [ ] **Plinko** (nach dem Screenshot, eigene Grafik im Kuby-Stil)
 - [x] **v2.03/v2.04 Testrunde des Besitzers (Java zuerst, Bedrock zweitrangig)**
   - [x] Casino für Bedrock-Spieler gesperrt (Betreten, /casino, Login im Casino → Survival-Spawn), Hinweis „nur Java-Edition“; abschaltbar mit `casino.bedrock-gesperrt: false`
   - [x] Blackjack: Einsatz-Summe über dem Stapel verschwindet beim Austeilen (lag vom Platz aus vor Karten und Handwert), kommt mit der nächsten Setzrunde zurück

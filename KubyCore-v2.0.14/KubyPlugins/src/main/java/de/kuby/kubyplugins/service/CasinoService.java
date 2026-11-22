@@ -236,13 +236,53 @@ public final class CasinoService {
 
     public static final String BEDROCK_MSG = "<red>Das Casino gibt es vorerst nur in der Java-Edition. <gray>Auf Bedrock fehlen dort noch Grafiken – wir arbeiten daran.";
 
+    private final java.util.Map<java.util.UUID, Long> bedrockNoticeAt = new java.util.HashMap<>();
+
+    /**
+     * Bedrock-Spieler wollen ins Casino (v2.05, Wunsch des Besitzers: „Fehlermeldung, damit Bedrock-Spieler verstehen,
+     * warum es nicht geht“): Titel auf dem Bildschirm, Erklärung im Chat und ein Hinweisfenster (Formular) mit dem
+     * Grund. Höchstens alle 30 Sekunden, damit Laufen am Rand nicht ständig Fenster öffnet; dazwischen nur die Actionbar.
+     */
+    public void bedrockNotice(Player p) {
+        long now = System.currentTimeMillis();
+        Long last = bedrockNoticeAt.get(p.getUniqueId());
+        p.sendActionBar(Msg.parse("<red>Casino: nur Java-Edition"));
+        if (last != null && now - last < 30_000) return;
+        bedrockNoticeAt.put(p.getUniqueId(), now);
+        p.showTitle(net.kyori.adventure.title.Title.title(Msg.parse("<red><b>Casino gesperrt"),
+                Msg.parse("<gray>Nur für die Java-Edition – Grund im Fenster und im Chat")));
+        p.playSound(p.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.7f);
+        Msg.send(p, "<red><b>Das Casino ist für Bedrock vorerst gesperrt.</b>");
+        Msg.send(p, "<gray>Tische, Karten, Chips, Automaten und Animationen sind eigene 3D-Modelle und Effekte. Auf Bedrock "
+                + "werden noch nicht alle richtig angezeigt – du würdest Karten, Einsätze oder Gewinne nicht sicher sehen. "
+                + "Damit niemand Chips verliert, ohne zu sehen was passiert, spielt das Casino nur in der Java-Edition.");
+        Msg.send(p, "<gray>Alles andere (Survival, Shop, Jobs, Angeln …) geht normal. <yellow>Sobald das Casino auf Bedrock fertig ist, geben wir es frei.");
+        // Fenster einen Moment später: kommt nicht während eines Teleports oder Chunk-Ladens
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            if (!p.isOnline()) return;
+            de.kuby.kubyplugins.bedrock.Bedrock.notice(p, "Casino – nur Java-Edition",
+                    "§cDas Casino ist im Moment nur für die Java-Edition geöffnet.\n\n"
+                            + "§fWarum? §7Die Tische, Karten, Chips, Automaten und Animationen im Casino sind eigene 3D-Modelle "
+                            + "und Effekte. Auf Bedrock werden davon noch nicht alle richtig angezeigt – du würdest zum Beispiel "
+                            + "Karten, Einsätze oder Gewinne nicht sicher sehen. Damit niemand Chips verliert, ohne zu sehen, was "
+                            + "passiert, ist das Casino für Bedrock gesperrt.\n\n"
+                            + "§fWas geht? §7Survival, Shop, Jobs, Angeln und alles andere kannst du ganz normal spielen.\n\n"
+                            + "§eSobald das Casino auf Bedrock fertig ist, geben wir es frei.",
+                    "Verstanden");
+        }, 10L);
+    }
+
+    public void forgetBedrockNotice(java.util.UUID id) {
+        bedrockNoticeAt.remove(id);
+    }
+
     public void travel(Player p) {
         if (!SURVIVAL.equals(plugin.modes().modeOf(p.getUniqueId()))) {
             Msg.send(p, "<red>Das Casino gibt es nur in Survival. Wechsle erst den Modus.");
             return;
         }
         if (bedrockBlocked(p)) {
-            Msg.send(p, BEDROCK_MSG);
+            bedrockNotice(p);
             return;
         }
         Location target = spawn();
