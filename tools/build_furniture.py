@@ -275,6 +275,8 @@ def quads(model):
             uv = face.get("uv") or default_uv(d, f, t)
             u0, v0, u1, v1 = [x / 16.0 for x in uv]
             uvs = [(u0, v0), (u0, v1), (u1, v1), (u1, v0)]
+            n = int(face.get("rotation", 0)) // 90 % 4  # wie BlockFaceUV: Ecke i nimmt UV (i + n) % 4
+            uvs = uvs[n:] + uvs[:n]
             if rot:
                 o = np.array(rot["origin"], dtype=float)
                 pts = (axis_rot(rot["axis"], rot["angle"]) @ (pts - o).T).T + o
@@ -402,7 +404,7 @@ def catalog(models):
         lines.append("  - %s" % yaml_str("%s;%s;%s" % (t["id"], t["name"], t["sub"])))
     lines.append("moebel:")
     for t in data.FURNITURE:
-        for fid, name, price in t["items"]:
+        for fid, name, price in data.items(t):
             m = by_id[fid]
             seats = ", ".join("[%s, %s]" % (local(sx), local(sz)) for sx, sz in m.seats)
             cells = ", ".join("[%d, %d]" % (-i, -j) for i in range(m.width) for j in range(m.depth))
@@ -432,8 +434,9 @@ def write(models, pack):
 
 def all_models():
     import furniture_models as fm
-    models = fm.build()
-    want = [fid for t in data.FURNITURE for fid, _n, _p in t["items"]]
+    import kuby_models as km
+    models = fm.build() + km.build(sys.modules[__name__])
+    want = [fid for t in data.FURNITURE for fid, _n, _p in data.items(t)]
     have = {m.id for m in models}
     missing = [x for x in want if x not in have]
     if missing:
@@ -459,11 +462,12 @@ def main():
             i += 1
     if sheet_path:
         import furniture_models as fm
-        models = fm.build()
+        import kuby_models as km
+        models = fm.build() + km.build(sys.modules[__name__])
         write_textures(pack)
         if only:
             tab = next((t for t in data.FURNITURE if t["id"] == only), None)
-            ids = [fid for fid, _n, _p in tab["items"]] if tab else only.split(",")
+            ids = [fid for fid, _n, _p in data.items(tab)] if tab else only.split(",")
             models = [m for m in models if m.id in ids]
             models.sort(key=lambda m: ids.index(m.id))
         sheet(models, sheet_path, os.environ.get("KUBY_VANILLA", "vanilla"))

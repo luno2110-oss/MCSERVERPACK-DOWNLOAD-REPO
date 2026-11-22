@@ -86,8 +86,14 @@ PETS = [
 ]
 
 
+def items(t):
+    """Möbel eines Reiters: die aus den Referenzbildern, dahinter die eigenen Modelle des Besitzers (kuby_models)."""
+    import kuby_models
+    return t["items"] + kuby_models.extra_items().get(t["id"], [])
+
+
 def count():
-    return sum(len(t["items"]) for t in FURNITURE)
+    return sum(len(items(t)) for t in FURNITURE)
 
 
 if __name__ == "__main__":

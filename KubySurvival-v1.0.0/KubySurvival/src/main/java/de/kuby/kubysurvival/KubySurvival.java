@@ -308,8 +308,9 @@ public final class KubySurvival extends JavaPlugin {
                 if (k == 0) return "Reiter " + t.id() + " leer";
                 n += k;
             }
-            return FurnitureCatalog.tabs().size() == 7 && n == 168 ? null
-                    : FurnitureCatalog.tabs().size() + " Reiter, " + n + " Möbel (erwartet 7 und 168)";
+            // 168 aus den Referenzbildern und 22 eigene Modelle des Besitzers (Kuby_Models.zip, v2.05)
+            return FurnitureCatalog.tabs().size() == 7 && n == 190 ? null
+                    : FurnitureCatalog.tabs().size() + " Reiter, " + n + " Möbel (erwartet 7 und 190)";
         });
         core.registerSelfTestCheck("Shop-Pets", () -> {
             List<PetService.Kind> list = pets.shopKinds();

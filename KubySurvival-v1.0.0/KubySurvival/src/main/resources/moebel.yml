@@ -24,6 +24,14 @@ moebel:
   klapphocker: {reiter: sitzen, name: "Klapphocker", preis: 50, felder: [[0, 0]], hoehe: 0.62, sitze: [[0.0, 0.0]], sitzhoehe: 0.625, licht: -1}
   barhocker: {reiter: sitzen, name: "Barhocker", preis: 150, felder: [[0, 0]], hoehe: 0.81, sitze: [[0.0, 0.0]], sitzhoehe: 0.812, licht: -1}
   casino_hocker: {reiter: sitzen, name: "Casino-Hocker", preis: 50, felder: [[0, 0]], hoehe: 1.12, sitze: [[0.0, 0.0]], sitzhoehe: 1.125, licht: -1}
+  kuby_holzstuhl: {reiter: sitzen, name: "Kuby-Holzstuhl", preis: 100, felder: [[0, 0]], hoehe: 1.28, sitze: [[0.0, 0.062]], sitzhoehe: 0.453, licht: -1}
+  kuby_stuhl_blau: {reiter: sitzen, name: "Kuby-Stuhl Blau", preis: 100, felder: [[0, 0]], hoehe: 1.28, sitze: [[0.0, 0.062]], sitzhoehe: 0.491, licht: -1}
+  kuby_stuhl_gruen: {reiter: sitzen, name: "Kuby-Stuhl Grün", preis: 100, felder: [[0, 0]], hoehe: 1.28, sitze: [[0.0, 0.062]], sitzhoehe: 0.491, licht: -1}
+  kuby_stuhl_rot: {reiter: sitzen, name: "Kuby-Stuhl Rot", preis: 100, felder: [[0, 0]], hoehe: 1.28, sitze: [[0.0, 0.062]], sitzhoehe: 0.491, licht: -1}
+  kuby_holzbank: {reiter: sitzen, name: "Kuby-Holzbank", preis: 150, felder: [[0, 0], [-1, 0]], hoehe: 0.25, sitze: [[-0.125, 0.031], [-0.875, 0.031]], sitzhoehe: 0.25, licht: -1}
+  kuby_bank_blau: {reiter: sitzen, name: "Kuby-Bank Blau", preis: 150, felder: [[0, 0], [-1, 0]], hoehe: 0.3, sitze: [[-0.125, 0.031], [-0.875, 0.031]], sitzhoehe: 0.297, licht: -1}
+  kuby_bank_gruen: {reiter: sitzen, name: "Kuby-Bank Grün", preis: 150, felder: [[0, 0], [-1, 0]], hoehe: 0.3, sitze: [[-0.125, 0.031], [-0.875, 0.031]], sitzhoehe: 0.297, licht: -1}
+  kuby_bank_rot: {reiter: sitzen, name: "Kuby-Bank Rot", preis: 150, felder: [[0, 0], [-1, 0]], hoehe: 0.3, sitze: [[-0.125, 0.031], [-0.875, 0.031]], sitzhoehe: 0.297, licht: -1}
   holztisch: {reiter: tische, name: "Holztisch", preis: 100, felder: [[0, 0]], hoehe: 0.94, sitze: [], sitzhoehe: 0.0, licht: -1}
   tisch_gruen: {reiter: tische, name: "Tisch Grün", preis: 100, felder: [[0, 0]], hoehe: 0.97, sitze: [], sitzhoehe: 0.0, licht: -1}
   tisch_weiss: {reiter: tische, name: "Tisch Weiß", preis: 100, felder: [[0, 0]], hoehe: 0.97, sitze: [], sitzhoehe: 0.0, licht: -1}
@@ -86,6 +94,17 @@ moebel:
   steinpilz: {reiter: pflanzen, name: "Steinpilz", preis: 100, felder: [[0, 0]], hoehe: 0.62, sitze: [], sitzhoehe: 0.0, licht: -1}
   pilzchen_braun: {reiter: pflanzen, name: "Pilzchen Braun", preis: 50, felder: [[0, 0]], hoehe: 0.56, sitze: [], sitzhoehe: 0.0, licht: -1}
   pilzgruppe_braun: {reiter: pflanzen, name: "Pilzgruppe Braun", preis: 100, felder: [[0, 0]], hoehe: 0.88, sitze: [], sitzhoehe: 0.0, licht: -1}
+  kuby_topf_klein: {reiter: pflanzen, name: "Pflanzkübel Klein", preis: 50, felder: [[0, 0]], hoehe: 0.64, sitze: [], sitzhoehe: 0.0, licht: -1}
+  kuby_topf_mittel: {reiter: pflanzen, name: "Pflanzkübel Mittel", preis: 50, felder: [[0, 0]], hoehe: 0.69, sitze: [], sitzhoehe: 0.0, licht: -1}
+  kuby_topf_gross: {reiter: pflanzen, name: "Pflanzkübel Groß", preis: 100, felder: [[0, 0]], hoehe: 0.69, sitze: [], sitzhoehe: 0.0, licht: -1}
+  kuby_blumentopf_1: {reiter: pflanzen, name: "Rosenkübel", preis: 100, felder: [[0, 0]], hoehe: 2.0, sitze: [], sitzhoehe: 0.0, licht: -1}
+  kuby_blumentopf_2: {reiter: pflanzen, name: "Blumenkübel", preis: 100, felder: [[0, 0]], hoehe: 1.33, sitze: [], sitzhoehe: 0.0, licht: -1}
+  kuby_baumtopf_1: {reiter: pflanzen, name: "Baumkübel", preis: 150, felder: [[0, 0]], hoehe: 1.95, sitze: [], sitzhoehe: 0.0, licht: -1}
+  kuby_baumtopf_2: {reiter: pflanzen, name: "Baumkübel Doppelt", preis: 150, felder: [[0, 0]], hoehe: 1.95, sitze: [], sitzhoehe: 0.0, licht: -1}
+  kuby_baumtopf_3: {reiter: pflanzen, name: "Baumkübel Dreifach", preis: 200, felder: [[0, 0]], hoehe: 1.95, sitze: [], sitzhoehe: 0.0, licht: -1}
+  kuby_baumtopf_4: {reiter: pflanzen, name: "Baumkübel Vierfach", preis: 200, felder: [[0, 0]], hoehe: 1.95, sitze: [], sitzhoehe: 0.0, licht: -1}
+  kuby_birkentopf_2: {reiter: pflanzen, name: "Birkenkübel", preis: 250, felder: [[0, 0]], hoehe: 2.0, sitze: [], sitzhoehe: 0.0, licht: -1}
+  kuby_birkentopf_3: {reiter: pflanzen, name: "Birkenkübel Groß", preis: 250, felder: [[0, 0]], hoehe: 2.0, sitze: [], sitzhoehe: 0.0, licht: -1}
   vorratskiste_1: {reiter: lager, name: "Vorratskiste 1", preis: 100, felder: [[0, 0]], hoehe: 0.84, sitze: [], sitzhoehe: 0.0, licht: -1}
   vorratskiste_2: {reiter: lager, name: "Vorratskiste 2", preis: 100, felder: [[0, 0]], hoehe: 0.84, sitze: [], sitzhoehe: 0.0, licht: -1}
   vorratskiste_3: {reiter: lager, name: "Vorratskiste 3", preis: 100, felder: [[0, 0]], hoehe: 0.84, sitze: [], sitzhoehe: 0.0, licht: -1}
@@ -162,6 +181,9 @@ moebel:
   handkarren_2: {reiter: markt, name: "Handkarren 2", preis: 250, felder: [[0, 0], [-1, 0]], hoehe: 0.69, sitze: [], sitzhoehe: 0.0, licht: -1}
   stoffbahn_1: {reiter: markt, name: "Stoffbahn 1", preis: 250, felder: [[0, 0], [-1, 0]], hoehe: 1.47, sitze: [], sitzhoehe: 0.0, licht: -1}
   stoffbahn_2: {reiter: markt, name: "Stoffbahn 2", preis: 250, felder: [[0, 0], [-1, 0]], hoehe: 1.47, sitze: [], sitzhoehe: 0.0, licht: -1}
+  kuby_obstkiste: {reiter: markt, name: "Obstkiste", preis: 100, felder: [[0, 0]], hoehe: 0.47, sitze: [], sitzhoehe: 0.0, licht: -1}
+  kuby_obstkiste_schraeg: {reiter: markt, name: "Obstkiste Schräg", preis: 100, felder: [[0, 0]], hoehe: 0.86, sitze: [], sitzhoehe: 0.0, licht: -1}
+  kuby_apfelkiste: {reiter: markt, name: "Apfelkiste", preis: 150, felder: [[0, 0]], hoehe: 0.75, sitze: [], sitzhoehe: 0.0, licht: -1}
   geldautomat: {reiter: bank, name: "Geldautomat", preis: 100, felder: [[0, 0]], hoehe: 1.44, sitze: [], sitzhoehe: 0.0, licht: -1}
   tresortuer: {reiter: bank, name: "Tresortür", preis: 150, felder: [[0, 0]], hoehe: 1.12, sitze: [], sitzhoehe: 0.0, licht: -1}
   bankschild: {reiter: bank, name: "Bankschild", preis: 150, felder: [[0, 0], [-1, 0]], hoehe: 0.88, sitze: [], sitzhoehe: 0.0, licht: -1}

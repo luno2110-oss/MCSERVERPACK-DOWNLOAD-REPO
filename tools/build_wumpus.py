@@ -141,16 +141,39 @@ def model(at):
     }
 
 
+# Wumpus des Besitzers (Kuby_Models.zip, Blockbench): wird bevorzugt, sonst der gezeichnete aus Quadern
+BBMODEL = os.path.join(HERE, "assets", "kuby_models", "wumpus.bbmodel")
+
+
+def model_bb():
+    """Wumpus aus dem Blockbench-Modell (Grundhaltung, ohne Animation): Füße auf y = 0, Mitte x = 8, z ≈ 8,
+    Gesicht nach Norden. Gibt (Textur, Modell)."""
+    sys.path.insert(0, HERE)
+    import bbmodel_import as bi
+    bb = bi.load(BBMODEL)
+    tex = bi.textures(bb)[0][1]
+    els, _err = bi.elements(bb, offset=(8, 0, 7.3), tex_keys=["#t"], max_err=0.5)
+    return tex, {
+        "textures": {"t": "kuby:item/deco/wumpus", "particle": "kuby:item/deco/wumpus"},
+        "elements": els,
+        "display": {"fixed": {"rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [1, 1, 1]}},
+    }
+
+
 def write(out):
-    at = atlas()
     tdir = os.path.join(out, "assets/kuby/textures/item/deco")
     mdir = os.path.join(out, "assets/kuby/models/item/deco")
     idir = os.path.join(out, "assets/kuby/items/deco")
     for d in (tdir, mdir, idir):
         os.makedirs(d, exist_ok=True)
-    at.img.save(os.path.join(tdir, "wumpus.png"))
+    if os.path.isfile(BBMODEL):
+        img, mdl = model_bb()
+    else:
+        at = atlas()
+        img, mdl = at.img, model(at)
+    img.save(os.path.join(tdir, "wumpus.png"))
     with open(os.path.join(mdir, "wumpus.json"), "w", encoding="utf-8") as f:
-        json.dump(model(at), f, separators=(",", ":"))
+        json.dump(mdl, f, separators=(",", ":"))
     with open(os.path.join(idir, "wumpus.json"), "w", encoding="utf-8") as f:
         json.dump({"model": {"type": "minecraft:model", "model": "kuby:item/deco/wumpus"}}, f)
 
