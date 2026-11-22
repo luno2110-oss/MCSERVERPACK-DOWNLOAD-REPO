@@ -43,20 +43,47 @@ public final class BattlepassScreen {
     static final int W = 390, HEIGHT = 270, PER_PAGE = 7;
     private static final long ARM_MS = 8000;
 
-    private static final TextColor SUB = TextColor.color(0x9FA1A7), VIOLET = TextColor.color(0xC7B6FC),
-            DARK = TextColor.color(0x1C122D), GOLD = TextColor.color(0xFCD45D), GOLD_Q = TextColor.color(0xFCC965),
+    private static final TextColor SUB = TextColor.color(0x9FA1A7),
+            GOLD = TextColor.color(0xFCD45D), GOLD_Q = TextColor.color(0xFCC965),
             BULLET = TextColor.color(0xFCC63C), DESC = TextColor.color(0xD1D2D5), WHITE = TextColor.color(0xFCFCFC),
-            CREAM = TextColor.color(0xFCEECD), FREE = TextColor.color(0xB5CCED), GRAY = TextColor.color(0xC0C4CB),
+            CREAM = TextColor.color(0xFCEECD), GRAY = TextColor.color(0xC0C4CB),
             OFF = TextColor.color(0x797D84), PILL_DARK = TextColor.color(0x1C1A23), GREEN = TextColor.color(0x6DE288),
             JEWELS = TextColor.color(0x7CEDA6), TIP_CLICK = TextColor.color(0xFCFC54);
     /** Abgedunkelte Icons (nicht erreicht bzw. abgeholt), Farben aus der Referenz. */
     private static final TextColor TINT_LOCKED = TextColor.color(0x767880), TINT_CLAIMED = TextColor.color(0xA2A2A2),
             TINT_READY = TextColor.color(0xFFFFFF);
 
+    /**
+     * Stil je Pass (v2.05): Battlepass (SMP) violett mit Ticket, Skypass (Skyblock) himmelblau mit schwebender Insel,
+     * Free-Reihe in Wiesen-Türkis. Gold (Premium), Grün (abgeholt) und Grau bleiben gleich.
+     */
+    public record Look(String name, KitData.Box head, KitData.Box level, KitData.Box free, KitData.Box tab,
+                       KitData.Box tabOn, KitData.Box pillOn, KitData.Box pillCur, KitData.Box questDay,
+                       KitData.Box buyBox, KitData.Box btnMain, KitData.Fill fill, KitData.Sprite ticket,
+                       KitData.Sprite title, KitData.Sprite freepass, KitData.Sprite play, KitData.Sprite tabScroll,
+                       TextColor accent, TextColor freeColor, TextColor dark) {}
+
+    public static final Look BATTLE = new Look("Battlepass", KitData.Box.BP_HEAD, KitData.Box.BP_LEVEL,
+            KitData.Box.BP_FREE, KitData.Box.BP_TAB, KitData.Box.BP_TAB_ON, KitData.Box.BP_PILL_ON,
+            KitData.Box.BP_PILL_CUR, KitData.Box.BP_QUEST_DAY, KitData.Box.BP_BUY_BOX, KitData.Box.BP_BTN_VIOLET,
+            KitData.Fill.BP_VIOLET, KitData.Sprite.BP_TICKET, KitData.Sprite.BP_TITLE, KitData.Sprite.BP_FREEPASS,
+            KitData.Sprite.BP_PLAY, KitData.Sprite.BP_TAB_SCROLL, TextColor.color(0xC7B6FC), TextColor.color(0xB5CCED),
+            TextColor.color(0x1C122D));
+    public static final Look SKY = new Look("Skypass", KitData.Box.SP_HEAD, KitData.Box.SP_LEVEL,
+            KitData.Box.SP_FREE, KitData.Box.SP_TAB, KitData.Box.SP_TAB_ON, KitData.Box.SP_PILL_ON,
+            KitData.Box.SP_PILL_CUR, KitData.Box.SP_QUEST_DAY, KitData.Box.SP_BUY_BOX, KitData.Box.SP_BTN_SKY,
+            KitData.Fill.SP_SKY, KitData.Sprite.SP_ISLAND, KitData.Sprite.SP_TITLE, KitData.Sprite.SP_FREEPASS,
+            KitData.Sprite.SP_PLAY, KitData.Sprite.SP_TAB_SCROLL, TextColor.color(0x9EDCF7), TextColor.color(0xA8EBD0),
+            TextColor.color(0x0F2233));
+
+    public static Look look(String pass) {
+        return BattlepassService.SKYPASS.equals(pass) ? SKY : BATTLE;
+    }
+
     /** Ein Feld: Stufe, Belohnungen, Zustand. */
     public record Cell(int level, List<Reward> rewards, Slot state) {}
 
-    public record View(Tab tab, boolean english, int season, long seasonLeft, int level, long points, int perLevel,
+    public record View(Look look, Tab tab, boolean english, int season, long seasonLeft, int level, long points, int perLevel,
                        boolean premium, int page, int pages, List<Cell> free, List<Cell> prem, int claimable,
                        List<QuestState> daily, List<QuestState> weekly, long dailyLeft, long weeklyLeft,
                        long premiumPrice, int freeCount, int premCount, String perks, long jewels, int amount,
@@ -90,8 +117,22 @@ public final class BattlepassScreen {
     // Öffnen
     // =================================================================================================================
 
-    /** /battlepass: Belohnungen auf der Seite der nächsten Stufe. Ohne Grafik-Pack das Truhen-Menü. */
+    /**
+     * /battlepass bzw. /skypass: Belohnungen auf der Seite der nächsten Stufe. Ohne Grafik-Pack das Truhen-Menü.
+     * In SMP der Battlepass, in Skyblock der Skypass, sonst ein Hinweis (Survival: Farmpass und Angelpass).
+     */
     public void open(Player p) {
+        String mode = plugin.modes().modeOf(p.getUniqueId());
+        if (!BattlepassService.enabled(mode)) {
+            boolean en = plugin.playerSettings().english(p.getUniqueId());
+            Sfx.play(plugin, p, Sfx.Kind.ERROR);
+            Msg.send(p, de.kuby.kubyplugins.service.ModeService.SURVIVAL.equals(mode)
+                    ? (en ? "<gray>Survival has its own passes: <white>/farmpass <gray>and <white>/angeln pass<gray>."
+                    : "<gray>Survival hat eigene Pässe: <white>/farmpass <gray>und <white>/angeln pass<gray>.")
+                    : (en ? "<gray>The <light_purple>Battlepass <gray>is in <white>SMP<gray>, the <aqua>Skypass <gray>in <white>Skyblock<gray>."
+                    : "<gray>Den <light_purple>Battlepass <gray>gibt es in <white>SMP<gray>, den <aqua>Skypass <gray>in <white>Skyblock<gray>."));
+            return;
+        }
         int level = plugin.battlepass().level(p.getUniqueId());
         pages.put(p.getUniqueId(), Math.min(level, BattlepassService.MAX_LEVEL - 1) / PER_PAGE);
         open(p, Tab.REWARDS);
@@ -100,7 +141,7 @@ public final class BattlepassScreen {
     public void open(Player p, Tab tab) {
         plugin.questProgress(p, "battlepass", tab.name(), 1);
         if (!plugin.uiPack().active(p)) {
-            new BattlepassMenu(plugin, 0).open(p);
+            new BattlepassMenu(plugin, 0, plugin.battlepass().passOf(p.getUniqueId())).open(p);
             return;
         }
         UUID id = p.getUniqueId();
@@ -109,6 +150,7 @@ public final class BattlepassScreen {
             armed.remove(id);
             armedAt.remove(id);
         }
+        if (!BattlepassService.enabled(plugin.modes().modeOf(id))) return;
         UiDialog.show(p, canvas(view(p, tab), actions(tab)), HEIGHT);
     }
 
@@ -126,25 +168,26 @@ public final class BattlepassScreen {
     View view(Player p, Tab tab) {
         UUID id = p.getUniqueId();
         BattlepassService bp = plugin.battlepass();
+        String pass = bp.passOf(id);
         int level = bp.level(id);
         boolean premium = bp.hasPremium(id);
         int page = Math.max(0, Math.min(pageCount() - 1, pages.getOrDefault(id, 0)));
-        List<Cell> free = cells(page, level, BattlepassService.FREE, bp.claimedOf(id, BattlepassService.FREE), true);
-        List<Cell> prem = cells(page, level, BattlepassService.PREMIUM, bp.claimedOf(id, BattlepassService.PREMIUM), premium);
+        List<Cell> free = cells(pass, page, level, BattlepassService.FREE, bp.claimedOf(id, BattlepassService.FREE), true);
+        List<Cell> prem = cells(pass, page, level, BattlepassService.PREMIUM, bp.claimedOf(id, BattlepassService.PREMIUM), premium);
         int left = bp.levelsLeftToday(id);
         int amount = Math.max(1, Math.min(Math.max(1, left), amounts.getOrDefault(id, 1)));
-        return new View(tab, plugin.playerSettings().english(id), bp.season(), bp.seasonLeft(), level,
-                bp.pointsInLevel(id), bp.xpPerLevel(), premium, page, pageCount(), free, prem,
+        return new View(look(pass), tab, plugin.playerSettings().english(id), bp.season(pass), bp.seasonLeft(pass), level,
+                bp.pointsInLevel(id), bp.xpPerLevel(pass), premium, page, pageCount(), free, prem,
                 bp.claimable(id, BattlepassService.FREE) + bp.claimable(id, BattlepassService.PREMIUM),
                 bp.quests(id, Period.DAILY), bp.quests(id, Period.WEEKLY),
                 BattlepassService.untilReset(Period.DAILY), BattlepassService.untilReset(Period.WEEKLY),
-                bp.premiumPrice(), bp.rewardLevels(BattlepassService.FREE), bp.rewardLevels(BattlepassService.PREMIUM),
-                perks(plugin.playerSettings().english(id)), plugin.jewels().balance(id), amount, bp.levelPrice(), left,
-                armed.get(id));
+                bp.premiumPrice(pass), bp.rewardLevels(BattlepassService.FREE, pass),
+                bp.rewardLevels(BattlepassService.PREMIUM, pass), perks(pass, plugin.playerSettings().english(id)),
+                plugin.jewels().balance(id), amount, bp.levelPrice(pass), left, armed.get(id));
     }
 
-    private List<Cell> cells(int page, int level, String track, int claimed, boolean unlocked) {
-        Map<Integer, List<Reward>> all = plugin.battlepass().byLevel(track);
+    private List<Cell> cells(String pass, int page, int level, String track, int claimed, boolean unlocked) {
+        Map<Integer, List<Reward>> all = plugin.battlepass().byLevel(track, pass);
         List<Cell> out = new ArrayList<>();
         for (int i = 0; i < PER_PAGE; i++) {
             int lvl = page * PER_PAGE + i + 1;
@@ -161,32 +204,40 @@ public final class BattlepassScreen {
         return out;
     }
 
-    private String perks(boolean en) {
-        String path = en ? "battlepass.premium-perks-en" : "battlepass.premium-perks";
-        return plugin.getConfig().getString(path, en ? "Gear, spawners and cosmetics" : "Ausrüstung, Spawner und Kosmetik");
+    private String perks(String pass, boolean en) {
+        boolean sky = BattlepassService.SKYPASS.equals(pass);
+        String path = pass + (en ? ".premium-perks-en" : ".premium-perks");
+        return plugin.getConfig().getString(path, sky ? (en ? "Saplings, farm blocks and rare island items"
+                : "Setzlinge, Farm-Blöcke und seltene Insel-Items")
+                : en ? "Gear, spawners and cosmetics" : "Ausrüstung, Spawner und Kosmetik");
     }
 
     /** Ansicht ohne Spieler (Selbsttest, Vorschau): Stufe 3 mit 50 Punkten, Stufe 2 abgeholt, wie in der Referenz. */
     public View sample(Tab tab) {
+        return sample(tab, BattlepassService.BATTLEPASS);
+    }
+
+    public View sample(Tab tab, String pass) {
         BattlepassService bp = plugin.battlepass();
         List<Cell> free = new ArrayList<>(), prem = new ArrayList<>();
-        Map<Integer, List<Reward>> f = bp.byLevel(BattlepassService.FREE), pr = bp.byLevel(BattlepassService.PREMIUM);
+        Map<Integer, List<Reward>> f = bp.byLevel(BattlepassService.FREE, pass), pr = bp.byLevel(BattlepassService.PREMIUM, pass);
         for (int lvl = 1; lvl <= PER_PAGE; lvl++) {
             List<Reward> a = f.getOrDefault(lvl, List.of()), b = pr.getOrDefault(lvl, List.of());
             free.add(new Cell(lvl, a, a.isEmpty() ? Slot.EMPTY : lvl <= 3 ? Slot.CLAIMED : Slot.LOCKED));
             prem.add(new Cell(lvl, b, b.isEmpty() ? Slot.EMPTY : Slot.NO_PREMIUM));
         }
         List<QuestState> daily = new ArrayList<>(), weekly = new ArrayList<>();
-        List<BattlepassService.Quest> d = bp.pool(Period.DAILY), w = bp.pool(Period.WEEKLY);
-        for (int i = 0; i < Math.min(bp.questCount(Period.DAILY), d.size()); i++) daily.add(new QuestState(d.get(i), 0, false));
-        for (int i = 0; i < Math.min(bp.questCount(Period.WEEKLY), w.size()); i++) {
+        List<BattlepassService.Quest> d = bp.pool(Period.DAILY, pass), w = bp.pool(Period.WEEKLY, pass);
+        for (int i = 0; i < Math.min(bp.questCount(Period.DAILY, pass), d.size()); i++) daily.add(new QuestState(d.get(i), 0, false));
+        for (int i = 0; i < Math.min(bp.questCount(Period.WEEKLY, pass), w.size()); i++) {
             weekly.add(new QuestState(w.get(i), i == 0 || i == 4 ? 1 : 0, false));
         }
         long day = 17 * 3_600_000L + 9 * 60_000L + 3_000L;
         long season = (46 * 86_400L + 16 * 3_600L + 9 * 60L + 11L) * 1000L;
-        return new View(tab, false, 3, season, 3, 50, bp.xpPerLevel(), false, 0, pageCount(), free, prem, 0, daily,
-                weekly, day, day, bp.premiumPrice(), bp.rewardLevels(BattlepassService.FREE),
-                bp.rewardLevels(BattlepassService.PREMIUM), perks(false), 0, 1, bp.levelPrice(), bp.levelDailyLimit(), null);
+        return new View(look(pass), tab, false, 3, season, 3, 50, bp.xpPerLevel(pass), false, 0, pageCount(), free, prem, 0,
+                daily, weekly, day, day, bp.premiumPrice(pass), bp.rewardLevels(BattlepassService.FREE, pass),
+                bp.rewardLevels(BattlepassService.PREMIUM, pass), perks(pass, false), 0, 1, bp.levelPrice(pass),
+                bp.levelDailyLimit(pass), null);
     }
 
     // =================================================================================================================
@@ -341,13 +392,29 @@ public final class BattlepassScreen {
         };
     }
 
+    /**
+     * Bild einer Belohnung bzw. Aufgabe: eigenes Kit-Icon, sonst das Item-Bild aus dem Pack (Skypass: Setzlinge,
+     * Knochenmehl, Lava …), zuletzt das Bündel.
+     */
+    static void drawIcon(Canvas c, int x, int y, String name, boolean big, TextColor tint) {
+        KitData.Icon kit = icon(name, null);
+        org.bukkit.Material m = kit == null ? org.bukkit.Material.matchMaterial(name) : null;
+        if (m != null) c.item(x, y, m, big, KitData.Icon.BUNDLE, tint);
+        else c.icon(x, y, kit != null ? kit : KitData.Icon.BUNDLE, big, tint);
+    }
+
+    static void drawReward(Canvas c, int x, int y, Reward r, boolean big, TextColor tint) {
+        if (r.icon().isEmpty() && "ITEM".equals(r.type())) drawIcon(c, x, y, r.value().split(":")[0], big, tint);
+        else c.icon(x, y, icon(r), big, tint);
+    }
+
     private static void center(Canvas c, int cx, int y, String text, TextColor color, boolean bold) {
         int w = Canvas.width(Canvas.clean(text), bold);
         c.text(cx - (w + 1) / 2, y, text, color, bold);
     }
 
     public static Canvas canvas(View v, Actions a) {
-        Canvas c = new Canvas(W).heading("Battlepass", SUB);
+        Canvas c = new Canvas(W).heading(v.look().name(), SUB);
         head(c, v, a);
         tabs(c, v, a);
         switch (v.tab()) {
@@ -360,9 +427,10 @@ public final class BattlepassScreen {
 
     private static void head(Canvas c, View v, Actions a) {
         boolean en = v.english();
-        c.box(0, 0, W, 48, KitData.Box.BP_HEAD);
-        c.sprite(4, 8, KitData.Sprite.BP_TICKET);
-        c.sprite(50, 10, KitData.Sprite.BP_TITLE);
+        Look l = v.look();
+        c.box(0, 0, W, 48, l.head());
+        c.sprite(4, 8, l.ticket());
+        c.sprite(50, 10, l.title());
         String left = v.seasonLeft() < 0 ? "" : en ? " · " + countdown(v.seasonLeft()) + " left"
                 : " · noch " + countdown(v.seasonLeft());
         c.text(50, 30, "Season " + v.season() + left, SUB, false);
@@ -370,7 +438,7 @@ public final class BattlepassScreen {
         int w = 28 + Canvas.width(label, false) + 8;
         int x = 383 - w;
         c.box(x, 13, w, 22, KitData.Box.BP_GRAY, 1);
-        c.sprite(x + 3, 16, KitData.Sprite.BP_FREEPASS);
+        c.sprite(x + 3, 16, v.look().freepass());
         c.text(x + 28, 20, label, v.premium() ? GOLD : GRAY, false);
         if (a != null) {
             c.action(x, 13, w, 22, a.tab(Tab.PREMIUM), v.premium()
@@ -391,17 +459,18 @@ public final class BattlepassScreen {
                 case QUESTS -> en ? "Quests" : "Aufgaben";
                 case PREMIUM -> "Premium";
             };
+            Look l = v.look();
             KitData.Box style = t == Tab.PREMIUM ? (on ? KitData.Box.BP_TAB_GOLD_ON : KitData.Box.BP_TAB_GOLD)
-                    : on ? KitData.Box.BP_TAB_ON : KitData.Box.BP_TAB;
+                    : on ? l.tabOn() : l.tab();
             KitData.Sprite icon = switch (t) {
                 case REWARDS -> KitData.Sprite.BP_TAB_CHEST;
-                case QUESTS -> KitData.Sprite.BP_TAB_SCROLL;
+                case QUESTS -> l.tabScroll();
                 case PREMIUM -> KitData.Sprite.BP_TAB_CROWN;
             };
             int w = 28 + Canvas.width(label, on) + 8;
             c.box(x, 54, w, 22, style);
             c.sprite(x + 3, 57, icon);
-            c.text(x + 28, 61, label, on ? DARK : t == Tab.PREMIUM ? GOLD : VIOLET, on);
+            c.text(x + 28, 61, label, on ? l.dark() : t == Tab.PREMIUM ? GOLD : l.accent(), on);
             if (a != null && !on) c.action(x, 54, w, 22, a.tab(t), Component.text(label, WHITE));
             x += w + 4;
         }
@@ -415,11 +484,12 @@ public final class BattlepassScreen {
         boolean en = v.english();
         pager(c, v, a);
         // Stufe und Punkte
-        c.box(0, 81, W, 33, KitData.Box.BP_LEVEL);
+        Look l = v.look();
+        c.box(0, 81, W, 33, l.level());
         boolean max = v.level() >= BattlepassService.MAX_LEVEL;
-        c.text(9, 88, List.of(Span.bold((en ? "Level " : "Stufe ") + v.level(), VIOLET),
+        c.text(9, 88, List.of(Span.bold((en ? "Level " : "Stufe ") + v.level(), l.accent()),
                 Span.of(" / " + BattlepassService.MAX_LEVEL, SUB)));
-        c.barFlat(9, 101, 170, max ? 1 : (double) v.points() / v.perLevel(), KitData.Fill.BP_VIOLET);
+        c.barFlat(9, 101, 170, max ? 1 : (double) v.points() / v.perLevel(), l.fill());
         if (max) {
             c.text(185, 100, en ? "Highest level reached" : "Höchste Stufe erreicht", SUB, false);
         } else {
@@ -444,9 +514,9 @@ public final class BattlepassScreen {
             c.text(381 - w, 94, label, SUB, false);
         }
         // Free
-        c.box(0, 117, W, 60, KitData.Box.BP_FREE);
+        c.box(0, 117, W, 60, l.free());
         c.sprite(19, 130, KitData.Sprite.BP_FREE_CHEST);
-        center(c, 27, 152, "Free", FREE, false);
+        center(c, 27, 152, "Free", l.freeColor(), false);
         for (int i = 0; i < v.free().size(); i++) slot(c, v, a, 49 + 48 * i, 124, v.free().get(i), false);
         // Stufen
         center(c, 27, 188, en ? "Level" : "Stufe", SUB, false);
@@ -458,11 +528,11 @@ public final class BattlepassScreen {
             KitData.Box style;
             TextColor color;
             if (lvl <= v.level()) {
-                style = KitData.Box.BP_PILL_ON;
+                style = l.pillOn();
                 color = PILL_DARK;
             } else if (lvl == v.level() + 1) {
-                style = KitData.Box.BP_PILL_CUR;
-                color = VIOLET;
+                style = l.pillCur();
+                color = l.accent();
             } else {
                 style = KitData.Box.BP_PILL_OFF;
                 color = GRAY;
@@ -471,7 +541,7 @@ public final class BattlepassScreen {
             center(c, x + 16, 188, String.valueOf(lvl), color, lvl <= v.level() + 1);
             if (i < n - 1) {
                 double frac = lvl + 1 <= v.level() ? 1 : lvl == v.level() ? (double) v.points() / v.perLevel() : 0;
-                c.barFlat(x + 34, 188, 12, frac, lvl + 1 <= v.level() ? KitData.Fill.BP_GREEN : KitData.Fill.BP_VIOLET);
+                c.barFlat(x + 34, 188, 12, frac, lvl + 1 <= v.level() ? KitData.Fill.BP_GREEN : l.fill());
             }
         }
         // Premium
@@ -490,12 +560,13 @@ public final class BattlepassScreen {
         int mw = Canvas.width(label, false) + 16;
         int mx = 358 - mw;
         boolean prev = v.page() > 0, next = v.page() < v.pages() - 1;
-        c.box(mx - 25, 54, 21, 22, prev ? KitData.Box.BP_TAB : KitData.Box.BP_GRAY);
-        c.text(mx - 18, 61, "‹", prev ? VIOLET : OFF, true);
-        c.box(mx, 54, mw, 22, KitData.Box.BP_TAB);
+        Look l = v.look();
+        c.box(mx - 25, 54, 21, 22, prev ? l.tab() : KitData.Box.BP_GRAY);
+        c.text(mx - 18, 61, "‹", prev ? l.accent() : OFF, true);
+        c.box(mx, 54, mw, 22, l.tab());
         c.text(mx + 8, 61, label, WHITE, false);
-        c.box(362, 54, 21, 22, next ? KitData.Box.BP_TAB : KitData.Box.BP_GRAY);
-        c.text(370, 61, "›", next ? VIOLET : OFF, true);
+        c.box(362, 54, 21, 22, next ? l.tab() : KitData.Box.BP_GRAY);
+        c.text(370, 61, "›", next ? l.accent() : OFF, true);
         if (a != null) {
             if (prev) c.action(mx - 25, 54, 21, 22, a.page(v.page() - 1), Component.text(en ? "Previous levels" : "Vorherige Stufen", WHITE));
             if (next) c.action(362, 54, 21, 22, a.page(v.page() + 1), Component.text(en ? "Next levels" : "Nächste Stufen", WHITE));
@@ -516,13 +587,13 @@ public final class BattlepassScreen {
             case CLAIMED -> TINT_CLAIMED;
             default -> TINT_LOCKED;
         };
-        c.icon(x + 7, y + 7, icon(cell.rewards().get(0)), true, tint);
+        drawReward(c, x + 7, y + 7, cell.rewards().get(0), true, tint);
         if (cell.state() == Slot.CLAIMED) c.sprite(x + 27, y + 28, KitData.Sprite.BP_CHECK);
         if (cell.state() == Slot.NO_PREMIUM) c.sprite(x + 29, y + 27, KitData.Sprite.BP_LOCK);
         if (a == null) return;
         TextComponent.Builder b = Component.text();
         b.append(Component.text((en ? "Level " : "Stufe ") + cell.level() + " · " + (premium ? "Premium" : "Free"),
-                premium ? GOLD : FREE).decorate(TextDecoration.BOLD));
+                premium ? GOLD : v.look().freeColor()).decorate(TextDecoration.BOLD));
         for (Reward r : cell.rewards()) {
             b.append(Component.newline()).append(Msg.parse("<gray>• " + BattlepassService.describe(r, en)));
         }
@@ -548,8 +619,8 @@ public final class BattlepassScreen {
 
     private static void quests(Canvas c, View v) {
         boolean en = v.english();
-        int y = questBox(c, v, 81, v.daily(), en ? "Daily quests" : "Tagesaufgaben", VIOLET, v.dailyLeft(),
-                KitData.Box.BP_QUEST_DAY, KitData.Fill.BP_VIOLET);
+        int y = questBox(c, v, 81, v.daily(), en ? "Daily quests" : "Tagesaufgaben", v.look().accent(), v.dailyLeft(),
+                v.look().questDay(), v.look().fill());
         questBox(c, v, y + 3, v.weekly(), en ? "Weekly quests" : "Wochenaufgaben", GOLD_Q, v.weeklyLeft(),
                 KitData.Box.BP_QUEST_WEEK, KitData.Fill.BP_GOLD);
     }
@@ -569,7 +640,7 @@ public final class BattlepassScreen {
         for (int i = 0; i < list.size(); i++) {
             QuestState q = list.get(i);
             int bx = 9 + 190 * (i % 2), by = y + 20 + 22 * (i / 2);
-            c.icon(bx, by + 1, icon(q.quest().icon(), KitData.Icon.PAPER), false);
+            drawIcon(c, bx, by + 1, q.quest().icon().isEmpty() ? "paper" : q.quest().icon(), false, TINT_READY);
             c.text(bx + 21, by, Canvas.fit(q.quest().label(en), true, 160), WHITE, true);
             double frac = (double) q.progress() / q.quest().target();
             c.barFlat(bx + 21, by + 12, 64, frac, q.done() ? KitData.Fill.BP_GREEN : fill);
@@ -614,7 +685,7 @@ public final class BattlepassScreen {
             int w = 28 + Canvas.width(label, true) + 8;
             c.box(66, 132, w, 22, KitData.Box.BP_BTN_GOLD_ON, 1);
             c.sprite(75, 135, KitData.Sprite.JS_EMERALD_PRICE);
-            c.text(94, 139, label, DARK, true);
+            c.text(94, 139, label, v.look().dark(), true);
             if (a != null) {
                 boolean enough = v.jewels() >= v.premiumPrice();
                 c.action(66, 132, w, 22, a.premium(), tip(en ? "Premium pass" : "Premium-Pass",
@@ -626,8 +697,8 @@ public final class BattlepassScreen {
             }
         }
         // Stufen kaufen
-        c.box(0, 162, W, 87, KitData.Box.BP_BUY_BOX);
-        c.text(9, 173, en ? "Buy levels" : "Stufen kaufen", VIOLET, true);
+        c.box(0, 162, W, 87, v.look().buyBox());
+        c.text(9, 173, en ? "Buy levels" : "Stufen kaufen", v.look().accent(), true);
         String n = Msg.coins(v.jewels());
         int nx = 381 - Canvas.width(n, true);
         c.text(nx, 173, n, JEWELS, true);
@@ -641,8 +712,8 @@ public final class BattlepassScreen {
         step(c, a, 41, "-1", amount - 1 >= 1, -1, en);
         String al = amount + (en ? (amount == 1 ? " level" : " levels") : amount == 1 ? " Stufe" : " Stufen");
         int vw = 28 + Canvas.width(al, true) + 8;
-        c.box(75, 200, vw, 22, KitData.Box.BP_BTN_VIOLET, 1);
-        c.sprite(79, 203, KitData.Sprite.BP_PLAY);
+        c.box(75, 200, vw, 22, v.look().btnMain(), 1);
+        c.sprite(79, 203, v.look().play());
         c.text(103, 207, al, WHITE, true);
         step(c, a, 75 + vw + 4, "+1", amount + 1 <= max, 1, en);
         step(c, a, 75 + vw + 38, "+5", amount + 5 <= max, 5, en);
@@ -653,7 +724,7 @@ public final class BattlepassScreen {
         int bx = 383 - bw;
         c.box(bx, 200, bw, 22, KitData.Box.BP_BTN_RED_ON, 1);
         c.sprite(bx + 9, 203, KitData.Sprite.JS_EMERALD_PRICE);
-        c.text(bx + 28, 207, bl, DARK, true);
+        c.text(bx + 28, 207, bl, v.look().dark(), true);
         if (a != null) {
             long price = v.levelPrice() * amount;
             String text = v.leftToday() <= 0 ? (en ? "No more levels can be bought today." : "Heute sind keine Stufen mehr kaufbar.")

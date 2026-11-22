@@ -89,6 +89,7 @@ public final class MainScreen {
             case "Freunde" -> KitData.Sprite.FR_LOGO;
             // Fortschritt
             case "Battlepass" -> KitData.Sprite.JS_PASS;
+            case "Skypass" -> KitData.Sprite.SP_ICON;
             case "Spielzeit" -> KitData.Sprite.HB_SPIELZEIT;
             case "Titel" -> KitData.Sprite.HB_TITEL;
             case "Kits" -> KitData.Sprite.QU_BOX_HEAD;
@@ -185,6 +186,10 @@ public final class MainScreen {
         if (smp) {
             mine.add(new Tile("Battlepass", "100 Stufen, Quests und Belohnungen", KitData.Icon.BOOK, go(pl -> plugin.battlepassScreen().open(pl))));
             mine.add(new Tile("Duo-RTP", "Zu zweit an einen Zufallsort, Kampf!", KitData.Icon.FIRE_CHARGE, go(pl -> new ExtraScreens(plugin).rtp(pl))));
+        }
+        if (sky) {
+            mine.add(new Tile("Skypass", "100 Stufen, Insel-Aufgaben und Belohnungen", KitData.Icon.FEATHER,
+                    go(pl -> plugin.battlepassScreen().open(pl))));
         }
 
         List<Tile> daily = new ArrayList<>();

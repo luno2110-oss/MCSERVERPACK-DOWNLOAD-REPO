@@ -357,6 +357,43 @@ battlepass:
     - "duellant;Duellant|Duelist;diamond_sword;DUEL;5;800;smp"
     - "haendler;Händler|Trader;emerald;TRADE;3;500"
 
+# Skypass (v2.05): der Pass für Skyblock, gleiche Technik wie der Battlepass (der gilt nur noch in SMP), eigener Stil
+# (himmelblau) und eigene Aufgaben. Was hier fehlt, kommt aus battlepass (z. B. xp-per-level, Preise, Tageslimit).
+# rewards: leer = Standard-Belohnungen mit Insel-Items (Setzlinge, Knochenmehl, Lava, Zuckerrohr ...).
+skypass:
+  season-start: "2026-10-01"
+  season-days: 90
+  first-season: 1
+  premium-perks: "Setzlinge, Farm-Blöcke und seltene Insel-Items"
+  premium-perks-en: "Saplings, farm blocks and rare island items"
+  daily-count: 4
+  weekly-count: 6
+  rewards: []
+  quests-daily:
+    - "bruchstein;Steinbruch|Quarry;cobblestone;MINE:COBBLESTONE;256;100"
+    - "zuckerrohr;Zuckerrohr-Ernte|Sugar Cane Harvest;sugar_cane;MINE:SUGAR_CANE;96;100"
+    - "holz;Holzfäller|Lumberjack;oak_log;MINE:LOG;64;100"
+    - "melonen;Melonenbauer|Melon Farmer;melon;MINE:MELON;64;100"
+    - "kuerbis;Kürbisfeld|Pumpkin Patch;pumpkin;MINE:PUMPKIN;48;100"
+    - "erze;Bergmann|Miner;iron_pickaxe;MINE:ORE;40;120"
+    - "bauen;Inselbauer|Island Builder;grass_block;PLACE;200;100"
+    - "werkbank;Handwerker|Crafter;crafting_table;CRAFT;64;100"
+    - "zuechter;Züchter|Breeder;wheat;BREED;10;100"
+    - "monster;Nachtwache|Night Watch;iron_sword;KILL:MONSTER;30;100"
+    - "angler;Angler|Angler;rod;FISH;15;100"
+    - "spielzeit;Stammgast|Regular;clock;PLAYTIME;60;120"
+    - "vote;Unterstützer|Supporter;paper;VOTE;1;80"
+  quests-weekly:
+    - "steinmeer;Steinmeer|Sea of Stone;cobblestone;MINE:COBBLESTONE;3000;700"
+    - "plantage;Plantagenbesitzer|Plantation Owner;sugar_cane;MINE:SUGAR_CANE;1000;700"
+    - "erzmagnat;Erz-Magnat|Ore Tycoon;iron_pickaxe;MINE:ORE;500;700"
+    - "baumeister;Baumeister|Master Builder;grass_block;PLACE;2500;700"
+    - "zauberer;Verzauberer|Enchanter;enchanting_table;ENCHANT;10;600"
+    - "monsterjaeger;Monsterjäger|Monster Hunter;iron_sword;KILL:MONSTER;400;600"
+    - "kisten;Kistenjäger|Crate Hunter;bell;CRATE;15;600"
+    - "dauerbrenner;Dauerbrenner|Marathon;clock;PLAYTIME;600;800"
+    - "voter;Treuer Voter|Loyal Voter;paper;VOTE;7;700"
+
 # Beta-Test: Rolle Beta-Tester (/kp beta add <Spieler>, oder alle-tester: true), Feedback-Formular (/feedback, 7 Seiten,
 # Sterne 1 bis 6 und Textfragen), Bug-Meldungen (/bug), Auswertung im Kadmin (Sicherheit > Beta-Feedback), CSV-Export
 # (/kp beta export). Für das erste abgeschickte Formular gibt es belohnung-juwelen.
@@ -730,6 +767,8 @@ modus-befehle:
   turnier: [smp]
   versichern: [smp]
   ranking: [smp]
+  # Skyblock
+  skypass: [skyblock]
   # Survival
   angeln: [survival]
   claim: [survival]

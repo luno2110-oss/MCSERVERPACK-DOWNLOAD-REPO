@@ -477,7 +477,7 @@ public final class KubyPlugins extends JavaPlugin {
         setAll(crash, "cashout");
         setAll(new AdminCommand(this), "kadmin");
         setAll(new HelpCommand(this), "befehle", "menu");
-        setAll(new ExtraCommand(this), "dailypot", "trade", "tags", "rtpqueue", "meta", "booster", "xpshop", "battlepass", "turnier", "verify", "versichern", "enderchest", "kristaltrade", "investments", "quizvote", "totenkiste", "kits", "hub", "tpa", "tpahere", "tpaccept", "tpadeny", "spielzeit", "playtime");
+        setAll(new ExtraCommand(this), "dailypot", "trade", "tags", "rtpqueue", "meta", "booster", "xpshop", "battlepass", "skypass", "turnier", "verify", "versichern", "enderchest", "kristaltrade", "investments", "quizvote", "totenkiste", "kits", "hub", "tpa", "tpahere", "tpaccept", "tpadeny", "spielzeit", "playtime");
         setAll(new KpCommand(this), "kp");
         backups = new de.kuby.kubyplugins.service.BackupService(this);
         alts = new de.kuby.kubyplugins.service.AltService(this);

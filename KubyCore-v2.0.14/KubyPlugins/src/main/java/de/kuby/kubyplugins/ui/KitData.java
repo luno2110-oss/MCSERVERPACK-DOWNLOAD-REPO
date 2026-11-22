@@ -629,14 +629,34 @@ public final class KitData {
                 "\uf1e8\u0109\u0108\u0109\uebf6\u0121\u0120\u0109\uf1e9\u0109\u0108\u0109\uf1ee\u0109\u0108\u0109\uebf8\u0121\u0120\u0109\uf1ef\u0109\u0108\u0109\uf1f4\u0109\u0108\u0109\uebfa\u0121\u0120\u0109\uf1f5\u0109\u0108\u0109"),
         BP_TAB_ON(6, "\uebfd\u0111\u0110\u0109\uf1fc\u0109\u0108\u0109\uf1fd\u0105\u0104\u0109\uf1fe\u0103\u0102\u0109\uf1ff\u0102\u0101\u0109\uebff\u0111\u0110\u0109\uf202\u0109\u0108\u0109\uf203\u0105\u0104\u0109\uf204\u0103\u0102\u0109\uf205\u0102\u0101\u0109\uf401\u0111\u0110\u0109\uf208\u0109\u0108\u0109\uf209\u0105\u0104\u0109\uf20a\u0103\u0102\u0109\uf20b\u0102\u0101\u0109",
                 "\uf1fa\u0109\u0108\u0109\uebfc\u0121\u0120\u0109\uf1fb\u0109\u0108\u0109\uf200\u0109\u0108\u0109\uebfe\u0121\u0120\u0109\uf201\u0109\u0108\u0109\uf206\u0109\u0108\u0109\uf400\u0121\u0120\u0109\uf207\u0109\u0108\u0109"),
+        SP_HEAD(5, "\uf403\u0111\u0110\u0109\uf20e\u0109\u0108\u0109\uf20f\u0105\u0104\u0109\uf210\u0103\u0102\u0109\uf211\u0102\u0101\u0109\uf405\u0111\u0110\u0109\uf214\u0109\u0108\u0109\uf215\u0105\u0104\u0109\uf216\u0103\u0102\u0109\uf217\u0102\u0101\u0109\uf407\u0111\u0110\u0109\uf21a\u0109\u0108\u0109\uf21b\u0105\u0104\u0109\uf21c\u0103\u0102\u0109\uf21d\u0102\u0101\u0109",
+                "\uf20c\u0109\u0108\u0109\uf402\u0121\u0120\u0109\uf20d\u0109\u0108\u0109\uf212\u0109\u0108\u0109\uf404\u0121\u0120\u0109\uf213\u0109\u0108\u0109\uf218\u0109\u0108\u0109\uf406\u0121\u0120\u0109\uf219\u0109\u0108\u0109"),
+        SP_LEVEL(5, "\uf409\u0111\u0110\u0109\uf220\u0109\u0108\u0109\uf221\u0105\u0104\u0109\uf222\u0103\u0102\u0109\uf223\u0102\u0101\u0109\uf40b\u0111\u0110\u0109\uf226\u0109\u0108\u0109\uf227\u0105\u0104\u0109\uf228\u0103\u0102\u0109\uf229\u0102\u0101\u0109\uf40d\u0111\u0110\u0109\uf22c\u0109\u0108\u0109\uf22d\u0105\u0104\u0109\uf22e\u0103\u0102\u0109\uf22f\u0102\u0101\u0109",
+                "\uf21e\u0109\u0108\u0109\uf408\u0121\u0120\u0109\uf21f\u0109\u0108\u0109\uf224\u0109\u0108\u0109\uf40a\u0121\u0120\u0109\uf225\u0109\u0108\u0109\uf22a\u0109\u0108\u0109\uf40c\u0121\u0120\u0109\uf22b\u0109\u0108\u0109"),
+        SP_TAB(6, "\uf40f\u0111\u0110\u0109\uf232\u0109\u0108\u0109\uf233\u0105\u0104\u0109\uf234\u0103\u0102\u0109\uf235\u0102\u0101\u0109\uf411\u0111\u0110\u0109\uf238\u0109\u0108\u0109\uf239\u0105\u0104\u0109\uf23a\u0103\u0102\u0109\uf23b\u0102\u0101\u0109\uf413\u0111\u0110\u0109\uf23e\u0109\u0108\u0109\uf23f\u0105\u0104\u0109\uf240\u0103\u0102\u0109\uf241\u0102\u0101\u0109",
+                "\uf230\u0109\u0108\u0109\uf40e\u0121\u0120\u0109\uf231\u0109\u0108\u0109\uf236\u0109\u0108\u0109\uf410\u0121\u0120\u0109\uf237\u0109\u0108\u0109\uf23c\u0109\u0108\u0109\uf412\u0121\u0120\u0109\uf23d\u0109\u0108\u0109"),
+        SP_TAB_ON(6, "\uf415\u0111\u0110\u0109\uf244\u0109\u0108\u0109\uf245\u0105\u0104\u0109\uf246\u0103\u0102\u0109\uf247\u0102\u0101\u0109\uf417\u0111\u0110\u0109\uf24a\u0109\u0108\u0109\uf24b\u0105\u0104\u0109\uf24c\u0103\u0102\u0109\uf24d\u0102\u0101\u0109\uf419\u0111\u0110\u0109\uf250\u0109\u0108\u0109\uf251\u0105\u0104\u0109\uf252\u0103\u0102\u0109\uf253\u0102\u0101\u0109",
+                "\uf242\u0109\u0108\u0109\uf414\u0121\u0120\u0109\uf243\u0109\u0108\u0109\uf248\u0109\u0108\u0109\uf416\u0121\u0120\u0109\uf249\u0109\u0108\u0109\uf24e\u0109\u0108\u0109\uf418\u0121\u0120\u0109\uf24f\u0109\u0108\u0109"),
+        SP_PILL_ON(6, "\uf41b\u0111\u0110\u0109\uf256\u0109\u0108\u0109\uf257\u0105\u0104\u0109\uf258\u0103\u0102\u0109\uf259\u0102\u0101\u0109\uf41d\u0111\u0110\u0109\uf25c\u0109\u0108\u0109\uf25d\u0105\u0104\u0109\uf25e\u0103\u0102\u0109\uf25f\u0102\u0101\u0109\uf41f\u0111\u0110\u0109\uf262\u0109\u0108\u0109\uf263\u0105\u0104\u0109\uf264\u0103\u0102\u0109\uf265\u0102\u0101\u0109",
+                "\uf254\u0109\u0108\u0109\uf41a\u0121\u0120\u0109\uf255\u0109\u0108\u0109\uf25a\u0109\u0108\u0109\uf41c\u0121\u0120\u0109\uf25b\u0109\u0108\u0109\uf260\u0109\u0108\u0109\uf41e\u0121\u0120\u0109\uf261\u0109\u0108\u0109"),
+        SP_PILL_CUR(6, "\uf421\u0111\u0110\u0109\uf268\u0109\u0108\u0109\uf269\u0105\u0104\u0109\uf26a\u0103\u0102\u0109\uf26b\u0102\u0101\u0109\uf423\u0111\u0110\u0109\uf26e\u0109\u0108\u0109\uf26f\u0105\u0104\u0109\uf270\u0103\u0102\u0109\uf271\u0102\u0101\u0109\uf425\u0111\u0110\u0109\uf274\u0109\u0108\u0109\uf275\u0105\u0104\u0109\uf276\u0103\u0102\u0109\uf277\u0102\u0101\u0109",
+                "\uf266\u0109\u0108\u0109\uf420\u0121\u0120\u0109\uf267\u0109\u0108\u0109\uf26c\u0109\u0108\u0109\uf422\u0121\u0120\u0109\uf26d\u0109\u0108\u0109\uf272\u0109\u0108\u0109\uf424\u0121\u0120\u0109\uf273\u0109\u0108\u0109"),
+        SP_QUEST_DAY(5, "\uf427\u0111\u0110\u0109\uf27a\u0109\u0108\u0109\uf27b\u0105\u0104\u0109\uf27c\u0103\u0102\u0109\uf27d\u0102\u0101\u0109\uf429\u0111\u0110\u0109\uf280\u0109\u0108\u0109\uf281\u0105\u0104\u0109\uf282\u0103\u0102\u0109\uf283\u0102\u0101\u0109\uf42b\u0111\u0110\u0109\uf286\u0109\u0108\u0109\uf287\u0105\u0104\u0109\uf288\u0103\u0102\u0109\uf289\u0102\u0101\u0109",
+                "\uf278\u0109\u0108\u0109\uf426\u0121\u0120\u0109\uf279\u0109\u0108\u0109\uf27e\u0109\u0108\u0109\uf428\u0121\u0120\u0109\uf27f\u0109\u0108\u0109\uf284\u0109\u0108\u0109\uf42a\u0121\u0120\u0109\uf285\u0109\u0108\u0109"),
+        SP_BUY_BOX(5, "\uf42d\u0111\u0110\u0109\uf28c\u0109\u0108\u0109\uf28d\u0105\u0104\u0109\uf28e\u0103\u0102\u0109\uf28f\u0102\u0101\u0109\uf42f\u0111\u0110\u0109\uf292\u0109\u0108\u0109\uf293\u0105\u0104\u0109\uf294\u0103\u0102\u0109\uf295\u0102\u0101\u0109\uf431\u0111\u0110\u0109\uf298\u0109\u0108\u0109\uf299\u0105\u0104\u0109\uf29a\u0103\u0102\u0109\uf29b\u0102\u0101\u0109",
+                "\uf28a\u0109\u0108\u0109\uf42c\u0121\u0120\u0109\uf28b\u0109\u0108\u0109\uf290\u0109\u0108\u0109\uf42e\u0121\u0120\u0109\uf291\u0109\u0108\u0109\uf296\u0109\u0108\u0109\uf430\u0121\u0120\u0109\uf297\u0109\u0108\u0109"),
+        SP_BTN_SKY(6, "\uf433\u0111\u0110\u0109\uf29e\u0109\u0108\u0109\uf29f\u0105\u0104\u0109\uf2a0\u0103\u0102\u0109\uf2a1\u0102\u0101\u0109\uf435\u0111\u0110\u0109\uf2a4\u0109\u0108\u0109\uf2a5\u0105\u0104\u0109\uf2a6\u0103\u0102\u0109\uf2a7\u0102\u0101\u0109\uf437\u0111\u0110\u0109\uf2aa\u0109\u0108\u0109\uf2ab\u0105\u0104\u0109\uf2ac\u0103\u0102\u0109\uf2ad\u0102\u0101\u0109",
+                "\uf29c\u0109\u0108\u0109\uf432\u0121\u0120\u0109\uf29d\u0109\u0108\u0109\uf2a2\u0109\u0108\u0109\uf434\u0121\u0120\u0109\uf2a3\u0109\u0108\u0109\uf2a8\u0109\u0108\u0109\uf436\u0121\u0120\u0109\uf2a9\u0109\u0108\u0109"),
+        SP_FREE(5, "\uf439\u0111\u0110\u0109\uf2b0\u0109\u0108\u0109\uf2b1\u0105\u0104\u0109\uf2b2\u0103\u0102\u0109\uf2b3\u0102\u0101\u0109\uf43b\u0111\u0110\u0109\uf2b6\u0109\u0108\u0109\uf2b7\u0105\u0104\u0109\uf2b8\u0103\u0102\u0109\uf2b9\u0102\u0101\u0109\uf43d\u0111\u0110\u0109\uf2bc\u0109\u0108\u0109\uf2bd\u0105\u0104\u0109\uf2be\u0103\u0102\u0109\uf2bf\u0102\u0101\u0109",
+                "\uf2ae\u0109\u0108\u0109\uf438\u0121\u0120\u0109\uf2af\u0109\u0108\u0109\uf2b4\u0109\u0108\u0109\uf43a\u0121\u0120\u0109\uf2b5\u0109\u0108\u0109\uf2ba\u0109\u0108\u0109\uf43c\u0121\u0120\u0109\uf2bb\u0109\u0108\u0109"),
         GD_CONTENT(5, null,
-                "\uf20c\u0109\u0108\u0109\uf402\u0121\u0120\u0109\uf20d\u0109\u0108\u0109\uf20e\u0109\u0108\u0109\uf403\u0121\u0120\u0109\uf20f\u0109\u0108\u0109\uf210\u0109\u0108\u0109\uf404\u0121\u0120\u0109\uf211\u0109\u0108\u0109"),
+                "\uf2c0\u0109\u0108\u0109\uf43e\u0121\u0120\u0109\uf2c1\u0109\u0108\u0109\uf2c2\u0109\u0108\u0109\uf43f\u0121\u0120\u0109\uf2c3\u0109\u0108\u0109\uf2c4\u0109\u0108\u0109\uf440\u0121\u0120\u0109\uf2c5\u0109\u0108\u0109"),
         GD_HEAD(5, null,
-                "\uf212\u0109\u0108\u0109\uf405\u0121\u0120\u0109\uf213\u0109\u0108\u0109\uf214\u0109\u0108\u0109\uf406\u0121\u0120\u0109\uf215\u0109\u0108\u0109\uf216\u0109\u0108\u0109\uf407\u0121\u0120\u0109\uf217\u0109\u0108\u0109"),
+                "\uf2c6\u0109\u0108\u0109\uf441\u0121\u0120\u0109\uf2c7\u0109\u0108\u0109\uf2c8\u0109\u0108\u0109\uf442\u0121\u0120\u0109\uf2c9\u0109\u0108\u0109\uf2ca\u0109\u0108\u0109\uf443\u0121\u0120\u0109\uf2cb\u0109\u0108\u0109"),
         GD_NAV(7, null,
-                "\uf218\u0109\u0108\u0109\uf408\u0121\u0120\u0109\uf219\u0109\u0108\u0109\uf21a\u0109\u0108\u0109\uf409\u0121\u0120\u0109\uf21b\u0109\u0108\u0109\uf21c\u0109\u0108\u0109\uf40a\u0121\u0120\u0109\uf21d\u0109\u0108\u0109"),
+                "\uf2cc\u0109\u0108\u0109\uf444\u0121\u0120\u0109\uf2cd\u0109\u0108\u0109\uf2ce\u0109\u0108\u0109\uf445\u0121\u0120\u0109\uf2cf\u0109\u0108\u0109\uf2d0\u0109\u0108\u0109\uf446\u0121\u0120\u0109\uf2d1\u0109\u0108\u0109"),
         GD_NAV_ON(5, null,
-                "\uf21e\u0109\u0108\u0109\uf40b\u0121\u0120\u0109\uf21f\u0109\u0108\u0109\uf220\u0109\u0108\u0109\uf40c\u0121\u0120\u0109\uf221\u0109\u0108\u0109\uf222\u0109\u0108\u0109\uf40d\u0121\u0120\u0109\uf223\u0109\u0108\u0109");
+                "\uf2d2\u0109\u0108\u0109\uf447\u0121\u0120\u0109\uf2d3\u0109\u0108\u0109\uf2d4\u0109\u0108\u0109\uf448\u0121\u0120\u0109\uf2d5\u0109\u0108\u0109\uf2d6\u0109\u0108\u0109\uf449\u0121\u0120\u0109\uf2d7\u0109\u0108\u0109");
 
         /** [Zeile oben/mitte/unten][links/mitte/rechts] */
         public final Piece[][] p;
@@ -751,14 +771,15 @@ public final class KitData {
 
     /** Balken-Füllfarben; Stücke in den Breiten 1, 2, 4, 8, 16, 32. */
     public enum Fill {
-        GOLD(new Piece('\uf23c', 2, 1, 5), new Piece('\uf23d', 3, 2, 5), new Piece('\uf23e', 5, 4, 5), new Piece('\uf23f', 9, 8, 5), new Piece('\uf414', 17, 16, 5), new Piece('\uf415', 33, 32, 5)),
-        CYAN(new Piece('\uf240', 2, 1, 5), new Piece('\uf241', 3, 2, 5), new Piece('\uf242', 5, 4, 5), new Piece('\uf243', 9, 8, 5), new Piece('\uf416', 17, 16, 5), new Piece('\uf417', 33, 32, 5)),
-        GREEN(new Piece('\uf244', 2, 1, 5), new Piece('\uf245', 3, 2, 5), new Piece('\uf246', 5, 4, 5), new Piece('\uf247', 9, 8, 5), new Piece('\uf418', 17, 16, 5), new Piece('\uf419', 33, 32, 5)),
-        PURPLE(new Piece('\uf248', 2, 1, 5), new Piece('\uf249', 3, 2, 5), new Piece('\uf24a', 5, 4, 5), new Piece('\uf24b', 9, 8, 5), new Piece('\uf41a', 17, 16, 5), new Piece('\uf41b', 33, 32, 5)),
-        RED(new Piece('\uf24c', 2, 1, 5), new Piece('\uf24d', 3, 2, 5), new Piece('\uf24e', 5, 4, 5), new Piece('\uf24f', 9, 8, 5), new Piece('\uf41c', 17, 16, 5), new Piece('\uf41d', 33, 32, 5)),
-        BP_VIOLET(new Piece('\uf250', 2, 1, 5), new Piece('\uf251', 3, 2, 5), new Piece('\uf252', 5, 4, 5), new Piece('\uf253', 9, 8, 5), new Piece('\uf41e', 17, 16, 5), new Piece('\uf41f', 33, 32, 5)),
-        BP_GREEN(new Piece('\uf254', 2, 1, 5), new Piece('\uf255', 3, 2, 5), new Piece('\uf256', 5, 4, 5), new Piece('\uf257', 9, 8, 5), new Piece('\uf420', 17, 16, 5), new Piece('\uf421', 33, 32, 5)),
-        BP_GOLD(new Piece('\uf258', 2, 1, 5), new Piece('\uf259', 3, 2, 5), new Piece('\uf25a', 5, 4, 5), new Piece('\uf25b', 9, 8, 5), new Piece('\uf422', 17, 16, 5), new Piece('\uf423', 33, 32, 5));
+        GOLD(new Piece('\uf2f0', 2, 1, 5), new Piece('\uf2f1', 3, 2, 5), new Piece('\uf2f2', 5, 4, 5), new Piece('\uf2f3', 9, 8, 5), new Piece('\uf450', 17, 16, 5), new Piece('\uf451', 33, 32, 5)),
+        CYAN(new Piece('\uf2f4', 2, 1, 5), new Piece('\uf2f5', 3, 2, 5), new Piece('\uf2f6', 5, 4, 5), new Piece('\uf2f7', 9, 8, 5), new Piece('\uf452', 17, 16, 5), new Piece('\uf453', 33, 32, 5)),
+        GREEN(new Piece('\uf2f8', 2, 1, 5), new Piece('\uf2f9', 3, 2, 5), new Piece('\uf2fa', 5, 4, 5), new Piece('\uf2fb', 9, 8, 5), new Piece('\uf454', 17, 16, 5), new Piece('\uf455', 33, 32, 5)),
+        PURPLE(new Piece('\uf2fc', 2, 1, 5), new Piece('\uf2fd', 3, 2, 5), new Piece('\uf2fe', 5, 4, 5), new Piece('\uf2ff', 9, 8, 5), new Piece('\uf456', 17, 16, 5), new Piece('\uf457', 33, 32, 5)),
+        RED(new Piece('\uf300', 2, 1, 5), new Piece('\uf301', 3, 2, 5), new Piece('\uf302', 5, 4, 5), new Piece('\uf303', 9, 8, 5), new Piece('\uf458', 17, 16, 5), new Piece('\uf459', 33, 32, 5)),
+        BP_VIOLET(new Piece('\uf304', 2, 1, 5), new Piece('\uf305', 3, 2, 5), new Piece('\uf306', 5, 4, 5), new Piece('\uf307', 9, 8, 5), new Piece('\uf45a', 17, 16, 5), new Piece('\uf45b', 33, 32, 5)),
+        BP_GREEN(new Piece('\uf308', 2, 1, 5), new Piece('\uf309', 3, 2, 5), new Piece('\uf30a', 5, 4, 5), new Piece('\uf30b', 9, 8, 5), new Piece('\uf45c', 17, 16, 5), new Piece('\uf45d', 33, 32, 5)),
+        BP_GOLD(new Piece('\uf30c', 2, 1, 5), new Piece('\uf30d', 3, 2, 5), new Piece('\uf30e', 5, 4, 5), new Piece('\uf30f', 9, 8, 5), new Piece('\uf45e', 17, 16, 5), new Piece('\uf45f', 33, 32, 5)),
+        SP_SKY(new Piece('\uf310', 2, 1, 5), new Piece('\uf311', 3, 2, 5), new Piece('\uf312', 5, 4, 5), new Piece('\uf313', 9, 8, 5), new Piece('\uf460', 17, 16, 5), new Piece('\uf461', 33, 32, 5));
 
         public final Piece[] p;
 
@@ -767,19 +788,19 @@ public final class KitData {
         }
     }
 
-    public static final Piece BAR_L = new Piece('\uf224', 9, 8, 7);
-    public static final Piece BAR_M = new Piece('\uf40e', 33, 32, 7);
-    public static final Piece BAR_R = new Piece('\uf225', 9, 8, 7);
-    public static final Piece[] BAR_NARROW = {new Piece('\uf40f', 17, 16, 7), new Piece('\uf226', 9, 8, 7), new Piece('\uf227', 5, 4, 7), new Piece('\uf228', 3, 2, 7), new Piece('\uf229', 2, 1, 7)};
+    public static final Piece BAR_L = new Piece('\uf2d8', 9, 8, 7);
+    public static final Piece BAR_M = new Piece('\uf44a', 33, 32, 7);
+    public static final Piece BAR_R = new Piece('\uf2d9', 9, 8, 7);
+    public static final Piece[] BAR_NARROW = {new Piece('\uf44b', 17, 16, 7), new Piece('\uf2da', 9, 8, 7), new Piece('\uf2db', 5, 4, 7), new Piece('\uf2dc', 3, 2, 7), new Piece('\uf2dd', 2, 1, 7)};
     /** Flacher Balken (Battle-Pass). */
-    public static final Piece BAR2_L = new Piece('\uf22a', 9, 8, 7);
-    public static final Piece BAR2_M = new Piece('\uf410', 33, 32, 7);
-    public static final Piece BAR2_R = new Piece('\uf22b', 9, 8, 7);
-    public static final Piece[] BAR2_NARROW = {new Piece('\uf411', 17, 16, 7), new Piece('\uf22c', 9, 8, 7), new Piece('\uf22d', 5, 4, 7), new Piece('\uf22e', 3, 2, 7), new Piece('\uf22f', 2, 1, 7)};
+    public static final Piece BAR2_L = new Piece('\uf2de', 9, 8, 7);
+    public static final Piece BAR2_M = new Piece('\uf44c', 33, 32, 7);
+    public static final Piece BAR2_R = new Piece('\uf2df', 9, 8, 7);
+    public static final Piece[] BAR2_NARROW = {new Piece('\uf44d', 17, 16, 7), new Piece('\uf2e0', 9, 8, 7), new Piece('\uf2e1', 5, 4, 7), new Piece('\uf2e2', 3, 2, 7), new Piece('\uf2e3', 2, 1, 7)};
     /** Linien 1 px hoch (weiß, eingefärbt): 32, 16, 8, 4, 2, 1 px. */
-    public static final Piece[] LINE = {new Piece('\uf412', 33, 32, 1), new Piece('\uf413', 17, 16, 1), new Piece('\uf230', 9, 8, 1), new Piece('\uf231', 5, 4, 1), new Piece('\uf232', 3, 2, 1), new Piece('\uf233', 2, 1, 1)};
-    public static final Piece[] VBAR1 = {new Piece('\uf234', 2, 1, 8), new Piece('\uf235', 2, 1, 4), new Piece('\uf236', 2, 1, 2), new Piece('\uf237', 2, 1, 1)};
-    public static final Piece[] VBAR3 = {new Piece('\uf238', 4, 3, 8), new Piece('\uf239', 4, 3, 4), new Piece('\uf23a', 4, 3, 2), new Piece('\uf23b', 4, 3, 1)};
+    public static final Piece[] LINE = {new Piece('\uf44e', 33, 32, 1), new Piece('\uf44f', 17, 16, 1), new Piece('\uf2e4', 9, 8, 1), new Piece('\uf2e5', 5, 4, 1), new Piece('\uf2e6', 3, 2, 1), new Piece('\uf2e7', 2, 1, 1)};
+    public static final Piece[] VBAR1 = {new Piece('\uf2e8', 2, 1, 8), new Piece('\uf2e9', 2, 1, 4), new Piece('\uf2ea', 2, 1, 2), new Piece('\uf2eb', 2, 1, 1)};
+    public static final Piece[] VBAR3 = {new Piece('\uf2ec', 4, 3, 8), new Piece('\uf2ed', 4, 3, 4), new Piece('\uf2ee', 4, 3, 2), new Piece('\uf2ef', 4, 3, 1)};
     public static final Piece BACK = new Piece('\ued80', 21, 20, 20);
     public static final Piece BACK_HELP = new Piece('\ued81', 23, 22, 22);
 
@@ -2074,19 +2095,25 @@ public final class KitData {
         BP_TAB_SCROLL(21, 17, 1, "\uf336", "F"),
         BP_TICKET(38, 37, 2, "\uf337\uf338\uf339\u0000", "Q720"),
         BP_TITLE(110, 15, 4, "\uf33a\uf33b\uf33c\uf33d", "QPQ?"),
-        GD_BOOK(32, 30, 1, "\uf33e", "Q"),
-        GD_NAV00(7, 8, 1, "\uf33f", "8"),
-        GD_NAV01(8, 8, 1, "\uf340", "9"),
-        GD_NAV02(6, 7, 1, "\uf341", "7"),
-        GD_NAV03(6, 8, 1, "\uf342", "7"),
-        GD_NAV04(6, 7, 1, "\uf343", "7"),
-        GD_NAV05(7, 8, 1, "\uf344", "8"),
-        GD_NAV06(8, 8, 1, "\uf345", "9"),
-        GD_NAV07(7, 7, 1, "\uf346", "8"),
-        GD_NAV08(8, 8, 1, "\uf347", "9"),
-        GD_NAV09(7, 7, 1, "\uf348", "8"),
-        GD_NAV10(8, 6, 1, "\uf349", "9"),
-        GD_NAV11(6, 8, 1, "\uf34a", "7");
+        SP_FREEPASS(21, 15, 1, "\uf33e", "F"),
+        SP_ICON(32, 32, 1, "\uf33f", "Q"),
+        SP_ISLAND(38, 37, 2, "\uf340\uf341\uf342\u0000", "Q720"),
+        SP_PLAY(19, 16, 1, "\uf343", "D"),
+        SP_TAB_SCROLL(21, 17, 1, "\uf344", "F"),
+        SP_TITLE(71, 15, 3, "\uf345\uf346\uf347", "QQ8"),
+        GD_BOOK(32, 30, 1, "\uf348", "Q"),
+        GD_NAV00(7, 8, 1, "\uf349", "8"),
+        GD_NAV01(8, 8, 1, "\uf34a", "9"),
+        GD_NAV02(6, 7, 1, "\uf34b", "7"),
+        GD_NAV03(6, 8, 1, "\uf34c", "7"),
+        GD_NAV04(6, 7, 1, "\uf34d", "7"),
+        GD_NAV05(7, 8, 1, "\uf34e", "8"),
+        GD_NAV06(8, 8, 1, "\uf34f", "9"),
+        GD_NAV07(7, 7, 1, "\uf350", "8"),
+        GD_NAV08(8, 8, 1, "\uf351", "9"),
+        GD_NAV09(7, 7, 1, "\uf352", "8"),
+        GD_NAV10(8, 6, 1, "\uf353", "9"),
+        GD_NAV11(6, 8, 1, "\uf354", "7");
 
         public final int width, height, cols;
         public final String chars, advances;

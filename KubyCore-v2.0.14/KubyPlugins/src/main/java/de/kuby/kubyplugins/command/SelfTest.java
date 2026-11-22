@@ -278,10 +278,13 @@ final class SelfTest {
         };
         for (de.kuby.kubyplugins.gui.BattlepassScreen.Tab t : de.kuby.kubyplugins.gui.BattlepassScreen.Tab.values()) {
             canvas.accept("Battlepass " + t, () -> de.kuby.kubyplugins.gui.BattlepassScreen.canvas(plugin.battlepassScreen().sample(t), ba));
+            // Skypass (Skyblock): gleiche Seiten im Himmel-Stil
+            canvas.accept("Skypass " + t, () -> de.kuby.kubyplugins.gui.BattlepassScreen.canvas(plugin.battlepassScreen().sample(t,
+                    de.kuby.kubyplugins.service.BattlepassService.SKYPASS), ba));
         }
         canvas.accept("Battlepass englisch", () -> {
             de.kuby.kubyplugins.gui.BattlepassScreen.View v = plugin.battlepassScreen().sample(de.kuby.kubyplugins.gui.BattlepassScreen.Tab.PREMIUM);
-            return de.kuby.kubyplugins.gui.BattlepassScreen.canvas(new de.kuby.kubyplugins.gui.BattlepassScreen.View(v.tab(), true,
+            return de.kuby.kubyplugins.gui.BattlepassScreen.canvas(new de.kuby.kubyplugins.gui.BattlepassScreen.View(v.look(), v.tab(), true,
                     v.season(), v.seasonLeft(), 100, 0, v.perLevel(), true, 14, v.pages(), List.of(), List.of(), 3, v.daily(),
                     v.weekly(), v.dailyLeft(), v.weeklyLeft(), v.premiumPrice(), v.freeCount(), v.premCount(), v.perks(),
                     12_345, 7, v.levelPrice(), 0, "levels"), ba);
@@ -627,6 +630,28 @@ final class SelfTest {
             } catch (Throwable t) {
                 fails.add(en.getKey() + ": " + t);
             }
+        }
+
+        // Währungen und Pässe je Modus (v2.05): XP nur SMP/Skyblock, Tokens nur Survival; Battlepass SMP, Skypass Skyblock
+        try {
+            String smp = de.kuby.kubyplugins.service.ModeService.SMP, sky = de.kuby.kubyplugins.service.ModeService.SKYBLOCK,
+                    surv = de.kuby.kubyplugins.service.ModeService.SURVIVAL;
+            if (!de.kuby.kubyplugins.service.ModeService.hasCurrency(smp, "xp") || !de.kuby.kubyplugins.service.ModeService.hasCurrency(sky, "xp")
+                    || de.kuby.kubyplugins.service.ModeService.hasCurrency(surv, "xp")) fails.add("Währung: XP nicht nur in SMP und Skyblock");
+            if (!de.kuby.kubyplugins.service.ModeService.hasCurrency(surv, "tokens") || de.kuby.kubyplugins.service.ModeService.hasCurrency(smp, "tokens")
+                    || de.kuby.kubyplugins.service.ModeService.hasCurrency(sky, "tokens")) fails.add("Währung: Tokens nicht nur in Survival");
+            if (!de.kuby.kubyplugins.service.BattlepassService.enabled(smp) || !de.kuby.kubyplugins.service.BattlepassService.enabled(sky)
+                    || de.kuby.kubyplugins.service.BattlepassService.enabled(surv)) fails.add("Pässe: Battlepass/Skypass falsch freigegeben");
+            if (!"skypass".equals(de.kuby.kubyplugins.service.BattlepassService.passOf(sky))
+                    || !"battlepass".equals(de.kuby.kubyplugins.service.BattlepassService.passOf(smp))) fails.add("Pässe: falscher Pass je Modus");
+            var bpq = plugin.battlepass().pool(de.kuby.kubyplugins.service.BattlepassService.Period.DAILY, "battlepass");
+            var spq = plugin.battlepass().pool(de.kuby.kubyplugins.service.BattlepassService.Period.DAILY, "skypass");
+            if (spq.isEmpty() || spq.stream().map(q -> q.id()).toList().equals(bpq.stream().map(q -> q.id()).toList()))
+                fails.add("Skypass: keine eigenen Tagesaufgaben");
+            if (plugin.battlepass().rewardLevels(de.kuby.kubyplugins.service.BattlepassService.PREMIUM, "skypass") < 50)
+                fails.add("Skypass: zu wenige Premium-Belohnungen");
+        } catch (Throwable t) {
+            fails.add("Währungen/Pässe: " + t);
         }
 
         // Casino: Juwelen nur in den freigegebenen Spielen, sonst immer Chips (auch wenn der Spieler Juwelen gewählt hat)

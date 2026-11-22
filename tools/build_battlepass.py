@@ -12,6 +12,8 @@ import os
 
 from PIL import Image
 
+import build_skypass
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 ASSETS = os.path.join(HERE, "assets", "battlepass")
 
@@ -28,14 +30,17 @@ def boxes():
     """Stil bp_<name> -> 15 x 15-Vorlage."""
     if not available():
         return {}
-    return {"bp_" + f[4:-4]: Image.open(os.path.join(ASSETS, f)).convert("RGBA") for f in _files("box_")}
+    out = {"bp_" + f[4:-4]: Image.open(os.path.join(ASSETS, f)).convert("RGBA") for f in _files("box_")}
+    out.update(build_skypass.boxes())  # Skypass (Skyblock): gleiche Kästen in Himmelblau
+    return out
 
 
 def sprites():
     """[(bp_<name>, Bild)] Grafiken (Reihenfolge fest: alphabetisch)."""
     if not available():
         return []
-    return [("bp_" + f[4:-4], Image.open(os.path.join(ASSETS, f)).convert("RGBA")) for f in _files("art_")]
+    return ([("bp_" + f[4:-4], Image.open(os.path.join(ASSETS, f)).convert("RGBA")) for f in _files("art_")]
+            + build_skypass.sprites())
 
 
 def icons():

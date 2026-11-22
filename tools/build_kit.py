@@ -278,6 +278,8 @@ BAR_FILLS = {
     "bp_violet": ("C7B6FC", "AFA0DE", "8479A8"),
     "bp_green": ("6DE288", "60C878", "48975B"),
     "bp_gold": ("FCC965", "DEB159", "A88643"),
+    # Skypass (Skyblock): Battle-Pass-Violett in Himmelblau (build_skypass.fill_sky)
+    "sp_sky": ("B5EBFC", "9FCEDE", "789AA8"),
 }
 BAR_H = 7
 LINE_W = (32, 16, 8, 4, 2, 1)     # Linien-Stücke (Unterstreichung), größte zuerst

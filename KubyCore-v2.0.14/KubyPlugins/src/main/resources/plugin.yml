@@ -179,6 +179,8 @@ commands:
     description: "XP eintauschen"
   battlepass:
     description: "Battlepass mit 100 Stufen öffnen"
+  skypass:
+    description: "Skypass (Skyblock) mit 100 Stufen öffnen"
   cosmetics:
     description: "Hüte, Spuren und Effekte auswählen"
     usage: "/cosmetics [give <Spieler> <ID>]"

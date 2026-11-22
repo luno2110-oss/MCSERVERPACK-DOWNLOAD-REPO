@@ -25,10 +25,18 @@ public final class BattlepassMenu extends GuiMenu {
     private static final int PER_PAGE = 9;
     private static final int PAGES = (BattlepassService.MAX_LEVEL + PER_PAGE - 1) / PER_PAGE;
     private final int page;
+    private final String pass;
 
     public BattlepassMenu(KubyPlugins plugin, int page) {
-        super(plugin, Msg.parse("<dark_gray>" + SmallCaps.of("battlepass") + " <gray>" + (page + 1) + "/" + PAGES), 6);
+        this(plugin, page, BattlepassService.BATTLEPASS);
+    }
+
+    /** Truhen-Ansicht des Passes (battlepass oder skypass, Titel passend). */
+    public BattlepassMenu(KubyPlugins plugin, int page, String pass) {
+        super(plugin, Msg.parse("<dark_gray>" + SmallCaps.of(BattlepassService.title(pass).toLowerCase(java.util.Locale.ROOT))
+                + " <gray>" + (page + 1) + "/" + PAGES), 6);
         this.page = Math.max(0, Math.min(page, PAGES - 1));
+        this.pass = pass;
     }
 
     @Override
@@ -74,19 +82,19 @@ public final class BattlepassMenu extends GuiMenu {
         set(45, page > 0
                 ? Items.make(Material.ARROW, "<gray>Vorherige Seite", List.of())
                 : Items.make(Material.ARROW, "<gray>Zurück zum Menü", List.of()),
-                e -> { if (page > 0) new BattlepassMenu(plugin, page - 1).open(p); else new MainMenu(plugin).open(p); });
+                e -> { if (page > 0) new BattlepassMenu(plugin, page - 1, pass).open(p); else new MainMenu(plugin).open(p); });
 
         set(47, Items.make(Material.HOPPER, "<green>Freie Belohnungen holen", List.of(
                 "<gray>Holt alle erreichten Stufen der Free-Spur")),
                 e -> claim(p, BattlepassService.FREE));
 
         set(49, Items.make(Material.BOOK, "<gold>Level " + level + " <gray>/ " + BattlepassService.MAX_LEVEL, List.of(
-                "<gray>Punkte: <white>" + bp.pointsInLevel(id) + "<gray>/<white>" + bp.xpPerLevel(),
-                "<gray>Season " + bp.season())), null);
+                "<gray>Punkte: <white>" + bp.pointsInLevel(id) + "<gray>/<white>" + bp.xpPerLevel(pass),
+                "<gray>Season " + bp.season(pass))), null);
 
         if (!premium) {
             set(51, Items.make(Material.EMERALD_BLOCK, "<green>Premium-Pass kaufen", List.of(
-                    "<gray>Preis: <aqua>" + bp.premiumPrice() + " Juwelen",
+                    "<gray>Preis: <aqua>" + bp.premiumPrice(pass) + " Juwelen",
                     "<gray>Belohnungen auf jeder Stufe")),
                     e -> {
                         String err = bp.buyPremium(p);
@@ -102,12 +110,12 @@ public final class BattlepassMenu extends GuiMenu {
 
         if (page < PAGES - 1) {
             set(53, Items.make(Material.ARROW, "<gray>Nächste Seite", List.of()),
-                    e -> new BattlepassMenu(plugin, page + 1).open(p));
+                    e -> new BattlepassMenu(plugin, page + 1, pass).open(p));
         }
     }
 
     private ItemStack cell(int lvl, String track, int claimedUpTo, boolean reached, boolean unlocked) {
-        List<Reward> rewards = plugin.battlepass().rewardsAt(lvl, track);
+        List<Reward> rewards = plugin.battlepass().rewardsAt(lvl, track, pass);
         if (rewards.isEmpty()) return filler();
         boolean claimed = lvl <= claimedUpTo;
         boolean canClaim = reached && !claimed && unlocked;

@@ -156,6 +156,36 @@ public final class BattlepassService implements ModeData {
     }
 
     // =================================================================================================================
+    // Pass je Modus (v2.05): Battlepass nur in SMP, Skypass in Skyblock (gleiche Technik, eigene Einstellungen und Stil)
+    // =================================================================================================================
+
+    public static final String BATTLEPASS = "battlepass", SKYPASS = "skypass";
+
+    /** Pass des Modus: Skyblock → skypass, sonst battlepass (in Survival und Hub gibt es keinen, siehe enabled). */
+    public static String passOf(String mode) {
+        return ModeService.SKYBLOCK.equals(mode) ? SKYPASS : BATTLEPASS;
+    }
+
+    public String passOf(UUID id) {
+        return passOf(plugin.modes().modeOf(id));
+    }
+
+    /** Gibt es im Modus einen Pass dieses Dienstes? SMP (Battlepass) und Skyblock (Skypass). */
+    public static boolean enabled(String mode) {
+        return ModeService.SMP.equals(mode) || ModeService.SKYBLOCK.equals(mode);
+    }
+
+    public static String title(String pass) {
+        return SKYPASS.equals(pass) ? "Skypass" : "Battlepass";
+    }
+
+    /** Config-Pfad: skypass.&lt;name&gt;, wenn dort gesetzt, sonst battlepass.&lt;name&gt;. */
+    private String key(String pass, String name) {
+        if (!BATTLEPASS.equals(pass) && cfg().contains(pass + "." + name)) return pass + "." + name;
+        return "battlepass." + name;
+    }
+
+    // =================================================================================================================
     // Season, Tag, Woche
     // =================================================================================================================
 
@@ -179,10 +209,10 @@ public final class BattlepassService implements ModeData {
     }
 
     /** {Nummer der laufenden Season, Ende in ms (oder -1 ohne season-start)}. */
-    private long[] seasonInfo() {
-        int first = cfg().getInt("battlepass.first-season", 1);
-        int days = Math.max(1, cfg().getInt("battlepass.season-days", 60));
-        String raw = cfg().getString("battlepass.season-start", "");
+    private long[] seasonInfo(String pass) {
+        int first = cfg().getInt(key(pass, "first-season"), 1);
+        int days = Math.max(1, cfg().getInt(key(pass, "season-days"), 60));
+        String raw = cfg().getString(key(pass, "season-start"), "");
         LocalDate start;
         try {
             start = raw == null || raw.isBlank() ? null : LocalDate.parse(raw.trim());
@@ -198,12 +228,20 @@ public final class BattlepassService implements ModeData {
     }
 
     public int season() {
-        return (int) seasonInfo()[0];
+        return season(BATTLEPASS);
+    }
+
+    public int season(String pass) {
+        return (int) seasonInfo(pass)[0];
     }
 
     /** Millisekunden bis zum Ende der Season, -1 ohne Ende. */
     public long seasonLeft() {
-        long end = seasonInfo()[1];
+        return seasonLeft(BATTLEPASS);
+    }
+
+    public long seasonLeft(String pass) {
+        long end = seasonInfo(pass)[1];
         return end < 0 ? -1 : Math.max(0, end - System.currentTimeMillis());
     }
 
@@ -212,23 +250,43 @@ public final class BattlepassService implements ModeData {
     // =================================================================================================================
 
     public int xpPerLevel() {
-        return Math.max(1, cfg().getInt("battlepass.xp-per-level", 250));
+        return xpPerLevel(BATTLEPASS);
+    }
+
+    public int xpPerLevel(String pass) {
+        return Math.max(1, cfg().getInt(key(pass, "xp-per-level"), 250));
     }
 
     public long premiumPrice() {
-        return cfg().getLong("battlepass.premium-price", 1000);
+        return premiumPrice(BATTLEPASS);
+    }
+
+    public long premiumPrice(String pass) {
+        return cfg().getLong(key(pass, "premium-price"), 1000);
     }
 
     public long levelPrice() {
-        return Math.max(0, cfg().getLong("battlepass.level-price", 100));
+        return levelPrice(BATTLEPASS);
+    }
+
+    public long levelPrice(String pass) {
+        return Math.max(0, cfg().getLong(key(pass, "level-price"), 100));
     }
 
     public int levelDailyLimit() {
-        return Math.max(0, cfg().getInt("battlepass.level-daily-limit", 999));
+        return levelDailyLimit(BATTLEPASS);
+    }
+
+    public int levelDailyLimit(String pass) {
+        return Math.max(0, cfg().getInt(key(pass, "level-daily-limit"), 999));
     }
 
     public int questCount(Period period) {
-        return Math.max(0, cfg().getInt(period == Period.DAILY ? "battlepass.daily-count" : "battlepass.weekly-count",
+        return questCount(period, BATTLEPASS);
+    }
+
+    public int questCount(Period period, String pass) {
+        return Math.max(0, cfg().getInt(key(pass, period == Period.DAILY ? "daily-count" : "weekly-count"),
                 period == Period.DAILY ? 4 : 6));
     }
 
@@ -238,8 +296,13 @@ public final class BattlepassService implements ModeData {
 
     /** Alle Aufgaben eines Zeitraums aus der Config (in dieser Reihenfolge angezeigt). */
     public List<Quest> pool(Period period) {
+        return pool(period, BATTLEPASS);
+    }
+
+    /** Aufgaben eines Passes: skypass.quests-daily/-weekly, wenn gesetzt, sonst die des Battlepass. */
+    public List<Quest> pool(Period period, String pass) {
         List<Quest> list = new ArrayList<>();
-        String path = period == Period.DAILY ? "battlepass.quests-daily" : "battlepass.quests-weekly";
+        String path = key(pass, period == Period.DAILY ? "quests-daily" : "quests-weekly");
         for (String raw : cfg().getStringList(path)) {
             Quest q = parseQuest(raw, period);
             if (q != null) list.add(q);
@@ -307,10 +370,10 @@ public final class BattlepassService implements ModeData {
 
     private List<Quest> choose(Period period, String mode, String key) {
         List<Quest> pool = new ArrayList<>();
-        for (Quest q : pool(period)) {
+        for (Quest q : pool(period, passOf(mode))) {
             if (q.modes().isEmpty() || q.modes().contains(mode)) pool.add(q);
         }
-        int n = questCount(period);
+        int n = questCount(period, passOf(mode));
         if (pool.size() <= n) return pool;
         List<Quest> shuffled = new ArrayList<>(pool);
         Collections.shuffle(shuffled, new Random(key.hashCode() * 31L + period.ordinal()));
@@ -340,7 +403,8 @@ public final class BattlepassService implements ModeData {
     public synchronized void count(UUID id, String type, long amount, String... tags) {
         if (amount <= 0) return;
         String mode = plugin.modes().modeOf(id);
-        if (ModeService.HUB.equals(mode)) return;
+        // Pässe nur in SMP (Battlepass) und Skyblock (Skypass); Survival hat Farmpass und Angelpass (v2.05)
+        if (!enabled(mode)) return;
         Data d = data(id);
         for (Period period : Period.values()) {
             Map<String, Integer> prog = period == Period.DAILY ? d.dayProgress : d.progress;
@@ -368,9 +432,10 @@ public final class BattlepassService implements ModeData {
     }
 
     private void completed(UUID id, Data d, Quest q) {
-        int before = level(d);
+        String pass = passOf(id);
+        int before = level(d, pass);
         d.xp += q.points();
-        int after = level(d);
+        int after = level(d, pass);
         Player p = Bukkit.getPlayer(id);
         if (p == null) return;
         boolean en = plugin.playerSettings().english(id);
@@ -378,8 +443,9 @@ public final class BattlepassService implements ModeData {
                 + " <gray>(+" + q.points() + (en ? " points)" : " Punkte)"));
         Sfx.play(plugin, p, Sfx.Kind.CHIME);
         if (after > before) {
-            Msg.send(p, (en ? "<light_purple>Battle Pass level " : "<light_purple>Battle-Pass-Stufe ") + after
-                    + (en ? " reached! <gray>Rewards: <white>/battlepass" : " erreicht! <gray>Belohnungen: <white>/battlepass"));
+            boolean sky = SKYPASS.equals(pass);
+            Msg.send(p, (sky ? "<aqua>" : "<light_purple>") + (en ? (sky ? "Skypass level " : "Battle Pass level ") : (sky ? "Skypass-Stufe " : "Battle-Pass-Stufe "))
+                    + after + (en ? " reached! <gray>Rewards: <white>/" : " erreicht! <gray>Belohnungen: <white>/") + pass);
             Sfx.play(plugin, p, Sfx.Kind.LEVEL_UP);
         }
     }
@@ -401,8 +467,14 @@ public final class BattlepassService implements ModeData {
 
     /** Alle Belohnungen. Ist die Liste in der config leer, gelten die Standardbelohnungen. */
     public List<Reward> rewards() {
+        return rewards(BATTLEPASS);
+    }
+
+    /** Belohnungen eines Passes (skypass.rewards, sonst Standard des Passes). */
+    public List<Reward> rewards(String pass) {
         List<Reward> list = new ArrayList<>();
-        for (String raw : cfg().getStringList("battlepass.rewards")) {
+        String path = SKYPASS.equals(pass) ? (cfg().isList("skypass.rewards") ? "skypass.rewards" : "") : "battlepass.rewards";
+        for (String raw : path.isEmpty() ? List.<String>of() : cfg().getStringList(path)) {
             String[] p = raw.split(";", 6);
             if (p.length < 4) continue;
             try {
@@ -413,17 +485,25 @@ public final class BattlepassService implements ModeData {
                 plugin.getLogger().warning("Ungültige Battlepass-Belohnung: " + raw);
             }
         }
-        return list.isEmpty() ? defaults() : list;
+        return list.isEmpty() ? defaults(pass) : list;
     }
 
     public List<Reward> rewardsAt(int level, String track) {
         return byLevel(track).getOrDefault(level, List.of());
     }
 
+    public List<Reward> rewardsAt(int level, String track, String pass) {
+        return byLevel(track, pass).getOrDefault(level, List.of());
+    }
+
     /** Belohnungen einer Spur nach Stufe. */
     public Map<Integer, List<Reward>> byLevel(String track) {
+        return byLevel(track, BATTLEPASS);
+    }
+
+    public Map<Integer, List<Reward>> byLevel(String track, String pass) {
         Map<Integer, List<Reward>> out = new HashMap<>();
-        for (Reward r : rewards()) {
+        for (Reward r : rewards(pass)) {
             if (r.track().equals(track)) out.computeIfAbsent(r.level(), k -> new ArrayList<>()).add(r);
         }
         return out;
@@ -431,7 +511,11 @@ public final class BattlepassService implements ModeData {
 
     /** Anzahl der Stufen mit Belohnung in einer Spur. */
     public int rewardLevels(String track) {
-        return byLevel(track).size();
+        return rewardLevels(track, BATTLEPASS);
+    }
+
+    public int rewardLevels(String track, String pass) {
+        return byLevel(track, pass).size();
     }
 
     /** Premium-Gegenstände im Wechsel (Standard). */
@@ -444,9 +528,20 @@ public final class BattlepassService implements ModeData {
      * Premium auf jeder Stufe im Wechsel XP, Schlüssel, XP, Schlüssel, Schlüssel, Gegenstand, XP; alle 10 Stufen
      * Juwelen, auf Stufe 100 fünf Netherite-Barren.
      */
+    /** Skypass-Gegenstände im Wechsel: was man auf einer Insel braucht. */
+    private static final String[] SKY_SPECIALS = {"OAK_SAPLING:4", "BONE_MEAL:32", "LAVA_BUCKET", "SUGAR_CANE:8",
+            "DIAMOND:8", "CACTUS:4", "MELON_SEEDS:8", "IRON_BLOCK:4", "NETHER_WART:8", "DIAMOND_PICKAXE", "GOLDEN_APPLE:8",
+            "NETHERITE_INGOT", "ELYTRA"};
+
     private List<Reward> defaults() {
-        String keyCmd = cfg().getString("battlepass.key-command", "keys give %player% keyall 1");
-        String keyName = cfg().getString("battlepass.key-name", "Keyall-Schlüssel");
+        return defaults(BATTLEPASS);
+    }
+
+    private List<Reward> defaults(String pass) {
+        boolean sky = SKYPASS.equals(pass);
+        String[] specials = sky ? SKY_SPECIALS : SPECIALS;
+        String keyCmd = cfg().getString(key(pass, "key-command"), "keys give %player% keyall 1");
+        String keyName = cfg().getString(key(pass, "key-name"), "Keyall-Schlüssel");
         List<Reward> list = new ArrayList<>();
         for (int lvl = 1; lvl <= MAX_LEVEL; lvl++) {
             if (lvl % 20 == 0) {
@@ -464,7 +559,7 @@ public final class BattlepassService implements ModeData {
             } else {
                 switch ((lvl - 1) % 7) {
                     case 0, 2, 6 -> list.add(new Reward(lvl, PREMIUM, "XP", String.valueOf(lvl * 30L)));
-                    case 5 -> list.add(new Reward(lvl, PREMIUM, "ITEM", SPECIALS[((lvl - 1) / 7) % SPECIALS.length]));
+                    case 5 -> list.add(new Reward(lvl, PREMIUM, "ITEM", specials[((lvl - 1) / 7) % specials.length]));
                     default -> list.add(new Reward(lvl, PREMIUM, "COMMAND", keyCmd, "bp_key", keyName));
                 }
             }
@@ -546,7 +641,7 @@ public final class BattlepassService implements ModeData {
 
     private Data data(UUID id) {
         Data d = data.computeIfAbsent(id, k -> new Data());
-        int season = season();
+        int season = season(passOf(id));
         if (d.season == 0) {
             d.season = season;               // Stand von vor den Seasons übernehmen
         } else if (d.season != season) {
@@ -581,8 +676,8 @@ public final class BattlepassService implements ModeData {
         return d;
     }
 
-    private int level(Data d) {
-        return (int) Math.min(MAX_LEVEL, d.xp / xpPerLevel() + d.bought);
+    private int level(Data d, String pass) {
+        return (int) Math.min(MAX_LEVEL, d.xp / xpPerLevel(pass) + d.bought);
     }
 
     public synchronized long xp(UUID id) {
@@ -590,13 +685,14 @@ public final class BattlepassService implements ModeData {
     }
 
     public synchronized int level(UUID id) {
-        return level(data(id));
+        return level(data(id), passOf(id));
     }
 
     /** Punkte in der laufenden Stufe (0 auf der höchsten Stufe). */
     public synchronized long pointsInLevel(UUID id) {
         Data d = data(id);
-        return level(d) >= MAX_LEVEL ? 0 : d.xp % xpPerLevel();
+        String pass = passOf(id);
+        return level(d, pass) >= MAX_LEVEL ? 0 : d.xp % xpPerLevel(pass);
     }
 
     public synchronized boolean hasPremium(UUID id) {
@@ -613,9 +709,10 @@ public final class BattlepassService implements ModeData {
         Data d = data(id);
         if (PREMIUM.equals(track) && !d.premium) return 0;
         int from = PREMIUM.equals(track) ? d.claimedPremium : d.claimedFree;
-        Map<Integer, List<Reward>> all = byLevel(track);
+        String pass = passOf(id);
+        Map<Integer, List<Reward>> all = byLevel(track, pass);
         int n = 0;
-        for (int lvl = from + 1; lvl <= level(d); lvl++) {
+        for (int lvl = from + 1; lvl <= level(d, pass); lvl++) {
             if (all.containsKey(lvl)) n++;
         }
         return n;
@@ -624,7 +721,8 @@ public final class BattlepassService implements ModeData {
     /** Heute noch kaufbare Stufen. */
     public synchronized int levelsLeftToday(UUID id) {
         Data d = data(id);
-        return Math.max(0, Math.min(levelDailyLimit() - d.boughtToday, MAX_LEVEL - level(d)));
+        String pass = passOf(id);
+        return Math.max(0, Math.min(levelDailyLimit(pass) - d.boughtToday, MAX_LEVEL - level(d, pass)));
     }
 
     /** Gibt null bei Erfolg zurück. */
@@ -633,7 +731,7 @@ public final class BattlepassService implements ModeData {
         Data d = data(id);
         boolean en = plugin.playerSettings().english(id);
         if (d.premium) return en ? "You already have the premium pass." : "Du hast den Premium-Pass schon.";
-        long price = premiumPrice();
+        long price = premiumPrice(passOf(id));
         if (!plugin.jewels().take(id, price)) {
             return en ? "You need " + Msg.coins(price) + " jewels for the premium pass."
                     : "Du brauchst " + Msg.coins(price) + " Juwelen für den Premium-Pass.";
@@ -658,12 +756,12 @@ public final class BattlepassService implements ModeData {
         Data d = data(id);
         boolean en = plugin.playerSettings().english(id);
         if (n < 1) return en ? "Choose at least one level." : "Wähle mindestens eine Stufe.";
-        if (level(d) >= MAX_LEVEL) return en ? "You are already at the highest level." : "Du hast schon die höchste Stufe.";
+        if (level(d, passOf(id)) >= MAX_LEVEL) return en ? "You are already at the highest level." : "Du hast schon die höchste Stufe.";
         if (n > levelsLeftToday(id)) {
             return en ? "You can buy " + levelsLeftToday(id) + " more levels today."
                     : "Heute kannst du noch " + levelsLeftToday(id) + " Stufen kaufen.";
         }
-        long price = levelPrice() * n;
+        long price = levelPrice(passOf(id)) * n;
         if (!plugin.jewels().take(id, price)) {
             long missing = price - plugin.jewels().balance(id);
             return en ? "You are missing " + Msg.coins(missing) + " jewels." : "Dir fehlen " + Msg.coins(missing) + " Juwelen.";
@@ -679,9 +777,10 @@ public final class BattlepassService implements ModeData {
         UUID id = p.getUniqueId();
         Data d = data(id);
         if (PREMIUM.equals(track) && !d.premium) return 0;
-        int level = level(d);
+        String pass = passOf(id);
+        int level = level(d, pass);
         int from = PREMIUM.equals(track) ? d.claimedPremium : d.claimedFree;
-        Map<Integer, List<Reward>> all = byLevel(track);
+        Map<Integer, List<Reward>> all = byLevel(track, pass);
         int count = 0;
         for (int lvl = from + 1; lvl <= level; lvl++) {
             List<Reward> rs = all.getOrDefault(lvl, List.of());

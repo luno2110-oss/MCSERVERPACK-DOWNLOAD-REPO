@@ -581,15 +581,20 @@ public final class Canvas {
      * sonst fallback.
      */
     public Canvas item(int x, int y, org.bukkit.Material m, boolean big, KitData.Icon fallback) {
+        return item(x, y, m, big, fallback, NamedTextColor.WHITE);
+    }
+
+    /** Item-Bild eingefärbt (wie icon mit tint, z. B. abgedunkelt für gesperrte Felder). */
+    public Canvas item(int x, int y, org.bukkit.Material m, boolean big, KitData.Icon fallback, TextColor tint) {
         ItemIcons.Entry e = ItemIcons.of(m);
         if (e == null) {
             KitData.Icon kit = Icons.exact(m);
-            return icon(x, y, kit != null ? kit : fallback, big);
+            return icon(x, y, kit != null ? kit : fallback, big, tint);
         }
         int size = big ? 32 : 16;
         char c = (char) ((big ? 0xE000 : 0xE800) + e.index());
         glyphs.add(new Glyph(Kind.ITEM, x, y, size, size, big ? e.adv32() : e.adv16(), Z_ICON, String.valueOf(c),
-                NamedTextColor.WHITE, false, Math.max(KitData.I_MIN, 7 - size), KitData.I_MAX, y, y + size));
+                tint, false, Math.max(KitData.I_MIN, 7 - size), KitData.I_MAX, y, y + size));
         return this;
     }
 
