@@ -1,96 +1,75 @@
 package de.kuby.kubyplugins.gui;
 
 import de.kuby.kubyplugins.KubyPlugins;
-import de.kuby.kubyplugins.service.StatsService;
 import de.kuby.kubyplugins.util.Items;
 import de.kuby.kubyplugins.util.Msg;
-import de.kuby.kubyplugins.util.Sfx;
 import de.kuby.kubyplugins.util.SmallCaps;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
-/** XP eintauschen gegen$, Juwelen oder Titel. Format pro Eintrag: ART;Wert;Kosten */
+/**
+ * XP-Shop als Truhen-Menü (ohne Grafik-Pack, v2.05): erst die Kategorien des Modus, dann ihre Angebote. Gleiche
+ * Angebote und gleicher Kauf wie im Fenster (XpShopScreen); Kaufen mit Shift-Klick, damit nichts aus Versehen
+ * gekauft wird.
+ */
 public final class XpShopMenu extends GuiMenu {
 
+    private final String category;
+
     public XpShopMenu(KubyPlugins plugin) {
-        super(plugin, Msg.parse("<dark_gray>" + SmallCaps.of("XP-Shop")), 3);
+        this(plugin, null);
+    }
+
+    public XpShopMenu(KubyPlugins plugin, String category) {
+        super(plugin, Msg.parse("<dark_gray>" + SmallCaps.of("XP-Shop")), 6);
+        this.category = category;
+    }
+
+    private static Material material(String name, Material def) {
+        Material m = Material.matchMaterial(name);
+        return m == null || !m.isItem() ? def : m;
     }
 
     @Override
     protected void build(Player p) {
-        StatsService.Stats s = plugin.stats().get(p.getUniqueId());
+        String mode = plugin.modes().modeOf(p.getUniqueId());
+        long xp = plugin.stats().get(p.getUniqueId()).xp;
         set(4, Items.make(Material.EXPERIENCE_BOTTLE, "<green>" + SmallCaps.of("Deine XP"), List.of(
-                "<gray>Verfügbar: <white>" + Msg.coins(s.xp))), null);
-
-        int slot = 10;
-        for (String raw : plugin.getConfig().getStringList("xp.shop")) {
-            if (slot > 16) break;
-            String[] parts = raw.split(";");
-            if (parts.length < 3) continue;
-            String kind = parts[0].trim().toUpperCase(Locale.ROOT);
-            String value = parts[1].trim();
-            long cost;
-            try {
-                cost = Long.parseLong(parts[2].trim());
-            } catch (NumberFormatException ex) {
-                continue;
+                "<gray>Verfügbar: <white>" + Msg.coins(xp))), null);
+        if (category == null) {
+            int slot = 19;
+            for (XpShopScreen.Category c : XpShopScreen.categories(plugin.getConfig(), mode)) {
+                if (slot > 43) break;
+                String id = c.id();
+                set(slot, Items.make(material(c.icon(), Material.CHEST), "<green>" + SmallCaps.of(c.name()), List.of(
+                        "<gray>" + c.line(), "<dark_gray>" + c.count() + " Angebote", "", "<yellow>Klick: öffnen")),
+                        e -> new XpShopMenu(plugin, id).open(p));
+                slot += (slot % 9 == 7) ? 3 : 1;
             }
-            final String k = kind;
-            final String v = value;
-            final long price = cost;
-
-            Material icon;
-            String label;
-            if (kind.equals("COINS")) {
-                icon = Material.GOLD_NUGGET;
-                label = value + "$";
-            } else if (kind.equals("JEWELS")) {
-                icon = Material.EMERALD;
-                label = value + " Juwelen";
-            } else {
-                icon = Material.NAME_TAG;
-                label = "Titel " + value;
-            }
-            set(slot++, Items.make(icon, "<green>" + SmallCaps.of(label), List.of(
-                            "<gray>Kosten: <yellow>" + Msg.coins(price) + " XP",
-                            "<gray>Klick: kaufen")),
-                    e -> buy(p, k, v, price));
-        }
-        addBack(p);
-    }
-
-    private void buy(Player p, String kind, String value, long cost) {
-        StatsService.Stats s = plugin.stats().get(p.getUniqueId());
-        if (s.xp < cost) {
-            Sfx.play(plugin, p, Sfx.Kind.ERROR);
-            done(p, "<red>Dir fehlen noch " + Msg.coins(cost - s.xp) + " XP.");
+            addBack(p);
             return;
         }
-        boolean ok = true;
-        try {
-            if (kind.equals("COINS")) plugin.economy().deposit(p.getUniqueId(), Long.parseLong(value));
-            else if (kind.equals("JEWELS")) plugin.jewels().add(p.getUniqueId(), Long.parseLong(value));
-            else if (kind.equals("TAG")) plugin.tags().grant(p.getUniqueId(), value);
-            else ok = false;
-        } catch (NumberFormatException ex) {
-            ok = false;
+        int slot = 9;
+        for (XpShopScreen.Offer o : XpShopScreen.offers(plugin.getConfig(), mode, category)) {
+            if (slot > 44) break;
+            String id = o.id();
+            List<String> lore = new ArrayList<>();
+            lore.add("<gray>" + o.line());
+            lore.add("<gray>Preis: " + (xp >= o.price() ? "<green>" : "<red>") + Msg.coins(o.price()) + " XP");
+            lore.add("");
+            lore.add(xp >= o.price() ? "<yellow>Shift-Klick: kaufen" : "<red>Dir fehlen " + Msg.coins(o.price() - xp) + " XP");
+            set(slot++, Items.make(material(o.icon(), Material.CHEST), "<green>" + o.name(), lore), e -> {
+                if (!e.isShiftClick()) {
+                    Msg.send(p, "<gray>Zum Kaufen <white>Shift-Klick</white> auf das Angebot.");
+                    return;
+                }
+                plugin.xpShopScreen().buy(p, id, false);
+                new XpShopMenu(plugin, category).open(p);
+            });
         }
-        if (!ok) {
-            Sfx.play(plugin, p, Sfx.Kind.ERROR);
-            done(p, "<red>Diese Ware ist in der config.yml falsch eingetragen.");
-            return;
-        }
-        s.xp -= cost;
-        plugin.stats().save();
-        Sfx.play(plugin, p, Sfx.Kind.SUCCESS);
-        done(p, "<green>Gekauft! <gray>-" + Msg.coins(cost) + " XP");
-    }
-
-    private void done(Player p, String message) {
-        Msg.send(p, message);
-        open(p);
+        set(49, Items.make(Material.ARROW, "<gray>" + SmallCaps.of("Zurück"), List.of()), e -> new XpShopMenu(plugin).open(p));
     }
 }

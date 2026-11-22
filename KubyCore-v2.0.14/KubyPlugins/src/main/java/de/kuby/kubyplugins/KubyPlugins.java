@@ -311,6 +311,7 @@ public final class KubyPlugins extends JavaPlugin {
         settingsScreen = new de.kuby.kubyplugins.gui.SettingsScreen(this);
         jewelShop = new de.kuby.kubyplugins.gui.JewelShopScreen(this);
         battlepassScreen = new de.kuby.kubyplugins.gui.BattlepassScreen(this);
+        xpShopScreen = new de.kuby.kubyplugins.gui.XpShopScreen(this);
         guide = new de.kuby.kubyplugins.gui.GuideScreen(this);
         getServer().getPluginManager().registerEvents(new de.kuby.kubyplugins.listener.ChatSettingsListener(this), this);
         playtime = new PlaytimeService(this);
@@ -520,6 +521,8 @@ public final class KubyPlugins extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new TotenkisteListener(this), this);
         getServer().getPluginManager().registerEvents(new ModeListener(this), this);
         getServer().getPluginManager().registerEvents(new XpSourceListener(this), this);
+        // XP-Shop: 3x3- und 5x5-Werkzeuge (v2.05)
+        getServer().getPluginManager().registerEvents(new de.kuby.kubyplugins.listener.AreaToolListener(this), this);
         getServer().getPluginManager().registerEvents(new de.kuby.kubyplugins.listener.BattlepassListener(this), this);
         getServer().getPluginManager().registerEvents(new de.kuby.kubyplugins.listener.LanguageListener(this), this);
         battlepass.start();
@@ -735,6 +738,9 @@ public final class KubyPlugins extends JavaPlugin {
     public de.kuby.kubyplugins.gui.JewelShopScreen jewelShop() { return jewelShop; }
 
     private de.kuby.kubyplugins.gui.BattlepassScreen battlepassScreen;
+    private de.kuby.kubyplugins.gui.XpShopScreen xpShopScreen;
+
+    public de.kuby.kubyplugins.gui.XpShopScreen xpShopScreen() { return xpShopScreen; }
 
     public de.kuby.kubyplugins.gui.BattlepassScreen battlepassScreen() { return battlepassScreen; }
 

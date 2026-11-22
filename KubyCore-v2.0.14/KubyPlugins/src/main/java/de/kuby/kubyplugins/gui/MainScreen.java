@@ -199,6 +199,10 @@ public final class MainScreen {
             daily.add(new Tile("Wirtschaft", "Rangliste der reichsten Spieler", KitData.Icon.GOLD_INGOT, go(pl -> new TopListScreen(plugin).money(pl))));
             daily.add(new Tile("Börse", "Anteile an Shop-Items kaufen und verkaufen", KitData.Icon.EMERALD, go(pl -> new ExtraScreens(plugin).investments(pl))));
         }
+        if (smp || sky) {
+            daily.add(new Tile("XP-Shop", "Geld, Juwelen, Keys, Booster und OP-Tools für XP", KitData.Icon.EXPERIENCE,
+                    go(pl -> plugin.xpShopScreen().open(pl))));
+        }
         daily.add(new Tile("Täglich", "30-Tage-Kalender mit Belohnungen", KitData.Icon.CLOCK, go(pl -> new DailyScreens(plugin).calendar(pl))));
         if (!hub) daily.add(new Tile("Team", "Team verwalten, Kasse und Teamhome", KitData.Icon.WHITE_BANNER, go(pl -> new TeamScreen(plugin).open(pl))));
         daily.add(new Tile("Tagespot", "Lose kaufen, Ziehung um 19 Uhr", KitData.Icon.GOLD_BLOCK, go(pl -> new DailyScreens(plugin).pot(pl))));

@@ -2113,7 +2113,8 @@ public final class KitData {
         GD_NAV08(8, 8, 1, "\uf351", "9"),
         GD_NAV09(7, 7, 1, "\uf352", "8"),
         GD_NAV10(8, 6, 1, "\uf353", "9"),
-        GD_NAV11(6, 8, 1, "\uf354", "7");
+        GD_NAV11(6, 8, 1, "\uf354", "7"),
+        XS_TITLE(72, 18, 3, "\uf355\uf356\uf357", "QQ9");
 
         public final int width, height, cols;
         public final String chars, advances;

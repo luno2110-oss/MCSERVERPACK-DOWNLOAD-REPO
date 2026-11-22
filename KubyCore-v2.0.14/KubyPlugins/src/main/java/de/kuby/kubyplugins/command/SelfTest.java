@@ -578,11 +578,26 @@ final class SelfTest {
                     NO, NO, NO, NO, NO, NO, NO)));
             canvas.accept("Team keins", () -> de.kuby.kubyplugins.gui.TeamScreen.canvas(new de.kuby.kubyplugins.gui.TeamScreen.View(
                     null, 0, 0, List.of(), 0, 0, 0, 0, 0, false, 999_999_999L, false, null, null, null, null, null, null, null)));
-            List<de.kuby.kubyplugins.gui.ExtraScreens.XpOffer> xo = new ArrayList<>();
-            for (int i = 0; i < 12; i++) xo.add(new de.kuby.kubyplugins.gui.ExtraScreens.XpOffer(de.kuby.kubyplugins.ui.KitData.Icon.EMERALD,
-                    "W".repeat(30), net.kyori.adventure.text.format.TextColor.color(0x5FE3A0), 999_999_999L, i % 2 == 0, NO));
-            canvas.accept("XP-Shop", () -> de.kuby.kubyplugins.gui.ExtraScreens.xpShop(999_999_999L, xo));
-            canvas.accept("XP-Shop leer", () -> de.kuby.kubyplugins.gui.ExtraScreens.xpShop(0, List.of()));
+            // XP-Shop (v2.05): Übersicht und jede Kategorie je Modus, englisch, leer
+            de.kuby.kubyplugins.gui.XpShopScreen.Actions xa = new de.kuby.kubyplugins.gui.XpShopScreen.Actions() {
+                public Consumer<Player> home() { return NO; }
+                public Consumer<Player> category(String id) { return NO; }
+                public Consumer<Player> page(int page) { return NO; }
+                public Consumer<Player> buy(String id) { return NO; }
+                public Consumer<Player> amount(String id, int amount) { return NO; }
+            };
+            for (String xm : new String[]{de.kuby.kubyplugins.service.ModeService.SMP, de.kuby.kubyplugins.service.ModeService.SKYBLOCK}) {
+                canvas.accept("XP-Shop " + xm, () -> de.kuby.kubyplugins.gui.XpShopScreen.canvas(
+                        de.kuby.kubyplugins.gui.XpShopScreen.sample(plugin.getConfig(), xm, null, 999_999_999L, false), xa));
+                for (var xc : de.kuby.kubyplugins.gui.XpShopScreen.categories(plugin.getConfig(), xm)) {
+                    canvas.accept("XP-Shop " + xm + " " + xc.id(), () -> de.kuby.kubyplugins.gui.XpShopScreen.canvas(
+                            de.kuby.kubyplugins.gui.XpShopScreen.sample(plugin.getConfig(), xm, xc.id(), 5_000, false), xa));
+                    canvas.accept("XP-Shop " + xm + " " + xc.id() + " englisch", () -> de.kuby.kubyplugins.gui.XpShopScreen.canvas(
+                            de.kuby.kubyplugins.gui.XpShopScreen.sample(plugin.getConfig(), xm, xc.id(), 999_999_999L, true), xa));
+                }
+            }
+            canvas.accept("XP-Shop leer", () -> de.kuby.kubyplugins.gui.XpShopScreen.canvas(
+                    de.kuby.kubyplugins.gui.XpShopScreen.sample(plugin.getConfig(), "keinmodus", null, 0, false), xa));
             List<de.kuby.kubyplugins.gui.ExtraScreens.Stock> st = new ArrayList<>();
             for (int i = 0; i < 20; i++) st.add(new de.kuby.kubyplugins.gui.ExtraScreens.Stock(org.bukkit.Material.DIAMOND,
                     "W".repeat(30), i % 3 != 0, 999_999_999L, 9999.99, 99999.99, 999_999_999L, i % 2 == 0 ? 999_999_999L : -999_999_999L, NO, NO, NO));
@@ -652,6 +667,60 @@ final class SelfTest {
                 fails.add("Skypass: zu wenige Premium-Belohnungen");
         } catch (Throwable t) {
             fails.add("Währungen/Pässe: " + t);
+        }
+
+        // XP-Shop (v2.05): jedes Angebot gültig (Items, Verzauberungen, Schlüssel, Booster), SMP mit PvP/Bauen/Team/Survival,
+        // Skyblock mit Insel, beide mit 3x3- und 5x5-Spitzhacke
+        try {
+            for (String xm : new String[]{de.kuby.kubyplugins.service.ModeService.SMP, de.kuby.kubyplugins.service.ModeService.SKYBLOCK}) {
+                var cats = de.kuby.kubyplugins.gui.XpShopScreen.categories(plugin.getConfig(), xm);
+                java.util.Set<String> ids = new java.util.HashSet<>();
+                for (var cat : cats) ids.add(cat.id());
+                for (String need : new String[]{"geld", "juwelen", "keys", "booster", "optools"}) {
+                    if (!ids.contains(need)) fails.add("XP-Shop " + xm + ": Kategorie " + need + " fehlt");
+                }
+                for (String need : xm.equals(de.kuby.kubyplugins.service.ModeService.SMP)
+                        ? new String[]{"pvp", "bauen", "team", "survival"} : new String[]{"insel"}) {
+                    if (!ids.contains(need)) fails.add("XP-Shop " + xm + ": Kategorie " + need + " fehlt");
+                }
+                java.util.Set<String> seen = new java.util.HashSet<>();
+                int area3 = 0, area5 = 0;
+                for (var o : de.kuby.kubyplugins.gui.XpShopScreen.allOffers(plugin.getConfig(), xm)) {
+                    if (!seen.add(o.id())) fails.add("XP-Shop " + xm + ": doppelte ID " + o.id());
+                    String err = de.kuby.kubyplugins.gui.XpShopScreen.check(plugin, o);
+                    if (err != null) fails.add("XP-Shop " + xm + " " + o.id() + ": " + err);
+                    if ("ITEM".equals(o.kind()) && err == null) {
+                        for (var it : de.kuby.kubyplugins.gui.XpShopScreen.items(o)) {
+                            int ar = de.kuby.kubyplugins.listener.AreaToolListener.area(it);
+                            if (ar == 3) area3++;
+                            if (ar == 5) area5++;
+                        }
+                    }
+                }
+                if (area3 == 0 || area5 == 0) fails.add("XP-Shop " + xm + ": 3x3- oder 5x5-Spitzhacke fehlt");
+            }
+            // Fläche: 5x5 = 24 weitere Blöcke, 3x3 = 8, je Ebene
+            var w = org.bukkit.Bukkit.getWorlds().get(0);
+            var b = w.getBlockAt(0, 200, 0);
+            for (org.bukkit.block.BlockFace f : new org.bukkit.block.BlockFace[]{org.bukkit.block.BlockFace.UP, org.bukkit.block.BlockFace.NORTH, org.bukkit.block.BlockFace.EAST}) {
+                var pl3 = de.kuby.kubyplugins.listener.AreaToolListener.plane(b, f, 3);
+                var pl5 = de.kuby.kubyplugins.listener.AreaToolListener.plane(b, f, 5);
+                if (pl3.size() != 8 || pl5.size() != 24) fails.add("Flächen-Werkzeug " + f + ": " + pl3.size() + "/" + pl5.size() + " statt 8/24");
+                for (var x : pl5) {
+                    int dx = x.getX() - b.getX(), dy = x.getY() - b.getY(), dz = x.getZ() - b.getZ();
+                    boolean inPlane = switch (f) {
+                        case UP -> dy == 0;
+                        case EAST -> dx == 0;
+                        default -> dz == 0;
+                    };
+                    if (!inPlane || Math.max(Math.abs(dx), Math.max(Math.abs(dy), Math.abs(dz))) > 2) {
+                        fails.add("Flächen-Werkzeug " + f + ": Block außerhalb der Ebene");
+                        break;
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            fails.add("XP-Shop: " + t);
         }
 
         // Casino: Juwelen nur in den freigegebenen Spielen, sonst immer Chips (auch wenn der Spieler Juwelen gewählt hat)

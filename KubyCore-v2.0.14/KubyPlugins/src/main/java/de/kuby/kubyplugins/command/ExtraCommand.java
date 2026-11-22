@@ -8,7 +8,6 @@ import de.kuby.kubyplugins.gui.QuizVoteMenu;
 import de.kuby.kubyplugins.gui.InvestmentsMenu;
 import de.kuby.kubyplugins.gui.KristalTradeMenu;
 import org.bukkit.block.Block;
-import de.kuby.kubyplugins.gui.XpShopMenu;
 import de.kuby.kubyplugins.gui.MetaMenu;
 import de.kuby.kubyplugins.KubyPlugins;
 import de.kuby.kubyplugins.gui.DailyPotMenu;

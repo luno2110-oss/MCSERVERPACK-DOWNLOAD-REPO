@@ -38,7 +38,6 @@ public final class ExtraScreens {
     // ---- Modelle ----
 
     /** Ware im XP-Shop: Icon, Name, Farbe, Preis in XP, kaufbar (genug XP), Klick. */
-    public record XpOffer(KitData.Icon icon, String name, TextColor color, long cost, boolean affordable, Consumer<Player> buy) {}
 
     /** Anlage: Icon, Name, aktiv, Shop-Preis, Anteilspreis, eigene Anteile, Wert, Gewinn, Klicks. */
     public record Stock(org.bukkit.Material icon, String name, boolean active, long price, double share, double mine, long value,
@@ -61,81 +60,9 @@ public final class ExtraScreens {
     // XP-Shop
     // =================================================================================================================
 
+    /** /xpshop: neuer XP-Shop mit Kategorien (XpShopScreen, v2.05). */
     public void xpShop(Player p) {
-        if (!plugin.uiPack().active(p)) {
-            new XpShopMenu(plugin).open(p);
-            return;
-        }
-        StatsService.Stats s = plugin.stats().get(p.getUniqueId());
-        List<XpOffer> offers = new ArrayList<>();
-        for (String raw : plugin.getConfig().getStringList("xp.shop")) {
-            String[] parts = raw.split(";");
-            if (parts.length < 3) continue;
-            String kind = parts[0].trim().toUpperCase(Locale.ROOT), value = parts[1].trim();
-            long cost;
-            try {
-                cost = Long.parseLong(parts[2].trim());
-            } catch (NumberFormatException ex) {
-                continue;
-            }
-            KitData.Icon icon = kind.equals("COINS") ? KitData.Icon.GOLD_NUGGET : kind.equals("JEWELS") ? KitData.Icon.EMERALD : KitData.Icon.NAME_TAG;
-            String name = kind.equals("COINS") ? value + "$" : kind.equals("JEWELS") ? value + " Juwelen" : "Titel " + value;
-            TextColor color = kind.equals("COINS") ? GOLD : kind.equals("JEWELS") ? JEWEL : CREAM;
-            long price = cost;
-            offers.add(new XpOffer(icon, name, color, cost, s.xp >= cost, pl -> {
-                buyXp(pl, kind, value, price);
-                xpShop(pl);
-            }));
-        }
-        UiDialog.show(p, xpShop(s.xp, offers), 260);
-    }
-
-    private void buyXp(Player p, String kind, String value, long cost) {
-        StatsService.Stats s = plugin.stats().get(p.getUniqueId());
-        if (s.xp < cost) {
-            Sfx.play(plugin, p, Sfx.Kind.ERROR);
-            Msg.send(p, "<red>Dir fehlen noch " + Msg.coins(cost - s.xp) + " XP.");
-            return;
-        }
-        try {
-            switch (kind) {
-                case "COINS" -> plugin.economy().deposit(p.getUniqueId(), Long.parseLong(value));
-                case "JEWELS" -> plugin.jewels().add(p.getUniqueId(), Long.parseLong(value));
-                case "TAG" -> plugin.tags().grant(p.getUniqueId(), value);
-                default -> throw new NumberFormatException();
-            }
-        } catch (NumberFormatException ex) {
-            Sfx.play(plugin, p, Sfx.Kind.ERROR);
-            Msg.send(p, "<red>Diese Ware ist in der config.yml falsch eingetragen.");
-            return;
-        }
-        s.xp -= cost;
-        plugin.stats().save();
-        Sfx.play(plugin, p, Sfx.Kind.SUCCESS);
-        Msg.send(p, "<green>Gekauft! <gray>-" + Msg.coins(cost) + " XP");
-    }
-
-    public static Canvas xpShop(long xp, List<XpOffer> offers) {
-        Canvas c = new Canvas(W).heading("XP-Shop", XP);
-        c.box(0, 0, W, 54, KitData.Box.XP);
-        c.icon(10, 11, KitData.Icon.EXPERIENCE, true);
-        c.headline(50, 12, "XP-Shop", XP);
-        c.text(50, 36, "XP aus Kills, Quests und Votes eintauschen", LIME, false);
-        c.textRight(378, 14, Msg.coins(xp), XP, true);
-        c.textRight(378, 26, Canvas.caps("XP verfügbar"), LIME, false);
-        int y = 60, cols = 3, cw = (W - 6) / cols, ch = 58;
-        for (int i = 0; i < offers.size(); i++) {
-            XpOffer o = offers.get(i);
-            int x = (i % cols) * (cw + 3), oy = y + (i / cols) * (ch + 3);
-            c.box(x, oy, cw, ch, o.affordable() ? KitData.Box.XP : KitData.Box.GRAY);
-            c.icon(x + (cw - 16) / 2, oy + 6, o.icon(), false);
-            c.textCenter(x + cw / 2, oy + 26, Canvas.fit(Canvas.lit(o.name()), true, cw - 10), o.affordable() ? o.color() : CHALKDIM, true);
-            c.smallButton(x + 8, oy + ch - 22, cw - 16, o.affordable() ? KitData.Small.GREEN : KitData.Small.DARK,
-                    Msg.coins(o.cost()) + " XP", o.affordable() ? WHITE : CHALKDIM, false);
-            if (o.affordable()) c.action(x, oy, cw, ch, o.buy(), o.name() + " für " + Msg.coins(o.cost()) + " XP");
-        }
-        if (offers.isEmpty()) c.text(4, y, "Im XP-Shop gibt es gerade nichts.", LIME, false);
-        return c;
+        plugin.xpShopScreen().open(p);
     }
 
     // =================================================================================================================

@@ -376,6 +376,16 @@ public final class TeamService {
         save();
     }
 
+    /** Geld direkt in die Teamkasse (XP-Shop), ohne es dem Spieler abzuziehen. Fehlermeldung oder null. */
+    public synchronized String addToBank(UUID player, long amount) {
+        Team t = of(player);
+        if (t == null) return "Du hast kein Team.";
+        if (amount <= 0) return "Ungültiger Betrag.";
+        t.bank += amount;
+        save();
+        return null;
+    }
+
     public String deposit(Player p, long amount) {
         Team t = of(p.getUniqueId());
         if (t == null) return "Du hast kein Team.";
