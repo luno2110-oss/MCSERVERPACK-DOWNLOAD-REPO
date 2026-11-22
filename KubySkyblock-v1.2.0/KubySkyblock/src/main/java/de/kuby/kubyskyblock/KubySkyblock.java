@@ -101,6 +101,7 @@ public final class KubySkyblock extends JavaPlugin {
         instance = this;
         core = c;
         de.kuby.kubyskyblock.gui.SkyScreen.samples(core::registerSelfTestCanvas);
+        de.kuby.kubyskyblock.gui.ItemListScreen.samples(core::registerSelfTestCanvas);
         de.kuby.kubyskyblock.gui.IslandScreen.samples(core::registerSelfTestCanvas);
         de.kuby.kubyskyblock.gui.GeneratorScreen.samples(core::registerSelfTestCanvas);
         de.kuby.kubyskyblock.gui.OneBlockScreen.samples(core::registerSelfTestCanvas);
@@ -229,7 +230,7 @@ public final class KubySkyblock extends JavaPlugin {
         core.registerMainEntry(ModeService.SKYBLOCK, new KubyPlugins.MainEntry(org.bukkit.Material.OAK_SIGN, "Besuchen",
                 "Offene Inseln anderer Spieler und Biom-Inseln", de.kuby.kubyskyblock.gui.IslandExtraScreen::visit));
         core.registerMainEntry(ModeService.SKYBLOCK, new KubyPlugins.MainEntry(org.bukkit.Material.BOOK, "Checkliste",
-                "Alle Items sammeln, Erfolge und Meilensteine", pl -> new de.kuby.kubyskyblock.gui.SkyScreen(core).open(pl)));
+                "Alle Items sammeln, Erfolge und Meilensteine", pl -> new de.kuby.kubyskyblock.gui.ItemListScreen(core).open(pl)));
         core.registerMainEntry(ModeService.SKYBLOCK, new KubyPlugins.MainEntry(org.bukkit.Material.BLAST_FURNACE, "Generatoren",
                 "Geld, XP und Items von selbst: kaufen, läuft sofort, einsammeln", de.kuby.kubyskyblock.gui.GeneratorScreen::island));
         core.registerMainEntry(ModeService.SKYBLOCK, new KubyPlugins.MainEntry(org.bukkit.Material.CRYING_OBSIDIAN, "Stufen",

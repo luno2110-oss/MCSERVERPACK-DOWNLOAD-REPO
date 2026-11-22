@@ -27,6 +27,11 @@ public final class ProgressService {
 
     private static final int[] MILESTONES = {10, 25, 50, 75, 100};
 
+    /** Meilensteine in Prozent (Belohnung: 500 $ und 25 XP je Prozentpunkt, dazu 3 Loot-Lose). */
+    public static int[] milestones() {
+        return MILESTONES.clone();
+    }
+
     private final KubySkyblock addon;
     private final KubyPlugins core;
     private final File file;

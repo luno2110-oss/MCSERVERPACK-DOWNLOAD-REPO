@@ -93,6 +93,7 @@ public final class SkyblockHud implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
+        de.kuby.kubyskyblock.gui.ItemListScreen.forget(e.getPlayer().getUniqueId());
         bars.remove(e.getPlayer().getUniqueId());
     }
 

@@ -55,8 +55,7 @@ public final class SkyScreen {
             list.add(new Ach(a.name(), a.desc(), Math.min(value, a.target()), a.target(), done.contains(a.id()), a.money(), a.xp(), a.jewels()));
         }
         UiDialog.show(p, canvas(new View(prog.percent(id), prog.collected(id).size(), prog.allItems().size(), list, pl -> {
-            de.kuby.kubyplugins.ui.UiDialog.close(pl);
-            new ChecklistMenu(core, 0).open(pl);
+            new ItemListScreen(core).open(pl);
         })), 330);
     }
 
@@ -77,7 +76,7 @@ public final class SkyScreen {
         c.text(30, y + 19, v.collected() + " von " + v.items() + " Items gesammelt", MIST, false);
         c.bar(30, y + 29, 230, v.items() == 0 ? 0 : v.collected() / (double) v.items(), KitData.Fill.CYAN);
         c.smallButton(W - 86, y + 12, 78, KitData.Small.DARK, "Ansehen", CLOUD, false);
-        c.action(W - 86, y + 12, 78, KitData.SMALL_H, v.checklist(), "Alle Items der Checkliste");
+        c.action(W - 86, y + 12, 78, KitData.SMALL_H, v.checklist(), "Itemliste: alle Items mit Bild, Kategorien und Filter");
         y += 40 + 8;
         int cw = (W - 4) / 2, ch = 54;
         for (int i = 0; i < v.achievements().size(); i++) {
