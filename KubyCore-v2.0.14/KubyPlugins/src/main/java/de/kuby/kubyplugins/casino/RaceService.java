@@ -605,6 +605,12 @@ public final class RaceService implements Listener {
         return lastOrder == null ? null : lastOrder.clone();
     }
 
+    /** Der Rennbildschirm oder null (für den Rundgang). */
+    public RaceBoard board() {
+        loadBoard();
+        return board;
+    }
+
     public Location boardCenter() {
         return board == null ? null : board.center();
     }

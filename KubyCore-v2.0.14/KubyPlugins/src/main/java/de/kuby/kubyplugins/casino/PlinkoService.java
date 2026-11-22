@@ -708,6 +708,16 @@ public final class PlinkoService implements Listener {
         return best;
     }
 
+    /** Alle aufgebauten Bretter (für den Rundgang). */
+    public List<PlinkoBoard> boardList() {
+        List<PlinkoBoard> l = new ArrayList<>();
+        for (String id : raw.keySet()) {
+            Board b = load(id);
+            if (b != null) l.add(b.board);
+        }
+        return l;
+    }
+
     /** Kurzinfo zu Kugeln in der Luft (Status). */
     public int ballsInFlight() {
         int n = 0;

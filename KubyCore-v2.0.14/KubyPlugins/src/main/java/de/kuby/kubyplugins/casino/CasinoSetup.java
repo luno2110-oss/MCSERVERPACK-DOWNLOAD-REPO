@@ -321,8 +321,14 @@ public final class CasinoSetup implements Listener {
         Msg.send(p, "<gray>Als Nächstes: <click:suggest_command:'/casino npc '><white>[Kasse/Jukebox-NPC]</white></click> "
                 + "<click:suggest_command:'/casino blackjack tisch '><white>[Blackjack-Tisch]</white></click> "
                 + "<click:suggest_command:'/casino poker-tisch '><white>[Poker-Tisch]</white></click> "
+                + "<click:suggest_command:'/casino roulette-tisch '><white>[Roulette-Tisch]</white></click> "
                 + "<click:suggest_command:'/casino slots automat'><white>[Slot-Automat]</white></click> "
+                + "<click:suggest_command:'/casino slots reihe 3'><white>[Slot-Reihe]</white></click> "
+                + "<click:suggest_command:'/casino crash bildschirm'><white>[Crash-Bildschirm]</white></click> "
+                + "<click:suggest_command:'/casino plinko automat'><white>[Plinko-Brett]</white></click> "
+                + "<click:suggest_command:'/casino rennen bildschirm'><white>[Pferderennen]</white></click> "
                 + "<click:run_command:'/casino rundgang'><white>[Rundgang testen]</white></click>");
+        Msg.send(p, "<dark_gray>Tische und Automaten: auf die Mitte des Tisches bzw. auf die Wand schauen, dann den Befehl ausführen.");
     }
 
     private void finish(Player p) {

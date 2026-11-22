@@ -304,6 +304,26 @@ public final class CasinoTourService {
                     "Crash: Der Kurs steigt – und je höher er steigt, desto schneller wird er.",
                     "Steigen Sie rechtzeitig aus. Wer zu gierig ist, verliert alles."));
         }
+        // Plinko (v2.05): Totale aufs Brett, leicht von rechts, damit Stifte und Fächer im Bild sind
+        PlinkoBoard pb = nearest(plugin.plinko().boardList(), PlinkoBoard::center, me);
+        if (pb != null) {
+            V3 f = V3.dir(pb.frontYaw(), 0);
+            Location c = pb.center();
+            double k = pb.size();
+            out.add(station(p, "plinko", c, f, 3.0, v(c).add(f.mul(5.6 * k)).add(f.right().mul(0.9)).up(-0.6), v(c).up(-0.35 * k),
+                    "Plinko: Die Kugel springt durch zwölf Reihen Stifte – in eines von dreizehn Fächern.",
+                    "Die Mitte trifft oft, der Rand nur selten – doch dort wartet das Hundertfünfzigfache."));
+        }
+        // Pferderennen (v2.05): ganzer Rennbildschirm mit Bahn und Toto-Tafel
+        RaceBoard rb = plugin.race().board();
+        if (rb != null && near(rb.center(), me)) {
+            V3 f = V3.dir(rb.frontYaw(), 0);
+            Location c = rb.center();
+            double k = rb.size();
+            out.add(station(p, "rennen", c, f, 3.6, v(c).add(f.mul(Math.max(4.5, 7.2 * k))).add(f.right().mul(1.1)).up(-0.5), v(c).up(-0.1),
+                    "Und hier: unser Pferderennen. Sechs Pferde – und in jedem Rennen neue Quoten.",
+                    "Setzen Sie auf Sieg oder Platz … und feuern Sie Ihren Favoriten an!"));
+        }
         // Jukebox
         Entity juke = nearest(plugin.casinoNpc().find(CasinoNpc.Role.MUSIK, me, RANGE), Entity::getLocation, me);
         if (juke != null) {
