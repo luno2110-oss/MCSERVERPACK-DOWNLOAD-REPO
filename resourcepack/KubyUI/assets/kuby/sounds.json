@@ -431,5 +431,21 @@
     "name": "kuby:casino/roulette/roll8"
    }
   ]
+ },
+ "tour.plinko": {
+  "sounds": [
+   {
+    "name": "kuby:tour/plinko",
+    "stream": true
+   }
+  ]
+ },
+ "tour.rennen": {
+  "sounds": [
+   {
+    "name": "kuby:tour/rennen",
+    "stream": true
+   }
+  ]
  }
 }

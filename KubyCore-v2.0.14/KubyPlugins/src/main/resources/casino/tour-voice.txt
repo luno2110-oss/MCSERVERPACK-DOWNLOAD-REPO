@@ -6,8 +6,10 @@ intro
 kasse
 musik
 outro
+plinko
 poker
 poker_rot
 poker_violett
+rennen
 roulette
 slots
