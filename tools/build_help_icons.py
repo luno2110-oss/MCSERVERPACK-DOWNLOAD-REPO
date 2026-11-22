@@ -1,7 +1,8 @@
 """Icons der Survival-Hilfe (18 x 18, Originalgröße wie in der Referenz) als SmallIcons im Dialog-Kit.
 
 28 Icons stammen pixelgenau aus den Referenz-Screenshots (tools/assets/help_icons/*.png, GUI-Skala 2, Hintergrund
-ausgestanzt). Für Seiten ohne Icon in der Referenz (Regeln, Casino, Angeln) entstehen hier passende im selben Stil:
+ausgestanzt). Für Seiten ohne Icon in der Referenz (Regeln, Casino, Angeln, ab v2.05 auch Täglich, Teleport, Nachrichten, Verkaufen &
+Börse, Titel & Erfolge) entstehen hier passende im selben Stil:
 16-px-Vorlage mit schwarzer Kontur. Die Namen landen als H_... in KitData.SmallIcon (build_kit.py).
 """
 import os
@@ -46,7 +47,13 @@ def build(vroot, chip_red):
     tex = os.path.join(vroot, "assets/minecraft/textures/item")
     for name, img in (("h_regeln", Image.open(os.path.join(tex, "written_book.png"))),
                       ("h_angeln", Image.open(os.path.join(tex, "fishing_rod.png"))),
-                      ("h_casino", chip_red)):
+                      ("h_casino", chip_red),
+                      # v2.05: Seiten Täglich, Teleport, Nachrichten, Verkaufen & Börse, Titel & Erfolge
+                      ("h_clock", Image.open(os.path.join(tex, "clock_00.png"))),
+                      ("h_pearl", Image.open(os.path.join(tex, "ender_pearl.png"))),
+                      ("h_chat", Image.open(os.path.join(tex, "writable_book.png"))),
+                      ("h_emerald", Image.open(os.path.join(tex, "emerald.png"))),
+                      ("h_nametag", Image.open(os.path.join(tex, "name_tag.png")))):
         result.append((name, outlined(img.convert("RGBA").crop((0, 0, 16, 16)))))
     return result
 
