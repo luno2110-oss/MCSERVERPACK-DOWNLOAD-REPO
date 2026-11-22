@@ -169,7 +169,7 @@ jobs:
           # vorab hinfliegen, damit Chunks und Anzeigen geladen sind (Software-Grafik braucht etwas)
           echo "kubytest kamera bj_oben Kamera" >&3
           sleep 25
-          for v in bj_oben bj_platz bj_seite poker roulette slots slots_klein bj_rot bj_violett bj_hocker poker_rot poker_violett; do
+          for v in bj_oben bj_platz bj_seite poker roulette slots slots_klein plinko plinko_nah bj_rot bj_violett bj_hocker poker_rot poker_violett; do
             echo "kubytest kamera $v Kamera" >&3
             sleep 9
             shot "10_$v"
@@ -226,6 +226,14 @@ jobs:
           clip video_slots 30
           for k in 1 2 3; do sleep 1; echo "kubytest dreh Kamera" >&3; sleep 9; done
           sleep 2
+          # Plinko (v2.05): Kamera-Spieler wirft acht Kugeln (Risiko Hoch), Video mit Ton und Bilder im Fall
+          echo "kubytest kamera plinko Kamera" >&3
+          sleep 4
+          clip video_plinko 20
+          sleep 1
+          echo "kubytest plinko Kamera hoch 8" >&3
+          for k in 1 2 3 4 5 6; do sleep 2; shot "35_plinko_$k"; done
+          sleep 8
           # Casino-Rundgang (Gastgeber Vincent führt durch alle Stationen) als Video mit Ton
           echo "kubytest rundgang Kamera" >&3
           sleep 1

@@ -183,6 +183,25 @@ public final class LoadTestCommand implements CommandExecutor {
                 Player xp = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : sender instanceof Player sp ? sp : null;
                 if (xp != null) crashShow(xp);
             }
+            case "plinko" -> {
+                // /kubytest plinko <Spieler> [niedrig|mittel|hoch] [Anzahl]: Kamera-Spieler wirft Kugeln am Test-Brett
+                // (alle 8 Ticks eine, Einsatz 100), jede Abrechnung als "[Casino-Test] plinko"-Zeile im Log
+                Player pp = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : sender instanceof Player sp ? sp : null;
+                de.kuby.kubyplugins.casino.Plinko.Risk rk = args.length > 2 ? de.kuby.kubyplugins.casino.Plinko.Risk.byName(args[2]) : null;
+                int n = args.length > 3 ? Math.max(1, Math.min(10, Integer.parseInt(args[3]))) : 6;
+                if (pp != null) {
+                    plugin.casino().giveChips(pp.getUniqueId(), 20_000);
+                    plugin.casinoPlay().testLog = true;
+                    plugin.plinko().testLog = true;
+                    de.kuby.kubyplugins.casino.Plinko.Risk risk = rk == null ? de.kuby.kubyplugins.casino.Plinko.Risk.HOCH : rk;
+                    for (int i = 0; i < n; i++) {
+                        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                            String err = plugin.plinko().testDrop(pp, "kplinko", risk, 1);
+                            plugin.getLogger().info("[Plinko-Test] Kugel " + risk.label + ": " + (err == null ? "fällt" : err));
+                        }, 1L + 8L * i);
+                    }
+                }
+            }
             case "roulette" -> {
                 // /kubytest roulette <Spieler>: Spieler setzt (Rot + eine Zahl), Countdown springt auf 1 – ein ganzer Wurf
                 Player rp = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : sender instanceof Player sp ? sp : null;
@@ -273,7 +292,7 @@ public final class LoadTestCommand implements CommandExecutor {
         p.teleport(back);
         plugin.getLogger().info("[Inventar-Test] " + (ok ? "OK" : "FEHLER") + " " + String.join(" | ", res));
     }
-    private static Location camBj, camRl, camPk, camSlots, camSlotsKlein, camCrash, camBjRot, camBjVio, camPkRot, camPkVio;
+    private static Location camBj, camRl, camPk, camSlots, camSlotsKlein, camPlinko, camCrash, camBjRot, camBjVio, camPkRot, camPkVio;
 
     /** Kamera-Punkte für Screenshots aus dem echten Client (CI "Client-Bilder"). */
     private void camera(Player p, String where) {
@@ -298,6 +317,18 @@ public final class LoadTestCommand implements CommandExecutor {
                 if (o == null) return;
                 from = o.clone().add(0, 3.0, 4.6);
                 to = o.clone().add(0, 0.8, 0.8);
+            }
+            case "plinko" -> {
+                // Plinko-Brett (v2.05) von vorn aus Spielerhöhe, ganzes Brett im Bild
+                if (camPlinko == null) return;
+                from = camPlinko.clone().add(0.7, -0.75, 3.6);
+                to = camPlinko.clone().add(0, -0.15, 0);
+            }
+            case "plinko_nah" -> {
+                // unten: Fächer mit Faktoren, Bedienfeld (Risiko, Einsatz, BALL)
+                if (camPlinko == null) return;
+                from = camPlinko.clone().add(-0.5, -1.0, 1.9);
+                to = camPlinko.clone().add(0.1, -1.55, 0);
             }
             case "slots_klein" -> {
                 // kleiner Tiefsee-Automat (v2.05) schräg von vorn, Hocker im Bild
@@ -490,6 +521,11 @@ public final class LoadTestCommand implements CommandExecutor {
         camPk = pkAt;
         camSlots = new Location(w, gx + 2.5, gy, gz - 7.5);
         Location slotC = new Location(w, gx - 3.5, gy + 1.5, gz - 7.5);
+        // Plinko (v2.05): Wand aus Schwarzstein (6 breit, 6 hoch) hinten rechts, Brett davor, Blick nach +z
+        for (int x = gx + 8; x <= gx + 13; x++) {
+            for (int y = 0; y < 6; y++) w.getBlockAt(x, (int) gy + y, gz - 12).setType(org.bukkit.Material.POLISHED_BLACKSTONE_BRICKS, false);
+        }
+        camPlinko = new Location(w, gx + 11.0, gy + 0.75 + 2.45 * 0.8, gz - 11);
         camSlotsKlein = new Location(w, gx - 3.5, gy, gz - 7.5);
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             de.kuby.kubyplugins.casino.BlackjackGame bj = plugin.blackjack().testTable(bjAt, 0f);
@@ -515,6 +551,7 @@ public final class LoadTestCommand implements CommandExecutor {
             // kleine Ausführung (v2.05): halbe Breite, eigenes Thema Tiefsee (Muscheln, Fische, Dreizack)
             plugin.slots().testMachine("kozean", slotC, 0f, new Location(w, slotC.getX(), gy, slotC.getZ() + 1.6), "ozean",
                     1.35, de.kuby.kubyplugins.casino.SlotTheme.OZEAN);
+            plugin.plinko().testBoard("kplinko", camPlinko, 0f, 0.8);
             int bjSeat = 0, pkSeat = 0;
             for (int i = 0; i < players.size(); i++) {
                 Player p = players.get(i);
@@ -887,6 +924,21 @@ public final class LoadTestCommand implements CommandExecutor {
         plugin.casino().giveChips(p.getUniqueId(), 10_000);
         boolean pulled = plugin.slots().testPull(p, "kgold");
         check("Slots: Hebel am Gold-Automaten gezogen", pulled, null);
+        // --- Plinko (v2.05): eine Kugel am Test-Brett, Risiko Hoch, Einsatz 100; Auszahlung = 100 × Faktor eines Fachs ---
+        plugin.plinko().testLog = true;
+        String perr = plugin.plinko().testDrop(p, "kplinko", de.kuby.kubyplugins.casino.Plinko.Risk.HOCH, 1);
+        check("Plinko: Kugel am Test-Brett abgeworfen", perr == null, perr);
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            var po = plugin.casinoPlay().testLast.get(p.getUniqueId() + "|plinko");
+            boolean known = false;
+            if (po != null) {
+                for (int sl = 0; sl < de.kuby.kubyplugins.casino.Plinko.SLOTS; sl++) {
+                    if (po.gross() == Math.round(po.stake() * de.kuby.kubyplugins.casino.Plinko.Risk.HOCH.mult(sl))) known = true;
+                }
+            }
+            check("Plinko: Kugel liegt im Fach und ist abgerechnet (Auszahlung = Einsatz × Faktor)", po != null && known && po.payout() >= po.gross(),
+                    po == null ? "keine Abrechnung nach 6 s" : "Einsatz " + po.stake() + ", Spiel zahlt " + po.gross() + ", ausgezahlt " + po.payout());
+        }, 120L);
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             plugin.casinoPlay().testLog = false;
             plugin.casinoPlay().testGolden = null;

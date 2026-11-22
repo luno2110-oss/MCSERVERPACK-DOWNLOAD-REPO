@@ -180,7 +180,7 @@ jobs:
           # Casino-Regeltest: jede Prüfung als OK/FEHLER-Zeile, dazu Slot-Walzen (Ergebnis = Mittellinie)
           rules = re.findall(r"\[Casino-Regel\] (OK|FEHLER) (.*)", log)
           rres = re.findall(r"\[Casino-Regel\] Ergebnis: (.*)", log)
-          reels = re.findall(r"\[Casino-Test\] slots Walzen: Ergebnis ([a-z ]+) \| Mittellinie nach dem Einrasten ([a-z ]+)", log)
+          reels = re.findall(r"\[Casino-Test\] slots Walzen: Ergebnis ([a-z0-9_ ]+) \| Mittellinie nach dem Einrasten ([a-z0-9_ ]+)", log)
           if not rres: probs.append("Casino-Regeltest nicht beendet (%d Prüfungen gelaufen)" % len(rules))
           for ok, what in rules:
               if ok == "FEHLER": probs.append("Casino-Regel: " + what[:250])

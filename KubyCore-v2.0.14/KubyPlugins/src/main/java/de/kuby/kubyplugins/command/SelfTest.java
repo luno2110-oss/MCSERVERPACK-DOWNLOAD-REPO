@@ -93,6 +93,20 @@ final class SelfTest {
             canvas.accept("Casino-Gewinntabelle " + th.key + " 5000", () -> CasinoScreens.slotsPaytable(th, 2500000, 5000));
         }
         canvas.accept("Roulette-Verlauf", () -> CasinoScreens.rouletteHistory(List.of(0, 17, 32), NO));
+        CasinoScreens.PlinkoActions pla = new CasinoScreens.PlinkoActions() {
+            public Consumer<Player> risk(int i) { return NO; }
+            public Consumer<Player> level(int i) { return NO; }
+            public Consumer<Player> custom() { return NO; }
+            public Consumer<Player> drop() { return NO; }
+        };
+        for (de.kuby.kubyplugins.casino.Plinko.Risk rk : de.kuby.kubyplugins.casino.Plinko.Risk.values()) {
+            List<CasinoScreens.PlinkoResult> rec = new java.util.ArrayList<>();
+            for (int sl : new int[]{6, 0, 3, 12, 7, 5, 9, 6, 2, 10, 11}) rec.add(new CasinoScreens.PlinkoResult(rk.mult(sl), sl, Math.round(5000 * rk.mult(sl)) - 5000));
+            canvas.accept("Plinko " + rk.label, () -> CasinoScreens.plinko(new CasinoScreens.PlinkoView(12_345_678, rk, 5000,
+                    de.kuby.kubyplugins.casino.PlinkoService.LEVELS, 5, "3 Kugeln im Fall", rec, 10, 15_000), pla));
+        }
+        canvas.accept("Plinko leer, eigener Einsatz", () -> CasinoScreens.plinko(new CasinoScreens.PlinkoView(0, de.kuby.kubyplugins.casino.Plinko.Risk.MITTEL,
+                2500, new long[]{10, 50, 100, 500, 1000, 5000, 15000}, -1, "Wähle Risiko und Einsatz, dann BALL", List.of(), 10, 15_000), pla));
         FriendsScreen.Actions fa = new FriendsScreen.Actions() {
             public Consumer<Player> tab(FriendsScreen.Tab t, boolean sent) { return NO; }
             public Consumer<Player> accept(String n) { return NO; }
@@ -601,7 +615,7 @@ final class SelfTest {
             var cp = plugin.casinoPlay();
             if (cp != null) {
                 if (!cp.jewelGame("blackjack")) fails.add("Casino: Blackjack muss Juwelen erlauben");
-                for (String g : new String[]{"roulette", "slots", "crash", "losbude"}) {
+                for (String g : new String[]{"roulette", "slots", "crash", "plinko", "losbude"}) {
                     if (cp.jewelGame(g)) fails.add("Casino: " + g + " darf keine Juwelen erlauben");
                     if (cp.cur(java.util.UUID.randomUUID(), g) != de.kuby.kubyplugins.service.CasinoPlay.Cur.CHIPS)
                         fails.add("Casino: " + g + " spielt nicht mit Chips");
@@ -711,6 +725,16 @@ final class SelfTest {
                     + de.kuby.kubyplugins.casino.RouletteTable.lastStats);
         } catch (Throwable t) {
             fails.add("Roulette-Physik: " + t);
+        }
+
+        // Plinko (v2.05): drei Risikostufen mit 95–97 % Rückfluss, 600 Bahnen im richtigen Fach, nie durch einen Stift
+        try {
+            List<String> pl = de.kuby.kubyplugins.casino.Plinko.selfCheck();
+            if (pl.isEmpty()) ok[0]++;
+            for (String e : pl) fails.add("Plinko: " + e);
+            plugin.getLogger().info("[Plinko] " + (pl.isEmpty() ? "ok, " : pl.size() + " Fehler, ") + de.kuby.kubyplugins.casino.Plinko.lastStats);
+        } catch (Throwable t) {
+            fails.add("Plinko: " + t);
         }
 
         // Slot-Themen (v2.05): je Automat eigene Symbole und Gewinne, jede Tabelle mit 93–97 % Rückfluss

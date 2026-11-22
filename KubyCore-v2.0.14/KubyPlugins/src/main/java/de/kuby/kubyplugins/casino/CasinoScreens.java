@@ -396,6 +396,144 @@ public final class CasinoScreens {
         return c;
     }
 
+    // =================================================================================================================
+    // Plinko (v2.05)
+    // =================================================================================================================
+
+    /** Ergebnis einer Kugel: Faktor, Fach, Netto (Auszahlung + Cashback − Einsatz). */
+    public record PlinkoResult(double mult, int slot, long net) {}
+
+    /**
+     * @param levels Einsatz-Stufen, levelIndex = gewählte Stufe (-1 = eigener Einsatz)
+     * @param recent letzte Kugeln des Spielers, neueste zuerst
+     */
+    public record PlinkoView(long chips, Plinko.Risk risk, long bet, long[] levels, int levelIndex, String status,
+                             List<PlinkoResult> recent, long minBet, long maxBet) {}
+
+    public interface PlinkoActions {
+        Consumer<Player> risk(int index);
+
+        Consumer<Player> level(int index);
+
+        Consumer<Player> custom();
+
+        Consumer<Player> drop();
+    }
+
+    /** Farbe je Gewinnstufe (Mitte grau … Rand violett, wie die Fächer am Brett); Stufe 5 als rotes Feld. */
+    private static final KitData.Small[] PLINKO_TIER = {KitData.Small.SET_GRAY, KitData.Small.SET_BLUE, KitData.Small.SET_TEAL,
+            KitData.Small.SET_GOLD, KitData.Small.SET_ORANGE, null, KitData.Small.SET_VIOLET};
+
+    private static void tierCell(Canvas c, int x, int y, int w, int tier) {
+        if (PLINKO_TIER[tier] == null) c.box(x, y, w, 16, KitData.Box.FIELD_RED, Canvas.Z_BOX + 1);
+        else c.smallButton(x, y, w, PLINKO_TIER[tier]);
+    }
+    private static final String[] PLINKO_CHIP = {"white", "red", "blue", "green", "black", "gold", "gold"};
+
+    public static Canvas plinko(PlinkoView v, PlinkoActions a) {
+        Canvas c = new Canvas(W).heading("Plinko", net.kyori.adventure.text.format.TextColor.color(0xF2B829));
+        head(c, KitData.Icon.PLINKO_BIG, "PLINKO", v.status());
+        // Deine Chips: Beschriftung rückt mit der Zahl nach links
+        int nw = Canvas.width(num(v.chips()), true);
+        int lx = Math.min(315, 378 - nw - 4 - Canvas.width("Chips", false));
+        c.smallIcon(lx - 16, 21, KitData.SmallIcon.S_CHIP_RED);
+        c.text(lx, 16, "Deine", GRAY);
+        c.text(lx, 26, "Chips", GRAY);
+        c.textRight(378, 21, num(v.chips()), GOLD, true);
+
+        // Risiko
+        int ry = 54;
+        c.box(0, ry, W, 38, KitData.Box.CASINO_DARK);
+        c.text(12, ry + 8, Canvas.caps("Risiko"), WHITE, true);
+        c.textRight(378, ry + 8, List.of(Canvas.Span.of("Höchster Gewinn ", GRAY), Canvas.Span.bold(Plinko.mult(v.risk().max()), GOLD)));
+        String[] tips = {"Oft etwas zurück, selten viel (bis 10x)", "Ausgewogen (bis 25x)", "Meist wenig, am Rand bis 150x"};
+        for (int i = 0; i < 3; i++) {
+            Plinko.Risk r = Plinko.Risk.values()[i];
+            boolean sel = r == v.risk();
+            int x = 12 + i * 92;
+            c.smallButton(x, ry + 19, 86, sel ? KitData.Small.GOLD_ON : KitData.Small.GOLD);
+            c.textCenter(x + 43, ry + 23, Canvas.caps(r.label), sel ? ON_GOLD : GOLD_SOFT, true);
+            c.action(x, ry + 19, 86, 16, a.risk(i), tip("<white>" + r.label, "<gray>" + tips[i],
+                    "<gray>Rückfluss <white>" + String.format(java.util.Locale.GERMAN, "%.1f", r.rtp() * 100) + " %"));
+        }
+
+        // Gewinne je Fach
+        int gy = ry + 41;
+        c.box(0, gy, W, 44, KitData.Box.FELT);
+        c.text(12, gy + 7, Canvas.caps("Gewinne"), WHITE, true);
+        c.textRight(378, gy + 7, List.of(Canvas.Span.of("Mitte oft, Rand selten · ", GRAY),
+                Canvas.Span.of("je Kugel ", GRAY), Canvas.Span.bold(num(v.bet()), GOLD)));
+        for (int i = 0; i < Plinko.SLOTS; i++) {
+            int x = 6 + i * 29;
+            double m = v.risk().mult(i);
+            tierCell(c, x, gy + 20, 28, Plinko.tier(i));
+            String lbl = Plinko.mult(m);
+            c.textCenter(x + 14, gy + 24, lbl.length() > 4 ? lbl.replace("x", "") : lbl, WHITE, true);
+            c.action(x, gy + 20, 28, 16, null, tip("<white>Fach " + (i + 1) + " · " + lbl,
+                    "<gray>Chance <white>" + String.format(java.util.Locale.GERMAN, "%.2f", Plinko.prob(i) * 100) + " %",
+                    "<gray>Zahlt <#F2DA90>" + num(Math.round(v.bet() * m)) + " Chips"));
+        }
+
+        // Einsatz
+        int ey = gy + 47;
+        c.box(0, ey, W, 60, KitData.Box.CASINO_DARK);
+        c.text(12, ey + 8, Canvas.caps("Einsatz"), WHITE, true);
+        c.textRight(378, ey + 8, List.of(Canvas.Span.of("Jede Kugel kostet ", GRAY), Canvas.Span.bold(num(v.bet()), GOLD)));
+        int n = v.levels().length;
+        for (int i = 0; i <= n; i++) {
+            boolean custom = i == n;
+            int cx = 34 + (custom ? 6 : i) * 53;
+            if (n > 6 && !custom) cx = 30 + i * 46;
+            boolean sel = custom ? v.levelIndex() < 0 : i == v.levelIndex();
+            String chip = custom ? "purple" : PLINKO_CHIP[Math.min(i, PLINKO_CHIP.length - 1)];
+            c.smallIcon(cx - 9, ey + (sel ? 21 : 24), small("c_" + chip));
+            String label = custom ? Canvas.caps(v.levelIndex() < 0 ? num(v.bet()) : "Eigen") : shortNum(v.levels()[i]);
+            c.textCenter(cx + 1, ey + 44, label, sel ? GOLD : GRAY, sel);
+            c.action(cx - 24, ey + 20, 48, 34, custom ? a.custom() : a.level(i), custom
+                    ? tip("Eigenen Einsatz eingeben", "<gray>" + num(v.minBet()) + " bis " + num(v.maxBet()) + " Chips")
+                    : tip("Jede Kugel kostet <yellow>" + num(v.levels()[i]) + " Chips"));
+        }
+
+        // Ball
+        int by = ey + 63;
+        c.smallButton(0, by, 190, KitData.Small.GREEN, "▼  Ball fallen lassen", ON_GREEN, true);
+        c.action(0, by, 190, 16, a.drop(), tip("<white>Eine Kugel für " + num(v.bet()) + " Chips",
+                "<gray>Am Brett geht es mit dem Knopf <white>BALL</white> schneller,", "<gray>bis zu 10 Kugeln gleichzeitig."));
+        c.textRight(378, by + 4, "12 Reihen · 13 Fächer", GRAY, false);
+
+        // Zuletzt
+        int zy = by + 19;
+        c.box(0, zy, W, 52, KitData.Box.CASINO_DARK);
+        c.smallIcon(13, zy + 8, KitData.SmallIcon.S_COIN);
+        c.text(26, zy + 8, Canvas.caps("Zuletzt"), WHITE, true);
+        if (v.recent().isEmpty()) {
+            c.text(26, zy + 22, "Noch keine Kugel gefallen.", LIGHT);
+        } else {
+            long sum = 0;
+            for (PlinkoResult r : v.recent()) sum += r.net();
+            c.textRight(378, zy + 8, List.of(Canvas.Span.of("Summe ", GRAY), Canvas.Span.bold((sum >= 0 ? "+" : "−") + num(Math.abs(sum)),
+                    sum >= 0 ? GREEN : RED)));
+            int shown = Math.min(10, v.recent().size());
+            for (int i = 0; i < shown; i++) {
+                PlinkoResult r = v.recent().get(i);
+                int x = 12 + i * 37;
+                tierCell(c, x, zy + 19, 34, Plinko.tier(r.slot()));
+                c.textCenter(x + 17, zy + 23, Plinko.mult(r.mult()), WHITE, true);
+                c.textCenter(x + 17, zy + 38, (r.net() >= 0 ? "+" : "−") + shortNum(Math.abs(r.net())), r.net() >= 0 ? GREEN : RED, false);
+            }
+        }
+        return c;
+    }
+
+    /** 1000 → „1k“, 5000 → „5k“, 2500 → „2,5k“, sonst „500“. */
+    private static String shortNum(long v) {
+        if (v >= 1000 && v % 100 == 0) {
+            double k = v / 1000.0;
+            return (k == Math.rint(k) ? String.valueOf((long) k) : String.format(java.util.Locale.GERMAN, "%.1f", k)) + "k";
+        }
+        return num(v);
+    }
+
     /** Eine Zeile im Gewinnplan: Name links, „20x = 2.000“ rechts; wird es zu eng, fällt der Betrag weg. */
     private static void payRow(Canvas c, int x, int ry, String name, double mult, long bet) {
         String m = SlotTheme.mult(mult);

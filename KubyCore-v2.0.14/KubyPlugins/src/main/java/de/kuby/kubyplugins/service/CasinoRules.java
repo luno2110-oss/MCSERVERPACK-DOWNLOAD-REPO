@@ -26,7 +26,7 @@ import java.util.function.Consumer;
  */
 public final class CasinoRules {
 
-    public static final List<String> GAMES = List.of("blackjack", "roulette", "slots", "crash", "losbude");
+    public static final List<String> GAMES = List.of("blackjack", "roulette", "slots", "crash", "plinko", "losbude");
 
     private static final int WIDTH = 320;
     /** Platzhalter für Icons im Text. Ohne Grafik-Pack werden daraus normale Zeichen. */
@@ -43,7 +43,7 @@ public final class CasinoRules {
     }
 
     /** Reihenfolge der Seiten zum Blättern (wie in der Hilfe-Referenz: "< vorherige | Hinreisen | nächste >"). */
-    private static final List<String> ORDER = List.of("casino", "blackjack", "roulette", "slots", "crash", "losbude", "rangliste");
+    private static final List<String> ORDER = List.of("casino", "blackjack", "roulette", "slots", "crash", "plinko", "losbude", "rangliste");
 
     private CasinoRules() {
     }
@@ -86,7 +86,7 @@ public final class CasinoRules {
 
     private static Page overview(KubyPlugins plugin) {
         List<String> how = List.of(
-                "Im Casino spielst du mit Chips an Slots, Roulette, Blackjack und Crash. In der VIP-Lounge gibt es Poker.",
+                "Im Casino spielst du mit Chips an Slots, Roulette, Blackjack, Crash und Plinko. In der VIP-Lounge gibt es Poker.",
                 "Chips tauschst du an der Kasse gegen Coins und wieder zurück. 1 Chip = 1 Coin, beim Auszahlen "
                         + plugin.getConfig().getInt("casino.cashout-tax-percent", 5) + " % Steuer.",
                 "Jeden " + drawDay(plugin) + " um " + plugin.getConfig().getString("casino.jackpot.draw-time", "18:00")
@@ -113,7 +113,7 @@ public final class CasinoRules {
                 new String[]{"/poker", "Poker in der VIP-Lounge"},
                 new String[]{"/casino status", "Deine Chips und der Jackpot"},
                 new String[]{"/casino regeln", "Diese Hilfe"});
-        return new Page("CASINO", "Slots, Roulette, Blackjack, Poker und Crash", de.kuby.kubyplugins.ui.KitData.Icon.CHIP_RED, how, commands);
+        return new Page("CASINO", "Slots, Roulette, Blackjack, Poker, Crash und Plinko", de.kuby.kubyplugins.ui.KitData.Icon.CHIP_RED, how, commands);
     }
 
     private static Page gamePage(KubyPlugins plugin, String game) {
@@ -162,6 +162,18 @@ public final class CasinoRules {
                         "Der Knopf am Bedienfeld wählt den Einsatz: Klick erhöht, Schleichen + Klick senkt (10 bis 5.000 Chips).",
                         "Drei gleiche zahlen 8- bis 80-fach, Kirschen schon einzeln. Den Gewinnplan zeigt das Schild am Automaten.",
                         "Drei Siebener knacken den Jackpot. Ein Teil jedes Drehs wandert hinein, voller Einsatz holt den größten Anteil.");
+            }
+            case "plinko" -> {
+                subtitle = "Kugel durch zwölf Stiftreihen in eins von 13 Fächern";
+                icon = de.kuby.kubyplugins.ui.KitData.Icon.PLINKO_BIG;
+                how = List.of(
+                        "Am Plinko-Brett wählst du unten das Risiko (Niedrig, Mittel, Hoch) und den Einsatz (Klick höher, Schleichen + Klick"
+                                + " tiefer, 10 bis 5.000 Chips). Der Knopf BALL lässt eine Kugel fallen, bis zu zehn gleichzeitig.",
+                        "An jedem Stift geht es zufällig links oder rechts. Die Mitte ist häufig und zahlt wenig, die Ränder sind selten"
+                                + " und zahlen viel: Niedrig bis 10x, Mittel bis 25x, Hoch bis 150x.",
+                        "Klick aufs Brett öffnet das Plinko-Fenster: Gewinne je Fach mit Chance, eigener Einsatz und deine letzten Kugeln.",
+                        "Ein Spieler hat das Brett für sich, bis er 30 Sekunden keine Kugel mehr wirft oder weggeht.");
+                commands.add(new String[]{"/casino plinko", "Plinko-Fenster am nächsten Brett"});
             }
             case "losbude" -> {
                 subtitle = "Rubbellose für Chips";
@@ -305,6 +317,7 @@ public final class CasinoRules {
             case "roulette" -> "Roulette";
             case "slots" -> "Slots";
             case "losbude" -> "Losbude";
+            case "plinko" -> "Plinko";
             default -> "Crash";
         };
     }

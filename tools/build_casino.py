@@ -1116,4 +1116,9 @@ def build(out):
     small = [(n, f()) for n, f in SMALL]
     for syms, _plate in st.THEMES.values():
         small += [("y_" + n, _small_symbol(fn)) for n, fn in syms]
-    return ([(n, f()) for n, f in ICONS16], small, [(n, f()) for n, f in BIG])
+    # Plinko (v2.05): Brett-Materialien, Kugel und das große Icon für den Dialog-Kopf
+    import build_plinko
+    if out:
+        build_plinko.write(out)
+    big = [(n, f()) for n, f in BIG] + [("plinko_big", build_plinko.icon())]
+    return ([(n, f()) for n, f in ICONS16], small, big)

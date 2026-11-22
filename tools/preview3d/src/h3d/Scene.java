@@ -254,6 +254,30 @@ public final class Scene {
                     Mock.runLater();
                 }
             }
+            case "plinko" -> {
+                // Plinko-Brett (v2.05) an der Wand bei z = 0, Blick nach +z; drei Kugeln im Fall, Verlauf, Risiko Mittel.
+                // args[2] = Größe (Standard 0,8)
+                double size = args.length > 2 ? Double.parseDouble(args[2]) : 0.8;
+                de.kuby.kubyplugins.casino.PlinkoBoard b = new de.kuby.kubyplugins.casino.PlinkoBoard("p1",
+                        new Location(w, 0.5, 2.7, 0.0), 0f, size, tag, click);
+                b.build();
+                var risk = de.kuby.kubyplugins.casino.Plinko.Risk.MITTEL;
+                b.multipliers(risk);
+                b.controls("Kuby", risk, "100", 3);
+                java.util.List<double[]> hist = new java.util.ArrayList<>();
+                int[] slots = {6, 4, 9, 2, 7, 5};
+                for (int sl : slots) hist.add(new double[]{risk.mult(sl), de.kuby.kubyplugins.casino.Plinko.tier(sl)});
+                b.history(hist);
+                java.util.Random r = new java.util.Random(7);
+                int[] at = {14, 38, 60};
+                for (int k = 0; k < at.length; k++) {
+                    var f = de.kuby.kubyplugins.casino.Plinko.flight(de.kuby.kubyplugins.casino.Plinko.path(r), r);
+                    int t = Math.min(at[k], f.length() - 1);
+                    b.spawnBall(f.u()[t], f.v()[t]);
+                    for (var e : f.events()) if (e.row() >= 0 && e.tick() <= t && e.tick() > t - 4) b.hitPeg(e.row(), e.peg());
+                }
+                b.hitSlot(3);
+            }
             case "crash", "crash_bereit", "crash_crash" -> {
                 de.kuby.kubyplugins.casino.CrashScreen c = new de.kuby.kubyplugins.casino.CrashScreen(
                         new Location(w, 0.5, 2.5, 0.01), 0f, 6, 3, null, null, tag);
