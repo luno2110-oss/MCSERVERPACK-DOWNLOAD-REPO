@@ -341,16 +341,16 @@ public final class LoadTestCommand implements CommandExecutor {
                 to = o.clone().add(0, 0.8, 0.8);
             }
             case "rennen" -> {
-                // Pferderennen-Bildschirm (v2.05) an der Südwand, Blick nach Süden, ganzer Bildschirm im Bild
+                // Pferderennen-Bildschirm (v2.05) an der Westwand, Blick nach Westen, ganzer Bildschirm im Bild
                 if (camRennen == null) return;
-                from = camRennen.clone().add(0, -0.55, -4.4);
+                from = camRennen.clone().add(4.4, -0.55, 0);
                 to = camRennen.clone().add(0, -0.1, 0);
             }
             case "rennen_nah" -> {
-                // Zielgerade und Toto-Tafel (rechts aus Sicht der Zuschauer = Westen)
+                // Zielgerade und Toto-Tafel (rechts aus Sicht der Zuschauer = Norden)
                 if (camRennen == null) return;
-                from = camRennen.clone().add(-1.2, -0.7, -2.3);
-                to = camRennen.clone().add(-1.6, -0.1, 0);
+                from = camRennen.clone().add(2.3, -0.7, -1.2);
+                to = camRennen.clone().add(0, -0.1, -1.6);
             }
             case "plinko" -> {
                 // Plinko-Brett (v2.05) von vorn aus Spielerhöhe, ganzes Brett im Bild
@@ -560,11 +560,12 @@ public final class LoadTestCommand implements CommandExecutor {
             for (int y = 0; y < 6; y++) w.getBlockAt(x, (int) gy + y, gz - 12).setType(org.bukkit.Material.POLISHED_BLACKSTONE_BRICKS, false);
         }
         camPlinko = new Location(w, gx + 11.0, gy + 0.75 + 2.45 * 0.8, gz - 11);
-        // Pferderennen (v2.05): Wand an der Südkante (9 breit, 5 hoch), Bildschirm davor, Blick nach Norden
-        for (int x = gx - 4; x <= gx + 5; x++) {
-            for (int y = 0; y < 5; y++) w.getBlockAt(x, (int) gy + y, gz + 18).setType(org.bukkit.Material.POLISHED_BLACKSTONE_BRICKS, false);
+        // Pferderennen (v2.05): Wand an der Westkante (10 breit, 5 hoch), Bildschirm davor, Blick nach Osten. Nicht an der
+        // Südseite: dort baut der Crash-Test später seine Wand (z + 14) genau vor die Kamera
+        for (int z = gz + 3; z <= gz + 12; z++) {
+            for (int y = 0; y < 5; y++) w.getBlockAt(gx - 15, (int) gy + y, z).setType(org.bukkit.Material.POLISHED_BLACKSTONE_BRICKS, false);
         }
-        camRennen = new Location(w, gx + 1.0, gy + 0.9 + 1.95 * 0.7, gz + 18);
+        camRennen = new Location(w, gx - 14.0, gy + 0.9 + 1.95 * 0.7, gz + 8.0);
         camSlotsKlein = new Location(w, gx - 3.5, gy, gz - 7.5);
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             de.kuby.kubyplugins.casino.BlackjackGame bj = plugin.blackjack().testTable(bjAt, 0f);
@@ -591,7 +592,7 @@ public final class LoadTestCommand implements CommandExecutor {
             plugin.slots().testMachine("kozean", slotC, 0f, new Location(w, slotC.getX(), gy, slotC.getZ() + 1.6), "ozean",
                     1.35, de.kuby.kubyplugins.casino.SlotTheme.OZEAN);
             plugin.plinko().testBoard("kplinko", camPlinko, 0f, 0.8);
-            plugin.race().testBoard(camRennen, 180f, 0.7);
+            plugin.race().testBoard(camRennen, -90f, 0.7);
             int bjSeat = 0, pkSeat = 0;
             for (int i = 0; i < players.size(); i++) {
                 Player p = players.get(i);
