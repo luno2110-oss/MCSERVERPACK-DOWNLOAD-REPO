@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v2.05** (ungetestet, nicht kompiliert)
+Stand: **v2.05** (ungetestet), v2.06 in Arbeit
 
 ---
 
@@ -565,6 +565,10 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Prüfung: SELFTEST (/sit, Teppich, Wand vor dem Sitz) und im echten Client `/kubytest aufstehen` (/sit und Blackjack-Hocker: Füße genau auf dem Boden, steckt nirgends)
 - [x] **v2.02 Zwei Fehler aus den Client-Bildern**: (1) Blackjack: die Serien-Anzeige „Serie 2 · nächster Sieg x1,4“ zweier Plätze lag übereinander (gleicher Dealer, oft gleiche Serie) – sie ist jetzt wie die Chip-Auswahl nur für den Spieler am Platz sichtbar. (2) Poker: die fünf Gemeinschaftskarten lagen für die Spieler gegenüber der Dealerin auf dem Kopf (zusätzliche 180°-Drehung) – jetzt wie die Handkarten zur Spielerseite lesbar
 - [x] **v2.02 Poker-Regeltest im SELFTEST**: Handbewertung wird bei jedem Serverstart geprüft – Rangfolge aller neun Blattklassen (Höchste Karte bis Straight Flush/Royal Flush), Kicker bei Paar und zwei Paaren, Full House nach Drilling vor Paar, A-2-3-4-5 als kleinste Straße (auch als Straight Flush), bestes Blatt aus 7 Karten, gleiche Blätter teilen den Pot
+- [~] **v2.06 Währungen je Modus, XP-Shop, Skypass, Skyblock-Itemliste, eigene Modelle** (in Arbeit)
+  - [x] Währungen je Modus (Vorgabe: SMP und Skyblock Geld, XP, Juwelen; Survival Geld, Tokens, Juwelen): `ModeService.hasCurrency`. XP nur noch in SMP/Skyblock (Erze, Mobs, Angeln, Tagesbonus, Spielzeit-Stufen), Tokens nur in Survival (Spielzeit, Kisten ziehen keine Tokens außerhalb von Survival), Info-Leiste zeigt je Modus nur seine Währungen. /tokens, /tokenshop, /farmpass und /angeln pass außerhalb von Survival mit Hinweis gesperrt (Admin-Befehle mit Argumenten bleiben)
+  - [x] Persönliche Booster (Grundlage für den XP-Shop): XP- und Verkaufs-Booster mit Laufzeit (boosters.yml), XP-Booster wirkt auf die XP-Quellen, Verkaufs-Booster auf /sell und das Verkaufsmenü
+  - [ ] Battlepass nur SMP, Skypass für Skyblock (eigener Stil), XP-Shop mit Kategorien je Modus (Geld, Juwelen, Crate-Keys, Booster, OP-Tools mit 3x3- und 5x5-Spitzhacken; in SMP auch PvP, Bauen, Team, Survival), neue Skyblock-Itemliste, eigene Modelle (Stühle, Bänke, Töpfe, Obststände, Wumpus) aus Kuby_Models.zip
 - [x] **v2.05 Casino-Wünsche des Besitzers**
   - [x] **Bedrock: verständliche Sperrmeldung** („Bedrock erstmal raus fürs Casino, mit Fehlermeldung, damit Bedrock-Spieler verstehen, warum es nicht geht“): Beim Betreten, Hinreisen, Einloggen im Casino und bei jedem Casino-Befehl (/casino, /poker, /roulette, /cashout, /plinko; erlaubt bleiben /casino hilfe, regeln, stats, status) bekommt ein Bedrock-Spieler die Actionbar „Casino nur für Java-Edition“, einen Titel „Casino gesperrt“ und drei Chatzeilen mit dem Grund (3D-Tische, Karten, Chips und Effekte werden auf Bedrock nicht richtig angezeigt – man sähe weder Karten noch Einsätze noch Gewinne; alles andere auf Kuby geht; das Casino öffnet für Bedrock, sobald es dort richtig aussieht). Dazu ein Fenster (Bedrock-Formular) „Casino – nur Java-Edition“ mit Knopf „Verstanden“. Alle 30 s höchstens einmal, damit es nicht nervt. Bedrock-Test in der CI prüft, dass das Fenster nach /poker kommt
   - [x] **Slots: jeder Automat mit eigenen Symbolen und Gewinnen** („pro Slot-Maschine unterschiedliche Icons und Gewinne“). Vier Themen (`SlotTheme`), je zehn eigene Walzen-Symbole (32 px, gezeichnet nach `tools/icon_db/STYLE.md`, Kontaktbogen geprüft), eigene Walzenfarbe und eigener Gewinnplan, alle bei rund 95 % Rückfluss (ohne Jackpot), aber mit anderem Spielgefühl:

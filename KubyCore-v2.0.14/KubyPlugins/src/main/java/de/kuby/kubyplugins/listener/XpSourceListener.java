@@ -134,7 +134,9 @@ public final class XpSourceListener implements Listener {
     }
 
     private void add(Player p, long base) {
-        long boosted = Math.round(base * plugin.booster().multiplier());
+        // XP ist eine Währung von SMP und Skyblock (v2.05): in Survival und im Hub keine XP
+        if (!plugin.modes().hasCurrency(p.getUniqueId(), "xp")) return;
+        long boosted = Math.round(base * plugin.booster().xpMultiplier(p.getUniqueId()));
         plugin.stats().get(p.getUniqueId()).xp += boosted;
     }
 }

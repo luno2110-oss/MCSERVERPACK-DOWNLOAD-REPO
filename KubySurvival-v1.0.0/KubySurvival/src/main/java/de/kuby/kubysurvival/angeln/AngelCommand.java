@@ -49,7 +49,15 @@ public final class AngelCommand implements CommandExecutor, TabCompleter {
         switch (sub) {
             case "buch", "fischbuch" -> menus.openBook(p, Water.FLUSS);
             case "rute", "upgrades" -> menus.openRod(p);
-            case "pass", "angelpass" -> menus.openPass(p, -1);
+            case "pass", "angelpass" -> {
+                // Angelpass gibt es nur in Survival (v2.05)
+                if (!de.kuby.kubyplugins.service.ModeService.SURVIVAL.equals(core.modes().modeOf(p.getUniqueId()))) {
+                    de.kuby.kubyplugins.util.Msg.send(p, "<red>" + de.kuby.kubyplugins.service.ModeService.onlyIn("Den Angelpass",
+                            de.kuby.kubyplugins.service.ModeService.SURVIVAL));
+                } else {
+                    menus.openPass(p, -1);
+                }
+            }
             case "freikaufen" -> {
                 if (game != null) game.buyEscaped(p);
             }

@@ -59,7 +59,8 @@ public final class SellService {
     }
 
     public double multiplier(UUID id) {
-        return 1.0 + level(id) * plugin.getConfig().getDouble("sellmulti.step", 0.05);
+        // dazu ein laufender Verkaufs-Booster aus dem XP-Shop (v2.05)
+        return (1.0 + level(id) * plugin.getConfig().getDouble("sellmulti.step", 0.05)) * plugin.booster().sellMultiplier(id);
     }
 
     public long upgradeCost(UUID id) {

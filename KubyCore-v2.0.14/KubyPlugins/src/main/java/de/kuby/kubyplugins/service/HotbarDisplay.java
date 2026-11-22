@@ -68,6 +68,10 @@ public final class HotbarDisplay {
         }
     }
 
+    private String mode(UUID id) {
+        return plugin.modes() == null ? ModeService.HUB : plugin.modes().modeOf(id);
+    }
+
     private String line(Player p, String mode) {
         UUID id = p.getUniqueId();
         // Münz- und XP-Icon aus dem Pack KubyUI, ohne Pack nur Text.
@@ -81,12 +85,17 @@ public final class HotbarDisplay {
         return switch (mode) {
             case "off" -> null;
             case "money" -> coin + plugin.moneyText(p);
-            case "xp" -> star + "<#ff9a1f>" + Msg.coins(plugin.stats().get(id).xp);
+            // Währungen je Modus (v2.05): XP nur in SMP und Skyblock, Tokens nur in Survival
+            case "xp" -> ModeService.hasCurrency(mode(id), "xp") ? star + "<#ff9a1f>" + Msg.coins(plugin.stats().get(id).xp)
+                    : coin + plugin.moneyText(p);
             case "all" -> {
+                String m = mode(id);
                 StringBuilder sb = new StringBuilder(coin + plugin.moneyText(p));
                 sb.append(sep).append("<#5FE3A0>").append(Msg.coins(plugin.jewels().balance(id))).append(en ? " jewels" : " Juwelen");
-                if (plugin.hasStat("tokens")) sb.append(sep).append("<#D08CFF>").append(Msg.coins(plugin.statValue("tokens", id))).append(" Tokens");
-                sb.append(sep).append(star).append("<#ff9a1f>").append(Msg.coins(plugin.stats().get(id).xp));
+                if (plugin.hasStat("tokens") && ModeService.hasCurrency(m, "tokens")) {
+                    sb.append(sep).append("<#D08CFF>").append(Msg.coins(plugin.statValue("tokens", id))).append(" Tokens");
+                }
+                if (ModeService.hasCurrency(m, "xp")) sb.append(sep).append(star).append("<#ff9a1f>").append(Msg.coins(plugin.stats().get(id).xp));
                 yield sb.toString();
             }
             case "coords" -> {

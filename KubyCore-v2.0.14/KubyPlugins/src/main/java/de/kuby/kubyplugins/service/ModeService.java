@@ -197,6 +197,41 @@ public final class ModeService {
         }
     }
 
+    // ---------- Währungen und Pässe je Modus (v2.05, Vorgabe des Besitzers) ----------
+    //   SMP, Skyblock: Geld, XP, Juwelen          Survival: Geld, Tokens, Juwelen
+    //   Battlepass: SMP · Skypass: Skyblock · Farmpass und Angelpass: Survival
+
+    /** Gibt es diese Währung (coins, jewels, xp, tokens) im Modus? Hub: nur Geld und Juwelen. */
+    public static boolean hasCurrency(String mode, String currency) {
+        if (currency == null) return false;
+        return switch (currency.toLowerCase(java.util.Locale.ROOT)) {
+            case "xp" -> SMP.equals(mode) || SKYBLOCK.equals(mode);
+            case "tokens", "token" -> SURVIVAL.equals(mode);
+            default -> true;
+        };
+    }
+
+    public boolean hasCurrency(UUID id, String currency) {
+        return hasCurrency(modeOf(id), currency);
+    }
+
+    /** Pass des Modus: "battlepass" (SMP), "skypass" (Skyblock), "farmpass" (Survival), sonst null. */
+    public static String passOf(String mode) {
+        return switch (mode == null ? "" : mode) {
+            case SMP -> "battlepass";
+            case SKYBLOCK -> "skypass";
+            case SURVIVAL -> "farmpass";
+            default -> null;
+        };
+    }
+
+    /** Hinweis für den falschen Modus, z. B. „Tokens gibt es nur in Survival.“ */
+    public static String onlyIn(String what, String... modes) {
+        List<String> names = new ArrayList<>();
+        for (String m : modes) names.add(label(m));
+        return what + " gibt es nur " + (names.size() == 1 ? "in " + names.get(0) : "in " + String.join(" und ", names)) + ".";
+    }
+
     public static String label(String mode) {
         return switch (mode) {
             case SMP -> "SMP";

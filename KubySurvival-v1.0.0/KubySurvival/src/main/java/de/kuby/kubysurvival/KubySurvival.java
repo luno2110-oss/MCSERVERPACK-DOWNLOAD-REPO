@@ -806,8 +806,27 @@ public final class KubySurvival extends JavaPlugin {
 
     private void command(String name, org.bukkit.command.CommandExecutor exec) {
         PluginCommand cmd = getCommand(name);
-        if (cmd != null) cmd.setExecutor(exec);
+        if (cmd == null) return;
+        // Survival-Währung und -Pässe (v2.05, Vorgabe des Besitzers): Tokens, Token-Shop und Farmpass gibt es nur in
+        // Survival. Spieler in SMP, Skyblock oder Hub bekommen einen Hinweis; Konsole und Admin-Befehle mit Argumenten
+        // (/tokens give …) bleiben überall möglich.
+        if (SURVIVAL_ONLY.contains(name)) {
+            org.bukkit.command.CommandExecutor inner = exec;
+            exec = (sender, c, label, args) -> {
+                if (sender instanceof org.bukkit.entity.Player p && !(args.length > 0 && p.hasPermission("kuby.admin"))
+                        && !de.kuby.kubyplugins.service.ModeService.SURVIVAL.equals(core.modes().modeOf(p.getUniqueId()))) {
+                    String what = name.startsWith("token") ? "Tokens und den Token-Shop" : "Den Farmpass";
+                    Msg.send(p, "<red>" + de.kuby.kubyplugins.service.ModeService.onlyIn(what, de.kuby.kubyplugins.service.ModeService.SURVIVAL)
+                            + " <gray>Mit <white>/survival</white> kommst du hin.");
+                    return true;
+                }
+                return inner.onCommand(sender, c, label, args);
+            };
+        }
+        cmd.setExecutor(exec);
     }
+
+    private static final java.util.Set<String> SURVIVAL_ONLY = java.util.Set.of("tokens", "tokenshop", "farmpass");
 
     /** Grober Ort eines Spielers in Survival (für Freunde sichtbar), leer außerhalb von Survival. */
     private String placeOf(UUID id) {

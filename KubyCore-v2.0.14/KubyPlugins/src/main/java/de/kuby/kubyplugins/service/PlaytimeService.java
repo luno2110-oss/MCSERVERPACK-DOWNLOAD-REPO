@@ -272,8 +272,12 @@ public final class PlaytimeService implements Listener {
         switch (pr.kind()) {
             case "coins" -> plugin.modes().depositIn(id, mode, pr.amount());
             case "jewels" -> plugin.jewels().add(id, pr.amount());
-            case "xp" -> plugin.stats().get(id).xp += pr.amount();
+            case "xp" -> {
+                // XP nur in SMP und Skyblock, Tokens nur in Survival (v2.05)
+                if (ModeService.hasCurrency(mode, "xp")) plugin.stats().get(id).xp += pr.amount();
+            }
             case "tokens" -> {
+                if (!ModeService.hasCurrency(mode, "tokens")) return;
                 if (!plugin.give("tokens", id, pr.amount())) plugin.getLogger().warning("Spielzeit: Tokens ohne Survival-Addon übersprungen");
             }
             case "key" -> plugin.keys().give(id, mode, pr.value(), (int) pr.amount());

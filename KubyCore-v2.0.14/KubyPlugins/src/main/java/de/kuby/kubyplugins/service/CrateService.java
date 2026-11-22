@@ -429,12 +429,21 @@ public final class CrateService implements Listener {
     }
 
     private Reward roll(Crate c) {
-        int r = ThreadLocalRandom.current().nextInt(Math.max(1, c.total()));
+        // Währungen, die es im Modus der Kiste nicht gibt (Tokens außerhalb von Survival), werden nicht gezogen (v2.05)
+        List<Reward> pool = new ArrayList<>();
+        int total = 0;
         for (Reward w : c.rewards()) {
+            if (("tokens".equals(w.kind()) || "xp".equals(w.kind())) && !ModeService.hasCurrency(c.mode(), w.kind())) continue;
+            pool.add(w);
+            total += w.weight();
+        }
+        if (pool.isEmpty()) pool = c.rewards();
+        int r = ThreadLocalRandom.current().nextInt(Math.max(1, total));
+        for (Reward w : pool) {
             r -= w.weight();
             if (r < 0) return w;
         }
-        return c.rewards().get(c.rewards().size() - 1);
+        return pool.get(pool.size() - 1);
     }
 
     private void give(Player p, Crate c, Reward r) {

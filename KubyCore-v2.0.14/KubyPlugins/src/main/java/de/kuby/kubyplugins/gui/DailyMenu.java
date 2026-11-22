@@ -79,7 +79,8 @@ public final class DailyMenu extends GuiMenu {
             if (day % 10 == 0) {
                 plugin.jewels().add(p.getUniqueId(), 25);
                 Msg.send(p, "<aqua>Meilenstein-Bonus: +25 Juwelen!");
-            } else if (java.util.concurrent.ThreadLocalRandom.current().nextInt(5) == 0) {
+            } else if (plugin.modes().hasCurrency(p.getUniqueId(), "xp") && java.util.concurrent.ThreadLocalRandom.current().nextInt(5) == 0) {
+                // XP gibt es nur in SMP und Skyblock (v2.05)
                 plugin.stats().get(p.getUniqueId()).xp += 50;
                 Msg.send(p, "<green>Glücksbonus: +50 XP!");
             }
