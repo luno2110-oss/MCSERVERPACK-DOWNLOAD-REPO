@@ -1002,8 +1002,9 @@ public final class LoadTestCommand implements CommandExecutor {
             check("Plinko: Kugel liegt im Fach und ist abgerechnet (Auszahlung = Einsatz × Faktor)", po != null && known && po.payout() >= po.gross(),
                     po == null ? "keine Abrechnung nach 6 s" : "Einsatz " + po.stake() + ", Spiel zahlt " + po.gross() + ", ausgezahlt " + po.payout());
         }, 120L);
+        // Abrechnungs-Protokoll (testLast) erst nach der Rennprüfung abschalten: das Rennen wird nach gut 20 s abgerechnet
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> plugin.casinoPlay().testLog = false, 540L);
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
-            plugin.casinoPlay().testLog = false;
             plugin.casinoPlay().testGolden = null;
             CASINO.remove(p.getUniqueId());
             plugin.getLogger().info("[Casino-Regel] Ergebnis: " + ruleOk + " OK, " + ruleBad + " Fehler");
