@@ -209,9 +209,10 @@ public final class WheelBoard {
             bulbs[i].setBrightness(new Display.Brightness(12, 12));
         }
         sprite(0, 0, 0.14, 0.85, "wh_hub", 0, 15);
-        pointer = sprite(0, R + 0.04, 0.16, 0.62, "wh_pointer", 0, 15);
+        pointer = sprite(0, R + 0.02, 0.16, 0.56, "wh_pointer", 0, 15);
         // Schriftzug, Gewinn-Tafel, Info
-        text(0, 1.82, 0.08, 0.95f, 400, CrashScreen.logo("GLÜCKSRAD", LOGO));
+        // Schriftzug über dem Zeiger (Oberkante des Zeigers bei v 1,75)
+        text(0, 1.93, 0.08, 0.9f, 400, CrashScreen.logo("GLÜCKSRAD", LOGO));
         box(0, -1.83, 0.075, 2.3, 0.3, 0.03, 0, "hd_plinko_dark");
         box(0, -1.665, 0.0925, 2.36, 0.03, 0.035, 0, "hd_gold");
         box(0, -1.995, 0.0925, 2.36, 0.03, 0.035, 0, "hd_gold");
