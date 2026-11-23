@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Echter Minecraft-Java-Client (Vanilla, ohne Mods) für Bildschirmfotos aus dem Spiel in der CI.
+"""Echter Minecraft-Java-Client für Bildschirmfotos aus dem Spiel in der CI (Vanilla, mit --shader auch Fabric + Sodium
++ Iris und ein Shaderpack von Modrinth, das gleich eingeschaltet ist).
 
 Lädt Client-Jar, Bibliotheken (mit LWJGL-Natives für Linux) und den Asset-Index von Mojang, schreibt options.txt
 (keine Pause ohne Fokus, kein Barrierefreiheits-Dialog, leise) und servers.dat mit dem Testserver, für den das
 Server-Resource-Pack (KubyUI) ohne Rückfrage angenommen wird. Gibt die Startzeile als launch.sh aus.
 
-Aufruf: python3 prepare.py <Version> <Zielordner> <Server-Adresse>
+Aufruf: python3 prepare.py <Version> <Zielordner> <Server-Adresse> [--shader <Modrinth-Shaderpack>]
 """
 import concurrent.futures
 import hashlib
@@ -13,6 +14,7 @@ import json
 import os
 import struct
 import sys
+import urllib.parse
 import urllib.request
 import uuid
 
@@ -63,8 +65,44 @@ def servers_dat(path, address):
         f.write(data)
 
 
+def modrinth(slug, version, loaders, dest_dir):
+    """Neueste Version eines Modrinth-Projekts (Mod oder Shaderpack) laden. version None: ohne Spielversion filtern."""
+    q = {"loaders": json.dumps(loaders)}
+    if version:
+        q["game_versions"] = json.dumps([version])
+    vs = json.loads(fetch("https://api.modrinth.com/v2/project/%s/version?%s" % (slug, urllib.parse.urlencode(q))))
+    if not vs:
+        raise SystemExit("Modrinth: keine Version von %s für %s %s" % (slug, version or "-", loaders))
+    pick = ([v for v in vs if v.get("version_type") == "release"] or vs)[0]
+    f = next((x for x in pick["files"] if x.get("primary")), pick["files"][0])
+    dest = os.path.join(dest_dir, f["filename"])
+    if not os.path.exists(dest):
+        fetch(f["url"], dest)
+    print("Modrinth %s: %s (%s)" % (slug, f["filename"], pick.get("version_number")))
+    return f["filename"]
+
+
+def fabric(version, lib_dir):
+    """Fabric-Loader-Profil: Bibliotheken (vor die Vanilla-Bibliotheken), Hauptklasse und JVM-Argumente."""
+    loaders = json.loads(fetch("https://meta.fabricmc.net/v2/versions/loader/%s" % version))
+    loader = next((x for x in loaders if x["loader"].get("stable")), loaders[0])["loader"]["version"]
+    prof = json.loads(fetch("https://meta.fabricmc.net/v2/versions/loader/%s/%s/profile/json" % (version, loader)))
+    cp = []
+    for lib in prof["libraries"]:
+        group, art, ver = lib["name"].split(":")[:3]
+        path = "%s/%s/%s/%s-%s.jar" % (group.replace(".", "/"), art, ver, art, ver)
+        dest = os.path.join(lib_dir, path)
+        if not os.path.exists(dest):
+            fetch(lib.get("url", "https://maven.fabricmc.net/").rstrip("/") + "/" + path, dest)
+        cp.append(dest)
+    jvm = [a for a in prof.get("arguments", {}).get("jvm", []) if isinstance(a, str)]
+    print("Fabric-Loader", loader)
+    return cp, prof["mainClass"], jvm
+
+
 def main():
     version, out, address = sys.argv[1], sys.argv[2], sys.argv[3]
+    shader = sys.argv[sys.argv.index("--shader") + 1] if "--shader" in sys.argv else None
     os.makedirs(out, exist_ok=True)
     man = json.loads(fetch(MANIFEST))
     v = next(x for x in man["versions"] if x["id"] == version)
@@ -133,9 +171,26 @@ def main():
             "",
         ]))
     servers_dat(os.path.join(game, "servers.dat"), address)
+    main_class, jvm = vj["mainClass"], []
+    if shader:
+        # Fabric + Fabric API + Sodium + Iris, Shaderpack gleich an (config/iris.properties)
+        fcp, main_class, jvm = fabric(version, lib_dir)
+        cp = fcp + cp
+        mods = os.path.join(game, "mods")
+        os.makedirs(mods, exist_ok=True)
+        for slug in ("fabric-api", "sodium", "iris"):
+            modrinth(slug, version, ["fabric"], mods)
+        packs = os.path.join(game, "shaderpacks")
+        os.makedirs(packs, exist_ok=True)
+        pack = modrinth(shader, None, ["iris"], packs)
+        os.makedirs(os.path.join(game, "config"), exist_ok=True)
+        with open(os.path.join(game, "config", "iris.properties"), "w") as f:
+            f.write("enableShaders=true\nshaderPack=%s\nenableDebugOptions=false\ndisableUpdateMessage=true\n" % pack)
+        with open(os.path.join(game, "options.txt"), "a") as f:
+            f.write("renderDistance:4\nsimulationDistance:5\n")
     name = "Kamera"
     uid = uuid.UUID(bytes=hashlib.md5(("OfflinePlayer:" + name).encode()).digest(), version=3).hex
-    args = ["java", "-Xmx2G", "-Dorg.lwjgl.util.NoChecks=true", "-cp", ":".join(cp), vj["mainClass"],
+    args = ["java", "-Xmx3G" if shader else "-Xmx2G", "-Dorg.lwjgl.util.NoChecks=true"] + jvm + ["-cp", ":".join(cp), main_class,
             "--username", name, "--version", version, "--gameDir", game, "--assetsDir", os.path.join(out, "assets"),
             "--assetIndex", idx["id"], "--uuid", uid, "--accessToken", "0", "--userType", "legacy",
             "--versionType", "release", "--width", "1600", "--height", "900", "--quickPlayMultiplayer", address]

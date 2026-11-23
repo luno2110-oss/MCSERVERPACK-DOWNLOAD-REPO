@@ -1,0 +1,245 @@
+# Bilder mit Shadern (Wunsch des Besitzers: „den Server bzw. unsere ganzen Sachen auch für Shader sichtbar machen“):
+# derselbe Testserver wie bei "Client-Bilder", aber der Client läuft mit Fabric + Sodium + Iris und einem echten
+# Shaderpack (Complementary Reimagined und BSL, je ein Lauf). Die Kamera fährt die Casino-Stationen tagsüber und nachts
+# ab, dazu ein Dreh am großen Glücksrad und das Glücksrad-Fenster. Software-Grafik (Mesa llvmpipe) ist mit Shadern sehr
+# langsam, deshalb lange Pausen. Ergebnis: Release "shader-bilder" (Bilder je Shaderpack, client.log, summary.md).
+name: Shader-Bilder
+
+on:
+  workflow_run:
+    workflows: ["Build plugins"]
+    types: [completed]
+  workflow_dispatch:
+
+jobs:
+  shots:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      matrix:
+        pack: [complementary-reimagined, bsl-shaders]
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            tools/clientshot
+            tools/loadtest
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Xvfb, Mesa und Werkzeuge
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb libgl1-mesa-dri libglx-mesa0 mesa-utils imagemagick xdotool \
+            libxrandr2 libxinerama1 libxcursor1 libxi6 libxxf86vm1 libxtst6 > /dev/null
+          pip install -q pillow pyyaml
+
+      - name: Bots installieren
+        working-directory: tools/loadtest
+        run: |
+          npm install --no-audit --no-fund
+          node pick_version.js 1.21.11 > version.txt
+          echo "NEED_VIA=$(sed -n 2p version.txt)" >> "$GITHUB_ENV"
+
+      - name: Client-Dateien aus dem Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            client/libraries
+            client/versions
+            client/assets
+          key: mc-client-1.21.11-fabric-v1
+
+      - name: Minecraft-Client holen (1.21.11, Fabric, Sodium, Iris, Shaderpack)
+        run: python3 tools/clientshot/prepare.py 1.21.11 "$PWD/client" localhost:25565 --shader "${{ matrix.pack }}"
+
+      - name: Paper und Plugins holen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p server/plugins
+          cd server
+          UA="KubyPlugins-CI (github.com/${GITHUB_REPOSITORY})"
+          curl -sSf -A "$UA" https://fill.papermc.io/v3/projects/paper/versions/1.21.11/builds -o builds.json
+          URL=$(python3 -c "import json;b=json.load(open('builds.json'));print(b[0]['downloads']['server:default']['url'])")
+          curl -sSfL -A "$UA" "$URL" -o paper.jar
+          WANT="${{ github.event.workflow_run.head_sha }}"
+          for i in $(seq 1 30); do
+            NOTES=$(gh release view latest -R "$GITHUB_REPOSITORY" --json body --jq .body 2>/dev/null || true)
+            if [ -z "$WANT" ] || echo "$NOTES" | grep -q "${WANT::7}"; then break; fi
+            sleep 10
+          done
+          echo "Release: $NOTES"
+          gh release download latest -p KubyPlugins.zip -R "$GITHUB_REPOSITORY" -O kuby.zip --clobber
+          unzip -q kuby.zip -d kuby
+          cp kuby/*.jar plugins/
+          if [ "$NEED_VIA" = "via" ]; then
+            for repo in ViaVersion/ViaVersion ViaVersion/ViaBackwards; do
+              J=$(curl -sSf -H "Authorization: Bearer ${{ github.token }}" "https://api.github.com/repos/$repo/releases/latest" \
+                | python3 -c "import json,sys;print([a['browser_download_url'] for a in json.load(sys.stdin)['assets'] if a['name'].endswith('.jar')][0])")
+              curl -sSfL "$J" -o "plugins/$(basename $repo).jar"
+            done
+          fi
+          echo "eula=true" > eula.txt
+          printf "online-mode=false\nallow-flight=true\nspawn-protection=0\nview-distance=5\nsimulation-distance=5\nmax-players=30\n" > server.properties
+          printf "settings:\n  connection-throttle: -1\n" > bukkit.yml
+
+      - name: Erster Start (Configs anlegen)
+        working-directory: server
+        run: |
+          mkfifo console
+          java -Xmx3G -jar paper.jar --nogui < console > first.log 2>&1 &
+          PID=$!
+          exec 3>console
+          for i in $(seq 1 300); do grep -q "Done (" first.log && break; kill -0 $PID 2>/dev/null || break; sleep 1; done
+          sleep 5
+          echo "stop" >&3
+          for i in $(seq 1 60); do kill -0 $PID 2>/dev/null || break; sleep 1; done
+          kill $PID 2>/dev/null || true
+          rm console
+          python3 - <<'EOF'
+          import yaml
+          p = "plugins/KubyCore/config.yml"
+          c = yaml.safe_load(open(p, encoding="utf-8"))
+          c.setdefault("modes", {})
+          for i, m in enumerate(["hub", "smp", "survival", "skyblock"]):
+              c["modes"].setdefault(m, {})
+              c["modes"][m]["world"] = "world"
+              c["modes"][m]["spawn"] = "world;%d;110;0;0;0" % (i * 300)
+          c.setdefault("beta", {})["alle-tester"] = True
+          c.setdefault("kubytest", {})["erlaubt"] = True
+          c.setdefault("casino", {}).setdefault("rundgang", {})["aktiv"] = False
+          c.setdefault("einfuehrung", {})["aktiv"] = False
+          yaml.safe_dump(c, open(p, "w", encoding="utf-8"), allow_unicode=True, sort_keys=False)
+          EOF
+
+      - name: Server, Bots und Client mit Shadern starten, Bilder aufnehmen
+        working-directory: server
+        env:
+          BOTS: '4'
+          DURATION: '420'
+        run: |
+          mkdir -p shots
+          mkfifo console
+          java -Xmx3G -jar paper.jar --nogui < console > server.log 2>&1 &
+          PID=$!
+          exec 3>console
+          for i in $(seq 1 300); do grep -q "Done (" server.log && break; kill -0 $PID 2>/dev/null || break; sleep 1; done
+          Xvfb :99 -screen 0 1600x900x24 -nolisten tcp > xvfb.log 2>&1 &
+          export DISPLAY=:99 LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe
+          shot() { import -window root "shots/$1.png"; echo "Bild $1"; }
+          sleep 2
+          glxinfo -B 2>/dev/null | grep -E "OpenGL (renderer|core profile version)" || true
+          ../client/launch.sh > client.log 2>&1 &
+          CPID=$!
+          for i in $(seq 1 600); do grep -q "Kamera joined the game\|Kamera\[.*logged in" server.log && break; kill -0 $CPID 2>/dev/null || break; sleep 1; done
+          grep -m1 "Kamera" server.log || { echo "Client nicht beigetreten"; tail -80 client.log; }
+          # Shader übersetzen dauert mit Software-Grafik
+          sleep 60
+          shot 00_beitritt
+          (cd ../tools/loadtest && node bots.js > ../../server/bots.log 2>&1) &
+          sleep 30
+          echo "time set 6000" >&3
+          echo "kubytest casino 300" >&3
+          sleep 40
+          echo "kubytest kamera bj_oben Kamera" >&3
+          sleep 40
+          # tagsüber: alle Stationen
+          for v in bj_oben bj_platz poker roulette slots slots_klein plinko rennen gluecksrad gluecksrad_nah; do
+            echo "kubytest kamera $v Kamera" >&3
+            sleep 18
+            shot "10_${v}_tag"
+          done
+          # großes Glücksrad dreht (Lämpchen, Nadel, Licht)
+          echo "kubytest kamera gluecksrad Kamera" >&3
+          sleep 6
+          echo "kubytest gluecksrad Kamera" >&3
+          for k in 1 2 3 4; do sleep 3; shot "11_gluecksrad_dreh_$k"; done
+          sleep 8
+          # Fenster und Bildschirm-Dreh (GUI ist von Shadern nicht betroffen, wird aber mitgeprüft)
+          echo "kubytest gluecksrad-ui Kamera" >&3
+          for k in 1 2; do sleep 2; shot "12_gluecksrad_ui_$k"; done
+          sleep 10
+          shot "12_gluecksrad_fenster"
+          echo "kubytest schliessen Kamera" >&3
+          sleep 3
+          # nachts: Lichter, Lichtblöcke, leuchtende Anzeigen
+          echo "time set 18000" >&3
+          sleep 20
+          for v in bj_oben roulette slots plinko rennen gluecksrad; do
+            echo "kubytest kamera $v Kamera" >&3
+            sleep 18
+            shot "20_${v}_nacht"
+          done
+          echo "kubytest gluecksrad Kamera" >&3
+          for k in 1 2 3; do sleep 3; shot "21_gluecksrad_nacht_dreh_$k"; done
+          sleep 10
+          kill $CPID 2>/dev/null || true
+          echo "stop" >&3
+          for i in $(seq 1 90); do kill -0 $PID 2>/dev/null || break; sleep 1; done
+          kill $PID 2>/dev/null || true
+          grep -iE "iris|sodium|shader" client.log | head -60 || true
+
+      - name: Auswerten
+        if: always()
+        working-directory: server
+        run: |
+          python3 - <<'EOF' > summary.md
+          import glob, os, re
+          from PIL import Image, ImageStat
+          pack = "${{ matrix.pack }}"
+          print("## Bilder mit Shaderpack %s" % pack)
+          probs = []
+          shots = sorted(glob.glob("shots/*.png"))
+          for f in shots:
+              im = Image.open(f).convert("RGB")
+              st = ImageStat.Stat(im)
+              spread = sum(st.stddev) / 3
+              print("- %s: Helligkeit %.0f, Kontrast %.0f" % (os.path.basename(f), sum(st.mean) / 3, spread))
+              if spread < 4: probs.append("%s ist einfarbig (kein Bild)" % os.path.basename(f))
+          if not shots: probs.append("keine Bilder")
+          log = open("server.log", encoding="utf-8", errors="replace").read() if os.path.exists("server.log") else ""
+          if "Kamera" not in log: probs.append("Client ist dem Server nicht beigetreten")
+          clog = open("client.log", encoding="utf-8", errors="replace").read() if os.path.exists("client.log") else ""
+          iris = re.findall(r"(?i)\[iris[^\]]*\].*", clog)
+          used = [l for l in iris if re.search(r"(?i)shader ?pack|using|loaded", l)]
+          print("- Iris: " + ("; ".join(used[:6]) if used else "keine Meldung zum Shaderpack"))
+          errs = sorted(set(re.findall(r"(?i)(?:failed to (?:compile|link|load)[^\n]{0,160}|shader compilation[^\n]{0,160})", clog)))
+          print("- Fehler beim Übersetzen der Shader: " + ("; ".join(errs[:8]) if errs else "keine"))
+          if not iris: probs.append("Iris hat nicht geladen")
+          mtex = sorted(set(re.findall(r"Missing textures in model ([\w:/.-]+)", clog)))
+          if mtex: probs.append("Fehlende Texturen in Modellen: " + ", ".join(mtex[:10]))
+          crash = re.search(r"(?i)(---- Minecraft Crash Report ----|Exception in thread \"Render thread\")", clog)
+          if crash: probs.append("Client abgestürzt (siehe client.log)")
+          open("problems.txt", "w").write("\n".join(probs) if probs else "keine Probleme")
+          for p in probs: print("- Problem: " + p)
+          EOF
+          cat summary.md >> "$GITHUB_STEP_SUMMARY"
+          cat summary.md
+
+      - name: Bilder als Release-Datei (shader-bilder)
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        working-directory: server
+        run: |
+          P="${{ matrix.pack }}"
+          touch client.log server.log summary.md problems.txt
+          gh release view shader-bilder -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
+            gh release create shader-bilder -R "$GITHUB_REPOSITORY" --title "Shader-Bilder" --notes "Bilder aus dem echten Client mit Iris und Shaderpacks (Xvfb, Software-Grafik)" --prerelease
+          (cd shots 2>/dev/null && zip -q "../shader-bilder-$P.zip" *.png) || true
+          cp client.log "client-$P.log"; cp summary.md "summary-$P.md"; cp problems.txt "problems-$P.txt"
+          gh release upload shader-bilder "client-$P.log" "summary-$P.md" "problems-$P.txt" -R "$GITHUB_REPOSITORY" --clobber
+          [ -f "shader-bilder-$P.zip" ] && gh release upload shader-bilder "shader-bilder-$P.zip" -R "$GITHUB_REPOSITORY" --clobber || true
+          if ! grep -q "keine Probleme" problems.txt; then cat problems.txt; exit 1; fi

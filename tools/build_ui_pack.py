@@ -172,6 +172,11 @@ import build_buttons  # noqa: E402
 
 build_buttons.write(OUT)
 
+# PBR-Karten für Shader (LabPBR): Casino-Gold glänzt als Metall, eingeschaltete Lämpchen und Neon leuchten selbst
+import build_pbr  # noqa: E402
+
+print("ok PBR:", build_pbr.write(OUT), "Spiegel-Karten")
+
 
 # ---------- Prüfung: Fehler in einer Schrift-Datei lassen Minecraft die ganze Schrift verwerfen ----------
 import check_fonts  # noqa: E402
