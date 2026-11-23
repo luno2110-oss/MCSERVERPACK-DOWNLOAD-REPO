@@ -363,6 +363,7 @@ casino:
     jackpot-share: 0.02         # so viel von jedem Dreh wandert in den Slots-Jackpot
     kino: true                  # zwei gleiche: Kino-Kamera auf die letzte Walze (Vignette, Herzschlag, Einrasten)
     hocker-abstand: 0.07        # Luft zwischen Hocker-Sitzfläche und Pultkante (Blöcke)
+    tempo-wechsel: true         # jede Runde anderes Dreh-Tempo (schnell, normal, lang, einzeln, zusammen); false = immer normal
   plinko:                       # Plinko-Bretter (/casino plinko automat [Größe]), Rückfluss je Risiko rund 96 %
     min-bet: 10
     max-bet: 5000               # eigener Einsatz bis hierhin (nach dem ersten Jackpot dreifach)

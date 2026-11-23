@@ -246,7 +246,10 @@ public final class SlotsService implements Listener {
         for (int x : result) if (x == 0) cherries++;
         boolean three = result[0] == result[1] && result[1] == result[2];
         boolean win = three || cherries > 0;
-        int[] arrive = {32, 46, tension ? 46 + 66 : 60};
+        // Dreh-Tempo je Runde zufällig (kurz, normal, lang, einzeln, zusammen), unabhängig vom Ergebnis
+        SlotSpin.Tempo tempo = plugin.getConfig().getBoolean("casino.slots.tempo-wechsel", true)
+                ? SlotSpin.pickTempo(RNG) : SlotSpin.Tempo.NORMAL;
+        int[] arrive = SlotSpin.arrivals(tempo, RNG, tension);
         SlotSpin[] spin = new SlotSpin[3];
         for (int i = 0; i < 3; i++) {
             double from = s.machine.reelAngle(i);
@@ -310,7 +313,8 @@ public final class SlotsService implements Listener {
                             got.append(s.shown[i][1]).append(' ');
                         }
                         plugin.getLogger().info("[Casino-Test] slots Walzen: Ergebnis " + want.toString().trim() + " | Mittellinie nach dem Einrasten "
-                                + got.toString().trim() + (tension ? " | Spannung (letzte Walze " + spin[2].arrive + " Ticks)" : ""));
+                                + got.toString().trim() + " | Tempo " + tempo + " (" + spin[0].arrive + "/" + spin[1].arrive + "/"
+                                + spin[2].arrive + " Ticks)" + (tension ? " | Spannung" : ""));
                     }
                     finish(p, s, result, bet, jw);
                 }

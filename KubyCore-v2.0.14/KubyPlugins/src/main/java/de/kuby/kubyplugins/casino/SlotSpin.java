@@ -35,6 +35,57 @@ public final class SlotSpin {
     }
 
     /**
+     * Dreh-Tempo (v2.06, Wunsch des Besitzers: „mal kurz, mal länger, damit es nicht langweilig ist“). Jede Runde
+     * wird eines gezogen; es ändert nur, wann die Walzen einrasten (Ticks), nie das Ergebnis.
+     * a/b/c: Einrasten der drei Walzen, weight: Häufigkeit.
+     */
+    public enum Tempo {
+        /** zackig: alles in knapp 2 Sekunden */
+        SCHNELL(18, 26, 34, 25),
+        /** wie bisher, gut 3 Sekunden */
+        NORMAL(32, 46, 60, 40),
+        /** lange laufen lassen, gut 4 Sekunden */
+        LANG(40, 62, 84, 18),
+        /** eine Walze nach der anderen mit großen Pausen */
+        EINZELN(24, 50, 76, 12),
+        /** alle drei fast gleichzeitig */
+        ZUSAMMEN(42, 46, 50, 5);
+
+        public final int a, b, c, weight;
+
+        Tempo(int a, int b, int c, int weight) {
+            this.a = a;
+            this.b = b;
+            this.c = c;
+            this.weight = weight;
+        }
+    }
+
+    public static Tempo pickTempo(java.util.Random rng) {
+        int sum = 0;
+        for (Tempo t : Tempo.values()) sum += t.weight;
+        int r = rng.nextInt(sum);
+        for (Tempo t : Tempo.values()) {
+            r -= t.weight;
+            if (r < 0) return t;
+        }
+        return Tempo.NORMAL;
+    }
+
+    /**
+     * Einrast-Ticks der drei Walzen: Tempo plus kleines Zittern (±2 Ticks), immer in Reihenfolge mit mindestens
+     * 3 Ticks Abstand. Spannung (zwei gleiche): die letzte Walze läuft 50 bis 80 Ticks länger als die zweite.
+     */
+    public static int[] arrivals(Tempo t, java.util.Random rng, boolean tension) {
+        int[] r = {t.a + rng.nextInt(5) - 2, t.b + rng.nextInt(5) - 2, t.c + rng.nextInt(5) - 2};
+        r[0] = Math.max(16, r[0]);
+        r[1] = Math.max(r[1], r[0] + 3);
+        r[2] = Math.max(r[2], r[1] + 3);
+        if (tension) r[2] = r[1] + 50 + rng.nextInt(31);
+        return r;
+    }
+
+    /**
      * @param from    Startwinkel
      * @param to      Zielwinkel (Zielsymbol auf der Linie, bis auf volle Umdrehungen)
      * @param arrive  Tick des Einrastens
@@ -50,14 +101,16 @@ public final class SlotSpin {
             scalable.add(false);
         }
         double vmax = 30;
-        int accel = 6;
+        // kurze Drehs (Tempo SCHNELL): kürzerer Anlauf und kürzeres Abbremsen, damit die Walze rechtzeitig einrastet
+        int accel = arrive < 24 ? 4 : 6;
         for (int i = 1; i <= accel; i++) {
             v.add(vmax * i / accel);
             scalable.add(true);
         }
         if (!tension) {
-            int decel = 14;
-            int cruise = Math.max(4, arrive - v.size() - decel);
+            // Einrasten genau in Tick arrive (= letzter Bewegungs-Tick, Index len - 1)
+            int decel = Math.max(6, Math.min(14, arrive + 1 - v.size() - 4));
+            int cruise = Math.max(4, arrive + 1 - v.size() - decel);
             for (int i = 0; i < cruise; i++) {
                 v.add(vmax);
                 scalable.add(true);
@@ -71,7 +124,7 @@ public final class SlotSpin {
         } else {
             // Spannung: die letzte Walze dreht im vollen Tempo einfach länger und rastet dann PLÖTZLICH ein
             int stop = 3;
-            int cruise = Math.max(4, arrive - v.size() - stop);
+            int cruise = Math.max(4, arrive + 1 - v.size() - stop);
             for (int i = 0; i < cruise; i++) {
                 v.add(vmax);
                 scalable.add(true);
@@ -112,5 +165,40 @@ public final class SlotSpin {
         }
         ang[ang.length - 1] = target;
         return new SlotSpin(ang, spd, len - 1);
+    }
+
+    /**
+     * Selbsttest der Dreh-Tempos: je Tempo, mit und ohne Spannung, 300 zufällige Drehs. Jede Walze rastet genau im
+     * geplanten Tick ein, die Walzen in Reihenfolge, Endwinkel = Zielsymbol, höchstens 120 Grad je Tick.
+     */
+    public static List<String> selfCheck() {
+        List<String> err = new ArrayList<>();
+        java.util.Random rng = new java.util.Random(7);
+        for (Tempo t : Tempo.values()) {
+            for (boolean tension : new boolean[]{false, true}) {
+                for (int n = 0; n < 300 && err.size() < 10; n++) {
+                    int[] arr = arrivals(t, rng, tension);
+                    int last = -1;
+                    for (int i = 0; i < 3; i++) {
+                        double from = rng.nextInt(10) * 36.0, to = rng.nextInt(10) * 36.0;
+                        SlotSpin sp = plan(from, to, arr[i], tension && i == 2 ? arr[1] + 6 : -1);
+                        if (sp.arrive != arr[i]) err.add(t + (tension ? " Spannung" : "") + ": Walze " + (i + 1) + " rastet in Tick "
+                                + sp.arrive + " statt " + arr[i] + " ein");
+                        if (sp.arrive <= last) err.add(t + ": Walze " + (i + 1) + " nicht nach der vorigen");
+                        last = sp.arrive;
+                        double end = sp.angle[sp.length() - 1];
+                        double d = ((end - to) % 360 + 360) % 360;
+                        if (Math.min(d, 360 - d) > 1e-6) err.add(t + ": Walze " + (i + 1) + " endet nicht auf dem Symbol");
+                        for (double v : sp.speed) {
+                            if (Math.abs(v) > 120) {
+                                err.add(t + ": Walze " + (i + 1) + " zu schnell (" + Math.round(v) + " Grad je Tick)");
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return err;
     }
 }

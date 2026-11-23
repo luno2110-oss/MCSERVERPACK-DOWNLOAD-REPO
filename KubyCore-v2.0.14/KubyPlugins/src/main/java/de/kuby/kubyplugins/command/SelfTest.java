@@ -860,6 +860,15 @@ final class SelfTest {
             fails.add("Plinko: " + t);
         }
 
+        // Slot-Tempo (v2.06): jede Runde anders lang, Walzen rasten trotzdem genau und in Reihenfolge ein
+        try {
+            List<String> sp = de.kuby.kubyplugins.casino.SlotSpin.selfCheck();
+            if (sp.isEmpty()) ok[0]++;
+            for (String e : sp) fails.add("Slot-Tempo: " + e);
+        } catch (Throwable t) {
+            fails.add("Slot-Tempo: " + t);
+        }
+
         // Slot-Themen (v2.05): je Automat eigene Symbole und Gewinne, jede Tabelle mit 93–97 % Rückfluss
         try {
             List<String> st = de.kuby.kubyplugins.casino.SlotTheme.selfCheck();

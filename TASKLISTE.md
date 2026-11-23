@@ -1,7 +1,7 @@
 # KubyPlugins – Gesamtplan (Hauptchat)
 
 Legende: [x] fertig · [~] teilweise · [ ] offen · (?) Annahme, bitte bestätigen
-Stand: **v2.06** (ungetestet)
+Stand: **v2.07** (ungetestet)
 
 ---
 
@@ -565,6 +565,10 @@ Entscheidungen: Einstellungen in allen Modi (für Survival angepasst), Juwelensh
   - Prüfung: SELFTEST (/sit, Teppich, Wand vor dem Sitz) und im echten Client `/kubytest aufstehen` (/sit und Blackjack-Hocker: Füße genau auf dem Boden, steckt nirgends)
 - [x] **v2.02 Zwei Fehler aus den Client-Bildern**: (1) Blackjack: die Serien-Anzeige „Serie 2 · nächster Sieg x1,4“ zweier Plätze lag übereinander (gleicher Dealer, oft gleiche Serie) – sie ist jetzt wie die Chip-Auswahl nur für den Spieler am Platz sichtbar. (2) Poker: die fünf Gemeinschaftskarten lagen für die Spieler gegenüber der Dealerin auf dem Kopf (zusätzliche 180°-Drehung) – jetzt wie die Handkarten zur Spielerseite lesbar
 - [x] **v2.02 Poker-Regeltest im SELFTEST**: Handbewertung wird bei jedem Serverstart geprüft – Rangfolge aller neun Blattklassen (Höchste Karte bis Straight Flush/Royal Flush), Kicker bei Paar und zwei Paaren, Full House nach Drilling vor Paar, A-2-3-4-5 als kleinste Straße (auch als Straight Flush), bestes Blatt aus 7 Karten, gleiche Blätter teilen den Pot
+- [x] **v2.07 Slots: Drehzeit wechselt jede Runde** („dass die Slots sich immer unterschiedlich lange drehen, mal kurz, mal länger, damit es nicht so langweilig ist“, ungetestet im Spiel): jede Runde wird ein Tempo gezogen, das nur das Einrasten der Walzen ändert, nie das Ergebnis
+  - Schnell (25 %): alles in knapp 2 s · Normal (40 %): wie bisher gut 3 s · Lang (18 %): gut 4 s · Einzeln (12 %): eine Walze nach der anderen mit großen Pausen · Zusammen (5 %): alle drei fast gleichzeitig. Dazu je Walze ±2 Ticks Zittern; bei zwei gleichen (Spannung) läuft die letzte Walze 2,5 bis 4 s länger statt immer gleich lang
+  - Kurze Drehs mit kürzerem Anlauf und Abbremsen, damit jede Walze genau im geplanten Tick einrastet. Abschalten: `casino.slots.tempo-wechsel: false` (dann immer Normal)
+  - Prüfung: SELFTEST „Slot-Tempo“ (je Tempo mit und ohne Spannung 300 Drehs: Einrasten im geplanten Tick, Walzen in Reihenfolge, Endwinkel = Zielsymbol, höchstens 120 Grad je Tick), Belastungstest-Log zeigt das Tempo je Dreh
 - [x] **v2.06 Währungen je Modus, XP-Shop, Skypass, Skyblock-Itemliste, eigene Modelle** (ungetestet im Spiel)
   - [x] Währungen je Modus (Vorgabe: SMP und Skyblock Geld, XP, Juwelen; Survival Geld, Tokens, Juwelen): `ModeService.hasCurrency`. XP nur noch in SMP/Skyblock (Erze, Mobs, Angeln, Tagesbonus, Spielzeit-Stufen), Tokens nur in Survival (Spielzeit, Kisten ziehen keine Tokens außerhalb von Survival), Info-Leiste zeigt je Modus nur seine Währungen. /tokens, /tokenshop, /farmpass und /angeln pass außerhalb von Survival mit Hinweis gesperrt (Admin-Befehle mit Argumenten bleiben)
   - [x] Persönliche Booster (Grundlage für den XP-Shop): XP- und Verkaufs-Booster mit Laufzeit (boosters.yml), XP-Booster wirkt auf die XP-Quellen, Verkaufs-Booster auf /sell und das Verkaufsmenü
