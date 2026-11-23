@@ -94,6 +94,7 @@ public final class HelpCommand implements CommandExecutor {
                     new Entry("/booster", "Booster-Status (18-24 Uhr: 1,5x XP)", null),
                     new Entry("/xpshop", "XP-Shop", null),
                     new Entry("/battlepass", "Battlepass ansehen", null),
+                    new Entry("/gluecksrad", "Glücksrad: alle 24 h gratis drehen (Survival, SMP)", null),
                     new Entry("/cosmetics", "Kosmetik auswählen", null),
                     new Entry("/turnier", "Turnier-Anmeldung", null),
                     new Entry("/verify", "Discord verknüpfen (+3 Homeplätze)", null),

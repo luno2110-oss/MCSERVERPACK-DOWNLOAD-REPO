@@ -1,15 +1,21 @@
 #!/usr/bin/env python3
-"""Glücksrad im Casino (v2.07): Grafik für das Rad an der Wand, im Kuby-Stil (tools/icon_db/STYLE.md, Lieblingsstil
-des Besitzers: gedeckte tiefe Farben, Licht oben links, Goldrahmen, Glühen aus der Mitte).
+"""Glücksräder (v2.07): Grafik für das große Rad auf der Bühne (3D) und für das Rad im Fenster (Bild über den
+Bildschirm), im Kuby-Stil (tools/icon_db/STYLE.md, Lieblingsstil des Besitzers: gedeckte tiefe Farben, Licht oben
+links, Goldrahmen mit Lämpchen, Glühen aus der Mitte).
 
-Schreibt in das Pack (assets/kuby, flache Bilder als item/generated, im Spiel wie die Slot-Symbole um 180 Grad gedreht):
-  wh_disc     Radscheibe 128 x 128: 12 Felder (Farbe je Feld, Licht nach außen heller), goldene Trennstriche, je Feld
-              ein Symbol (Chips, Juwel, Schlüssel, Booster, Stern für den Hauptgewinn) und der Betrag in Pixel-Ziffern.
-              Symbole und Zahlen sind so gedreht, dass das Feld aufrecht steht, wenn es oben am Zeiger ankommt.
-  wh_rim      Goldring 128 x 128 (steht still, Licht oben links bleibt oben links)
-  wh_hub      Nabe 32 x 32 (Gold mit Stern, steht still)
-  wh_pointer  Zeiger 32 x 32 (zeigt nach unten auf das Feld)
-Die Felder kommen aus der config.yml (casino.gluecksrad.felder), damit Bild und Gewinne zusammenpassen.
+Schreibt in das Pack (assets/kuby):
+  item/casino/wh_disc_casino  Radscheibe 128 x 128 (flach, item/generated, im Spiel um 180 Grad gedreht): 12 Felder
+                              (Farbe je Feld, nach außen heller), goldene Trennstriche, je Feld Symbol und Betrag,
+                              so gedreht, dass das Feld aufrecht steht, wenn es oben an der Nadel ankommt
+  item/casino/wh_back         Rückwand hinter der Scheibe (dunkel, Goldkante, Bolzen)
+  item/casino/wh_hub          Nabe (Gold mit Stern und Edelstein)
+  item/casino/wh_burst        Strahlenkranz hinter dem Rad (dreht sich beim Drehen langsam gegenläufig)
+  item/casino/wh_peg          Stift (3D-Modell, Würfel 21,5 über der Mitte: dreht sich mit der Scheibe um die Radmitte)
+  item/casino/wh_needle       Nadel (3D-Modell, Gelenk im Ursprung, hängt nach unten, rot mit Goldkante)
+  font/wheel.json             Schrift kuby:wheel für die Dreh-Animation im Fenster: je Rad 36 Bilder (alle 10 Grad,
+                              mit Goldring, Lauflicht und Stiften), die Nadel in 9 Stellungen, zwei feste Leerzeichen
+  Dialog-Grafiken wh_ui_casino / wh_ui_smp (über build_kit, sprites())
+Die Felder kommen aus der config.yml (gluecksrad.casino / gluecksrad.smp), damit Bild und Gewinne zusammenpassen.
 
 Aufruf: python3 tools/build_wheel.py [pack] [--sheet bild.png]
 """
@@ -19,6 +25,7 @@ import os
 import re
 import sys
 
+import numpy as np
 from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -30,13 +37,22 @@ rgb = bc.rgb
 T = (0, 0, 0, 0)
 OUT = rgb("140A0C")
 CONFIG = os.path.join(REPO, "KubyCore-v2.0.14/KubyPlugins/src/main/resources/config.yml")
+WHEELS = ("casino", "smp")
 
-DEFAULT = ["20;chips:1000;1.000 Chips", "12;jewels:5;5 Juwelen", "16;chips:2500;2.500 Chips", "12;key:vote:1;Vote-Key",
-           "10;chips:5000;5.000 Chips", "8;booster:cashback:2:30;Cashback x2", "20;chips:1000;1.000 Chips",
-           "6;key:selten:1;Selten-Key", "5;chips:10000;10.000 Chips", "4;jewels:25;25 Juwelen", "3;key:episch:1;Episch-Key",
-           "1;chips:100000;Hauptgewinn"]
+DEFAULT = {
+    "casino": ["18;chips:10000;10.000 Chips", "10;jewels:50;50 Juwelen", "14;chips:25000;25.000 Chips",
+               "10;key:selten:3;3 Selten-Keys", "9;chips:50000;50.000 Chips", "8;booster:cashback:3:60;Cashback x3",
+               "18;chips:10000;10.000 Chips", "6;key:episch:2;2 Episch-Keys", "5;chips:100000;100.000 Chips",
+               "2;cosmetic:c_goldzylinder:150000;Goldener Zylinder", "3;key:legendaer:1;Legendär-Key",
+               "1;chips:1000000;Hauptgewinn"],
+    "smp": ["18;coins:5000;5.000 $", "12;xp:1000;1.000 XP", "14;coins:15000;15.000 $", "10;key:vote:3;3 Vote-Keys",
+            "10;jewels:25;25 Juwelen", "8;booster:xp:2:60;XP x2", "18;coins:5000;5.000 $", "6;key:selten:2;2 Selten-Keys",
+            "5;coins:50000;50.000 $", "5;booster:sell:2:120;Verkauf x2", "3;key:episch:2;2 Episch-Keys",
+            "1;coins:500000;Hauptgewinn"],
+}
 
 # Feldfarben (dunkel, mitte, hell), gedeckt und tief; reihum, das Hauptgewinn-Feld schwarz-gold
+# (die mittleren Töne stehen auch in WheelScreen.SEG für die Farbfelder im Fenster)
 SEG = [
     ("6A0A16", "9A1222", "C81E30"),   # Rot
     ("12306A", "1A4A9A", "2A64C0"),   # Blau
@@ -47,47 +63,73 @@ SEG = [
 ]
 JACKPOT = ("120E10", "221A1C", "34282A")
 GOLD = [rgb(h) for h in ("6A400A", "A06A10", "D8A020", "F4C21C", "FFE870")]
+GEM = {"casino": ("8E1E2E", "B8283A", "E85A6A"), "smp": ("0C5A2E", "1EA454", "7FE08A")}
 
-# Ziffern 3 x 5 (und K, Komma, x) für die Beträge
+# Ziffern 3 x 5 (und K, M, Komma, x) für die Beträge
 FONT = {
     "0": ["###", "#.#", "#.#", "#.#", "###"], "1": [".#.", "##.", ".#.", ".#.", "###"],
     "2": ["###", "..#", "###", "#..", "###"], "3": ["###", "..#", ".##", "..#", "###"],
     "4": ["#.#", "#.#", "###", "..#", "..#"], "5": ["###", "#..", "###", "..#", "###"],
     "6": ["###", "#..", "###", "#.#", "###"], "7": ["###", "..#", ".#.", ".#.", ".#."],
     "8": ["###", "#.#", "###", "#.#", "###"], "9": ["###", "#.#", "###", "..#", "###"],
-    "K": ["#.#", "##.", "#..", "##.", "#.#"], ",": ["...", "...", "...", ".#.", "#.."],
-    "x": ["...", "#.#", ".#.", "#.#", "..."],
+    "K": ["#.#", "##.", "#..", "##.", "#.#"], "M": ["#...#", "##.##", "#.#.#", "#...#", "#...#"],
+    ",": ["...", "...", "...", ".#.", "#.."], "x": ["...", "#.#", ".#.", "#.#", "..."],
 }
 
+# Maße im 128er-Bild: Scheibe bis 58,5, Stifte bei 54,5, Ring 57,5 bis 63,5; Symbole und Beträge
+R_IN, R_DISC, R_PEG, R_ICON, R_LABEL = 13.0, 58.5, 54.5, 33.0, 47.0
 
-def fields():
-    """[(Gewicht, Gewinn, Anzeige)] aus der config.yml (casino.gluecksrad.felder), sonst die Vorgabe."""
+
+# =====================================================================================================================
+# Felder aus der config.yml
+# =====================================================================================================================
+
+def fields(wheel="casino"):
+    """[(Gewicht, Gewinn, Anzeige)] aus der config.yml (gluecksrad.<rad>.felder), sonst die Vorgabe."""
     lines = []
     try:
         with open(CONFIG, encoding="utf-8") as fh:
             text = fh.read()
-        m = re.search(r"\n  gluecksrad:.*?\n    felder:\n((?:      - \"[^\n]*\"\n)+)", text, re.S)
-        if m:
-            lines = re.findall(r'      - "([^\n]*)"', m.group(1))
+        top = re.search(r"\ngluecksrad:\n((?:(?:  [^\n]*|#[^\n]*|)\n)+)", text)
+        if top:
+            sec = re.search(r"(?:^|\n)  " + wheel + r":\n(?:    [^\n]*\n|\s*#[^\n]*\n)*?    felder:\n((?:      - \"[^\n]*\"[^\n]*\n)+)",
+                            top.group(1))
+            if sec:
+                lines = re.findall(r'      - "([^\n"]*)"', sec.group(1))
     except OSError:
         pass
     out = []
-    for raw in lines or DEFAULT:
+    for raw in lines or DEFAULT[wheel]:
         p = raw.split(";")
         out.append((int(p[0]), p[1], p[2] if len(p) > 2 else p[1]))
-    return out[:12] + [(1, "chips:1000", "")] * (12 - len(out[:12]))
+    return out[:12] + [(0, "chips:0", "Niete")] * (12 - len(out[:12]))
+
+
+def jackpot(fs):
+    """Wie Wheel.jackpot: kleinstes Gewicht, bei Gleichstand das letzte."""
+    best = 0
+    for i in range(1, len(fs)):
+        if fs[i][0] <= fs[best][0]:
+            best = i
+    return best
 
 
 def label(prize):
     kind, _, rest = prize.partition(":")
-    if kind == "chips":
-        n = int(rest)
+    if kind in ("chips", "coins", "xp"):
+        n = int(rest.split(":")[0])
+        if n >= 1_000_000:
+            k = n / 1_000_000
+            return (("%d" % k) if k == int(k) else ("%.1f" % k).replace(".", ",")) + "M"
         if n >= 1000:
             k = n / 1000
             return (("%d" % k) if k == int(k) else ("%.1f" % k).replace(".", ",")) + "K"
         return str(n)
-    if kind in ("jewels", "coins"):
+    if kind == "jewels":
         return rest.split(":")[0]
+    if kind == "key":
+        p = rest.split(":")
+        return "x" + p[1] if len(p) > 1 and p[1] != "1" else ""
     if kind == "booster":
         return "x" + rest.split(":")[1].split(".")[0]
     return ""
@@ -105,7 +147,6 @@ def text_img(s):
                 if ch == "#":
                     px[x + xx, 1 + yy] = rgb("FFF4D0")
         x += len(g[0]) + 1
-    # 1-px-Kontur
     out = img.copy()
     po = out.load()
     for y in range(img.height):
@@ -148,23 +189,26 @@ KEY_RAMPS = {"vote": ["1E6A2A", "2E9A3E", "54C860", "9CF0A0"], "selten": ["14306
              "keyall": ["6A4A08", "A87A10", "E8B830", "FFF0A0"]}
 
 
-def icon_for(prize, jackpot):
+def icon_for(prize, jack):
     kind, _, rest = prize.partition(":")
-    if jackpot:
+    if jack:
         return vanilla_item("nether_star") or bc.chip("gold")
     if kind == "chips":
         n = int(rest)
-        name = "white" if n < 2000 else "blue" if n < 4000 else "green" if n < 8000 else "black"
+        name = "white" if n < 20000 else "blue" if n < 40000 else "green" if n < 80000 else "black"
         return bc.chip(name)
     if kind == "jewels":
         return vanilla_item("emerald") or bc.chip("green")
     if kind == "coins":
         return vanilla_item("gold_ingot") or bc.chip("gold")
+    if kind == "xp":
+        return vanilla_item("experience_bottle") or bc.chip("green")
     if kind == "key":
         key = Image.open(os.path.join(HERE, "assets/battlepass/icon_key.png")).convert("RGBA")
         return recolor(key, KEY_RAMPS.get(rest.split(":")[0], KEY_RAMPS["keyall"]))
     if kind == "booster":
-        return vanilla_item("experience_bottle") or bc.chip("purple")
+        b = rest.split(":")[0]
+        return vanilla_item({"xp": "experience_bottle", "sell": "gold_nugget"}.get(b, "glowstone_dust")) or bc.chip("purple")
     if kind == "tag":
         return vanilla_item("name_tag") or bc.chip("pink")
     return vanilla_item("golden_helmet") or bc.chip("pink")
@@ -178,84 +222,265 @@ def paste_rotated(base, img, cx, cy, deg):
     base.alpha_composite(small, (int(round(cx - small.width / 2)), int(round(cy - small.height / 2))))
 
 
-def disc():
-    S = 128
-    c = S / 2
-    p = bc.Pix(S)
-    fs = fields()
-    jack = max(range(12), key=lambda i: int(fs[i][1].split(":")[1]) if fs[i][1].startswith("chips:") else -1)
-    r_out, r_in = 58.5, 13.0
+# =====================================================================================================================
+# Scheibe (numpy): Feld je Pixel nach Winkel, Ringe nach Abstand
+# =====================================================================================================================
+
+S = 128
+C = S / 2
+_yy, _xx = np.mgrid[0:S, 0:S]
+DX, DY = _xx + 0.5 - C, _yy + 0.5 - C
+DIST = np.hypot(DX, DY)
+PHI = np.degrees(np.arctan2(DX, -DY)) % 360          # im Uhrzeigersinn ab oben
+LAM = (-DX - DY) / (np.maximum(DIST, 1e-6) * math.sqrt(2))   # Licht oben links: 1 oben links, -1 unten rechts
+
+
+def _arr(col):
+    return np.array(col[:3], dtype=np.float64)
+
+
+def disc(wheel="casino", rot=0.0, ui=False):
+    """Scheibe um rot Grad gegen den Uhrzeigersinn gedreht. ui: mit Stiften und festem Licht oben links."""
+    fs = fields(wheel)
+    jack = jackpot(fs)
+    img = np.zeros((S, S, 4), dtype=np.float64)
+    field = np.round((PHI + rot) / 30.0).astype(int) % 12
+    inside = (DIST >= R_IN) & (DIST <= R_DISC)
     for i in range(12):
         dark, mid, light = JACKPOT if i == jack else SEG[i % len(SEG)]
-        # Feld i: Mitte bei i*30 Grad im Uhrzeigersinn ab oben; Pix.sector zählt ab rechts im Uhrzeigersinn
-        a0 = (i * 30 - 90 - 15) % 360
-        a1 = (a0 + 30) % 360
-        p.sector(c, c, r_in, r_out, a0, a1, rgb(mid))
-        p.sector(c, c, r_in, 24, a0, a1, rgb(dark))
-        p.sector(c, c, 49, r_out, a0, a1, rgb(light))
-    # goldene Trennstriche
-    for i in range(12):
-        a = math.radians(i * 30 - 90 - 15)
-        p.line(c + r_in * math.cos(a), c + r_in * math.sin(a), c + r_out * math.cos(a), c + r_out * math.sin(a), GOLD[3], 1.2)
-    p.ring(c, c, r_in - 1.2, r_in, GOLD[2])
-    img = p.image(outline=None)
-    # Symbole und Beträge
+        m = inside & (field == i)
+        img[m & (DIST < 24), :3] = _arr(rgb(dark))
+        img[m & (DIST >= 24) & (DIST < 49), :3] = _arr(rgb(mid))
+        img[m & (DIST >= 49), :3] = _arr(rgb(light))
+        img[m, 3] = 255
+    # Hauptgewinn-Feld: feine Goldkante innen am Rand
+    jm = inside & (field == jack) & (DIST >= 55.5) & (DIST < 56.5)
+    img[jm, :3] = _arr(GOLD[2])
+    # Kante außen dunkel
+    edge = (DIST > R_DISC - 1) & (DIST <= R_DISC)
+    img[edge, :3] = img[edge, :3] * 0.55
+    # goldene Trennstriche auf den Feldgrenzen (15 + 30 k)
+    delta = ((PHI + rot - 15) % 30)
+    delta = np.minimum(delta, 30 - delta)
+    sep = inside & (DIST * np.sin(np.radians(delta)) <= 0.62)
+    img[sep, :3] = _arr(GOLD[3])
+    img[sep & (DIST > 40), :3] = _arr(GOLD[4])
+    # Goldring innen
+    ring = (DIST >= R_IN - 1.4) & (DIST < R_IN)
+    img[ring, :3] = _arr(GOLD[2])
+    img[ring, 3] = 255
+    if ui:
+        # festes Licht oben links (die Scheibe im Fenster dreht sich, das Licht bleibt)
+        k = np.clip(LAM, -1, 1)[..., None]
+        on = img[..., 3:] > 0
+        lit = np.where(k > 0, img[..., :3] + (255 - img[..., :3]) * 0.10 * k, img[..., :3] * (1 + 0.16 * k))
+        img[..., :3] = np.where(on, lit, img[..., :3])
+    out = Image.fromarray(np.clip(img, 0, 255).astype(np.uint8), "RGBA")
+    # Symbole und Beträge, aufrecht wenn das Feld oben ist
     for i, (_w, prize, _name) in enumerate(fs):
-        deg = i * 30
+        deg = i * 30 - rot
         a = math.radians(deg - 90)
-        icon = icon_for(prize, i == jack)
-        paste_rotated(img, icon, c + 37 * math.cos(a), c + 37 * math.sin(a), deg)
+        paste_rotated(out, icon_for(prize, i == jack), C + R_ICON * math.cos(a), C + R_ICON * math.sin(a), deg)
         lab = label(prize)
         if lab:
-            paste_rotated(img, text_img(lab), c + 52 * math.cos(a), c + 52 * math.sin(a), deg)
-    return img
+            paste_rotated(out, text_img(lab), C + R_LABEL * math.cos(a), C + R_LABEL * math.sin(a), deg)
+    if ui:
+        # Stifte auf den Feldgrenzen: Goldknopf mit Glanz oben links
+        p = bc.Pix(S)
+        for kk in range(12):
+            a = math.radians(15 + kk * 30 - rot - 90)
+            x, y = C + R_PEG * math.cos(a), C + R_PEG * math.sin(a)
+            p.disk(x, y, 2.3, GOLD[2])
+            p.disk(x - 0.5, y - 0.5, 1.4, GOLD[3])
+            p.put(int(x - 1), int(y - 1), GOLD[4])
+        out.alpha_composite(p.image())
+    return out
 
 
-def rim():
-    """Goldring, Licht oben links: obere linke Hälfte heller, untere rechte dunkler; innen und außen Kontur."""
-    S = 128
-    c = S / 2
-    img = Image.new("RGBA", (S, S), T)
-    px = img.load()
-    for y in range(S):
-        for x in range(S):
-            dx, dy = x + 0.5 - c, y + 0.5 - c
-            d = math.hypot(dx, dy)
-            if 57.5 <= d <= 63.5:
-                if d < 58.5 or d > 62.5:
-                    px[x, y] = OUT
-                    continue
-                lam = (-dx - dy) / (d * 1.4142)
-                k = 4 if lam > 0.75 else 3 if lam > 0.1 else 2 if lam > -0.6 else 1
-                if 60.2 < d < 61.0:
-                    k = max(1, k - 1)       # Rille im Ring
-                px[x, y] = GOLD[k]
-    return img
+def rim(lit_phase=None):
+    """Goldring (steht still, Licht oben links), dazu 24 Lämpchen; lit_phase: jedes dritte ab dieser Stelle leuchtet."""
+    img = np.zeros((S, S, 4), dtype=np.uint8)
+    band = (DIST >= 57.5) & (DIST <= 63.5)
+    k = np.where(LAM > 0.75, 4, np.where(LAM > 0.1, 3, np.where(LAM > -0.6, 2, 1)))
+    k = np.where((DIST > 60.2) & (DIST < 61.0), np.maximum(1, k - 1), k)
+    gold = np.array([GOLD[i] for i in range(5)], dtype=np.uint8)[:, :3]
+    img[band, :3] = gold[k[band]]
+    img[band, 3] = 255
+    o = band & ((DIST < 58.5) | (DIST > 62.5))
+    img[o, :3] = np.array(OUT[:3], dtype=np.uint8)
+    out = Image.fromarray(img, "RGBA")
+    if lit_phase is not None:
+        p = bc.Pix(S)
+        for j in range(24):
+            a = math.radians(j * 15 + 7.5 - 90)
+            x, y = C + 60.6 * math.cos(a), C + 60.6 * math.sin(a)
+            on = (j + lit_phase) % 3 == 0
+            p.disk(x, y, 1.6, rgb("FFF4C0") if on else rgb("7A4A10"))
+            if on:
+                p.put(int(x - 0.5), int(y - 0.5), rgb("FFFFFF"))
+        out.alpha_composite(p.image(outline=None))
+    return out
 
 
-def hub():
+def hub(wheel="casino"):
+    gem = GEM.get(wheel, GEM["casino"])
     p = bc.Pix(32)
     p.disk(16, 16, 11.5, GOLD[1])
     p.disk(16, 16, 10.5, GOLD[3])
     p.sector(16, 16, 6, 10.5, 180, 300, GOLD[4])
-    p.disk(16, 16, 6.5, rgb("8E1E2E"))
-    p.disk(16, 16, 5.5, rgb("B8283A"))
+    p.disk(16, 16, 6.5, rgb(gem[0]))
+    p.disk(16, 16, 5.5, rgb(gem[1]))
     star = [(16, 11.5), (17.3, 14.6), (20.5, 14.8), (18, 16.9), (18.9, 20.2), (16, 18.4), (13.1, 20.2), (14, 16.9),
             (11.5, 14.8), (14.7, 14.6)]
     p.poly(star, GOLD[4])
     p.put(15, 14, rgb("FFFFFF"))
+    p.put(14, 13, rgb(gem[2]))
     return p.image()
 
 
-def pointer():
-    """Zeiger nach unten: Goldrahmen, rotes Inneres, oben eine Niete."""
-    p = bc.Pix(32)
-    p.poly([(7, 3), (25, 3), (16, 29)], GOLD[2])
-    p.poly([(9, 5), (23, 5), (16, 25)], rgb("B8283A"))
-    p.poly([(9, 5), (16, 5), (16, 25)], rgb("D8384A"))
-    p.disk(16, 7.5, 2.6, GOLD[4])
-    p.put(15, 6, rgb("FFFFFF"))
-    return p.image()
+def back():
+    """Rückwand: dunkles Pflaume, Goldkante, 24 Bolzen (steht hinter der Scheibe, außen ein schmaler Rand sichtbar)."""
+    img = np.zeros((S, S, 4), dtype=np.uint8)
+    on = DIST <= 63.5
+    base = np.where(LAM[..., None] > 0.3, np.array([0x3A, 0x1A, 0x2A]), np.array([0x2A, 0x12, 0x20]))
+    img[on, :3] = base[on]
+    img[on, 3] = 255
+    edge = on & (DIST > 62.0)
+    img[edge, :3] = np.array(GOLD[1][:3], dtype=np.uint8)
+    img[on & (DIST > 63.0), :3] = np.array(OUT[:3], dtype=np.uint8)
+    out = Image.fromarray(img, "RGBA")
+    p = bc.Pix(S)
+    for j in range(24):
+        a = math.radians(j * 15 - 90)
+        p.disk(C + 61 * math.cos(a), C + 61 * math.sin(a), 0.9, GOLD[3])
+    out.alpha_composite(p.image(outline=None))
+    return out
+
+
+def burst():
+    """Strahlenkranz hinter dem Rad (Tiefe wie bei den Generator-Bildern: hinten dunkel, zur Mitte heller und wärmer),
+    24 Strahlen im Wechsel, außen ein Goldring mit Punkten."""
+    img = np.zeros((S, S, 4), dtype=np.float64)
+    on = DIST <= 63.5
+    ray = (np.floor(PHI / 15.0).astype(int) % 2) == 0
+    a = np.array([0x4A, 0x22, 0x3A], dtype=np.float64)
+    b = np.array([0x2A, 0x14, 0x26], dtype=np.float64)
+    col = np.where(ray[..., None], a, b)
+    glow = np.clip(1 - DIST / 63.5, 0, 1)[..., None] ** 1.6
+    warm = np.array([0xC8, 0x7A, 0x2A], dtype=np.float64)
+    col = col + (warm - col) * glow * 0.55
+    img[on, :3] = col[on]
+    img[on, 3] = 255
+    edge = on & (DIST > 60.5)
+    img[edge, :3] = np.array(GOLD[1][:3])
+    img[on & (DIST > 61.5) & (DIST <= 62.5), :3] = np.array(GOLD[2][:3])
+    img[on & (DIST > 62.5), :3] = np.array(OUT[:3])
+    out = Image.fromarray(np.clip(img, 0, 255).astype(np.uint8), "RGBA")
+    p = bc.Pix(S)
+    for j in range(32):
+        an = math.radians(j * 11.25 - 90)
+        p.disk(C + 58.2 * math.cos(an), C + 58.2 * math.sin(an), 1.1, GOLD[3] if j % 2 else GOLD[4])
+    out.alpha_composite(p.image(outline=None))
+    return out
+
+
+# =====================================================================================================================
+# Nadel (Fenster): Zelle 32 x 96, Gelenk bei (16, 9); im Rad-Bild sitzt das Gelenk 7 px über dem oberen Rand
+# =====================================================================================================================
+
+NEEDLE_W, NEEDLE_H, HINGE = 32, 96, (16, 9)
+NEEDLE_STATES = [-10 + 5 * k for k in range(9)]
+
+
+def needle_img(deg):
+    th = math.radians(deg)
+    hx, hy = HINGE
+
+    def rot(pts, sx=1.0):
+        out = []
+        for dx, dy in pts:
+            dx *= sx
+            out.append((hx + dx * math.cos(th) - dy * math.sin(th), hy + dx * math.sin(th) + dy * math.cos(th)))
+        return out
+
+    body = [(-4.0, 0.0), (4.0, 0.0), (2.8, 12.0), (0.0, 19.5), (-2.8, 12.0)]
+    inner = [(-2.6, 1.0), (2.6, 1.0), (1.6, 11.5), (0.0, 16.5), (-1.6, 11.5)]
+    left = [(-2.6, 1.0), (0.0, 1.0), (0.0, 16.5), (-1.6, 11.5)]
+    p = bc.Pix(NEEDLE_W, NEEDLE_H)
+    p.poly(rot(body), GOLD[2])
+    p.poly(rot(inner), rgb("B8283A"))
+    p.poly(rot(left), rgb("D8384A"))
+    p.disk(hx, hy, 4.2, GOLD[2])
+    p.disk(hx - 0.4, hy - 0.4, 3.2, GOLD[3])
+    p.disk(hx, hy, 1.4, GOLD[1])
+    p.put(hx - 2, hy - 2, GOLD[4])
+    img = p.image()
+    img.putpixel((NEEDLE_W - 1, 0), (0, 0, 0, 1))   # feste Breite der Schrift-Zelle (Minecraft misst bis zum letzten Pixel)
+    return img
+
+
+def frame(wheel, i):
+    """Bild i der Dreh-Animation: Scheibe um i * 10 Grad gedreht, Ring mit Lauflicht, Nabe."""
+    img = Image.new("RGBA", (S, S), T)
+    img.alpha_composite(disc(wheel, i * 10.0, ui=True))
+    img.alpha_composite(rim(lit_phase=i))
+    img.alpha_composite(hub(wheel), (48, 48))
+    img.putpixel((S - 1, 0), (0, 0, 0, 1))
+    return img
+
+
+def ui_sprite(wheel):
+    """Dialog-Grafik: Rad in Ruhe (Feld 0 oben), Nadel darüber; 128 x 144."""
+    out = Image.new("RGBA", (S, S + 16), T)
+    f = frame(wheel, 0)
+    f.putpixel((S - 1, 0), T)
+    out.alpha_composite(f, (0, 16))
+    n = needle_img(0)
+    n.putpixel((NEEDLE_W - 1, 0), T)
+    out.alpha_composite(n, (64 - HINGE[0], 16 - 7 - HINGE[1]))
+    return out
+
+
+def sprites():
+    return [("wh_ui_casino", ui_sprite("casino")), ("wh_ui_smp", ui_sprite("smp"))]
+
+
+# =====================================================================================================================
+# 3D-Modelle (Stift, Nadel)
+# =====================================================================================================================
+
+def _box(frm, to, tex, faces=("north", "south", "east", "west", "up", "down")):
+    return {"from": frm, "to": to, "faces": {f: {"texture": tex, "uv": [0, 0, 16, 16]} for f in faces}}
+
+
+def peg_model():
+    """Stift: Goldstift 21,5 über dem Ursprung, ragt nach vorn (Modell -z zeigt im Spiel zu den Zuschauern)."""
+    return {"textures": {"g": "kuby:block/casino/hd_gold", "l": "kuby:block/casino/hd_gold_lit",
+                         "particle": "kuby:block/casino/hd_gold"},
+            "elements": [_box([7.15, 28.5, 4.0], [8.85, 30.5, 9.0], "#g"),
+                         _box([6.8, 28.1, 3.3], [9.2, 30.9, 4.0], "#l")]}
+
+
+def needle_model():
+    """Nadel: Gelenk im Ursprung (8, 8, 8), hängt nach unten (Spitze 12 Einheiten tiefer), rot mit Goldkante."""
+    return {"textures": {"g": "kuby:block/casino/hd_gold", "l": "kuby:block/casino/hd_gold_lit",
+                         "r": "kuby:block/casino/hd_velvet", "particle": "kuby:block/casino/hd_velvet"},
+            "elements": [
+                _box([6.6, -1.0, 6.6], [9.4, 7.0, 9.4], "#r"),
+                _box([7.1, -3.0, 6.8], [8.9, -1.0, 9.2], "#r"),
+                _box([7.6, -4.2, 7.0], [8.4, -3.0, 9.0], "#l"),
+                _box([7.7, -0.5, 6.3], [8.3, 6.0, 6.6], "#l"),
+                _box([6.4, -1.5, 7.4], [9.6, -0.9, 8.6], "#g"),
+                _box([6.2, 6.2, 6.8], [9.8, 9.8, 9.8], "#g"),
+                _box([6.8, 6.8, 5.8], [9.2, 9.2, 6.8], "#l"),
+            ]}
+
+
+# =====================================================================================================================
+# Schreiben
+# =====================================================================================================================
+
+OLD = ("wh_disc", "wh_rim", "wh_pointer")
 
 
 def write(pack):
@@ -263,29 +488,64 @@ def write(pack):
     itex = os.path.join(a, "textures/item/casino")
     models = os.path.join(a, "models/item/casino")
     items = os.path.join(a, "items/casino")
-    for d in (itex, models, items):
+    ftex = os.path.join(a, "textures/font")
+    for d in (itex, models, items, ftex, os.path.join(a, "font")):
         os.makedirs(d, exist_ok=True)
-    parts = {"wh_disc": disc(), "wh_rim": rim(), "wh_hub": hub(), "wh_pointer": pointer()}
-    for name, img in parts.items():
-        img.save(os.path.join(itex, name + ".png"))
+    for name in OLD:   # alte Wand-Fassung
+        for p in (os.path.join(itex, name + ".png"), os.path.join(models, name + ".json"), os.path.join(items, name + ".json")):
+            if os.path.isfile(p):
+                os.remove(p)
+
+    def item(name, model):
         with open(os.path.join(models, name + ".json"), "w", encoding="utf-8") as fh:
-            json.dump({"parent": "minecraft:item/generated", "textures": {"layer0": "kuby:item/casino/" + name}}, fh)
+            json.dump(model, fh)
         with open(os.path.join(items, name + ".json"), "w", encoding="utf-8") as fh:
             json.dump({"model": {"type": "minecraft:model", "model": "kuby:item/casino/" + name}}, fh)
-    return len(parts)
+
+    flat = {"wh_disc_casino": disc("casino"), "wh_back": back(), "wh_hub": hub("casino"), "wh_burst": burst()}
+    for name, img in flat.items():
+        img.save(os.path.join(itex, name + ".png"))
+        item(name, {"parent": "minecraft:item/generated", "textures": {"layer0": "kuby:item/casino/" + name}})
+    item("wh_peg", peg_model())
+    item("wh_needle", needle_model())
+    # Schrift kuby:wheel
+    prov = [{"type": "space", "advances": {"": -26, "": 15}}]
+    for wheel, base in (("casino", 0xE000), ("smp", 0xE040)):
+        sheet = Image.new("RGBA", (S * 6, S * 6), T)
+        for i in range(36):
+            sheet.alpha_composite(frame(wheel, i), ((i % 6) * S, (i // 6) * S))
+        sheet.save(os.path.join(ftex, "wheel_%s.png" % wheel))
+        rows = ["".join(chr(base + r * 6 + c) for c in range(6)) for r in range(6)]
+        prov.append({"type": "bitmap", "file": "kuby:font/wheel_%s.png" % wheel, "height": 40, "ascent": 21, "chars": rows})
+    ns = Image.new("RGBA", (NEEDLE_W * len(NEEDLE_STATES), NEEDLE_H), T)
+    for k, deg in enumerate(NEEDLE_STATES):
+        ns.alpha_composite(needle_img(deg), (k * NEEDLE_W, 0))
+    ns.save(os.path.join(ftex, "wheel_needle.png"))
+    prov.append({"type": "bitmap", "file": "kuby:font/wheel_needle.png", "height": 30, "ascent": 26,
+                 "chars": ["".join(chr(0xE080 + k) for k in range(len(NEEDLE_STATES)))]})
+    with open(os.path.join(a, "font/wheel.json"), "w", encoding="utf-8") as fh:
+        json.dump({"providers": prov}, fh, ensure_ascii=False)
+    return len(flat) + 2 + 3
 
 
 def sheet(path):
-    """Vorschau: Rad zusammengesetzt (Scheibe, Ring, Nabe, Zeiger) 4-fach."""
-    k = 4
-    out = Image.new("RGBA", (128 * k + 40, 128 * k + 80), (24, 18, 30, 255))
-    d = disc().resize((128 * k, 128 * k), Image.NEAREST)
-    out.alpha_composite(d, (20, 60))
-    out.alpha_composite(rim().resize((128 * k, 128 * k), Image.NEAREST), (20, 60))
-    h = hub().resize((32 * k, 32 * k), Image.NEAREST)
-    out.alpha_composite(h, (20 + 64 * k - 16 * k, 60 + 64 * k - 16 * k))
-    pt = pointer().resize((32 * k, 32 * k), Image.NEAREST)
-    out.alpha_composite(pt, (20 + 64 * k - 16 * k, 0))
+    """Vorschau: Scheibe (3D), Rückwand, Bild 0/3/7 der Animation mit Nadel, Dialog-Grafiken; 3-fach."""
+    k = 3
+    tiles = [disc("casino"), back(), burst()]
+    for i, deg in ((0, 0), (3, 20), (7, 30)):
+        f = frame("casino", i).copy()
+        n = needle_img(deg)
+        canvas = Image.new("RGBA", (S, S + 16), T)
+        canvas.alpha_composite(f, (0, 16))
+        canvas.alpha_composite(n, (64 - HINGE[0], 16 - 7 - HINGE[1]))
+        tiles.append(canvas)
+    tiles += [ui_sprite("casino"), ui_sprite("smp")]
+    w = sum(t.width * k + 16 for t in tiles) + 16
+    out = Image.new("RGBA", (w, (S + 16) * k + 32), (24, 18, 30, 255))
+    x = 16
+    for t in tiles:
+        out.alpha_composite(t.resize((t.width * k, t.height * k), Image.NEAREST), (x, 16))
+        x += t.width * k + 16
     out.save(path)
 
 
@@ -294,4 +554,4 @@ if __name__ == "__main__":
     if "--sheet" in args:
         sheet(args[args.index("--sheet") + 1])
     else:
-        print("ok Glücksrad:", write(args[0] if args else os.path.join(REPO, "resourcepack/KubyUI")), "Bilder")
+        print("ok Glücksrad:", write(args[0] if args else os.path.join(REPO, "resourcepack/KubyUI")), "Teile")

@@ -903,17 +903,24 @@ final class SelfTest {
             fails.add("Plinko: " + t);
         }
 
-        // Glücksrad (v2.07): 12 gültige Felder, Ziehung nach Gewicht, jede geplante Drehung landet auf dem gezogenen Feld,
-        // läuft nur vorwärts und wird langsamer
+        // Glücksräder (v2.07, Casino und SMP): je 12 gültige Felder, Ziehung nach Gewicht, jede geplante Drehung landet
+        // auf dem gezogenen Feld (die Nadel zeigt frei darauf), läuft nur vorwärts und wird langsamer; Gold-Dreh doppelt
         try {
-            var wf = de.kuby.kubyplugins.casino.Wheel.fields(plugin.getConfig());
-            List<String> we = new ArrayList<>(de.kuby.kubyplugins.casino.Wheel.selfCheck(wf));
-            we.addAll(de.kuby.kubyplugins.casino.WheelService.checkFields(plugin));
+            List<String> we = new ArrayList<>(de.kuby.kubyplugins.casino.WheelService.checkFields(plugin));
+            StringBuilder info = new StringBuilder();
+            for (String wheel : new String[]{de.kuby.kubyplugins.casino.Wheel.CASINO, de.kuby.kubyplugins.casino.Wheel.SMP}) {
+                var wf = de.kuby.kubyplugins.casino.Wheel.fields(plugin.getConfig(), wheel);
+                for (String e : de.kuby.kubyplugins.casino.Wheel.selfCheck(wf)) we.add(wheel + ": " + e);
+                info.append(wheel).append(" im Schnitt ").append(Math.round(de.kuby.kubyplugins.casino.Wheel.expectedChips(wf)))
+                        .append(" je Dreh, Hauptgewinn Feld ").append(de.kuby.kubyplugins.casino.Wheel.jackpot(wf)).append("; ");
+            }
+            if (!"chips:20000".equals(de.kuby.kubyplugins.casino.Wheel.doubled("chips:10000"))
+                    || !"key:selten:6".equals(de.kuby.kubyplugins.casino.Wheel.doubled("key:selten:3"))
+                    || !"booster:xp:2:120".equals(de.kuby.kubyplugins.casino.Wheel.doubled("booster:xp:2:60")))
+                we.add("Gold-Dreh verdoppelt falsch");
             if (we.isEmpty()) ok[0]++;
             for (String e : we) fails.add("Glücksrad: " + e);
-            plugin.getLogger().info("[Glücksrad] " + (we.isEmpty() ? "ok" : we.size() + " Fehler") + ", im Schnitt "
-                    + Math.round(de.kuby.kubyplugins.casino.Wheel.expectedChips(wf)) + " Chips je Dreh, Hauptgewinn Feld "
-                    + de.kuby.kubyplugins.casino.Wheel.jackpot(wf));
+            plugin.getLogger().info("[Glücksrad] " + (we.isEmpty() ? "ok" : we.size() + " Fehler") + ", " + info);
         } catch (Throwable t) {
             fails.add("Glücksrad: " + t);
         }

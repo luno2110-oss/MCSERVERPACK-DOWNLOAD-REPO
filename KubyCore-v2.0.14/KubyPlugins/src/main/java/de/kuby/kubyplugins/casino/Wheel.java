@@ -26,9 +26,16 @@ public final class Wheel {
     private Wheel() {
     }
 
+    /** Räder: casino (Bühne im Casino und Fenster in Survival), smp (nur Fenster). */
+    public static final String CASINO = "casino", SMP = "smp";
+
     public static List<Field> fields(FileConfiguration cfg) {
+        return fields(cfg, CASINO);
+    }
+
+    public static List<Field> fields(FileConfiguration cfg, String wheel) {
         List<Field> out = new ArrayList<>();
-        for (String raw : cfg.getStringList("casino.gluecksrad.felder")) {
+        for (String raw : cfg.getStringList("gluecksrad." + wheel + ".felder")) {
             String[] p = raw.split(";", 3);
             if (p.length < 2) continue;
             try {
@@ -54,18 +61,25 @@ public final class Wheel {
         return 0;
     }
 
-    /** Hauptgewinn: das Feld mit den meisten Chips. */
+    /** Hauptgewinn: das Feld mit dem kleinsten Gewicht (bei Gleichstand das letzte). */
     public static int jackpot(List<Field> f) {
-        int best = -1;
-        long most = -1;
-        for (int i = 0; i < f.size(); i++) {
-            long n = chips(f.get(i).prize());
-            if (n > most) {
-                most = n;
-                best = i;
-            }
-        }
+        int best = 0;
+        for (int i = 1; i < f.size(); i++) if (f.get(i).weight() <= f.get(best).weight()) best = i;
         return best;
+    }
+
+    /** Wert eines Gewinns in der Hauptwährung des Rads (Chips bzw. Geld), für Ansagen und Schnitt. */
+    public static long value(String prize) {
+        String[] p = prize.split(":");
+        if (p.length < 2) return 0;
+        try {
+            return switch (p[0]) {
+                case "chips", "coins" -> Long.parseLong(p[1].trim());
+                default -> 0;
+            };
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 
     public static long chips(String prize) {
@@ -82,12 +96,15 @@ public final class Wheel {
         return Math.floorMod((int) Math.round(a / STEP), SEGMENTS);
     }
 
+    /** Halt im Feld: so weit hinter der Feldmitte (Grad), dass die Nadel frei steht und sicher auf diesem Feld zeigt. */
+    public static final double OFF_MIN = 1, OFF_MAX = 13;
+
     /**
-     * Winkel je Tick: von from bis zum Halt auf Feld target (Versatz offset in Grad, höchstens ±12 im Feld), turns volle
-     * Umdrehungen, Dauer ticks, auslaufend wie ein echtes Rad (Ease-out mit Potenz 3,2).
+     * Winkel je Tick: von from bis zum Halt auf Feld target (Versatz offset in Grad, OFF_MIN bis OFF_MAX hinter der
+     * Feldmitte), turns volle Umdrehungen, Dauer ticks, auslaufend wie ein echtes Rad (Ease-out mit Potenz 3,2).
      */
     public static double[] plan(double from, int target, double offset, int turns, int ticks) {
-        double end = target * STEP + Math.max(-12, Math.min(12, offset));
+        double end = target * STEP + Math.max(OFF_MIN, Math.min(OFF_MAX, offset));
         double delta = Math.floorMod((long) Math.floor((end - from) * 1000), 360_000) / 1000.0;
         double total = delta + 360.0 * Math.max(1, turns);
         double[] a = new double[ticks + 1];
@@ -99,17 +116,86 @@ public final class Wheel {
         return a;
     }
 
+    // ---------- Stifte und Nadel ----------
+
+    /**
+     * Stifte sitzen auf den Feldgrenzen (15 + 30 · i Grad im Uhrzeigersinn auf der Scheibe). Das Rad dreht gegen den
+     * Uhrzeigersinn, die Stifte kommen also von rechts nach oben und laufen oben nach links weiter. Ein Stift, der oben
+     * vorbei ist, nimmt die Spitze der Nadel mit nach links (sie zeigt dabei noch aufs alte Feld), bis er NEEDLE_ZONE
+     * Grad weiter ist: dann rutscht die Nadel über den Stift (Klack) und federt zurück aufs neue Feld.
+     */
+    public static final double NEEDLE_ZONE = 15, NEEDLE_MAX = 30;
+
+    /** Wie weit (Grad) der letzte Stift schon links am Zeiger vorbei ist (0 bis 30). */
+    public static double pegPast(double a) {
+        return ((a - STEP / 2) % STEP + STEP) % STEP;
+    }
+
+    /** Wie weit der Stift die Nadel gerade nach links drückt (Grad, 0 = frei). */
+    public static double needlePush(double a) {
+        double s = pegPast(a);
+        return s < NEEDLE_ZONE ? NEEDLE_MAX * s / NEEDLE_ZONE : 0;
+    }
+
+    /** Ist zwischen den Winkeln a0 und a1 die Nadel über einen Stift gerutscht (Klack)? */
+    public static boolean pegPassed(double a0, double a1) {
+        return Math.floor((a1 - STEP / 2 - NEEDLE_ZONE) / STEP) != Math.floor((a0 - STEP / 2 - NEEDLE_ZONE) / STEP);
+    }
+
+    /** Feld, auf das die Nadel gerade zeigt (hängt sie noch am Stift, das alte). Beim Halt gleich fieldAt. */
+    public static int pointerField(double a) {
+        return Math.floorMod((int) Math.floor((a - STEP / 2 - NEEDLE_ZONE) / STEP) + 1, SEGMENTS);
+    }
+
+    /** Nadel als gedämpfte Feder: [Ausschlag, Geschwindigkeit] einen Tick weiter, gedrückt vom Stift bei Winkel a. */
+    public static double[] needleStep(double[] n, double a) {
+        double push = needlePush(a);
+        if (push >= n[0]) return new double[]{push, 0};
+        double v = n[1] * 0.55 - n[0] * 0.55;
+        double x = n[0] + v;
+        if (Math.abs(x) < 0.3 && Math.abs(v) < 0.3) return new double[]{0, 0};
+        return new double[]{push > 0 ? Math.max(push, x) : x, v};
+    }
+
+    // ---------- Gold-Dreh und Ersatz ----------
+
+    /** Gewinn verdoppelt (Gold-Dreh): Beträge, Schlüssel-Anzahl, Booster-Minuten; Titel/Kosmetik: Ersatz-Betrag doppelt. */
+    public static String doubled(String prize) {
+        String[] p = prize.split(":");
+        try {
+            switch (p[0]) {
+                case "chips", "coins", "jewels", "xp" -> p[1] = String.valueOf(Long.parseLong(p[1].trim()) * 2);
+                case "key" -> {
+                    int n = p.length > 2 ? Integer.parseInt(p[2].trim()) : 1;
+                    return "key:" + p[1] + ":" + n * 2;
+                }
+                case "booster" -> {
+                    if (p.length >= 4) p[3] = String.valueOf(Integer.parseInt(p[3].trim()) * 2);
+                }
+                case "cosmetic", "tag" -> {
+                    if (p.length >= 3) p[2] = String.valueOf(Long.parseLong(p[2].trim()) * 2);
+                }
+                default -> {
+                    return prize;
+                }
+            }
+        } catch (RuntimeException e) {
+            return prize;
+        }
+        return String.join(":", p);
+    }
+
     /** Erwartungswert in Chips je Dreh (nur Chip-Felder), für die Info im SELFTEST. */
     public static double expectedChips(List<Field> f) {
         int sum = 0;
         double ev = 0;
         for (Field x : f) sum += x.weight();
-        for (Field x : f) ev += x.weight() * (double) chips(x.prize());
+        for (Field x : f) ev += x.weight() * (double) value(x.prize());
         return sum == 0 ? 0 : ev / sum;
     }
 
     /**
-     * Selbsttest: 2.000 geplante Drehungen landen auf dem gezogenen Feld, laufen nur vorwärts und werden langsamer,
+     * Selbsttest: 2.000 geplante Drehungen landen auf dem gezogenen Feld (auch die Nadel zeigt frei darauf), laufen nur vorwärts und werden langsamer,
      * höchstens 50 Grad je Tick (Anzeige wird alle 2 Ticks weich nachgezogen, unter 90 Grad bleibt die Richtung eindeutig); Ziehung trifft die Gewichte (±2 Prozentpunkte bei 60.000 Ziehungen).
      */
     public static List<String> selfCheck(List<Field> f) {
@@ -119,8 +205,10 @@ public final class Wheel {
             double from = rng.nextDouble() * 720;
             int target = rng.nextInt(SEGMENTS);
             int ticks = 130 + rng.nextInt(50);
-            double[] a = plan(from, target, (rng.nextDouble() * 2 - 1) * 11, 3 + rng.nextInt(2), ticks);
+            double[] a = plan(from, target, OFF_MIN + rng.nextDouble() * (OFF_MAX - OFF_MIN), 3 + rng.nextInt(2), ticks);
             if (fieldAt(a[ticks]) != target) err.add("Drehung " + n + " endet auf Feld " + fieldAt(a[ticks]) + " statt " + target);
+            if (pointerField(a[ticks]) != target) err.add("Drehung " + n + ": Nadel zeigt auf Feld " + pointerField(a[ticks]) + " statt " + target);
+            if (needlePush(a[ticks]) > 0) err.add("Drehung " + n + ": Nadel hängt beim Halt am Stift");
             double last = Double.MAX_VALUE;
             for (int t = 1; t <= ticks; t++) {
                 double v = a[t] - a[t - 1];

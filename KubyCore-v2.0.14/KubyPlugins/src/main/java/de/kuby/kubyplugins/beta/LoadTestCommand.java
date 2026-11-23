@@ -225,12 +225,30 @@ public final class LoadTestCommand implements CommandExecutor {
                 }
             }
             case "gluecksrad" -> {
-                // /kubytest gluecksrad <Spieler>: Kamera-Spieler dreht das Test-Rad (ohne Wartezeit)
+                // /kubytest gluecksrad <Spieler>: Kamera-Spieler dreht das große Rad auf der Test-Bühne (ohne Wartezeit)
                 Player wp = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : sender instanceof Player sp ? sp : null;
                 if (wp != null) {
                     String err = plugin.wheel().testSpin(wp, "krad");
                     plugin.getLogger().info("[Glücksrad-Test] Dreh: " + (err == null ? "läuft" : err));
                 }
+            }
+            case "gluecksrad-ui" -> {
+                // /kubytest gluecksrad-ui <Spieler>: Dreh im Fenster (Bild über den Bildschirm), danach öffnet sich das Fenster
+                Player wp = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : sender instanceof Player sp ? sp : null;
+                if (wp != null) {
+                    String err = plugin.wheel().testUiSpin(wp);
+                    plugin.getLogger().info("[Glücksrad-Test] Fenster-Dreh: " + (err == null ? "läuft" : err));
+                }
+            }
+            case "schliessen" -> {
+                // /kubytest schliessen <Spieler>: offenes Fenster (Dialog) schließen
+                Player wp = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : sender instanceof Player sp ? sp : null;
+                if (wp != null) de.kuby.kubyplugins.ui.UiDialog.close(wp);
+            }
+            case "gluecksrad-fenster" -> {
+                // /kubytest gluecksrad-fenster <Spieler>: nur das Fenster öffnen
+                Player wp = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : sender instanceof Player sp ? sp : null;
+                if (wp != null) plugin.wheel().open(wp);
             }
             case "roulette" -> {
                 // /kubytest roulette <Spieler>: Spieler setzt (Rot + eine Zahl), Countdown springt auf 1 – ein ganzer Wurf
@@ -362,10 +380,16 @@ public final class LoadTestCommand implements CommandExecutor {
                 to = camRennen.clone().add(0, -0.1, -1.6);
             }
             case "gluecksrad" -> {
-                // Glücksrad (v2.07) an der Ostwand von vorn, ganzes Rad mit Schriftzug und Gewinn-Tafel im Bild
+                // Glücksrad-Bühne (v2.07) von vorn aus Spielerhöhe: Rad, Schild, Podest und Gewinner-Tafel im Bild
                 if (camRad == null) return;
-                from = camRad.clone().add(-5.0, -0.6, 0.4);
-                to = camRad.clone().add(0, 0.05, 0);
+                from = camRad.clone().add(-8.2, 2.1, 0.3);
+                to = camRad.clone().add(0, 2.55, 0);
+            }
+            case "gluecksrad_nah" -> {
+                // Glücksrad nah: Nadel und Stifte oben am Rad
+                if (camRad == null) return;
+                from = camRad.clone().add(-2.6, 3.7, 0.9);
+                to = camRad.clone().add(0, 3.75, 0);
             }
             case "plinko" -> {
                 // Plinko-Brett (v2.05) von vorn aus Spielerhöhe, ganzes Brett im Bild
@@ -582,11 +606,11 @@ public final class LoadTestCommand implements CommandExecutor {
         }
         camRennen = new Location(w, gx - 14.0, gy + 0.9 + 1.95 * 0.7, gz + 8.0);
         camSlotsKlein = new Location(w, gx - 3.5, gy, gz - 7.5);
-        // Glücksrad (v2.07): Wand an der Ostkante (9 breit, 6 hoch), Rad davor, Blick nach Westen
-        for (int z = gz - 3; z <= gz + 5; z++) {
-            for (int y = 0; y < 6; y++) w.getBlockAt(gx + 16, (int) gy + y, z).setType(org.bukkit.Material.POLISHED_BLACKSTONE_BRICKS, false);
+        // Glücksrad (v2.07): Bühne an der Ostkante (gut 7 breit, Rad 5,4 hoch), dunkle Wand dahinter, Blick nach Westen
+        for (int z = gz - 4; z <= gz + 7; z++) {
+            for (int y = 0; y < 7; y++) w.getBlockAt(gx + 16, (int) gy + y, z).setType(org.bukkit.Material.POLISHED_BLACKSTONE_BRICKS, false);
         }
-        camRad = new Location(w, gx + 16.0, gy + 0.5 + 2.35 * 0.9, gz + 1.5);
+        camRad = new Location(w, gx + 14.2, gy, gz + 1.5);
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             de.kuby.kubyplugins.casino.BlackjackGame bj = plugin.blackjack().testTable(bjAt, 0f);
             // die anderen Tisch-Farben daneben (rot, violett) – für die Bilder aus dem echten Client

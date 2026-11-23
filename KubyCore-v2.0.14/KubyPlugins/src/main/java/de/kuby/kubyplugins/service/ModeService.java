@@ -267,6 +267,23 @@ public final class ModeService {
         if (!live && plugin.economyLog() != null) plugin.economyLog().record(id, mode, amount, sn.money() + amount);
     }
 
+    /** XP (Kuby-XP, nicht Vanilla) in einem Modus gutschreiben, gleiche Regeln wie depositIn (z. B. SMP-Glücksrad). */
+    public synchronized void xpIn(UUID id, String mode, long amount) {
+        if (amount == 0) return;
+        Player online = Bukkit.getPlayer(id);
+        boolean live = mode.equals(modeOf(id));
+        if (live) {
+            plugin.stats().get(id).xp += amount;
+            plugin.stats().save();
+        }
+        if (live && online != null) return;
+        Map<String, Snap> byMode = snaps.computeIfAbsent(id, k -> new HashMap<>());
+        Snap sn = byMode.getOrDefault(mode, emptySnap());
+        byMode.put(mode, new Snap(sn.money(), sn.xp() + amount, sn.trophies(), sn.kills(), sn.deaths(), sn.inv(), sn.ec(),
+                sn.ab(), sn.extras()));
+        save();
+    }
+
     /** Geld eines Spielers in einem Modus: live vom Konto, sonst aus dem gespeicherten Stand (auch offline). */
     public synchronized long moneyIn(UUID id, String mode) {
         if (mode.equals(modeOf(id)) && Bukkit.getPlayer(id) != null) return plugin.economy().balance(id);

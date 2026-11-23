@@ -364,26 +364,6 @@ casino:
     kino: true                  # zwei gleiche: Kino-Kamera auf die letzte Walze (Vignette, Herzschlag, Einrasten)
     hocker-abstand: 0.07        # Luft zwischen Hocker-Sitzfläche und Pultkante (Blöcke)
     tempo-wechsel: true         # jede Runde anderes Dreh-Tempo (schnell, normal, lang, einzeln, zusammen); false = immer normal
-  gluecksrad:                   # Glücksrad (v2.07): an der Wand (/casino gluecksrad aufstellen [Größe]), alle N Stunden gratis drehen
-    stunden: 6
-    erinnerung: true            # Nachricht im Chat, sobald der nächste Dreh bereit ist
-    ansage-ab: 25000            # Gewinne ab so vielen Chips (und der Hauptgewinn) werden allen angesagt
-    # 12 Felder im Uhrzeigersinn ab oben: "Gewicht;Gewinn;Anzeige". Gewinn: chips:N, coins:N, jewels:N, key:<art>:<anzahl>,
-    # booster:<art>:<faktor>:<minuten>, tag:<titel-id>, cosmetic:<kosmetik-id>. Die Bilder auf dem Rad (Grafik-Pack)
-    # folgen dieser Liste; nach Änderungen das Pack neu bauen. Das Feld mit den meisten Chips ist der Hauptgewinn.
-    felder:
-      - "20;chips:1000;1.000 Chips"
-      - "12;jewels:5;5 Juwelen"
-      - "16;chips:2500;2.500 Chips"
-      - "12;key:vote:1;Vote-Key"
-      - "10;chips:5000;5.000 Chips"
-      - "8;booster:cashback:2:30;Cashback-Booster x2 (30 min)"
-      - "20;chips:1000;1.000 Chips"
-      - "6;key:selten:1;Selten-Key"
-      - "5;chips:10000;10.000 Chips"
-      - "4;jewels:25;25 Juwelen"
-      - "3;key:episch:1;Episch-Key"
-      - "1;chips:100000;Hauptgewinn 100.000 Chips"
   # Chip-Shop (v2.07): /casino shop, Knopf an der Kasse, Figur /casino npc chipshop. Kosmetik und Titel von hier
   # gelten in allen Modi. Kategorien "id;Name;Icon;Stil;#Farbe;Zeile", Angebote "id;Name;Art;Wert;Preis;Icon;Zeile".
   # Icon: hat:<hut>, particle:<partikel>, sprite:<JS_…>, item:<MATERIAL>. Arten: COSMETIC (Wert = ID aus cosmetics-casino),
@@ -487,6 +467,55 @@ tags:
   - "booster;<#FF6BD6><b>ʙᴏᴏꜱᴛᴇʀ</b>"   # automatisch für Discord-Server-Booster (DiscordSRV, nach /verify und beim Einloggen)
   - "kuerbiskoenig;<#FF8A1E>Kürbiskönig"   # Halloween-Event (Candy-Shop)
   - "geisterjaeger;<#B080FF>Geisterjäger"  # Halloween-Event (Candy-Shop)
+
+# Glücksräder (v2.07): jeder Spieler darf alle N Stunden einmal gratis drehen.
+#   casino: großes Rad auf der Bühne im Casino (/casino gluecksrad aufstellen) und als Fenster (/gluecksrad in Survival)
+#   smp:    nur als Fenster (/gluecksrad in SMP)
+# Felder (12, im Uhrzeigersinn ab oben): "Gewicht;Gewinn;Anzeige". Gewinn: chips:N, coins:N, xp:N, jewels:N,
+#   key:<art>:<anzahl>, booster:<art>:<faktor>:<minuten> (mehrere mit +), tag:<titel-id>, cosmetic:<kosmetik-id>[:Ersatz-Chips].
+#   Das Feld mit dem kleinsten Gewicht ist der Hauptgewinn. Die Bilder (Grafik-Pack) folgen dieser Liste; nach Änderungen
+#   das Pack neu bauen.
+# Serie: wer innerhalb von serie-stunden nach dem letzten Dreh wieder dreht, verlängert seine Serie; jeder gold-dreh-te
+#   Dreh in Folge ist ein Gold-Dreh mit doppeltem Gewinn.
+gluecksrad:
+  casino:
+    stunden: 24
+    serie-stunden: 48
+    gold-dreh: 7
+    erinnerung: true
+    ansage-ab: 100000           # Gewinne ab so vielen Chips (und der Hauptgewinn) werden allen angesagt
+    felder:
+      - "18;chips:10000;10.000 Chips"
+      - "10;jewels:50;50 Juwelen"
+      - "14;chips:25000;25.000 Chips"
+      - "10;key:selten:3;3 Selten-Keys"
+      - "9;chips:50000;50.000 Chips"
+      - "8;booster:cashback:3:60;Cashback-Booster x3 (1 h)"
+      - "18;chips:10000;10.000 Chips"
+      - "6;key:episch:2;2 Episch-Keys"
+      - "5;chips:100000;100.000 Chips"
+      - "2;cosmetic:c_goldzylinder:150000;Goldener Zylinder"
+      - "3;key:legendaer:1;Legendär-Key"
+      - "1;chips:1000000;HAUPTGEWINN 1.000.000 Chips"
+  smp:
+    stunden: 24
+    serie-stunden: 48
+    gold-dreh: 7
+    erinnerung: true
+    ansage-ab: 100000           # Geld ab diesem Betrag (und der Hauptgewinn) wird allen angesagt
+    felder:
+      - "18;coins:5000;5.000 $"
+      - "12;xp:1000;1.000 XP"
+      - "14;coins:15000;15.000 $"
+      - "10;key:vote:3;3 Vote-Keys"
+      - "10;jewels:25;25 Juwelen"
+      - "8;booster:xp:2:60;XP-Booster x2 (1 h)"
+      - "18;coins:5000;5.000 $"
+      - "6;key:selten:2;2 Selten-Keys"
+      - "5;coins:50000;50.000 $"
+      - "5;booster:sell:2:120;Verkaufs-Booster x2 (2 h)"
+      - "3;key:episch:2;2 Episch-Keys"
+      - "1;coins:500000;HAUPTGEWINN 500.000 $"
 
 # Casino-Titel (v2.07): nur aus dem Chip-Shop, gelten in allen Modi
 tags-casino:

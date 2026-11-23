@@ -255,17 +255,28 @@ public final class Scene {
                 }
             }
             case "gluecksrad" -> {
-                // Glücksrad (v2.07) an der Wand bei z = 0, Blick nach +z; args[2] = Winkel der Scheibe (Grad)
+                // Glücksrad-Bühne (v2.07) bei z = 0, Vorderseite nach +z; args[2] = Winkel der Scheibe, args[3] = Nadel (Grad)
                 double ang = args.length > 2 ? Double.parseDouble(args[2]) : 0;
-                de.kuby.kubyplugins.casino.WheelBoard b = new de.kuby.kubyplugins.casino.WheelBoard("g1",
-                        new Location(w, 0.5, 2.6, 0.0), 0f, 1.0, tag, click);
-                b.build();
+                double nd = args.length > 3 ? Double.parseDouble(args[3]) : 0;
+                de.kuby.kubyplugins.casino.WheelStage b = new de.kuby.kubyplugins.casino.WheelStage("g1",
+                        new Location(w, 0.5, 0.0, 0.0), 0f, 1.0, tag, click);
+                b.build(Component.text("1.000.000 Chips", NamedTextColor.WHITE), new org.bukkit.inventory.ItemStack(org.bukkit.Material.GOLD_BLOCK));
                 b.spinTo(ang, 0);
-                b.prize(de.kuby.kubyplugins.casino.WheelBoard.prizeText("2.500 Chips", false));
-                b.info(Component.text("Rechtsklick aufs Rad · /gluecksrad zeigt deine Wartezeit", NamedTextColor.GRAY));
-                boolean[] lit = new boolean[de.kuby.kubyplugins.casino.WheelBoard.BULBS];
-                for (int i = 0; i < lit.length; i += 2) lit[i] = true;
-                b.bulbs(lit);
+                b.needle(nd);
+                b.prize(de.kuby.kubyplugins.casino.WheelStage.prizeText("25.000 Chips", false));
+                b.info(Component.text("Rechtsklick aufs Rad · /gluecksrad zeigt Gewinne und Serie", NamedTextColor.GRAY));
+                b.winners(Component.text("LETZTE GEWINNER", NamedTextColor.GOLD).appendNewline().append(Component.text("Kuby_Max 25.000 Chips", NamedTextColor.WHITE))
+                        .appendNewline().append(Component.text("Lena ★ 2 Episch-Keys", NamedTextColor.YELLOW)));
+                boolean[] lit = new boolean[de.kuby.kubyplugins.casino.WheelStage.RIM];
+                for (int i = 0; i < lit.length; i += 3) lit[i] = true;
+                b.rimBulbs(lit, false);
+                boolean[] pl = new boolean[de.kuby.kubyplugins.casino.WheelStage.PLAT_BULBS];
+                for (int i = 0; i < pl.length; i += 2) pl[i] = true;
+                b.platBulbs(pl, false);
+                boolean[] sg = new boolean[de.kuby.kubyplugins.casino.WheelStage.SIGN_BULBS];
+                for (int i = 0; i < sg.length; i += 2) sg[i] = true;
+                b.signBulbs(sg, false);
+                b.spots(true);
             }
             case "rennen" -> {
                 // Pferderennen-Bildschirm (v2.05) an der Wand bei z = 0, Blick nach +z; args[2] = Tick im Rennen (-1 = Start)

@@ -2147,7 +2147,9 @@ public final class KitData {
         GD_NAV10(8, 6, 1, "\uf369", "9"),
         GD_NAV11(6, 8, 1, "\uf36a", "7"),
         XS_TITLE(72, 18, 3, "\uf36b\uf36c\uf36d", "QQ9"),
-        XS_CHIP_TITLE(88, 18, 3, "\uf36e\uf36f\uf370", "QQI");
+        XS_CHIP_TITLE(88, 18, 3, "\uf36e\uf36f\uf370", "QQI"),
+        WH_UI_CASINO(128, 144, 4, "\uf371\uf372\uf373\uf374\uf375\uf376\uf377\uf378\uf379\uf37a\uf37b\uf37c\uf37d\uf37e\uf37f\uf380\uf381\uf382\uf383\uf384", "QQQ:QQQNQQQPQQQNQQQ:"),
+        WH_UI_SMP(128, 144, 4, "\uf385\uf386\uf387\uf388\uf389\uf38a\uf38b\uf38c\uf38d\uf38e\uf38f\uf390\uf391\uf392\uf393\uf394\uf395\uf396\uf397\uf398", "QQQ:QQQNQQQPQQQNQQQ:");
 
         public final int width, height, cols;
         public final String chars, advances;

@@ -94,8 +94,9 @@ public final class CasinoRules {
                         + " einmal gespielt hat, ist dabei, und einer gewinnt den ganzen Topf in Chips.",
                 "Im Casino läuft Musik. Bei DJ Mia oder mit /music suchst du dir Songs aus oder schaltest sie aus.",
                 "An der Losbude gibt es Rubbellose für Chips: aufdecken, drei gleiche Symbole gewinnen.",
-                "Am Glücksrad drehst du alle " + plugin.getConfig().getLong("casino.gluecksrad.stunden", 6) + " Stunden einmal gratis:"
-                        + " Chips, Juwelen, Kisten-Schlüssel, Booster oder der Hauptgewinn. /gluecksrad zeigt, wann du wieder darfst.",
+                "Am großen Glücksrad auf der Bühne drehst du alle " + plugin.getConfig().getLong("gluecksrad.casino.stunden", 24) + " Stunden einmal gratis:"
+                        + " Chips, Juwelen, Kisten-Schlüssel, Booster, ein Casino-Hut oder der Hauptgewinn. Jeder "
+                        + plugin.getConfig().getInt("gluecksrad.casino.gold-dreh", 7) + ". Dreh in Folge ist ein Gold-Dreh (doppelt). /gluecksrad öffnet das Rad als Fenster.",
                 "Im Chip-Shop (an der Kasse oder /casino shop) gibt es für Chips Casino-Hüte, Effekte, Booster, Ränge und"
                         + " Titel, von 30.000 bis über 1,5 Mio. Chips. Hüte und Titel von dort gelten in allen Modi.",
                 "In der VIP-Lounge geben dir die Barkeeper einmal am Tag "
@@ -113,7 +114,7 @@ public final class CasinoRules {
                 new String[]{"/casino buy <Anzahl>", "Chips kaufen"},
                 new String[]{"/casino sell <Anzahl>", "Chips eintauschen"},
                 new String[]{"/casino shop", "Chip-Shop"},
-                new String[]{"/gluecksrad", "Glücksrad: Wartezeit"},
+                new String[]{"/gluecksrad", "Glücksrad: Gewinne, Serie, drehen"},
                 new String[]{"/casino stats", "Rangliste"},
                 new String[]{"/music", "Casino-Musik"},
                 new String[]{"/poker", "Poker in der VIP-Lounge"},

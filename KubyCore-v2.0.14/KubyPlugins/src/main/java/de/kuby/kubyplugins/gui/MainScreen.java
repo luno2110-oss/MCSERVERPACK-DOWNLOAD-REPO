@@ -207,6 +207,15 @@ public final class MainScreen {
         if (!hub) daily.add(new Tile("Team", "Team verwalten, Kasse und Teamhome", KitData.Icon.WHITE_BANNER, go(pl -> new TeamScreen(plugin).open(pl))));
         daily.add(new Tile("Tagespot", "Lose kaufen, Ziehung um 19 Uhr", KitData.Icon.GOLD_BLOCK, go(pl -> new DailyScreens(plugin).pot(pl))));
         daily.add(new Tile("Freunde", "Freunde, Anfragen und Nachspringen", KitData.Icon.COOKIE, cmd("friends")));
+        // Glücksrad (v2.07): Survival (Casino-Rad) und SMP; in eine Reihe mit freiem Platz, damit das Menü nicht wächst
+        if (plugin.wheel() != null && plugin.wheel().wheelFor(p) != null) {
+            String wn = plugin.wheel().wheelFor(p);
+            Tile wheel = new Tile("Glücksrad", "Alle 24 h gratis drehen, Serie bis zum Gold-Dreh", KitData.Icon.ROULETTE_WHEEL,
+                    art("Glücksrad"), go(pl -> plugin.wheel().open(pl)), plugin.wheel().left(wn, p.getUniqueId()) == 0);
+            if (smp || daily.size() % 4 != 0) daily.add(wheel);
+            else if (mine.size() % 4 != 0) mine.add(wheel);
+            else daily.add(wheel);
+        }
 
         List<Tile> prog = new ArrayList<>();
         prog.add(new Tile("Spielzeit", "Stufen nach aktiver Spielzeit", KitData.Icon.EXPERIENCE, go(pl -> new PlaytimeScreen(plugin).open(pl))));
