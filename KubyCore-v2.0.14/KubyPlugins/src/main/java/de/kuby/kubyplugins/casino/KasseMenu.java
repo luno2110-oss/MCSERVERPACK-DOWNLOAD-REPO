@@ -105,6 +105,15 @@ public final class KasseMenu extends GuiMenu {
                 CasinoText.line("Anzahl eintippen, in Coins auszahlen"),
                 CasinoText.line("Steuer beim Auszahlen: <#FF5A5A>" + tax + "%"), "",
                 CasinoText.click("eingeben")));
+        // Chip-Shop (v2.07): Kosmetik, Effekte, Booster, Ränge und Titel für Chips
+        set(40, Items.make(Material.GOLD_BLOCK, CasinoText.title("gold", "Chip-Shop"), List.of("",
+                CasinoText.line("Casino-Hüte, Effekte, Booster,"),
+                CasinoText.line("Ränge und Titel für deine Chips"),
+                CasinoText.line("<gray>30.000 bis über 1,5 Mio. Chips"), "",
+                CasinoText.click("öffnen"))), e -> {
+            p.closeInventory();
+            plugin.chipShop().open(p);
+        });
         set(34, customSell, e -> {
             p.closeInventory();
             CasinoInput.amount(p, "Chips auszahlen", List.of("<gray>Wie viele Chips möchtest du auszahlen?",

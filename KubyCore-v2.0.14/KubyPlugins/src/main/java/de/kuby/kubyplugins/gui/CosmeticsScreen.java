@@ -87,6 +87,7 @@ public final class CosmeticsScreen {
     private static String price(Item it) {
         if (it.currency() == Currency.CRATE) return "nur aus Kisten";
         if (it.currency() == Currency.EVENT) return "nur im Event-Shop";
+        if (it.currency() == Currency.CASINO) return "nur im Chip-Shop";
         if (it.price() <= 0 || it.currency() == Currency.NONE) return it.bpLevel() > 0 ? "Battlepass Stufe " + it.bpLevel() : "gratis";
         return switch (it.currency()) {
             case MONEY -> Msg.coins(it.price()) + " Coins";
@@ -169,6 +170,11 @@ public final class CosmeticsScreen {
         }
         if (it.currency() == Currency.EVENT) {
             Msg.send(p, "<gray>" + it.label() + " gibt es nur im Event-Shop. <white>/quests");
+            Sfx.play(plugin, p, Sfx.Kind.ERROR);
+            return;
+        }
+        if (it.currency() == Currency.CASINO) {
+            Msg.send(p, "<gray>" + it.label() + " gibt es nur im Chip-Shop des Casinos. <white>/casino shop");
             Sfx.play(plugin, p, Sfx.Kind.ERROR);
             return;
         }

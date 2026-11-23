@@ -203,6 +203,15 @@ public final class CasinoService {
         return true;
     }
 
+    /** Chips ausgeben (Chip-Shop): wie takeChips, aber ohne Teilnahme an der Jackpot-Ziehung (ist kein Einsatz). */
+    public synchronized boolean spendChips(UUID id, long count) {
+        long have = chips(id);
+        if (count <= 0 || have < count) return false;
+        chips.put(id, have - count);
+        save();
+        return true;
+    }
+
     /** Gibt Chips zurück, etwa eine Auszahlung. */
     public synchronized void giveChips(UUID id, long count) {
         if (count <= 0) return;

@@ -352,6 +352,83 @@ def hats():
     h.box(5.25, 8.7, 7.15, 5.55, 11.0, 7.45, "stem")
     pixels(h, STAR, 5.4, 13.2, 0.45, {"S": "gold", "W": "goldlight"})
     out.append(h)
+
+    # ----- Casino-Hüte (v2.07, nur im Chip-Shop des Casinos) -----
+
+    # Croupier-Schirm: grüner Dealer-Schirm vorne, dunkles Stirnband, roter Chip als Abzeichen
+    h = Hat("croupier", "Croupier-Schirm", {"visor": "#3FB873", "visordark": "#2A8A52", "band": "#1E2A24",
+                                             "goldtrim": "#E8B830", "chip": "#D8283A", "chipwhite": "#F4F0E6"}, seed=73)
+    h.ring(6.4, 8.2, 4.7, 0.7, "band", top="goldtrim")
+    h.box(3.4, 7.0, -0.4, 12.6, 7.7, 3.4, "visordark", top="visor", rot=("x", 22.5, (8, 7.7, 3.3)))
+    h.box(3.4, 6.95, -0.5, 12.6, 7.75, -0.2, "goldtrim", rot=("x", 22.5, (8, 7.7, 3.3)))
+    h.box(7.0, 6.6, 3.05, 9.0, 8.6, 3.3, "chip")
+    h.box(7.6, 7.2, 2.95, 8.4, 8.0, 3.1, "chipwhite")
+    out.append(h)
+
+    # Goldener Zylinder: wie der Zylinder, aber in Gold mit schwarzem Band und rotem Edelstein
+    h = Hat("goldzylinder", "Goldener Zylinder", {"goldfelt": "#E2B22E", "goldbrim": "#C9971C", "goldtop": "#F2CC52",
+                                                   "band": "#1C1C22", "gemred": "#E0303C"}, seed=79)
+    h.box(2, 5.5, 2, 14, 6.5, 14, "goldbrim")
+    h.box(3.5, 6.5, 3.5, 12.5, 15.5, 12.5, "goldfelt", top="goldtop")
+    h.box(3.35, 6.5, 3.35, 12.65, 8.2, 12.65, "band", faces=("north", "south", "east", "west"))
+    h.box(7.3, 6.9, 3.15, 8.7, 7.9, 3.35, "gemred")
+    out.append(h)
+
+    # Glückswürfel-Reif: zwei Würfel auf Federn, schräg, mit Augen (vorne fünf und drei, oben eins)
+    h = Hat("wuerfel", "Glückswürfel-Reif", {"die": "#F4F2EC", "dieshade": "#D9D5CC", "pip": "#1A1A20",
+                                             "pipred": "#D8283A", "spring": "#3A3440", "band": "#8E1E2E"}, seed=83)
+    band(h, "band", top="band")
+    for cx, cy, sz, ang, pips in ((5.2, 12.6, 2.6, 22.5, ((-0.7, 0.7), (0.7, 0.7), (0, 0), (-0.7, -0.7), (0.7, -0.7))),
+                                  (10.9, 13.8, 3.0, -22.5, ((-0.8, 0.8), (0, 0), (0.8, -0.8)))):
+        r = sz / 2
+        rot = ("z", ang, (cx, cy, 7.3))
+        h.box(cx - 0.15, 8.7, 7.15, cx + 0.15, cy - r, 7.45, "spring")
+        h.box(cx - r, cy - r, 7.3 - r, cx + r, cy + r, 7.3 + r, "die", top="die", rot=rot)
+        for px, py in pips:
+            u = 0.28
+            h.box(cx + px - u, cy + py - u, 7.3 - r - 0.08, cx + px + u, cy + py + u, 7.3 - r, "pip", rot=rot)
+        h.box(cx - 0.32, cy + r, 7.3 - 0.32, cx + 0.32, cy + r + 0.08, 7.3 + 0.32, "pipred", rot=rot)
+    out.append(h)
+
+    # Pokerkarten-Reif: drei Karten als Fächer (Herz-Ass, Pik, Karo), Karten weiß mit roten und schwarzen Zeichen
+    h = Hat("pokerkarten", "Pokerkarten-Reif", {"card": "#F6F4EE", "cardshade": "#DCD8CE", "red": "#D8283A",
+                                                 "black": "#1A1A20", "band": "#1E1E26", "gold": "#E8B830"}, seed=89)
+    band(h, "band", top="band")
+    SUIT = {"heart": [".R.R.", "RRRRR", ".RRR.", "..R.."], "spade": ["..B..", ".BBB.", "BBBBB", "..B.."],
+            "diamond": ["..R..", ".RRR.", "RRRRR", ".RRR.", "..R.."]}
+    for ang, suit, dz in ((22.5, "spade", 0.0), (0, "heart", -0.3), (-22.5, "diamond", -0.6)):
+        rot = ("z", ang, (8, 8.6, 7.3)) if ang else None
+        z0 = 7.0 + dz
+        h.box(6.6, 9.0, z0, 9.4, 13.2, z0 + 0.25, "card", rot=rot)
+        rows = SUIT[suit]
+        u = 0.36
+        for rr, line in enumerate(rows):
+            for cc, ch in enumerate(line):
+                if ch == ".":
+                    continue
+                x = 8 - len(line) * u / 2 + cc * u
+                y = 11.9 - rr * u
+                h.box(x, y - u, z0 - 0.06, x + u, y, z0, "red" if ch == "R" else "black", rot=rot)
+    h.box(7.5, 8.4, 6.0, 8.5, 9.2, 7.1, "gold")
+    out.append(h)
+
+    # Chip-Krone: goldener Reif mit Samt, an den Ecken Stapel aus Casino-Chips (rot, blau, schwarz mit weißem Rand),
+    # vorne ein großer roter Edelstein
+    h = Hat("chipkrone", "Chip-Krone", {"gold": "#F2C230", "golddark": "#C9971C", "velvet": "#1E3A8E",
+                                         "chipred": "#D8283A", "chipblue": "#2F6BE0", "chipblack": "#26262E",
+                                         "chipedge": "#F4F0E6", "gemred": "#E0303C"}, seed=97)
+    h.ring(6.5, 9.0, 4.75, 1.0, "gold", top="golddark")
+    h.box(4.0, 6.5, 4.0, 12.0, 8.0, 12.0, "velvet")
+    stacks = ((3.75, 3.75, ("chipred", "chipblue", "chipblack")), (12.25, 3.75, ("chipblack", "chipred", "chipblue")),
+              (3.75, 12.25, ("chipblue", "chipblack", "chipred")), (12.25, 12.25, ("chipred", "chipblack", "chipblue")))
+    for cx, cz, cols in stacks:
+        for i, col in enumerate(cols):
+            y0 = 9.0 + i * 0.75
+            h.cube(cx, y0 + 0.35, cz, 1.05, 0.35, 1.05, col)
+            h.cube(cx, y0 + 0.35, cz, 1.12, 0.12, 1.12, "chipedge", faces=("north", "south", "east", "west"))
+    h.box(7.0, 7.2, 2.95, 9.0, 9.6, 3.25, "gemred")
+    h.box(7.4, 9.6, 3.0, 8.6, 10.2, 3.2, "gold")
+    out.append(h)
     return out
 
 
@@ -444,6 +521,9 @@ PARTICLES = [
     ("totem_of_undying", "glitter_3", (0.95, 0.85, 0.25)), ("dragon_breath", "generic_5", (0.85, 0.35, 0.95)),
     ("portal", "generic_5", (0.6, 0.3, 0.95)), ("cherry_leaves", "cherry_1", None), ("flash", "flash", (1.0, 1.0, 0.85)),
     ("soul", "soul_3", None), ("explosion", "explosion_4", (0.95, 0.75, 0.45)), ("witch", "spell_3", (0.7, 0.3, 0.9)),
+    # Casino-Effekte (v2.07, Chip-Shop)
+    ("wax_on", "glow", (1.0, 0.72, 0.18)), ("electric_spark", "glow", (0.75, 0.9, 1.0)), ("firework", "spark_4", None),
+    ("glow", "glow", (0.45, 1.0, 0.85)), ("falling_honey", "drip_fall", (0.98, 0.72, 0.16)),
 ]
 
 

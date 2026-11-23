@@ -221,6 +221,7 @@ public final class KubyPlugins extends JavaPlugin {
         modules = new ModuleService(this);
         markers = new MarkerService(this);
         casino = new CasinoService(this);
+        chipShop = new de.kuby.kubyplugins.casino.ChipShop(this);
         casinoLog = new CasinoLog(this);
         jackpotDraw = new JackpotDraw(this);
         jackpotDraw.start();
@@ -739,6 +740,10 @@ public final class KubyPlugins extends JavaPlugin {
 
     private de.kuby.kubyplugins.gui.BattlepassScreen battlepassScreen;
     private de.kuby.kubyplugins.gui.XpShopScreen xpShopScreen;
+    private de.kuby.kubyplugins.casino.ChipShop chipShop;
+
+    /** Chip-Shop im Casino (v2.07); Freischaltungen daraus gelten in allen Modi. */
+    public de.kuby.kubyplugins.casino.ChipShop chipShop() { return chipShop; }
 
     public de.kuby.kubyplugins.gui.XpShopScreen xpShopScreen() { return xpShopScreen; }
 

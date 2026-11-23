@@ -43,11 +43,11 @@ public final class CosmeticService implements ModeData {
     }
 
     public enum Currency {
-        MONEY, XP, JEWELS, NONE, CRATE, EVENT;
+        MONEY, XP, JEWELS, NONE, CRATE, EVENT, CASINO;
 
-        /** Nicht kaufbar: nur aus Kisten (CRATE) oder aus dem Event-Shop (EVENT). */
+        /** Nicht kaufbar: nur aus Kisten (CRATE), aus dem Event-Shop (EVENT) oder aus dem Chip-Shop im Casino (CASINO). */
         public boolean special() {
-            return this == CRATE || this == EVENT;
+            return this == CRATE || this == EVENT || this == CASINO;
         }
     }
 
@@ -117,8 +117,15 @@ public final class CosmeticService implements ModeData {
     /** Katalog eines Modus (cosmetics-modes.&lt;modus&gt;, sonst cosmetics). */
     public List<Item> catalogue(String mode) {
         String path = "cosmetics-modes." + mode;
-        return parse(plugin.getConfig().isList(path) ? plugin.getConfig().getStringList(path)
-                : plugin.getConfig().getStringList("cosmetics"));
+        List<Item> list = new ArrayList<>(parse(plugin.getConfig().isList(path) ? plugin.getConfig().getStringList(path)
+                : plugin.getConfig().getStringList("cosmetics")));
+        list.addAll(casino());
+        return list;
+    }
+
+    /** Casino-Kosmetik (v2.07): nur aus dem Chip-Shop, in jedem Modus sichtbar und gültig (cosmetics-casino). */
+    public List<Item> casino() {
+        return parse(plugin.getConfig().getStringList("cosmetics-casino"));
     }
 
     /** Alle Kosmetiken aller Modi (für Effekte, die nur die ID kennen). */
@@ -126,6 +133,7 @@ public final class CosmeticService implements ModeData {
         List<Item> all = new ArrayList<>(parse(plugin.getConfig().getStringList("cosmetics")));
         var sec = plugin.getConfig().getConfigurationSection("cosmetics-modes");
         if (sec != null) for (String m : sec.getKeys(false)) all.addAll(parse(sec.getStringList(m)));
+        all.addAll(casino());
         return all;
     }
 
@@ -187,6 +195,8 @@ public final class CosmeticService implements ModeData {
     /** Gratis-Items (ohne Preis und ohne BP-Stufe) gehören jedem. */
     public synchronized boolean owns(UUID id, Item it) {
         if (!it.currency().special() && it.bpLevel() == 0 && (it.currency() == Currency.NONE || it.price() <= 0)) return true;
+        // aus dem Chip-Shop: gilt in allen Modi
+        if (plugin.chipShop() != null && plugin.chipShop().owns(id, "cosmetic:" + it.id())) return true;
         return owned.getOrDefault(id, Set.of()).contains(it.id());
     }
 
@@ -196,6 +206,7 @@ public final class CosmeticService implements ModeData {
         if (owns(id, it)) return "Diese Kosmetik gehört dir schon.";
         if (it.currency() == Currency.CRATE) return "Das gibt es nur aus Kisten.";
         if (it.currency() == Currency.EVENT) return "Das gibt es nur im Event-Shop.";
+        if (it.currency() == Currency.CASINO) return "Das gibt es nur im Chip-Shop des Casinos.";
         if (plugin.battlepass().level(id) < it.bpLevel()) return "Benötigt Battlepass-Stufe " + it.bpLevel() + ".";
         if (it.price() > 0) {
             switch (it.currency()) {

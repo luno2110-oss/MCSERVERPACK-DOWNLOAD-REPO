@@ -549,7 +549,9 @@ public final class CasinoPlay {
             lossStake.remove(id);
             lost = 0;
         } else if (gross < stake) {
-            cashback = Math.round((stake - gross) * cfg("cashback", 0.03));
+            // Cashback-Booster aus dem Chip-Shop (v2.07): x2/x3 auf den Trost bei Verlust (ändert keine Gewinnchance)
+            double cbBoost = plugin.booster() == null ? 1.0 : plugin.booster().personal(id, "cashback");
+            cashback = Math.round((stake - gross) * cfg("cashback", 0.03) * cbBoost);
             if (cashback <= 0 && stake - gross >= 20) cashback = 1;
             newStreak = 0;
             streak.remove(id);

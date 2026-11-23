@@ -596,6 +596,21 @@ final class SelfTest {
                             de.kuby.kubyplugins.gui.XpShopScreen.sample(plugin.getConfig(), xm, xc.id(), 999_999_999L, true), xa));
                 }
             }
+            // Chip-Shop (v2.07): Übersicht und jede Kategorie, mit wenig und mit vielen Chips
+            de.kuby.kubyplugins.casino.ChipShop.Actions cha = new de.kuby.kubyplugins.casino.ChipShop.Actions() {
+                public Consumer<Player> home() { return NO; }
+                public Consumer<Player> category(String id) { return NO; }
+                public Consumer<Player> page(int page) { return NO; }
+                public Consumer<Player> buy(String id) { return NO; }
+            };
+            canvas.accept("Chip-Shop", () -> de.kuby.kubyplugins.casino.ChipShop.canvas(
+                    de.kuby.kubyplugins.casino.ChipShop.sample(plugin.getConfig(), null, 9_999_999_999L), cha));
+            for (var cc : de.kuby.kubyplugins.casino.ChipShop.categories(plugin.getConfig())) {
+                canvas.accept("Chip-Shop " + cc.id(), () -> de.kuby.kubyplugins.casino.ChipShop.canvas(
+                        de.kuby.kubyplugins.casino.ChipShop.sample(plugin.getConfig(), cc.id(), 100_000), cha));
+                canvas.accept("Chip-Shop " + cc.id() + " reich", () -> de.kuby.kubyplugins.casino.ChipShop.canvas(
+                        de.kuby.kubyplugins.casino.ChipShop.sample(plugin.getConfig(), cc.id(), 9_999_999_999L), cha));
+            }
             canvas.accept("XP-Shop leer", () -> de.kuby.kubyplugins.gui.XpShopScreen.canvas(
                     de.kuby.kubyplugins.gui.XpShopScreen.sample(plugin.getConfig(), "keinmodus", null, 0, false), xa));
             List<de.kuby.kubyplugins.gui.ExtraScreens.Stock> st = new ArrayList<>();
@@ -721,6 +736,34 @@ final class SelfTest {
             }
         } catch (Throwable t) {
             fails.add("XP-Shop: " + t);
+        }
+
+        // Chip-Shop (v2.07): fünf Kategorien, jedes Angebot gültig (Kosmetik als CASINO, Titel, Booster, Ränge),
+        // Preise 30.000 bis über 1,5 Mio., Casino-Kosmetik in jedem Modus im Katalog
+        try {
+            var cats = de.kuby.kubyplugins.casino.ChipShop.categories(plugin.getConfig());
+            java.util.Set<String> ids = new java.util.HashSet<>();
+            for (var cat : cats) ids.add(cat.id());
+            for (String need : new String[]{"kosmetik", "effekte", "booster", "raenge", "titel"}) {
+                if (!ids.contains(need)) fails.add("Chip-Shop: Kategorie " + need + " fehlt");
+            }
+            long min = Long.MAX_VALUE, max = 0;
+            java.util.Set<String> seen = new java.util.HashSet<>();
+            for (var o : de.kuby.kubyplugins.casino.ChipShop.allOffers(plugin.getConfig())) {
+                if (!seen.add(o.id())) fails.add("Chip-Shop: doppelte ID " + o.id());
+                String err = de.kuby.kubyplugins.casino.ChipShop.check(plugin, o);
+                if (err != null) fails.add("Chip-Shop " + o.id() + ": " + err);
+                min = Math.min(min, o.price());
+                max = Math.max(max, o.price());
+            }
+            if (min < 30_000 || max < 1_500_000) fails.add("Chip-Shop: Preise " + min + " bis " + max + " (erwartet ab 30.000 bis mindestens 1,5 Mio.)");
+            for (String m : new String[]{de.kuby.kubyplugins.service.ModeService.SMP, de.kuby.kubyplugins.service.ModeService.SURVIVAL,
+                    de.kuby.kubyplugins.service.ModeService.SKYBLOCK, de.kuby.kubyplugins.service.ModeService.HUB}) {
+                boolean in = plugin.cosmetics().catalogue(m).stream().anyMatch(i -> i.id().equals("c_chipkrone"));
+                if (!in) fails.add("Chip-Shop: Casino-Kosmetik fehlt im Katalog von " + m);
+            }
+        } catch (Throwable t) {
+            fails.add("Chip-Shop: " + t);
         }
 
         // Casino: Juwelen nur in den freigegebenen Spielen, sonst immer Chips (auch wenn der Spieler Juwelen gewählt hat)

@@ -40,9 +40,11 @@ public final class TagService implements ModeData {
 
     public List<Tag> all() {
         List<Tag> list = new ArrayList<>();
-        for (String raw : plugin.getConfig().getStringList("tags")) {
-            String[] p = raw.split(";", 2);
-            if (p.length == 2) list.add(new Tag(p[0].trim(), p[1].trim()));
+        for (String path : new String[]{"tags", "tags-casino"}) {
+            for (String raw : plugin.getConfig().getStringList(path)) {
+                String[] p = raw.split(";", 2);
+                if (p.length == 2) list.add(new Tag(p[0].trim(), p[1].trim()));
+            }
         }
         list.addAll(LEAGUE_TAGS);
         return list;
@@ -52,6 +54,8 @@ public final class TagService implements ModeData {
         for (League l : League.values()) {
             if (l.tagId().equals(tagId)) return plugin.stats().get(id).trophies >= l.min();
         }
+        // Casino-Titel aus dem Chip-Shop gelten in allen Modi
+        if (plugin.chipShop() != null && plugin.chipShop().owns(id, "tag:" + tagId)) return true;
         return unlocked.getOrDefault(id, Set.of()).contains(tagId);
     }
 

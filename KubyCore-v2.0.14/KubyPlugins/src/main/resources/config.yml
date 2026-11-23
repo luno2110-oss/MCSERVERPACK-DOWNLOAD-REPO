@@ -364,6 +364,56 @@ casino:
     kino: true                  # zwei gleiche: Kino-Kamera auf die letzte Walze (Vignette, Herzschlag, Einrasten)
     hocker-abstand: 0.07        # Luft zwischen Hocker-Sitzfläche und Pultkante (Blöcke)
     tempo-wechsel: true         # jede Runde anderes Dreh-Tempo (schnell, normal, lang, einzeln, zusammen); false = immer normal
+  # Chip-Shop (v2.07): /casino shop, Knopf an der Kasse, Figur /casino npc chipshop. Kosmetik und Titel von hier
+  # gelten in allen Modi. Kategorien "id;Name;Icon;Stil;#Farbe;Zeile", Angebote "id;Name;Art;Wert;Preis;Icon;Zeile".
+  # Icon: hat:<hut>, particle:<partikel>, sprite:<JS_…>, item:<MATERIAL>. Arten: COSMETIC (Wert = ID aus cosmetics-casino),
+  # TAG (Wert = ID aus tags-casino), BOOSTER (cashback|sell|xp:Faktor:Minuten, mehrere mit +; Cashback = Trost bei
+  # Verlust im Casino), RANK (Wert = Rang aus jewelshop-survival.ranks, sonst jewelshop-smp.ranks; beim Aufstieg nur der
+  # Unterschied), COMMAND (Befehl als Konsole, %player%).
+  chip-shop:
+    ansage-ab: 500000           # Käufe ab so vielen Chips werden im Chat allen angesagt
+    kategorien:
+      - "kosmetik;Kosmetik;hat:chipkrone;violet;#CD89FC;Casino-Hüte, gibt es nur hier"
+      - "effekte;Effekte;particle:totem_of_undying;blue;#62CAFC;Spuren, Kill- und Teleport-Effekte"
+      - "booster;Booster;item:EMERALD;green;#5BED79;Cashback und Verkauf bis x3"
+      - "raenge;Ränge;sprite:JSS_RANK_NETHERIT;gold;#FCD45D;Von Platin bis Netherit"
+      - "titel;Titel;item:NAME_TAG;red;#FC7986;Zeig allen, wer du bist"
+    angebote:
+      kosmetik:
+        - "croupier;Croupier-Schirm;COSMETIC;c_croupier;30000;hat:croupier;Grüner Dealer-Schirm mit Goldrand"
+        - "goldzylinder;Goldener Zylinder;COSMETIC;c_goldzylinder;150000;hat:goldzylinder;Der Zylinder ganz in Gold"
+        - "wuerfel;Glückswürfel-Reif;COSMETIC;c_wuerfel;250000;hat:wuerfel;Zwei Würfel auf Federn"
+        - "pokerkarten;Pokerkarten-Reif;COSMETIC;c_pokerkarten;400000;hat:pokerkarten;Pik, Herz und Karo als Fächer"
+        - "chipkrone;Chip-Krone;COSMETIC;c_chipkrone;1500000;hat:chipkrone;Die Krone der Casino-Könige"
+      effekte:
+        - "goldtropfen;Spur: Goldtropfen;COSMETIC;c_goldtropfen;40000;particle:falling_honey;Goldene Tropfen hinter dir"
+        - "goldfunken;Spur: Goldfunken;COSMETIC;c_goldfunken;75000;particle:wax_on;Eine funkelnde Goldspur"
+        - "tp_glitzer;Teleport: Glitzer;COSMETIC;c_tp_glitzer;100000;particle:glow;Glitzerwolke bei jedem Teleport"
+        - "kill_gold;Kill: Goldregen;COSMETIC;c_kill_gold;150000;particle:wax_on;Goldregen über dem Besiegten"
+        - "gluecksfunken;Spur: Glücksfunken;COSMETIC;c_gluecksfunken;250000;particle:electric_spark;Knisternde Funken"
+        - "kill_feuerwerk;Kill: Feuerwerk;COSMETIC;c_kill_feuerwerk;400000;particle:firework;Feuerwerk bei jedem Sieg"
+        - "tp_jackpot;Teleport: Jackpot-Blitz;COSMETIC;c_tp_jackpot;750000;particle:electric_spark;Blitz und Funken beim Teleport"
+        - "jackpot_spur;Spur: Jackpot-Funken;COSMETIC;c_jackpot_spur;1500000;particle:totem_of_undying;Die Spur der Jackpot-Gewinner"
+      booster:
+        - "cb2_30;Cashback-Booster x2 (30 min);BOOSTER;cashback:2:30;30000;item:EMERALD;Doppelter Trost bei jedem verlorenen Einsatz"
+        - "sell2_30;Verkaufs-Booster x2 (30 min);BOOSTER;sell:2:30;60000;item:GOLD_INGOT;Doppelter Preis beim Verkaufen"
+        - "cb3_60;Cashback-Booster x3 (1 h);BOOSTER;cashback:3:60;150000;item:EMERALD_BLOCK;Dreifacher Trost für eine Stunde"
+        - "sell2_120;Verkaufs-Booster x2 (2 h);BOOSTER;sell:2:120;200000;item:GOLD_BLOCK;Zwei Stunden doppelter Verkauf"
+        - "mega;Mega-Booster (3 h);BOOSTER;cashback:3:180+sell:2:180;750000;item:NETHER_STAR;Cashback x3 und Verkauf x2 für drei Stunden"
+      raenge:
+        - "platin;Platin Rang;RANK;platin;300000;sprite:JSS_RANK_PLATIN;+1 Home · 30 Freundesplätze · Pet Ozelot"
+        - "diamant;Diamant Rang;RANK;diamant;600000;sprite:JSS_RANK_DIAMANT;+2 Homes · 40 Freundesplätze · Pet Eisbär"
+        - "smaragd;Smaragd Rang;RANK;smaragd;1000000;sprite:JSS_RANK_SMARAGD;+3 Homes · 50 Freundesplätze · Pet Laubdrache"
+        - "netherit;Netherit Rang;RANK;netherit;1500000;sprite:JSS_RANK_NETHERIT;+4 Homes · 75 Freundesplätze · Pet Magmadrache"
+      titel:
+        - "t_gluckspilz;Titel: Glückspilz;TAG;c_gluckspilz;30000;item:NAME_TAG;Für alle, die Glück haben"
+        - "t_zocker;Titel: Zocker;TAG;c_zocker;60000;item:NAME_TAG;Am Automaten zu Hause"
+        - "t_kartenhai;Titel: Kartenhai;TAG;c_kartenhai;120000;item:NAME_TAG;Blackjack und Poker im Griff"
+        - "t_pokerface;Titel: Pokerface;TAG;c_pokerface;200000;item:NAME_TAG;Niemand liest dein Gesicht"
+        - "t_highroller;Titel: High Roller;TAG;c_highroller;400000;item:NAME_TAG;Für die ganz großen Einsätze"
+        - "t_jackpotkoenig;Titel: Jackpot-König;TAG;c_jackpotkoenig;800000;item:NAME_TAG;Gold, Glanz und Glück"
+        - "t_casinolegende;Titel: Casino-Legende;TAG;c_casinolegende;1500000;item:NAME_TAG;Für die Legenden des Casinos"
+        - "t_kroesus;Titel: Krösus;TAG;c_kroesus;5000000;item:NAME_TAG;Der teuerste Titel auf Kuby"
   plinko:                       # Plinko-Bretter (/casino plinko automat [Größe]), Rückfluss je Risiko rund 96 %
     min-bet: 10
     max-bet: 5000               # eigener Einsatz bis hierhin (nach dem ersten Jackpot dreifach)
@@ -417,6 +467,17 @@ tags:
   - "booster;<#FF6BD6><b>ʙᴏᴏꜱᴛᴇʀ</b>"   # automatisch für Discord-Server-Booster (DiscordSRV, nach /verify und beim Einloggen)
   - "kuerbiskoenig;<#FF8A1E>Kürbiskönig"   # Halloween-Event (Candy-Shop)
   - "geisterjaeger;<#B080FF>Geisterjäger"  # Halloween-Event (Candy-Shop)
+
+# Casino-Titel (v2.07): nur aus dem Chip-Shop, gelten in allen Modi
+tags-casino:
+  - "c_gluckspilz;<#7FE08A>Glückspilz"
+  - "c_zocker;<#F2C94C>Zocker"
+  - "c_kartenhai;<#62CAFC>Kartenhai"
+  - "c_pokerface;<#C9D5EF>Pokerface"
+  - "c_highroller;<gradient:#F2C94C:#FF8A1E><b>High Roller</b></gradient>"
+  - "c_jackpotkoenig;<gradient:#FFE97A:#F2C230:#C9971C><b>Jackpot-König</b></gradient>"
+  - "c_casinolegende;<gradient:#FF5FA8:#9B5CFF:#38D4E8><b>Casino-Legende</b></gradient>"
+  - "c_kroesus;<gradient:#FFFFFF:#F2C94C:#FFFFFF><b>Krösus</b></gradient>"
 
 # Soundeffekte an/aus
 sfx:
@@ -582,6 +643,22 @@ cosmetics:
   - "tp_portal;TELEPORT;PORTAL;Portal;RARE;XP;4000;0"
   - "tp_dragon;TELEPORT;DRAGON_BREATH;Drachenatem;EPIC;JEWELS;30;0"
   - "tp_soul;TELEPORT;SOUL;Seelen-Wirbel;LEGENDARY;NONE;0;30"
+
+# Casino-Kosmetik (v2.07): nur aus dem Chip-Shop im Casino (Währung CASINO), in jedem Modus sichtbar und gültig
+cosmetics-casino:
+  - "c_croupier;HAT;croupier;Croupier-Schirm;RARE;CASINO;0;0"
+  - "c_goldzylinder;HAT;goldzylinder;Goldener Zylinder;EPIC;CASINO;0;0"
+  - "c_wuerfel;HAT;wuerfel;Glückswürfel-Reif;EPIC;CASINO;0;0"
+  - "c_pokerkarten;HAT;pokerkarten;Pokerkarten-Reif;EPIC;CASINO;0;0"
+  - "c_chipkrone;HAT;chipkrone;Chip-Krone;LEGENDARY;CASINO;0;0"
+  - "c_goldtropfen;TRAIL;FALLING_HONEY;Goldtropfen;RARE;CASINO;0;0"
+  - "c_goldfunken;TRAIL;WAX_ON;Goldfunken;RARE;CASINO;0;0"
+  - "c_gluecksfunken;TRAIL;ELECTRIC_SPARK;Glücksfunken;EPIC;CASINO;0;0"
+  - "c_jackpot_spur;TRAIL;TOTEM_OF_UNDYING;Jackpot-Funken;LEGENDARY;CASINO;0;0"
+  - "c_kill_gold;KILL;WAX_ON;Goldregen;RARE;CASINO;0;0"
+  - "c_kill_feuerwerk;KILL;FIREWORK;Feuerwerk;EPIC;CASINO;0;0"
+  - "c_tp_glitzer;TELEPORT;GLOW;Glitzer;RARE;CASINO;0;0"
+  - "c_tp_jackpot;TELEPORT;ELECTRIC_SPARK;Jackpot-Blitz;LEGENDARY;CASINO;0;0"
 
 cosmetics-modes:
   survival:

@@ -481,7 +481,7 @@ public final class JewelShopScreen {
     // Zeichnen
     // =================================================================================================================
 
-    static KitData.Box box(String style) {
+    public static KitData.Box box(String style) {
         try {
             return KitData.Box.valueOf("JS_" + style.toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException e) {

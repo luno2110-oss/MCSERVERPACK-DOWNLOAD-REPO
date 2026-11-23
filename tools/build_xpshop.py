@@ -91,10 +91,64 @@ def title():
     return _join([xp, crop(S), crop(H), crop(O), crop(P)])
 
 
+# Casino-Gold (Chip-Shop): dunkel -> hell, Lichter gelblicher
+GOLD = ["#5E3E0C", "#8A5A10", "#B27A14", "#D99A1C", "#F2C230", "#FADB5C", "#FFF0A0"]
+
+I = ["XXXX"] * 15
+
+
+def _recolor(im, ramp_hex, span=190):
+    out = im.copy()
+    px = out.load()
+    ramp = [_hex(h) for h in ramp_hex]
+    for y in range(out.height):
+        for x in range(out.width):
+            p = px[x, y]
+            if p[3] == 0:
+                continue
+            lum = (p[0] * 299 + p[1] * 587 + p[2] * 114) / 1000
+            if lum < 40:
+                continue
+            t = max(0.0, min(1.0, (lum - 60) / span))
+            px[x, y] = ramp[min(len(ramp) - 1, int(t * len(ramp)))][:3] + (p[3],)
+    return out
+
+
+def _c_from_o(src):
+    """C aus dem O: rechter Stamm in der Mitte offen, Schnittkanten mit Kontur."""
+    o = src.crop((O[0], 0, O[1], src.height)).copy()
+    px = o.load()
+    w, h = o.size
+    bright = lambda c: c[3] > 0 and sum(c[:3]) >= 40  # noqa: E731
+    cols = [x for x in range(w) if any(bright(px[x, y]) for y in range(h))]
+    right = sorted(cols)[-5:]
+    for y in range(5, 11):
+        for x in right + [max(right) + 1]:
+            if 0 <= x < w:
+                px[x, y] = (0, 0, 0, 0)
+    ink = (2, 1, 1, 255)
+    for y in range(h):
+        for x in range(w):
+            if px[x, y][3] != 0:
+                continue
+            if any(0 <= x + dx < w and 0 <= y + dy < h and bright(px[x + dx, y + dy])
+                   for dx in (-1, 0, 1) for dy in (-1, 0, 1)):
+                px[x, y] = ink
+    return o
+
+
+def chip_title():
+    """Schriftzug CHIP-SHOP: „CHIP-“ in Casino-Gold, „SHOP“ weiß wie beim Juwelenshop."""
+    src = Image.open(TITLE).convert("RGBA")
+    crop = lambda c: src.crop((c[0], 0, c[1], src.height))  # noqa: E731
+    chip = _recolor(_join([_c_from_o(src), crop(H), _glyph(I, src), crop(P), _glyph(DASH, src)]), GOLD, span=245)
+    return _join([chip, crop(S), crop(H), crop(O), crop(P)])
+
+
 def sprites():
     if not os.path.isfile(TITLE):
         return []
-    return [("xs_title", title())]
+    return [("xs_title", title()), ("xs_chip_title", chip_title())]
 
 
 if __name__ == "__main__":

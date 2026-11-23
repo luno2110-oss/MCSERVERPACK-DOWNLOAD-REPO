@@ -44,6 +44,8 @@ public final class CasinoNpc implements Listener {
         CRASH("Crash", "crash", TextColor.color(0xF2402E), KitData.SmallIcon.C_WHITE),
         MIA("Mia", "mia", null, null),
         LOSBUDE("Losbude", "losbude", null, KitData.SmallIcon.Y_CLOVER),
+        /** Chip-Shop (v2.07): besondere Kosmetik, Effekte, Booster, Ränge und Titel für Chips. */
+        CHIPSHOP("Chip-Shop", "chipshop", TextColor.color(0xF2C94C), KitData.SmallIcon.C_PINK),
         /** Jukebox im Stil der alten Wurlitzer: Rechtsklick öffnet das Musik-Menü (/music). */
         MUSIK("Jukebox", "musik", TextColor.color(0xFFB23A), null);
 
@@ -93,6 +95,7 @@ public final class CasinoNpc implements Listener {
             case CROUPIER -> mannequin(loc, "Croupier", "croupier");
             // geladener Creeper (blaue Aura) wie im Clip; ohne KI zündet er nie
             case MIA -> mannequin(loc, "Mia", "mia");
+            case CHIPSHOP -> mannequin(loc, "Chip-Shop", "croupier");
             case LOSBUDE -> mannequin(loc, "Losbude", "croupier");
             case CRASH -> loc.getWorld().spawn(loc, org.bukkit.entity.Creeper.class, c -> {
                 c.setPowered(true);
@@ -221,6 +224,12 @@ public final class CasinoNpc implements Listener {
                     .append(Component.text("Lieder wünschen, Lautstärke, Radio", light)).append(Component.newline())
                     .append(Component.text("➜ ", NamedTextColor.YELLOW)).append(Component.text("Rechtsklick", light))
                     .build();
+            case CHIPSHOP -> Component.text()
+                    .append(Component.text("Hüte, Effekte, Ränge, Titel", light)).append(Component.newline())
+                    .append(Component.text("für deine ", light)).append(Component.text("Chips", TextColor.color(0xF6E23A)))
+                    .append(Component.newline())
+                    .append(Component.text("➜ ", NamedTextColor.YELLOW)).append(Component.text("Rechtsklick", light))
+                    .build();
             case CROUPIER, CRASH -> Component.text()
                     .append(Component.text("Einsatz setzen", light)).append(Component.newline())
                     .append(Component.text("➜ ", NamedTextColor.YELLOW)).append(Component.text("Rechtsklick", light))
@@ -325,6 +334,7 @@ public final class CasinoNpc implements Listener {
             case CRASH -> p -> plugin.crash().open(p);
             case MIA, MUSIK -> p -> plugin.casinoMusic().openMenu(p);
             case LOSBUDE -> p -> Losbude.open(plugin, p);
+            case CHIPSHOP -> p -> plugin.chipShop().open(p);
         };
     }
 

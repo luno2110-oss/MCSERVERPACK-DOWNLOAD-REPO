@@ -103,6 +103,7 @@ public final class CasinoCommand implements CommandExecutor, org.bukkit.command.
             }
             case "jackpot" -> jackpot(p, args);
             case "kasse" -> kasse(p);
+            case "shop", "chipshop", "chip-shop" -> plugin.chipShop().open(p);
             case "rundgang", "tour" -> {
                 if (!plugin.casinoTour().play(p)) Msg.send(p, "<red>Hier gibt es nichts zu zeigen – stell dich ins Casino (im Umkreis von 90 Blöcken).");
             }
