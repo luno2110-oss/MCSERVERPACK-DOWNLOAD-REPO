@@ -606,11 +606,13 @@ public final class LoadTestCommand implements CommandExecutor {
         }
         camRennen = new Location(w, gx - 14.0, gy + 0.9 + 1.95 * 0.7, gz + 8.0);
         camSlotsKlein = new Location(w, gx - 3.5, gy, gz - 7.5);
-        // Glücksrad (v2.07): Bühne an der Ostkante (gut 7 breit, Rad 5,4 hoch), dunkle Wand dahinter, Blick nach Westen
-        for (int z = gz - 4; z <= gz + 7; z++) {
-            for (int y = 0; y < 7; y++) w.getBlockAt(gx + 16, (int) gy + y, z).setType(org.bukkit.Material.POLISHED_BLACKSTONE_BRICKS, false);
+        // Glücksrad (v2.07): Bühne östlich hinter dem Roulette auf eigener Fläche (gut 7 breit, Rad 5,4 hoch), dunkle Wand
+        // dahinter, Vorderseite nach Westen; die Kamera steht zwischen Roulette und Bühne
+        flatten(w, gx + 16, gx + 27, gz - 6, gz + 9, (int) gy);
+        for (int z = gz - 5; z <= gz + 8; z++) {
+            for (int y = 0; y < 7; y++) w.getBlockAt(gx + 25, (int) gy + y, z).setType(org.bukkit.Material.POLISHED_BLACKSTONE_BRICKS, false);
         }
-        camRad = new Location(w, gx + 14.2, gy, gz + 1.5);
+        camRad = new Location(w, gx + 21.5, gy, gz + 1.5);
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             de.kuby.kubyplugins.casino.BlackjackGame bj = plugin.blackjack().testTable(bjAt, 0f);
             // die anderen Tisch-Farben daneben (rot, violett) – für die Bilder aus dem echten Client
