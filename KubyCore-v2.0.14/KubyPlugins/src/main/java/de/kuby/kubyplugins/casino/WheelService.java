@@ -612,8 +612,9 @@ public final class WheelService implements Listener {
             boolean[] sg = new boolean[WheelStage.SIGN_BULBS];
             for (int i = 0; i < sg.length; i++) sg[i] = (i + s.t / 4) % 2 == 0;
             st.signBulbs(sg, s.gold);
-            st.lights(10 + (s.t / 2) % 6);
         }
+        // echtes Licht pulsiert mit (Lichtblöcke; seltener, damit der Server nicht ständig Licht neu rechnet)
+        if (s.t % 6 == 0) st.lights(11 + (s.t / 6) % 5);
         // Scheinwerfer: Lichtstrahl aus Partikeln aufs Rad
         if (s.t % 4 == 0) beams(st, s.gold);
         // Spannung kurz vor dem Halt: Herzschlag
@@ -654,7 +655,7 @@ public final class WheelService implements Listener {
                 st.rimBulbs(lit, b.bigWin);
                 st.platBulbs(lit, b.bigWin);
                 st.signBulbs(lit, b.bigWin);
-                st.lights(on ? 15 : 9);
+                if (b.winBlink % 8 == 0) st.lights(on ? 15 : 10);
             }
             if (b.bigWin && b.winBlink % 10 == 0) confetti(st, 14);
             if (b.winBlink == 0) {

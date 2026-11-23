@@ -611,6 +611,18 @@ final class SelfTest {
                 canvas.accept("Chip-Shop " + cc.id() + " reich", () -> de.kuby.kubyplugins.casino.ChipShop.canvas(
                         de.kuby.kubyplugins.casino.ChipShop.sample(plugin.getConfig(), cc.id(), 9_999_999_999L), cha));
             }
+            // Glücksrad-Fenster (v2.07): Casino und SMP, bereit, Wartezeit, Gold-Dreh, nach dem Gewinn
+            de.kuby.kubyplugins.casino.WheelScreen.Actions wha = new de.kuby.kubyplugins.casino.WheelScreen.Actions() {
+                public Consumer<Player> spin() { return NO; }
+                public Consumer<Player> refresh() { return NO; }
+                public Consumer<Player> casino() { return NO; }
+            };
+            for (String wheel : new String[]{"casino", "smp"}) {
+                for (String state : new String[]{"ready", "wait", "gold", "win"}) {
+                    canvas.accept("Glücksrad " + wheel + " " + state, () -> de.kuby.kubyplugins.casino.WheelScreen.canvas(
+                            de.kuby.kubyplugins.casino.WheelScreen.sample(plugin.getConfig(), wheel, state), wha));
+                }
+            }
             canvas.accept("XP-Shop leer", () -> de.kuby.kubyplugins.gui.XpShopScreen.canvas(
                     de.kuby.kubyplugins.gui.XpShopScreen.sample(plugin.getConfig(), "keinmodus", null, 0, false), xa));
             List<de.kuby.kubyplugins.gui.ExtraScreens.Stock> st = new ArrayList<>();
