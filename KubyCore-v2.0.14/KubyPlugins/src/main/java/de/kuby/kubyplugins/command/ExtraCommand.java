@@ -47,6 +47,7 @@ public final class ExtraCommand implements CommandExecutor {
             case "xpshop" -> new de.kuby.kubyplugins.gui.ExtraScreens(plugin).xpShop(p);
             case "booster" -> booster(p);
             case "battlepass", "skypass" -> plugin.battlepassScreen().open(p);
+            case "gluecksrad" -> plugin.wheel().info(p);
             case "verify" -> verify(p);
             case "enderchest" -> p.openInventory(plugin.enderchests().open(p));
             case "kristaltrade" -> new KristalTradeMenu(plugin).open(p);

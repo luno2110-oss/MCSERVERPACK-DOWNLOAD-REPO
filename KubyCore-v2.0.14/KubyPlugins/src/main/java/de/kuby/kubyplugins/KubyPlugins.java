@@ -145,6 +145,7 @@ public final class KubyPlugins extends JavaPlugin {
     private de.kuby.kubyplugins.casino.SlotsService slots;
     private de.kuby.kubyplugins.casino.CrashGame crash;
     private de.kuby.kubyplugins.casino.PlinkoService plinko;
+    private de.kuby.kubyplugins.casino.WheelService wheel;
     private de.kuby.kubyplugins.casino.RaceService race;
     private de.kuby.kubyplugins.casino.CasinoHolos casinoHolos;
     private CasinoLog casinoLog;
@@ -276,6 +277,7 @@ public final class KubyPlugins extends JavaPlugin {
         slots = new de.kuby.kubyplugins.casino.SlotsService(this);
         crash = new de.kuby.kubyplugins.casino.CrashGame(this);
         plinko = new de.kuby.kubyplugins.casino.PlinkoService(this);
+        wheel = new de.kuby.kubyplugins.casino.WheelService(this);
         race = new de.kuby.kubyplugins.casino.RaceService(this);
         casinoHolos = new de.kuby.kubyplugins.casino.CasinoHolos(this);
         edit = new EditModeService(this);
@@ -479,7 +481,7 @@ public final class KubyPlugins extends JavaPlugin {
         setAll(crash, "cashout");
         setAll(new AdminCommand(this), "kadmin");
         setAll(new HelpCommand(this), "befehle", "menu");
-        setAll(new ExtraCommand(this), "dailypot", "trade", "tags", "rtpqueue", "meta", "booster", "xpshop", "battlepass", "skypass", "turnier", "verify", "versichern", "enderchest", "kristaltrade", "investments", "quizvote", "totenkiste", "kits", "hub", "tpa", "tpahere", "tpaccept", "tpadeny", "spielzeit", "playtime");
+        setAll(new ExtraCommand(this), "dailypot", "trade", "tags", "rtpqueue", "meta", "booster", "xpshop", "battlepass", "skypass", "gluecksrad", "turnier", "verify", "versichern", "enderchest", "kristaltrade", "investments", "quizvote", "totenkiste", "kits", "hub", "tpa", "tpahere", "tpaccept", "tpadeny", "spielzeit", "playtime");
         setAll(new KpCommand(this), "kp");
         backups = new de.kuby.kubyplugins.service.BackupService(this);
         alts = new de.kuby.kubyplugins.service.AltService(this);
@@ -540,6 +542,7 @@ public final class KubyPlugins extends JavaPlugin {
         getServer().getPluginManager().registerEvents(slots, this);
         getServer().getPluginManager().registerEvents(crash, this);
         getServer().getPluginManager().registerEvents(plinko, this);
+        getServer().getPluginManager().registerEvents(wheel, this);
         getServer().getPluginManager().registerEvents(race, this);
         getServer().getPluginManager().registerEvents(casinoHolos, this);
         getServer().getPluginManager().registerEvents(new CasinoVipListener(this), this);
@@ -554,6 +557,7 @@ public final class KubyPlugins extends JavaPlugin {
             slots.respawn();
             crash.respawn();
             plinko.respawn();
+            wheel.respawn();
             race.respawn();
             casinoHolos.respawnAll();
             poker.respawn();
@@ -604,6 +608,7 @@ public final class KubyPlugins extends JavaPlugin {
         slots.shutdown();
         crash.shutdown();
         plinko.shutdown();
+        wheel.shutdown();
         race.shutdown();
         casinoHolos.shutdown();
         if (cookieStation != null) cookieStation.despawn();
@@ -1018,6 +1023,9 @@ public final class KubyPlugins extends JavaPlugin {
     public de.kuby.kubyplugins.casino.SlotsService slots() { return slots; }
     public de.kuby.kubyplugins.casino.CrashGame crash() { return crash; }
     public de.kuby.kubyplugins.casino.PlinkoService plinko() { return plinko; }
+
+    /** Glücksrad im Casino (v2.07): alle 6 Stunden ein Gratis-Dreh. */
+    public de.kuby.kubyplugins.casino.WheelService wheel() { return wheel; }
     public de.kuby.kubyplugins.casino.RaceService race() { return race; }
     public de.kuby.kubyplugins.casino.CasinoHolos casinoHolos() { return casinoHolos; }
     public CasinoLog casinoLog() { return casinoLog; }

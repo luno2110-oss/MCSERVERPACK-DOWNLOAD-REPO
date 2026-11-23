@@ -181,6 +181,9 @@ commands:
     description: "Battlepass mit 100 Stufen öffnen"
   skypass:
     description: "Skypass (Skyblock) mit 100 Stufen öffnen"
+  gluecksrad:
+    description: "Glücksrad im Casino: wann du wieder gratis drehen darfst"
+    aliases: [wheel]
   cosmetics:
     description: "Hüte, Spuren und Effekte auswählen"
     usage: "/cosmetics [give <Spieler> <ID>]"

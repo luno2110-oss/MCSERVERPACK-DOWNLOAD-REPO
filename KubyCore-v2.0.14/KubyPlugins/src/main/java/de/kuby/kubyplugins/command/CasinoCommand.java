@@ -123,6 +123,7 @@ public final class CasinoCommand implements CommandExecutor, org.bukkit.command.
             case "automat" -> Msg.send(p, "<gray>Slot-Automaten baust du jetzt mit <white>/casino slots automat [Breite]</white>.");
             case "slots" -> plugin.slots().command(p, args);
             case "plinko" -> plugin.plinko().command(p, args);
+            case "gluecksrad", "glücksrad", "rad" -> plugin.wheel().command(p, args);
             case "rennen", "pferderennen" -> plugin.race().command(p, args);
             case "crash" -> plugin.crash().command(p, args);
             case "holo" -> plugin.casinoHolos().command(p, args);
@@ -281,7 +282,7 @@ public final class CasinoCommand implements CommandExecutor, org.bukkit.command.
         java.util.List<String> opts = new java.util.ArrayList<>();
         if (args.length == 1) {
             opts.addAll(java.util.List.of("status", "kaufen", "verkaufen", "waehrung", "serie", "jackpot", "regeln", "stats", "rundgang",
-                    "cashout", "hilfe", "plinko", "rennen"));
+                    "cashout", "hilfe", "plinko", "rennen", "gluecksrad", "shop"));
             if (admin) opts.addAll(java.util.List.of("blackjack", "poker-tisch", "roulette-tisch", "automat", "slots", "crash", "npc",
                     "holo", "kasse", "barkeeper", "admin", "einrichten"));
         } else if (admin && args.length == 2 && args[0].equalsIgnoreCase("rennen")) {

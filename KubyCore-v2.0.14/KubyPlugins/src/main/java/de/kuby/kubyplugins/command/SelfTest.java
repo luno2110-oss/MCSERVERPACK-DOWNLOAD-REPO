@@ -903,6 +903,21 @@ final class SelfTest {
             fails.add("Plinko: " + t);
         }
 
+        // Glücksrad (v2.07): 12 gültige Felder, Ziehung nach Gewicht, jede geplante Drehung landet auf dem gezogenen Feld,
+        // läuft nur vorwärts und wird langsamer
+        try {
+            var wf = de.kuby.kubyplugins.casino.Wheel.fields(plugin.getConfig());
+            List<String> we = new ArrayList<>(de.kuby.kubyplugins.casino.Wheel.selfCheck(wf));
+            we.addAll(de.kuby.kubyplugins.casino.WheelService.checkFields(plugin));
+            if (we.isEmpty()) ok[0]++;
+            for (String e : we) fails.add("Glücksrad: " + e);
+            plugin.getLogger().info("[Glücksrad] " + (we.isEmpty() ? "ok" : we.size() + " Fehler") + ", im Schnitt "
+                    + Math.round(de.kuby.kubyplugins.casino.Wheel.expectedChips(wf)) + " Chips je Dreh, Hauptgewinn Feld "
+                    + de.kuby.kubyplugins.casino.Wheel.jackpot(wf));
+        } catch (Throwable t) {
+            fails.add("Glücksrad: " + t);
+        }
+
         // Slot-Tempo (v2.06): jede Runde anders lang, Walzen rasten trotzdem genau und in Reihenfolge ein
         try {
             List<String> sp = de.kuby.kubyplugins.casino.SlotSpin.selfCheck();

@@ -235,7 +235,10 @@ public final class RaceBoard {
             horses[lane] = center.getWorld().spawn(at(horseU(0), v + 0.02, 0.11 + 0.004 * lane), ItemDisplay.class, e -> {
                 e.setItemStack(model("rn_h" + ln + "_1"));
                 e.setBrightness(new Display.Brightness(15, 15));
-                e.setTransformation(new Transformation(new Vector3f(), face(), new Vector3f(s, s, s), new Quaternionf()));
+                // flaches Bild (item/generated): um 180 Grad gedreht wie die Slot-Symbole, sonst sieht man es von hinten
+                // (gespiegelt) und die Pferde laufen rückwärts zum Ziel (Meldung des Besitzers, v2.07)
+                e.setTransformation(new Transformation(new Vector3f(), new Quaternionf(face()).rotateY((float) Math.PI),
+                        new Vector3f(s, s, s), new Quaternionf()));
                 mark(e, "horse");
             });
             frame[lane] = 1;

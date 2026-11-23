@@ -254,6 +254,19 @@ public final class Scene {
                     Mock.runLater();
                 }
             }
+            case "gluecksrad" -> {
+                // Glücksrad (v2.07) an der Wand bei z = 0, Blick nach +z; args[2] = Winkel der Scheibe (Grad)
+                double ang = args.length > 2 ? Double.parseDouble(args[2]) : 0;
+                de.kuby.kubyplugins.casino.WheelBoard b = new de.kuby.kubyplugins.casino.WheelBoard("g1",
+                        new Location(w, 0.5, 2.6, 0.0), 0f, 1.0, tag, click);
+                b.build();
+                b.spinTo(ang, 0);
+                b.prize(de.kuby.kubyplugins.casino.WheelBoard.prizeText("2.500 Chips", false));
+                b.info(Component.text("Rechtsklick aufs Rad · /gluecksrad zeigt deine Wartezeit", NamedTextColor.GRAY));
+                boolean[] lit = new boolean[de.kuby.kubyplugins.casino.WheelBoard.BULBS];
+                for (int i = 0; i < lit.length; i += 2) lit[i] = true;
+                b.bulbs(lit);
+            }
             case "rennen" -> {
                 // Pferderennen-Bildschirm (v2.05) an der Wand bei z = 0, Blick nach +z; args[2] = Tick im Rennen (-1 = Start)
                 int at = args.length > 2 ? Integer.parseInt(args[2]) : 200;

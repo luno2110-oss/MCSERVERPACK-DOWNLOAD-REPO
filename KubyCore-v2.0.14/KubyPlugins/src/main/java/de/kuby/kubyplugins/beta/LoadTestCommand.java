@@ -224,6 +224,14 @@ public final class LoadTestCommand implements CommandExecutor {
                     }
                 }
             }
+            case "gluecksrad" -> {
+                // /kubytest gluecksrad <Spieler>: Kamera-Spieler dreht das Test-Rad (ohne Wartezeit)
+                Player wp = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : sender instanceof Player sp ? sp : null;
+                if (wp != null) {
+                    String err = plugin.wheel().testSpin(wp, "krad");
+                    plugin.getLogger().info("[Glücksrad-Test] Dreh: " + (err == null ? "läuft" : err));
+                }
+            }
             case "roulette" -> {
                 // /kubytest roulette <Spieler>: Spieler setzt (Rot + eine Zahl), Countdown springt auf 1 – ein ganzer Wurf
                 Player rp = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : sender instanceof Player sp ? sp : null;
@@ -314,7 +322,8 @@ public final class LoadTestCommand implements CommandExecutor {
         p.teleport(back);
         plugin.getLogger().info("[Inventar-Test] " + (ok ? "OK" : "FEHLER") + " " + String.join(" | ", res));
     }
-    private static Location camBj, camRl, camPk, camSlots, camSlotsKlein, camPlinko, camRennen, camCrash, camBjRot, camBjVio, camPkRot, camPkVio;
+    private static Location camBj, camRl, camPk, camSlots, camSlotsKlein, camPlinko, camRennen, camCrash, camBjRot, camBjVio, camPkRot, camPkVio,
+            camRad;
 
     /** Kamera-Punkte für Screenshots aus dem echten Client (CI "Client-Bilder"). */
     private void camera(Player p, String where) {
@@ -351,6 +360,12 @@ public final class LoadTestCommand implements CommandExecutor {
                 if (camRennen == null) return;
                 from = camRennen.clone().add(2.3, -0.7, -1.2);
                 to = camRennen.clone().add(0, -0.1, -1.6);
+            }
+            case "gluecksrad" -> {
+                // Glücksrad (v2.07) an der Ostwand von vorn, ganzes Rad mit Schriftzug und Gewinn-Tafel im Bild
+                if (camRad == null) return;
+                from = camRad.clone().add(-5.0, -0.6, 0.4);
+                to = camRad.clone().add(0, 0.05, 0);
             }
             case "plinko" -> {
                 // Plinko-Brett (v2.05) von vorn aus Spielerhöhe, ganzes Brett im Bild
@@ -567,6 +582,11 @@ public final class LoadTestCommand implements CommandExecutor {
         }
         camRennen = new Location(w, gx - 14.0, gy + 0.9 + 1.95 * 0.7, gz + 8.0);
         camSlotsKlein = new Location(w, gx - 3.5, gy, gz - 7.5);
+        // Glücksrad (v2.07): Wand an der Ostkante (9 breit, 6 hoch), Rad davor, Blick nach Westen
+        for (int z = gz - 3; z <= gz + 5; z++) {
+            for (int y = 0; y < 6; y++) w.getBlockAt(gx + 16, (int) gy + y, z).setType(org.bukkit.Material.POLISHED_BLACKSTONE_BRICKS, false);
+        }
+        camRad = new Location(w, gx + 16.0, gy + 0.5 + 2.35 * 0.9, gz + 1.5);
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             de.kuby.kubyplugins.casino.BlackjackGame bj = plugin.blackjack().testTable(bjAt, 0f);
             // die anderen Tisch-Farben daneben (rot, violett) – für die Bilder aus dem echten Client
@@ -593,6 +613,7 @@ public final class LoadTestCommand implements CommandExecutor {
                     1.35, de.kuby.kubyplugins.casino.SlotTheme.OZEAN);
             plugin.plinko().testBoard("kplinko", camPlinko, 0f, 0.8);
             plugin.race().testBoard(camRennen, -90f, 0.7);
+            plugin.wheel().testBoard("krad", camRad, 90f, 0.9);
             int bjSeat = 0, pkSeat = 0;
             for (int i = 0; i < players.size(); i++) {
                 Player p = players.get(i);
@@ -1003,6 +1024,19 @@ public final class LoadTestCommand implements CommandExecutor {
             check("Plinko: Kugel liegt im Fach und ist abgerechnet (Auszahlung = Einsatz × Faktor)", po != null && known && po.payout() >= po.gross(),
                     po == null ? "keine Abrechnung nach 6 s" : "Einsatz " + po.stake() + ", Spiel zahlt " + po.gross() + ", ausgezahlt " + po.payout());
         }, 120L);
+        // --- Glücksrad (v2.07): Dreh ohne Wartezeit am Test-Rad; das Rad hält auf dem gezogenen Feld, Gewinn kommt an ---
+        plugin.wheel().testLast = null;
+        long chipsBefore = plugin.casino().chips(p.getUniqueId());
+        String werr = plugin.wheel().testSpin(p, "krad");
+        check("Glücksrad: Dreh am Test-Rad gestartet", werr == null, werr);
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            String wl = plugin.wheel().testLast;
+            String[] wp = wl == null ? new String[0] : wl.split(";");
+            boolean same = wp.length == 4 && wp[0].equals(wp[1]);
+            check("Glücksrad: Rad hält auf dem gezogenen Feld, Gewinn ausgezahlt", same && "ok".equals(wp[3]),
+                    wl == null ? "kein Ergebnis nach 8 s" : "gezogen Feld " + wp[0] + ", am Zeiger Feld " + wp[1] + ", Gewinn " + wp[2] + " (" + wp[3]
+                            + "), Chips vorher " + chipsBefore + ", nachher " + plugin.casino().chips(p.getUniqueId()));
+        }, 160L);
         // Abrechnungs-Protokoll (testLast) erst nach der Rennprüfung abschalten: das Rennen wird nach gut 20 s abgerechnet
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> plugin.casinoPlay().testLog = false, 540L);
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
