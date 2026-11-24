@@ -275,6 +275,23 @@ public final class BlackjackTable {
         });
     }
 
+    /**
+     * Stücke auf dem Bogen der Dealer-Seite: Kreis um (Mittelpunkt cz vor/hinter der Grundlinie, Radius dist), von -phiEnd
+     * bis phiEnd, Unterkante bottom, Höhe h, Tiefe d (quer zum Bogen); jedes zweite Stück 1,2 mm höher.
+     */
+    private void edgeArc(Vector3f f0, Vector3f r0, double rho, double cz, double phiEnd, int segs, double dist, double bottom,
+                         float h, float d, String material, float extra) {
+        float len = (float) (2 * dist * Math.tan(phiEnd / segs) * 1.04) + extra;
+        for (int i = 0; i < segs; i++) {
+            double phi = -phiEnd + 2 * phiEnd * (i + 0.5) / segs;
+            double px = dist * Math.sin(phi), pz = cz + dist * Math.cos(phi);
+            Vector3f radial = new Vector3f((float) (f0.x * Math.cos(phi) + r0.x * Math.sin(phi)), 0,
+                    (float) (f0.z * Math.cos(phi) + r0.z * Math.sin(phi)));
+            Location c = origin.clone().add(r0.x * px + f0.x * pz, bottom + h / 2 + ZF * (i % 2), r0.z * px + f0.z * pz);
+            box(c, angleOf(radial), len, h, d, material);
+        }
+    }
+
     private ItemDisplay item(Location at, String model, Quaternionf rot, float scale, String role) {
         return at.getWorld().spawn(at, ItemDisplay.class, e -> {
             e.setItemStack(model(model));
@@ -312,25 +329,18 @@ public final class BlackjackTable {
             float baseLen = (float) (2 * (radius - 0.1) * Math.tan(Math.toRadians(step / 2)) * 1.03);
             box(at(d, radius - 0.16, (FELT_Y - 0.02) / 2 + zf), ang, baseLen, (float) (FELT_Y - 0.02), 0.2f, "hd_cream");
         }
-        // Dealer-Seite: gebogene Holzkante mit Goldleiste, Segmente auf dem Bogen (Mittelpunkt hinter dem Dealer),
-        // Nachbarstücke überlappen sich: jedes zweite 1,2 mm höher
+        // Dealer-Seite als Bogen, aufgebaut wie der Rest des Tischs: unten Creme-Sockel (5 cm zurückgesetzt), oben eine
+        // schmale Holzleiste mit Goldstreifen, die an den Ecken unter dem Polster endet (vorher ragte eine hohe Holzwand
+        // an den Ecken heraus). Stücke auf dem Bogen (Mittelpunkt hinter dem Dealer), jedes zweite 1,2 mm höher.
         Vector3f f0 = fwd(), r0 = right();
         double rho = BULGE_RHO * radius, cz = BULGE_YC * radius;
-        double phiEnd = Math.asin(Math.min(1, (radius + 0.06) / rho));
-        int segs = 14;
-        float segLen = (float) (2 * rho * Math.tan(phiEnd / segs) * 1.04);
-        for (int i = 0; i < segs; i++) {
-            double phi = -phiEnd + 2 * phiEnd * (i + 0.5) / segs;
-            double px = rho * Math.sin(phi), pz = cz + rho * Math.cos(phi);
-            Vector3f radial = new Vector3f((float) (f0.x * Math.cos(phi) + r0.x * Math.sin(phi)), 0,
-                    (float) (f0.z * Math.cos(phi) + r0.z * Math.sin(phi)));
-            Location c = origin.clone().add(r0.x * px + f0.x * pz, 0, r0.z * px + f0.z * pz);
-            double zf = ZF * (i % 2);
-            // 4 mm über dem Boden (sonst gleiche Unterseite wie der Sockel), Goldleiste 3 mm länger (Stirnseiten nicht bündig)
-            float hh = (float) (FELT_Y + 0.05 - 0.004);
-            box(c.clone().add(0, 0.004 + hh / 2 + zf, 0), angleOf(radial), segLen, hh, 0.14f, "rv_wood");
-            box(c.clone().add(0, FELT_Y + 0.055 + zf, 0), angleOf(radial), segLen + 0.006f, 0.012f, 0.15f, "hd_gold");
-        }
+        double rimInner = radius * F_RIM_IN;
+        edgeArc(f0, r0, rho, cz, Math.asin(Math.min(1, (radius - 0.06) / rho)), 16, rho + 0.05, 0.004,
+                (float) (FELT_Y - 0.032), 0.14f, "hd_cream", 0f);   // Oberkante 8 mm unter dem Sockelring (kein Z-Fighting)
+        edgeArc(f0, r0, rho, cz, Math.asin(Math.min(1, (rimInner + 0.03) / rho)), 14, rho, FELT_Y - 0.02,
+                0.07f, 0.14f, "rv_wood", 0f);
+        edgeArc(f0, r0, rho, cz, Math.asin(Math.min(1, (rimInner + 0.03) / rho)), 14, rho, FELT_Y + 0.05,
+                0.012f, 0.15f, "hd_gold", 0.006f);
         for (int s = 0; s < SEATS; s++) stool(s);
         // Dealer
         Location dealerAt = at(fwd(), edgeAt(0) - 0.6, 0);

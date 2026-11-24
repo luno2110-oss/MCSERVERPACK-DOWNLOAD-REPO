@@ -134,6 +134,8 @@ def felt_blackjack(w=96, FELT=FELT):
             px[x, y] = FELT[3] if q < 0.42 else FELT[2] if q < 0.74 else FELT[1]
     for y in range(h):
         for x in range(w):
+            if px[x, y][3] == 0:
+                continue                  # nur auf dem Filz (nicht im Bogen an der Dealer-Seite, nicht außerhalb)
             q = math.hypot(x + 0.5 - R, y + 0.5) / R
             if abs(q - F_LINE) < 0.6 / R:
                 px[x, y] = GOLD[3]
@@ -145,6 +147,8 @@ def felt_blackjack(w=96, FELT=FELT):
         br = F_BET_R * R + 0.4
         for y in range(h):
             for x in range(w):
+                if px[x, y][3] == 0:
+                    continue
                 d = math.hypot(x + 0.5 - bx, y + 0.5 - by)
                 if d <= br - 1:
                     px[x, y] = FELT[4]
