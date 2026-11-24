@@ -30,7 +30,7 @@ import java.util.List;
  * Ebenen wie die Generator-Grafiken: Bühne mit Stufe und Lichterkette, Ständer, das Rad (Scheibe mit Feldern, Rückseite,
  * dicker Goldrand mit 24 Lämpchen, 12 Stifte auf den Feldgrenzen, Nabe), oben die Nadel an ihrem Gelenk (die Stifte
  * drücken sie beim Vorbeilaufen weg, sie schnappt zurück), darüber das Schild „GLÜCKSRAD“ mit Lichterrahmen, vorn zwei
- * Scheinwerfer, rechts das Podest mit dem Hauptgewinn, links die Tafel mit den letzten Gewinnern.
+ * Scheinwerfer, rechts das Podest mit dem Hauptgewinn (die Tafel „Letzte Gewinner“ links ist auf Wunsch weg).
  *
  * <p>Koordinaten (mal {@code size}): u rechts, v hoch, f nach vorn (zu den Zuschauern); center = Mitte der Bühne am
  * Boden. Flache Bilder werden wie die Slot-Symbole um 180 Grad gedreht (sonst sähe man sie von hinten, gespiegelt).
@@ -65,7 +65,6 @@ public final class WheelStage {
     private final ItemDisplay[] spotLens = new ItemDisplay[2];
     private TextDisplay prize;
     private TextDisplay info;
-    private TextDisplay winners;
     private TextDisplay jackpotText;
     private final List<Location> lights = new ArrayList<>();
     private double angle;
@@ -252,7 +251,14 @@ public final class WheelStage {
                 mark(e, "peg");
             });
         }
-        sprite(0, HC, 0.15, 0.9, "wh_hub", flat(0), 15);
+        // Nabe in 3D (achteckiger Goldkörper, Kappe mit Stern, Edelstein-Knopf), steht still
+        float hk = (float) (1.05 * size);
+        center.getWorld().spawn(at(0, HC, 0.12), ItemDisplay.class, e -> {
+            e.setItemStack(model("wh_hub3d"));
+            e.setBrightness(new Display.Brightness(15, 15));
+            e.setTransformation(new Transformation(new Vector3f(), face(), new Vector3f(hk, hk, hk), new Quaternionf()));
+            mark(e, "static");
+        });
         // Nadel am Gelenk über dem Rad, Halterung
         box(0, HC + HINGE + 0.12, -0.05, 0.42, 0.5, 0.3, 0, "hd_plinko_dark");
         box(0, HC + HINGE, 0.12, 0.2, 0.2, 0.12, Math.PI / 4, "hd_gold_lit");
@@ -274,7 +280,8 @@ public final class WheelStage {
             double u = -1.7 + j * 3.4 / (SIGN_BULBS / 2 - 1);
             signBulbs[i] = box(u, sv + (top ? 0.37 : -0.37), 0.06, 0.08, 0.08, 0.02, Math.PI / 4, "hd_gold");
         }
-        text(0, sv - 0.14, 0.03, 1.0f, 400, CrashScreen.logo("GLÜCKSRAD", LOGO));
+        // Schriftzug als Bild (Text in der Titelschrift rutschte in manchen Clients zur Seite)
+        sprite(0, sv + 0.02, 0.03, 3.62, "wh_logo", flat(0), 15);
         // Scheinwerfer vorn links und rechts
         for (int s = -1; s <= 1; s += 2) {
             double u = s * (PLAT_W / 2 - 0.25);
@@ -297,13 +304,6 @@ public final class WheelStage {
         });
         jackpotText = text(pu, 1.95, 0.4, 0.42f, 150, Component.text("HAUPTGEWINN", TextColor.color(0xFFE870), TextDecoration.BOLD)
                 .appendNewline().append(jackpotName));
-        // Tafel mit den letzten Gewinnern (links)
-        double wu = -PLAT_W / 2 - 0.85;
-        box(wu, 0.9, 0.4, 0.1, 1.8, 0.1, 0, "hd_plinko_dark");
-        box(wu, 1.75, 0.45, 1.3, 1.05, 0.06, 0, "hd_plinko_dark");
-        box(wu, 2.29, 0.48, 1.36 - 2 * ZF, 0.04, 0.05, 0, "hd_gold");
-        box(wu, 1.21, 0.48, 1.36 - 2 * ZF, 0.04, 0.05, 0, "hd_gold");
-        winners = text(wu, 1.3, 0.49, 0.33f, 150, Component.empty());
         // Gewinn-Anzeige und Info vor der Bühne
         prize = text(0, PLAT_H + 0.5, PLAT_D / 2 - 0.1, 0.62f, 300, Component.empty());
         info = text(0, PLAT_H + 0.2, PLAT_D / 2 - 0.1, 0.34f, 400, Component.empty());
@@ -437,9 +437,6 @@ public final class WheelStage {
         if (info != null && info.isValid()) info.text(c);
     }
 
-    public void winners(Component c) {
-        if (winners != null && winners.isValid()) winners.text(c);
-    }
 
     public static Component prizeText(String name, boolean big) {
         TextColor col = big ? TextColor.color(0xFFE870) : NamedTextColor.WHITE;

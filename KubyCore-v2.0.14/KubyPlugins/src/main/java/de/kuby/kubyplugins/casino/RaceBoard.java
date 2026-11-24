@@ -143,6 +143,18 @@ public final class RaceBoard {
         });
     }
 
+    /** Schriftzug als flaches Bild (item/generated, quadratisch, Schriftzug mittig), w = Breite in Blöcken. */
+    private void logo(double u, double v, double f, double w, String name) {
+        float s = (float) (w * size);
+        center.getWorld().spawn(at(u, v, f), ItemDisplay.class, e -> {
+            e.setItemStack(model(name));
+            e.setBrightness(new Display.Brightness(15, 15));
+            e.setTransformation(new Transformation(new Vector3f(), new Quaternionf(face()).rotateY((float) Math.PI),
+                    new Vector3f(s, s, s * 0.1f), new Quaternionf()));
+            mark(e, "static");
+        });
+    }
+
     private TextDisplay text(double u, double v, double f, float scale, int lineWidth, Component c) {
         float k = (float) size;
         return center.getWorld().spawn(at(u, v, f), TextDisplay.class, e -> {
@@ -199,7 +211,8 @@ public final class RaceBoard {
             rv.setTransformation(new Transformation(t.getTranslation(), new Quaternionf(face()).rotateZ((float) (Math.PI / 4)), t.getScale(), t.getRightRotation()));
         }
         // Titel und Status
-        text(0, 1.6, 0.07, 0.75f, 600, CrashScreen.logo("PFERDERENNEN", LOGO));
+        // Schriftzug als Bild (Text in der Titelschrift rutschte in manchen Clients zur Seite)
+        logo(0, 1.72, 0.07, 3.6, "rr_logo");
         status = text(0, 1.42, 0.07, 0.36f, 600, Component.empty());
         // Bahn: Rasen, Rails, Ziellinie
         double trackW = U_END - (U_START - 0.4), trackMid = (U_END + U_START - 0.4) / 2, trackH = LANE * HorseRace.HORSES;

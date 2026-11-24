@@ -26,7 +26,7 @@ import re
 import sys
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
@@ -77,7 +77,11 @@ FONT = {
 }
 
 # Maße im 128er-Bild: Scheibe bis 58,5, Stifte bei 54,5, Ring 57,5 bis 63,5; Symbole und Beträge
-R_IN, R_DISC, R_PEG, R_ICON, R_LABEL = 13.0, 58.5, 54.5, 33.0, 47.0
+R_IN, R_DISC, R_PEG, R_ICON, R_LABEL = 13.0, 58.5, 54.5, 33.0, 46.5
+# Größe eines Schrift-Pixels der Beträge (128er-Einheiten): „100K“ ist dann 19,5 breit, das Feld dort gut 23
+LABEL_U = 1.3
+# Auflösung: Scheibe auf der Bühne, Bilder der Dreh-Animation im Fenster
+DISC_3D, FRAME = 256, 192
 
 
 # =====================================================================================================================
@@ -214,127 +218,181 @@ def icon_for(prize, jack):
     return vanilla_item("golden_helmet") or bc.chip("pink")
 
 
-def paste_rotated(base, img, cx, cy, deg):
-    """img mittig bei (cx, cy) einsetzen, um deg Grad im Uhrzeigersinn gedreht (4-fach vergrößert, nächster Nachbar)."""
-    big = img.resize((img.width * 4, img.height * 4), Image.NEAREST)
+def paste_rotated(base, img, cx, cy, deg, scale=1.0):
+    """img mittig bei (cx, cy) einsetzen, um deg Grad im Uhrzeigersinn gedreht und scale-fach vergrößert (über eine
+    4-fache Zwischenstufe gedreht, nächster Nachbar: Pixel bleiben scharf)."""
+    big = img.resize((max(1, round(img.width * scale * 4)), max(1, round(img.height * scale * 4))), Image.NEAREST)
     big = big.rotate(-deg, resample=Image.NEAREST, expand=True)
     small = big.resize((max(1, big.width // 4), max(1, big.height // 4)), Image.NEAREST)
     base.alpha_composite(small, (int(round(cx - small.width / 2)), int(round(cy - small.height / 2))))
 
 
+def draw_label(img, text, cx, cy, deg, u):
+    """Betrag als Pixel-Schrift, die Schrift-Pixel als gedrehte Quadrate gezeichnet (nicht als gedrehtes Bild): auch
+    schräg scharf und lesbar (Wunsch des Besitzers: „man erkennt die Zahlen gar nicht richtig“). u = Größe eines
+    Schrift-Pixels in Bild-Pixeln, deg = Drehung im Uhrzeigersinn, dunkle Kontur rundum."""
+    cells = []
+    x = 0
+    for ch in text:
+        g = FONT[ch]
+        for gy, row in enumerate(g):
+            for gx, c in enumerate(row):
+                if c == "#":
+                    cells.append((x + gx, gy))
+        x += len(g[0]) + 1
+    w, h = x - 1, 5
+    th = math.radians(deg)
+    co, si = math.cos(th), math.sin(th)
+    d = ImageDraw.Draw(img)
+
+    def quad(px, py, e):
+        pts = []
+        for qx, qy in ((px - e, py - e), (px + 1 + e, py - e), (px + 1 + e, py + 1 + e), (px - e, py + 1 + e)):
+            lx, ly = (qx - w / 2) * u, (qy - h / 2) * u
+            pts.append((cx + lx * co - ly * si, cy + lx * si + ly * co))
+        return pts
+
+    for px, py in cells:
+        d.polygon(quad(px, py, 0.55), fill=OUT)
+    for px, py in cells:
+        d.polygon(quad(px, py, 0.0), fill=rgb("FFF4D0"))
+
+
 # =====================================================================================================================
-# Scheibe (numpy): Feld je Pixel nach Winkel, Ringe nach Abstand
+# Scheibe (numpy): Feld je Pixel nach Winkel, Ringe nach Abstand. Alle Maße in Einheiten des 128er-Bilds, gezeichnet in
+# beliebiger Größe (Bühne 256 px, Bildschirm-Dreh 192 px, Fenster 128 px)
 # =====================================================================================================================
 
 S = 128
 C = S / 2
-_yy, _xx = np.mgrid[0:S, 0:S]
-DX, DY = _xx + 0.5 - C, _yy + 0.5 - C
-DIST = np.hypot(DX, DY)
-PHI = np.degrees(np.arctan2(DX, -DY)) % 360          # im Uhrzeigersinn ab oben
-LAM = (-DX - DY) / (np.maximum(DIST, 1e-6) * math.sqrt(2))   # Licht oben links: 1 oben links, -1 unten rechts
+_GRID = {}
+
+
+def grid(size):
+    """Pixelmitten in 128er-Einheiten: (DX, DY, DIST, PHI im Uhrzeigersinn ab oben, LAM Licht oben links)."""
+    if size not in _GRID:
+        yy, xx = np.mgrid[0:size, 0:size]
+        k = S / size
+        dx, dy = (xx + 0.5) * k - C, (yy + 0.5) * k - C
+        dist = np.hypot(dx, dy)
+        phi = np.degrees(np.arctan2(dx, -dy)) % 360
+        lam = (-dx - dy) / (np.maximum(dist, 1e-6) * math.sqrt(2))
+        _GRID[size] = (dx, dy, dist, phi, lam)
+    return _GRID[size]
+
+
+DX, DY, DIST, PHI, LAM = grid(S)
 
 
 def _arr(col):
     return np.array(col[:3], dtype=np.float64)
 
 
-def disc(wheel="casino", rot=0.0, ui=False):
+def disc(wheel="casino", rot=0.0, ui=False, size=S, labels=True):
     """Scheibe um rot Grad gegen den Uhrzeigersinn gedreht. ui: mit Stiften und festem Licht oben links."""
     fs = fields(wheel)
     jack = jackpot(fs)
-    img = np.zeros((S, S, 4), dtype=np.float64)
-    field = np.round((PHI + rot) / 30.0).astype(int) % 12
-    inside = (DIST >= R_IN) & (DIST <= R_DISC)
+    _dx, _dy, dist, phi, lam = grid(size)
+    f = size / S
+    img = np.zeros((size, size, 4), dtype=np.float64)
+    field = np.round((phi + rot) / 30.0).astype(int) % 12
+    inside = (dist >= R_IN) & (dist <= R_DISC)
     for i in range(12):
         dark, mid, light = JACKPOT if i == jack else SEG[i % len(SEG)]
         m = inside & (field == i)
-        img[m & (DIST < 24), :3] = _arr(rgb(dark))
-        img[m & (DIST >= 24) & (DIST < 49), :3] = _arr(rgb(mid))
-        img[m & (DIST >= 49), :3] = _arr(rgb(light))
+        img[m & (dist < 24), :3] = _arr(rgb(dark))
+        img[m & (dist >= 24) & (dist < 49), :3] = _arr(rgb(mid))
+        img[m & (dist >= 49), :3] = _arr(rgb(light))
         img[m, 3] = 255
     # Hauptgewinn-Feld: feine Goldkante innen am Rand
-    jm = inside & (field == jack) & (DIST >= 55.5) & (DIST < 56.5)
+    jm = inside & (field == jack) & (dist >= 55.5) & (dist < 56.5)
     img[jm, :3] = _arr(GOLD[2])
     # Kante außen dunkel
-    edge = (DIST > R_DISC - 1) & (DIST <= R_DISC)
+    edge = (dist > R_DISC - 1) & (dist <= R_DISC)
     img[edge, :3] = img[edge, :3] * 0.55
     # goldene Trennstriche auf den Feldgrenzen (15 + 30 k)
-    delta = ((PHI + rot - 15) % 30)
+    delta = ((phi + rot - 15) % 30)
     delta = np.minimum(delta, 30 - delta)
-    sep = inside & (DIST * np.sin(np.radians(delta)) <= 0.62)
+    sep = inside & (dist * np.sin(np.radians(delta)) <= max(0.62, 0.55 / f))
     img[sep, :3] = _arr(GOLD[3])
-    img[sep & (DIST > 40), :3] = _arr(GOLD[4])
+    img[sep & (dist > 40), :3] = _arr(GOLD[4])
     # Goldring innen
-    ring = (DIST >= R_IN - 1.4) & (DIST < R_IN)
+    ring = (dist >= R_IN - 1.4) & (dist < R_IN)
     img[ring, :3] = _arr(GOLD[2])
     img[ring, 3] = 255
     if ui:
         # festes Licht oben links (die Scheibe im Fenster dreht sich, das Licht bleibt)
-        k = np.clip(LAM, -1, 1)[..., None]
+        k = np.clip(lam, -1, 1)[..., None]
         on = img[..., 3:] > 0
         lit = np.where(k > 0, img[..., :3] + (255 - img[..., :3]) * 0.10 * k, img[..., :3] * (1 + 0.16 * k))
         img[..., :3] = np.where(on, lit, img[..., :3])
     out = Image.fromarray(np.clip(img, 0, 255).astype(np.uint8), "RGBA")
+    c = size / 2
     # Symbole und Beträge, aufrecht wenn das Feld oben ist
     for i, (_w, prize, _name) in enumerate(fs):
         deg = i * 30 - rot
         a = math.radians(deg - 90)
-        paste_rotated(out, icon_for(prize, i == jack), C + R_ICON * math.cos(a), C + R_ICON * math.sin(a), deg)
-        lab = label(prize)
+        paste_rotated(out, icon_for(prize, i == jack), c + R_ICON * f * math.cos(a), c + R_ICON * f * math.sin(a), deg, f)
+        lab = label(prize) if labels else ""
         if lab:
-            paste_rotated(out, text_img(lab), C + R_LABEL * math.cos(a), C + R_LABEL * math.sin(a), deg)
+            draw_label(out, lab, c + R_LABEL * f * math.cos(a), c + R_LABEL * f * math.sin(a), deg, LABEL_U * f)
     if ui:
         # Stifte auf den Feldgrenzen: Goldknopf mit Glanz oben links
-        p = bc.Pix(S)
+        p = bc.Pix(size)
         for kk in range(12):
             a = math.radians(15 + kk * 30 - rot - 90)
-            x, y = C + R_PEG * math.cos(a), C + R_PEG * math.sin(a)
-            p.disk(x, y, 2.3, GOLD[2])
-            p.disk(x - 0.5, y - 0.5, 1.4, GOLD[3])
-            p.put(int(x - 1), int(y - 1), GOLD[4])
+            x, y = c + R_PEG * f * math.cos(a), c + R_PEG * f * math.sin(a)
+            p.disk(x, y, 2.3 * f, GOLD[2])
+            p.disk(x - 0.5 * f, y - 0.5 * f, 1.4 * f, GOLD[3])
+            p.put(int(x - f), int(y - f), GOLD[4])
         out.alpha_composite(p.image())
     return out
 
 
-def rim(lit_phase=None):
+def rim(lit_phase=None, size=S):
     """Goldring (steht still, Licht oben links), dazu 24 Lämpchen; lit_phase: jedes dritte ab dieser Stelle leuchtet."""
-    img = np.zeros((S, S, 4), dtype=np.uint8)
-    band = (DIST >= 57.5) & (DIST <= 63.5)
-    k = np.where(LAM > 0.75, 4, np.where(LAM > 0.1, 3, np.where(LAM > -0.6, 2, 1)))
-    k = np.where((DIST > 60.2) & (DIST < 61.0), np.maximum(1, k - 1), k)
+    _dx, _dy, dist, _phi, lam = grid(size)
+    f = size / S
+    img = np.zeros((size, size, 4), dtype=np.uint8)
+    band = (dist >= 57.5) & (dist <= 63.5)
+    k = np.where(lam > 0.75, 4, np.where(lam > 0.1, 3, np.where(lam > -0.6, 2, 1)))
+    k = np.where((dist > 60.2) & (dist < 61.0), np.maximum(1, k - 1), k)
     gold = np.array([GOLD[i] for i in range(5)], dtype=np.uint8)[:, :3]
     img[band, :3] = gold[k[band]]
     img[band, 3] = 255
-    o = band & ((DIST < 58.5) | (DIST > 62.5))
+    o = band & ((dist < 57.5 + 1 / f) | (dist > 63.5 - 1 / f))
     img[o, :3] = np.array(OUT[:3], dtype=np.uint8)
     out = Image.fromarray(img, "RGBA")
     if lit_phase is not None:
-        p = bc.Pix(S)
+        c = size / 2
+        p = bc.Pix(size)
         for j in range(24):
             a = math.radians(j * 15 + 7.5 - 90)
-            x, y = C + 60.6 * math.cos(a), C + 60.6 * math.sin(a)
+            x, y = c + 60.6 * f * math.cos(a), c + 60.6 * f * math.sin(a)
             on = (j + lit_phase) % 3 == 0
-            p.disk(x, y, 1.6, rgb("FFF4C0") if on else rgb("7A4A10"))
+            p.disk(x, y, 1.6 * f, rgb("FFF4C0") if on else rgb("7A4A10"))
             if on:
-                p.put(int(x - 0.5), int(y - 0.5), rgb("FFFFFF"))
+                p.put(int(x - 0.5 * f), int(y - 0.5 * f), rgb("FFFFFF"))
         out.alpha_composite(p.image(outline=None))
     return out
 
 
-def hub(wheel="casino"):
+def hub(wheel="casino", size=32):
+    """Nabe: Goldring, Edelstein, Stern (32 px = Maß 1; größer für schärfere Bilder)."""
     gem = GEM.get(wheel, GEM["casino"])
-    p = bc.Pix(32)
-    p.disk(16, 16, 11.5, GOLD[1])
-    p.disk(16, 16, 10.5, GOLD[3])
-    p.sector(16, 16, 6, 10.5, 180, 300, GOLD[4])
-    p.disk(16, 16, 6.5, rgb(gem[0]))
-    p.disk(16, 16, 5.5, rgb(gem[1]))
+    f = size / 32
+    p = bc.Pix(size)
+    c = 16 * f
+    p.disk(c, c, 11.5 * f, GOLD[1])
+    p.disk(c, c, 10.5 * f, GOLD[3])
+    p.sector(c, c, 6 * f, 10.5 * f, 180, 300, GOLD[4])
+    p.disk(c, c, 6.5 * f, rgb(gem[0]))
+    p.disk(c, c, 5.5 * f, rgb(gem[1]))
     star = [(16, 11.5), (17.3, 14.6), (20.5, 14.8), (18, 16.9), (18.9, 20.2), (16, 18.4), (13.1, 20.2), (14, 16.9),
             (11.5, 14.8), (14.7, 14.6)]
-    p.poly(star, GOLD[4])
-    p.put(15, 14, rgb("FFFFFF"))
-    p.put(14, 13, rgb(gem[2]))
+    p.poly([(x * f, y * f) for x, y in star], GOLD[4])
+    p.put(int(15 * f), int(14 * f), rgb("FFFFFF"))
+    p.put(int(14 * f), int(13 * f), rgb(gem[2]))
     return p.image()
 
 
@@ -419,20 +477,21 @@ def needle_img(deg):
     return img
 
 
-def frame(wheel, i):
-    """Bild i der Dreh-Animation: Scheibe um i * 10 Grad gedreht, Ring mit Lauflicht, Nabe."""
-    img = Image.new("RGBA", (S, S), T)
-    img.alpha_composite(disc(wheel, i * 10.0, ui=True))
-    img.alpha_composite(rim(lit_phase=i))
-    img.alpha_composite(hub(wheel), (48, 48))
-    img.putpixel((S - 1, 0), (0, 0, 0, 1))
+def frame(wheel, i, size=FRAME, labels=True):
+    """Bild i der Dreh-Animation: Scheibe um i * 10 Grad gedreht, Ring mit Lauflicht, Nabe (size px, Maße wie 128)."""
+    img = Image.new("RGBA", (size, size), T)
+    img.alpha_composite(disc(wheel, i * 10.0, ui=True, size=size, labels=labels))
+    img.alpha_composite(rim(lit_phase=i, size=size))
+    hs = 32 * size // S
+    img.alpha_composite(hub(wheel, hs), ((size - hs) // 2, (size - hs) // 2))
+    img.putpixel((size - 1, 0), (0, 0, 0, 1))
     return img
 
 
 def ui_sprite(wheel):
     """Dialog-Grafik: Rad in Ruhe (Feld 0 oben), Nadel darüber; 128 x 144."""
     out = Image.new("RGBA", (S, S + 16), T)
-    f = frame(wheel, 0)
+    f = frame(wheel, 0, S, labels=False)   # 128 px: Beträge zu klein zum Lesen, die Liste daneben nennt sie
     f.putpixel((S - 1, 0), T)
     out.alpha_composite(f, (0, 16))
     n = needle_img(0)
@@ -459,6 +518,24 @@ def peg_model():
                          "particle": "kuby:block/casino/hd_gold"},
             "elements": [_box([7.15, 28.5, 4.0], [8.85, 30.5, 9.0], "#g"),
                          _box([6.8, 28.1, 3.3], [9.2, 30.9, 4.0], "#l")]}
+
+
+def hub_model():
+    """Nabe in 3D (Wunsch des Besitzers: „der Stern in der Mitte ist nur eine 2D-Textur“): achteckiger Goldkörper (zwei
+    Quader, einer um 45 Grad gedreht: acht Spitzen), davor die Kappe mit Stern und Edelstein (Textur wh_hub), in der
+    Sternmitte ein kleiner Goldnagel. Vorderseite = Modell -z (im Spiel zu den Zuschauern), Mitte im Ursprung (8, 8, 8)."""
+    rot = {"angle": 45, "axis": "z", "origin": [8, 8, 8]}
+    body = _box([3.0, 3.0, 6.4], [13.0, 13.0, 10.4], "#g")
+    body2 = dict(_box([3.0, 3.0, 6.5], [13.0, 13.0, 10.3], "#g"), rotation=rot)
+    rim = _box([2.6, 2.6, 6.0], [13.4, 13.4, 6.4], "#l")
+    rim2 = dict(_box([2.6, 2.6, 6.05], [13.4, 13.4, 6.35], "#l"), rotation=rot)
+    cap = _box([3.6, 3.6, 5.2], [12.4, 12.4, 6.0], "#g")
+    cap["faces"]["north"] = {"texture": "#hub", "uv": [16, 0, 0, 16]}
+    knob = dict(_box([7.45, 7.45, 4.7], [8.55, 8.55, 5.2], "#l"), rotation=rot)   # Goldnagel in der Sternmitte
+    return {"textures": {"g": "kuby:block/casino/hd_gold", "l": "kuby:block/casino/hd_gold_lit",
+                         "r": "kuby:block/casino/hd_velvet", "hub": "kuby:item/casino/wh_hub",
+                         "particle": "kuby:block/casino/hd_gold"},
+            "elements": [body, body2, rim, rim2, cap, knob]}
 
 
 def needle_model():
@@ -502,18 +579,20 @@ def write(pack):
         with open(os.path.join(items, name + ".json"), "w", encoding="utf-8") as fh:
             json.dump({"model": {"type": "minecraft:model", "model": "kuby:item/casino/" + name}}, fh)
 
-    flat = {"wh_disc_casino": disc("casino"), "wh_back": back(), "wh_hub": hub("casino"), "wh_burst": burst()}
+    flat = {"wh_disc_casino": disc("casino", size=DISC_3D), "wh_back": back(), "wh_hub": hub("casino", 64),
+            "wh_burst": burst()}
     for name, img in flat.items():
         img.save(os.path.join(itex, name + ".png"))
         item(name, {"parent": "minecraft:item/generated", "textures": {"layer0": "kuby:item/casino/" + name}})
     item("wh_peg", peg_model())
+    item("wh_hub3d", hub_model())
     item("wh_needle", needle_model())
     # Schrift kuby:wheel
     prov = [{"type": "space", "advances": {"": -26, "": 15}}]
     for wheel, base in (("casino", 0xE000), ("smp", 0xE040)):
-        sheet = Image.new("RGBA", (S * 6, S * 6), T)
+        sheet = Image.new("RGBA", (FRAME * 6, FRAME * 6), T)
         for i in range(36):
-            sheet.alpha_composite(frame(wheel, i), ((i % 6) * S, (i // 6) * S))
+            sheet.alpha_composite(frame(wheel, i), ((i % 6) * FRAME, (i // 6) * FRAME))
         sheet.save(os.path.join(ftex, "wheel_%s.png" % wheel))
         rows = ["".join(chr(base + r * 6 + c) for c in range(6)) for r in range(6)]
         prov.append({"type": "bitmap", "file": "kuby:font/wheel_%s.png" % wheel, "height": 40, "ascent": 21, "chars": rows})
@@ -525,15 +604,15 @@ def write(pack):
                  "chars": ["".join(chr(0xE080 + k) for k in range(len(NEEDLE_STATES)))]})
     with open(os.path.join(a, "font/wheel.json"), "w", encoding="utf-8") as fh:
         json.dump({"providers": prov}, fh, ensure_ascii=False)
-    return len(flat) + 2 + 3
+    return len(flat) + 3 + 3
 
 
 def sheet(path):
     """Vorschau: Scheibe (3D), Rückwand, Bild 0/3/7 der Animation mit Nadel, Dialog-Grafiken; 3-fach."""
     k = 3
-    tiles = [disc("casino"), back(), burst()]
+    tiles = [disc("casino", size=DISC_3D).resize((S, S), Image.LANCZOS), back(), burst()]
     for i, deg in ((0, 0), (3, 20), (7, 30)):
-        f = frame("casino", i).copy()
+        f = frame("casino", i, S).copy()
         n = needle_img(deg)
         canvas = Image.new("RGBA", (S, S + 16), T)
         canvas.alpha_composite(f, (0, 16))

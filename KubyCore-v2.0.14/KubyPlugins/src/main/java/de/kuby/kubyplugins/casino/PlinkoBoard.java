@@ -145,6 +145,18 @@ public final class PlinkoBoard {
         });
     }
 
+    /** Schriftzug als flaches Bild (item/generated, quadratisch, Schriftzug mittig), w = Breite in Blöcken. */
+    private void logo(double u, double v, double f, double w, String name) {
+        float s = (float) (w * size);
+        center.getWorld().spawn(at(u, v, f), ItemDisplay.class, e -> {
+            e.setItemStack(model(name));
+            e.setBrightness(new Display.Brightness(15, 15));
+            e.setTransformation(new Transformation(new Vector3f(), new Quaternionf(face()).rotateY((float) Math.PI),
+                    new Vector3f(s, s, s * 0.1f), new Quaternionf()));
+            mark(e, "static");
+        });
+    }
+
     private TextDisplay text(double u, double v, double f, float scale, int lineWidth, Component c) {
         float k = (float) size;
         return center.getWorld().spawn(at(u, v, f), TextDisplay.class, e -> {
@@ -205,7 +217,8 @@ public final class PlinkoBoard {
         box(0, 2.24, 0.075, 1.9, 0.42, 0.03, 0, "hd_plinko_dark");
         box(0, 2.0125, 0.0925, 1.98, 0.035, 0.035, 0, "hd_gold");
         box(0, 2.4675, 0.0925, 1.98, 0.035, 0.035, 0, "hd_gold");
-        text(0, 2.1, 0.095, 0.9f, 400, CrashScreen.logo("PLINKO", LOGO));
+        // Schriftzug als Bild (Text in der Titelschrift rutschte in manchen Clients nach rechts, Bild des Besitzers)
+        logo(0, 2.246, 0.095, 2.0, "pl_logo");
         // Einwurf-Trichter
         for (int side = -1; side <= 1; side += 2) {
             box(side * 0.12, Plinko.DROP_V + 0.06, F_PEG, 0.2, 0.035, 0.04, side * Math.toRadians(38), "hd_gold");

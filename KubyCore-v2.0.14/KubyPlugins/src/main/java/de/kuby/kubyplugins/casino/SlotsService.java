@@ -95,13 +95,14 @@ public final class SlotsService implements Listener {
     }
 
     /**
-     * Hocker direkt vor das Pult (v2.05, Wunsch des Besitzers: „Hocker näher dran“): auf der Mittelachse des Automaten,
-     * Sitzfläche (0,5 breit) endet casino.slots.hocker-abstand vor der Pultkante. Vorher stand er dort, wo der Admin beim
-     * Aufbauen stand – meist gut einen Block zu weit weg. Höhe bleibt die gespeicherte (Boden).
+     * Hocker vor das Pult auf die Mittelachse des Automaten (v2.05 „Hocker näher dran“, v2.07 „die Hocker sind zu nah“):
+     * die Sitzfläche (0,5 breit) endet casino.slots.hocker-luft vor der Pultkante (Standard 0,3: Platz für die Beine, der
+     * Sitzende steckt nicht im Pult). Neuer Schlüssel, damit der alte gespeicherte Wert 0,07 (hocker-abstand) nicht mehr
+     * greift. Höhe bleibt die gespeicherte (Boden). Gilt beim nächsten Laden auch für schon aufgestellte Automaten.
      */
     private Location closeStool(Location center, float yaw, int desk, double floorY) {
         double r = Math.toRadians(yaw);
-        double gap = plugin.getConfig().getDouble("casino.slots.hocker-abstand", 0.07);
+        double gap = Math.max(0, Math.min(1.5, plugin.getConfig().getDouble("casino.slots.hocker-luft", 0.3)));
         double dist = desk > 0 ? desk - 0.03 + 0.25 + gap : 0.85;
         return new Location(center.getWorld(), center.getX() - Math.sin(r) * dist, floorY, center.getZ() + Math.cos(r) * dist);
     }

@@ -362,7 +362,7 @@ casino:
     jackpot-start: 20000        # Slots-Jackpot (drei Siebener), startet nach einem Gewinn wieder hier
     jackpot-share: 0.02         # so viel von jedem Dreh wandert in den Slots-Jackpot
     kino: true                  # zwei gleiche: Kino-Kamera auf die letzte Walze (Vignette, Herzschlag, Einrasten)
-    hocker-abstand: 0.07        # Luft zwischen Hocker-Sitzfläche und Pultkante (Blöcke)
+    hocker-luft: 0.3            # Luft zwischen Hocker-Sitzfläche und Pultkante (Blöcke); der alte Schlüssel hocker-abstand gilt nicht mehr
     tempo-wechsel: true         # jede Runde anderes Dreh-Tempo (schnell, normal, lang, einzeln, zusammen); false = immer normal
   # Chip-Shop (v2.07): /casino shop, Knopf an der Kasse, Figur /casino npc chipshop. Kosmetik und Titel von hier
   # gelten in allen Modi. Kategorien "id;Name;Icon;Stil;#Farbe;Zeile", Angebote "id;Name;Art;Wert;Preis;Icon;Zeile".

@@ -342,7 +342,6 @@ public final class WheelService implements Listener {
         Wheel.Field jf = fs.get(Wheel.jackpot(fs));
         b.st.build(Component.text(jf.name().replaceFirst("(?i)^hauptgewinn\\s*", ""), NamedTextColor.WHITE), jackpotItem(jf.prize()));
         idle(b);
-        winnersBoard(b);
     }
 
     private static ItemStack jackpotItem(String prize) {
@@ -724,24 +723,6 @@ public final class WheelService implements Listener {
         b.st.info(Component.text("Rechtsklick aufs Rad · /gluecksrad zeigt Gewinne und Serie", TextColor.color(0xACA48E)));
     }
 
-    private void winnersBoard(Stage b) {
-        List<String> wl;
-        synchronized (this) {
-            wl = new ArrayList<>(winners.getOrDefault(Wheel.CASINO, List.of()));
-        }
-        net.kyori.adventure.text.TextComponent.Builder t = Component.text();
-        t.append(Component.text("LETZTE GEWINNER", TextColor.color(0xF2C94C), TextDecoration.BOLD));
-        if (wl.isEmpty()) t.append(Component.newline()).append(Component.text("Noch niemand – du?", TextColor.color(0xACA48E)));
-        for (String line : wl) {
-            String[] p = line.split(";", 5);
-            if (p.length < 2) continue;
-            boolean big = p.length > 3 && ("1".equals(p[3]) || "1".equals(p[4]));
-            t.append(Component.newline()).append(Component.text(p[0] + " ", NamedTextColor.WHITE))
-                    .append(Component.text(p[1], big ? TextColor.color(0xFFE870) : TextColor.color(0xD1D2D5)));
-        }
-        b.st.winners(t.build());
-    }
-
     private void confetti(WheelStage st, int n) {
         Location c = st.confettiLocation();
         World w = c.getWorld();
@@ -919,7 +900,6 @@ public final class WheelService implements Listener {
             b.st.info(Component.text(s.name + " gewinnt " + shown + "!", TextColor.color(0xF2C94C)));
             b.winBlink = big ? 160 : 80;
             b.bigWin = big;
-            winnersBoard(b);
         }
         if (big) {
             Bukkit.broadcast(Msg.parse("<#F2C94C>✦ Glücksrad" + (Wheel.SMP.equals(s.wheel) ? " (SMP)" : "") + ": <white>" + s.name

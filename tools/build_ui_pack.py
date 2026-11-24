@@ -130,6 +130,9 @@ if VANILLA and os.path.isdir(VANILLA):
                     build_jewelshop.sprites() + build_battlepass.sprites() + build_guide.sprites()
                     + build_xpshop.sprites() + build_wheel.sprites(),
                     build_jewelshop.strips())
+    # Schriftzüge der Casino-Automaten als Bild (aus der Titelschrift des Kits): PLINKO, GLÜCKSRAD, CRASH, PFERDERENNEN
+    import build_logos  # noqa: E402
+    print("ok Schriftzüge:", build_logos.write(OUT))
     # Icons für Hologramm-Zeilen (kuby:holo): dieselben Zeichen wie kuby:k/i0, aber nur 9 px hoch wie Text
     with open(os.path.join(OUT, "assets/kuby/font/k/i0.json"), encoding="utf-8") as fh:
         i0 = json.load(fh)

@@ -265,8 +265,6 @@ public final class Scene {
                 b.needle(nd);
                 b.prize(de.kuby.kubyplugins.casino.WheelStage.prizeText("25.000 Chips", false));
                 b.info(Component.text("Rechtsklick aufs Rad · /gluecksrad zeigt Gewinne und Serie", NamedTextColor.GRAY));
-                b.winners(Component.text("LETZTE GEWINNER", NamedTextColor.GOLD).appendNewline().append(Component.text("Kuby_Max 25.000 Chips", NamedTextColor.WHITE))
-                        .appendNewline().append(Component.text("Lena ★ 2 Episch-Keys", NamedTextColor.YELLOW)));
                 boolean[] lit = new boolean[de.kuby.kubyplugins.casino.WheelStage.RIM];
                 for (int i = 0; i < lit.length; i += 3) lit[i] = true;
                 b.rimBulbs(lit, false);

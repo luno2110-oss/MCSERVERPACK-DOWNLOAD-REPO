@@ -104,6 +104,16 @@ public final class CrashScreen {
         return off(width / 2 + 0.8, height / 2 - 1.2, 0.3);
     }
 
+    /** Breite des Schriftzugs „CRASH“ in Blöcken: ein Drittel der Bildschirmbreite, 2,4 bis 5. */
+    public double titleWidth() {
+        return Math.max(2.4, Math.min(5.0, 0.32 * width));
+    }
+
+    /** Größe von „Letzte Runden“: wächst mit dem Bildschirm (vorher fest 0,55). */
+    public float roundsScale() {
+        return (float) Math.max(0.75, Math.min(1.1, 0.12 * width));
+    }
+
     private void mark(Entity e) {
         e.setPersistent(false);
         e.getPersistentDataContainer().set(tag, PersistentDataType.BYTE, (byte) 1);
@@ -140,6 +150,7 @@ public final class CrashScreen {
         removeAll();
         Quaternionf face = face();
         header = text(off(0, height / 2 - 0.56, 0.02), face, 0.6f, 400);
+        header.setShadowed(true);   // Titelschrift (BEREIT, Kurs): mit Schatten sitzt sie in jedem Client mittig
         status = text(off(0, height / 2 - 0.86, 0.02), face, 0.48f, 400);
         hint = text(off(0, height / 2 - 1.0, 0.02), face, 0.3f, 400);
         tip = text(off(0, 0, 0.03), face, 0.5f, 200);
@@ -155,11 +166,21 @@ public final class CrashScreen {
             });
             segmentRed[i] = false;
         }
+        // Schriftzug „CRASH“ als Bild (als Text in der Titelschrift rutschte er in manchen Clients zur Seite) und größer,
+        // wächst mit dem Bildschirm (Wunsch des Besitzers: „die zwei Überschriften größer“); Unterkante bleibt am Platz
         Location ta = titleAt != null ? titleAt : defaultTitle();
-        TextDisplay title = text(ta, face, 0.85f, 400);
-        title.text(logo("CRASH", LOGO));
+        double tw = titleWidth();
+        Location tc = ta.clone().add(0, -0.106 + tw * 23 / 81.0 / 2, 0);
+        float ts = (float) tw;
+        tc.getWorld().spawn(tc, ItemDisplay.class, e -> {
+            e.setItemStack(model("cr_logo"));
+            e.setBrightness(new Display.Brightness(15, 15));
+            e.setTransformation(new Transformation(new Vector3f(), new Quaternionf(face).rotateY((float) Math.PI),
+                    new Vector3f(ts, ts, ts * 0.1f), new Quaternionf()));
+            mark(e);
+        });
         Location ra = roundsAt != null ? roundsAt : defaultRounds();
-        rounds = text(ra, face, 0.55f, 300);
+        rounds = text(ra, face, roundsScale(), 300);
     }
 
     public void removeAll() {
