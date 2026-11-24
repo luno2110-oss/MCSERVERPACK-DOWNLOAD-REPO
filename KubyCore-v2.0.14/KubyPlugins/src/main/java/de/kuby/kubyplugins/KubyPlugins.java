@@ -161,6 +161,9 @@ public final class KubyPlugins extends JavaPlugin {
     private PokerService poker;
     private PokerService pokerHr;
     private PokerService pokerVio;
+    /** Weitere Tische je Farbe (v2.07, Wunsch des Besitzers: „mehrere Roulette- oder Poker-Tische pro Stufe“). */
+    private final java.util.List<de.kuby.kubyplugins.casino.RouletteGame> moreRoulettes = new java.util.ArrayList<>();
+    private final java.util.List<PokerService> morePokers = new java.util.ArrayList<>();
     private VoteService votes;
     private AchievementService achievements;
     private UiPackService uiPack;
@@ -246,6 +249,14 @@ public final class KubyPlugins extends JavaPlugin {
         // violetter Elite-Pokertisch (Blinds 25.000/50.000, Buy-in bis 1 Mio., Datei poker-violett.yml)
         pokerVio = new PokerService(this, de.kuby.kubyplugins.casino.TableTier.VIOLETT);
         pokerVio.start();
+        for (de.kuby.kubyplugins.casino.TableTier t : de.kuby.kubyplugins.casino.TableTier.values()) {
+            for (int i = 2; i <= 40; i++) {
+                if (!hasSavedTable(PokerService.fileOf(this, t, i))) continue;
+                PokerService more = new PokerService(this, t, i);
+                more.start();
+                morePokers.add(more);
+            }
+        }
         votes = new VoteService(this);
         achievements = new AchievementService(this);
         achievements.start();
@@ -283,6 +294,13 @@ public final class KubyPlugins extends JavaPlugin {
         roulette = new de.kuby.kubyplugins.casino.RouletteGame(this);
         rouletteHr = new de.kuby.kubyplugins.casino.RouletteGame(this, de.kuby.kubyplugins.casino.TableTier.ROT);
         rouletteVio = new de.kuby.kubyplugins.casino.RouletteGame(this, de.kuby.kubyplugins.casino.TableTier.VIOLETT);
+        for (de.kuby.kubyplugins.casino.TableTier t : de.kuby.kubyplugins.casino.TableTier.values()) {
+            for (int i = 2; i <= 40; i++) {
+                if (hasSavedTable(de.kuby.kubyplugins.casino.RouletteGame.fileOf(this, t, i))) {
+                    moreRoulettes.add(new de.kuby.kubyplugins.casino.RouletteGame(this, t, i));
+                }
+            }
+        }
         slots = new de.kuby.kubyplugins.casino.SlotsService(this);
         crash = new de.kuby.kubyplugins.casino.CrashGame(this);
         plinko = new de.kuby.kubyplugins.casino.PlinkoService(this);
@@ -302,8 +320,7 @@ public final class KubyPlugins extends JavaPlugin {
         modes.registerBusyCheck(p -> pvp().inCombat(p.getUniqueId()));
         modes.registerBusyCheck(p -> rtpQueue().inQueue(p.getUniqueId()));
         modes.registerBusyCheck(p -> blackjack.inGame(p.getUniqueId()));
-        modes.registerBusyCheck(p -> poker.isSeated(p.getUniqueId()) || pokerHr.isSeated(p.getUniqueId())
-                || pokerVio.isSeated(p.getUniqueId()));
+        modes.registerBusyCheck(p -> pokerTables().stream().anyMatch(s -> s.isSeated(p.getUniqueId())));
         modes.registerExtras(java.util.List.of(homes, battlepass, cosmetics, kits, tags, daily, investments, shopStorage));
         keys = new KeyService(this);
         crates = new de.kuby.kubyplugins.service.CrateService(this);
@@ -551,6 +568,7 @@ public final class KubyPlugins extends JavaPlugin {
         getServer().getPluginManager().registerEvents(roulette, this);
         getServer().getPluginManager().registerEvents(rouletteHr, this);
         getServer().getPluginManager().registerEvents(rouletteVio, this);
+        for (de.kuby.kubyplugins.casino.RouletteGame g : moreRoulettes) getServer().getPluginManager().registerEvents(g, this);
         getServer().getPluginManager().registerEvents(blackjack, this);
         getServer().getPluginManager().registerEvents(slots, this);
         getServer().getPluginManager().registerEvents(crash, this);
@@ -569,6 +587,7 @@ public final class KubyPlugins extends JavaPlugin {
             roulette.respawn();
             rouletteHr.respawn();
             rouletteVio.respawn();
+            for (de.kuby.kubyplugins.casino.RouletteGame g : moreRoulettes) g.respawn();
             slots.respawn();
             crash.respawn();
             plinko.respawn();
@@ -578,6 +597,7 @@ public final class KubyPlugins extends JavaPlugin {
             poker.respawn();
             pokerHr.respawn();
             pokerVio.respawn();
+            for (PokerService s : morePokers) s.respawn();
             votes.hook();
             hubSettings.applyAll();
         }, 40L);
@@ -623,6 +643,7 @@ public final class KubyPlugins extends JavaPlugin {
         if (casinoMusic != null) casinoMusic.shutdown();
         rouletteHr.shutdown();
         rouletteVio.shutdown();
+        for (de.kuby.kubyplugins.casino.RouletteGame g : moreRoulettes) g.shutdown();
         slots.shutdown();
         crash.shutdown();
         plinko.shutdown();
@@ -635,6 +656,7 @@ public final class KubyPlugins extends JavaPlugin {
         poker.shutdown();
         pokerHr.shutdown();
         pokerVio.shutdown();
+        for (PokerService s : morePokers) s.shutdown();
         if (casinoPlay != null) casinoPlay.shutdown();
         if (hats != null) hats.removeAll();
         if (crates != null) crates.removeLabels();
@@ -1041,9 +1063,42 @@ public final class KubyPlugins extends JavaPlugin {
     public de.kuby.kubyplugins.casino.RouletteGame rouletteHr() { return rouletteHr; }
     public de.kuby.kubyplugins.casino.RouletteGame rouletteVio() { return rouletteVio; }
 
-    /** Alle drei Roulette-Tische (grün, rot, violett). */
+    /** Alle Roulette-Tische: je Farbe der erste, dazu alle weiteren (v2.07). */
     public java.util.List<de.kuby.kubyplugins.casino.RouletteGame> roulettes() {
-        return java.util.List.of(roulette, rouletteHr, rouletteVio);
+        java.util.List<de.kuby.kubyplugins.casino.RouletteGame> all = new java.util.ArrayList<>(java.util.List.of(roulette, rouletteHr, rouletteVio));
+        all.addAll(moreRoulettes);
+        return all;
+    }
+
+    /** Gespeicherter Tisch in einer Datei (Zeile „tisch“). */
+    private static boolean hasSavedTable(java.io.File f) {
+        return f.exists() && org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(f).getString("tisch") != null;
+    }
+
+    /**
+     * Roulette-Tisch zum Aufstellen (v2.07): ein Tisch dieser Farbe ohne Aufstellung, sonst ein neuer mit der nächsten
+     * Nummer (vorher wurde der eine Tisch der Farbe nur versetzt).
+     */
+    public de.kuby.kubyplugins.casino.RouletteGame rouletteToPlace(de.kuby.kubyplugins.casino.TableTier t) {
+        for (de.kuby.kubyplugins.casino.RouletteGame g : roulettes()) if (g.tier() == t && !g.hasTable()) return g;
+        int next = 2;
+        for (de.kuby.kubyplugins.casino.RouletteGame g : roulettes()) if (g.tier() == t) next = Math.max(next, g.index() + 1);
+        de.kuby.kubyplugins.casino.RouletteGame g = new de.kuby.kubyplugins.casino.RouletteGame(this, t, next);
+        getServer().getPluginManager().registerEvents(g, this);
+        g.respawn();
+        moreRoulettes.add(g);
+        return g;
+    }
+
+    /** Pokertisch zum Aufstellen (v2.07): einer dieser Farbe ohne Aufstellung, sonst ein neuer. */
+    public PokerService pokerToPlace(de.kuby.kubyplugins.casino.TableTier t) {
+        for (PokerService s : pokerTables()) if (s.tier() == t && !s.hasTable()) return s;
+        int next = 2;
+        for (PokerService s : pokerTables()) if (s.tier() == t) next = Math.max(next, s.index() + 1);
+        PokerService s = new PokerService(this, t, next);
+        s.start();
+        morePokers.add(s);
+        return s;
     }
 
     /** Nächster Roulette-Tisch in Reichweite (sonst der grüne). */
@@ -1086,9 +1141,11 @@ public final class KubyPlugins extends JavaPlugin {
     public PokerService pokerHr() { return pokerHr; }
     public PokerService pokerVio() { return pokerVio; }
 
-    /** Alle Pokertische (grün, rot, violett). */
+    /** Alle Pokertische: je Farbe der erste, dazu alle weiteren (v2.07). */
     public java.util.List<PokerService> pokerTables() {
-        return java.util.List.of(poker, pokerHr, pokerVio);
+        java.util.List<PokerService> all = new java.util.ArrayList<>(java.util.List.of(poker, pokerHr, pokerVio));
+        all.addAll(morePokers);
+        return all;
     }
 
     /** Pokertisch für einen Spieler: an dem er sitzt, sonst der nächste aufgebaute (grün, rot oder violett). */

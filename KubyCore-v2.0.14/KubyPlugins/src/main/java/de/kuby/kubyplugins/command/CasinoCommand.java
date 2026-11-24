@@ -78,13 +78,10 @@ public final class CasinoCommand implements CommandExecutor, org.bukkit.command.
                 } else {
                     de.kuby.kubyplugins.casino.TableTier tier = args.length > 1 && de.kuby.kubyplugins.casino.TableTier.parse(args[1]) != null
                             ? de.kuby.kubyplugins.casino.TableTier.parse(args[1]) : de.kuby.kubyplugins.casino.TableTier.GRUEN;
-                    de.kuby.kubyplugins.service.PokerService pk = switch (tier) {
-                        case GRUEN -> plugin.poker();
-                        case ROT -> plugin.pokerHr();
-                        case VIOLETT -> plugin.pokerVio();
-                    };
+                    // v2.07: jeder Aufruf stellt einen weiteren Tisch dieser Farbe auf (Verschieben im Casino-Admin)
+                    de.kuby.kubyplugins.service.PokerService pk = plugin.pokerToPlace(tier);
                     pk.setTable(p.getLocation());
-                    Msg.send(p, "<green>Poker-Tisch (" + tier.key + ") aufgebaut: Mitte da, wo du stehst,"
+                    Msg.send(p, "<green>Poker-Tisch " + pk.index() + " (" + tier.key + ") aufgebaut: Mitte da, wo du stehst,"
                             + " der Dealer an der Seite, auf die du schaust (Tisch 5,4 x 2,7 Blöcke, sechs Plätze). Big Blind "
                             + tier.minBet(plugin) + ", Buy-in bis " + tier.maxBet(plugin) + " Chips."
                             + " Andere Farben: /casino poker-tisch gruen|rot|violett");
@@ -268,19 +265,35 @@ public final class CasinoCommand implements CommandExecutor, org.bukkit.command.
             if (args[i].equalsIgnoreCase("entfernen")) remove = true;
             else if (de.kuby.kubyplugins.casino.TableTier.parse(args[i]) != null) tier = de.kuby.kubyplugins.casino.TableTier.parse(args[i]);
         }
-        de.kuby.kubyplugins.casino.RouletteGame game = plugin.roulette(tier);
         if (remove) {
-            game.removeTable();
-            Msg.send(p, "<green>Anzeigen des Roulette-Tischs (" + tier.key + ") entfernt (bis zum nächsten Setzen).");
+            // nächster Tisch dieser Farbe (v2.07: es kann mehrere geben)
+            de.kuby.kubyplugins.casino.RouletteGame near = null;
+            double bd = Double.MAX_VALUE;
+            for (de.kuby.kubyplugins.casino.RouletteGame g : plugin.roulettes()) {
+                if (g.tier() != tier || !g.hasTable() || !g.table().center().getWorld().equals(p.getWorld())) continue;
+                double d = g.table().center().distanceSquared(p.getLocation());
+                if (d < bd) {
+                    bd = d;
+                    near = g;
+                }
+            }
+            if (near == null) {
+                Msg.send(p, "<red>Kein Roulette-Tisch (" + tier.key + ") in dieser Welt.");
+                return;
+            }
+            near.removeTable();
+            Msg.send(p, "<green>Anzeigen des nächsten Roulette-Tischs (" + tier.key + ") entfernt (bis zum nächsten Setzen).");
             return;
         }
+        // v2.07: jeder Aufruf stellt einen weiteren Tisch dieser Farbe auf (Verschieben im Casino-Admin)
+        de.kuby.kubyplugins.casino.RouletteGame game = plugin.rouletteToPlace(tier);
         float yaw = Math.round(p.getLocation().getYaw() / 90f) * 90f;
         double r = Math.toRadians(yaw);
         Location feet = p.getLocation();
         Location center = new Location(feet.getWorld(), feet.getBlockX() + 0.5 - Math.sin(r) * 2.0, feet.getY(),
                 feet.getBlockZ() + 0.5 + Math.cos(r) * 2.0);
         game.setTable(center, yaw);
-        Msg.send(p, "<green>Roulette-Tisch (Las Vegas, " + tier.key + ") aufgebaut: Kessel links, Croupier gegenüber. Gesetzt wird per Rechtsklick "
+        Msg.send(p, "<green>Roulette-Tisch " + game.index() + " (Las Vegas, " + tier.key + ") aufgebaut: Kessel links, Croupier gegenüber. Gesetzt wird per Rechtsklick "
                 + "aufs Tableau, Linksklick nimmt Chips zurück, Schleichen + Rechtsklick öffnet das Menü.");
     }
 

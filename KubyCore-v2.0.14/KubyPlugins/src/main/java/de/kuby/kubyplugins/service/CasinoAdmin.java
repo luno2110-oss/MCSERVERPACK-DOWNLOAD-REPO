@@ -500,6 +500,14 @@ public final class CasinoAdmin {
     /** Quelle von Teilen: Dienst, Name der Farbe (oder null), Farbe der Zeile, ob „zu mir holen“ passt (Bodenteile). */
     private record Source(Placeable p, String tier, TextColor color, boolean floor) {}
 
+    private static String tierName(TableTier t) {
+        return t == TableTier.ROT ? "Rot" : t == TableTier.VIOLETT ? "Violett" : "Grün";
+    }
+
+    private static TextColor tierColor(TableTier t) {
+        return t == TableTier.ROT ? T_RED : t == TableTier.VIOLETT ? T_VIOLET : T_GREEN;
+    }
+
     /** Einstellung: kind 0 = ganze Zahl, 1 = Prozent (gespeichert als Anteil), 2 = Kommazahl, 3 = Schalter. */
     private record Setting(String path, String label, double def, double step, double min, double max, int kind, String hint) {}
 
@@ -547,8 +555,7 @@ public final class CasinoAdmin {
                     List.of(place("Grün hier", "casino roulette-tisch", "Spielerseite, Blick zum Croupier; Tischmitte 2 Blöcke vor dir"),
                             place("Rot hier", "casino roulette-tisch rot", "High Roller: Spielerseite, Blick zum Croupier"),
                             place("Violett hier", "casino roulette-tisch violett", "Elite: Spielerseite, Blick zum Croupier")),
-                    pl -> List.of(new Source(pl.roulette(), "Grün", T_GREEN, true), new Source(pl.rouletteHr(), "Rot", T_RED, true),
-                            new Source(pl.rouletteVio(), "Violett", T_VIOLET, true)),
+                    pl -> pl.roulettes().stream().map(g -> new Source(g, tierName(g.tier()), tierColor(g.tier()), true)).toList(),
                     List.of(i("casino.roulette.wait-seconds", "Wartezeit bis zum Wurf (s)", 20, 5, 5, 120),
                             i("casino.roulette.min-bet", "Grün: Mindesteinsatz", 10, 10, 1, 1_000_000),
                             i("casino.roulette.max-round", "Grün: Höchstens je Runde", 100_000, 10_000, 100, 100_000_000),
@@ -570,8 +577,7 @@ public final class CasinoAdmin {
                     List.of(place("Grün hier", "casino poker-tisch gruen", "Auf die Tischmitte stellen, Blick zur Seite der Dealerin"),
                             place("Rot hier", "casino poker-tisch rot", "High Roller: Tischmitte, Blick zur Dealerin"),
                             place("Violett hier", "casino poker-tisch violett", "Elite: Tischmitte, Blick zur Dealerin")),
-                    pl -> List.of(new Source(pl.poker(), "Grün", T_GREEN, true), new Source(pl.pokerHr(), "Rot", T_RED, true),
-                            new Source(pl.pokerVio(), "Violett", T_VIOLET, true)),
+                    pl -> pl.pokerTables().stream().map(s -> new Source(s, tierName(s.tier()), tierColor(s.tier()), true)).toList(),
                     List.of(i("casino.poker.min-buyin-bb", "Kleinstes Buy-in (Big Blinds)", 40, 5, 10, 200),
                             i("casino.poker.turn-seconds", "Grün: Zeit je Zug (s)", 30, 5, 10, 180),
                             i("casino.poker-rot.turn-seconds", "Rot: Zeit je Zug (s)", 30, 5, 10, 180),

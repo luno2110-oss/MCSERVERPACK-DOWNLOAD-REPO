@@ -144,15 +144,37 @@ public final class RouletteGame implements Placeable, org.bukkit.event.Listener 
     }
 
     public RouletteGame(KubyPlugins plugin, TableTier tier) {
-        this.plugin = plugin;
-        this.tier = tier;
-        this.game = "roulette" + tier.suffix;
+        this(plugin, tier, 1);
+    }
+
+    /** Nummer des Tischs in seiner Farbe (v2.07: beliebig viele Tische je Farbe; 1 = der ursprüngliche). */
+    private final int index;
+
+    public int index() {
+        return index;
+    }
+
+    /** Datei eines Tischs dieser Farbe (1 = roulette-tisch[-rot].yml, 2 … = …-2.yml). */
+    public static File fileOf(KubyPlugins plugin, TableTier tier, int index) {
         String k = switch (tier) {
             case GRUEN -> "";
             case ROT -> "-rot";
             case VIOLETT -> "-violett";
         };
-        this.file = new File(plugin.getDataFolder(), "roulette-tisch" + k + ".yml");
+        return new File(plugin.getDataFolder(), "roulette-tisch" + k + (index > 1 ? "-" + index : "") + ".yml");
+    }
+
+    public RouletteGame(KubyPlugins plugin, TableTier tier, int index) {
+        this.plugin = plugin;
+        this.tier = tier;
+        this.index = Math.max(1, index);
+        this.game = "roulette" + tier.suffix;
+        String k = switch (tier) {
+            case GRUEN -> "";
+            case ROT -> "-rot";
+            case VIOLETT -> "-violett";
+        } + (this.index > 1 ? "-" + this.index : "");
+        this.file = fileOf(plugin, tier, this.index);
         this.table = new RouletteTable(plugin, new NamespacedKey(plugin, "roulette_table" + k.replace('-', '_'))).tier(tier);
         YamlConfiguration yml = YamlConfiguration.loadConfiguration(file);
         String t = yml.getString("tisch");
@@ -1197,7 +1219,7 @@ public final class RouletteGame implements Placeable, org.bukkit.event.Listener 
         if (!hasTable()) return List.of();
         boolean busy = !bets.isEmpty() || phase != Phase.IDLE || wheelBusy;
         return List.of(new Piece("tisch", title().charAt(0) + title().substring(1).toLowerCase(java.util.Locale.ROOT).replace("roulette", "Roulette")
-                .replace("high roller", "High Roller").replace("elite", "Elite"), table.center(), table.yaw(), Double.NaN,
+                .replace("high roller", "High Roller").replace("elite", "Elite") + (index > 1 ? " " + index : ""), table.center(), table.yaw(), Double.NaN,
                 busy ? "Runde läuft" : "frei", busy));
     }
 

@@ -121,20 +121,38 @@ public final class PokerService implements de.kuby.kubyplugins.casino.Placeable,
     }
 
     public PokerService(KubyPlugins plugin, de.kuby.kubyplugins.casino.TableTier tier) {
-        this.plugin = plugin;
-        this.tier = tier;
-        this.highRoller = tier.highRoller();
+        this(plugin, tier, 1);
+    }
+
+    /** Nummer des Tischs in seiner Farbe (v2.07: beliebig viele Tische je Farbe; 1 = der ursprüngliche). */
+    private final int index;
+
+    public int index() {
+        return index;
+    }
+
+    /** Datei eines weiteren Tischs dieser Farbe (2, 3 …). */
+    public static File fileOf(KubyPlugins plugin, de.kuby.kubyplugins.casino.TableTier tier, int index) {
         String k = switch (tier) {
             case GRUEN -> "poker";
             case ROT -> "poker-rot";
             case VIOLETT -> "poker-violett";
         };
+        return new File(plugin.getDataFolder(), k + (index > 1 ? "-" + index : "") + ".yml");
+    }
+
+    public PokerService(KubyPlugins plugin, de.kuby.kubyplugins.casino.TableTier tier, int index) {
+        this.plugin = plugin;
+        this.tier = tier;
+        this.index = Math.max(1, index);
+        this.highRoller = tier.highRoller();
         String t = switch (tier) {
             case GRUEN -> "kp_poker";
             case ROT -> "kp_pokerr";
             case VIOLETT -> "kp_pokerv";
         };
-        this.file = new File(plugin.getDataFolder(), k + ".yml");
+        if (this.index > 1) t = t + this.index;
+        this.file = fileOf(plugin, tier, this.index);
         this.tag = new NamespacedKey(plugin, t);
         this.ptag = new NamespacedKey(plugin, t + "_t");
         this.pclick = new NamespacedKey(plugin, t + "_c");
@@ -1488,7 +1506,7 @@ public final class PokerService implements de.kuby.kubyplugins.casino.Placeable,
             case GRUEN -> "Pokertisch";
             case ROT -> "Pokertisch High Roller";
             case VIOLETT -> "Pokertisch Elite";
-        };
+        } + (index > 1 ? " " + index : "");
         return java.util.List.of(new de.kuby.kubyplugins.casino.Placeable.Piece("tisch", name, t, tableYaw(), Double.NaN,
                 busy ? seats.size() + " am Tisch" : "frei", busy));
     }
