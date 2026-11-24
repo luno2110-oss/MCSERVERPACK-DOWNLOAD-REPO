@@ -117,6 +117,8 @@ public final class People implements Placeable, Listener {
     /** Tätigkeit der Figur (Leute) bzw. Skin-Pfad (alle animierten Figuren). */
     private final NamespacedKey actKey, varKey, skinKey, slimKey, anchorKey, groupKey, lenKey, seatKey, bubbleKey;
     private final Map<String, Variant> variants = new LinkedHashMap<>();
+    /** Sprachaufnahmen (v2.07, „Voicelines wie in GTA“): Text -> Stimme -> Ton-Schlüssel (resources/casino/voice.txt). */
+    private final Map<String, Map<String, String>> voice = new HashMap<>();
     private final Map<UUID, Npc> npcs = new HashMap<>();
     private long tick;
     private final java.util.Set<String> warned = new java.util.HashSet<>();
@@ -133,6 +135,59 @@ public final class People implements Placeable, Listener {
         seatKey = new NamespacedKey(plugin, "people_seat");
         bubbleKey = new NamespacedKey(plugin, "people_bubble");
         loadVariants();
+        loadVoice();
+    }
+
+    private void loadVoice() {
+        try (InputStream in = People.class.getResourceAsStream("/casino/voice.txt")) {
+            if (in == null) return;
+            BufferedReader r = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
+            String line;
+            while ((line = r.readLine()) != null) {
+                String[] p = line.split("\\|", 3);
+                if (p.length == 3) voice.computeIfAbsent(p[2].trim(), k -> new HashMap<>()).put(p[1], p[0]);
+            }
+        } catch (Exception e) {
+            plugin.getLogger().warning("voice.txt nicht lesbar: " + e.getMessage());
+        }
+    }
+
+    /** Stimme einer Figur: Security, Pechvogel, Gast (Mann/Frau) oder Personal nach Rolle. */
+    private static String voiceOf(Npc n) {
+        if (n.act != null && n.act.guard()) return "sec";
+        if (n.role != null) {
+            return switch (n.role) {
+                case CROUPIER -> "croupier";
+                case KASSE -> "kasse";
+                case LOSBUDE -> "losbude";
+                default -> n.slim ? "gast_w" : "gast_m";
+            };
+        }
+        if (n.act == Act.VERZWEIFELT && !n.slim) return "pech";
+        return n.slim ? "gast_w" : "gast_m";
+    }
+
+    /** Satz hörbar machen, wenn es eine Aufnahme gibt; Tonhöhe je Person leicht verschieden (klingt nach mehr Stimmen). */
+    private void speak(Npc n, Mannequin m, String text) {
+        String t = text.replace("‹Funk› ", "").trim();
+        Map<String, String> by = voice.get(t);
+        if (by == null) return;
+        String v = voiceOf(n);
+        String key = by.get(v);
+        if (key == null && v.equals("pech")) key = by.get("gast_m");
+        if (key == null) return;
+        float pitch = 0.93f + (Math.floorMod(n.id.hashCode(), 15)) / 100f;
+        m.getWorld().playSound(m.getLocation().add(0, 1.6, 0), "kuby:voice." + key, org.bukkit.SoundCategory.VOICE,
+                text.startsWith("‹Funk›") ? 0.6f : 1.0f, pitch);
+    }
+
+    /** Aufnahme an einem Ort abspielen (z. B. Croupier am Roulette-Tisch: „Rien ne va plus.“). */
+    public void speakAt(Location at, String voiceName, String text) {
+        Map<String, String> by = voice.get(text);
+        String key = by == null ? null : by.get(voiceName);
+        if (key != null && at.getWorld() != null) {
+            at.getWorld().playSound(at, "kuby:voice." + key, org.bukkit.SoundCategory.VOICE, 1.0f, 1.0f);
+        }
     }
 
     private void loadVariants() {
@@ -377,6 +432,7 @@ public final class People implements Placeable, Listener {
         m.addPassenger(d);
         n.bubble = d.getUniqueId();
         n.bubbleEnd = tick + ticks;
+        speak(n, m, text);
     }
 
     void say(Npc n, Mannequin m, String text) {
@@ -435,7 +491,7 @@ public final class People implements Placeable, Listener {
             {"Morgen früh Arbeit …", "Dann geh doch.", "Nach dem nächsten Gewinn.", "Also nie."},
     };
 
-    static final String[] LAUGH = {"Haha!", "Hahaha!", "Hör auf!", "Nicht dein Ernst!", "Ich kann nicht mehr!"};
+    static final String[] LAUGH = {"Haha!", "Hahaha, hör auf!", "Hahaha, nicht dein Ernst!", "Ich kann nicht mehr!"};
 
     static String click(Act act, Variant v) {
         String own = v == null ? null : PERSONAL.get(v.id());
@@ -734,7 +790,7 @@ public final class People implements Placeable, Listener {
         // auf und ab gehen
         walk(n, m, 0.045, n.len <= 0 ? 2.5 : n.len, 40);
         if (tick % 90 == 0) {
-            String[] lines = {"Ja … ja … nein!", "Wie, die Karte ist gesperrt?", "Ich bin gleich zu Hause, Schatz.", "Sag Mama, ich bin im Theater.",
+            String[] lines = {"Ja … ja … nein!", "Wie, die Karte ist gesperrt?", "Ja, Schatz, ich bin gleich zu Hause!", "Sag Mama, ich bin im Theater.",
                     "Nein, ich hab nicht gespielt. Fast nicht.", "Haha, nein! Erzähl!", "Warte, hier ist's so laut …", "Kannst du mir was leihen?",
                     "Der Deal steht. Morgen um neun.", "Ich hab gewonnen! Also … ein bisschen."};
             say(n, m, lines[(n.line++ + n.id.hashCode() & 0xFFFF) % lines.length], BUBBLE, 70, true);
@@ -878,7 +934,7 @@ public final class People implements Placeable, Listener {
             n.phaseEnd = tick + 80;
             say(n, m, any("*schluchzt*", "Warum hab ich nicht aufgehört …", "Die ganze Miete …"), RADIO, 70, true);
         } else if (r < 7) {
-            say(n, m, any("Rot. Es war doch so sicher Rot.", "Nur noch eine Runde, dann hol ich alles zurück.", "Alles weg …",
+            say(n, m, any("Rot. Es war doch so sicher Rot.", "Nur noch eine Runde, dann hol ich alles zurück.", "Alles weg … die ganze Miete.",
                     "Wie sag ich das zu Hause?", "Ich hatte so ein gutes Gefühl …"), RADIO, 80, true);
         } else {
             m.setPose(Pose.SNEAKING, true);                // krümmt sich zusammen
@@ -1104,13 +1160,14 @@ public final class People implements Placeable, Listener {
                     hold(m, "leer", ItemUseAnimation.TRIDENT);   // Arm hoch
                     n.phaseEnd = tick + 30;
                     m.swingOffHand();
-                    say(n, m, big ? any("WAHNSINN!", "Jackpot-Stimmung!", "Ich wusste es!") : any("Jaaa!", "Na also!", "Glückwunsch!"), CHEER, 60, false);
+                    say(n, m, big ? any(n.slim ? "Wahnsinn!" : "Wow! Nicht schlecht!", "Jackpot-Stimmung!", "Ich wusste es!")
+                            : any("Jaaa! Na also!", "Jaaa! Na also!", "Glückwunsch!"), CHEER, 60, false);
                 } else if (RND.nextBoolean()) {
-                    say(n, m, any("Ohh …", "Knapp daneben.", "Nächstes Mal!"), BUBBLE, 50, false);
+                    say(n, m, any("Ohh … knapp daneben.", "Ohh … knapp daneben.", "Nächstes Mal!"), BUBBLE, 50, false);
                 }
             } else if (big && won && d < 64 && (n.act == Act.GRUPPE || n.act == Act.TRINKEN || n.act == Act.BANK || n.act == Act.WAND)) {
                 lookAt(n, p.getEyeLocation(), 60);
-                if (RND.nextInt(3) == 0) say(n, m, any("Wow!", "Nicht schlecht!", "Hast du das gesehen?"), BUBBLE, 50, false);
+                if (RND.nextInt(3) == 0) say(n, m, any(n.slim ? "Wahnsinn!" : "Wow! Nicht schlecht!", "Hast du das gesehen?"), BUBBLE, 50, false);
             } else if (big && won && d < 100 && n.act == Act.VERZWEIFELT) {
                 lookAt(n, p.getEyeLocation(), 80);
                 say(n, m, any("Gib mir was ab!", "Nur ein paar Chips … bitte!", "Warum immer die anderen …"), RADIO, 70, true);
@@ -1362,6 +1419,7 @@ public final class People implements Placeable, Listener {
         if (variants.size() < 20) err.add("people.txt: nur " + variants.size() + " Figuren");
         if (group("security").size() < 3) err.add("weniger als 3 Security-Varianten");
         if (group("gast").size() < 8) err.add("weniger als 8 Gäste");
+        if (voice.size() < 15) err.add("voice.txt: nur " + voice.size() + " Sätze mit Aufnahme");
         for (Act a : Act.values()) {
             if (pool(a).isEmpty()) err.add("kein Pool für " + a.id);
             if (click(a, null) == null) err.add("kein Satz für " + a.id);

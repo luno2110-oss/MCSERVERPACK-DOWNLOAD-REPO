@@ -1,0 +1,30 @@
+croupier_1|croupier|Faites vos jeux!
+croupier_2|croupier|Rien ne va plus.
+croupier_3|croupier|Bonsoir. Ein Platz ist noch frei.
+gast_m_1|gast_m|Prost!
+gast_m_2|gast_m|Jaaa! Na also!
+gast_m_3|gast_m|Ohh … knapp daneben.
+gast_m_4|gast_m|Hahaha, nicht dein Ernst!
+gast_m_5|gast_m|Ein Bier, bitte!
+gast_m_6|gast_m|Ja, Schatz, ich bin gleich zu Hause!
+gast_m_7|gast_m|Wow! Nicht schlecht!
+gast_w_1|gast_w|Prost!
+gast_w_2|gast_w|Wahnsinn!
+gast_w_3|gast_w|Wo bleiben die denn?
+gast_w_4|gast_w|Zwei Martini, bitte!
+gast_w_5|gast_w|Hahaha, hör auf!
+gast_w_6|gast_w|Da seid ihr ja! Endlich!
+kasse_1|kasse|Willkommen! Chips gefällig?
+kasse_2|kasse|Hallo! Coins rein, Chips raus.
+losbude_1|losbude|Lose, Lose! Heute schon Glück gehabt?
+losbude_2|losbude|Hauptgewinn noch nicht gezogen!
+losbude_3|losbude|Wer wagt, gewinnt!
+pech_1|pech|Alles weg … die ganze Miete.
+pech_2|pech|Hey … hast du ein paar Chips übrig?
+pech_3|pech|Nur noch eine Runde, dann hol ich alles zurück.
+pech_4|pech|Gib mir was ab!
+sec_1|sec|Guten Abend.
+sec_2|sec|Hey! Nicht rennen!
+sec_3|sec|Alles ruhig am Eingang.
+sec_4|sec|Verstanden. Bin auf Position.
+sec_5|sec|Willkommen im Casino.

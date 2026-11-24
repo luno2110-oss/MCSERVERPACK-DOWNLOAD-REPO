@@ -449,6 +449,9 @@ public final class RouletteGame implements Placeable, org.bukkit.event.Listener 
         if (phase == Phase.IDLE) {
             phase = Phase.BETTING;
             countdown = (int) plugin.getConfig().getLong("casino.roulette.wait-seconds", 20);
+            // Croupier-Stimme (v2.07): „Faites vos jeux!“
+            if (plugin.people() != null && table.croupier() != null) plugin.people().speakAt(table.croupier().location().add(0, 1.6, 0),
+                    "croupier", "Faites vos jeux!");
             nearby(15).forEach(q -> CasinoText.send(q, "<white>" + Msg.escape(p.getName()) + "</white> setzt – die Runde startet in "
                     + countdown + " s. <yellow>/roulette"));
         }
@@ -535,6 +538,9 @@ public final class RouletteGame implements Placeable, org.bukkit.event.Listener 
 
     /** "Nichts geht mehr": Glocke, Blitz-Zahlen, und wer am meisten gesetzt hat, darf die Kugel werfen. */
     private void rienNeVaPlus() {
+        // Croupier-Stimme (v2.07): „Rien ne va plus.“
+        if (plugin.people() != null && table.croupier() != null) plugin.people().speakAt(table.croupier().location().add(0, 1.6, 0),
+                "croupier", "Rien ne va plus.");
         Location c = table.layoutCenter();
         if (table.croupier() != null) table.croupier().sweep();
         if (c != null) {

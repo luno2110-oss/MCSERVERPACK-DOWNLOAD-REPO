@@ -495,5 +495,245 @@
     "stream": true
    }
   ]
+ },
+ "voice.sec_1": {
+  "sounds": [
+   {
+    "name": "kuby:voice/sec_1",
+    "attenuation_distance": 14
+   }
+  ]
+ },
+ "voice.sec_2": {
+  "sounds": [
+   {
+    "name": "kuby:voice/sec_2",
+    "attenuation_distance": 14
+   }
+  ]
+ },
+ "voice.sec_3": {
+  "sounds": [
+   {
+    "name": "kuby:voice/sec_3",
+    "attenuation_distance": 14
+   }
+  ]
+ },
+ "voice.sec_4": {
+  "sounds": [
+   {
+    "name": "kuby:voice/sec_4",
+    "attenuation_distance": 14
+   }
+  ]
+ },
+ "voice.sec_5": {
+  "sounds": [
+   {
+    "name": "kuby:voice/sec_5",
+    "attenuation_distance": 14
+   }
+  ]
+ },
+ "voice.gast_m_1": {
+  "sounds": [
+   {
+    "name": "kuby:voice/gast_m_1",
+    "attenuation_distance": 14
+   }
+  ]
+ },
+ "voice.gast_m_2": {
+  "sounds": [
+   {
+    "name": "kuby:voice/gast_m_2",
+    "attenuation_distance": 14
+   }
+  ]
+ },
+ "voice.gast_m_3": {
+  "sounds": [
+   {
+    "name": "kuby:voice/gast_m_3",
+    "attenuation_distance": 14
+   }
+  ]
+ },
+ "voice.gast_m_4": {
+  "sounds": [
+   {
+    "name": "kuby:voice/gast_m_4",
+    "attenuation_distance": 14
+   }
+  ]
+ },
+ "voice.gast_m_5": {
+  "sounds": [
+   {
+    "name": "kuby:voice/gast_m_5",
+    "attenuation_distance": 14
+   }
+  ]
+ },
+ "voice.gast_m_6": {
+  "sounds": [
+   {
+    "name": "kuby:voice/gast_m_6",
+    "attenuation_distance": 14
+   }
+  ]
+ },
+ "voice.gast_m_7": {
+  "sounds": [
+   {
+    "name": "kuby:voice/gast_m_7",
+    "attenuation_distance": 14
+   }
+  ]
+ },
+ "voice.gast_w_1": {
+  "sounds": [
+   {
+    "name": "kuby:voice/gast_w_1",
+    "attenuation_distance": 14
+   }
+  ]
+ },
+ "voice.gast_w_2": {
+  "sounds": [
+   {
+    "name": "kuby:voice/gast_w_2",
+    "attenuation_distance": 14
+   }
+  ]
+ },
+ "voice.gast_w_3": {
+  "sounds": [
+   {
+    "name": "kuby:voice/gast_w_3",
+    "attenuation_distance": 14
+   }
+  ]
+ },
+ "voice.gast_w_4": {
+  "sounds": [
+   {
+    "name": "kuby:voice/gast_w_4",
+    "attenuation_distance": 14
+   }
+  ]
+ },
+ "voice.gast_w_5": {
+  "sounds": [
+   {
+    "name": "kuby:voice/gast_w_5",
+    "attenuation_distance": 14
+   }
+  ]
+ },
+ "voice.gast_w_6": {
+  "sounds": [
+   {
+    "name": "kuby:voice/gast_w_6",
+    "attenuation_distance": 14
+   }
+  ]
+ },
+ "voice.pech_1": {
+  "sounds": [
+   {
+    "name": "kuby:voice/pech_1",
+    "attenuation_distance": 14
+   }
+  ]
+ },
+ "voice.pech_2": {
+  "sounds": [
+   {
+    "name": "kuby:voice/pech_2",
+    "attenuation_distance": 14
+   }
+  ]
+ },
+ "voice.pech_3": {
+  "sounds": [
+   {
+    "name": "kuby:voice/pech_3",
+    "attenuation_distance": 14
+   }
+  ]
+ },
+ "voice.pech_4": {
+  "sounds": [
+   {
+    "name": "kuby:voice/pech_4",
+    "attenuation_distance": 14
+   }
+  ]
+ },
+ "voice.croupier_1": {
+  "sounds": [
+   {
+    "name": "kuby:voice/croupier_1",
+    "attenuation_distance": 14
+   }
+  ]
+ },
+ "voice.croupier_2": {
+  "sounds": [
+   {
+    "name": "kuby:voice/croupier_2",
+    "attenuation_distance": 14
+   }
+  ]
+ },
+ "voice.croupier_3": {
+  "sounds": [
+   {
+    "name": "kuby:voice/croupier_3",
+    "attenuation_distance": 14
+   }
+  ]
+ },
+ "voice.kasse_1": {
+  "sounds": [
+   {
+    "name": "kuby:voice/kasse_1",
+    "attenuation_distance": 14
+   }
+  ]
+ },
+ "voice.kasse_2": {
+  "sounds": [
+   {
+    "name": "kuby:voice/kasse_2",
+    "attenuation_distance": 14
+   }
+  ]
+ },
+ "voice.losbude_1": {
+  "sounds": [
+   {
+    "name": "kuby:voice/losbude_1",
+    "attenuation_distance": 14
+   }
+  ]
+ },
+ "voice.losbude_2": {
+  "sounds": [
+   {
+    "name": "kuby:voice/losbude_2",
+    "attenuation_distance": 14
+   }
+  ]
+ },
+ "voice.losbude_3": {
+  "sounds": [
+   {
+    "name": "kuby:voice/losbude_3",
+    "attenuation_distance": 14
+   }
+  ]
  }
 }
