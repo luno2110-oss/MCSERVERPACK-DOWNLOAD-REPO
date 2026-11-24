@@ -79,7 +79,12 @@ public final class TeamCommand implements CommandExecutor {
                 reply(p, plugin.teams().delHome(p, args[1]), "<gray>Team-Home gelöscht.");
             }
             case "lager", "storage" -> {
-                String err = plugin.teams().openStorage(p);
+                // /team lager [2|erweitern]
+                if (args.length > 1 && (args[1].equalsIgnoreCase("erweitern") || args[1].equalsIgnoreCase("upgrade"))) {
+                    reply(p, plugin.teams().expandStorage(p), "<green>Team-Lager erweitert.");
+                    return true;
+                }
+                String err = plugin.teams().openStorage(p, args.length > 1 && args[1].equals("2") ? 1 : 0);
                 if (err != null) Msg.send(p, "<red>" + err);
             }
             case "kick" -> {

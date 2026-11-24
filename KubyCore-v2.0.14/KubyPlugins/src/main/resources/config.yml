@@ -42,6 +42,8 @@ team:
   max-members: 5              # Plätze auf Team-Level 1
   members-per-level: 1        # mehr Plätze je Team-Level
   max-level: 10               # Team-XP: 1 pro aktiver Minute in Survival, doppelt mit Teamkollegen online; Level L braucht 200*L*(L-1)
+  lager:                      # Team-Lager: zwei Seiten zu 3 Reihen (4. Reihe Knöpfe); Reihen 1 + je zwei Level + gekaufte
+    preise: [10000, 25000, 50000, 100000, 200000]   # Preis der 2. bis 6. Reihe aus der Teamkasse (/team lager erweitern, nur Teamchef)
 
 market:
   tax-percent: 5

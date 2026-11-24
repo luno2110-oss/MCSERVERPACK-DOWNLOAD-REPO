@@ -5,6 +5,7 @@ import de.kuby.kubyplugins.util.Locs;
 import de.kuby.kubyplugins.util.Msg;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
@@ -41,7 +42,9 @@ public final class TeamService {
         private long bank;
         private long xp;
         private ItemStack[] storage = new ItemStack[54];
-        private Inventory storageInv;
+        /** Team-Lager (v2.07): zwei gemeinsame Seiten (je 3 Reihen Inhalt + Knopfreihe), gekaufte Reihen. */
+        private final Inventory[] pages = new Inventory[2];
+        private int extraRows;
 
         private Team(String mode, String name, UUID leader) {
             this.mode = mode;
@@ -59,19 +62,24 @@ public final class TeamService {
         public Map<String, String> homes() { return Collections.unmodifiableMap(homes); }
     }
 
-    /** Halter des Team-Lagers (ein Inventar-Objekt pro Team, damit alle denselben Inhalt sehen). */
+    /** Halter einer Seite des Team-Lagers (ein Inventar je Team und Seite, damit alle denselben Inhalt sehen). */
     public static final class StorageHolder implements InventoryHolder {
         public final Team team;
+        public final int page;
 
-        StorageHolder(Team team) {
+        StorageHolder(Team team, int page) {
             this.team = team;
+            this.page = page;
         }
 
         @Override
         public @NotNull Inventory getInventory() {
-            return team.storageInv;
+            return team.pages[page];
         }
     }
+
+    /** Lagerplätze je Seite (3 Reihen), Seiten, Größe des Fensters (4. Reihe = Knöpfe). */
+    public static final int PAGE_SLOTS = 27, PAGES = 2, PAGE_SIZE = 36;
 
     private final KubyPlugins plugin;
     private final File file;
@@ -99,6 +107,7 @@ public final class TeamService {
             if (hs != null) for (String h : hs.getKeys(false)) t.homes.put(h, hs.getString(h));
             t.bank = yml.getLong(key + ".bank");
             t.xp = yml.getLong(key + ".xp");
+            t.extraRows = Math.max(0, yml.getInt(key + ".lager-reihen"));
             var st = yml.getConfigurationSection(key + ".storage");
             if (st != null) {
                 for (String slot : st.getKeys(false)) {
@@ -173,9 +182,41 @@ public final class TeamService {
         return Math.min(5, 1 + (level(t) - 1) / 2);
     }
 
-    /** Reihen im Team-Lager: 1, dazu eine je zwei Level (höchstens 6). */
+    /** Reihen im Team-Lager: 1, dazu eine je zwei Level, dazu gekaufte Reihen (höchstens 6 = zwei Seiten zu 3 Reihen). */
     public int storageRows(Team t) {
-        return Math.min(6, 1 + (level(t) - 1) / 2);
+        return Math.min(6, 1 + (level(t) - 1) / 2 + t.extraRows);
+    }
+
+    /** Preis der nächsten Lager-Reihe aus der Teamkasse (team.lager.preise, je Reihe 2 bis 6), -1 = voll. */
+    public long expandCost(Team t) {
+        int rows = storageRows(t);
+        if (rows >= 6) return -1;
+        List<Long> prices = plugin.getConfig().getLongList("team.lager.preise");
+        if (prices.isEmpty()) prices = List.of(10_000L, 25_000L, 50_000L, 100_000L, 200_000L);
+        return prices.get(Math.max(0, Math.min(prices.size() - 1, rows - 1)));
+    }
+
+    /**
+     * Team-Lager um eine Reihe erweitern (v2.07, Wunsch des Besitzers: „Spieler sollen die Teamkiste erweitern können, höchstens
+     * zwei Seiten mit 3 Reihen, die 4. für die Knöpfe“): nur der Teamchef, bezahlt aus der Teamkasse.
+     */
+    public synchronized String expandStorage(Player p) {
+        Team t = of(p.getUniqueId());
+        if (t == null) return "Du hast kein Team.";
+        if (!t.leader.equals(p.getUniqueId())) return "Nur der Teamchef kann das Lager erweitern.";
+        long cost = expandCost(t);
+        if (cost < 0) return "Das Team-Lager ist schon voll ausgebaut (zwei Seiten).";
+        if (t.bank < cost) return "In der Teamkasse fehlen " + Msg.coins(cost - t.bank) + "$ (Preis " + Msg.coins(cost) + "$). Einzahlen: /team kasse einzahlen <Betrag>";
+        syncStorage(t);
+        t.bank -= cost;
+        t.extraRows++;
+        save();
+        for (int pg = 0; pg < PAGES; pg++) if (t.pages[pg] != null) renderPage(t, pg);
+        for (UUID m : t.members) {
+            Player q = Bukkit.getPlayer(m);
+            if (q != null) Msg.send(q, "<gold>Team-Lager erweitert: <white>" + storageRows(t) + " von 6 Reihen</white> <gray>(" + Msg.coins(cost) + "$ aus der Teamkasse).");
+        }
+        return null;
     }
 
     /** Team-XP für ein Mitglied (z. B. aktive Spielzeit). Aufstiege werden dem Team gemeldet. */
@@ -271,10 +312,11 @@ public final class TeamService {
     private void payOut(Team t, UUID to) {
         if (t.bank > 0) plugin.modes().depositIn(to, t.mode, t.bank);
         t.bank = 0;
-        if (t.storageInv != null) {
-            for (org.bukkit.entity.HumanEntity v : List.copyOf(t.storageInv.getViewers())) v.closeInventory();
-            t.storage = t.storageInv.getContents();
+        for (Inventory inv : t.pages) {
+            if (inv == null) continue;
+            for (org.bukkit.entity.HumanEntity v : List.copyOf(inv.getViewers())) v.closeInventory();
         }
+        syncStorage(t);
         for (ItemStack it : t.storage) if (it != null && !it.getType().isAir()) plugin.modes().abholboxIn(to, t.mode, it);
         t.storage = new ItemStack[54];
     }
@@ -341,39 +383,139 @@ public final class TeamService {
         memberOf.remove(t.mode + "|" + target);
         Player kicked = Bukkit.getPlayer(target);
         if (kicked != null) {
-            if (t.storageInv != null && t.storageInv.getViewers().contains(kicked)) kicked.closeInventory();
+            for (Inventory inv : t.pages) if (inv != null && inv.getViewers().contains(kicked)) kicked.closeInventory();
             Msg.send(kicked, "<red>Du wurdest aus dem Team " + t.name + " entfernt.");
         }
         save();
         return null;
     }
 
-    /** Team-Lager öffnen (alle Mitglieder, nur im Modus des Teams). */
+    /** Team-Lager öffnen (alle Mitglieder, nur im Modus des Teams), erste Seite. */
     public String openStorage(Player p) {
+        return openStorage(p, 0);
+    }
+
+    /** Seite (0 oder 1) des Team-Lagers öffnen. */
+    public synchronized String openStorage(Player p, int page) {
         Team t = of(p.getUniqueId());
         if (t == null) return "Du hast kein Team.";
-        int size = storageRows(t) * 9;
-        if (t.storageInv == null || (t.storageInv.getSize() != size && t.storageInv.getViewers().isEmpty())) {
-            if (t.storageInv != null) t.storage = t.storageInv.getContents();
-            t.storageInv = Bukkit.createInventory(new StorageHolder(t), size, Msg.parse("<dark_gray>Team-Lager " + t.name));
-            ItemStack[] content = new ItemStack[size];
-            List<ItemStack> overflow = new ArrayList<>();
-            for (int i = 0; i < t.storage.length; i++) {
-                if (t.storage[i] == null) continue;
-                if (i < size) content[i] = t.storage[i];
-                else overflow.add(t.storage[i]);
-            }
-            t.storageInv.setContents(content);
-            for (ItemStack it : overflow) t.storageInv.addItem(it);
+        int pg = Math.max(0, Math.min(PAGES - 1, page));
+        if (pg == 1 && storageRows(t) <= 3) return "Seite 2 gibt es ab der 4. Reihe – erweitere das Lager.";
+        if (t.pages[pg] == null) {
+            t.pages[pg] = Bukkit.createInventory(new StorageHolder(t, pg), PAGE_SIZE,
+                    Msg.parse("<dark_gray>Team-Lager " + t.name + (storageRows(t) > 3 ? " · Seite " + (pg + 1) + "/2" : "")));
+            renderPage(t, pg);
         }
-        p.openInventory(t.storageInv);
+        p.openInventory(t.pages[pg]);
         return null;
     }
 
-    /** Lager-Inhalt übernehmen (beim Schließen). */
+    /** Freie Plätze (Index im Lager) sind die ersten storageRows * 9. */
+    public boolean unlocked(Team t, int page, int slot) {
+        return slot >= 0 && slot < PAGE_SLOTS && page * PAGE_SLOTS + slot < storageRows(t) * 9;
+    }
+
+    /** Seite neu füllen: Lagerplätze, gesperrte Plätze, Knopfreihe. */
+    private void renderPage(Team t, int pg) {
+        Inventory inv = t.pages[pg];
+        if (inv == null) return;
+        int rows = storageRows(t);
+        long cost = expandCost(t);
+        for (int i = 0; i < PAGE_SLOTS; i++) {
+            int idx = pg * PAGE_SLOTS + i;
+            if (idx < rows * 9) {
+                ItemStack cur = inv.getItem(i);
+                if (cur == null || isLockItem(cur)) inv.setItem(i, t.storage[idx]);
+            } else {
+                inv.setItem(i, de.kuby.kubyplugins.util.Items.make(Material.GRAY_STAINED_GLASS_PANE, "<gray>Gesperrter Platz",
+                        cost < 0 ? List.of() : List.of("<dark_gray>Erweitern: unten der Amboss", "<dark_gray>Nächste Reihe: <yellow>" + Msg.coins(cost) + "$")));
+            }
+        }
+        ItemStack bar = de.kuby.kubyplugins.util.Items.make(Material.BLACK_STAINED_GLASS_PANE, " ", List.of());
+        for (int i = PAGE_SLOTS; i < PAGE_SIZE; i++) inv.setItem(i, bar);
+        if (pg == 1) inv.setItem(27, de.kuby.kubyplugins.util.Items.make(Material.ARROW, "<yellow>‹ Seite 1", List.of("<gray>Zur ersten Seite")));
+        inv.setItem(30, de.kuby.kubyplugins.util.Items.make(Material.CHEST, "<gold>Team-Lager " + t.name, List.of(
+                "<gray>Reihen: <white>" + rows + " von 6", "<gray>Seite: <white>" + (pg + 1) + (rows > 3 ? " von 2" : ""),
+                "<gray>Teamkasse: <yellow>" + Msg.coins(t.bank) + "$")));
+        inv.setItem(32, cost < 0
+                ? de.kuby.kubyplugins.util.Items.make(Material.NETHER_STAR, "<gold>Voll ausgebaut", List.of("<gray>Zwei Seiten mit je 3 Reihen"))
+                : de.kuby.kubyplugins.util.Items.make(Material.ANVIL, "<green>Lager erweitern: +1 Reihe", List.of(
+                "<gray>Kosten: <yellow>" + Msg.coins(cost) + "$ <gray>aus der Teamkasse", "<gray>In der Kasse: <white>" + Msg.coins(t.bank) + "$",
+                rows == 3 ? "<aqua>Die 4. Reihe öffnet Seite 2" : "<gray>Danach " + (rows + 1) + " von 6 Reihen", "", "<yellow>Klick (nur Teamchef)")));
+        if (pg == 0) inv.setItem(35, rows > 3
+                ? de.kuby.kubyplugins.util.Items.make(Material.ARROW, "<yellow>Seite 2 ›", List.of("<gray>Zur zweiten Seite"))
+                : de.kuby.kubyplugins.util.Items.make(Material.GRAY_DYE, "<gray>Seite 2 gesperrt", List.of("<dark_gray>Ab der 4. Reihe")));
+    }
+
+    private static boolean isLockItem(ItemStack it) {
+        return it != null && (it.getType() == Material.GRAY_STAINED_GLASS_PANE || it.getType() == Material.BLACK_STAINED_GLASS_PANE)
+                && it.hasItemMeta() && it.getItemMeta().hasDisplayName();
+    }
+
+    /** Lager-Inhalt aus den offenen Seiten übernehmen (nur freie Plätze; Knöpfe und Sperren nicht). */
+    private void syncStorage(Team t) {
+        for (int pg = 0; pg < PAGES; pg++) {
+            Inventory inv = t.pages[pg];
+            if (inv == null) continue;
+            for (int i = 0; i < PAGE_SLOTS; i++) {
+                int idx = pg * PAGE_SLOTS + i;
+                if (unlocked(t, pg, i)) t.storage[idx] = inv.getItem(i);
+            }
+        }
+    }
+
+    /** Beim Schließen einer Seite: übernehmen und speichern; ohne Zuschauer die Seite verwerfen (nächstes Öffnen neu). */
     public synchronized void storageClosed(Team t) {
-        if (t.storageInv != null) t.storage = java.util.Arrays.copyOf(t.storageInv.getContents(), 54);
+        syncStorage(t);
         save();
+        // Seiten ohne Zuschauer verwerfen: beim nächsten Öffnen frisch (Titel „Seite 1/2“ nach dem Erweitern)
+        plugin.getServer().getScheduler().runTask(plugin, () -> {
+            synchronized (TeamService.this) {
+                for (int pg = 0; pg < PAGES; pg++) {
+                    Inventory inv = t.pages[pg];
+                    if (inv != null && inv.getViewers().isEmpty()) {
+                        syncStorage(t);
+                        t.pages[pg] = null;
+                    }
+                }
+            }
+        });
+    }
+
+    /** Klick auf einen Knopf der Knopfreihe (Slot 27 bis 35). */
+    public void storageButton(Player p, Team t, int page, int slot) {
+        switch (slot) {
+            case 27 -> {
+                if (page == 1) flip(p, t, 0);
+            }
+            case 35 -> {
+                if (page == 0) {
+                    if (storageRows(t) > 3) flip(p, t, 1);
+                    else Msg.send(p, "<gray>Seite 2 gibt es ab der 4. Reihe. Erweitern: der Amboss unten.");
+                }
+            }
+            case 32 -> {
+                String err = expandStorage(p);
+                if (err != null) {
+                    Msg.send(p, "<red>" + err);
+                    p.playSound(p.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_BASS, 0.7f, 0.6f);
+                } else {
+                    p.playSound(p.getLocation(), org.bukkit.Sound.BLOCK_ANVIL_USE, 0.6f, 1.3f);
+                    // Titel zeigt jetzt „Seite 1/2“: Seiten neu anlegen, wenn niemand mehr drin ist
+                }
+            }
+            default -> {
+            }
+        }
+    }
+
+    private void flip(Player p, Team t, int page) {
+        syncStorage(t);
+        plugin.getServer().getScheduler().runTask(plugin, () -> {
+            String err = openStorage(p, page);
+            if (err != null) Msg.send(p, "<red>" + err);
+            else p.playSound(p.getLocation(), org.bukkit.Sound.ITEM_BOOK_PAGE_TURN, 0.7f, 1.1f);
+        });
     }
 
     /** Geld direkt in die Teamkasse (XP-Shop), ohne es dem Spieler abzuziehen. Fehlermeldung oder null. */
@@ -436,10 +578,12 @@ public final class TeamService {
             for (Map.Entry<String, String> h : t.homes.entrySet()) out.set(k + ".homes." + h.getKey(), h.getValue());
             out.set(k + ".bank", t.bank);
             out.set(k + ".xp", t.xp);
-            ItemStack[] content = t.storageInv != null ? t.storageInv.getContents() : t.storage;
+            syncStorage(t);
+            ItemStack[] content = t.storage;
             for (int i = 0; i < content.length; i++) {
                 if (content[i] != null && !content[i].getType().isAir()) out.set(k + ".storage." + i, content[i]);
             }
+            if (t.extraRows > 0) out.set(k + ".lager-reihen", t.extraRows);
             out.set(k + ".allies", List.copyOf(allies.getOrDefault(k, Set.of())));
         }
         try {
