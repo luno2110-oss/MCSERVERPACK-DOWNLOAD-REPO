@@ -201,6 +201,7 @@ final class SelfTest {
                             false, false, true), sn));
             List<de.kuby.kubyplugins.staff.StaffScreen.Tile> tiles = new ArrayList<>(de.kuby.kubyplugins.staff.StaffScreen.coreTiles());
             tiles.add(new de.kuby.kubyplugins.staff.StaffScreen.Tile("Verwaltung", org.bukkit.Material.IRON_SWORD, ww, longText, "addon0"));
+            de.kuby.kubyplugins.service.CasinoAdmin.samples(canvas);
             canvas.accept("Kadmin", () -> de.kuby.kubyplugins.staff.StaffScreen.kadmin(
                     new de.kuby.kubyplugins.staff.StaffScreen.Kadmin(sf, "2.0.14", 999, tiles), sn));
             canvas.accept("Team-Bereich Eingabe", () -> de.kuby.kubyplugins.staff.StaffScreen.prompt(KitData.Icon.BELL, "VERWARNEN", longText,
