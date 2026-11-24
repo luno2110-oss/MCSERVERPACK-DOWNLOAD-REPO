@@ -28,6 +28,7 @@ sys.path.insert(0, HERE)
 import jewelshop_survival_data as data  # noqa: E402
 
 CATALOG = os.path.join(REPO, "KubySurvival-v1.0.0/KubySurvival/src/main/resources/moebel.yml")
+CATALOG_CASINO = os.path.join(REPO, "KubyCore-v2.0.14/KubyPlugins/src/main/resources/casino/moebel.yml")
 ICONS = os.path.join(HERE, "assets/jewelshop_survival")
 
 # Blickwinkel im Inventar (wie die Shop-Bilder: Vorderseite links unten, Oberseite sichtbar)
@@ -411,8 +412,10 @@ def catalog(models):
             lines.append("  %s: {reiter: %s, name: %s, preis: %d, felder: [%s], hoehe: %s, sitze: [%s], "
                          "sitzhoehe: %s, licht: %d}" % (fid, t["id"], yaml_str(name), price, cells,
                                                        m.height(), seats, round(m.seat_y / 16, 3), m.light))
-    with open(CATALOG, "w", encoding="utf-8") as f:
-        f.write("\n".join(lines) + "\n")
+    # derselbe Katalog fürs Casino (v2.07: Möbel frei im Casino aufstellen, CasinoDecor in KubyCore)
+    for path in (CATALOG, CATALOG_CASINO):
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("\n".join(lines) + "\n")
 
 
 def write(models, pack):

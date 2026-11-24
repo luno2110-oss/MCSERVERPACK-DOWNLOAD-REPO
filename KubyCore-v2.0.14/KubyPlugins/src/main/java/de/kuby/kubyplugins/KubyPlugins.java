@@ -158,6 +158,7 @@ public final class KubyPlugins extends JavaPlugin {
     private CasinoMusic casinoMusic;
     private de.kuby.kubyplugins.casino.CasinoNpc casinoNpc;
     private de.kuby.kubyplugins.casino.People people;
+    private de.kuby.kubyplugins.casino.CasinoDecor decor;
     private PokerService poker;
     private PokerService pokerHr;
     private PokerService pokerVio;
@@ -241,6 +242,7 @@ public final class KubyPlugins extends JavaPlugin {
         casinoMusic = new CasinoMusic(this);
         casinoNpc = new de.kuby.kubyplugins.casino.CasinoNpc(this);
         people = new de.kuby.kubyplugins.casino.People(this);
+        decor = new de.kuby.kubyplugins.casino.CasinoDecor(this);
         poker = new PokerService(this);
         poker.start();
         // weinroter High-Roller-Pokertisch (eigene Blinds, eigene Datei poker-rot.yml)
@@ -564,6 +566,7 @@ public final class KubyPlugins extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new BlackjackListener(this), this);
         getServer().getPluginManager().registerEvents(casinoNpc, this);
         getServer().getPluginManager().registerEvents(people, this);
+        getServer().getPluginManager().registerEvents(decor, this);
         people.start();
         getServer().getPluginManager().registerEvents(roulette, this);
         getServer().getPluginManager().registerEvents(rouletteHr, this);
@@ -594,6 +597,7 @@ public final class KubyPlugins extends JavaPlugin {
             wheel.respawn();
             race.respawn();
             casinoHolos.respawnAll();
+            decor.respawn();
             poker.respawn();
             pokerHr.respawn();
             pokerVio.respawn();
@@ -1137,6 +1141,7 @@ public final class KubyPlugins extends JavaPlugin {
     public CasinoMusic casinoMusic() { return casinoMusic; }
     public de.kuby.kubyplugins.casino.CasinoNpc casinoNpc() { return casinoNpc; }
     public de.kuby.kubyplugins.casino.People people() { return people; }
+    public de.kuby.kubyplugins.casino.CasinoDecor decor() { return decor; }
     public PokerService poker() { return poker; }
     public PokerService pokerHr() { return pokerHr; }
     public PokerService pokerVio() { return pokerVio; }

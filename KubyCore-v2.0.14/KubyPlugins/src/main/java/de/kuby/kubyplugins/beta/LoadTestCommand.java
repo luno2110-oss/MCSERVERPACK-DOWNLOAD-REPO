@@ -600,6 +600,12 @@ public final class LoadTestCommand implements CommandExecutor {
         plugin.casinoNpc().spawn(de.kuby.kubyplugins.casino.CasinoNpc.Role.LOSBUDE, at.apply(-23.5, 12.5), "1");
         plugin.casinoNpc().spawn(de.kuby.kubyplugins.casino.CasinoNpc.Role.KASSE, at.apply(-28.0, 12.5), "2");
         plugin.casinoVip().barkeeperAt(new Location(w, gx - 18.5, gy, gz + 9.5, 90f, 0f), null);
+        // Casino-Möbel (v2.07): Barhocker vor der Theke, Pflanzen, Lehnbank an der Rückwand (frei platziert)
+        var dc = plugin.decor();
+        for (double z : new double[]{7.6, 8.6, 10.6}) dc.place("barhocker", new Location(w, gx - 20.75, gy, gz + z), 90f);
+        dc.place("topfpflanze_7", new Location(w, gx - 29.3, gy, gz + 11.3), 270f);
+        dc.place("topfpflanze_13", new Location(w, gx - 29.3, gy, gz - 4.3), 270f);
+        dc.place("lehnbank", new Location(w, gx - 29.3, gy, gz + 0.5), 270f);
         plugin.getLogger().info("[Casino-Test] Leute-Ecke: " + pe.count() + " animierte Figuren");
     }
 
