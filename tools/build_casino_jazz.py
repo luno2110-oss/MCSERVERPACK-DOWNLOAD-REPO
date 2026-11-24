@@ -290,7 +290,7 @@ def main():
             ticks = int(dur * 20) + 20
             data["music." + sid] = {"sounds": [{"name": "kuby:music/" + sid, "stream": True}]}
             with open(os.path.join(SONGS, sid + ".audio"), "w", encoding="utf-8") as f:
-                f.write("%s|%d|kuby:music.%s\n" % (p["name"], ticks, sid))
+                f.write("%s|%d|kuby:music.%s|klassik|frei\n" % (p["name"], ticks, sid))   # Kategorie, Freischalten (v2.07)
             print(sid, p["name"], "%.0f s" % dur, os.path.getsize(ogg) // 1024, "KB")
     with open(sj, "w", encoding="utf-8") as fh:
         json.dump(data, fh, indent=1)

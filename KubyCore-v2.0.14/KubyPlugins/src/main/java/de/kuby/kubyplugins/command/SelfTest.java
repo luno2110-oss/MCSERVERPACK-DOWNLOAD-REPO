@@ -204,6 +204,7 @@ final class SelfTest {
             de.kuby.kubyplugins.service.CasinoAdmin.samples(canvas);
             de.kuby.kubyplugins.gui.KristalTradeScreen.samples(canvas);
             de.kuby.kubyplugins.gui.ExtraScreens.metaSamples(canvas);
+            de.kuby.kubyplugins.casino.CasinoScreens.musicSamples(canvas);
             canvas.accept("Kadmin", () -> de.kuby.kubyplugins.staff.StaffScreen.kadmin(
                     new de.kuby.kubyplugins.staff.StaffScreen.Kadmin(sf, "2.0.14", 999, tiles), sn));
             canvas.accept("Team-Bereich Eingabe", () -> de.kuby.kubyplugins.staff.StaffScreen.prompt(KitData.Icon.BELL, "VERWARNEN", longText,

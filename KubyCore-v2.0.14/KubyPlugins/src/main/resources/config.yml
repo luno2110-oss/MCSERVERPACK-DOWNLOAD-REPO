@@ -327,6 +327,12 @@ casino:
       - kuby.rank.legend
   music:
     volume: 0.6
+  musik:                        # Casino-Songs freischalten (v2.07): frei, drop, quest:runden|siege|serie:<n>, shop:<Chips>
+    drop-chance: 0.005          # Chance je Casino-Runde auf einen Zufallsfund (Songs mit „drop“)
+    freischalten: {}            # z. B. plaza: "quest:siege:50" überschreibt die Angabe im Song
+    # eigene Songs (z. B. Titel, für die ihr eine Lizenz habt): <id>.ogg nach resourcepack/KubyUI/assets/kuby/sounds/music/,
+    # in assets/kuby/sounds.json "music.<id>" eintragen (wie die anderen), dann hier "id;Name;Sekunden;klassik|special;frei"
+    eigene: []
   poker:                        # Blinds und Höchst-Buy-in kommen aus casino.tische (Stufe des Tisches)
     min-buyin-bb: 40            # kleinstes Buy-in in Big Blinds (höchstens die Hälfte des größten Buy-ins)
     turn-seconds: 30
@@ -400,6 +406,7 @@ casino:
       - "booster;Booster;item:EMERALD;green;#5BED79;Cashback und Verkauf bis x3"
       - "raenge;Ränge;sprite:JSS_RANK_NETHERIT;gold;#FCD45D;Von Platin bis Netherit"
       - "titel;Titel;item:NAME_TAG;red;#FC7986;Zeig allen, wer du bist"
+      - "musik;Musik;item:JUKEBOX;violet;#C79AF5;Songs für die Casino-Jukebox"
     angebote:
       kosmetik:
         - "croupier;Croupier-Schirm;COSMETIC;c_croupier;30000;hat:croupier;Grüner Dealer-Schirm mit Goldrand"
@@ -427,6 +434,9 @@ casino:
         - "diamant;Diamant Rang;RANK;diamant;600000;sprite:JSS_RANK_DIAMANT;+2 Homes · 40 Freundesplätze · Pet Eisbär"
         - "smaragd;Smaragd Rang;RANK;smaragd;1000000;sprite:JSS_RANK_SMARAGD;+3 Homes · 50 Freundesplätze · Pet Laubdrache"
         - "netherit;Netherit Rang;RANK;netherit;1500000;sprite:JSS_RANK_NETHERIT;+4 Homes · 75 Freundesplätze · Pet Magmadrache"
+      musik:                    # Songs für /music (Art MUSIC, Wert = Song-ID); gilt für Songs mit „shop:<Preis>“
+        - "m_lagerfeuer;Song: Lagerfeuer;MUSIC;lagerfeuer;100000;item:MUSIC_DISC_FAR;Special · Gitarre und Pfeife am Feuer"
+        - "m_neon;Song: Neon Boulevard;MUSIC;neon;150000;item:MUSIC_DISC_CAT;Klassik · Cool Jazz mit gedämpfter Trompete"
       titel:
         - "t_gluckspilz;Titel: Glückspilz;TAG;c_gluckspilz;30000;item:NAME_TAG;Für alle, die Glück haben"
         - "t_zocker;Titel: Zocker;TAG;c_zocker;60000;item:NAME_TAG;Am Automaten zu Hause"

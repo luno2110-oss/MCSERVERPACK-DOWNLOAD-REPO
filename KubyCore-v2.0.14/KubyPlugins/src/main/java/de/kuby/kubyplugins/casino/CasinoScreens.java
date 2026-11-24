@@ -732,81 +732,147 @@ public final class CasinoScreens {
     // Musik
     // =================================================================================================================
 
-    public record Song(String name, String length) {}
+    /** Ein Song im Fenster: owned = freigeschaltet; how = wie man ihn bekommt (gesperrt). */
+    public record Song(String id, String name, String length, boolean owned, String how) {}
 
-    /** choice: -1 = alle Songs, 0..n-1 = ein Song, -2 = Musik aus. */
-    public record MusicView(List<Song> songs, int choice, int playing, String time) {}
+    /**
+     * choice: „alle:klassik“, „alle:special“, „aus“ oder Song-ID; tab: „klassik“ oder „special“; playing: Name oder null.
+     * own/all je Kategorie für die Reiter.
+     */
+    public record MusicView(List<Song> songs, String choice, String tab, String playing, String time, int ownK, int allK,
+                            int ownS, int allS) {}
 
     public interface MusicActions {
-        Consumer<Player> choose(int choice);
+        Consumer<Player> choose(String choice);
 
         Consumer<Player> next();
+
+        Consumer<Player> tab(String category);
+
+        Consumer<Player> shop();
     }
 
+    /**
+     * Casino-Musik (v2.07): Reiter Klassik und Special, eigener Knopf „Musik aus“, gesperrte Songs mit dem Weg dahin
+     * (Zufallsfund, Quest mit Fortschritt, Chip-Shop mit Knopf).
+     */
     public static Canvas music(MusicView v, MusicActions a) {
         Canvas c = new Canvas(W).heading("Casino-Musik", net.kyori.adventure.text.format.TextColor.color(0xF2B829));
         head(c, KitData.Icon.JUKEBOX, "CASINO", "Musik · Dein Soundtrack im Casino");
-        String pill = v.choice() == -1 ? "Alle Songs" : v.choice() == -2 ? "Musik aus" : v.songs().get(v.choice()).name();
-        int pw = Canvas.width(pill, true) + 13;
-        c.smallButton(378 - pw, 9, pw, v.choice() == -1 ? KitData.Small.GREEN : KitData.Small.GOLD, pill,
-                v.choice() == -1 ? ON_GREEN : GOLD_SOFT, true);
-        c.textRight(378 - pw - 8, 13, "Deine Wahl", GRAY, false);
+        boolean off = "aus".equals(v.choice());
+        // eigener Knopf „Musik aus“ (bzw. „Musik an“), oben rechts im Kopf
+        String ol = off ? "▶ Musik an" : "■ Musik aus";
+        int ow = Canvas.width(ol, true) + 16;
+        c.smallButton(380 - ow, 9, ow, off ? KitData.Small.GREEN : KitData.Small.DARK, ol, off ? ON_GREEN : TextColor.color(0xFF7A7A), true);
+        c.action(380 - ow, 9, ow, 16, a.choose(off ? "alle:klassik" : "aus"), off ? "Musik wieder einschalten (alle Klassik-Songs)" : "Musik im Casino ausschalten");
 
         // Läuft gerade
         int ny = 54;
         c.box(0, ny, W, 51, KitData.Box.CASINO_DARK);
         c.icon(8, ny + 10, KitData.Icon.VINYL, true);
         c.text(46, ny + 12, Canvas.caps("Läuft gerade"), GRAY, false);
-        if (v.playing() >= 0) {
-            Song s = v.songs().get(v.playing());
+        if (v.playing() != null) {
             c.smallIcon(46, ny + 23, KitData.SmallIcon.S_NOTE_GOLD);
-            c.text(59, ny + 22, s.name(), GOLD_SOFT, true);
-            c.text(46, ny + 32, List.of(Canvas.Span.of(v.time(), LIGHT),
-                    Canvas.Span.of(" · Song " + (v.playing() + 1) + " von " + v.songs().size(), GRAY)));
+            c.text(59, ny + 22, Canvas.fit(v.playing(), true, 200), GOLD_SOFT, true);
+            String mode = v.choice().startsWith("alle:") ? (v.choice().endsWith("special") ? "alle Special-Songs" : "alle Klassik-Songs") : "Dauerschleife";
+            c.text(46, ny + 32, List.of(Canvas.Span.of(v.time(), LIGHT), Canvas.Span.of(" · " + mode, GRAY)));
         } else {
-            c.text(46, ny + 22, "Musik ist aus", GRAY, true);
+            c.text(46, ny + 22, off ? "Musik ist aus" : "Startet, sobald du im Casino bist", GRAY, true);
         }
-        if (v.choice() == -1) {
+        if (!off && v.choice().startsWith("alle:")) {
             c.smallButton(266, ny + 18, 113, KitData.Small.GOLD);
             c.text(275, ny + 22, "⏭", GOLD_SOFT, false);
             c.text(287, ny + 22, "Nächster Song", GOLD_SOFT, true);
             c.action(266, ny + 18, 113, 16, a.next(), "Springt zum nächsten Song");
         }
 
+        // Reiter Klassik / Special
+        int ty = 108, tw = (W - 3) / 2;
+        String[][] tabs = {{"klassik", "Klassik " + v.ownK() + "/" + v.allK(), "Lounge, Jazz und Swing fürs Casino"},
+                {"special", "Special " + v.ownS() + "/" + v.allS(), "Songs abseits vom Casino-Stil"}};
+        for (int i = 0; i < 2; i++) {
+            boolean on = tabs[i][0].equals(v.tab());
+            int x = i * (tw + 3);
+            c.smallButton(x, ty, tw, on ? KitData.Small.GOLD_ON : KitData.Small.DARK, tabs[i][1], on ? ON_GOLD : LIGHT, true);
+            if (!on) c.action(x, ty, tw, 16, a.tab(tabs[i][0]), tabs[i][2]);
+        }
+
         // Auswahl
-        int ly = 108;
-        int n = v.songs().size() + 2;
+        int ly = ty + 20;
+        int n = v.songs().size() + 1;
         c.box(0, ly, W, 15 + 18 * n, KitData.Box.CASINO_DARK);
+        String all = "alle:" + v.tab();
         for (int i = 0; i < n; i++) {
-            int choice = i == 0 ? -1 : i == n - 1 ? -2 : i - 1;
             int y = ly + 9 + 18 * i;
-            boolean on = choice == v.choice();
-            String name;
-            String desc;
-            if (choice == -1) {
+            if (i == 0) {
+                boolean on = all.equals(v.choice());
+                int owned = 0;
+                for (Song s : v.songs()) if (s.owned()) owned++;
                 c.text(15, y + 4, "⤨", WHITE, false);
-                name = "Alle Songs";
-                desc = "Alle " + v.songs().size() + " Songs wechseln sich ab.";
-            } else if (choice == -2) {
+                c.text(30, y + 4, "Alle " + ("special".equals(v.tab()) ? "Special" : "Klassik"), on ? GOLD_SOFT : LIGHT, true);
+                c.text(149, y + 4, owned + (owned == 1 ? " Song wechselt" : " Songs wechseln sich ab"), on ? LIGHT : GRAY, false);
+                choose(c, y, on, owned > 0 ? a.choose(all) : null, owned > 0 ? "Klick zum Wählen" : "Noch kein Song freigeschaltet");
+                continue;
+            }
+            Song s = v.songs().get(i - 1);
+            boolean on = s.id().equals(v.choice());
+            if (s.owned()) {
+                c.smallIcon(15, y + 4, on ? KitData.SmallIcon.S_NOTE_GOLD : KitData.SmallIcon.S_NOTE);
+                c.text(30, y + 4, Canvas.fit(s.name(), true, 115), on ? GOLD_SOFT : LIGHT, true);
+                c.text(149, y + 4, s.length() + " · in Dauerschleife", on ? LIGHT : GRAY, false);
+                choose(c, y, on, a.choose(s.id()), "Nur dieser Song, immer wieder");
+            } else {
                 c.smallIcon(15, y + 4, KitData.SmallIcon.S_MUTE);
-                name = "Musik aus";
-                desc = "Im Casino bleibt es ruhig.";
-            } else {
-                c.smallIcon(15, y + 4, KitData.SmallIcon.S_NOTE);
-                name = v.songs().get(choice).name();
-                desc = "Nur dieser Song, immer wieder.";
+                c.text(30, y + 4, Canvas.fit(s.name(), true, 115), BTN_GRAY, true);
+                c.text(149, y + 4, Canvas.fit(s.how(), false, 170), GRAY, false);
+                if (s.how().startsWith("Chip-Shop")) {
+                    c.smallButton(326, y, 51, KitData.Small.GOLD, "Shop", GOLD_SOFT, true);
+                    c.action(326, y, 51, 16, a.shop(), "Im Chip-Shop kaufen (Kategorie Musik)");
+                } else {
+                    c.smallButton(326, y, 51, KitData.Small.GOLD_GRAY, "Zu", BTN_GRAY, true);
+                    c.action(10, y, 370, 16, null, s.how().startsWith("Quest") ? s.how() + " – im Casino spielen" : s.how() + ": jede Runde im Casino hat eine kleine Chance");
+                }
             }
-            c.text(30, y + 4, name, on ? GOLD_SOFT : LIGHT, true);
-            c.text(149, y + 4, desc, on ? LIGHT : GRAY, false);
-            if (on) {
-                c.smallButton(326, y, 51, KitData.Small.GREEN, "Aktiv", ON_GREEN, true);
-            } else {
-                c.smallButton(326, y, 51, KitData.Small.GOLD, "Wählen", GOLD_SOFT, true);
-            }
-            c.action(10, y, 370, 16, on ? null : a.choose(choice), on ? "Läuft gerade" : "Klick zum Wählen");
         }
         c.textCenter(W / 2, ly + 15 + 18 * n + 7, "Lautstärke: Optionen > Musik & Töne > Jukebox/Notenblöcke", GRAY, false);
         return c;
+    }
+
+    private static void choose(Canvas c, int y, boolean on, Consumer<Player> act, String hover) {
+        if (on) c.smallButton(326, y, 51, KitData.Small.GREEN, "Aktiv", ON_GREEN, true);
+        else if (act == null) c.smallButton(326, y, 51, KitData.Small.GOLD_GRAY, "Wählen", BTN_GRAY, true);
+        else c.smallButton(326, y, 51, KitData.Small.GOLD, "Wählen", GOLD_SOFT, true);
+        c.action(10, y, 370, 16, on ? null : act, on ? "Läuft gerade" : hover);
+    }
+
+    /** Selbsttest: Klassik mit gesperrten Songs, Special, Musik aus. */
+    public static void musicSamples(java.util.function.BiConsumer<String, java.util.function.Supplier<Canvas>> reg) {
+        MusicActions no = new MusicActions() {
+            public Consumer<Player> choose(String c) {
+                return p -> { };
+            }
+
+            public Consumer<Player> next() {
+                return p -> { };
+            }
+
+            public Consumer<Player> tab(String t) {
+                return p -> { };
+            }
+
+            public Consumer<Player> shop() {
+                return p -> { };
+            }
+        };
+        List<Song> k = List.of(new Song("velvet", "Velvet Lounge", "2:12", true, ""), new Song("golden", "Golden Hour Swing", "2:41", true, ""),
+                new Song("plaza", "Plaza bei Nacht", "1:51", false, "Zufallsfund beim Spielen"),
+                new Song("rumba", "Roulette Rumba", "1:32", false, "Quest: Runden spielen 37/100"),
+                new Song("neon", "Neon Boulevard", "1:54", false, "Chip-Shop · 150.000 Chips"));
+        List<Song> sp = List.of(new Song("pixel", "Pixel-Abenteuer", "1:20", true, ""), new Song("sternenstaub", "Sternenstaub " + "W".repeat(20), "1:18", false, "Zufallsfund beim Spielen"),
+                new Song("lagerfeuer", "Lagerfeuer", "1:23", false, "Chip-Shop · 100.000 Chips"));
+        reg.accept("Casino-Musik Klassik", () -> music(new MusicView(k, "alle:klassik", "klassik", "Golden Hour Swing", "2:41", 2, 5, 1, 3), no));
+        reg.accept("Casino-Musik Special", () -> music(new MusicView(sp, "pixel", "special", "Pixel-Abenteuer", "1:20", 2, 5, 1, 3), no));
+        reg.accept("Casino-Musik aus", () -> music(new MusicView(k, "aus", "klassik", null, "", 2, 5, 0, 3), no));
     }
 
     // =================================================================================================================

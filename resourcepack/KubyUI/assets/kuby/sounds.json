@@ -447,5 +447,53 @@
     "stream": true
    }
   ]
+ },
+ "music.plaza": {
+  "sounds": [
+   {
+    "name": "kuby:music/plaza",
+    "stream": true
+   }
+  ]
+ },
+ "music.rumba": {
+  "sounds": [
+   {
+    "name": "kuby:music/rumba",
+    "stream": true
+   }
+  ]
+ },
+ "music.neon": {
+  "sounds": [
+   {
+    "name": "kuby:music/neon",
+    "stream": true
+   }
+  ]
+ },
+ "music.pixel": {
+  "sounds": [
+   {
+    "name": "kuby:music/pixel",
+    "stream": true
+   }
+  ]
+ },
+ "music.sternenstaub": {
+  "sounds": [
+   {
+    "name": "kuby:music/sternenstaub",
+    "stream": true
+   }
+  ]
+ },
+ "music.lagerfeuer": {
+  "sounds": [
+   {
+    "name": "kuby:music/lagerfeuer",
+    "stream": true
+   }
+  ]
  }
 }

@@ -616,6 +616,7 @@ public final class KubyPlugins extends JavaPlugin {
         if (displaySettings != null) displaySettings.shutdown();
         blackjack.shutdown();
         roulette.shutdown();
+        if (casinoMusic != null) casinoMusic.shutdown();
         rouletteHr.shutdown();
         rouletteVio.shutdown();
         slots.shutdown();

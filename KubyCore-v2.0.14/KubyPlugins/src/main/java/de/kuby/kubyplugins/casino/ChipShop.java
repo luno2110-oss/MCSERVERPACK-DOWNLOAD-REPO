@@ -53,7 +53,7 @@ public final class ChipShop {
 
     public record Category(String id, String name, String icon, String style, TextColor color, String line, int count) {}
 
-    /** kind: COSMETIC, TAG, BOOSTER, RANK, COMMAND. icon: hat:&lt;id&gt;, particle:&lt;name&gt;, sprite:&lt;JS_…&gt;, item:&lt;MATERIAL&gt;. */
+    /** kind: COSMETIC, TAG, BOOSTER, RANK, COMMAND, MUSIC (Song für die Casino-Jukebox, v2.07). icon: hat:&lt;id&gt;, particle:&lt;name&gt;, sprite:&lt;JS_…&gt;, item:&lt;MATERIAL&gt;. */
     public record Offer(String id, String category, String name, String kind, String value, long price, String icon,
                         String line) {}
 
@@ -229,6 +229,9 @@ public final class ChipShop {
             case "COMMAND" -> {
                 if (o.value().isBlank()) return "Befehl fehlt";
             }
+            case "MUSIC" -> {
+                if (plugin.casinoMusic() == null || !plugin.casinoMusic().exists(o.value())) return "Song " + o.value() + " fehlt";
+            }
             default -> {
                 return "unbekannte Art " + o.kind();
             }
@@ -330,6 +333,11 @@ public final class ChipShop {
                     if (myRank >= 0) price = Math.max(0, o.price() - ranks.get(myRank).price());
                     info = myRank >= 0 ? "Aufstieg: nur der Unterschied" : "Dauerhaft, für alle Modi";
                 }
+            }
+            case "MUSIC" -> {
+                boolean has = plugin.casinoMusic() != null && plugin.casinoMusic().owns(id, o.value());
+                st = has ? State.OWNED : null;
+                info = has ? "Abspielen: /music im Casino" : "Für die Casino-Jukebox (/music)";
             }
             case "BOOSTER" -> {
                 st = null;
@@ -460,6 +468,10 @@ public final class ChipShop {
                     for (String cmd : cmds) Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd.replace("%player%", p.getName()));
                 }
                 case "COMMAND" -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), o.value().replace("%player%", p.getName()));
+                case "MUSIC" -> {
+                    if (plugin.casinoMusic() == null || !plugin.casinoMusic().exists(o.value())) return "Diesen Song gibt es nicht.";
+                    if (!plugin.casinoMusic().unlock(p, o.value(), "Chip-Shop")) return "Diesen Song hast du schon.";
+                }
                 default -> {
                     return "Diese Ware ist falsch eingetragen.";
                 }

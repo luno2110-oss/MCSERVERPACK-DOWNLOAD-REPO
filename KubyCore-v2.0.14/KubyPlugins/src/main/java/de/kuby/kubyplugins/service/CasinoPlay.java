@@ -590,6 +590,12 @@ public final class CasinoPlay {
         }
         Outcome out = new Outcome(c, stake, gross, payout, bonus, mult, newStreak, golden, comeback, cashback, lost);
         if (testLog) testLast.put(id + "|" + game, out);
+        // Casino-Musik (v2.07): Zähler für Musik-Quests und Zufallsfund nach jeder Runde (auf dem Hauptthread)
+        if (plugin.casinoMusic() != null) {
+            boolean won = gross > stake;
+            int st = newStreak;
+            plugin.getServer().getScheduler().runTask(plugin, () -> plugin.casinoMusic().onRound(id, won, st));
+        }
         return out;
     }
 
