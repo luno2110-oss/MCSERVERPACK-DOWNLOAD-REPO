@@ -36,6 +36,8 @@ public final class TradeService {
         public final TradeSession session;
         public final UUID owner;
         Inventory inv;
+        /** Mit Grafik-Pack: eigener Hintergrund (v2.07), leere Felder bleiben frei statt Glasscheiben. */
+        boolean themed;
 
         TradeHolder(TradeSession session, UUID owner) {
             this.session = session;
@@ -121,8 +123,8 @@ public final class TradeService {
 
     private void start(Player a, Player b) {
         TradeSession s = new TradeSession(a.getUniqueId(), b.getUniqueId());
-        s.ha.inv = Bukkit.createInventory(s.ha, 54, Msg.parse("<dark_gray>Tausch mit " + b.getName()));
-        s.hb.inv = Bukkit.createInventory(s.hb, 54, Msg.parse("<dark_gray>Tausch mit " + a.getName()));
+        s.ha.inv = Bukkit.createInventory(s.ha, 54, title(s.ha, a, b));
+        s.hb.inv = Bukkit.createInventory(s.hb, 54, title(s.hb, b, a));
         sessions.put(a.getUniqueId(), s);
         sessions.put(b.getUniqueId(), s);
         refresh(s);
@@ -132,6 +134,17 @@ public final class TradeService {
         Sfx.play(plugin, b, Sfx.Kind.TRADE);
     }
 
+    /**
+     * Fenstertitel; mit Grafik-Pack eigener Hintergrund (v2.07, „Custom-UI fürs Traden“): links dein Angebot (grün),
+     * rechts das des Partners (blau), Rille für den Countdown, unten Annehmen, Status, Abbrechen.
+     */
+    private net.kyori.adventure.text.Component title(TradeHolder h, Player self, Player partner) {
+        net.kyori.adventure.text.Component t = Msg.parse("<dark_gray>Du  ⇄  " + partner.getName());
+        if (!plugin.uiPack().active(self)) return Msg.parse("<dark_gray>Tausch mit " + partner.getName());
+        h.themed = true;
+        return de.kuby.kubyplugins.ui.ChestBg.title("trade", 6, t);
+    }
+
     /** Spiegelt das Partner-Angebot, den Timer, Bestätigungen und die Buttons. */
     private void refresh(TradeSession s) {
         for (UUID id : List.of(s.a, s.b)) {
@@ -139,14 +152,16 @@ public final class TradeService {
             Inventory mine = s.inv(id);
             Inventory theirs = s.inv(other);
 
+            boolean themed = s.holder(id).themed;
             for (int row = 0; row < 5; row++) {
-                mine.setItem(row * 9 + 4, timerPane(s, row));
+                ItemStack pane = timerPane(s, row);
+                mine.setItem(row * 9 + 4, themed && pane.getType() != Material.LIME_STAINED_GLASS_PANE ? null : pane);
                 for (int c = 0; c < 4; c++) {
                     ItemStack it = theirs.getItem(row * 9 + c);
                     mine.setItem(row * 9 + 5 + c, it == null ? null : it.clone());
                 }
             }
-            for (int slot = 45; slot < 54; slot++) mine.setItem(slot, Items.filler());
+            for (int slot = 45; slot < 54; slot++) mine.setItem(slot, themed ? null : Items.filler());
 
             boolean mineOk = s.confirmed(id);
             boolean theirOk = s.confirmed(other);

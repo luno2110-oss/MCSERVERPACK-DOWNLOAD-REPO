@@ -13,7 +13,7 @@ import java.util.List;
 public final class ChestBg {
 
     /** Farbwelten in der Reihenfolge von build_chest_bg.THEMES. */
-    public static final List<String> THEMES = List.of("market", "shop", "storage", "pickup", "heads", "sell", "steel", "sky");
+    public static final List<String> THEMES = List.of("market", "shop", "storage", "pickup", "heads", "sell", "steel", "sky", "trade");
 
     private static final Key FONT = Key.key("kuby", "chest");
 

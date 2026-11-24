@@ -43,14 +43,14 @@ public final class ExtraCommand implements CommandExecutor {
             case "trade" -> trade(p, args);
             case "tags" -> tags(p, args);
             case "rtpqueue" -> rtp(p, args);
-            case "meta" -> new MetaMenu(plugin).open(p);
+            case "meta" -> new de.kuby.kubyplugins.gui.ExtraScreens(plugin).meta(p);
             case "xpshop" -> new de.kuby.kubyplugins.gui.ExtraScreens(plugin).xpShop(p);
             case "booster" -> booster(p);
             case "battlepass", "skypass" -> plugin.battlepassScreen().open(p);
             case "gluecksrad" -> plugin.wheel().open(p);
             case "verify" -> verify(p);
             case "enderchest" -> p.openInventory(plugin.enderchests().open(p));
-            case "kristaltrade" -> new KristalTradeMenu(plugin).open(p);
+            case "kristaltrade" -> de.kuby.kubyplugins.gui.KristalTradeScreen.open(plugin, p);
             case "investments" -> new de.kuby.kubyplugins.gui.ExtraScreens(plugin).investments(p);
             case "quizvote" -> new de.kuby.kubyplugins.gui.ExtraScreens(plugin).quiz(p);
             case "kits" -> {

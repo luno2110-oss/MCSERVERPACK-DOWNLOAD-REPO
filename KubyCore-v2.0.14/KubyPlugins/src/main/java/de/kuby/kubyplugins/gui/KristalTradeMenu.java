@@ -15,7 +15,7 @@ import java.util.Map;
 /** Tauscht Ancient Debris gegen End-Kristalle: 4 Debris ergeben 1 Kristall. */
 public final class KristalTradeMenu extends GuiMenu {
 
-    private static final int PRICE = 4;
+    static final int PRICE = 4;
 
     public KristalTradeMenu(KubyPlugins plugin) {
         super(plugin, Msg.parse("<dark_gray>" + SmallCaps.of("Kristall-Tausch")), 3);
@@ -34,32 +34,32 @@ public final class KristalTradeMenu extends GuiMenu {
                 "",
                 "<yellow>Linksklick: <white>1x tauschen",
                 "<yellow>Rechtsklick: <white>so viele wie möglich")),
-                e -> trade(p, e.isRightClick() ? -1 : 1));
+                e -> {
+                    trade(plugin, p, e.isRightClick() ? -1 : 1);
+                    open(p);
+                });
         set(22, Items.make(Material.ARROW, "<gray>Zurück zum Menü", List.of()),
                 e -> new MainMenu(plugin).open(p));
     }
 
-    /** amount -1 = so viele wie möglich. */
-    private void trade(Player p, int amount) {
+    /** amount -1 = so viele wie möglich (auch vom Fenster KristalTradeScreen genutzt). */
+    static void trade(KubyPlugins plugin, Player p, int amount) {
         // nur unveränderter Schutt (früher zählte auch umbenannter, wurde aber nicht entnommen: Kristalle aus dem Nichts)
         int debris = Items.countPlain(p.getInventory(), Material.ANCIENT_DEBRIS);
         int crystals = amount < 0 ? debris / PRICE : Math.min(amount, debris / PRICE);
         if (crystals <= 0) {
             Sfx.play(plugin, p, Sfx.Kind.ERROR);
             Msg.send(p, "<red>Du brauchst mindestens " + PRICE + " Ancient Debris.");
-            open(p);
             return;
         }
         if (!Items.takePlain(p.getInventory(), Material.ANCIENT_DEBRIS, crystals * PRICE)) {
             Sfx.play(plugin, p, Sfx.Kind.ERROR);
             Msg.send(p, "<red>Der Antike Schutt muss unverändert sein (nicht umbenannt).");
-            open(p);
             return;
         }
         Map<Integer, ItemStack> rest = p.getInventory().addItem(new ItemStack(Material.END_CRYSTAL, crystals));
         rest.values().forEach(it -> plugin.abholbox().add(p.getUniqueId(), it));
         Sfx.play(plugin, p, Sfx.Kind.SUCCESS);
         Msg.send(p, "<green>" + crystals + "x End-Crystal erhalten" + (rest.isEmpty() ? "" : " <gray>(Rest in der Abholbox)"));
-        open(p);
     }
 }

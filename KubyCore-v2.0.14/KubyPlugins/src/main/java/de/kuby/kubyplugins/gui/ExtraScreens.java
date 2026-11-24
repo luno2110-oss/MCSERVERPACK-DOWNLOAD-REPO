@@ -50,6 +50,11 @@ public final class ExtraScreens {
 
     public record Quiz(String active, int questions, List<Category> categories) {}
 
+    /** Wochen-Meta (v2.07): ein Item je Kandidat mit Stimmen, eigene Stimme, aktives Meta. */
+    public record MetaItem(org.bukkit.Material item, String name, int votes, boolean mine, boolean active, Consumer<Player> vote) {}
+
+    public record Meta(String active, List<MetaItem> items) {}
+
     private final KubyPlugins plugin;
 
     public ExtraScreens(KubyPlugins plugin) {
@@ -289,6 +294,84 @@ public final class ExtraScreens {
             y += 28 + 3;
         }
         return c;
+    }
+
+    // =================================================================================================================
+    // Wochen-Meta (v2.07: eigenes Fenster statt Truhe)
+    // =================================================================================================================
+
+    public void meta(Player p) {
+        if (!plugin.uiPack().active(p)) {
+            new MetaMenu(plugin).open(p);
+            return;
+        }
+        var w = plugin.weekly();
+        Map<org.bukkit.Material, Integer> tally = w.tally();
+        org.bukkit.Material mine = w.myVote(p.getUniqueId());
+        org.bukkit.Material active = w.activeMeta();
+        List<MetaItem> items = new ArrayList<>();
+        for (org.bukkit.Material m : w.candidates()) {
+            items.add(new MetaItem(m, prettyItem(m), tally.getOrDefault(m, 0), m == mine, m == active, pl -> {
+                String err = plugin.weekly().vote(pl.getUniqueId(), m);
+                Sfx.play(plugin, pl, err == null ? Sfx.Kind.PING : Sfx.Kind.ERROR);
+                Msg.send(pl, err == null ? "<green>Stimme für " + prettyItem(m) + " gespeichert." : "<red>" + err);
+                meta(pl);
+            }));
+        }
+        UiDialog.show(p, meta(new Meta(active == null ? null : prettyItem(active), items)), 300);
+    }
+
+    static String prettyItem(org.bukkit.Material m) {
+        String n = de.kuby.kubyplugins.ui.ItemNames.de(m);
+        return n != null ? n : cap(m.name().toLowerCase(java.util.Locale.ROOT).replace('_', ' '));
+    }
+
+    /** Zwei Spalten mit Item-Karten: Bild, Name, Stimmen als Balken, „wählen“ bzw. „✔ du“; das aktive Meta leuchtet golden. */
+    public static Canvas meta(Meta v) {
+        Canvas c = new Canvas(W).heading("Wochen-Meta", TextColor.color(0xF2C94C));
+        c.box(0, 0, W, 54, KitData.Box.EMBER);
+        c.icon(10, 11, KitData.Icon.GOLD_INGOT, true);
+        c.headline(50, 12, "Wochen-Meta", TextColor.color(0xFFE0A0));
+        c.text(50, 36, "Welches Item bringt nächste Woche +25 % beim Verkaufen?", TextColor.color(0xE8C8A0), false);
+        int y = 60;
+        c.box(0, y, W, 22, KitData.Box.EMBER_CARD);
+        c.text(8, y + 7, Canvas.fit(v.active() == null ? "Gerade ist kein Meta aktiv · neue Wahl jeden Montag um 00:05"
+                : "Aktiv: " + v.active() + " (+25 % Verkaufspreis) · neue Wahl montags 00:05", false, W - 16), TextColor.color(0xFFE0A0), false);
+        y += 26;
+        int total = 0;
+        for (MetaItem it : v.items()) total += it.votes();
+        int cw = (W - 4) / 2;
+        for (int i = 0; i < v.items().size() && i < 14; i++) {
+            MetaItem it = v.items().get(i);
+            int x = (i % 2) * (cw + 4), ry = y + (i / 2) * 30;
+            c.box(x, ry, cw, 28, it.mine() ? KitData.Box.GOLD : it.active() ? KitData.Box.BRONZE_CARD : KitData.Box.EMBER_CARD);
+            c.item(x + 6, ry + 6, it.item(), false, KitData.Icon.PAPER);
+            c.text(x + 27, ry + 4, Canvas.fit(it.name(), true, cw - 31 - 40), it.mine() ? GOLD : TextColor.color(0xFFE0A0), true);
+            double f = total == 0 ? 0 : it.votes() / (double) total;
+            c.bar(x + 27, ry + 17, cw - 31 - 44, f, it.mine() ? KitData.Fill.GOLD : KitData.Fill.GREEN);
+            c.textRight(x + cw - 6, ry + 4, String.valueOf(it.votes()), TextColor.color(0xE8C8A0), true);
+            if (it.mine()) {
+                c.textRight(x + cw - 6, ry + 16, "✔ du", GREEN, true);
+            } else {
+                c.textRight(x + cw - 6, ry + 16, "wählen", TextColor.color(0xE8C8A0), false);
+                c.action(x, ry, cw, 28, it.vote(), "Für " + it.name() + " stimmen (" + it.votes() + (it.votes() == 1 ? " Stimme)" : " Stimmen)"));
+            }
+        }
+        return c;
+    }
+
+    /** Selbsttest: Wochen-Meta mit 14 Kandidaten, langen Namen und eigener Stimme. */
+    public static void metaSamples(java.util.function.BiConsumer<String, java.util.function.Supplier<Canvas>> reg) {
+        List<MetaItem> items = new ArrayList<>();
+        org.bukkit.Material[] ms = {org.bukkit.Material.WHEAT, org.bukkit.Material.CARROT, org.bukkit.Material.POTATO, org.bukkit.Material.CACTUS,
+                org.bukkit.Material.SUGAR_CANE, org.bukkit.Material.PUMPKIN, org.bukkit.Material.MELON_SLICE, org.bukkit.Material.BAMBOO,
+                org.bukkit.Material.COCOA_BEANS, org.bukkit.Material.NETHER_WART, org.bukkit.Material.KELP, org.bukkit.Material.SWEET_BERRIES,
+                org.bukkit.Material.CHORUS_FRUIT, org.bukkit.Material.GLOW_BERRIES};
+        for (int i = 0; i < ms.length; i++) {
+            items.add(new MetaItem(ms[i], i == 3 ? "W".repeat(40) : prettyItem(ms[i]), i * 37, i == 2, i == 5, p -> { }));
+        }
+        reg.accept("Wochen-Meta", () -> meta(new Meta("Kürbis", items)));
+        reg.accept("Wochen-Meta ohne", () -> meta(new Meta(null, items.subList(0, 3))));
     }
 
     private static String cap(String s) {

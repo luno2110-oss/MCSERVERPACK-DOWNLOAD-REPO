@@ -29,7 +29,12 @@ THEMES = [
     ("sell", ("E4FFFA", "98DCD0", "3A7A70", "6AAEA4", "1C423C", "2AA090")),       # Verkaufen: Türkis
     ("steel", ("F4F8FC", "BCC6D0", "5A6470", "8C96A2", "2C333A", "6A7A8C")),      # Kit-Vorschau: Stahl
     ("sky", ("FFFFFF", "D4ECFC", "6A98BC", "9CC4E4", "34587A", "4AA0E0")),        # Skyblock: Wolken
+    ("trade", ("F6E6C4", "B48A5A", "5E3C1E", "8A6440", "36220E", "D8A23A")),      # Handel: Nussholz mit Gold (v2.07)
 ]
+# Handel (6 Reihen): links das eigene Angebot (grün getönt), rechts das des Partners (blau), dazwischen die Rille für den
+# Countdown, unten nur die drei Knöpfe (Annehmen, Status, Abbrechen)
+TRADE_MINE = ("CFE8CF", "5C8A62", "2E5A36", "1A3A20")     # Licht, Slot innen, Rahmen, Slot-Schatten
+TRADE_THEIRS = ("D2E0F0", "5C7A9C", "2E4A6A", "1A2C44")
 ROWS = range(1, 7)
 
 
@@ -64,7 +69,62 @@ def slot(d, x, y, light, inner, dark):
     d.line((x + 17, y + 1, x + 17, y + 17), fill=light)
 
 
-def draw(colors, rows):
+def panel(d, x0, y0, x1, y1, edge, glow):
+    """Vertiefte Fläche hinter einer Slot-Gruppe: 1 px Rand in der Gruppenfarbe, innen ein Hauch Licht oben links."""
+    d.rectangle((x0, y0, x1, y1), outline=edge)
+    d.line((x0 + 1, y0 + 1, x1 - 1, y0 + 1), fill=glow)
+    d.line((x0 + 1, y0 + 1, x0 + 1, y1 - 1), fill=glow)
+
+
+def draw_trade(colors):
+    """Handels-Fenster, 6 Reihen: Angebots-Felder links (grün) und rechts (blau), Rille mit 5 Stufen in der Mitte,
+    Knopf-Plätze unten links, Mitte und rechts; Pfeile oben in der Rille zeigen den Tausch."""
+    light, face, shadow, inner, dark, accent = (rgb(c) for c in colors)
+    rows = 6
+    h = 114 + 18 * rows
+    img = Image.new("RGBA", (W, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    frame(d, 0, 0, W - 1, h - 1, light, face, shadow)
+    d.line((7, 15, W - 8, 15), fill=accent)
+    d.line((8, 16, W - 7, 16), fill=light)
+    for side, (lt, inn, edge, dk) in ((0, TRADE_MINE), (5, TRADE_THEIRS)):
+        lt, inn, edge, dk = rgb(lt), rgb(inn), rgb(edge), rgb(dk)
+        x0 = 7 + 18 * side
+        panel(d, x0 - 1, 16, x0 + 72, 17 + 90, edge, lt)
+        for r in range(5):
+            for c in range(4):
+                slot(d, x0 + 18 * c, 17 + 18 * r, lt, inn, dk)
+    # Rille für den Countdown (Spalte 4): dunkel vertieft, fünf Stufen, Goldkante
+    gx = 7 + 18 * 4
+    d.rectangle((gx + 1, 17, gx + 16, 17 + 89), fill=dark)
+    d.line((gx + 1, 17, gx + 1, 17 + 89), fill=rgb("1E1206"))
+    d.line((gx + 16, 17, gx + 16, 17 + 89), fill=accent)
+    for r in range(1, 5):
+        d.line((gx + 2, 17 + 18 * r, gx + 15, 17 + 18 * r), fill=shadow)
+    # Pfeile im obersten Feld: nach links (zu dir) und nach rechts (zum Partner)
+    cx, cy = gx + 8, 17 + 9
+    for dx, dy in ((-3, -2), (-2, -2), (-1, -2), (0, -2), (1, -2), (2, -2), (3, -2), (2, -3), (1, -4), (2, -1), (1, 0)):
+        d.point((cx + dx, cy + dy), fill=accent)
+    for dx, dy in ((-3, 2), (-2, 2), (-1, 2), (0, 2), (1, 2), (2, 2), (3, 2), (-2, 1), (-1, 0), (-2, 3), (-1, 4)):
+        d.point((cx + dx, cy + dy), fill=light)
+    # Knopfreihe: nur drei Plätze, dazwischen eine feine Goldleiste
+    by = 17 + 18 * 5
+    for c in (0, 4, 8):
+        slot(d, 7 + 18 * c, by, light, inner, dark)
+    d.line((7 + 18 + 4, by + 9, 7 + 18 * 4 - 5, by + 9), fill=accent)
+    d.line((7 + 18 * 5 + 4, by + 9, 7 + 18 * 8 - 5, by + 9), fill=accent)
+    inv = 30 + 18 * rows
+    for r in range(3):
+        for c in range(9):
+            slot(d, 7 + 18 * c, inv + 18 * r, light, inner, dark)
+    for c in range(9):
+        slot(d, 7 + 18 * c, inv + 58, light, inner, dark)
+    return img
+
+
+def draw(colors, rows, name=None):
+    if name == "trade" and rows == 6:
+        return draw_trade(colors)
     light, face, shadow, inner, dark, accent = (rgb(c) for c in colors)
     h = 114 + 18 * rows
     img = Image.new("RGBA", (W, h), (0, 0, 0, 0))
@@ -93,7 +153,7 @@ def build(out):
     providers = [{"type": "space", "advances": {"": -8, "": -169}}]
     for t, (name, colors) in enumerate(THEMES):
         for rows in ROWS:
-            img = draw(colors, rows)
+            img = draw(colors, rows, name)
             img.save(os.path.join(tex, "%s_%d.png" % (name, rows)))
             providers.append({"type": "bitmap", "file": "kuby:gui/chest/%s_%d.png" % (name, rows), "height": img.height,
                               "ascent": 13, "chars": [chr(0xE000 + 8 * t + rows)]})
