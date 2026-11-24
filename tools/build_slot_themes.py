@@ -51,6 +51,11 @@ WHITE = ramp("7A808E", "A8B0BE", "D4DAE4", "EEF2F8", "FFFFFF")
 SAND = ramp("8A6A3A", "B8945A", "D8BC84", "EED8A8", "FFF2D4")
 GREEN = ramp("1E4A14", "2E7A1E", "46A82A", "7AD24A", "B8F08A")
 INK = ramp("12101A", "1E1C2A", "2C2A3C", "3E3C52", "585670")
+# v2.07: Jute und Schnur (Geldsack), Perle und Muschel-Innenseite (gedeckt, Licht wärmer, Schatten kühler)
+BURLAP = ramp("5A3E22", "82603A", "A8845A", "C8A87A", "E2CCA0")
+ROPE = ramp("3A2410", "5A3A1C", "7A5430", "9A7046", "B88E60")
+PEARL = ramp("6E7A96", "9AA6C0", "C8D0E2", "E6ECF6", "FBFAF2")
+PEARL_IN = ramp("C88A7A", "E0A894", "F2C8B4", "FADCCA", "FFF0E4")
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -159,13 +164,32 @@ def g_lamp(p):
 
 
 def g_horseshoe(p):
-    shoe = sector(16, 14, 6, 12.5, 150, 30) | rect(3, 14, 9, 25) | rect(23, 14, 29, 25)
-    shoe |= rect(2, 24, 10, 28) | rect(22, 24, 30, 28)                        # verbreiterte Enden
-    shoe -= rect(10, 15, 22, 28)
+    """Hufeisen (v2.07 neu): ovaler Ring, unten ein Keil offen (Öffnung ~70°), Stollen an den Enden, sechs Nagellöcher
+    im gleichen Abstand entlang des Bogens (das unterste rechts fehlt – das Muster einmal gebrochen)."""
+    cx, cy = 16, 15.5
+
+    def inside(x, y, rx, ry):
+        return ((x + 0.5 - cx) / rx) ** 2 + ((y + 0.5 - cy) / ry) ** 2 <= 1
+
+    def ang(x, y):
+        return math.degrees(math.atan2(y + 0.5 - cy, x + 0.5 - cx)) % 360
+
+    shoe = {(x, y) for x in range(32) for y in range(32)
+            if inside(x, y, 12.0, 12.5) and not inside(x, y, 7.0, 7.6) and not (55 <= ang(x, y) <= 125)}
+    for sx in (-1, 1):                                                         # Stollen
+        x0 = int(cx + sx * 7.5) if sx > 0 else int(cx - 10.5)
+        shoe |= rect(x0, 25, x0 + 3, 27)
     shade(p, shoe, GOLD)
-    for x, y in ((5, 17), (5, 21), (26, 17), (26, 21), (8, 8), (23, 8)):
-        flat(p, rect(x, y, x, y + 1), GOLD[0])                               # Nagellöcher, gleicher Abstand
-    glint(p, [(7, 6), (8, 5)])
+    inner = {(x, y) for (x, y) in shoe if not inside(x, y, 8.2, 8.8) and inside(x, y, 8.9, 9.5)}
+    flat(p, {(x, y) for (x, y) in shoe if inside(x, y, 8.0, 8.6)}, GOLD[1])  # Innenkante im Schatten
+    holes = [150, 182, 214, 326, 358, 30]
+    for k, a in enumerate(holes):
+        if k == 5:
+            continue                                                           # gebrochenes Muster
+        r = math.radians(a)
+        x, y = int(cx + 9.8 * math.cos(r)), int(cy + 10.2 * math.sin(r))
+        flat(p, rect(x, y, x, y), GOLD[0])
+    glint(p, [(9, 5), (10, 4), (8, 6)], GOLD[4])
 
 
 def g_dynamite(p):
@@ -194,14 +218,22 @@ def g_bar(p):
 
 
 def g_sack(p):
-    bag = disk(16, 20, 9.2) | poly([(12, 11), (20, 11), (22, 15), (10, 15)])
-    shade(p, bag, SAND)
-    shade(p, poly([(11, 6), (21, 6), (19, 10), (13, 10)]), SAND)               # Zipfel
-    flat(p, rect(12, 10, 20, 11), WOOD[1])                                     # Schnur
-    shade(p, disk(16, 21, 4.6), GOLD)
-    flat(p, ring(16, 21, 2.6, 3.4), GOLD[1])                                   # Münzrand
-    glint(p, [(14, 19)], GOLD[4])
-    glint(p, [(10, 16), (11, 15)], SAND[4])
+    """Geldsack (v2.07 neu): bauchiger Jutesack, Hals mit Schnur gebunden, Stoffzipfel oben, $ aufgedruckt, eine
+    Goldmünze lugt heraus."""
+    bag = M(lambda t: [t.put(x, y, 1) for x in range(32) for y in range(32)
+                       if ((x + 0.5 - 16) / 10.5) ** 2 + ((y + 0.5 - 20.5) / 8.0) ** 2 <= 1]) | poly([(11, 13), (21, 13), (23, 17), (9, 17)])
+    shade(p, bag, BURLAP)
+    shade(p, poly([(9, 6), (13, 9), (16, 7), (19, 9), (23, 6), (21, 12), (11, 12)]), BURLAP)   # Zipfel
+    flat(p, rect(11, 12, 21, 13), ROPE[1])                                     # Schnur
+    flat(p, rect(11, 12, 21, 12), ROPE[3])
+    shade(p, disk(22.5, 11, 2.6), GOLD, rim=False)                             # Münze im Zipfel
+    # $ in der Mitte (dunkle Stufe der Jute)
+    dollar = rect(14, 17, 18, 17) | rect(14, 17, 14, 20) | rect(14, 20, 18, 20) | rect(18, 20, 18, 23) | rect(14, 23, 18, 23)
+    dollar |= rect(16, 16, 16, 24)
+    flat(p, dollar, BURLAP[0])
+    flat(p, line(8, 18, 9, 24, 1) & bag, BURLAP[3])                           # Lichtkante links
+    glint(p, [(21, 10)], GOLD[4])
+    glint(p, [(10, 16)], BURLAP[4])
 
 
 def g_crown(p):
@@ -434,10 +466,23 @@ def o_wheel(p):
 
 
 def o_pearl(p):
-    shade(p, sector(16, 20, 0, 13, 0, 180) & rect(2, 20, 30, 30), PEACH)       # Muschel unten
-    shade(p, disk(16, 15, 7.2), WHITE)
-    flat(p, ring(16, 15, 5.0, 6.0) & rect(17, 15, 24, 22), WHITE[1])
-    glint(p, [(13, 11), (14, 11), (13, 12)])
+    """Perle in der Muschel (v2.07 neu): oberer Deckel hinten offen (dunkler), untere Schale mit Rippen, die Perle in
+    der Mitte mit kühlem Schatten und warmem Licht."""
+    lid = sector(16, 13, 0, 12.5, 180, 360) & rect(3, 0, 29, 13)
+    shade(p, lid, PEACH, base=1)
+    for a in range(200, 345, 24):
+        r = math.radians(a)
+        p.line(16, 13, 16 + 11.5 * math.cos(r), 13 + 11.5 * math.sin(r), PEACH[0], 1)
+    shade(p, M(lambda t: [t.put(x, y, 1) for x in range(32) for y in range(32)
+                          if ((x + 0.5 - 16) / 13.5) ** 2 + ((y + 0.5 - 17) / 3.0) ** 2 <= 1]), PEARL_IN, rim=False)   # Innenseite
+    bottom = sector(16, 18, 0, 13.5, 0, 180) & rect(2, 18, 30, 31)
+    shade(p, bottom, PEACH)
+    for a in range(24, 170, 24):
+        r = math.radians(a)
+        p.line(16, 18, 16 + 12.5 * math.cos(r), 18 + 12.5 * math.sin(r), PEACH[1], 1)
+    shade(p, disk(16, 15.5, 5.6), PEARL)
+    flat(p, ring(16, 15.5, 4.4, 5.6) & rect(16, 16, 23, 22), PEARL[1])          # kühler Schatten unten rechts
+    glint(p, [(14, 12), (13, 13), (14, 13)])
 
 
 def o_trident(p):
@@ -464,10 +509,54 @@ THEMES = {
 }
 
 
+# Tiefe wie bei den Generator-Bildern (Lieblingsstil des Besitzers, v2.07): weicher Bodenschatten unter jedem Symbol,
+# Glühen hinter den wertvollen (Farbe, Stärke), Funkeln darüber (x, y, Größe 1 oder 2, Farbe der Arme)
+GLOW = {"g_crown": ("F8CC2A", 0.55), "g_ruby": ("F04A44", 0.55), "g_chest": ("FFD24A", 0.75), "o_pearl": ("CFE8FF", 0.65),
+        "o_trident": ("3EC4B4", 0.6), "g_bar": ("F8CC2A", 0.35)}
+SPARKLE = {"g_bar": [(25, 10, 2, "FCEB7A")], "g_crown": [(27, 5, 2, "FCEB7A"), (4, 16, 1, "FCEB7A")],
+           "g_ruby": [(25, 6, 2, "FF8A6E")], "g_chest": [(26, 3, 2, "FCEB7A"), (5, 9, 1, "FCEB7A")],
+           "o_pearl": [(23, 9, 2, "CFE8FF")], "o_trident": [(27, 3, 2, "9EF0DE"), (4, 6, 1, "FCEB7A")],
+           "o_goldfish": [(26, 6, 1, "FCEB7A")], "g_nugget": [(25, 7, 1, "FCEB7A")]}
+
+
+def depth(img, name):
+    """Bodenschatten und Glühen hinter das Symbol, Funkeln davor."""
+    out = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    px = out.load()
+    for y in range(32):
+        for x in range(32):
+            d = ((x + 0.5 - 16) / 10.5) ** 2 + ((y + 0.5 - 29.2) / 2.2) ** 2
+            if d <= 1:
+                px[x, y] = (26, 14, 30, int(70 * (1 - d) + 20))
+    if name in GLOW:
+        col, k = GLOW[name]
+        c = rgb(col)
+        for y in range(32):
+            for x in range(32):
+                r = math.hypot(x + 0.5 - 16, y + 0.5 - 15) / 15.5
+                if r < 1:
+                    a = int(255 * k * (1 - r) ** 1.6)
+                    if a > px[x, y][3]:
+                        px[x, y] = (c[0], c[1], c[2], a)
+    out.alpha_composite(img)
+    q = out.load()
+    for x, y, size, col in SPARKLE.get(name, []):
+        arm = rgb(col)
+        q[x, y] = (255, 255, 250, 255)
+        for d in range(1, size + 1):
+            a = 255 if d < size else 170
+            for dx, dy in ((d, 0), (-d, 0), (0, d), (0, -d)):
+                if 0 <= x + dx < 32 and 0 <= y + dy < 32:
+                    q[x + dx, y + dy] = (arm[0], arm[1], arm[2], a)
+    return out
+
+
 def symbol(fn):
     p = bc.Pix(32)
     fn(p)
-    return p.image(outline=OUT)
+    img = p.image(outline=OUT)
+    name = fn.__name__
+    return depth(img, name) if name[:2] in ("g_", "o_") else img
 
 
 def plate(edge, base, light):
