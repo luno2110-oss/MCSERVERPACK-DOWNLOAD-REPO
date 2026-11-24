@@ -50,6 +50,7 @@ import build_help_icons  # noqa: E402
 import build_hats  # noqa: E402
 import build_settings  # noqa: E402
 import build_skins  # noqa: E402
+import build_people  # noqa: E402
 import build_sym  # noqa: E402
 
 build_sym.build(OUT)
@@ -90,6 +91,7 @@ if VANILLA and os.path.isdir(VANILLA):
     build_casino_px.write(OUT)
     build_roulette_vegas.write(OUT)
     build_skins.build(OUT)
+    build_people.write(OUT)              # Figuren-Varianten, Blinzel-Bilder, Requisiten (nach den handgemalten)
     own += casino16
     own += build_hats.particle_icons(VANILLA)
     # Icons der Survival-Hilfe in Originalgröße (18 px) hinter die Casino-Icons
