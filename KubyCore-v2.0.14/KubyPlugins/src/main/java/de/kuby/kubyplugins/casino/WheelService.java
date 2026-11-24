@@ -615,7 +615,8 @@ public final class WheelService implements Placeable, Listener {
     private String check(Player p, String wheel, boolean test) {
         UUID id = p.getUniqueId();
         if (Wheel.CASINO.equals(wheel)) {
-            String blocked = plugin.casino().checkMode(p);
+            // Test-Dreh (Belastungstest): der Regeltest-Spieler wechselt nebenher den Modus, geprüft wird hier das Rad
+            String blocked = test ? null : plugin.casino().checkMode(p);
             if (blocked != null) return blocked;
         } else if (!wheel.equals(wheelFor(p))) {
             return "Dieses Glücksrad gibt es nur in SMP.";
