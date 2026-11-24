@@ -38,7 +38,7 @@ import java.util.UUID;
  * Sicherheit: Stacks und Einsätze werden laufend in poker.yml gesichert und nach einem Absturz zurückgegeben.
  * Wer geht, ausloggt oder zu weit weg ist, passt und bekommt seinen Stack zurück.
  */
-public final class PokerService implements org.bukkit.event.Listener {
+public final class PokerService implements de.kuby.kubyplugins.casino.Placeable, org.bukkit.event.Listener {
 
     private static final int MAX_SEATS = 6;
     private static final String SURVIVAL = "survival";
@@ -1475,5 +1475,50 @@ public final class PokerService implements org.bukkit.event.Listener {
         } catch (IOException e) {
             plugin.getLogger().warning("poker.yml konnte nicht gespeichert werden: " + e.getMessage());
         }
+    }
+
+    // ---------- Casino-Admin (v2.07) ----------
+
+    @Override
+    public synchronized java.util.List<de.kuby.kubyplugins.casino.Placeable.Piece> pieces() {
+        Location t = table();
+        if (t == null) return java.util.List.of();
+        boolean busy = !seats.isEmpty();
+        String name = switch (tier) {
+            case GRUEN -> "Pokertisch";
+            case ROT -> "Pokertisch High Roller";
+            case VIOLETT -> "Pokertisch Elite";
+        };
+        return java.util.List.of(new de.kuby.kubyplugins.casino.Placeable.Piece("tisch", name, t, tableYaw(), Double.NaN,
+                busy ? seats.size() + " am Tisch" : "frei", busy));
+    }
+
+    /** Poker steht auf ganzen Blöcken: Verschieben in ganzen Blöcken, Drehen in 90°-Schritten. */
+    @Override
+    public synchronized String move(String id, double dx, double dy, double dz, float dyaw) {
+        Location t = table();
+        if (t == null) return "Kein Pokertisch aufgestellt.";
+        if (!seats.isEmpty()) return "Am Tisch sitzen Spieler – erst wenn er leer ist.";
+        int bx = (int) Math.round(dx), by = (int) Math.round(dy), bz = (int) Math.round(dz);
+        float turn = Math.round(dyaw / 90f) * 90f;
+        if (bx == 0 && by == 0 && bz == 0 && turn == 0) return "Poker rückt nur ganze Blöcke und 90° (Schritt 1 wählen).";
+        Location n = t.clone().add(bx, by, bz);
+        // setTable dreht um 180° (Dealerin schaut zur Mitte): Blick so wählen, dass die neue Richtung herauskommt
+        n.setYaw(de.kuby.kubyplugins.casino.Placeable.norm(tableYaw() + turn - 180f));
+        setTable(n);
+        return null;
+    }
+
+    @Override
+    public synchronized String remove(String id) {
+        if (tisch == null) return "Kein Pokertisch aufgestellt.";
+        if (!seats.isEmpty()) return "Am Tisch sitzen Spieler – erst wenn er leer ist.";
+        if (desk != null) desk.removeAll();
+        if (display != null) display.remove();
+        display = null;
+        desk = null;
+        tisch = null;
+        save();
+        return null;
     }
 }

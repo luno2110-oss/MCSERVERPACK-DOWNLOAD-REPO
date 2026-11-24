@@ -151,6 +151,16 @@ CASINO_BOXES = {
     "felt": dict(corner=CORNER_GOLD_FRAME, straight=5, edge="KLD",
                  colors={"L": "F8C412", "D": "0A1A08", "N": "015426"},
                  glow={"tl": "F6E592", "tr": "F2D560", "bl": "EEC23A", "br": "C88600"}),
+    # Casino-Admin (v2.07, „wie das KAdmin, nur mit Violett-Gold als UI-Textur“): Kopf, Karten und Kacheln in tiefem
+    # Violett mit demselben Goldrahmen wie der Casino-Kopf; Violett aus der Elite-Filz-Rampe (FELT_VIOLET)
+    "cv_head": dict(corner=CORNER_CASINO_HEAD, straight=6, edge="KLD",
+                    colors={"L": "FFF25A", "D": "E49E0A", "N": "3F1A66"},
+                    bottom={"L": "DE9508", "D": "F0CB2C"}),
+    "cv_card": dict(corner=CORNER_GOLD_FRAME, straight=5, edge="KLD",
+                    colors={"L": "F6BE12", "D": "0E0818", "N": "1C1428"},
+                    glow={"tl": "F6E592", "tr": "F2D560", "bl": "EEC23A", "br": "C88600"}),
+    "cv_tile": dict(corner=CORNER_FIELD, straight=5, edge="KLD",
+                    colors={"L": "7A6230", "D": "3E2E14", "N": "2B1B42"}, first="36234F", last="231536"),
     # Roulette rot (High Roller) und violett (Elite), v2.07: gleicher Goldrahmen, Filz in der Tischfarbe
     "felt_red": dict(corner=CORNER_GOLD_FRAME, straight=5, edge="KLD",
                      colors={"L": "F8C412", "D": "1A0608", "N": "621624"},
@@ -190,7 +200,7 @@ SLICED_BOXES.update(build_guide.boxes())
 ALL_BOXES = list(BOXES) + list(CASINO_BOXES) + list(SLICED_BOXES)
 # Kästen, die auch schmaler als 48 px gehen (Zahlenfelder im Roulette-Raster, Battle-Pass-Felder und -Knöpfe,
 # Reiter im Survival-Juwelenshop): schmale Mittelstücke
-NARROW_BOXES = (("field_red", "field_green", "field_black", "field_felt", "field_felt_red", "field_felt_violet") + tuple(build_battlepass.boxes())
+NARROW_BOXES = (("field_red", "field_green", "field_black", "field_felt", "field_felt_red", "field_felt_violet", "cv_tile") + tuple(build_battlepass.boxes())
                 + ("jss_tab_brown", "jss_tab_off", "jss_tab_pink", "rg_nav", "fr_btn", "fr_sub_on", "fr_sub_off",
                    "pw_page_on", "pw_page_off", "qu_tab_event", "qu_tab_daily", "qu_tab_weekly", "qu_tab_main",
                    "qu_tab_mile", "qu_tab_team"))
@@ -235,6 +245,8 @@ BUTTONS16 = {
     "s_gold_on": dict(L="F6C03D", D="CD9C31", top2="C29734", Db="816712", N="A47F26", side="B4861E"),
     "s_gold_gray": dict(L="FAC23E", D="B3842D", Db="A08029", N="232327"),
     "s_green": dict(L="24AC5F", D="158C46", top2="1A8849", Db="0A5E28", N="19733D", side="177033"),
+    # Casino-Admin (v2.07): violetter Knopf (Reiter, Nebenaktionen) zu den goldenen Hauptknöpfen
+    "s_violet": dict(L="A57BE0", D="6A44A0", Db="4E3078", N="2A1842"),
 }
 # Mehrfach-Schalter des Einstellungen-Menüs (9-Slice aus den Referenzbildern), Enum-Namen ohne "s_"
 SLICED_SMALL = {"s_" + k: v for k, v in build_settings.smalls().items()}

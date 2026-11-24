@@ -248,7 +248,16 @@ public final class Cinema implements Listener {
             p.resetPlayerTime();
             p.resetPlayerWeather();
             // bei normalem Ende läuft die Abblende noch aus
-            if (res != Result.DONE) p.clearTitle();
+            if (res != Result.DONE) {
+                p.clearTitle();
+            } else if (!r.bedrock && r.t >= r.flashUntil && ((r.grade != null && !r.grade.isEmpty()) || r.card != null)) {
+                // Farbstimmung (Vignette) und Titelkarte standen mit 60 s Dauer: sanft ausblenden statt stehen lassen
+                // (v2.07, Meldung des Besitzers: „die Vignette in der Slots-Szene wird nicht mehr entfernt“)
+                Character gc = GRADES.get(r.grade);
+                var fade = Component.text();
+                if (gc != null) fade.append(glyph(gc, GRADE_ADV, FONT, 0xFFFFFF));
+                p.showTitle(Title.title(fade.build(), Component.empty(), Title.Times.times(Duration.ZERO, Duration.ofMillis(50), Duration.ofMillis(600))));
+            }
             p.sendActionBar(Component.empty());
             p.hideBossBar(r.top);
             for (BossBar b : r.hiddenBars) p.showBossBar(b);

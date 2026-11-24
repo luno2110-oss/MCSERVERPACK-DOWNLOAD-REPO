@@ -48,7 +48,7 @@ import java.util.UUID;
  * Abgerechnet wird, sobald der Zweite im Ziel ist (CasinoPlay: Serie, Goldene Zeit, Cashback, Rangliste). Danach
  * kommt ein neues Feld mit neuen Quoten.
  */
-public final class RaceService implements Listener {
+public final class RaceService implements Placeable, Listener {
 
     public static final String GAME = "rennen";
     private static final SecureRandom RNG = new SecureRandom();
@@ -685,5 +685,58 @@ public final class RaceService implements Listener {
     /** Kurzer Text für Status-Befehle. */
     public Component statusLine() {
         return Component.text("Pferderennen: " + phase.name().toLowerCase(java.util.Locale.ROOT), NamedTextColor.GRAY);
+    }
+
+    // ---------- Casino-Admin (v2.07) ----------
+
+    @Override
+    public List<Piece> pieces() {
+        loadBoard();
+        if (board == null) return List.of();
+        boolean busy = !bets.isEmpty() || phase == Phase.RUNNING;
+        return List.of(new Piece("bildschirm", "Rennbildschirm", board.center(), (float) Placeable.fieldValue(raw, 4, 0), board.size(),
+                busy ? "Wetten offen" : "frei", busy));
+    }
+
+    private String rebuildBoard(String line) {
+        loadBoard();
+        if (board == null) return "Kein Rennbildschirm aufgestellt.";
+        if (!bets.isEmpty() || phase == Phase.RUNNING) return "Es laufen Wetten oder ein Rennen – danach noch einmal.";
+        board.removeAll();
+        board = null;
+        raw = line;
+        save();
+        loadBoard();
+        build();
+        return null;
+    }
+
+    @Override
+    public String move(String id, double dx, double dy, double dz, float dyaw) {
+        return rebuildBoard(Placeable.shift(raw, dx, dy, dz, dyaw));
+    }
+
+    @Override
+    public String resize(String id, double delta) {
+        if (raw == null) return "Kein Rennbildschirm aufgestellt.";
+        return rebuildBoard(Placeable.field(raw, 5, Math.max(0.4, Math.min(1.2, Placeable.fieldValue(raw, 5, 0.7) + delta))));
+    }
+
+    @Override
+    public double sizeStep() {
+        return 0.1;
+    }
+
+    @Override
+    public String remove(String id) {
+        loadBoard();
+        if (board == null) return "Kein Rennbildschirm aufgestellt.";
+        if (!settled && phase != Phase.OPEN) refundAll();
+        board.removeAll();
+        board = null;
+        raw = null;
+        phase = Phase.OPEN;
+        save();
+        return null;
     }
 }

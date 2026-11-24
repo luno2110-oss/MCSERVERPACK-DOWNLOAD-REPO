@@ -71,7 +71,7 @@ import java.util.UUID;
  *
  * <p>Daten in gluecksrad.yml: raeder (Bühnen), zeit / serie je Rad und Spieler, gewinner je Rad (letzte fünf).
  */
-public final class WheelService implements Listener {
+public final class WheelService implements Placeable, Listener {
 
     private static final SecureRandom RNG = new SecureRandom();
     /** Ausholen vor dem Dreh: Ticks und Grad zurück. */
@@ -1136,6 +1136,66 @@ public final class WheelService implements Listener {
     }
 
     /** /casino gluecksrad aufstellen [Größe] | entfernen | zuruecksetzen <Spieler> */
+    // ---------- Casino-Admin (v2.07) ----------
+
+    @Override
+    public List<Piece> pieces() {
+        List<Piece> out = new ArrayList<>();
+        int i = 1;
+        for (String id : raw.keySet()) {
+            Stage b = load(id);
+            if (b == null) continue;
+            out.add(new Piece(id, "Glücksrad-Bühne " + i++, b.st.center(), (float) Placeable.fieldValue(raw.get(id), 4, 0), b.st.size(),
+                    b.spin != null ? "dreht" : "Leerlauf", b.spin != null));
+        }
+        return out;
+    }
+
+    private String rebuild(String id, String line) {
+        Stage b = load(id);
+        if (b == null) return "Glücksrad nicht gefunden.";
+        if (b.spin != null) return "Das Rad dreht gerade – gleich noch einmal.";
+        b.st.removeAll();
+        stages.remove(id);
+        raw.put(id, line);
+        save();
+        Stage n = load(id);
+        if (n == null) return "Glücksrad ließ sich nicht neu laden.";
+        build(n);
+        return null;
+    }
+
+    @Override
+    public String move(String id, double dx, double dy, double dz, float dyaw) {
+        if (!raw.containsKey(id)) return "Glücksrad nicht gefunden.";
+        return rebuild(id, Placeable.shift(raw.get(id), dx, dy, dz, dyaw));
+    }
+
+    @Override
+    public String resize(String id, double delta) {
+        if (!raw.containsKey(id)) return "Glücksrad nicht gefunden.";
+        double v = Math.max(0.6, Math.min(1.5, Placeable.fieldValue(raw.get(id), 5, 1.0) + delta));
+        return rebuild(id, Placeable.field(raw.get(id), 5, v));
+    }
+
+    @Override
+    public double sizeStep() {
+        return 0.1;
+    }
+
+    @Override
+    public String remove(String id) {
+        Stage b = load(id);
+        if (b == null) return "Glücksrad nicht gefunden.";
+        if (b.spin != null) finish(b.spin, b, false);
+        b.spin = null;
+        b.st.removeAll();
+        stages.remove(id);
+        raw.remove(id);
+        save();
+        return null;
+    }
+
     public void command(Player p, String[] args) {
         String sub = args.length > 1 ? args[1].toLowerCase(Locale.ROOT) : "";
         if (!p.hasPermission("kuby.admin") || sub.isEmpty()) {

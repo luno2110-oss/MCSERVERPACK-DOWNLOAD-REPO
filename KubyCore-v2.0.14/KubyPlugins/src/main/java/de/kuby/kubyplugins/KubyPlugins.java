@@ -222,6 +222,8 @@ public final class KubyPlugins extends JavaPlugin {
         customItems = new de.kuby.kubyplugins.service.CustomItemService(this);
         models = new de.kuby.kubyplugins.service.ModelService(this);
         worlds = new WorldService(this);
+        // eigene Welten (Skyblock, mit /kp create angelegt) nach einem Neustart wieder laden, bevor Dienste sie brauchen
+        worlds.loadModeWorlds();
         modules = new ModuleService(this);
         markers = new MarkerService(this);
         casino = new CasinoService(this);

@@ -157,6 +157,12 @@ public final class RouletteTable {
         return yaw;
     }
 
+    /** Tisch vergessen (Casino-Admin „Entfernen“): danach gibt es keinen Tisch mehr. */
+    public void forget() {
+        removeAll();
+        origin = null;
+    }
+
     /** Tischmitte am Boden (null, solange kein Tisch gesetzt ist). */
     public Location center() {
         return origin == null ? null : origin.clone();

@@ -52,6 +52,7 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -66,7 +67,7 @@ import java.util.UUID;
  * wer den Höchstwert erreicht, wird automatisch ausgezahlt. Einsätze liegen bis zum Ende der Runde in crash.yml und
  * kommen nach einem Absturz des Servers zurück.
  */
-public final class CrashGame implements Listener, CommandExecutor {
+public final class CrashGame implements Placeable, Listener, CommandExecutor {
 
     public enum Phase { IDLE, BETTING, RUNNING, CRASHED }
 
@@ -908,4 +909,47 @@ public final class CrashGame implements Listener, CommandExecutor {
         return String.format(Locale.GERMAN, "%.1f", v);
     }
 
+
+    // ---------- Casino-Admin (v2.07) ----------
+
+    @Override
+    public List<Piece> pieces() {
+        CrashScreen sc = screen();
+        if (sc == null) return List.of();
+        boolean busy = !bets.isEmpty() || phase == Phase.RUNNING;
+        return List.of(new Piece("bildschirm", "Crash-Bildschirm", sc.center(), (float) Placeable.fieldValue(screenRaw, 4, 0), Double.NaN,
+                busy ? "Runde läuft" : "frei", busy));
+    }
+
+    /** Bildschirm, Titel, „Letzte Runden“ und Info wandern gemeinsam (die Schilder sind echte Blöcke und bleiben). */
+    @Override
+    public String move(String id, double dx, double dy, double dz, float dyaw) {
+        if (screenRaw == null) return "Kein Crash-Bildschirm aufgestellt.";
+        if (!bets.isEmpty() || phase == Phase.RUNNING) return "Es läuft eine Runde – danach noch einmal.";
+        if (screen != null) screen.removeAll();
+        removeInfo();
+        screen = null;
+        screenRaw = Placeable.shift(screenRaw, dx, dy, dz, dyaw);
+        titleRaw = Placeable.shift(titleRaw, dx, dy, dz, 0);
+        roundsRaw = Placeable.shift(roundsRaw, dx, dy, dz, 0);
+        infoRaw = Placeable.shift(infoRaw, dx, dy, dz, 0);
+        save();
+        build();
+        return null;
+    }
+
+    @Override
+    public String remove(String id) {
+        if (screenRaw == null) return "Kein Crash-Bildschirm aufgestellt.";
+        if (screen != null) screen.removeAll();
+        removeInfo();
+        screen = null;
+        screenRaw = null;
+        titleRaw = null;
+        roundsRaw = null;
+        infoRaw = null;
+        signs.clear();
+        save();
+        return null;
+    }
 }

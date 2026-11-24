@@ -43,7 +43,7 @@ import java.util.UUID;
  * Mittellinie. Einsatz 10 bis 5.000 (Knopf: höher, Schleichen + Knopf: tiefer). Drei Siebener knacken den
  * Slots-Jackpot (wächst mit jedem Dreh). Rückfluss ohne Jackpot rund 95 %.
  */
-public final class SlotsService implements Listener {
+public final class SlotsService implements Placeable, Listener {
 
     public static final long[] LEVELS = {10, 50, 100, 500, 1000, 5000};
     /** Symbole, Gewichte und Gewinne kommen je Automat aus seinem Thema (SlotTheme, v2.05). */
@@ -559,6 +559,63 @@ public final class SlotsService implements Listener {
     }
 
     /** /casino slots automat [Breite|klein] [Stil] [symbole=Thema] | reihe <Anzahl> … | entfernen | jackpot */
+    // ---------- Casino-Admin (v2.07) ----------
+
+    @Override
+    public java.util.List<Piece> pieces() {
+        java.util.List<Piece> out = new java.util.ArrayList<>();
+        int i = 1;
+        for (String id : raw.keySet()) {
+            State st = load(id);
+            if (st == null) continue;
+            String theme = st.machine.theme() == null ? "" : " · " + st.machine.theme().title;
+            out.add(new Piece(id, "Slot-Automat " + i++ + theme, st.machine.center(), (float) Placeable.fieldValue(raw.get(id), 4, 0),
+                    st.machine.width(), st.busy ? "dreht" : st.seated != null ? "besetzt" : "frei", st.busy));
+        }
+        return out;
+    }
+
+    private String rebuild(String id, String line) {
+        State st = load(id);
+        if (st == null) return "Automat nicht gefunden.";
+        if (st.busy) return "Die Walzen drehen gerade – gleich noch einmal.";
+        st.machine.removeAll();
+        machines.remove(id);
+        raw.put(id, line);
+        save();
+        State n = load(id);
+        if (n == null) return "Automat ließ sich nicht neu laden.";
+        build(n);
+        return null;
+    }
+
+    @Override
+    public String move(String id, double dx, double dy, double dz, float dyaw) {
+        if (!raw.containsKey(id)) return "Automat nicht gefunden.";
+        return rebuild(id, Placeable.shift(raw.get(id), dx, dy, dz, dyaw, 6));
+    }
+
+    @Override
+    public String resize(String id, double delta) {
+        if (!raw.containsKey(id)) return "Automat nicht gefunden.";
+        double w = Math.max(1.35, Math.min(4.0, Placeable.fieldValue(raw.get(id), 5, 2.7) + delta));
+        return rebuild(id, Placeable.field(raw.get(id), 5, w));
+    }
+
+    @Override
+    public double sizeStep() {
+        return 0.15;
+    }
+
+    @Override
+    public String remove(String id) {
+        State st = machines.remove(id);
+        if (st != null) st.machine.removeAll();
+        if (raw.remove(id) == null) return "Automat nicht gefunden.";
+        save();
+        return null;
+    }
+
     public void command(Player p, String[] args) {
         if (!p.hasPermission("kuby.admin")) {
             Msg.send(p, "<red>Nur Admins.");

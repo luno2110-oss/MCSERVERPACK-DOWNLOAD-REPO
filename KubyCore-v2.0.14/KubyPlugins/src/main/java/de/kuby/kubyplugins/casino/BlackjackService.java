@@ -36,7 +36,7 @@ import java.util.UUID;
  * Alle Blackjack-Tische: Aufbau, Klicks (Hocker, Chips, Aktionsfelder, Dealer), Aufstehen, Sicherung offener
  * Einsätze. Admin: /casino blackjack tisch [Radius] (an deiner Position, Blick zu den Spielern), entfernen, liste.
  */
-public final class BlackjackService implements Listener {
+public final class BlackjackService implements Placeable, Listener {
 
     private final KubyPlugins plugin;
     private final File file;
@@ -297,6 +297,87 @@ public final class BlackjackService implements Listener {
             plugin.getServer().getScheduler().runTaskTimer(plugin, () -> games.values().forEach(BlackjackGame::hoverTick), 22L, 2L);
         }
         return g;
+    }
+
+    // =================================================================================================================
+    // Casino-Admin (v2.07): auflisten, verschieben, drehen, Größe, Farbe, entfernen
+    // =================================================================================================================
+
+    @Override
+    public List<Piece> pieces() {
+        List<Piece> out = new ArrayList<>();
+        for (String id : raw.keySet()) {
+            BlackjackGame g = load(id);
+            if (g == null) continue;
+            out.add(new Piece(id, g.name, g.table.origin(), g.table.yaw(), g.table.radius(), g.idle() ? "frei" : "Runde läuft", !g.idle()));
+        }
+        return out;
+    }
+
+    /** Tisch neu aufbauen, nachdem raw geändert wurde. */
+    private String rebuild(String id, String line) {
+        BlackjackGame g = load(id);
+        if (g == null) return "Tisch nicht gefunden.";
+        if (!g.idle()) return "Am Tisch läuft eine Runde – nach der Runde noch einmal.";
+        g.shutdown();
+        games.remove(id);
+        raw.put(id, line);
+        saveEscrow();
+        BlackjackGame n = load(id);
+        if (n == null) return "Tisch ließ sich nicht neu laden.";
+        n.table.build();
+        n.refreshDisplays();
+        return null;
+    }
+
+    @Override
+    public String move(String id, double dx, double dy, double dz, float dyaw) {
+        if (!raw.containsKey(id)) return "Tisch nicht gefunden.";
+        return rebuild(id, Placeable.shift(raw.get(id), dx, dy, dz, dyaw));
+    }
+
+    @Override
+    public String resize(String id, double delta) {
+        if (!raw.containsKey(id)) return "Tisch nicht gefunden.";
+        double r = Math.max(2.2, Math.min(4.5, Placeable.fieldValue(raw.get(id), 5, 3.0) + delta));
+        return rebuild(id, Placeable.field(raw.get(id), 5, r));
+    }
+
+    @Override
+    public double sizeStep() {
+        return 0.25;
+    }
+
+    /** Farbe eines Tisches wechseln (grün, rot, violett): Filz, Limits und Chips der Farbe. */
+    public String tier(String id, TableTier tier) {
+        String line = raw.get(id);
+        if (line == null) return "Tisch nicht gefunden.";
+        String[] p = line.split(";", -1);
+        List<String> f = new ArrayList<>(java.util.Arrays.asList(p));
+        while (f.size() < 6) f.add("3.0");
+        if (tier == TableTier.GRUEN) {
+            while (f.size() > 6) f.remove(f.size() - 1);
+        } else if (f.size() > 6) {
+            f.set(6, tier.key);
+        } else {
+            f.add(tier.key);
+        }
+        return rebuild(id, String.join(";", f));
+    }
+
+    public TableTier tierOf(String id) {
+        BlackjackGame g = load(id);
+        return g == null ? TableTier.GRUEN : g.table.tier();
+    }
+
+    @Override
+    public String remove(String id) {
+        if (!raw.containsKey(id)) return "Tisch nicht gefunden.";
+        BlackjackGame g = games.remove(id);
+        if (g != null) g.shutdown();
+        raw.remove(id);
+        saveEscrow();
+        return null;
     }
 
     /** /casino blackjack tisch [Radius] | entfernen | liste */

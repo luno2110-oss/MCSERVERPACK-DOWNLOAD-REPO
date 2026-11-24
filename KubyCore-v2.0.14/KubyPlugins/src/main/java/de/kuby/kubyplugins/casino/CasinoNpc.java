@@ -35,7 +35,7 @@ import java.util.function.Consumer;
  * /casino npc &lt;rolle&gt; an ihre Position; Rechtsklick öffnet das passende Menü. Figuren und Hologramme sind
  * dauerhaft (überleben Neustarts) und über eine Markierung miteinander verbunden.
  */
-public final class CasinoNpc implements Listener {
+public final class CasinoNpc implements Placeable, Listener {
 
     /** Rolle einer Figur: Titel, Zeilen darunter, Aktion beim Rechtsklick. */
     public enum Role {
@@ -358,5 +358,53 @@ public final class CasinoNpc implements Listener {
         }
         spawn(role, p.getLocation());
         Msg.send(p, "<green>" + role.title + " aufgestellt. Entfernen: /casino npc entfernen (davor stehen).");
+    }
+
+    // ---------- Casino-Admin (v2.07): Figuren sind Entities, Schlüssel = UUID ----------
+
+    @Override
+    public java.util.List<Piece> pieces() {
+        java.util.List<Piece> out = new java.util.ArrayList<>();
+        for (org.bukkit.World w : plugin.getServer().getWorlds()) {
+            for (Entity e : w.getEntities()) {
+                Role r = roleOf(e);
+                if (r == null) continue;
+                out.add(new Piece(e.getUniqueId().toString(), r.title, e.getLocation(), e.getLocation().getYaw(), Double.NaN, r.id, false));
+            }
+        }
+        out.sort(java.util.Comparator.comparing(Piece::name));
+        return out;
+    }
+
+    private Entity byId(String id) {
+        try {
+            Entity e = plugin.getServer().getEntity(java.util.UUID.fromString(id));
+            return e != null && roleOf(e) != null ? e : null;
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
+    }
+
+    @Override
+    public String move(String id, double dx, double dy, double dz, float dyaw) {
+        Entity e = byId(id);
+        if (e == null) return "Figur nicht gefunden (Chunk nicht geladen?).";
+        Location to = e.getLocation().add(dx, dy, dz);
+        to.setYaw(Placeable.norm(to.getYaw() + dyaw));
+        to.setPitch(0);
+        removeHolo(e);
+        e.teleport(to);
+        Role r = roleOf(e);
+        if (r != null) spawnHolo(r, e);
+        return null;
+    }
+
+    @Override
+    public String remove(String id) {
+        Entity e = byId(id);
+        if (e == null) return "Figur nicht gefunden (Chunk nicht geladen?).";
+        removeHolo(e);
+        e.remove();
+        return null;
     }
 }

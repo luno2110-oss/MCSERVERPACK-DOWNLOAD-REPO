@@ -37,6 +37,11 @@ public final class SkyblockSetup {
         KubyPlugins core = addon.core();
         String name = core.modes().worldOf(ModeService.SKYBLOCK);
         World w = Bukkit.getWorld(name);
+        if (w == null && core.worlds().loadExisting(ModeService.SKYBLOCK) != null) {
+            // Ordner war da, Welt nach einem Neustart nur nicht geladen (v2.07)
+            w = Bukkit.getWorld(name);
+            Msg.send(p, "<green>✔ Welt <white>" + name + " <green>geladen (lag schon auf der Platte).");
+        }
         if (w == null) {
             String err = core.worlds().create(ModeService.SKYBLOCK);
             if (err != null) {

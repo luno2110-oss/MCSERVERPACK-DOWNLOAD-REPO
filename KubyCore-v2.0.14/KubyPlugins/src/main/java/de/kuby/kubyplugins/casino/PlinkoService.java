@@ -55,7 +55,7 @@ import java.util.UUID;
  * liegt (CasinoPlay: Serie, Goldene Zeit, Cashback, Statistik). Das Fach steht beim Abwurf fest (Zufallsweg), die
  * Flugbahn wird dazu passend geplant ({@link Plinko#flight}).
  */
-public final class PlinkoService implements Listener {
+public final class PlinkoService implements Placeable, Listener {
 
     public static final long[] LEVELS = {10, 50, 100, 500, 1000, 5000};
     private static final SecureRandom RNG = new SecureRandom();
@@ -619,6 +619,67 @@ public final class PlinkoService implements Listener {
     }
 
     /** /casino plinko [automat [Größe] | entfernen | liste] */
+    // ---------- Casino-Admin (v2.07) ----------
+
+    @Override
+    public List<Piece> pieces() {
+        List<Piece> out = new ArrayList<>();
+        int i = 1;
+        for (String id : raw.keySet()) {
+            Board b = load(id);
+            if (b == null) continue;
+            boolean busy = !b.balls.isEmpty();
+            out.add(new Piece(id, "Plinko-Brett " + i++, b.board.center(), (float) Placeable.fieldValue(raw.get(id), 4, 0), b.board.size(),
+                    busy ? b.balls.size() + " Kugeln unterwegs" : b.active != null ? "besetzt" : "frei", busy));
+        }
+        return out;
+    }
+
+    private String rebuild(String id, String line) {
+        Board b = load(id);
+        if (b == null) return "Brett nicht gefunden.";
+        if (!b.balls.isEmpty()) return "Es fallen noch Kugeln – gleich noch einmal.";
+        b.board.removeAll();
+        boards.remove(id);
+        raw.put(id, line);
+        save();
+        Board n = load(id);
+        if (n == null) return "Brett ließ sich nicht neu laden.";
+        build(n);
+        return null;
+    }
+
+    @Override
+    public String move(String id, double dx, double dy, double dz, float dyaw) {
+        if (!raw.containsKey(id)) return "Brett nicht gefunden.";
+        return rebuild(id, Placeable.shift(raw.get(id), dx, dy, dz, dyaw));
+    }
+
+    @Override
+    public String resize(String id, double delta) {
+        if (!raw.containsKey(id)) return "Brett nicht gefunden.";
+        double v = Math.max(0.6, Math.min(1.4, Placeable.fieldValue(raw.get(id), 5, 0.8) + delta));
+        return rebuild(id, Placeable.field(raw.get(id), 5, v));
+    }
+
+    @Override
+    public double sizeStep() {
+        return 0.1;
+    }
+
+    @Override
+    public String remove(String id) {
+        Board b = load(id);
+        if (b == null) return "Brett nicht gefunden.";
+        for (Ball ball : b.balls) if (!ball.settled) settle(b, ball, false);
+        b.balls.clear();
+        b.board.removeAll();
+        boards.remove(id);
+        raw.remove(id);
+        save();
+        return null;
+    }
+
     public void command(Player p, String[] args) {
         String sub = args.length > 1 ? args[1].toLowerCase(java.util.Locale.ROOT) : "";
         if (!p.hasPermission("kuby.admin") || sub.isEmpty()) {

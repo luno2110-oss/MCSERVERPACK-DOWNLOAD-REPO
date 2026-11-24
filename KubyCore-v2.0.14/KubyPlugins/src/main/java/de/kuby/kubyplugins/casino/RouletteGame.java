@@ -38,7 +38,7 @@ import java.util.function.Consumer;
  * hat in der Runde seine eigene Chip-Farbe. Offene Einsätze stehen in roulette-tisch.yml und kommen nach einem Absturz
  * zurück.
  */
-public final class RouletteGame implements org.bukkit.event.Listener {
+public final class RouletteGame implements Placeable, org.bukkit.event.Listener {
 
     public enum Kind {
         ROT("Rot", 2), SCHWARZ("Schwarz", 2), GERADE("Gerade", 2), UNGERADE("Ungerade", 2), NIEDRIG("1–18", 2),
@@ -1187,4 +1187,36 @@ public final class RouletteGame implements org.bukkit.event.Listener {
         }
     }
 
+
+    // =================================================================================================================
+    // Casino-Admin (v2.07)
+    // =================================================================================================================
+
+    @Override
+    public List<Piece> pieces() {
+        if (!hasTable()) return List.of();
+        boolean busy = !bets.isEmpty() || phase != Phase.IDLE || wheelBusy;
+        return List.of(new Piece("tisch", title().charAt(0) + title().substring(1).toLowerCase(java.util.Locale.ROOT).replace("roulette", "Roulette")
+                .replace("high roller", "High Roller").replace("elite", "Elite"), table.center(), table.yaw(), Double.NaN,
+                busy ? "Runde läuft" : "frei", busy));
+    }
+
+    @Override
+    public String move(String id, double dx, double dy, double dz, float dyaw) {
+        Location c = table.center();
+        if (c == null) return "Kein Tisch aufgestellt.";
+        if (!bets.isEmpty() || phase != Phase.IDLE || wheelBusy) return "Am Tisch läuft eine Runde – nach der Runde noch einmal.";
+        setTable(c.add(dx, dy, dz), Placeable.norm(table.yaw() + dyaw));
+        return null;
+    }
+
+    @Override
+    public String remove(String id) {
+        if (!hasTable()) return "Kein Tisch aufgestellt.";
+        abortRound();
+        table.forget();
+        tableRaw = null;
+        save();
+        return null;
+    }
 }

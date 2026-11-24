@@ -42,7 +42,7 @@ import java.util.UUID;
  * persönlichen Zeile "Du bist dabei ✓"), die Ranking-Tafel an der Wand und das "CASINO"-Hologramm am Eingang.
  * Admins stellen sie mit /casino holo &lt;jackpot|ranking|eingang&gt; auf.
  */
-public final class CasinoHolos implements Listener {
+public final class CasinoHolos implements Placeable, Listener {
 
     public static final List<String> KINDS = List.of("jackpot", "ranking", "eingang");
     private static final Key HOLO = Key.key("kuby", "holo");
@@ -121,7 +121,7 @@ public final class CasinoHolos implements Listener {
         for (String k : KINDS) build(k);
     }
 
-    private void remove(String kind) {
+    private void despawn(String kind) {
         Location at = parse(places.get(kind));
         shown.remove(kind);
         if (kind.equals("jackpot")) {
@@ -150,7 +150,7 @@ public final class CasinoHolos implements Listener {
     }
 
     private void build(String kind) {
-        remove(kind);
+        despawn(kind);
         Location at = parse(places.get(kind));
         if (at == null || !at.getWorld().isChunkLoaded(at.getBlockX() >> 4, at.getBlockZ() >> 4)) return;
         float yaw = at.getYaw();
@@ -434,7 +434,7 @@ public final class CasinoHolos implements Listener {
             return;
         }
         if (args.length > 2 && args[2].equalsIgnoreCase("entfernen")) {
-            remove(kind);
+            despawn(kind);
             places.remove(kind);
             save();
             Msg.send(p, "<green>Hologramm entfernt.");
@@ -455,7 +455,7 @@ public final class CasinoHolos implements Listener {
         } else {
             at = p.getLocation().clone();
         }
-        remove(kind);
+        despawn(kind);
         places.put(kind, at.getWorld().getName() + ";" + at.getX() + ";" + at.getY() + ";" + at.getZ() + ";" + at.getYaw());
         save();
         build(kind);
@@ -463,6 +463,46 @@ public final class CasinoHolos implements Listener {
     }
 
     public void shutdown() {
-        for (String k : KINDS) remove(k);
+        for (String k : KINDS) despawn(k);
+    }
+
+    // ---------- Casino-Admin (v2.07) ----------
+
+    public static String label(String kind) {
+        return switch (kind) {
+            case "jackpot" -> "Jackpot-Hologramm";
+            case "ranking" -> "Ranking-Tafel";
+            case "eingang" -> "Eingangs-Schriftzug";
+            default -> kind;
+        };
+    }
+
+    @Override
+    public List<Piece> pieces() {
+        List<Piece> out = new java.util.ArrayList<>();
+        for (String k : KINDS) {
+            Location l = parse(places.get(k));
+            if (l != null) out.add(new Piece(k, label(k), l, l.getYaw(), Double.NaN, "", false));
+        }
+        return out;
+    }
+
+    @Override
+    public String move(String id, double dx, double dy, double dz, float dyaw) {
+        if (!places.containsKey(id)) return "Hologramm nicht gefunden.";
+        despawn(id);
+        places.put(id, Placeable.shift(places.get(id), dx, dy, dz, dyaw));
+        save();
+        build(id);
+        return null;
+    }
+
+    @Override
+    public String remove(String id) {
+        if (!places.containsKey(id)) return "Hologramm nicht gefunden.";
+        despawn(id);
+        places.remove(id);
+        save();
+        return null;
     }
 }
