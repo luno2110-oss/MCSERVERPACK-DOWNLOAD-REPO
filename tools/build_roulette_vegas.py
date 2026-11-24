@@ -358,8 +358,8 @@ def bowl_segment(diamond):
         c = r(0.55)
         els.append(_el(c - 0.32, y(0.025), 7.68, c + 0.32, y(0.075), 8.32, "#g",
                        {"origin": [c, y(0.05), 8], "axis": "y", "angle": 45}))
-    return {"textures": {"w": "kuby:block/casino/hd_walnut", "d": "kuby:block/casino/hd_dark", "g": "kuby:block/casino/hd_gold",
-                         "particle": "kuby:block/casino/hd_walnut"}, "elements": els}
+    return {"textures": {"w": "kuby:block/casino/rv_wood", "d": "kuby:block/casino/hd_dark", "g": "kuby:block/casino/hd_gold",
+                         "particle": "kuby:block/casino/rv_wood"}, "elements": els}
 
 
 def _ring16(r0, r1, y0, y1, tex):
@@ -422,7 +422,7 @@ def rotor3d(tex):
         r = rr(rad) * CAP_PAD
         els.append({"from": [8 - r, h(top), 8 - r], "to": [8 + r, h(top), 8 + r],
                     "faces": {"up": {"texture": "#c%d" % i, "uv": [0, 0, 16, 16]}}})
-    textures = {"top": tex, "w": "kuby:block/casino/hd_walnut", "g": "kuby:block/casino/hd_gold", "particle": tex}
+    textures = {"top": tex, "w": "kuby:block/casino/rv_wood", "g": "kuby:block/casino/hd_gold", "particle": tex}
     for i in range(len(CONE_TIERS)):
         textures["c%d" % i] = "kuby:block/casino/rv_cap%d" % i
     return {"textures": textures, "elements": els}

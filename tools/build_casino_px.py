@@ -242,6 +242,53 @@ def mat_walnut():
     return _mat(f)
 
 
+# Roulette (v2.07, Wunsch des Besitzers: „die gelben Streifen auf der schwarzen Ablage weg oder sauberer“, „die
+# Holztextur gefällt mir nicht“). Die Würfel-Materialien werden über ganze Tischkanten gezogen (eine 16-px-Textur auf
+# 4 Blöcke Länge): deshalb nur Muster, die waagrecht gestreckt gut aussehen – durchgehende Linien, keine Fugen und
+# keine Stiche (die Goldnaht im Leder wurde gestreckt zu Straßen-Markierungen).
+RV_WOOD = [rgb(c) for c in ("2A1609", "41230F", "5A3317", "714222", "8C5730", "A8703F")]
+RV_RAIL = [rgb(c) for c in ("0C0B10", "15131B", "1E1B26", "2A2634", "3C3748")]
+
+
+def mat_rv_wood():
+    """Lackiertes Nussholz: Licht oben (Lackkante), zwei dunkle Maserlinien in sanften Wellen, ein heller Streifen,
+    unten dunkler (Schatten kühler, Licht wärmer)."""
+    def f(x, y):
+        if y == 0:
+            return RV_WOOD[5]
+        if y == 15:
+            return RV_WOOD[0]
+        g1 = 5 + round(1.4 * math.sin(2 * math.pi * x / 16))
+        g2 = 10 + round(1.2 * math.sin(2 * math.pi * (x + 6) / 16))
+        if y in (g1, g2):
+            return RV_WOOD[1]
+        if y == g1 + 1 and x % 5 != 0:
+            return RV_WOOD[2]
+        if y == 2 and 3 <= x <= 12:
+            return RV_WOOD[5]            # Lackglanz
+        if y < 4:
+            return RV_WOOD[4]
+        if y < 12:
+            return RV_WOOD[3]
+        return RV_WOOD[2]
+    return _mat(f)
+
+
+def mat_rv_rail():
+    """Schwarzes Polsterleder ohne Naht: helle Oberkante, ein ruhiger Glanzstreifen, nach unten dunkler."""
+    def f(x, y):
+        if y == 0:
+            return RV_RAIL[4]
+        if y == 2:
+            return RV_RAIL[3]
+        if y < 6:
+            return RV_RAIL[2]
+        if y < 13:
+            return RV_RAIL[1]
+        return RV_RAIL[0]
+    return _mat(f)
+
+
 def mat_ramp(r, tube=False):
     def f(x, y):
         if tube:
@@ -257,6 +304,7 @@ MATERIALS = {
     "hd_neon_pink": lambda: mat_ramp(NEON_P, True), "hd_neon_cyan": lambda: mat_ramp(NEON_C, True),
     "hd_edge": lambda: _mat(lambda x, y: PAPER[2]),
     "hd_ocean": lambda: mat_ramp(OCEAN),
+    "rv_wood": mat_rv_wood, "rv_rail": mat_rv_rail,
     # Leuchtleisten der Slot-Automaten im eingeschalteten Zustand (beim Drehen): hellere Rampe mit fast weißem Kern.
     # Früher leuchteten sie über den Glow-Umriss, der im echten Client die Textur durch eine flache Farbe ersetzte.
     "hd_gold_lit": lambda: mat_ramp([rgb(c) for c in ("D9A11A", "F2C23A", "FFE48A", "FFF8DC")], True),
