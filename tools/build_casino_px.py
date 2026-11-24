@@ -108,6 +108,19 @@ SEAT_ANGLES = (-60, -30, 0, 30, 60)
 F_RIM_IN, F_BET, F_BET_R, F_LINE = 0.885, 0.70, 0.078, 0.60
 
 
+# Dealer-Seite als flacher Bogen (v2.07, Wunsch des Besitzers: „auf der Seite des Dealers runder, bei einem echten
+# Tisch fällt es nach innen, Richtung Spieler“): Kreisbogen durch die Ecken, in der Mitte BJ_BULGE · R zu den Spielern
+# hin. Dieselbe Form baut BlackjackTable (DEALER_BULGE) aus Holz-Segmenten.
+BJ_BULGE = 0.12
+BJ_RHO = (1 + BJ_BULGE * BJ_BULGE) / (2 * BJ_BULGE)
+
+
+def bj_edge(u):
+    """Dealer-Kante (in Radius-Anteilen) bei Querlage u (-1 bis 1)."""
+    u = max(-1.0, min(1.0, u))
+    return BJ_BULGE - BJ_RHO + math.sqrt(BJ_RHO * BJ_RHO - u * u)
+
+
 def felt_blackjack(w=96, FELT=FELT):
     h = w // 2
     R = w / 2
@@ -116,7 +129,7 @@ def felt_blackjack(w=96, FELT=FELT):
     for y in range(h):
         for x in range(w):
             q = math.hypot(x + 0.5 - R, y + 0.5) / R
-            if q > 0.99:
+            if q > 0.99 or (y + 0.5) / R < bj_edge((x + 0.5 - R) / R):
                 continue
             px[x, y] = FELT[3] if q < 0.42 else FELT[2] if q < 0.74 else FELT[1]
     for y in range(h):
@@ -137,9 +150,15 @@ def felt_blackjack(w=96, FELT=FELT):
                     px[x, y] = FELT[4]
                 elif d <= br:
                     px[x, y] = GOLD[3]
-    # kleines Gold-Karo an der Bankkante (Mitte), sonst freie Fläche
-    for dx, dy in ((0, 2), (-1, 3), (0, 3), (1, 3), (0, 4)):
-        px[int(R) + dx, dy] = GOLD[3]
+    # feine Goldlinie entlang der gebogenen Bankkante, in der Mitte ein kleines Gold-Karo
+    for x in range(w):
+        e = bj_edge((x + 0.5 - R) / R) * R
+        yy = int(e + 1.2)
+        if 0 <= yy < h and px[x, yy][3]:
+            px[x, yy] = GOLD[1]
+    e0 = int(BJ_BULGE * R)
+    for dx, dy in ((0, 3), (-1, 4), (0, 4), (1, 4), (0, 5)):
+        px[int(R) + dx, e0 + dy] = GOLD[3]
     return img
 
 

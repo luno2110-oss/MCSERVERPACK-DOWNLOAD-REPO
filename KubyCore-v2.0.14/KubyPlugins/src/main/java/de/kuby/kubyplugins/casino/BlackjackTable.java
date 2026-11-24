@@ -29,8 +29,8 @@ import java.util.List;
 
 /**
  * Blackjack-Tisch im Clean-Look (v1.68): ein durchgehender Filz in hoher Auflösung (512 x 256 px, mit Aufdruck,
- * Einsatzkreisen und feinen Kartenecken), schwarze Leder-Armauflage, Sockel in Creme-Lack mit Goldband, gerade
- * Bankkante aus Nussholz, fünf Barhocker (Creme-Leder, Goldfuß). Der Tisch ist niedriger als vorher (Filz 0,8 statt
+ * Einsatzkreisen und feinen Kartenecken), schwarze Leder-Armauflage, Sockel in Creme-Lack mit Goldband, die
+ * Bankkante aus Nussholz als flacher Bogen zu den Spielern hin (v2.07, Nierenform wie am echten Tisch), fünf Barhocker (Creme-Leder, Goldfuß). Der Tisch ist niedriger als vorher (Filz 0,8 statt
  * 1,0), vom Hocker aus liegen Karten, Chips und alle Zahlen frei im Blick.
  *
  * <p>Alle Lagen auf dem Filz sind Anteile am Radius und passen zum Aufdruck (tools/build_casino_hd.py). Karten sind
@@ -52,6 +52,14 @@ public final class BlackjackTable {
     private static final double F_CARDS = 0.50;
     private static final double F_RACK = 0.832;
     private static final double F_DEALER_CARDS = 0.21;
+    /**
+     * Dealer-Seite als flacher Bogen (v2.07, Wunsch des Besitzers: „auf der Seite des Dealers runder, bei einem echten
+     * Tisch fällt es nach innen, Richtung Spieler“): Kreisbogen durch die Ecken (±R, 0), in der Mitte DEALER_BULGE · R zu
+     * den Spielern hin, der Dealer steht in der Mulde. Gleiche Form im Filz (tools/build_casino_px.py BJ_BULGE).
+     */
+    static final double DEALER_BULGE = 0.12;
+    private static final double BULGE_RHO = (1 + DEALER_BULGE * DEALER_BULGE) / (2 * DEALER_BULGE);
+    private static final double BULGE_YC = DEALER_BULGE - BULGE_RHO;
     private static final float CARD_SCALE = 0.48f;
     private static final float CHIP_SCALE = 0.30f;
     /** Chips im Tablett/Pot: 0,152 breit, damit Nachbarstapel (Abstand 0,15–0,16) sich nicht durchdringen. */
@@ -214,9 +222,28 @@ public final class BlackjackTable {
         return onSeatAxis(seat, radius * F_CARDS, 0, FELT_Y);
     }
 
+    /** Abstand der Dealer-Kante von der Grundlinie (Richtung Spieler) bei Querlage x in Blöcken. */
+    double edgeAt(double x) {
+        double u = Math.max(-1, Math.min(1, x / radius));
+        return radius * (BULGE_YC + Math.sqrt(BULGE_RHO * BULGE_RHO - u * u));
+    }
+
+    /** Abstand der Dealer-Karten: vor dem Chip-Tablett, das an der gebogenen Kante liegt. */
+    private double dealerCards() {
+        return Math.max(radius * F_DEALER_CARDS, edgeAt(0) + 0.53);
+    }
+
     private Location shoeAt() {
         Vector3f r = right();
-        return origin.clone().add(fwd().x * 0.36 - r.x * radius * 0.42, FELT_Y + 0.11, fwd().z * 0.36 - r.z * radius * 0.42);
+        double f = edgeAt(radius * 0.42) + 0.36;
+        return origin.clone().add(fwd().x * f - r.x * radius * 0.42, FELT_Y + 0.11, fwd().z * f - r.z * radius * 0.42);
+    }
+
+    /** Kartenablage (aus Spielersicht rechts), up = Höhe. */
+    private Location discardAt(double up) {
+        Vector3f r = right();
+        double f = edgeAt(radius * 0.42) + 0.34;
+        return origin.clone().add(fwd().x * f + r.x * radius * 0.42, up, fwd().z * f + r.z * radius * 0.42);
     }
 
     // =================================================================================================================
@@ -285,20 +312,37 @@ public final class BlackjackTable {
             float baseLen = (float) (2 * (radius - 0.1) * Math.tan(Math.toRadians(step / 2)) * 1.03);
             box(at(d, radius - 0.16, (FELT_Y - 0.02) / 2 + zf), ang, baseLen, (float) (FELT_Y - 0.02), 0.2f, "hd_cream");
         }
-        // gerade Kante (Dealer-Seite): Nussholz mit Goldleiste
-        box(origin.clone().add(0, (FELT_Y + 0.05) / 2, 0), angleOf(fwd()), (float) (2 * radius + 0.08), (float) (FELT_Y + 0.05), 0.14f, "hd_walnut");
-        box(origin.clone().add(0, FELT_Y + 0.055, 0), angleOf(fwd()), (float) (2 * radius + 0.084), 0.012f, 0.15f, "hd_gold");
+        // Dealer-Seite: gebogene Holzkante mit Goldleiste, Segmente auf dem Bogen (Mittelpunkt hinter dem Dealer),
+        // Nachbarstücke überlappen sich: jedes zweite 1,2 mm höher
+        Vector3f f0 = fwd(), r0 = right();
+        double rho = BULGE_RHO * radius, cz = BULGE_YC * radius;
+        double phiEnd = Math.asin(Math.min(1, (radius + 0.06) / rho));
+        int segs = 14;
+        float segLen = (float) (2 * rho * Math.tan(phiEnd / segs) * 1.04);
+        for (int i = 0; i < segs; i++) {
+            double phi = -phiEnd + 2 * phiEnd * (i + 0.5) / segs;
+            double px = rho * Math.sin(phi), pz = cz + rho * Math.cos(phi);
+            Vector3f radial = new Vector3f((float) (f0.x * Math.cos(phi) + r0.x * Math.sin(phi)), 0,
+                    (float) (f0.z * Math.cos(phi) + r0.z * Math.sin(phi)));
+            Location c = origin.clone().add(r0.x * px + f0.x * pz, 0, r0.z * px + f0.z * pz);
+            double zf = ZF * (i % 2);
+            // 4 mm über dem Boden (sonst gleiche Unterseite wie der Sockel), Goldleiste 3 mm länger (Stirnseiten nicht bündig)
+            float hh = (float) (FELT_Y + 0.05 - 0.004);
+            box(c.clone().add(0, 0.004 + hh / 2 + zf, 0), angleOf(radial), segLen, hh, 0.14f, "rv_wood");
+            box(c.clone().add(0, FELT_Y + 0.055 + zf, 0), angleOf(radial), segLen + 0.006f, 0.012f, 0.15f, "hd_gold");
+        }
         for (int s = 0; s < SEATS; s++) stool(s);
         // Dealer
-        Location dealerAt = at(fwd(), -0.6, 0);
+        Location dealerAt = at(fwd(), edgeAt(0) - 0.6, 0);
         dealerAt.setYaw(yaw);
         anim = new DealerAnim(plugin, w, dealerAt, yaw, e -> mark(e, "dealer"),
                 hb -> hb.getPersistentDataContainer().set(click, PersistentDataType.STRING, id + ":dealer:0"));
-        dealerText = text(at(fwd(), -0.6, 2.25), Component.empty(), 0.85f, Display.Billboard.VERTICAL);
+        dealerText = text(at(fwd(), edgeAt(0) - 0.6, 2.25), Component.empty(), 0.85f, Display.Billboard.VERTICAL);
         dealerText.setViewRange(0.3f);      // ~19 Blöcke: aus der Ferne überlagern sich die Schilder vieler Tische
         // Chip-Tablett der Bank: schwarz glänzend, sechs Stapel echter 3D-Chips
         Vector3f r = right();
-        Location trayAt = origin.clone().add(fwd().x * 0.2, FELT_Y + 0.02, fwd().z * 0.2);
+        double trayF = edgeAt(0) + 0.18;
+        Location trayAt = origin.clone().add(fwd().x * trayF, FELT_Y + 0.02, fwd().z * trayF);
         box(trayAt, angleOf(fwd()), 1.02f, 0.04f, 0.24f, "hd_dark");
         box(trayAt.clone().add(fwd().x * 0.12, 0.01, fwd().z * 0.12), angleOf(fwd()), 1.024f, 0.05f, 0.012f, "hd_gold");
         String[] stacks = {"white", "red", "blue", "green", "black", "purple"};
@@ -317,7 +361,7 @@ public final class BlackjackTable {
         Location face = shoe.clone().add(fwd().x * 0.2, 0.02, fwd().z * 0.2);
         item(face, "c3_back", new Quaternionf().rotateY(angleOf(fwd()) + (float) Math.PI).rotateX((float) Math.toRadians(-62)),
                 CARD_SCALE * 0.9f, "static");
-        Location discard = origin.clone().add(fwd().x * 0.34 + r.x * radius * 0.42, FELT_Y + 0.05, fwd().z * 0.34 + r.z * radius * 0.42);
+        Location discard = discardAt(FELT_Y + 0.05);
         box(discard, angleOf(fwd()), 0.3f, 0.1f, 0.4f, "hd_dark");
         for (int k = 0; k < 4; k++) {
             item(discard.clone().add(0, 0.055 + 0.006 * k, 0), "c3_back", new Quaternionf().rotateY(angleOf(fwd()) + (float) (0.05 * k)),
@@ -333,7 +377,7 @@ public final class BlackjackTable {
             streakText[s] = privateTo(s, text(cardsAt(s).add(0, 0.47 + lift, 0), Component.empty(), 0.5f, Display.Billboard.CENTER));
             totals[s] = badge(onSeatAxis(s, radius * F_CARDS + 0.12, 0.44, FELT_Y + 0.09)); // weit genug neben der ersten Karte, damit die Zahl aus keinem Winkel Karten verdeckt
         }
-        dealerBadge = badge(at(fwd(), radius * F_DEALER_CARDS + 0.05, FELT_Y + 0.1).add(r.x * 0.5, 0, r.z * 0.5));
+        dealerBadge = badge(at(fwd(), dealerCards() + 0.05, FELT_Y + 0.1).add(r.x * 0.5, 0, r.z * 0.5));
     }
 
     private void stool(int s) {
@@ -513,7 +557,7 @@ public final class BlackjackTable {
         if (seat == SEATS) {
             Vector3f r = right();
             double side = (k - 0.5) * 0.33 - 0.05 * Math.max(0, k - 1);
-            return at(fwd(), radius * F_DEALER_CARDS, FELT_Y + 0.004 + 0.003 * k).add(r.x * side, 0, r.z * side);
+            return at(fwd(), dealerCards(), FELT_Y + 0.004 + 0.003 * k).add(r.x * side, 0, r.z * side);
         }
         double base = handsAtSeat > 1 ? (hand == 0 ? 0.3 : -0.3) : 0;
         return onSeatAxis(seat, radius * F_CARDS + 0.03 * k, base - k * 0.12 + 0.06, FELT_Y + 0.004 + 0.003 * k);
@@ -620,8 +664,7 @@ public final class BlackjackTable {
 
     /** Karten wandern am Rundenende in die Ablage (statt einfach zu verschwinden). */
     public void collectCards() {
-        Vector3f r = right();
-        Location discard = origin.clone().add(fwd().x * 0.34 + r.x * radius * 0.42, FELT_Y + 0.12, fwd().z * 0.34 + r.z * radius * 0.42);
+        Location discard = discardAt(FELT_Y + 0.12);
         int i = 0;
         for (List<Entity> l : cards) {
             for (Entity e : l) {
@@ -719,7 +762,8 @@ public final class BlackjackTable {
             Location f = field(seat);
             Vector3f d = dir(SEAT_ANGLES[seat]);
             for (int i = 0; i < 4; i++) {
-                Location from = origin.clone().add(fwd().x * 0.25, FELT_Y + 0.1, fwd().z * 0.25);
+                double bank = edgeAt(0) + 0.2;
+                Location from = origin.clone().add(fwd().x * bank, FELT_Y + 0.1, fwd().z * bank);
                 ItemDisplay e = item(from, "c3chip_" + (jewels ? "gold" : "green"), new Quaternionf(), CHIP_SCALE, "chip");
                 e.setTeleportDuration(7);
                 Location to = f.clone().add(-d.z * 0.16 * (i % 2 == 0 ? 1 : -1), 0.012 + chipStep(CHIP_SCALE) * (i / 2), d.x * 0.16 * (i % 2 == 0 ? 1 : -1));
@@ -968,7 +1012,7 @@ public final class BlackjackTable {
     }
 
     public Location dealerLocation() {
-        return anim != null ? anim.location() : at(fwd(), -0.6, 0);
+        return anim != null ? anim.location() : at(fwd(), edgeAt(0) - 0.6, 0);
     }
 
     /** Dealer-Geste beim Austeilen (ohne Ziel: vor sich). */
