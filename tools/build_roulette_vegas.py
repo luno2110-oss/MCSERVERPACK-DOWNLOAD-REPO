@@ -105,6 +105,34 @@ def cell(img, x0, y0, x1, y1, base):
     vline(img, x1 - 1, y0, y1 - 1, base[1])
 
 
+ZERO_R = 7.5
+
+
+def zero_shape(grow=0):
+    """Pixel der Null: Rechteck X_NUM+1 … X_END-1, Y_ZERO+1 … Y_NUM-1, die beiden Ecken zum Kessel mit Radius ZERO_R.
+    grow = 1: dieselbe Form 1 px größer um dieselben Bogen-Mittelpunkte (für den Goldrand)."""
+    x0, x1, y0, y1 = X_NUM + 1, X_END, Y_ZERO + 1, Y_NUM
+    cxl, cxr, cy = x0 + ZERO_R, x1 - ZERO_R, y0 + ZERO_R
+    r = ZERO_R + grow
+    out = set()
+    for y in range(y0 - grow, y1):
+        for x in range(x0 - grow, x1 + grow):
+            fy = y + 0.5
+            fx = x + 0.5
+            if fy < cy and (fx < cxl or fx > cxr):
+                cx = cxl if fx < cxl else cxr
+                if (fx - cx) ** 2 + (fy - cy) ** 2 > r ** 2:
+                    continue
+            out.add((x, y))
+    return out
+
+
+def zero_outline(zero):
+    """Goldlinie um die Null: Ring zwischen der Form und ihrer 1 px größeren Fassung (gleiche Bogen-Mittelpunkte),
+    gleichmäßig dick, ohne Lücken an den Diagonalen."""
+    return {q for q in zero_shape(1) if q not in zero and q[1] < Y_NUM}
+
+
 def layout(FELT=FELT):
     """Tableau; FELT = Filzfarbe (grün, v2.07 auch rot und violett für die High-Roller- und Elite-Tische)."""
     img = Image.new("RGBA", (LW, LH), FELT[2])
@@ -115,11 +143,16 @@ def layout(FELT=FELT):
             if (x + 2 * y) % 7 == 0:
                 p[x, y] = FELT[3]
     gold = GOLD[3]
-    # Null (oben, über alle drei Kolonnen, Ecken angeschrägt wie am echten Tisch)
-    cell(img, X_NUM + 1, Y_ZERO + 1, X_END, Y_NUM, ZERO)
-    for k in range(3):   # angeschrägte Ecken oben
-        fill(img, X_NUM + 1, Y_ZERO + 1 + k, X_NUM + 4 - k, Y_ZERO + 2 + k, FELT[2])
-        fill(img, X_END - 3 + k, Y_ZERO + 1 + k, X_END, Y_ZERO + 2 + k, FELT[2])
+    # Null (oben, über alle drei Kolonnen): Ecken zum Kessel hin rund (v2.07: Bogen statt Schräge, „smoother
+    # abrunden“), Licht oben links folgt dem Bogen, Goldrand außen herum (unten bei den Kreisen)
+    zero = zero_shape()
+    for (x, y) in zero:
+        c = ZERO[2]
+        if (x - 1, y) not in zero or (x, y - 1) not in zero:
+            c = ZERO[3]
+        if (x + 1, y) not in zero or y == Y_NUM - 1:
+            c = ZERO[1]
+        p[x, y] = c
     # Schrift liegt so, dass man sie von der Spielerseite liest: Oberkante zum Croupier (Bild +x)
     paste_center(img, up(text_img("0", CREAM)), (X_NUM + X_END) / 2 + 0.5, (Y_ZERO + Y_NUM) / 2)
     # Zahlen 1–36: Reihe r (0 am Kessel) hat 3r+1, 3r+2, 3r+3; Kolonne c = 0, 1, 2 quer
@@ -158,16 +191,15 @@ def layout(FELT=FELT):
         else:
             paste_center(img, up(text_img(o, CREAM, True)), cx, cy + 0.5)
     # Goldlinien: Außenrahmen und Raster
-    # Die Null ist ein Feld mit angeschrägten Ecken: der Goldrand folgt den Schrägen (v2.07, Wunsch des Besitzers: „den
-    # goldenen Rand an die Form des grünen Feldes anpassen“), die Kolonnen-Linien beginnen erst unter der Null
+    # Die Null ist ein Feld mit runden Ecken: der Goldrand läuft als 1-px-Linie außen um den Bogen (v2.07, Wunsch des
+    # Besitzers: „den goldenen Rand an die Form des grünen Feldes anpassen“, „smoother abrunden“); die Kolonnen-Linien
+    # beginnen erst unter der Null
     for x in (X_OUT, X_DOZ, X_NUM, X_NUM + CELL_W, X_NUM + 2 * CELL_W, X_END):
-        y_top = Y_ZERO + 4 if x in (X_NUM, X_END) else Y_NUM
+        y_top = Y_NUM
         y_bot = Y_END if x >= X_NUM else Y_COL
         vline(img, x, y_top, y_bot, gold)
-    hline(img, X_NUM + 4, X_END - 4, Y_ZERO, gold)
-    for k in range(4):
-        p[X_NUM + 3 - k, Y_ZERO + 1 + k] = gold
-        p[X_END - 3 + k, Y_ZERO + 1 + k] = gold
+    for (x, y) in zero_outline(zero):
+        p[x, y] = gold
     for r in range(13):
         y = Y_NUM + r * ROW_H
         hline(img, X_NUM, X_END, y, gold)

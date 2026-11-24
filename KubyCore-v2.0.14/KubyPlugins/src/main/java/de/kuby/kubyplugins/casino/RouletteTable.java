@@ -336,7 +336,8 @@ public final class RouletteTable {
         float cy = yaw + 180f;
         feet.setYaw(cy);
         croupier = new DealerAnim(plugin, w, feet, cy, e -> mark(e, "dealer"),
-                hb -> hb.getPersistentDataContainer().set(click, PersistentDataType.STRING, "croupier"));
+                hb -> hb.getPersistentDataContainer().set(click, PersistentDataType.STRING, "croupier"))
+                .walkRange(-0.9f, 0.9f);
         slab(RACK_U - 0.64, RACK_U + 0.64, RACK_V - 0.1, RACK_V + 0.1, FELT - 0.003, FELT + 0.035, "hd_dark");
         slab(RACK_U - 0.64, RACK_U + 0.64, RACK_V - 0.11, RACK_V - 0.1, FELT, FELT + 0.045, "hd_gold");
         // Chip-Rack (v2.07): je Spielerfarbe eine Röhre (goldene Stege), Chips hochkant aufgereiht; verlorene Einsätze

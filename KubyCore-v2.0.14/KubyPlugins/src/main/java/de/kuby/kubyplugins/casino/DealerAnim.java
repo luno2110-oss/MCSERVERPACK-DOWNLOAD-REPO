@@ -40,9 +40,13 @@ public final class DealerAnim {
     // Gelenke (Grad): Oberkörper Neigung/Drehung/Seite, Kopf, rechte und linke Schulter (x vor/zurück, y Schwenk,
     // z abspreizen), Ellbogen, Hüft-Seitenneigung der Beine
     static final int TP = 0, TY = 1, TR = 2, HP = 3, HY = 4, HR = 5,
-            RSX = 6, RSY = 7, RSZ = 8, REX = 9, LSX = 10, LSY = 11, LSZ = 12, LEX = 13, LG = 14, N = 15;
-    /** Federfrequenz je Gelenk (rad/s): Kopf schnell, Rumpf ruhig, Unterarm etwas weicher als Oberarm. */
-    private static final float[] OMEGA = {7, 7, 6, 15, 15, 12, 11, 11, 11, 10, 11, 11, 11, 10, 5};
+            RSX = 6, RSY = 7, RSZ = 8, REX = 9, LSX = 10, LSY = 11, LSZ = 12, LEX = 13, LG = 14,
+            RL = 15, LL = 16, WY = 17, N = 18;
+    /**
+     * Federfrequenz je Gelenk (rad/s): Kopf schnell, Rumpf ruhig, Unterarm etwas weicher als Oberarm; Beine (Schritt)
+     * schnell, Drehung beim Losgehen ruhig.
+     */
+    private static final float[] OMEGA = {7, 7, 6, 15, 15, 12, 11, 11, 11, 10, 11, 11, 11, 10, 5, 16, 16, 7};
     private static final float SCALE = 0.9375f;
     private static final String[] PARTS = {"head", "torso", "rleg", "lleg", "rarm_up", "rarm_lo", "larm_up", "larm_lo"};
 
@@ -73,6 +77,15 @@ public final class DealerAnim {
     private long busyUntil;
     private String lastIdle = "";
     private long nextIdle = 100;
+
+    // Gehen (v2.07, Wunsch des Besitzers: „der NPC soll in seinem Bereich bei dem Tisch auch etwas laufen“): seitlich
+    // an der Tischkante entlang (lokale x-Achse), erst umdrehen, dann gehen (Beine und Arme schwingen), am Ziel zurück
+    // zum Tisch drehen. walkMin/walkMax = erlaubter Bereich in Blöcken (0/0 = bleibt stehen)
+    private float walkMin, walkMax;
+    private float walkPos, walkTarget;
+    private boolean walking;
+    private float stride;
+    private Location hitAt;
 
     public DealerAnim(Plugin plugin, World w, Location feet, float yaw, Consumer<Entity> mark, Consumer<Interaction> hitSetup) {
         this.plugin = plugin;
@@ -107,6 +120,25 @@ public final class DealerAnim {
         } catch (Throwable ignored) {
             // Vorschau ohne Scheduler: Pose bleibt stehen
         }
+    }
+
+    /** Bereich, in dem der Dealer an seiner Tischseite umhergehen darf (Blöcke seitlich, links positiv). */
+    public DealerAnim walkRange(float min, float max) {
+        this.walkMin = Math.min(min, 0);
+        this.walkMax = Math.max(max, 0);
+        return this;
+    }
+
+    /** Zurück an den Platz (z. B. wenn eine Runde beginnt). */
+    public void home() {
+        if (walkPos != 0 || walkTarget != 0) {
+            walkTarget = 0;
+            walking = true;
+        }
+    }
+
+    public boolean away() {
+        return Math.abs(walkPos) > 0.05f;
     }
 
     /** Klickfläche (für Markierungen der Tische). */
@@ -275,8 +307,13 @@ public final class DealerAnim {
         if (busy() || tick < nextIdle) return;
         nextIdle = tick + 60 + rnd.nextInt(120);
         if (stance == Stance.WAIT) stance = Stance.UPRIGHT;
-        List<String> pool = new ArrayList<>(List.of("tie", "sleeve", "cuff", "lean", "room", "glance", "glance", "still"));
+        List<String> pool = new ArrayList<>(List.of("tie", "sleeve", "cuff", "lean", "room", "glance", "glance", "still", "stretch",
+                "watch", "walk", "walk"));
         if (players == null || players.isEmpty()) pool.removeIf(s -> s.equals("glance"));
+        if (walkMax - walkMin < 0.3f) pool.removeIf(s -> s.equals("walk"));
+        // wer Spieler am Tisch hat, entfernt sich nicht weit; weg vom Platz: meist zurückgehen
+        if (away() && rnd.nextInt(3) > 0) pool = new ArrayList<>(List.of("walk"));
+        if (stance == Stance.LEAN && away()) pool.remove("lean");
         pool.remove(lastIdle);
         String pick = pool.get(rnd.nextInt(pool.size()));
         lastIdle = pick;
@@ -287,9 +324,42 @@ public final class DealerAnim {
             case "lean" -> lean(60 + rnd.nextInt(80));
             case "room" -> lookRoom();
             case "glance" -> lookAt(players.get(rnd.nextInt(players.size())));
+            case "stretch" -> stretch();
+            case "watch" -> watch();
+            case "walk" -> {
+                float to;
+                if (away()) to = (players != null && !players.isEmpty()) || rnd.nextBoolean() ? 0 : walkMin + rnd.nextFloat() * (walkMax - walkMin);
+                else to = walkMin + rnd.nextFloat() * (walkMax - walkMin);
+                if (players != null && !players.isEmpty()) to = Math.max(-0.5f, Math.min(0.5f, to));
+                if (Math.abs(to - walkPos) < 0.25f) to = 0;
+                walkTarget = to;
+                walking = true;
+                busyUntil = Math.max(busyUntil, tick + 24 + (long) (Math.abs(to - walkPos) / 0.05f));
+            }
             default -> {
             }
         }
+    }
+
+    /** Schultern kreisen, Nacken lockern: kurz strecken, Kopf zur Seite neigen. */
+    public void stretch() {
+        play(new Clip("stretch", 48)
+                .k(0)
+                .k(10, RSX, -20, RSZ, -16, LSX, -20, LSZ, 16, TP, -8, HP, -6)
+                .k(20, RSX, 10, RSZ, -8, LSX, 10, LSZ, 8, TP, -4, HR, 12)
+                .k(30, HR, -12, HP, 4)
+                .k(40, HR, 0)
+                .k(48));
+    }
+
+    /** Auf die Armbanduhr schauen: linken Arm anwinkeln, Blick nach unten, kurz nicken. */
+    public void watch() {
+        play(new Clip("watch", 40)
+                .k(0)
+                .k(8, LSX, -48, LSZ, -24, LEX, -96, HP, 38, HY, 10)
+                .k(22, LSX, -48, LSZ, -24, LEX, -96, HP, 40, HY, 10)
+                .k(28, HP, 20)
+                .k(40));
     }
 
     /** Krawatte (Fliege) richten: beide Hände an den Knoten, kurz zurechtrücken, Kinn hoch, Brust raus. */
@@ -360,7 +430,11 @@ public final class DealerAnim {
     // Pose, Federn, Gelenkkette
     // =================================================================================================================
 
+    private static final java.util.Set<String> IDLE_CLIPS = java.util.Set.of("tie", "sleeve", "cuff", "room", "stretch", "watch", "straighten");
+
     private void play(Clip c) {
+        // Spiel-Gesten (Austeilen, Chips, Applaus …): erst zurück an den Platz
+        if (!IDLE_CLIPS.contains(c.name)) home();
         clip = c;
         clipStart = tick;
         busyUntil = Math.max(busyUntil, tick + c.length);
@@ -442,6 +516,28 @@ public final class DealerAnim {
         }
         target[HY] += sacY;
         target[HP] += sacP;
+        // Gehen: erst zur Laufrichtung drehen, dann Schritte; am Ziel zurück zum Tisch drehen
+        if (walking) {
+            float diff = walkTarget - walkPos;
+            float dir = Math.signum(diff);
+            target[WY] = dir * 90f;
+            if (Math.abs(cur[WY] - target[WY]) < 25f) {
+                float speed = 0.05f;
+                walkPos += Math.abs(diff) <= speed ? diff : dir * speed;
+                stride += 0.42f;
+                float sw = (float) Math.sin(stride);
+                target[RL] = sw * 26f;
+                target[LL] = -sw * 26f;
+                target[RSX] += -sw * 16f;
+                target[LSX] += sw * 16f;
+                target[TP] += 2f;
+                target[HY] = 0;
+            }
+            if (Math.abs(walkTarget - walkPos) < 1e-3f) {
+                walkPos = walkTarget;
+                walking = false;
+            }
+        }
         // Geste
         if (clip != null) {
             int ct = (int) (tick - clipStart);
@@ -457,6 +553,20 @@ public final class DealerAnim {
             cur[j] += vel[j] * dt;
         }
         if (tick % 2 == 0) apply(3);
+        // Klickfläche läuft mit
+        if (hit != null && hit.isValid() && tick % 10 == 0) {
+            Location at = offset();
+            if (hitAt == null || hitAt.distanceSquared(at) > 0.01) {
+                hit.teleport(at);
+                hitAt = at;
+            }
+        }
+    }
+
+    /** Standpunkt mit seitlichem Versatz (Gehen). */
+    private Location offset() {
+        double r = Math.toRadians(yaw);
+        return root.clone().add(Math.cos(r) * walkPos, 0, Math.sin(r) * walkPos);
     }
 
     private float localYaw(Location to) {
@@ -465,7 +575,8 @@ public final class DealerAnim {
 
     /** Gierwinkel (positiv = zur linken Körperseite) und Neigung (positiv = nach unten) vom Kopf zum Ziel. */
     private float[] localYawPitch(Location to) {
-        double hx = root.getX(), hy = root.getY() + 1.62, hz = root.getZ();
+        Location o = offset();
+        double hx = o.getX(), hy = o.getY() + 1.62, hz = o.getZ();
         double dx = to.getX() - hx, dy = to.getY() - hy, dz = to.getZ() - hz;
         double r = Math.toRadians(yaw);
         // Welt -> lokal (Blickrichtung +Z)
@@ -491,7 +602,9 @@ public final class DealerAnim {
     /** Gelenkkette ausrechnen und an die Anzeigen schicken. Maße in Skin-Pixeln (Füße bei 0, Kopf 24..32). */
     private void apply(int interp) {
         float px = SCALE / 16f;
-        Matrix4f base = new Matrix4f().rotateY(rad(-yaw)).scale(px);
+        double r = Math.toRadians(yaw);
+        Matrix4f base = new Matrix4f().translate((float) (Math.cos(r) * walkPos), 0, (float) (Math.sin(r) * walkPos))
+                .rotateY(rad(-yaw)).rotateY(rad(cur[WY])).scale(px);
         Matrix4f legs = rot(new Matrix4f(base).translate(0, 12, 0), 0, 0, cur[LG]);
         Matrix4f torso = rot(new Matrix4f(base).translate(0, 12, 0), cur[TY], cur[TP], cur[TR]);
         Matrix4f head = rot(new Matrix4f(torso).translate(0, 12, 0), cur[HY], cur[HP], cur[HR]);
@@ -500,8 +613,8 @@ public final class DealerAnim {
         Matrix4f lUp = rot(new Matrix4f(torso).translate(6, 11, 0), cur[LSY], cur[LSX], cur[LSZ]);
         Matrix4f lLo = rot(new Matrix4f(lUp).translate(0, -5, 0), 0, cur[LEX], 0);
         // Beinmodelle liegen schon seitlich der Hüftmitte (wie im normalen Skin direkt nebeneinander)
-        Matrix4f rLeg = new Matrix4f(legs);
-        Matrix4f lLeg = new Matrix4f(legs);
+        Matrix4f rLeg = rot(new Matrix4f(legs), 0, cur[RL], 0);
+        Matrix4f lLeg = rot(new Matrix4f(legs), 0, cur[LL], 0);
         Matrix4f[] ms = {head, torso, rLeg, lLeg, rUp, rLo, lUp, lLo};
         for (int i = 0; i < parts.length; i++) {
             ItemDisplay d = parts[i];

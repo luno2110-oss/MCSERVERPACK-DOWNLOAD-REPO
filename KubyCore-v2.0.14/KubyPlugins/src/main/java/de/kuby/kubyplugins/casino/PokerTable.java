@@ -275,7 +275,8 @@ public final class PokerTable {
         Location dAt = local(0, 0, -(R + 0.55));
         dAt.setYaw(yaw);
         anim = new DealerAnim(plugin, w, dAt, yaw, e -> mark(e, "dealer"),
-                hb -> hb.getPersistentDataContainer().set(click, PersistentDataType.STRING, id + ":dealer:0"));
+                hb -> hb.getPersistentDataContainer().set(click, PersistentDataType.STRING, id + ":dealer:0"))
+                .walkRange(-0.6f, 0.6f);
         dealerText = text(local(0, 2.25, -(R + 0.55)), Component.empty(), 0.85f, Display.Billboard.VERTICAL);
         // Chip-Tablett der Dealerin
         Location tray = local(0, FELT_Y + 0.02, -(R - 0.28));

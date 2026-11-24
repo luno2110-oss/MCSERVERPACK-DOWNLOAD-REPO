@@ -348,7 +348,8 @@ public final class BlackjackTable {
         Location dealerAt = at(fwd(), edgeAt(0) - 0.6, 0);
         dealerAt.setYaw(yaw);
         anim = new DealerAnim(plugin, w, dealerAt, yaw, e -> mark(e, "dealer"),
-                hb -> hb.getPersistentDataContainer().set(click, PersistentDataType.STRING, id + ":dealer:0"));
+                hb -> hb.getPersistentDataContainer().set(click, PersistentDataType.STRING, id + ":dealer:0"))
+                .walkRange(-0.6f, 0.6f);
         dealerText = text(at(fwd(), edgeAt(0) - 0.6, 2.25), Component.empty(), 0.85f, Display.Billboard.VERTICAL);
         dealerText.setViewRange(0.3f);      // ~19 Blöcke: aus der Ferne überlagern sich die Schilder vieler Tische
         // Chip-Rack der Bank (v2.07): schwarzes Tablett mit sechs Röhren (goldene Stege), in jeder stehen Chips einer Farbe
