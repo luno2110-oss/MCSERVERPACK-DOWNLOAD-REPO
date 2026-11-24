@@ -294,15 +294,20 @@ public final class RouletteTable {
         slab(-1.35, 2.6, -0.715, -0.7, 0.34, 0.36, "hd_gold");
         slab(-2.95, -1.65, -0.6, 0.6, 0.06, FELT - 0.1, "rv_wood");
         slab(-2.92, -1.68, -0.57, 0.57, 0, 0.06, "hd_dark");
-        slab(-1.55, 2.9, -1.05, 1.1, FELT - 0.12, FELT - 0.06, "rv_wood");
+        slab(-1.62, 2.9, -1.05, 1.2, FELT - 0.12, FELT - 0.06, "rv_wood");
         slab(-1.518, 2.68, -0.85, 1.04, FELT - 0.06, FELT - 0.003, "rv_felt" + feltSuffix());     // Ende 2 mm hinter dem Polster
         display(layoutCenter(), "rv_layout" + feltSuffix(), pic(), new Vector3f((float) (LW * PX), 1f, (float) (LH * PX)), "static");
         // Polster-Reling auf der Spielerseite und am Ende, Goldkante innen; Croupier-Seite Holzkante mit Goldleiste
         slab(-1.52, 2.9, -1.05, -0.83, FELT - 0.04, FELT + 0.09, "rv_rail");
         slab(2.68, 2.9, -0.83, 1.1, FELT - 0.04, FELT + 0.09, "rv_rail");
         slab(-1.518, 2.68, -0.84, -0.828, FELT - 0.002, FELT + 0.03, "hd_gold");     // 2 mm vor dem Polster (v2.04: lag bündig)
-        slab(-1.52, 2.68, 1.04, 1.1, FELT - 0.06, FELT + 0.02, "rv_wood");
-        slab(-1.52, 2.68, 1.04, 1.1, FELT + 0.02, FELT + 0.03, "hd_gold");
+        // v2.07 (Wunsch des Besitzers: „den schwarzen Rahmen komplett um den Tisch ziehen“): Polster auch auf der
+        // Croupier-Seite und an den Ecken zum Kessel, innen dieselbe Goldkante wie auf der Spielerseite
+        slab(-1.52, 2.9, 1.04, 1.2, FELT - 0.04, FELT + 0.09, "rv_rail");
+        slab(-1.518, 2.68, 1.028, 1.04, FELT - 0.002, FELT + 0.03, "hd_gold");
+        slab(2.668, 2.68, -0.828, 1.028, FELT - 0.002, FELT + 0.03, "hd_gold");
+        slab(-1.62, -1.52, -1.05, -0.62, FELT - 0.04, FELT + 0.09, "rv_rail");
+        slab(-1.62, -1.52, 0.62, 1.2, FELT - 0.04, FELT + 0.09, "rv_rail");
         // --- Kessel: Gehäuse (Zwölfeck), Kessel aus 16 Segmenten mit Tiefe, Rotor in der Mulde, Drehkreuz, Kugel ---
         Location wc = local(WU, WV, 0);
         // Gehäuse: zwölf Seitenteile tangential und ein Füllstück, Oberkante knapp unter dem Filz (Kessel sitzt darauf)
@@ -341,7 +346,9 @@ public final class RouletteTable {
             slab(u - 0.004, u + 0.004, RACK_V - 0.09, RACK_V + 0.09, FELT + 0.035, FELT + 0.05, "hd_gold");
         }
         Location r0 = local(RACK_U, RACK_V, FELT + 0.035);
-        Location ru = local(RACK_U + 1, RACK_V, FELT + 0.035), rv = local(RACK_U, RACK_V + 1, FELT + 0.035);
+        // um 180° gedreht (v2.07, „das Rack ist falsch herum“): Röhren füllen sich vom Croupier aus, die niedrigen
+        // Werte liegen aus Sicht der Spieler links
+        Location ru = local(RACK_U - 1, RACK_V, FELT + 0.035), rv = local(RACK_U, RACK_V - 1, FELT + 0.035);
         bankRack = new ChipRack(plugin, r0, new Vector3f((float) (ru.getX() - r0.getX()), 0, (float) (ru.getZ() - r0.getZ())),
                 new Vector3f((float) (rv.getX() - r0.getX()), 0, (float) (rv.getZ() - r0.getZ())), 0.15, 0.18, RACK_CHIP, COLORS, 6,
                 (at, color, rot, sc) -> display(at, "c3chip_" + color, rot, new Vector3f(sc, sc, sc), "rack"));

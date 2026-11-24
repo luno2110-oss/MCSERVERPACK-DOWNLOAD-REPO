@@ -132,7 +132,9 @@ def layout(FELT=FELT):
     # Kolonnen „2 TO 1“ (gedreht, damit es in 11 px passt: „2:1“)
     for c in range(3):
         x0 = X_NUM + c * CELL_W
-        paste_center(img, up(text_img("2:1", gold, True)), x0 + (CELL_W + 1) / 2, Y_COL + 5.5)
+        # 8 px hoch im 10 px hohen Feld (Y_COL+1 … Y_END-1): Mitte Y_COL + 6, je 1 px Luft (v2.07: saß 1 px zu weit an
+        # den Zahlen, weil round(…,5) zur geraden Zahl rundet)
+        paste_center(img, up(text_img("2:1", gold, True)), x0 + (CELL_W + 1) / 2, Y_COL + 6)
     # Dutzende: je 4 Reihen, Schrift quer gedreht (liest sich von der Spielerseite)
     for d in range(3):
         y0 = Y_NUM + d * 4 * ROW_H
@@ -156,11 +158,16 @@ def layout(FELT=FELT):
         else:
             paste_center(img, up(text_img(o, CREAM, True)), cx, cy + 0.5)
     # Goldlinien: Außenrahmen und Raster
+    # Die Null ist ein Feld mit angeschrägten Ecken: der Goldrand folgt den Schrägen (v2.07, Wunsch des Besitzers: „den
+    # goldenen Rand an die Form des grünen Feldes anpassen“), die Kolonnen-Linien beginnen erst unter der Null
     for x in (X_OUT, X_DOZ, X_NUM, X_NUM + CELL_W, X_NUM + 2 * CELL_W, X_END):
-        y_top = Y_ZERO if x >= X_NUM else Y_NUM
+        y_top = Y_ZERO + 4 if x in (X_NUM, X_END) else Y_NUM
         y_bot = Y_END if x >= X_NUM else Y_COL
         vline(img, x, y_top, y_bot, gold)
-    hline(img, X_NUM, X_END, Y_ZERO, gold)
+    hline(img, X_NUM + 4, X_END - 4, Y_ZERO, gold)
+    for k in range(4):
+        p[X_NUM + 3 - k, Y_ZERO + 1 + k] = gold
+        p[X_END - 3 + k, Y_ZERO + 1 + k] = gold
     for r in range(13):
         y = Y_NUM + r * ROW_H
         hline(img, X_NUM, X_END, y, gold)
