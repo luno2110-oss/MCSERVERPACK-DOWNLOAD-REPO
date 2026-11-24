@@ -674,7 +674,7 @@ public final class BlackjackGame {
             }
             if (net > 0) table.glow(i, best.equals("Blackjack!") ? 0xFFD34D : 0x7CFF9A);
             single = result;
-            table.sweepChips(i, payout > 0);
+            table.settleChips(i, staked, payout);
             final int ps = i;
             final boolean won = net > 0;
             later(8 + 20L * (players - 1), () -> {

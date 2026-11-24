@@ -937,6 +937,23 @@ final class SelfTest {
             fails.add("Glücksrad: " + t);
         }
 
+        // Chip-Racks (v2.07): Gewinne werden in Rack-Chips zerlegt (größte zuerst, höchstens 10 Chips fürs Bild)
+        try {
+            long[] vals = {10, 50, 100, 500, 1_000, 5_000};
+            List<String> re = new ArrayList<>();
+            for (long amt : new long[]{10, 60, 5_660, 1_234, 49_990}) {
+                long sum = 0;
+                var b = de.kuby.kubyplugins.casino.ChipRack.breakdown(amt, vals, 10);
+                for (int t : b) sum += vals[t];
+                if (b.isEmpty() || b.size() > 10 || sum > amt) re.add(amt + " → " + b.size() + " Chips, Summe " + sum);
+                if (amt <= 5_660 && amt % 10 == 0 && sum != amt) re.add(amt + " nicht genau (" + sum + ")");
+            }
+            if (re.isEmpty()) ok[0]++;
+            for (String e : re) fails.add("Chip-Rack: " + e);
+        } catch (Throwable t) {
+            fails.add("Chip-Rack: " + t);
+        }
+
         // Slot-Tempo (v2.06): jede Runde anders lang, Walzen rasten trotzdem genau und in Reihenfolge ein
         try {
             List<String> sp = de.kuby.kubyplugins.casino.SlotSpin.selfCheck();

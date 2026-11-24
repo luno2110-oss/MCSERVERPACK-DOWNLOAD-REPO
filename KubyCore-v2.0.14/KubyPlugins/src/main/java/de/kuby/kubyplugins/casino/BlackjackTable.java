@@ -94,6 +94,8 @@ public final class BlackjackTable {
     private final java.util.UUID[] owner = new java.util.UUID[SEATS];
     private final List<List<Entity>> cards = new ArrayList<>();
     private final List<List<Entity>> chips = new ArrayList<>();
+    /** Chip-Rack der Bank (v2.07). */
+    private ChipRack bankRack;
     private final List<List<Button>> rack = new ArrayList<>();
     private final List<List<Button>> controls = new ArrayList<>();
     private final List<List<Button>> actions = new ArrayList<>();
@@ -349,21 +351,19 @@ public final class BlackjackTable {
                 hb -> hb.getPersistentDataContainer().set(click, PersistentDataType.STRING, id + ":dealer:0"));
         dealerText = text(at(fwd(), edgeAt(0) - 0.6, 2.25), Component.empty(), 0.85f, Display.Billboard.VERTICAL);
         dealerText.setViewRange(0.3f);      // ~19 Blöcke: aus der Ferne überlagern sich die Schilder vieler Tische
-        // Chip-Tablett der Bank: schwarz glänzend, sechs Stapel echter 3D-Chips
+        // Chip-Rack der Bank (v2.07): schwarzes Tablett mit sechs Röhren (goldene Stege), in jeder stehen Chips einer Farbe
+        // hochkant aufgereiht; verlorene Einsätze fliegen hinein, Gewinne nimmt der Dealer heraus (ChipRack)
         Vector3f r = right();
         double trayF = edgeAt(0) + 0.18;
         Location trayAt = origin.clone().add(fwd().x * trayF, FELT_Y + 0.02, fwd().z * trayF);
         box(trayAt, angleOf(fwd()), 1.02f, 0.04f, 0.24f, "hd_dark");
         box(trayAt.clone().add(fwd().x * 0.12, 0.01, fwd().z * 0.12), angleOf(fwd()), 1.024f, 0.05f, 0.012f, "hd_gold");
-        String[] stacks = {"white", "red", "blue", "green", "black", "purple"};
-        for (int i = 0; i < stacks.length; i++) {
-            double side = (i - 2.5) * 0.16;
-            for (int k = 0; k < 3; k++) {
-                // Nachbarstapel überlappen sich: jeder zweite 1,2 mm höher und jeder Stapel anders gedreht (v2.04)
-                Location c = trayAt.clone().add(r.x * side, 0.03 + chipStep(TRAY_CHIP) * k + ZF * (i % 2), r.z * side);
-                item(c, "c3chip_" + stacks[i], new Quaternionf().rotateY((float) (k * Math.PI / 8 + i * 0.41)), TRAY_CHIP, "static");
-            }
+        for (int k = -2; k <= 2; k++) {
+            box(trayAt.clone().add(r.x * k * 0.16, 0.03, r.z * k * 0.16), angleOf(fwd()), 0.008f, 0.02f, 0.22f, "hd_gold");
         }
+        bankRack = new ChipRack(plugin, trayAt.clone().add(0, 0.02, 0), r, fwd(), 0.16, 0.22, TRAY_CHIP, rackColors(), 8,
+                (at, color, rot, sc) -> item(at, "c3chip_" + color, rot, sc, "rack"));
+        bankRack.build();
         // Kartenschlitten (aus Spielersicht links) und Ablage (rechts)
         Location shoe = shoeAt();
         box(shoe, angleOf(fwd()), 0.3f, 0.2f, 0.42f, "hd_dark");
@@ -764,6 +764,90 @@ public final class BlackjackTable {
             if (e.isValid()) e.teleport(to.clone().add(0, 0.08, 0));
         }, 1L);
         plugin.getServer().getScheduler().runTaskLater(plugin, e::remove, 6L);
+    }
+
+    /** Röhren des Racks: grüner Tisch 10 bis 5.000, High-Roller-Tische 100 bis 100.000 (Farben wie chipColor). */
+    private String[] rackColors() {
+        return tier == TableTier.GRUEN ? new String[]{"white", "red", "blue", "green", "black", "purple"}
+                : new String[]{"blue", "green", "black", "purple", "gold", "pink"};
+    }
+
+    private long[] rackValues() {
+        return tier == TableTier.GRUEN ? new long[]{10, 50, 100, 500, 1_000, 5_000}
+                : new long[]{100, 500, 1_000, 5_000, 25_000, 100_000};
+    }
+
+    /**
+     * Abrechnung mit dem Rack (v2.07, Wunsch des Besitzers): verloren → die Chips fliegen vom Einsatzkreis ins Rack der
+     * Bank und bleiben dort hochkant stehen; gewonnen → der Dealer nimmt den Gewinn als Chips aus dem Rack, legt sie neben
+     * den Einsatz, dann rutscht alles zum Spieler; unentschieden → der Einsatz rutscht zurück.
+     */
+    public void settleChips(int seat, long staked, long payout) {
+        List<Entity> list = chips.get(seat);
+        list.removeIf(e -> {
+            if (!(e instanceof TextDisplay)) return false;
+            if (e.isValid()) e.remove();
+            return true;
+        });
+        if (bankRack == null) {
+            sweepChips(seat, payout > 0);
+            return;
+        }
+        World w = origin.getWorld();
+        if (payout < staked) {
+            // verloren: jeder Chip in seine Röhre (gestaffelt, der Dealer zieht sie ein)
+            int i = 0;
+            for (Entity e : new ArrayList<>(list)) {
+                if (!(e instanceof ItemDisplay d) || !d.isValid()) continue;
+                String c = ChipRack.colorOf(d);
+                long delay = 4 + 2L * i++;
+                bankRack.deposit(d, bankRack.tubeOf(c == null ? "white" : c), delay);
+                if (i % 3 == 1) later(delay + 8, () -> w.playSound(trayCenter(), "kuby:casino.chip", org.bukkit.SoundCategory.PLAYERS, 0.7f, 1.15f));
+            }
+            list.clear();
+            return;
+        }
+        long net = payout - staked;
+        int paid = 0;
+        if (net > 0) {
+            Location f = field(seat);
+            Vector3f d = dir(SEAT_ANGLES[seat]);
+            Location beside = f.clone().add(-d.z * 0.17, 0, d.x * 0.17);
+            List<Integer> pay = ChipRack.breakdown(net, rackValues(), 10);
+            for (int i = 0; i < pay.size(); i++) {
+                ItemDisplay e = bankRack.withdraw(pay.get(i));
+                Location to = beside.clone().add(0, 0.012 + chipStep(CHIP_SCALE) * i, 0);
+                // flach auf Spielgröße (Rack-Chips sind kleiner)
+                e.setTransformation(new Transformation(new Vector3f(), e.getTransformation().getLeftRotation(),
+                        new Vector3f(CHIP_SCALE, CHIP_SCALE, CHIP_SCALE), new Quaternionf()));
+                bankRack.fly(e, to, (float) (i * Math.PI / 8), 3 + 2L * i, 7);
+                list.add(e);
+            }
+            paid = pay.size();
+            later(4, () -> w.playSound(trayCenter(), "kuby:casino.chip", org.bukkit.SoundCategory.PLAYERS, 0.8f, 0.9f));
+        }
+        // dann alles zum Spieler
+        Vector3f d = dir(SEAT_ANGLES[seat]);
+        later((net > 0 ? 18 : 6) + 2L * paid, () -> {
+            for (Entity e : list) {
+                if (e instanceof Display disp && disp.isValid()) {
+                    Transformation t = disp.getTransformation();
+                    disp.setInterpolationDelay(0);
+                    disp.setInterpolationDuration(12);
+                    disp.setTransformation(new Transformation(new Vector3f(d.x * 1.2f, 0.25f, d.z * 1.2f), t.getLeftRotation(),
+                            t.getScale(), t.getRightRotation()));
+                }
+            }
+        });
+    }
+
+    private Location trayCenter() {
+        double f = edgeAt(0) + 0.18;
+        return origin.clone().add(fwd().x * f, FELT_Y + 0.05, fwd().z * f);
+    }
+
+    private void later(long ticks, Runnable r) {
+        plugin.getServer().getScheduler().runTaskLater(plugin, r, Math.max(1, ticks));
     }
 
     /** Gewinn: die Bank legt Chips dazu (kurz sichtbar), dann rutscht alles zum Spieler. Verlust: alles zur Bank. */

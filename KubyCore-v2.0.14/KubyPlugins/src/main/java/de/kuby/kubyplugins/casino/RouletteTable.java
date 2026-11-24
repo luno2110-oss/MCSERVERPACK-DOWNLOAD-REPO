@@ -79,6 +79,8 @@ public final class RouletteTable {
     private static final double Y_TRACK = 0.113, Y_POCKET = H_ROTOR - FELT + 0.0225, CONE_TOP = 0.09;
     private static final double CU = -1.25, CV = 1.58;
     private static final float CHIP = 0.21f;
+    /** Chips im Rack etwas kleiner (Röhrenabstand 0,15): Durchmesser 0,144 statt 0,168. */
+    private static final float RACK_CHIP = 0.18f;
     private static final double RACK_U = 0.15, RACK_V = 0.935;
 
     /** Chip-Farben der Spieler (wie die Farbchips am echten Tisch) und ihre Textfarbe. */
@@ -106,6 +108,8 @@ public final class RouletteTable {
     private ItemDisplay turret;
     private ItemDisplay ball;
     private ItemDisplay dolly;
+    /** Chip-Rack des Croupiers (v2.07). */
+    private ChipRack bankRack;
     private final List<ItemDisplay> winFrame = new ArrayList<>();
     private final List<Entity> blitzMarks = new ArrayList<>();
     /** Chips je Platz und Farbe (Stapel von unten nach oben). */
@@ -321,12 +325,18 @@ public final class RouletteTable {
                 hb -> hb.getPersistentDataContainer().set(click, PersistentDataType.STRING, "croupier"));
         slab(RACK_U - 0.64, RACK_U + 0.64, RACK_V - 0.1, RACK_V + 0.1, FELT - 0.003, FELT + 0.035, "hd_dark");
         slab(RACK_U - 0.64, RACK_U + 0.64, RACK_V - 0.11, RACK_V - 0.1, FELT, FELT + 0.045, "hd_gold");
-        for (int i = 0; i < COLORS.length; i++) {
-            for (int k = 0; k < 3 - (i % 3 == 1 ? 1 : 0); k++) {
-                Location c = rackSpot(i).add(0, BlackjackTable.chipStep(CHIP) * k, 0);
-                display(c, "c3chip_" + COLORS[i], new Quaternionf().rotateY((float) (k * 0.7 + i)), new Vector3f(CHIP, CHIP, CHIP), "static");
-            }
+        // Chip-Rack (v2.07): je Spielerfarbe eine Röhre (goldene Stege), Chips hochkant aufgereiht; verlorene Einsätze
+        // fliegen in ihre Röhre, Gewinne nimmt der Croupier aus der Röhre der Spielerfarbe (ChipRack)
+        for (int i = 0; i <= COLORS.length; i++) {
+            double u = RACK_U + (i - COLORS.length / 2.0) * 0.15;
+            slab(u - 0.004, u + 0.004, RACK_V - 0.09, RACK_V + 0.09, FELT + 0.035, FELT + 0.05, "hd_gold");
         }
+        Location r0 = local(RACK_U, RACK_V, FELT + 0.035);
+        Location ru = local(RACK_U + 1, RACK_V, FELT + 0.035), rv = local(RACK_U, RACK_V + 1, FELT + 0.035);
+        bankRack = new ChipRack(plugin, r0, new Vector3f((float) (ru.getX() - r0.getX()), 0, (float) (ru.getZ() - r0.getZ())),
+                new Vector3f((float) (rv.getX() - r0.getX()), 0, (float) (rv.getZ() - r0.getZ())), 0.15, 0.18, RACK_CHIP, COLORS, 6,
+                (at, color, rot, sc) -> display(at, "c3chip_" + color, rot, new Vector3f(sc, sc, sc), "rack"));
+        bankRack.build();
         // (v2.04: die Anzeigetafel an der Kesselseite ist entfernt, Wunsch des Besitzers; die letzten Zahlen stehen im
         // Text über dem Tisch)
         // --- Texte ---
@@ -347,11 +357,6 @@ public final class RouletteTable {
     /** Dreht einen Vektor aus dem Kessel-Modellraum (Modell-+X = Croupier) in die Welt. */
     private Vector3f rotate(Vector3f v) {
         return base().transform(v);
-    }
-
-    private Location rackSpot(int colorIndex) {
-        // Nachbar-Stapel überlappen sich (Abstand 0,15, Chip 0,21): jeder zweite 1,2 mm höher (v2.04, Z-Fighting)
-        return local(RACK_U + (colorIndex - 3.5) * 0.15, RACK_V, FELT + 0.035 + BlackjackTable.chipStep(CHIP) * 0.5 + ZF * (colorIndex % 2));
     }
 
     public void removeAll() {
@@ -603,10 +608,14 @@ public final class RouletteTable {
             if (!losing.test(s)) continue;
             it.remove();
             if (any == null) any = spotCenter(s);
+            // die Chips fliegen in die Röhre ihrer Farbe und bleiben dort stehen (v2.07)
             for (Map.Entry<String, List<ItemDisplay>> c : e.getValue().entrySet()) {
-                int ci = Math.max(0, java.util.Arrays.asList(COLORS).indexOf(c.getKey()));
-                Location rack = rackSpot(ci).add(0, 0.06, 0);
-                slide(c.getValue(), d -> rack, 9);
+                int ci = bankRack == null ? 0 : bankRack.tubeOf(c.getKey());
+                int n = 0;
+                for (ItemDisplay d : c.getValue()) {
+                    if (bankRack != null) bankRack.deposit(d, ci, 1 + n++ / 2);
+                    else d.remove();
+                }
             }
         }
         return any;
@@ -621,25 +630,18 @@ public final class RouletteTable {
         Location base = st.get(0).getLocation();
         Vector3f r = right();
         Location target = base.clone().add(r.x * 0.12, 0, r.z * 0.12);
-        int ci = Math.max(0, java.util.Arrays.asList(COLORS).indexOf(color));
-        Location from = rackSpot(ci).add(0, 0.05, 0);
+        if (bankRack == null) return;
+        // der Croupier nimmt die Chips aus der Röhre der Spielerfarbe (v2.07): das Rack wird sichtbar leerer
+        int t = bankRack.tubeOf(color);
         int n = Math.max(1, Math.min(10, count));
         for (int i = 0; i < n; i++) {
-            Location end = target.clone().add(0, BlackjackTable.chipStep(CHIP) * i, 0);
-            ItemDisplay d = from.getWorld().spawn(from, ItemDisplay.class, e -> {
-                e.setItemStack(BlackjackTable.model("c3chip_" + color));
-                e.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
-                e.setTransformation(new Transformation(new Vector3f(), new Quaternionf().rotateY(rnd.nextFloat() * 6.28f),
-                        new Vector3f(CHIP, CHIP, CHIP), new Quaternionf()));
-                e.setViewRange(0.6f);
-                mark(e, "chip");
-            });
+            Location end = target.clone().add(0, BlackjackTable.chipStep(CHIP) * (i + 0.5), 0);
+            ItemDisplay d = bankRack.withdraw(t);
+            d.setViewRange(0.6f);
+            d.setTransformation(new Transformation(new Vector3f(), d.getTransformation().getLeftRotation(),
+                    new Vector3f(CHIP, CHIP, CHIP), new Quaternionf()));
             payouts.add(d);
-            later(1 + i / 2, () -> {
-                if (!d.isValid()) return;
-                d.setTeleportDuration(8);
-                d.teleport(end);
-            });
+            bankRack.fly(d, end, rnd.nextFloat() * 6.28f, 1 + i / 2, 8);
         }
     }
 
