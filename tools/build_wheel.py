@@ -592,7 +592,7 @@ def hub_model():
     cap["faces"]["north"] = {"texture": "#hub", "uv": [16, 0, 0, 16]}
     knob = dict(_box([7.45, 7.45, 4.7], [8.55, 8.55, 5.2], "#l"), rotation=rot)   # Goldnagel in der Sternmitte
     return {"textures": {"g": "kuby:block/casino/hd_gold", "l": "kuby:block/casino/hd_gold_lit",
-                         "r": "kuby:block/casino/hd_velvet", "hub": "kuby:item/casino/wh_hub",
+                         "r": "kuby:block/casino/hd_velvet", "hub": "kuby:block/casino/wh_hub",
                          "particle": "kuby:block/casino/hd_gold"},
             "elements": [body, body2, rim, rim2, cap, knob]}
 
@@ -644,6 +644,11 @@ def write(pack):
         img.save(os.path.join(itex, name + ".png"))
         item(name, {"parent": "minecraft:item/generated", "textures": {"layer0": "kuby:item/casino/" + name}})
     item("wh_peg", peg_model())
+    # Kappen-Textur der 3D-Nabe im Block-Atlas: seit 1.21.11 darf ein Modell nur Texturen aus einem Atlas nutzen
+    # (Gold kommt aus block/…), sonst verwirft der Client das Modell und zeigt das lila-schwarze Fehlerbild
+    btex = os.path.join(a, "textures/block/casino")
+    os.makedirs(btex, exist_ok=True)
+    flat["wh_hub"].save(os.path.join(btex, "wh_hub.png"))
     item("wh_hub3d", hub_model())
     item("wh_needle", needle_model())
     # Schrift kuby:wheel

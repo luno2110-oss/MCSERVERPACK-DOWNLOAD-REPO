@@ -68,8 +68,31 @@ def check_fonts(root):
     return problems
 
 
+def check_atlases(root):
+    """Seit 1.21.11 darf ein Modell nur Texturen aus einem Atlas nutzen (block/… oder item/…), sonst verwirft der Client
+    es („Multiple atlases used in model“) und zeigt das lila-schwarze Fehlerbild (so passiert an der Glücksrad-Nabe)."""
+    import glob
+    import json
+    problems = []
+    for f in glob.glob(os.path.join(root, "assets", "*", "models", "**", "*.json"), recursive=True):
+        try:
+            with open(f, encoding="utf-8") as fh:
+                tex = json.load(fh).get("textures", {})
+        except (ValueError, OSError):
+            continue
+        kinds = set()
+        for v in tex.values():
+            if isinstance(v, str) and not v.startswith("#"):
+                path = v.split(":", 1)[-1]
+                kinds.add("item" if path.startswith("item/") else "block" if path.startswith("block/") else path.split("/")[0])
+        if len(kinds) > 1:
+            problems.append("%s: Texturen aus mehreren Atlanten %s" % (os.path.relpath(f, root), sorted(kinds)))
+    return problems
+
+
 if __name__ == "__main__":
     found = check_fonts(sys.argv[1] if len(sys.argv) > 1 else "resourcepack/KubyUI")
+    found += check_atlases(sys.argv[1] if len(sys.argv) > 1 else "resourcepack/KubyUI")
     for x in found:
         print("FEHLER " + x)
     print("Schriften geprüft: " + ("ok" if not found else "%d Fehler" % len(found)))

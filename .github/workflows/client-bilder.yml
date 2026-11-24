@@ -387,6 +387,14 @@ jobs:
           kino = re.findall(r"\[Kino-Test\] (OK|FEHLER) (.*)", log)
           print("- Leisten oben nach Kino-Szenen: " + ("; ".join(k[0] + " " + k[1] for k in kino) if kino else "nicht gelaufen"))
           if not kino or kino[-1][0] != "OK": probs.append("Leisten oben nach Kino-Szenen: " + (kino[-1][1] if kino else "Test nicht gelaufen"))
+          # Modelle, die der Client verwirft (z. B. Texturen aus zwei Atlanten): im Spiel lila-schwarze Würfel
+          try:
+              clog = open("client.log", encoding="utf-8", errors="replace").read()
+          except OSError:
+              clog = ""
+          bake = sorted(set(re.findall(r"Unable to bake (?:item )?model: '([^']+)'", clog)))
+          print("- Vom Client verworfene Modelle: " + (", ".join(bake) if bake else "keine"))
+          if bake: probs.append("Client verwirft Modelle: " + ", ".join(bake[:8]))
           open("problems.txt", "w").write("\n".join(probs) if probs else "keine Probleme")
           for p in probs: print("- Problem: " + p)
           EOF
