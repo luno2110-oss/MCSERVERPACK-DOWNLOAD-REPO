@@ -411,6 +411,26 @@ public final class WheelStage {
         swap(signBulbs, lit, gold);
     }
 
+    private boolean gold;
+
+    /**
+     * Goldener Dreh (v2.07, „das Glücksrad soll gold werden mit goldenen Glitzer-Effekten, richtig episch“): Scheibe und
+     * Strahlenkranz in Gold; zurück mit gold(false).
+     */
+    public void gold(boolean on) {
+        if (on == gold) return;
+        gold = on;
+        if (disc != null && disc.isValid()) disc.setItemStack(model(on ? "wh_disc_casino_gold" : "wh_disc_casino"));
+        if (burst != null && burst.isValid()) {
+            burst.setItemStack(model(on ? "wh_burst_gold" : "wh_burst"));
+            burst.setBrightness(new Display.Brightness(on ? 15 : 11, on ? 15 : 11));
+        }
+    }
+
+    public boolean isGold() {
+        return gold;
+    }
+
     public void spots(boolean on) {
         boolean[] lit = {on, on};
         swap(spotLens, lit, false);

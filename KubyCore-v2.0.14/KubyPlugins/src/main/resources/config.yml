@@ -498,10 +498,15 @@ tags:
 # Serie: wer innerhalb von serie-stunden nach dem letzten Dreh wieder dreht, verlängert seine Serie; jeder gold-dreh-te
 #   Dreh in Folge ist ein Gold-Dreh mit doppeltem Gewinn.
 gluecksrad:
+  # Rechte für mehrere Gratis-Drehs (vip-drehs); ohne Liste gelten die Casino-VIP-Rechte (casino.vip.rank-permissions)
+  vip-rechte: [group.legend, kuby.rank.legend, kuby.gluecksrad.vip]
   casino:
     stunden: 24
     serie-stunden: 48
     gold-dreh: 7
+    vip-drehs: 3                # VIP/Legend (gluecksrad.vip-rechte): so viele Gratis-Drehs je Zeitraum
+    preis-dreh: 85              # Extra-Dreh für Juwelen (ohne Wartezeit)
+    preis-gold: 200             # Goldener Dreh für Juwelen: goldenes Rad mit Glitzer, jeder Gewinn doppelt
     erinnerung: true
     ansage-ab: 100000           # Gewinne ab so vielen Chips (und der Hauptgewinn) werden allen angesagt
     felder:
@@ -521,6 +526,9 @@ gluecksrad:
     stunden: 24
     serie-stunden: 48
     gold-dreh: 7
+    vip-drehs: 3                # VIP/Legend (gluecksrad.vip-rechte): so viele Gratis-Drehs je Zeitraum
+    preis-dreh: 85              # Extra-Dreh für Juwelen (ohne Wartezeit)
+    preis-gold: 200             # Goldener Dreh für Juwelen: goldenes Rad mit Glitzer, jeder Gewinn doppelt
     erinnerung: true
     ansage-ab: 100000           # Geld ab diesem Betrag (und der Hauptgewinn) wird allen angesagt
     felder:

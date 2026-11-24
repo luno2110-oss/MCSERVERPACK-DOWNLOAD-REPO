@@ -21,6 +21,7 @@ Aufruf: python3 tools/build_wheel.py [pack] [--sheet bild.png]
 """
 import json
 import math
+import random
 import os
 import re
 import sys
@@ -62,6 +63,14 @@ SEG = [
     ("0C4A5A", "106A7A", "18909A"),   # Türkis
 ]
 JACKPOT = ("120E10", "221A1C", "34282A")
+# Goldener Dreh (v2.07, „das Glücksrad soll gold werden mit goldenen Glitzer-Effekten“): Felder in drei Goldtönen
+# reihum (Königsgold, Champagner, Bernstein), Trennstriche weißgolden; das Hauptgewinn-Feld bleibt schwarz-gold
+GOLD_SEG = [
+    ("6A400A", "A87010", "E0A828"),   # Königsgold
+    ("7A5A22", "B8903C", "EACB6E"),   # Champagner
+    ("4E2406", "84420C", "B46414"),   # Bernstein
+]
+WHITE_GOLD = rgb("FFF6C8")
 GOLD = [rgb(h) for h in ("6A400A", "A06A10", "D8A020", "F4C21C", "FFE870")]
 GEM = {"casino": ("8E1E2E", "B8283A", "E85A6A"), "smp": ("0C5A2E", "1EA454", "7FE08A")}
 
@@ -288,8 +297,9 @@ def _arr(col):
     return np.array(col[:3], dtype=np.float64)
 
 
-def disc(wheel="casino", rot=0.0, ui=False, size=S, labels=True):
-    """Scheibe um rot Grad gegen den Uhrzeigersinn gedreht. ui: mit Stiften und festem Licht oben links."""
+def disc(wheel="casino", rot=0.0, ui=False, size=S, labels=True, gold=False):
+    """Scheibe um rot Grad gegen den Uhrzeigersinn gedreht. ui: mit Stiften und festem Licht oben links.
+    gold: Felder in Goldtönen (Goldener Dreh)."""
     fs = fields(wheel)
     jack = jackpot(fs)
     _dx, _dy, dist, phi, lam = grid(size)
@@ -298,7 +308,7 @@ def disc(wheel="casino", rot=0.0, ui=False, size=S, labels=True):
     field = np.round((phi + rot) / 30.0).astype(int) % 12
     inside = (dist >= R_IN) & (dist <= R_DISC)
     for i in range(12):
-        dark, mid, light = JACKPOT if i == jack else SEG[i % len(SEG)]
+        dark, mid, light = JACKPOT if i == jack else (GOLD_SEG[i % len(GOLD_SEG)] if gold else SEG[i % len(SEG)])
         m = inside & (field == i)
         img[m & (dist < 24), :3] = _arr(rgb(dark))
         img[m & (dist >= 24) & (dist < 49), :3] = _arr(rgb(mid))
@@ -314,8 +324,8 @@ def disc(wheel="casino", rot=0.0, ui=False, size=S, labels=True):
     delta = ((phi + rot - 15) % 30)
     delta = np.minimum(delta, 30 - delta)
     sep = inside & (dist * np.sin(np.radians(delta)) <= max(0.62, 0.55 / f))
-    img[sep, :3] = _arr(GOLD[3])
-    img[sep & (dist > 40), :3] = _arr(GOLD[4])
+    img[sep, :3] = _arr(GOLD[4] if gold else GOLD[3])
+    img[sep & (dist > 40), :3] = _arr(WHITE_GOLD if gold else GOLD[4])
     # Goldring innen
     ring = (dist >= R_IN - 1.4) & (dist < R_IN)
     img[ring, :3] = _arr(GOLD[2])
@@ -442,6 +452,52 @@ def burst():
     return out
 
 
+def burst_gold():
+    """Strahlenkranz für den Goldenen Dreh: Strahlen in Gold und Bernstein, zur Mitte fast weiß (Glühen aus dem Inneren)."""
+    img = np.zeros((S, S, 4), dtype=np.float64)
+    on = DIST <= 63.5
+    ray = (np.floor(PHI / 15.0).astype(int) % 2) == 0
+    a = np.array([0xB0, 0x78, 0x14], dtype=np.float64)
+    b = np.array([0x6A, 0x3A, 0x08], dtype=np.float64)
+    col = np.where(ray[..., None], a, b)
+    glow = np.clip(1 - DIST / 63.5, 0, 1)[..., None] ** 1.4
+    hot = np.array([0xFF, 0xF0, 0xB0], dtype=np.float64)
+    col = col + (hot - col) * glow * 0.7
+    img[on, :3] = col[on]
+    img[on, 3] = 255
+    img[on & (DIST > 60.5), :3] = np.array(GOLD[2][:3])
+    img[on & (DIST > 61.5) & (DIST <= 62.5), :3] = np.array(GOLD[4][:3])
+    img[on & (DIST > 62.5), :3] = np.array(OUT[:3])
+    out = Image.fromarray(np.clip(img, 0, 255).astype(np.uint8), "RGBA")
+    p = bc.Pix(S)
+    for j in range(32):
+        an = math.radians(j * 11.25 - 90)
+        p.disk(C + 58.2 * math.cos(an), C + 58.2 * math.sin(an), 1.1, WHITE_GOLD if j % 2 else GOLD[4])
+    out.alpha_composite(p.image(outline=None))
+    return out
+
+
+def sparkles(img, i, size):
+    """Glitzer für den Goldenen Dreh: kleine Vierstrahl-Sterne auf Scheibe und Ring, je Bild an anderen Stellen
+    (deterministisch), damit es beim Drehen funkelt. Mitte weiß, Strahlen hellgold, eine Stufe Schein."""
+    rnd = random.Random(7919 * (i + 1))
+    f = size / S
+    px = img.load()
+    for _k in range(9):
+        r = rnd.uniform(18, 62) * f
+        an = rnd.uniform(0, 2 * math.pi)
+        x, y = int(size / 2 + r * math.cos(an)), int(size / 2 + r * math.sin(an))
+        arm = 1 + int(rnd.random() < 0.45) + (1 if f > 1.2 else 0)
+        pts = [(0, 0, (255, 255, 250, 255))]
+        for d in range(1, arm + 1):
+            c = (255, 240, 170, 255) if d < arm else (255, 214, 90, 210)
+            pts += [(d, 0, c), (-d, 0, c), (0, d, c), (0, -d, c)]
+        for dx, dy, c in pts:
+            if 0 <= x + dx < size and 0 <= y + dy < size and px[x + dx, y + dy][3] > 0:
+                px[x + dx, y + dy] = c
+    return img
+
+
 # =====================================================================================================================
 # Nadel (Fenster): Zelle 32 x 96, Gelenk bei (16, 9); im Rad-Bild sitzt das Gelenk 7 px über dem oberen Rand
 # =====================================================================================================================
@@ -477,13 +533,16 @@ def needle_img(deg):
     return img
 
 
-def frame(wheel, i, size=FRAME, labels=True):
-    """Bild i der Dreh-Animation: Scheibe um i * 10 Grad gedreht, Ring mit Lauflicht, Nabe (size px, Maße wie 128)."""
+def frame(wheel, i, size=FRAME, labels=True, gold=False):
+    """Bild i der Dreh-Animation: Scheibe um i * 10 Grad gedreht, Ring mit Lauflicht, Nabe (size px, Maße wie 128).
+    gold: goldene Felder und Glitzer (Goldener Dreh)."""
     img = Image.new("RGBA", (size, size), T)
-    img.alpha_composite(disc(wheel, i * 10.0, ui=True, size=size, labels=labels))
+    img.alpha_composite(disc(wheel, i * 10.0, ui=True, size=size, labels=labels, gold=gold))
     img.alpha_composite(rim(lit_phase=i, size=size))
     hs = 32 * size // S
     img.alpha_composite(hub(wheel, hs), ((size - hs) // 2, (size - hs) // 2))
+    if gold:
+        sparkles(img, i, size)
     img.putpixel((size - 1, 0), (0, 0, 0, 1))
     return img
 
@@ -580,7 +639,7 @@ def write(pack):
             json.dump({"model": {"type": "minecraft:model", "model": "kuby:item/casino/" + name}}, fh)
 
     flat = {"wh_disc_casino": disc("casino", size=DISC_3D), "wh_back": back(), "wh_hub": hub("casino", 64),
-            "wh_burst": burst()}
+            "wh_burst": burst(), "wh_disc_casino_gold": disc("casino", size=DISC_3D, gold=True), "wh_burst_gold": burst_gold()}
     for name, img in flat.items():
         img.save(os.path.join(itex, name + ".png"))
         item(name, {"parent": "minecraft:item/generated", "textures": {"layer0": "kuby:item/casino/" + name}})
@@ -589,13 +648,15 @@ def write(pack):
     item("wh_needle", needle_model())
     # Schrift kuby:wheel
     prov = [{"type": "space", "advances": {"": -26, "": 15}}]
-    for wheel, base in (("casino", 0xE000), ("smp", 0xE040)):
+    # Bilder der Dreh-Animation: Casino, SMP und je eine goldene Fassung (Goldener Dreh, v2.07)
+    for wheel, base, gold in (("casino", 0xE000, False), ("smp", 0xE040, False), ("casino", 0xE100, True), ("smp", 0xE140, True)):
         sheet = Image.new("RGBA", (FRAME * 6, FRAME * 6), T)
         for i in range(36):
-            sheet.alpha_composite(frame(wheel, i), ((i % 6) * FRAME, (i // 6) * FRAME))
-        sheet.save(os.path.join(ftex, "wheel_%s.png" % wheel))
+            sheet.alpha_composite(frame(wheel, i, gold=gold), ((i % 6) * FRAME, (i // 6) * FRAME))
+        name = "wheel_%s%s" % (wheel, "_gold" if gold else "")
+        sheet.save(os.path.join(ftex, name + ".png"))
         rows = ["".join(chr(base + r * 6 + c) for c in range(6)) for r in range(6)]
-        prov.append({"type": "bitmap", "file": "kuby:font/wheel_%s.png" % wheel, "height": 40, "ascent": 21, "chars": rows})
+        prov.append({"type": "bitmap", "file": "kuby:font/%s.png" % name, "height": 40, "ascent": 21, "chars": rows})
     ns = Image.new("RGBA", (NEEDLE_W * len(NEEDLE_STATES), NEEDLE_H), T)
     for k, deg in enumerate(NEEDLE_STATES):
         ns.alpha_composite(needle_img(deg), (k * NEEDLE_W, 0))

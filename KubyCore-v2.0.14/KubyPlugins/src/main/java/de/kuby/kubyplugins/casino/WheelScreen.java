@@ -26,11 +26,13 @@ import java.util.function.Consumer;
  */
 public final class WheelScreen {
 
-    public static final int W = 390, HEIGHT = 280;
+    public static final int W = 390, HEIGHT = 310;
     public static final Key FONT = Key.key("kuby", "wheel");
     /** Schrift kuby:wheel: Bild i des Casino-Rads = E000 + i, SMP-Rad = E040 + i, Nadel k = E080 + k. */
     public static final char CASINO_BASE = '', SMP_BASE = '', NEEDLE_BASE = '', BACK = '', FWD = '';
     public static final int FRAMES = 36, NEEDLES = 9;
+    /** Goldener Dreh (v2.07): goldene Bilder mit Glitzer, Casino E100 + i, SMP E140 + i. */
+    public static final char CASINO_GOLD_BASE = '\uE100', SMP_GOLD_BASE = '\uE140';
 
     private static final TextColor GOLD = TextColor.color(0xF2C94C), LIGHT = TextColor.color(0xFFE870),
             SUB = TextColor.color(0x9FA1A7), DESC = TextColor.color(0xD1D2D5), WHITE = TextColor.color(0xFCFCFC),
@@ -42,9 +44,21 @@ public final class WheelScreen {
     /** Letzter Gewinn (für das Fenster direkt nach dem Dreh). */
     public record Win(String wheel, String text, boolean gold, boolean jackpot, long at) {}
 
+    /**
+     * @param freeLeft  Gratis-Drehs, die gerade frei sind (VIP/Legend bis zu freePer je Zeitraum)
+     * @param bought    gekaufte Extra-Drehs, boughtGold gekaufte Goldene Drehs (noch nicht gedreht)
+     * @param priceSpin Juwelen je Extra-Dreh, priceGold je Goldenem Dreh, jewels Kontostand
+     */
     public record View(String wheel, List<Wheel.Field> fields, int jackpot, long left, int streak, int goldEvery,
                        boolean nextGold, long streakLeft, long hours, boolean spinning, Win win, List<String> winners,
-                       boolean hasStage) {}
+                       boolean hasStage, int freeLeft, int freePer, int bought, int boughtGold, long priceSpin, long priceGold,
+                       long jewels) {
+        public View(String wheel, List<Wheel.Field> fields, int jackpot, long left, int streak, int goldEvery, boolean nextGold,
+                    long streakLeft, long hours, boolean spinning, Win win, List<String> winners, boolean hasStage) {
+            this(wheel, fields, jackpot, left, streak, goldEvery, nextGold, streakLeft, hours, spinning, win, winners, hasStage,
+                    left == 0 ? 1 : 0, 1, 0, 0, 85, 200, 0);
+        }
+    }
 
     public interface Actions {
         Consumer<Player> spin();
@@ -52,6 +66,11 @@ public final class WheelScreen {
         Consumer<Player> refresh();
 
         Consumer<Player> casino();
+
+        /** Extra-Dreh (gold = Goldener Dreh) mit Juwelen kaufen und gleich drehen. */
+        default Consumer<Player> buy(boolean gold) {
+            return null;
+        }
     }
 
     private WheelScreen() {
@@ -63,9 +82,14 @@ public final class WheelScreen {
 
     /** Ein Bild der Dreh-Animation: Rad bei Winkel a (Grad, gegen den Uhrzeigersinn), Nadel um deg nach links. */
     public static Component frame(String wheel, double a, double deg) {
+        return frame(wheel, a, deg, false);
+    }
+
+    /** Wie oben; gold = Bilder des Goldenen Drehs (goldene Felder, Glitzer). */
+    public static Component frame(String wheel, double a, double deg, boolean gold) {
         int i = Math.floorMod((int) Math.round(a / 10.0), FRAMES);
         int k = Math.max(0, Math.min(NEEDLES - 1, (int) Math.round((deg + 10) / 5.0)));
-        char base = Wheel.SMP.equals(wheel) ? SMP_BASE : CASINO_BASE;
+        char base = Wheel.SMP.equals(wheel) ? (gold ? SMP_GOLD_BASE : SMP_BASE) : (gold ? CASINO_GOLD_BASE : CASINO_BASE);
         String s = String.valueOf((char) (base + i)) + BACK + (char) (NEEDLE_BASE + k) + FWD;
         return Component.text(s).font(FONT).color(NamedTextColor.WHITE).shadowColor(ShadowColor.none());
     }
@@ -85,7 +109,8 @@ public final class WheelScreen {
         // Kopf: Schriftzug, Untertitel, Serie
         c.box(0, 0, W, 46, KitData.Box.CASINO_DARK);
         c.headline(10, 9, "GLÜCKS|RAD", GOLD);
-        c.text(10, 31, (casino ? "Casino" : "SMP") + " · alle " + v.hours() + " h ein Gratis-Dreh", SUB, false);
+        c.text(10, 31, Canvas.fit((casino ? "Casino" : "SMP") + (v.freePer() > 1 ? " · Legend: " + v.freePer() + " Drehs je " + v.hours() + " h"
+                : " · alle " + v.hours() + " h ein Gratis-Dreh"), false, 196), v.freePer() > 1 ? LIGHT : SUB, false);
         streak(c, v);
         // links: das Rad
         c.box(0, 50, 172, 156, KitData.Box.CASINO_DARK);
@@ -96,7 +121,28 @@ public final class WheelScreen {
         fieldList(c, v, accent);
         // rechts unten: Drehen oder Wartezeit
         action(c, v, a);
+        // ganz unten: Drehs mit Juwelen kaufen
+        shop(c, v, a);
         return c;
+    }
+
+    /** Kaufleiste (v2.07): Extra-Dreh und Goldener Dreh (Gewinn x2, goldenes Rad mit Glitzer) für Juwelen. */
+    private static void shop(Canvas c, View v, Actions a) {
+        int y = 282, w = (W - 6) / 2;
+        boolean canN = v.jewels() >= v.priceSpin(), canG = v.jewels() >= v.priceGold();
+        c.box(0, y, w, 26, KitData.Box.JS_VIOLET, 1);
+        c.text(8, y + 4, "EXTRA-DREH" + (v.bought() > 0 ? " (" + v.bought() + " gekauft)" : ""), WHITE, true);
+        c.text(8, y + 15, Canvas.fit(v.priceSpin() + " Juwelen · sofort drehen", false, w - 16), canN ? DESC : SUB, false);
+        if (a != null && a.buy(false) != null) c.action(0, y, w, 26, a.buy(false), tip("Extra-Dreh",
+                "Ein weiterer Dreh für " + v.priceSpin() + " Juwelen, ohne auf die Wartezeit zu warten. Stehst du am großen Rad im Casino,"
+                        + " dreht es dort. Deine Juwelen: " + v.jewels() + ".", canN ? "Klick: kaufen und drehen" : "Dir fehlen Juwelen"));
+        int x = W - w;
+        c.box(x, y, w, 26, KitData.Box.JS_GOLD, 1);
+        c.text(x + 8, y + 4, "★ GOLDENER DREH" + (v.boughtGold() > 0 ? " (" + v.boughtGold() + ")" : ""), LIGHT, true);
+        c.text(x + 8, y + 15, Canvas.fit(v.priceGold() + " Juwelen · Gewinn x2", false, w - 16), canG ? WHITE : SUB, false);
+        if (a != null && a.buy(true) != null) c.action(x, y, w, 26, a.buy(true), tip("Goldener Dreh",
+                "Das Rad wird golden, Glitzer überall – und jeder Gewinn zählt doppelt. " + v.priceGold() + " Juwelen."
+                        + " Deine Juwelen: " + v.jewels() + ".", canG ? "Klick: kaufen und drehen" : "Dir fehlen Juwelen"));
     }
 
     private static void streak(Canvas c, View v) {
@@ -181,10 +227,18 @@ public final class WheelScreen {
         if (v.spinning()) {
             c.box(x, y, w, 26, KitData.Box.JS_GRAY, 1);
             c.textCenter(x + w / 2, y + 9, "Das Rad dreht …", DESC, false);
+        } else if (v.boughtGold() > 0 || (v.left() > 0 && v.bought() > 0)) {
+            // gekaufte Drehs (Goldener zuerst), wenn kein Gratis-Dreh frei ist
+            boolean gold = v.boughtGold() > 0;
+            c.box(x, y, w, 26, gold ? KitData.Box.JS_GOLD : KitData.Box.JS_VIOLET, 1);
+            c.textCenter(x + w / 2, y + 9, gold ? "★ GOLDENEN DREH STARTEN ★" : "GEKAUFTEN DREH STARTEN", gold ? LIGHT : WHITE, true);
+            if (a != null) c.action(x, y, w, 26, a.spin(), tip(gold ? "Goldener Dreh" : "Extra-Dreh",
+                    gold ? "Goldenes Rad, jeder Gewinn doppelt." : "Dein gekaufter Dreh.", "Klick: drehen"));
         } else if (v.left() == 0) {
             boolean gold = v.nextGold();
             c.box(x, y, w, 26, gold ? KitData.Box.JS_GOLD : KitData.Box.JS_GREEN, 1);
-            c.textCenter(x + w / 2, y + 9, gold ? "★ GOLD-DREH STARTEN ★" : "GRATIS DREHEN", gold ? LIGHT : GREEN, true);
+            c.textCenter(x + w / 2, y + 9, (gold ? "★ GOLD-DREH STARTEN ★" : "GRATIS DREHEN") + (v.freePer() > 1 ? " " + v.freeLeft() + "/" + v.freePer() : ""),
+                    gold ? LIGHT : GREEN, true);
             if (a != null) c.action(x, y, w, 26, a.spin(), tip(gold ? "Gold-Dreh" : "Gratis drehen",
                     gold ? "Dein " + v.goldEvery() + ". Dreh in Folge: jeder Gewinn zählt doppelt!"
                             : "Einmal alle " + v.hours() + " h gratis. Dreh jeden Tag für deine Serie: beim "
@@ -224,7 +278,9 @@ public final class WheelScreen {
                 "Sara;HAUPTGEWINN 1.000.000 Chips;0;0;1");
         Win win = "win".equals(state) ? new Win(wheel, "GOLD-DREH: 50.000 Chips", true, false, 0) : null;
         boolean gold = "gold".equals(state);
-        return new View(wheel, fs, Wheel.jackpot(fs), "wait".equals(state) || "win".equals(state) ? 23 * 3_600_000L + 41 * 60_000L : 0,
-                gold ? 6 : 3, 7, gold, 40 * 3_600_000L, 24, false, win, wl, !Wheel.SMP.equals(wheel));
+        boolean wait = "wait".equals(state) || "win".equals(state) || "bought".equals(state);
+        return new View(wheel, fs, Wheel.jackpot(fs), wait ? 23 * 3_600_000L + 41 * 60_000L : 0,
+                gold ? 6 : 3, 7, gold, 40 * 3_600_000L, 24, false, win, wl, !Wheel.SMP.equals(wheel), wait ? 0 : "vip".equals(state) ? 2 : 1,
+                "vip".equals(state) ? 3 : 1, "bought".equals(state) ? 2 : 0, "bought".equals(state) ? 1 : 0, 85, 200, 12_345);
     }
 }

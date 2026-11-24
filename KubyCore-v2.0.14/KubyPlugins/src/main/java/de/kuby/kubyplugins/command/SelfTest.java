@@ -617,9 +617,10 @@ final class SelfTest {
                 public Consumer<Player> spin() { return NO; }
                 public Consumer<Player> refresh() { return NO; }
                 public Consumer<Player> casino() { return NO; }
+                public Consumer<Player> buy(boolean gold) { return NO; }
             };
             for (String wheel : new String[]{"casino", "smp"}) {
-                for (String state : new String[]{"ready", "wait", "gold", "win"}) {
+                for (String state : new String[]{"ready", "wait", "gold", "win", "bought", "vip"}) {
                     canvas.accept("Glücksrad " + wheel + " " + state, () -> de.kuby.kubyplugins.casino.WheelScreen.canvas(
                             de.kuby.kubyplugins.casino.WheelScreen.sample(plugin.getConfig(), wheel, state), wha));
                 }

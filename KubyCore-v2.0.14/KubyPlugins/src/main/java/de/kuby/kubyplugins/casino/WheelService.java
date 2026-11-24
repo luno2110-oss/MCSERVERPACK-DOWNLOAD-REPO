@@ -158,6 +158,10 @@ public final class WheelService implements Placeable, Listener {
     private final Map<String, String> raw = new LinkedHashMap<>();
     private final Map<String, Stage> stages = new LinkedHashMap<>();
     private final Map<String, Map<UUID, Long>> last = new HashMap<>();
+    /** Gratis-Zeitraum je Spieler: {Start, genutzte Drehs} (VIP/Legend: mehrere Drehs je Zeitraum, v2.07). */
+    private final Map<String, Map<UUID, long[]>> window = new HashMap<>();
+    /** Mit Juwelen gekaufte, noch offene Drehs: {Extra, Golden} (v2.07). */
+    private final Map<String, Map<UUID, int[]>> bought = new HashMap<>();
     private final Map<String, Map<UUID, Integer>> streak = new HashMap<>();
     private final Map<String, List<String>> winners = new HashMap<>();
     private final Map<String, Set<UUID>> reminded = new HashMap<>();
@@ -206,6 +210,38 @@ public final class WheelService implements Placeable, Listener {
         }
         ConfigurationSection g = yml.getConfigurationSection("gewinner");
         if (g != null) for (String w : g.getKeys(false)) winners.put(w, new ArrayList<>(g.getStringList(w)));
+        ConfigurationSection fe = yml.getConfigurationSection("fenster");
+        if (fe != null) {
+            for (String w : fe.getKeys(false)) {
+                ConfigurationSection ws = fe.getConfigurationSection(w);
+                if (ws == null) continue;
+                for (String u : ws.getKeys(false)) {
+                    String[] q = String.valueOf(ws.getString(u)).split(";");
+                    try {
+                        window.computeIfAbsent(w, k -> new HashMap<>()).put(UUID.fromString(u), new long[]{Long.parseLong(q[0]), Long.parseLong(q[1])});
+                    } catch (RuntimeException ignored) {
+                        // kaputter Eintrag
+                    }
+                }
+            }
+        }
+        // ältere Stände: der letzte Dreh eröffnet den Zeitraum
+        last.forEach((w, m) -> m.forEach((u, t) -> window.computeIfAbsent(w, k -> new HashMap<>()).putIfAbsent(u, new long[]{t, 1})));
+        ConfigurationSection kb = yml.getConfigurationSection("gekauft");
+        if (kb != null) {
+            for (String w : kb.getKeys(false)) {
+                ConfigurationSection ws = kb.getConfigurationSection(w);
+                if (ws == null) continue;
+                for (String u : ws.getKeys(false)) {
+                    String[] q = String.valueOf(ws.getString(u)).split(";");
+                    try {
+                        bought.computeIfAbsent(w, k -> new HashMap<>()).put(UUID.fromString(u), new int[]{Integer.parseInt(q[0]), Integer.parseInt(q[1])});
+                    } catch (RuntimeException ignored) {
+                        // kaputter Eintrag
+                    }
+                }
+            }
+        }
     }
 
     private static void putUuid(Map<String, Map<UUID, Long>> m, String wheel, String uuid, long v) {
@@ -228,6 +264,12 @@ public final class WheelService implements Placeable, Listener {
             if (v > 0 && t != null && t > cut) yml.set("serie." + w + "." + k, v);
         }));
         winners.forEach((w, l) -> yml.set("gewinner." + w, l));
+        window.forEach((w, m) -> m.forEach((k, v) -> {
+            if (v[0] > cut) yml.set("fenster." + w + "." + k, v[0] + ";" + v[1]);
+        }));
+        bought.forEach((w, m) -> m.forEach((k, v) -> {
+            if (v[0] > 0 || v[1] > 0) yml.set("gekauft." + w + "." + k, v[0] + ";" + v[1]);
+        }));
         try {
             plugin.getDataFolder().mkdirs();
             yml.save(file);
@@ -278,8 +320,96 @@ public final class WheelService implements Placeable, Listener {
 
     /** Millisekunden bis zum nächsten Gratis-Dreh (0 = bereit). */
     public synchronized long left(String wheel, UUID id) {
-        Long t = last.getOrDefault(wheel, Map.of()).get(id);
-        return t == null ? 0 : Math.max(0, t + cooldownMs(wheel) - System.currentTimeMillis());
+        if (freeLeft(wheel, id) > 0) return 0;
+        long[] w = window.getOrDefault(wheel, Map.of()).get(id);
+        return w == null ? 0 : Math.max(0, w[0] + cooldownMs(wheel) - System.currentTimeMillis());
+    }
+
+    /**
+     * Gratis-Drehs je Zeitraum (v2.07, Wunsch des Besitzers: „VIP bzw. Spieler mit dem Legend-Rang bekommen 3 Spins alle
+     * 24 h“): Rechte aus gluecksrad.vip-rechte (Standard wie das Casino-VIP: group.legend, kuby.rank.legend).
+     */
+    public int freePer(String wheel, UUID id) {
+        Player p = Bukkit.getPlayer(id);
+        if (p == null) return 1;
+        List<String> perms = cfg().isList("gluecksrad.vip-rechte") ? cfg().getStringList("gluecksrad.vip-rechte")
+                : cfg().getStringList("casino.vip.rank-permissions");
+        boolean vip = p.hasPermission("kuby.gluecksrad.vip");
+        for (String perm : perms) vip |= p.hasPermission(perm);
+        return vip ? Math.max(1, cfg().getInt("gluecksrad." + wheel + ".vip-drehs", 3)) : 1;
+    }
+
+    /** Noch freie Gratis-Drehs im laufenden Zeitraum. */
+    public synchronized int freeLeft(String wheel, UUID id) {
+        long[] w = window.getOrDefault(wheel, Map.of()).get(id);
+        int per = freePer(wheel, id);
+        if (w == null || System.currentTimeMillis() - w[0] >= cooldownMs(wheel)) return per;
+        return (int) Math.max(0, per - w[1]);
+    }
+
+    /** Gekaufte, offene Drehs {Extra, Golden}. */
+    public synchronized int[] bought(String wheel, UUID id) {
+        int[] b = bought.getOrDefault(wheel, Map.of()).get(id);
+        return b == null ? new int[2] : b.clone();
+    }
+
+    public long price(String wheel, boolean gold) {
+        return Math.max(1, gold ? cfg().getLong("gluecksrad." + wheel + ".preis-gold", 200) : cfg().getLong("gluecksrad." + wheel + ".preis-dreh", 85));
+    }
+
+    /** Welcher Dreh als Nächstes läuft: gekaufter Goldener zuerst, dann Gratis, dann gekaufter Extra-Dreh; null = keiner. */
+    private enum Use { FREE, BOUGHT, GOLD }
+
+    private synchronized Use nextUse(String wheel, UUID id) {
+        int[] b = bought(wheel, id);
+        if (b[1] > 0) return Use.GOLD;
+        if (freeLeft(wheel, id) > 0) return Use.FREE;
+        if (b[0] > 0) return Use.BOUGHT;
+        return null;
+    }
+
+    /**
+     * Dreh mit Juwelen kaufen (v2.07: Extra-Dreh 85, Goldener Dreh 200 mit doppeltem Gewinn) und gleich drehen: am großen
+     * Rad, wenn man im Casino davor steht, sonst im Fenster. Fehlermeldung oder null.
+     */
+    public String buy(Player p, String wheel, boolean gold) {
+        if (wheel == null) return "Hier gibt es kein Glücksrad.";
+        UUID id = p.getUniqueId();
+        long price = price(wheel, gold);
+        if (plugin.jewels().balance(id) < price) {
+            CasinoText.error(p, "Dir fehlen Juwelen: " + price + " nötig, du hast " + plugin.jewels().balance(id) + ".");
+            return "Juwelen";
+        }
+        if (!plugin.jewels().take(id, price)) return "Juwelen";
+        synchronized (this) {
+            int[] b = bought.computeIfAbsent(wheel, k -> new HashMap<>()).computeIfAbsent(id, k -> new int[2]);
+            b[gold ? 1 : 0]++;
+        }
+        save();
+        plugin.getLogger().info("[Glücksrad] " + p.getName() + " kauft " + (gold ? "Goldenen Dreh" : "Extra-Dreh") + " für " + price + " Juwelen");
+        CasinoText.send(p, gold ? "<#FFE870><b>★ Goldener Dreh gekauft!</b></#FFE870> <gray>Das Rad wird golden – jeder Gewinn zählt doppelt."
+                : "<#F2C94C>Extra-Dreh gekauft!</#F2C94C> <gray>Viel Glück.");
+        p.playSound(p.getLocation(), gold ? Sound.BLOCK_BEACON_POWER_SELECT : Sound.ENTITY_PLAYER_LEVELUP, 0.8f, gold ? 1.4f : 1.2f);
+        Stage near = Wheel.CASINO.equals(wheel) ? nearStage(p) : null;
+        if (near != null && near.spin == null) stageSpin(p, near, false);
+        else uiSpin(p, wheel);
+        return null;
+    }
+
+    /** Bühne, vor der der Spieler steht (12 Blöcke). */
+    private Stage nearStage(Player p) {
+        Stage best = null;
+        double bd = 144;
+        for (String id : raw.keySet()) {
+            Stage b = load(id);
+            if (b == null || !b.st.center().getWorld().equals(p.getWorld())) continue;
+            double d = b.st.center().distanceSquared(p.getLocation());
+            if (d < bd) {
+                bd = d;
+                best = b;
+            }
+        }
+        return best;
     }
 
     /** Laufende Serie (0 = keine oder abgelaufen). */
@@ -430,7 +560,8 @@ public final class WheelService implements Placeable, Listener {
             CasinoText.send(p, "<#F2C94C>Dein Glücksrad ist bereit!</#F2C94C> <click:run_command:'/gluecksrad'><white>[Jetzt drehen]</white></click>");
         } else {
             CasinoText.send(p, "<gray>Nächster Gratis-Dreh am Glücksrad in <white>" + duration(l) + "</white> (ab <white>"
-                    + clock(l) + " Uhr</white>).");
+                    + clock(l) + " Uhr</white>). <click:run_command:'/gluecksrad'><hover:show_text:'<gray>Extra-Dreh " + price(wheel, false)
+                    + " Juwelen, Goldener Dreh " + price(wheel, true) + " Juwelen (Gewinn x2)'><#C08CF0>[Dreh kaufen]</#C08CF0></hover></click>");
         }
     }
 
@@ -445,9 +576,11 @@ public final class WheelService implements Placeable, Listener {
         synchronized (this) {
             wl = new ArrayList<>(winners.getOrDefault(wheel, List.of()));
         }
+        int[] b = bought(wheel, id);
         return new WheelScreen.View(wheel, fs, Wheel.jackpot(fs), left(wheel, id), streak(wheel, id), goldEvery(wheel),
                 nextGold(wheel, id), streakLeft(wheel, id), hours(wheel), spinning, win, wl,
-                Wheel.CASINO.equals(wheel) && hasWheel());
+                Wheel.CASINO.equals(wheel) && hasWheel(), freeLeft(wheel, id), freePer(wheel, id), b[0], b[1], price(wheel, false),
+                price(wheel, true), plugin.jewels().balance(id));
     }
 
     WheelScreen.Actions actions(String wheel) {
@@ -465,6 +598,11 @@ public final class WheelService implements Placeable, Listener {
             @Override
             public java.util.function.Consumer<Player> casino() {
                 return pl -> pl.performCommand("casino");
+            }
+
+            @Override
+            public java.util.function.Consumer<Player> buy(boolean gold) {
+                return pl -> WheelService.this.buy(pl, wheel, gold);
             }
         };
     }
@@ -484,8 +622,7 @@ public final class WheelService implements Placeable, Listener {
         }
         if (uiSpins.containsKey(id)) return "Dein Rad dreht schon.";
         for (Stage b : stages.values()) if (b.spin != null && b.spin.player.equals(id)) return "Dein Rad dreht schon.";
-        long l = left(wheel, id);
-        if (l > 0 && !test) return "WAIT";
+        if (!test && nextUse(wheel, id) == null) return "WAIT";
         return null;
     }
 
@@ -502,12 +639,24 @@ public final class WheelService implements Placeable, Listener {
         List<Wheel.Field> fs = fields(wheel);
         int target = Wheel.pick(fs, RNG);
         Wheel.Field f = fs.get(target);
-        int st = nextStreak(wheel, id);
-        boolean gold = st % goldEvery(wheel) == 0;
+        Use use = nextUse(wheel, id);
+        if (use == null) use = Use.FREE;   // Test
+        // gekaufte Drehs zählen nicht zur Serie; Goldener Dreh: gekauft oder jeder gold-dreh-te Gratis-Dreh in Folge
+        int st = use == Use.FREE ? nextStreak(wheel, id) : streak(wheel, id);
+        boolean gold = use == Use.GOLD || (use == Use.FREE && st % goldEvery(wheel) == 0);
         String prize = gold ? Wheel.doubled(f.prize()) : f.prize();
+        long now = System.currentTimeMillis();
         synchronized (this) {
-            last.computeIfAbsent(wheel, k -> new HashMap<>()).put(id, System.currentTimeMillis());
-            streak.computeIfAbsent(wheel, k -> new HashMap<>()).put(id, st);
+            if (use == Use.FREE) {
+                last.computeIfAbsent(wheel, k -> new HashMap<>()).put(id, now);
+                streak.computeIfAbsent(wheel, k -> new HashMap<>()).put(id, st);
+                long[] wnd = window.computeIfAbsent(wheel, k -> new HashMap<>()).get(id);
+                if (wnd == null || now - wnd[0] >= cooldownMs(wheel)) window.get(wheel).put(id, new long[]{now, 1});
+                else wnd[1]++;
+            } else {
+                int[] b = bought.computeIfAbsent(wheel, k -> new HashMap<>()).computeIfAbsent(id, k -> new int[2]);
+                b[use == Use.GOLD ? 1 : 0] = Math.max(0, b[use == Use.GOLD ? 1 : 0] - 1);
+            }
             reminded.computeIfAbsent(wheel, k -> new HashSet<>()).remove(id);
         }
         save();
@@ -551,7 +700,14 @@ public final class WheelService implements Placeable, Listener {
         b.spin = s;
         b.idleAngle = Double.NaN;
         b.winBlink = 0;
-        b.st.info(Component.text(p.getName() + (s.gold ? " dreht · GOLD-DREH!" : " dreht …"), s.gold ? TextColor.color(0xFFE870) : TextColor.color(0xE8E4DC)));
+        b.st.info(Component.text(p.getName() + (s.gold ? " dreht · GOLDENER DREH!" : " dreht …"), s.gold ? TextColor.color(0xFFE870) : TextColor.color(0xE8E4DC)));
+        b.st.gold(s.gold);
+        if (s.gold) {
+            Location gl = b.st.effectLocation();
+            gl.getWorld().spawnParticle(Particle.FIREWORK, gl, 40, 1.4, 1.4, 0.2, 0.08);
+            gl.getWorld().spawnParticle(Particle.TOTEM_OF_UNDYING, gl, 60, 1.6, 1.6, 0.3, 0.3);
+            gl.getWorld().playSound(gl, Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.6f, 1.6f);
+        }
         b.st.spots(true);
         Location fx = b.st.effectLocation();
         fx.getWorld().playSound(fx, Sound.BLOCK_PISTON_CONTRACT, 0.8f, 0.6f);
@@ -622,6 +778,7 @@ public final class WheelService implements Placeable, Listener {
         if (s.t % 6 == 0) st.lights(11 + (s.t / 6) % 5);
         // Scheinwerfer: Lichtstrahl aus Partikeln aufs Rad
         if (s.t % 4 == 0) beams(st, s.gold);
+        if (s.gold) glitter(st, s.t);
         // Spannung kurz vor dem Halt: Herzschlag
         int rest = s.plan.length - 1 - (s.t - WINDUP);
         if (rest > 0 && rest <= 36 && rest % 9 == 0) w.playSound(fx, Sound.BLOCK_NOTE_BLOCK_BASEDRUM, 0.8f, 0.6f);
@@ -631,6 +788,21 @@ public final class WheelService implements Placeable, Listener {
             b.spin = null;
             finish(s, b, true);
         }
+    }
+
+    /** Goldener Dreh: goldener Glitzer rund ums Rad, ab und zu ein heller Funke vor der Scheibe. */
+    private void glitter(WheelStage st, int t) {
+        Location c = st.effectLocation();
+        World w = c.getWorld();
+        Particle.DustOptions[] golds = {new Particle.DustOptions(Color.fromRGB(0xFFE870), 0.9f),
+                new Particle.DustOptions(Color.fromRGB(0xF4C21C), 0.7f), new Particle.DustOptions(Color.fromRGB(0xFFF6C8), 0.5f)};
+        for (int k = 0; k < 3; k++) {
+            double an = RNG.nextDouble() * Math.PI * 2, r = WheelStage.R * (0.55 + RNG.nextDouble() * 0.6);
+            Location at = st.at(Math.cos(an) * r, WheelStage.HC + Math.sin(an) * r, 0.35);
+            w.spawnParticle(Particle.DUST, at, 1, 0.03, 0.03, 0.03, 0, golds[RNG.nextInt(golds.length)]);
+        }
+        if (t % 3 == 0) w.spawnParticle(Particle.WAX_ON, st.at((RNG.nextDouble() - 0.5) * 3, WheelStage.HC + (RNG.nextDouble() - 0.5) * 3, 0.4), 1, 0, 0, 0, 0);
+        if (t % 7 == 0) w.spawnParticle(Particle.END_ROD, st.at((RNG.nextDouble() - 0.5) * 2.6, WheelStage.HC + 1.9, 0.4), 1, 0.05, 0.05, 0.05, 0.01);
     }
 
     private void beams(WheelStage st, boolean gold) {
@@ -672,6 +844,7 @@ public final class WheelService implements Placeable, Listener {
             if (b.bigWin && b.winBlink % 10 == 0) confetti(st, 14);
             if (b.winBlink == 0) {
                 st.spots(false);
+                st.gold(false);
                 idle(b);
             }
             return;
@@ -782,12 +955,14 @@ public final class WheelService implements Placeable, Listener {
         if (!s.text) {
             p.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ZERO, Duration.ofMillis(1500), Duration.ofMillis(400)));
             p.sendTitlePart(TitlePart.SUBTITLE, Component.empty());
-            p.sendTitlePart(TitlePart.TITLE, WheelScreen.frame(wheel, from, 0));
+            p.sendTitlePart(TitlePart.TITLE, WheelScreen.frame(wheel, from, 0, s.gold));
         }
         Sfx.play(plugin, p, Sfx.Kind.WHOOSH);
         if (s.gold) {
             p.playSound(p.getLocation(), Sound.BLOCK_BEACON_POWER_SELECT, 0.7f, 1.6f);
-            p.sendActionBar(Component.text("✦ GOLD-DREH: doppelter Gewinn! ✦", TextColor.color(0xFFE870), TextDecoration.BOLD));
+            p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.5f, 1.7f);
+            p.sendActionBar(Component.text("✦ GOLDENER DREH: doppelter Gewinn! ✦", TextColor.color(0xFFE870), TextDecoration.BOLD));
+            p.getWorld().spawnParticle(Particle.TOTEM_OF_UNDYING, p.getLocation().add(0, 1.2, 0), 50, 0.6, 0.8, 0.6, 0.35);
         }
         start();
         return null;
@@ -803,7 +978,9 @@ public final class WheelService implements Placeable, Listener {
         s.t++;
         double a = s.angle();
         s.needle = Wheel.needleStep(s.needle, a);
-        if (!s.text) p.sendTitlePart(TitlePart.TITLE, WheelScreen.frame(s.wheel, a, s.needle[0]));
+        if (!s.text) p.sendTitlePart(TitlePart.TITLE, WheelScreen.frame(s.wheel, a, s.needle[0], s.gold));
+        if (s.gold && s.t % 6 == 0) p.getWorld().spawnParticle(Particle.DUST, p.getLocation().add(0, 1.6, 0), 3, 0.5, 0.4, 0.5, 0,
+                new Particle.DustOptions(Color.fromRGB(0xFFE870), 0.8f));
         if (s.t <= WINDUP) {
             if (s.t % 2 == 0) p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_SNARE, 0.5f, 0.8f + s.t * 0.05f);
             s.prev = a;
@@ -828,7 +1005,7 @@ public final class WheelService implements Placeable, Listener {
         if (s.stopped() && s.t - WINDUP == s.plan.length - 1 && !s.text) {
             // letztes Bild länger stehen lassen
             p.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ZERO, Duration.ofMillis(2600), Duration.ofMillis(500)));
-            p.sendTitlePart(TitlePart.TITLE, WheelScreen.frame(s.wheel, a, 0));
+            p.sendTitlePart(TitlePart.TITLE, WheelScreen.frame(s.wheel, a, 0, s.gold));
         }
         if (s.done()) {
             uiSpins.remove(s.player);
