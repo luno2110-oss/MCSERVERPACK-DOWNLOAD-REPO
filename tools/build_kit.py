@@ -151,6 +151,13 @@ CASINO_BOXES = {
     "felt": dict(corner=CORNER_GOLD_FRAME, straight=5, edge="KLD",
                  colors={"L": "F8C412", "D": "0A1A08", "N": "015426"},
                  glow={"tl": "F6E592", "tr": "F2D560", "bl": "EEC23A", "br": "C88600"}),
+    # Roulette rot (High Roller) und violett (Elite), v2.07: gleicher Goldrahmen, Filz in der Tischfarbe
+    "felt_red": dict(corner=CORNER_GOLD_FRAME, straight=5, edge="KLD",
+                     colors={"L": "F8C412", "D": "1A0608", "N": "621624"},
+                     glow={"tl": "F6E592", "tr": "F2D560", "bl": "EEC23A", "br": "C88600"}),
+    "felt_violet": dict(corner=CORNER_GOLD_FRAME, straight=5, edge="KLD",
+                        colors={"L": "F8C412", "D": "120A1E", "N": "3F2262"},
+                        glow={"tl": "F6E592", "tr": "F2D560", "bl": "EEC23A", "br": "C88600"}),
     "casino_dark": dict(corner=CORNER_GOLD_FRAME, straight=5, edge="KLD",
                         colors={"L": "F6BE12", "D": "120C08", "N": "1B1511"},
                         glow={"tl": "F6E592", "tr": "F2D560", "bl": "EEC23A", "br": "C88600"}),
@@ -162,6 +169,10 @@ CASINO_BOXES = {
                         colors={"L": "665628", "D": "47381C", "N": "222126"}, first="2A292E", last="232024"),
     "field_felt": dict(corner=CORNER_FIELD, straight=5, edge="KLD",
                        colors={"L": "6C5A2C", "D": "433813", "N": "0E4A26"}, first="135A30", last="0C4420"),
+    "field_felt_red": dict(corner=CORNER_FIELD, straight=5, edge="KLD",
+                           colors={"L": "6C5A2C", "D": "433813", "N": "4E0F1C"}, first="621624", last="3C0A14"),
+    "field_felt_violet": dict(corner=CORNER_FIELD, straight=5, edge="KLD",
+                              colors={"L": "6C5A2C", "D": "433813", "N": "30194C"}, first="3F2262", last="231238"),
 }
 # Einstellungen-Menü (Referenzen2): Kästen als 9-Slice aus den Referenzbildern (tools/assets/settings)
 import build_settings  # noqa: E402
@@ -179,7 +190,7 @@ SLICED_BOXES.update(build_guide.boxes())
 ALL_BOXES = list(BOXES) + list(CASINO_BOXES) + list(SLICED_BOXES)
 # Kästen, die auch schmaler als 48 px gehen (Zahlenfelder im Roulette-Raster, Battle-Pass-Felder und -Knöpfe,
 # Reiter im Survival-Juwelenshop): schmale Mittelstücke
-NARROW_BOXES = (("field_red", "field_green", "field_black", "field_felt") + tuple(build_battlepass.boxes())
+NARROW_BOXES = (("field_red", "field_green", "field_black", "field_felt", "field_felt_red", "field_felt_violet") + tuple(build_battlepass.boxes())
                 + ("jss_tab_brown", "jss_tab_off", "jss_tab_pink", "rg_nav", "fr_btn", "fr_sub_on", "fr_sub_off",
                    "pw_page_on", "pw_page_off", "qu_tab_event", "qu_tab_daily", "qu_tab_weekly", "qu_tab_main",
                    "qu_tab_mile", "qu_tab_team"))

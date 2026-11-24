@@ -141,6 +141,10 @@ public final class WheelService implements Listener {
         boolean bigWin;
         /** Jemand in der Nähe hat seinen Dreh bereit: Lichter lebhafter, Aufforderung blinkt. */
         boolean waiting;
+        /** Leerlauf: das Rad dreht sich langsam weiter (Winkel je Tick, NaN = neu vom Rad übernehmen), Nadel federt mit. */
+        double idleAngle = Double.NaN;
+        double[] idleNeedle = {0, 0};
+        int idleHold;
 
         Stage(WheelStage st) {
             this.st = st;
@@ -542,8 +546,10 @@ public final class WheelService implements Listener {
         }
         int ticks = test ? 120 : 130 + RNG.nextInt(50);
         double off = Wheel.OFF_MIN + RNG.nextDouble() * (Wheel.OFF_MAX - Wheel.OFF_MIN);
-        Spin s = draw(p, Wheel.CASINO, b.st.angle(), false, ticks, off);
+        double from = Double.isNaN(b.idleAngle) ? b.st.angle() : b.idleAngle;
+        Spin s = draw(p, Wheel.CASINO, from, false, ticks, off);
         b.spin = s;
+        b.idleAngle = Double.NaN;
         b.winBlink = 0;
         b.st.info(Component.text(p.getName() + (s.gold ? " dreht · GOLD-DREH!" : " dreht …"), s.gold ? TextColor.color(0xFFE870) : TextColor.color(0xE8E4DC)));
         b.st.spots(true);
@@ -642,9 +648,16 @@ public final class WheelService implements Listener {
         }
     }
 
+    /** Leerlauf-Drehung (Wunsch des Besitzers: „dauerhaft langsam leicht drehen, als Idle-Animation“): Grad je Tick. */
+    private static final double IDLE_SPEED = 0.3;
+
     private void idleTick(Stage b) {
         WheelStage st = b.st;
         if (tick % 2 == 0) st.podium();
+        // nach einem Dreh bleibt das Ergebnis erst stehen (Blinken + gut 3 s), dann dreht das Rad langsam weiter
+        if (b.winBlink > 0) b.idleHold = 70;
+        else if (b.idleHold > 0) b.idleHold--;
+        else idleSpin(b);
         if (b.winBlink > 0) {
             b.winBlink--;
             if (b.winBlink % 4 == 0) {
@@ -705,6 +718,16 @@ public final class WheelService implements Listener {
                         : "<gray>Glücksrad: nächster Dreh in <white>" + duration(l) + "</white>" + serie));
             }
         }
+    }
+
+    private void idleSpin(Stage b) {
+        WheelStage st = b.st;
+        if (Double.isNaN(b.idleAngle)) b.idleAngle = st.angle();
+        b.idleAngle += IDLE_SPEED;
+        // Ziel 10 Ticks voraus, weich nachgezogen: so steht die Anzeige jeden Tick etwa bei idleAngle
+        if (tick % 10 == 0) st.spinTo(b.idleAngle + IDLE_SPEED * 10, 10);
+        b.idleNeedle = Wheel.needleStep(b.idleNeedle, b.idleAngle);
+        st.needle(b.idleNeedle[0]);
     }
 
     private boolean readyNearby(WheelStage st) {

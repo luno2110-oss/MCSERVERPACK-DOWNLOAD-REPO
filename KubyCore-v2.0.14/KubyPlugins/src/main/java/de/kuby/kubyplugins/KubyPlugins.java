@@ -142,6 +142,9 @@ public final class KubyPlugins extends JavaPlugin {
     private CasinoService casino;
     private de.kuby.kubyplugins.casino.BlackjackService blackjack;
     private de.kuby.kubyplugins.casino.RouletteGame roulette;
+    /** Roulette in Rot (High Roller) und Violett (Elite), v2.07. */
+    private de.kuby.kubyplugins.casino.RouletteGame rouletteHr;
+    private de.kuby.kubyplugins.casino.RouletteGame rouletteVio;
     private de.kuby.kubyplugins.casino.SlotsService slots;
     private de.kuby.kubyplugins.casino.CrashGame crash;
     private de.kuby.kubyplugins.casino.PlinkoService plinko;
@@ -274,6 +277,8 @@ public final class KubyPlugins extends JavaPlugin {
                 p -> new de.kuby.kubyplugins.gui.ProgressScreens(this).achievements(p, 0)));
         blackjack = new de.kuby.kubyplugins.casino.BlackjackService(this);
         roulette = new de.kuby.kubyplugins.casino.RouletteGame(this);
+        rouletteHr = new de.kuby.kubyplugins.casino.RouletteGame(this, de.kuby.kubyplugins.casino.TableTier.ROT);
+        rouletteVio = new de.kuby.kubyplugins.casino.RouletteGame(this, de.kuby.kubyplugins.casino.TableTier.VIOLETT);
         slots = new de.kuby.kubyplugins.casino.SlotsService(this);
         crash = new de.kuby.kubyplugins.casino.CrashGame(this);
         plinko = new de.kuby.kubyplugins.casino.PlinkoService(this);
@@ -475,7 +480,7 @@ public final class KubyPlugins extends JavaPlugin {
             return true;
         }, "music");
         setAll((sender, command, label, args) -> {
-            if (sender instanceof org.bukkit.entity.Player p) roulette.open(p);
+            if (sender instanceof org.bukkit.entity.Player p) rouletteNear(p.getLocation()).open(p);
             return true;
         }, "roulette");
         setAll(crash, "cashout");
@@ -538,6 +543,8 @@ public final class KubyPlugins extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new BlackjackListener(this), this);
         getServer().getPluginManager().registerEvents(casinoNpc, this);
         getServer().getPluginManager().registerEvents(roulette, this);
+        getServer().getPluginManager().registerEvents(rouletteHr, this);
+        getServer().getPluginManager().registerEvents(rouletteVio, this);
         getServer().getPluginManager().registerEvents(blackjack, this);
         getServer().getPluginManager().registerEvents(slots, this);
         getServer().getPluginManager().registerEvents(crash, this);
@@ -554,6 +561,8 @@ public final class KubyPlugins extends JavaPlugin {
             casino.respawn();
             blackjack.respawn();
             roulette.respawn();
+            rouletteHr.respawn();
+            rouletteVio.respawn();
             slots.respawn();
             crash.respawn();
             plinko.respawn();
@@ -605,6 +614,8 @@ public final class KubyPlugins extends JavaPlugin {
         if (displaySettings != null) displaySettings.shutdown();
         blackjack.shutdown();
         roulette.shutdown();
+        rouletteHr.shutdown();
+        rouletteVio.shutdown();
         slots.shutdown();
         crash.shutdown();
         plinko.shutdown();
@@ -1020,6 +1031,35 @@ public final class KubyPlugins extends JavaPlugin {
     public CasinoService casino() { return casino; }
     public de.kuby.kubyplugins.casino.BlackjackService blackjack() { return blackjack; }
     public de.kuby.kubyplugins.casino.RouletteGame roulette() { return roulette; }
+    public de.kuby.kubyplugins.casino.RouletteGame rouletteHr() { return rouletteHr; }
+    public de.kuby.kubyplugins.casino.RouletteGame rouletteVio() { return rouletteVio; }
+
+    /** Alle drei Roulette-Tische (grün, rot, violett). */
+    public java.util.List<de.kuby.kubyplugins.casino.RouletteGame> roulettes() {
+        return java.util.List.of(roulette, rouletteHr, rouletteVio);
+    }
+
+    /** Nächster Roulette-Tisch in Reichweite (sonst der grüne). */
+    public de.kuby.kubyplugins.casino.RouletteGame rouletteNear(org.bukkit.Location l) {
+        de.kuby.kubyplugins.casino.RouletteGame best = roulette;
+        double bd = Double.MAX_VALUE;
+        if (l != null) {
+            for (de.kuby.kubyplugins.casino.RouletteGame g : roulettes()) {
+                if (!g.hasTable() || !g.near(l)) continue;
+                double d = g.table().center().distanceSquared(l);
+                if (d < bd) {
+                    bd = d;
+                    best = g;
+                }
+            }
+        }
+        return best;
+    }
+
+    /** Roulette nach Farbe (gruen, rot, violett). */
+    public de.kuby.kubyplugins.casino.RouletteGame roulette(de.kuby.kubyplugins.casino.TableTier t) {
+        return t == de.kuby.kubyplugins.casino.TableTier.ROT ? rouletteHr : t == de.kuby.kubyplugins.casino.TableTier.VIOLETT ? rouletteVio : roulette;
+    }
     public de.kuby.kubyplugins.casino.SlotsService slots() { return slots; }
     public de.kuby.kubyplugins.casino.CrashGame crash() { return crash; }
     public de.kuby.kubyplugins.casino.PlinkoService plinko() { return plinko; }

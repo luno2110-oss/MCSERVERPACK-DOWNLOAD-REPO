@@ -96,6 +96,8 @@ public final class RouletteTable {
 
     private final Plugin plugin;
     private final NamespacedKey tag;
+    /** Tischfarbe (v2.07): grün, rot (High Roller), violett (Elite) – Filz und Tableau in der Farbe. */
+    private TableTier tier = TableTier.GRUEN;
     private final NamespacedKey click;
     private Location origin;
     private float yaw;
@@ -136,7 +138,8 @@ public final class RouletteTable {
     public RouletteTable(Plugin plugin, NamespacedKey tag) {
         this.plugin = plugin;
         this.tag = tag;
-        this.click = new NamespacedKey(plugin, "roulette_click");
+        // je Tisch ein eigener Klick-Schlüssel (v2.07: drei Roulette-Tische, grün/rot/violett): grün bleibt roulette_click
+        this.click = new NamespacedKey(plugin, tag.getKey().equals("roulette_table") ? "roulette_click" : tag.getKey() + "_click");
     }
 
     public NamespacedKey clickKey() {
@@ -286,8 +289,8 @@ public final class RouletteTable {
         slab(-2.95, -1.65, -0.6, 0.6, 0.06, FELT - 0.1, "rv_wood");
         slab(-2.92, -1.68, -0.57, 0.57, 0, 0.06, "hd_dark");
         slab(-1.55, 2.9, -1.05, 1.1, FELT - 0.12, FELT - 0.06, "rv_wood");
-        slab(-1.518, 2.68, -0.85, 1.04, FELT - 0.06, FELT - 0.003, "rv_felt");     // Ende 2 mm hinter dem Polster
-        display(layoutCenter(), "rv_layout", pic(), new Vector3f((float) (LW * PX), 1f, (float) (LH * PX)), "static");
+        slab(-1.518, 2.68, -0.85, 1.04, FELT - 0.06, FELT - 0.003, "rv_felt" + feltSuffix());     // Ende 2 mm hinter dem Polster
+        display(layoutCenter(), "rv_layout" + feltSuffix(), pic(), new Vector3f((float) (LW * PX), 1f, (float) (LH * PX)), "static");
         // Polster-Reling auf der Spielerseite und am Ende, Goldkante innen; Croupier-Seite Holzkante mit Goldleiste
         slab(-1.52, 2.9, -1.05, -0.83, FELT - 0.04, FELT + 0.09, "rv_rail");
         slab(2.68, 2.9, -0.83, 1.1, FELT - 0.04, FELT + 0.09, "rv_rail");
@@ -357,6 +360,23 @@ public final class RouletteTable {
     /** Dreht einen Vektor aus dem Kessel-Modellraum (Modell-+X = Croupier) in die Welt. */
     private Vector3f rotate(Vector3f v) {
         return base().transform(v);
+    }
+
+    public RouletteTable tier(TableTier t) {
+        this.tier = t == null ? TableTier.GRUEN : t;
+        return this;
+    }
+
+    public TableTier tier() {
+        return tier;
+    }
+
+    private String feltSuffix() {
+        return switch (tier) {
+            case GRUEN -> "";
+            case ROT -> "_red";
+            case VIOLETT -> "_violet";
+        };
     }
 
     public void removeAll() {

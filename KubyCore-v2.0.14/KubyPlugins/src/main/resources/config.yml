@@ -284,7 +284,10 @@ casino:
   bonus:
     serie-schritt: 0.2
     serie-max: 2.5
-    cashback: 0.03
+    cashback: 0.03              # grüne Tische und alle übrigen Spiele
+    cashback-rot: 0.035         # rote Tische (Roulette, Blackjack High Roller)
+    cashback-violett: 0.0375    # violette Tische (Roulette, Blackjack Elite)
+    # nicht über 0.04: dann hätten Dutzend und Kolonne beim Roulette keinen Hausvorteil mehr (SELFTEST meldet es)
     comeback-ab: 3
     comeback-bonus: 0.25
     max-gesamt: 6.0             # Obergrenze aller Faktoren zusammen (Serie x Goldene Zeit + Comeback)
@@ -350,6 +353,23 @@ casino:
     min-bet: 10
     max-round: 100000           # höchstens so viele Chips je Spieler und Runde
     range: 12                   # so nah muss man am Tisch stehen
+    blitz-min: 1                # Blitz-Zahlen (Volltreffer x2 bis x5) je Runde
+    blitz-max: 3
+    zahl-quote: 31              # Volltreffer ohne Blitz zahlt 31:1 (mit Blitz x2 bis x5)
+    # Rot und Violett: mehr Blitz-Zahlen und mehr Cashback, dafür zahlt ein Volltreffer ohne Blitz etwas weniger
+    # (wie Lightning Roulette); so bleibt jede Wette im Hausvorteil (SELFTEST prüft es)
+    rot:                        # roter Tisch (High Roller): /casino roulette-tisch rot
+      min-bet: 1000
+      max-round: 500000
+      blitz-min: 3
+      blitz-max: 3
+      zahl-quote: 29
+    violett:                    # violetter Tisch (Elite): /casino roulette-tisch violett
+      min-bet: 5000
+      max-round: 2000000
+      blitz-min: 3
+      blitz-max: 5
+      zahl-quote: 27
   crash:
     min-bet: 10                 # kleinster Einsatz je Runde
     max-bet: 100000             # größter Einsatz je Spieler und Runde

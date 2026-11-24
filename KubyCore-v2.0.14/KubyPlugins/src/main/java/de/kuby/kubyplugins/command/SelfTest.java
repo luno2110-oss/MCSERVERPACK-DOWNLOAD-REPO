@@ -817,19 +817,36 @@ final class SelfTest {
             fails.add("High-Roller: " + t);
         }
 
-        // Roulette: jede Wettart hat Hausvorteil, auch Zahlen mit Blitz-Bonus (1 bis 3 Zahlen aus 0..36, x2 bis x5)
+        // Roulette: jede Wettart hat an jeder Tischfarbe Hausvorteil, auch Zahlen mit Blitz-Bonus (x2 bis x5) und mit dem
+        // Cashback der Farbe auf verlorene Einsätze (grün 1–3 Blitz-Zahlen, rot 3, violett 3–5; v2.07)
         try {
-            double blitzAvg = (2 + 2 + 3 + 3 + 4 + 5) / 6.0, blitzCount = 2.0;
-            for (var k : de.kuby.kubyplugins.casino.RouletteGame.Kind.values()) {
-                int hits = 0;
-                for (int n = 0; n <= 36; n++) {
-                    if (new de.kuby.kubyplugins.casino.RouletteGame.Bet(null, "", k, k == de.kuby.kubyplugins.casino.RouletteGame.Kind.ZAHL ? 7
-                            : k == de.kuby.kubyplugins.casino.RouletteGame.Kind.DUTZEND || k == de.kuby.kubyplugins.casino.RouletteGame.Kind.KOLONNE ? 1 : 0, 1).wins(n)) hits++;
+            double blitzAvg = (2 + 2 + 3 + 3 + 4 + 5) / 6.0;
+            for (de.kuby.kubyplugins.casino.RouletteGame g : plugin.roulettes()) {
+                int[] br = g.blitzRange();
+                double blitzCount = (br[0] + br[1]) / 2.0;
+                double cb = plugin.casinoPlay().cashbackRate(g.game());
+                for (var k : de.kuby.kubyplugins.casino.RouletteGame.Kind.values()) {
+                    int hits = 0;
+                    for (int n = 0; n <= 36; n++) {
+                        if (new de.kuby.kubyplugins.casino.RouletteGame.Bet(null, "", k, k == de.kuby.kubyplugins.casino.RouletteGame.Kind.ZAHL ? 7
+                                : k == de.kuby.kubyplugins.casino.RouletteGame.Kind.DUTZEND || k == de.kuby.kubyplugins.casino.RouletteGame.Kind.KOLONNE ? 1 : 0, 1).wins(n)) hits++;
+                    }
+                    double ev = hits / 37.0 * g.mult(k);
+                    if (k == de.kuby.kubyplugins.casino.RouletteGame.Kind.ZAHL) ev *= 1 + blitzCount / 37.0 * (blitzAvg - 1);
+                    ev += cb * (37 - hits) / 37.0;
+                    if (ev >= 1.0) fails.add("Roulette " + g.tier().key + " " + k.label + ": Spieler im Vorteil (Erwartung " + String.format("%.3f", ev) + ")");
+                    else ok[0]++;
                 }
-                double ev = hits / 37.0 * k.multiplier;
-                if (k == de.kuby.kubyplugins.casino.RouletteGame.Kind.ZAHL) ev *= 1 + blitzCount / 37.0 * (blitzAvg - 1);
-                if (ev >= 1.0) fails.add("Roulette " + k.label + ": Spieler im Vorteil (Erwartung " + String.format("%.3f", ev) + ")");
+                if (g.minBetValue() <= 0 || g.maxRoundValue() < g.minBetValue()) fails.add("Roulette " + g.tier().key + ": Einsatzgrenzen falsch");
             }
+            var gs = plugin.roulettes();
+            if (!(gs.get(0).minBetValue() < gs.get(1).minBetValue() && gs.get(1).minBetValue() < gs.get(2).minBetValue()))
+                fails.add("Roulette: Mindesteinsatz steigt nicht von grün über rot zu violett");
+            if (!(gs.get(0).blitzRange()[1] <= gs.get(1).blitzRange()[1] && gs.get(1).blitzRange()[1] < gs.get(2).blitzRange()[1]))
+                fails.add("Roulette: Blitz-Zahlen steigen nicht mit der Tischfarbe");
+            if (!(plugin.casinoPlay().cashbackRate("roulette") < plugin.casinoPlay().cashbackRate("roulette_hr")
+                    && plugin.casinoPlay().cashbackRate("roulette_hr") < plugin.casinoPlay().cashbackRate("roulette_violett_hr")))
+                fails.add("Cashback steigt nicht mit der Tischfarbe");
         } catch (Throwable t) {
             fails.add("Roulette-Quoten: " + t);
         }

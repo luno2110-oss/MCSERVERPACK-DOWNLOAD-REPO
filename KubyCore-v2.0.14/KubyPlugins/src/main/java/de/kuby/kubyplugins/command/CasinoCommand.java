@@ -36,7 +36,7 @@ public final class CasinoCommand implements CommandExecutor, org.bukkit.command.
         switch (sub) {
             case "status" -> status(p);
             case "werfen" -> {
-                String err = plugin.roulette().throwBall(p);
+                String err = plugin.rouletteNear(p.getLocation()).throwBall(p);
                 if (err != null) Msg.send(p, "<red>" + err);
             }
             case "waehrung", "währung", "juwelen" -> {
@@ -241,7 +241,7 @@ public final class CasinoCommand implements CommandExecutor, org.bukkit.command.
             return;
         }
         String blocked = plugin.casino().checkMode(p);
-        String err = blocked != null ? blocked : plugin.roulette().betByName(p, args[2], amount);
+        String err = blocked != null ? blocked : plugin.rouletteNear(p.getLocation()).betByName(p, args[2], amount);
         if (err != null) {
             Msg.send(p, "<red>" + err);
             return;
@@ -251,7 +251,8 @@ public final class CasinoCommand implements CommandExecutor, org.bukkit.command.
     }
 
     /**
-     * /casino roulette-tisch [entfernen]: Las-Vegas-Tisch vor dir. Du stehst auf der Spielerseite und schaust zum Croupier;
+     * /casino roulette-tisch [gruen|rot|violett] [entfernen]: Las-Vegas-Tisch vor dir (rot = High Roller, violett = Elite:
+     * höhere Einsätze, mehr Blitz-Zahlen, mehr Cashback). Du stehst auf der Spielerseite und schaust zum Croupier;
      * die Tischmitte liegt 2 Blöcke vor dir, der Kessel links, Platzbedarf 6,3 x 3,5 Blöcke (mit Croupier und Tafel).
      */
     private void rouletteTable(Player p, String[] args) {
@@ -259,9 +260,17 @@ public final class CasinoCommand implements CommandExecutor, org.bukkit.command.
             Msg.send(p, "<red>Nur Admins können den Roulette-Tisch setzen.");
             return;
         }
-        if (args.length > 1 && args[1].equalsIgnoreCase("entfernen")) {
-            plugin.roulette().removeTable();
-            Msg.send(p, "<green>Anzeigen des Roulette-Tischs entfernt (bis zum nächsten Setzen).");
+        // Farbe (v2.07): /casino roulette-tisch [rot|violett] [entfernen]
+        de.kuby.kubyplugins.casino.TableTier tier = de.kuby.kubyplugins.casino.TableTier.GRUEN;
+        boolean remove = false;
+        for (int i = 1; i < args.length; i++) {
+            if (args[i].equalsIgnoreCase("entfernen")) remove = true;
+            else if (de.kuby.kubyplugins.casino.TableTier.parse(args[i]) != null) tier = de.kuby.kubyplugins.casino.TableTier.parse(args[i]);
+        }
+        de.kuby.kubyplugins.casino.RouletteGame game = plugin.roulette(tier);
+        if (remove) {
+            game.removeTable();
+            Msg.send(p, "<green>Anzeigen des Roulette-Tischs (" + tier.key + ") entfernt (bis zum nächsten Setzen).");
             return;
         }
         float yaw = Math.round(p.getLocation().getYaw() / 90f) * 90f;
@@ -269,8 +278,8 @@ public final class CasinoCommand implements CommandExecutor, org.bukkit.command.
         Location feet = p.getLocation();
         Location center = new Location(feet.getWorld(), feet.getBlockX() + 0.5 - Math.sin(r) * 2.0, feet.getY(),
                 feet.getBlockZ() + 0.5 + Math.cos(r) * 2.0);
-        plugin.roulette().setTable(center, yaw);
-        Msg.send(p, "<green>Roulette-Tisch (Las Vegas) aufgebaut: Kessel links, Croupier gegenüber. Gesetzt wird per Rechtsklick "
+        game.setTable(center, yaw);
+        Msg.send(p, "<green>Roulette-Tisch (Las Vegas, " + tier.key + ") aufgebaut: Kessel links, Croupier gegenüber. Gesetzt wird per Rechtsklick "
                 + "aufs Tableau, Linksklick nimmt Chips zurück, Schleichen + Rechtsklick öffnet das Menü.");
     }
 
@@ -293,6 +302,8 @@ public final class CasinoCommand implements CommandExecutor, org.bukkit.command.
             opts.addAll(java.util.List.of("tisch", "entfernen", "liste"));
         } else if (admin && args.length == 2 && args[0].equalsIgnoreCase("einrichten")) {
             opts.addAll(java.util.List.of("ok", "spawn", "neu", "abbrechen"));
+        } else if (admin && args.length >= 2 && args.length <= 3 && args[0].equalsIgnoreCase("roulette-tisch")) {
+            opts.addAll(java.util.List.of("gruen", "rot", "violett", "entfernen"));
         } else if (admin && args.length == 2 && args[0].equalsIgnoreCase("poker-tisch")) {
             opts.addAll(java.util.List.of("gruen", "rot", "violett"));
         } else if (admin && args.length >= 3 && args[0].equalsIgnoreCase("blackjack") && args[1].equalsIgnoreCase("tisch")) {

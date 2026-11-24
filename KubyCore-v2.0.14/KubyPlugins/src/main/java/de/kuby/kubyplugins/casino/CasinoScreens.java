@@ -66,9 +66,9 @@ public final class CasinoScreens {
     /** Experte: Zahlenraster 0 bis 36, Kolonnen 2:1, Dutzende, einfache Chancen. Gibt die Höhe zurück. */
     private static int expertGrid(Canvas c, int fy, RouletteView v, RouletteActions a, String sets) {
         int fh = 114;
-        c.box(0, fy, W, fh, KitData.Box.FELT);
+        c.box(0, fy, W, fh, v.felt());
         c.text(12, fy + 7, Canvas.caps("Zahlen setzen"), WHITE, true);
-        c.textRight(377, fy + 7, List.of(Canvas.Span.of("Zahl ", GRAY), Canvas.Span.of("31:1", WHITE),
+        c.textRight(377, fy + 7, List.of(Canvas.Span.of("Zahl ", GRAY), Canvas.Span.of(v.straight() + ":1", WHITE),
                 Canvas.Span.of(" · Dutzend ", GRAY), Canvas.Span.of("2:1", WHITE), Canvas.Span.of(" · Rest ", GRAY),
                 Canvas.Span.of("1:1", WHITE)));
         int gy = fy + 18;
@@ -76,7 +76,7 @@ public final class CasinoScreens {
         // Null über alle drei Reihen
         c.box(10, gy, 24, 52, KitData.Box.FIELD_GREEN, z);
         c.textCenter(23, gy + 22, "0", WHITE, true);
-        c.action(10, gy, 24, 52, a.field("ZAHL", 0), tip("Zahl <white>0</white> · Quote <white>31:1", sets, mineLine(v, "zahl:0")));
+        c.action(10, gy, 24, 52, a.field("ZAHL", 0), tip("Zahl <white>0</white> · Quote <white>" + v.straight() + ":1", sets, mineLine(v, "zahl:0")));
         marker(c, 34, gy, v, "zahl:0");
         for (int col = 0; col < 12; col++) {
             for (int r = 0; r < 3; r++) {
@@ -85,7 +85,7 @@ public final class CasinoScreens {
                 boolean red = de.kuby.kubyplugins.casino.RouletteTable.red(n);
                 c.box(x, y, 24, 16, red ? KitData.Box.FIELD_RED : KitData.Box.FIELD_BLACK, z);
                 c.textCenter(x + 13, y + 4, String.valueOf(n), WHITE, true);
-                c.action(x, y, 24, 16, a.field("ZAHL", n), tip("Zahl <white>" + n + "</white> · Quote <white>31:1",
+                c.action(x, y, 24, 16, a.field("ZAHL", n), tip("Zahl <white>" + n + "</white> · Quote <white>" + v.straight() + ":1",
                         sets, mineLine(v, "zahl:" + n)));
                 marker(c, x + 24, y, v, "zahl:" + n);
             }
@@ -93,7 +93,7 @@ public final class CasinoScreens {
         for (int r = 0; r < 3; r++) {
             int k = 3 - r;
             int y = gy + 18 * r;
-            c.box(348, y, 32, 16, KitData.Box.FIELD_FELT, z);
+            c.box(348, y, 32, 16, v.fieldFelt(), z);
             c.textCenter(365, y + 4, "2:1", GOLD_SOFT, true);
             c.action(348, y, 32, 16, a.field("KOLONNE", k), tip(k + ". Kolonne · Quote <white>2:1",
                     "<gray>Alle Zahlen dieser Reihe", sets, mineLine(v, "kolonne" + k + ":" + k)));
@@ -102,7 +102,7 @@ public final class CasinoScreens {
         String[] dz = {"1–12", "13–24", "25–36"};
         for (int d = 0; d < 3; d++) {
             int x = 36 + 104 * d, y = gy + 54;
-            c.box(x, y, 102, 16, KitData.Box.FIELD_FELT, z);
+            c.box(x, y, 102, 16, v.fieldFelt(), z);
             c.textCenter(x + 52, y + 4, dz[d], WHITE, true);
             c.action(x, y, 102, 16, a.field("DUTZEND", d + 1), tip((d + 1) + ". Dutzend · Quote <white>2:1",
                     "<gray>Zahlen " + dz[d], sets, mineLine(v, "dutzend" + (d + 1) + ":" + (d + 1))));
@@ -115,7 +115,7 @@ public final class CasinoScreens {
             KitData.Box st = switch (ev[i][2]) {
                 case "red" -> KitData.Box.FIELD_RED;
                 case "black" -> KitData.Box.FIELD_BLACK;
-                default -> KitData.Box.FIELD_FELT;
+                default -> v.fieldFelt();
             };
             c.box(x, y, 55, 16, st, z);
             boolean range = ev[i][1].contains("–");
@@ -148,6 +148,22 @@ public final class CasinoScreens {
             new ChipChoice(500, "green", "500"), new ChipChoice(1000, "black", "1.000"),
             new ChipChoice(0, "purple", "EIGEN"), new ChipChoice(-1, "gold", "ALLES"));
 
+    /**
+     * Chip-Auswahl je Tischfarbe (v2.07): an den roten und violetten Tischen liegen die kleinen Chips unter dem
+     * Mindesteinsatz, dort beginnt die Reihe beim Mindesteinsatz (rot 1.000 bis 100.000, violett 5.000 bis 500.000).
+     */
+    public static List<ChipChoice> chipsFor(long minBet) {
+        long[] v = minBet >= 5_000 ? new long[]{5_000, 10_000, 50_000, 100_000, 500_000}
+                : minBet >= 1_000 ? new long[]{1_000, 5_000, 10_000, 50_000, 100_000} : null;
+        if (v == null) return CHIPS;
+        String[] col = {"white", "red", "blue", "green", "black"};
+        List<ChipChoice> out = new java.util.ArrayList<>();
+        for (int i = 0; i < 5; i++) out.add(new ChipChoice(v[i], col[i], v[i] >= 1_000 ? (v[i] / 1_000) + "K" : num(v[i])));
+        out.add(CHIPS.get(5));
+        out.add(CHIPS.get(6));
+        return List.copyOf(out);
+    }
+
     /** Ein Einsatz in der Liste "Deine Einsätze". */
     public record BetLine(String label, TextColor color, long amount) {}
 
@@ -157,7 +173,26 @@ public final class CasinoScreens {
      */
     public record RouletteView(long chips, boolean expert, int history, long chipValue, int chipIndex,
                                String status, List<BetLine> bets, long roundTotal, boolean canRepeat,
-                               java.util.Map<String, Long> mine, List<Integer> recent) {}
+                               java.util.Map<String, Long> mine, List<Integer> recent, String title, int straight,
+                               List<ChipChoice> choices, long minBet, long maxRound) {
+        /** Grüner Tisch (Titel ROULETTE, Volltreffer 31:1, Chips 10 bis 1.000). */
+        public RouletteView(long chips, boolean expert, int history, long chipValue, int chipIndex, String status,
+                            List<BetLine> bets, long roundTotal, boolean canRepeat, java.util.Map<String, Long> mine,
+                            List<Integer> recent) {
+            this(chips, expert, history, chipValue, chipIndex, status, bets, roundTotal, canRepeat, mine, recent, "ROULETTE", 31,
+                    CHIPS, 10, 100_000);
+        }
+
+        /** Filz-Kasten in der Tischfarbe (rot: HIGH ROLLER, violett: ELITE). */
+        public KitData.Box felt() {
+            return title.startsWith("ELITE") ? KitData.Box.FELT_VIOLET : title.startsWith("HIGH") ? KitData.Box.FELT_RED : KitData.Box.FELT;
+        }
+
+        public KitData.Box fieldFelt() {
+            return title.startsWith("ELITE") ? KitData.Box.FIELD_FELT_VIOLET
+                    : title.startsWith("HIGH") ? KitData.Box.FIELD_FELT_RED : KitData.Box.FIELD_FELT;
+        }
+    }
 
     public interface RouletteActions {
         Consumer<Player> mode(boolean expert);
@@ -184,12 +219,13 @@ public final class CasinoScreens {
 
     public static Canvas roulette(RouletteView v, RouletteActions a) {
         Canvas c = new Canvas(W).heading("Roulette", net.kyori.adventure.text.format.TextColor.color(0xF2B829));
-        head(c, KitData.Icon.ROULETTE_WHEEL, "ROULETTE", v.status());
+        head(c, KitData.Icon.ROULETTE_WHEEL, v.title(), v.status());
         // rechts: Deine Chips
-        c.smallIcon(299, 21, KitData.SmallIcon.S_CHIP_RED);
-        c.text(315, 16, "Deine", GRAY);
-        c.text(315, 26, "Chips", GRAY);
-        c.textRight(378, 21, num(v.chips()), GOLD, true);
+        // Deine Chips: Beschriftung über dem Betrag, Chip davor (auch Millionenbeträge passen, v2.07)
+        String own = num(v.chips());
+        c.textRight(378, 13, "Deine Chips", GRAY, false);
+        c.textRight(378, 26, own, GOLD, true);
+        c.smallIcon(378 - Canvas.width(own, true) - 15, 26, KitData.SmallIcon.S_CHIP_RED);
 
         // Reiter Einfach / Experte, Verlauf
         int ty = 54;
@@ -210,14 +246,14 @@ public final class CasinoScreens {
         int fh = v.expert() ? expertGrid(c, fy, v, a, sets) : 60;
         if (!v.expert()) {
             // Farbe setzen
-            c.box(0, fy, W, 60, KitData.Box.FELT);
+            c.box(0, fy, W, 60, v.felt());
             c.text(12, fy + 7, Canvas.caps("Farbe setzen"), WHITE, true);
             c.textRight(377, fy + 7, List.of(Canvas.Span.of("Rot/Schwarz ", GRAY), Canvas.Span.of("1:1", WHITE),
-                    Canvas.Span.of(" · Grün ", GRAY), Canvas.Span.of("31:1", WHITE)));
+                    Canvas.Span.of(" · Grün ", GRAY), Canvas.Span.of(v.straight() + ":1", WHITE)));
             field(c, 10, fy + 18, KitData.Box.FIELD_RED, "Rot", "Quote 1:1", a.color("rot"),
                     tip("Quote <white>1:1", sets, mineLine(v, "rot:0")));
-            field(c, 136, fy + 18, KitData.Box.FIELD_GREEN, "Grün · 0", "Quote 31:1", a.color("gruen"),
-                    tip("Quote <white>31:1", sets, mineLine(v, "zahl:0")));
+            field(c, 136, fy + 18, KitData.Box.FIELD_GREEN, "Grün · 0", "Quote " + v.straight() + ":1", a.color("gruen"),
+                    tip("Quote <white>" + v.straight() + ":1", sets, mineLine(v, "zahl:0")));
             field(c, 262, fy + 18, KitData.Box.FIELD_BLACK, "Schwarz", "Quote 1:1", a.color("schwarz"),
                     tip("Quote <white>1:1", sets, mineLine(v, "schwarz:0")));
             marker(c, 10 + 118, fy + 18, v, "rot:0");
@@ -231,11 +267,12 @@ public final class CasinoScreens {
         c.text(12, cy + 8, Canvas.caps("Chip wählen"), WHITE, true);
         c.smallIcon(95, cy + 9, KitData.SmallIcon.S_CHIP_RED);
         c.text(107, cy + 8, "Eigener Betrag", GOLD_SOFT);
-        c.action(93, cy + 6, 92, 12, a.custom(), tip("Eigenen Betrag eingeben", "<gray>Mindestens 10, höchstens 100.000 Chips"));
+        c.action(93, cy + 6, 92, 12, a.custom(), tip("Eigenen Betrag eingeben", "<gray>Mindestens " + num(v.minBet()) + ", höchstens "
+                + num(v.maxRound()) + " Chips"));
         c.textRight(378, cy + 8, List.of(Canvas.Span.of("Jeder Klick setzt ", GRAY),
                 Canvas.Span.bold(v.chipValue() > 0 ? num(v.chipValue()) : "-", GOLD)));
-        for (int i = 0; i < CHIPS.size(); i++) {
-            ChipChoice ch = CHIPS.get(i);
+        for (int i = 0; i < v.choices().size(); i++) {
+            ChipChoice ch = v.choices().get(i);
             int cx = 38 + 52 * i;
             boolean sel = i == v.chipIndex();
             c.smallIcon(cx - 9, cy + (sel ? 21 : 24), small("c_" + ch.chip()));

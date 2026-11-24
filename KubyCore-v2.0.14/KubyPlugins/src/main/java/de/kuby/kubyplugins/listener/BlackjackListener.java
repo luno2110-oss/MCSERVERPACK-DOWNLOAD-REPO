@@ -32,7 +32,9 @@ public final class BlackjackListener implements Listener {
         Location at = e.getClickedBlock().getLocation();
         Player p = e.getPlayer();
         String game;
-        if (plugin.roulette().isTable(at)) game = "roulette";
+        de.kuby.kubyplugins.casino.RouletteGame rg = null;
+        for (de.kuby.kubyplugins.casino.RouletteGame g : plugin.roulettes()) if (g.isTable(at)) rg = g;
+        if (rg != null) game = "roulette";
         else if (plugin.casino().isKasse(at)) game = "kasse";
         else return;
         e.setCancelled(true);
@@ -47,6 +49,6 @@ public final class BlackjackListener implements Listener {
             CasinoRules.open(plugin, p, game);
             return;
         }
-        plugin.roulette().open(p);
+        rg.open(p);
     }
 }

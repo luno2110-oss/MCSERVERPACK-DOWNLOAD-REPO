@@ -10,8 +10,12 @@ const HOST = process.env.HOST || '127.0.0.1';
 const PORT = +(process.env.PORT || 19132);
 const VERSION = process.env.VERSION || '1.26.60';
 const DURATION = +(process.env.DURATION || 90) * 1000;
-const COMMANDS = ['/menu', '/feedback', '/shop', '/settings', '/freunde', '/feedback', '/support', '/menu', '/modus survival', '/angeln',
-  '/poker'];
+// /poker vor /angeln: das Angel-Menü öffnet nach jedem Klick ein neues Fenster, am Ende der Liste kam das Casino-Hinweisfenster
+// sonst manchmal nicht mehr durch (v2.07)
+const COMMANDS = ['/menu', '/feedback', '/shop', '/settings', '/freunde', '/feedback', '/support', '/menu', '/modus survival', '/poker',
+  '/angeln'];
+// Höchstens so viele Klicks je Befehl, dann Fenster schließen und weiter (Menüs, die sich endlos neu öffnen)
+const MAX_CLICKS = 8;
 
 const PACK_UUID = (process.env.PACK_UUID || '').toLowerCase();
 // bedrock-protocol liest die UUID im Pack-Info-Paket als zwei Little-Endian-Hälften: dieselbe UUID in dieser Schreibweise
@@ -95,6 +99,7 @@ client.on('resource_pack_chunk_data', (p) => {
 });
 let queue = COMMANDS.slice();
 let lastCommandAt = 0;
+let clicksSinceCommand = 0;
 
 function send(name, data) {
   try { client.queue(name, data); return true; } catch (e) {
@@ -104,6 +109,7 @@ function send(name, data) {
 
 function command(cmd) {
   lastCommandAt = Date.now();
+  clicksSinceCommand = 0;
   res.commands.push(cmd);
   log('Befehl', cmd);
   const f = fieldsOf('packet_command_request') || [];
@@ -205,6 +211,16 @@ client.on('modal_form_request', (p) => {
 function answer(id, form) {
   const f = fieldsOf('packet_modal_form_response') || ['form_id', 'has_response_data', 'data', 'has_cancel_reason', 'cancel_reason'];
   let data;
+  // Casino-Hinweis immer bestätigen; sonst nach MAX_CLICKS das Fenster schließen und zum nächsten Befehl
+  const notice = /nur Java-Edition/.test(String(form.title || '').replace(/§./g, ''));
+  if (!notice && ++clicksSinceCommand > MAX_CLICKS) {
+    log('  schließe Fenster (genug Klicks für diesen Befehl)');
+    const close = { form_id: id, has_response_data: false, has_cancel_reason: true, cancel_reason: 'user_closed' };
+    if (!f.includes('has_response_data')) { delete close.has_response_data; close.data = 'null'; }
+    send('modal_form_response', close);
+    setTimeout(nextCommand, 1500);
+    return;
+  }
   if (form.type === 'form' && form.buttons && form.buttons.length) {
     // Knopf wählen: abwechselnd erster und zufälliger, damit Untermenüs aufgehen
     const i = res.clicks % 2 === 0 ? 0 : Math.floor(Math.random() * form.buttons.length);

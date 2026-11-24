@@ -101,6 +101,19 @@ public final class CasinoPlay {
         return plugin.getConfig().getDouble("casino.bonus." + key, def);
     }
 
+    /**
+     * Cashback-Satz je Tischfarbe (v2.07, Wunsch des Besitzers: „bei den höheren ist der Cashback auch höher“): grün 3 %,
+     * rot (Spiel-Suffix _hr) 3,5 %, violett (_violett_hr) 3,75 %. Gilt für Roulette und Blackjack der jeweiligen Farbe.
+     * Ab 4 % hätten Dutzend und Kolonne beim Roulette keinen Hausvorteil mehr (36/37 + 4 % · 25/37 = 1), SELFTEST prüft es.
+     */
+    public double cashbackRate(String game) {
+        double base = cfg("cashback", 0.03);
+        if (game == null) return base;
+        if (game.endsWith("_violett_hr")) return Math.max(base, cfg("cashback-violett", 0.0375));
+        if (game.endsWith("_hr")) return Math.max(base, cfg("cashback-rot", 0.035));
+        return base;
+    }
+
     /** Spiele, in denen man mit Juwelen spielen kann (casino.juwelen.spiele, Standard nur Blackjack). Alle anderen immer Chips. */
     public boolean jewelGame(String game) {
         java.util.List<String> l = plugin.getConfig().getStringList("casino.juwelen.spiele");
@@ -551,7 +564,7 @@ public final class CasinoPlay {
         } else if (gross < stake) {
             // Cashback-Booster aus dem Chip-Shop (v2.07): x2/x3 auf den Trost bei Verlust (ändert keine Gewinnchance)
             double cbBoost = plugin.booster() == null ? 1.0 : plugin.booster().personal(id, "cashback");
-            cashback = Math.round((stake - gross) * cfg("cashback", 0.03) * cbBoost);
+            cashback = Math.round((stake - gross) * cashbackRate(game) * cbBoost);
             if (cashback <= 0 && stake - gross >= 20) cashback = 1;
             newStreak = 0;
             streak.remove(id);

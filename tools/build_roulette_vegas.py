@@ -105,7 +105,8 @@ def cell(img, x0, y0, x1, y1, base):
     vline(img, x1 - 1, y0, y1 - 1, base[1])
 
 
-def layout():
+def layout(FELT=FELT):
+    """Tableau; FELT = Filzfarbe (grün, v2.07 auch rot und violett für die High-Roller- und Elite-Tische)."""
     img = Image.new("RGBA", (LW, LH), FELT[2])
     p = img.load()
     # Filz: ganz feines Webmuster (jede 4. Diagonale eine Stufe heller), Licht oben links
@@ -474,6 +475,12 @@ def write(out):
     ball_tex().save(os.path.join(tex, "rv_ball.png"))
     dolly_tex().save(os.path.join(tex, "rv_dolly.png"))
     item("rv_layout", flat(B + "rv_layout"))
+    # High-Roller (rot) und Elite (violett), v2.07: gleiches Tableau und gleicher Filz in der Tischfarbe
+    for suf, felt in (("_red", px.FELT_RED), ("_violet", px.FELT_VIOLET)):
+        layout(felt).save(os.path.join(tex, "rv_layout" + suf + ".png"))
+        item("rv_layout" + suf, flat(B + "rv_layout" + suf))
+        Image.new("RGBA", (16, 16), felt[2]).save(os.path.join(tex, "rv_felt" + suf + ".png"))
+        item("m_rv_felt" + suf, px.cube_model(B + "rv_felt" + suf))
     walnut = px.mat_walnut()
     for i in range(len(CONE_TIERS)):
         cone_cap(walnut).save(os.path.join(tex, "rv_cap%d.png" % i))

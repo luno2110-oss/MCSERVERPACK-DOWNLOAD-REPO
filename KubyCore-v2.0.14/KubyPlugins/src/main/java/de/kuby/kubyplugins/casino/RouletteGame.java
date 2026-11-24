@@ -107,6 +107,9 @@ public final class RouletteGame implements org.bukkit.event.Listener {
     private final KubyPlugins plugin;
     private final File file;
     private final RouletteTable table;
+    /** Tischfarbe (v2.07): grün, rot (High Roller), violett (Elite); Spielname mit Anhang für Serie und Cashback. */
+    private final TableTier tier;
+    private final String game;
     private final List<Bet> bets = new ArrayList<>();
     private final List<Integer> history = new ArrayList<>();
     private final Map<UUID, Session> sessions = new HashMap<>();
@@ -137,9 +140,20 @@ public final class RouletteGame implements org.bukkit.event.Listener {
     }
 
     public RouletteGame(KubyPlugins plugin) {
+        this(plugin, TableTier.GRUEN);
+    }
+
+    public RouletteGame(KubyPlugins plugin, TableTier tier) {
         this.plugin = plugin;
-        this.file = new File(plugin.getDataFolder(), "roulette-tisch.yml");
-        this.table = new RouletteTable(plugin, new NamespacedKey(plugin, "roulette_table"));
+        this.tier = tier;
+        this.game = "roulette" + tier.suffix;
+        String k = switch (tier) {
+            case GRUEN -> "";
+            case ROT -> "-rot";
+            case VIOLETT -> "-violett";
+        };
+        this.file = new File(plugin.getDataFolder(), "roulette-tisch" + k + ".yml");
+        this.table = new RouletteTable(plugin, new NamespacedKey(plugin, "roulette_table" + k.replace('-', '_'))).tier(tier);
         YamlConfiguration yml = YamlConfiguration.loadConfiguration(file);
         String t = yml.getString("tisch");
         tableRaw = t;
@@ -173,7 +187,7 @@ public final class RouletteGame implements org.bukkit.event.Listener {
         for (String line : yml.getStringList("offen")) {
             String[] p = line.split(";");
             try {
-                plugin.casinoPlay().refund(UUID.fromString(p[0]), "roulette", Long.parseLong(p[1]));
+                plugin.casinoPlay().refund(UUID.fromString(p[0]), game, Long.parseLong(p[1]));
             } catch (RuntimeException ignored) {
             }
         }
@@ -248,7 +262,7 @@ public final class RouletteGame implements org.bukkit.event.Listener {
     }
 
     private void refundAll() {
-        for (Bet b : bets) plugin.casinoPlay().refund(b.player(), "roulette", b.amount());
+        for (Bet b : bets) plugin.casinoPlay().refund(b.player(), game, b.amount());
         bets.clear();
         save();
     }
@@ -299,12 +313,68 @@ public final class RouletteGame implements org.bukkit.event.Listener {
     // Einsätze
     // =================================================================================================================
 
+    /** Einstellungen je Tischfarbe: grün casino.roulette.*, rot/violett casino.roulette.rot.* / .violett.* */
+    private String cfgPath(String key) {
+        return tier == TableTier.GRUEN ? "casino.roulette." + key : "casino.roulette." + tier.key + "." + key;
+    }
+
     private long minBet() {
-        return plugin.getConfig().getLong("casino.roulette.min-bet", 10);
+        long def = switch (tier) {
+            case GRUEN -> 10;
+            case ROT -> 1_000;
+            case VIOLETT -> 5_000;
+        };
+        return plugin.getConfig().getLong(cfgPath("min-bet"), def);
     }
 
     private long maxRound() {
-        return plugin.getConfig().getLong("casino.roulette.max-round", 100_000);
+        long def = switch (tier) {
+            case GRUEN -> 100_000;
+            case ROT -> 500_000;
+            case VIOLETT -> 2_000_000;
+        };
+        return plugin.getConfig().getLong(cfgPath("max-round"), def);
+    }
+
+    /**
+     * Blitz-Zahlen (Booster-Felder) je Runde (Wunsch des Besitzers: „Rot: 3 mögliche Booster-Felder, Violett bis zu 5“):
+     * grün wie bisher 1–3, rot immer 3, violett 3–5.
+     */
+    public int[] blitzRange() {
+        int[] def = switch (tier) {
+            case GRUEN -> new int[]{1, 3};
+            case ROT -> new int[]{3, 3};
+            case VIOLETT -> new int[]{3, 5};
+        };
+        int lo = Math.max(0, plugin.getConfig().getInt(cfgPath("blitz-min"), def[0]));
+        int hi = Math.max(lo, Math.min(12, plugin.getConfig().getInt(cfgPath("blitz-max"), def[1])));
+        return new int[]{lo, hi};
+    }
+
+    public TableTier tier() {
+        return tier;
+    }
+
+    /** Spiel-Schlüssel für Chips, Cashback und Protokoll: roulette, roulette_hr, roulette_violett_hr. */
+    public String game() {
+        return game;
+    }
+
+    public long minBetValue() {
+        return minBet();
+    }
+
+    public long maxRoundValue() {
+        return maxRound();
+    }
+
+    /** Überschrift am Tisch je Farbe. */
+    private String title() {
+        return switch (tier) {
+            case GRUEN -> "ROULETTE";
+            case ROT -> "HIGH ROLLER ROULETTE";
+            case VIOLETT -> "ELITE ROULETTE";
+        };
     }
 
     private long placed(UUID id) {
@@ -320,8 +390,8 @@ public final class RouletteGame implements org.bukkit.event.Listener {
             long left = plugin.casinoPlay().maxFor(p.getUniqueId(), maxRound()) - placed(p.getUniqueId());
             return Math.min(plugin.casino().chips(p.getUniqueId()), left);
         }
-        if (s.chip == 5) return s.custom;
-        return CasinoScreens.CHIPS.get(s.chip).value();
+        if (s.chip == 5) return Math.max(minBet(), s.custom);
+        return CasinoScreens.chipsFor(minBet()).get(s.chip).value();
     }
 
     /** Setzt den gewählten Chip auf ein Feld. Null bei Erfolg, sonst Meldung. */
@@ -337,13 +407,13 @@ public final class RouletteGame implements org.bukkit.event.Listener {
         if (!near(p.getLocation())) return "Geh näher an den Roulette-Tisch.";
         if (phase == Phase.SPINNING || phase == Phase.RESULT) return "Die Kugel rollt – gleich geht's weiter.";
         if (throwWait > 0) return "Nichts geht mehr – gleich rollt die Kugel.";
-        boolean jw = plugin.casinoPlay().cur(p.getUniqueId(), "roulette") == de.kuby.kubyplugins.service.CasinoPlay.Cur.JEWELS;
+        boolean jw = plugin.casinoPlay().cur(p.getUniqueId(), game) == de.kuby.kubyplugins.service.CasinoPlay.Cur.JEWELS;
         if (!jw && amount < minBet()) return "Mindesteinsatz " + CasinoText.num(minBet()) + " Chips.";
         long maxR = plugin.casinoPlay().maxFor(p.getUniqueId(), maxRound());
         if (!jw && placed(p.getUniqueId()) + amount > maxR) {
             return "Höchstens " + CasinoText.num(maxR) + " Chips pro Runde.";
         }
-        String err = plugin.casinoPlay().take(p, "roulette", amount);
+        String err = plugin.casinoPlay().take(p, game, amount);
         if (err != null) return err;
         Bet bet = new Bet(p.getUniqueId(), p.getName(), kind, param, amount);
         // gleicher Platz desselben Spielers: zusammenfassen (sonst wachsen Liste und roulette-tisch.yml mit jedem Klick)
@@ -370,7 +440,7 @@ public final class RouletteGame implements org.bukkit.event.Listener {
         if (s.last.isEmpty()) return "Noch keine letzte Runde.";
         long sum = 0;
         for (Bet b : s.last) sum += b.amount();
-        if (plugin.casinoPlay().balance(p.getUniqueId(), "roulette") < sum) return "Für alle Einsätze der letzten Runde reicht dein Guthaben nicht.";
+        if (plugin.casinoPlay().balance(p.getUniqueId(), game) < sum) return "Für alle Einsätze der letzten Runde reicht dein Guthaben nicht.";
         for (Bet b : s.last) {
             String err = place(p, b.kind(), b.param(), b.amount());
             if (err != null) return err;
@@ -388,7 +458,7 @@ public final class RouletteGame implements org.bukkit.event.Listener {
             }
         }
         if (back == 0) return "Du hast in dieser Runde nichts gesetzt.";
-        plugin.casinoPlay().refund(p.getUniqueId(), "roulette", back);
+        plugin.casinoPlay().refund(p.getUniqueId(), game, back);
         table.clearChips();
         for (Bet b : bets) table.chip(spotOf(b), chipColor(b.player()));
         if (bets.isEmpty()) {
@@ -397,7 +467,7 @@ public final class RouletteGame implements org.bukkit.event.Listener {
         }
         save();
         updateTable();
-        CasinoText.send(p, "Einsätze zurückgenommen: <#F2C94C>+" + plugin.casinoPlay().unit(p.getUniqueId(), "roulette", back));
+        CasinoText.send(p, "Einsätze zurückgenommen: <#F2C94C>+" + plugin.casinoPlay().unit(p.getUniqueId(), game, back));
         return null;
     }
 
@@ -434,7 +504,7 @@ public final class RouletteGame implements org.bukkit.event.Listener {
         for (Player p : bettors()) {
             if (hovering.containsKey(p.getUniqueId())) continue;   // der Feld-Hinweis hat Vorrang
             String col = countdown <= 5 ? "<#FF6B6B>" : "<white>";
-            p.sendActionBar(Msg.parse("<gray>Roulette · Einsatz <#F2C94C>" + plugin.casinoPlay().unit(p.getUniqueId(), "roulette", placed(p.getUniqueId()))
+            p.sendActionBar(Msg.parse("<gray>Roulette · Einsatz <#F2C94C>" + plugin.casinoPlay().unit(p.getUniqueId(), game, placed(p.getUniqueId()))
                     + "</#F2C94C> · Runde in " + col + countdown + " s"
                     + (plugin.casinoPlay().golden() ? " <gold>· ✦ Gewinne x" + de.kuby.kubyplugins.service.CasinoPlay.fmt(plugin.casinoPlay().goldenFactor()) : "")));
         }
@@ -449,9 +519,10 @@ public final class RouletteGame implements org.bukkit.event.Listener {
             c.getWorld().playSound(c, Sound.BLOCK_BELL_USE, 0.9f, 1.2f);
             c.getWorld().playSound(c, Sound.BLOCK_BELL_USE, 0.6f, 1.6f);
         }
-        // Blitz-Zahlen: 1 bis 3 zufällige Zahlen, Volltreffer darauf zahlen x2 bis x5 mehr
+        // Blitz-Zahlen (Booster-Felder): Anzahl je Tischfarbe (grün 1–3, rot 3, violett 3–5), Volltreffer x2 bis x5
         blitz.clear();
-        int n = 1 + RNG.nextInt(3);
+        int[] br = blitzRange();
+        int n = br[0] + RNG.nextInt(br[1] - br[0] + 1);
         while (blitz.size() < n) blitz.put(RNG.nextInt(37), new int[]{2, 2, 3, 3, 4, 5}[RNG.nextInt(6)]);
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<Integer, Integer> e : blitz.entrySet()) {
@@ -545,7 +616,7 @@ public final class RouletteGame implements org.bukkit.event.Listener {
         Map<UUID, de.kuby.kubyplugins.service.CasinoPlay.Outcome> outcomes = new LinkedHashMap<>();
         Map<UUID, List<Bet>> byPlayer = new LinkedHashMap<>();
         for (Bet b : bets) {
-            long paid = b.wins(result) ? b.amount() * b.kind().multiplier : 0;
+            long paid = b.wins(result) ? b.amount() * mult(b.kind()) : 0;
             if (paid > 0 && b.kind() == Kind.ZAHL && blitz.containsKey(result)) paid *= blitz.get(result);
             long[] s = sum.computeIfAbsent(b.player(), k -> new long[2]);
             s[0] += b.amount();
@@ -559,7 +630,7 @@ public final class RouletteGame implements org.bukkit.event.Listener {
         String colorTag = result == 0 ? "#3FD55C" : RouletteTable.red(result) ? "#FF5A5A" : "#D8D8D8";
         for (Map.Entry<UUID, long[]> e : sum.entrySet()) {
             long staked = e.getValue()[0];
-            de.kuby.kubyplugins.service.CasinoPlay.Outcome o = plugin.casinoPlay().settle(e.getKey(), "roulette", staked, e.getValue()[1]);
+            de.kuby.kubyplugins.service.CasinoPlay.Outcome o = plugin.casinoPlay().settle(e.getKey(), game, staked, e.getValue()[1]);
             long paid = o.payout();
             long net = paid - staked;
             paidTotal += paid;
@@ -652,7 +723,7 @@ public final class RouletteGame implements org.bukkit.event.Listener {
                 RouletteTable.Spot s = spotOf(b);
                 String color = chipColor(b.player());
                 if (!done.add(s.key() + color)) continue;
-                table.pay(s, color, b.kind() == Kind.ZAHL ? 10 : b.kind().multiplier - 1);
+                table.pay(s, color, b.kind() == Kind.ZAHL ? 10 : mult(b.kind()) - 1);
                 if (to == null) to = table.spotCenter(s);
             }
             if (to != null) {
@@ -732,7 +803,7 @@ public final class RouletteGame implements org.bukkit.event.Listener {
             }
         }
         if (back == 0) return null;
-        plugin.casinoPlay().refund(p.getUniqueId(), "roulette", back);
+        plugin.casinoPlay().refund(p.getUniqueId(), game, back);
         table.take(s, chipColor(p.getUniqueId()));
         if (bets.isEmpty()) {
             phase = Phase.IDLE;
@@ -740,13 +811,27 @@ public final class RouletteGame implements org.bukkit.event.Listener {
         }
         save();
         updateTable();
-        p.sendActionBar(Msg.parse("<gray>Zurückgenommen: <#F2C94C>+" + plugin.casinoPlay().unit(p.getUniqueId(), "roulette", back)));
+        p.sendActionBar(Msg.parse("<gray>Zurückgenommen: <#F2C94C>+" + plugin.casinoPlay().unit(p.getUniqueId(), game, back)));
         p.playSound(p.getLocation(), Sound.ITEM_BUNDLE_REMOVE_ONE, 0.7f, 1.2f);
         return null;
     }
 
-    private static String odds(Kind k) {
-        return (k.multiplier - 1) + ":1";
+    private String odds(Kind k) {
+        return (mult(k) - 1) + ":1";
+    }
+
+    /**
+     * Auszahlung inklusive Einsatz je Wettart an diesem Tisch. Volltreffer: grün 31:1, rot 29:1, violett 27:1 – an den
+     * höheren Tischen gibt es mehr Blitz-Zahlen und mehr Cashback, so bleibt jede Wette knapp im Hausvorteil (SELFTEST).
+     */
+    public int mult(Kind k) {
+        if (k != Kind.ZAHL) return k.multiplier;
+        int def = switch (tier) {
+            case GRUEN -> 31;
+            case ROT -> 29;
+            case VIOLETT -> 27;
+        };
+        return Math.max(2, Math.min(35, plugin.getConfig().getInt(cfgPath("zahl-quote"), def))) + 1;
     }
 
     private static String spotLabel(RouletteTable.Spot s) {
@@ -849,7 +934,8 @@ public final class RouletteGame implements org.bukkit.event.Listener {
 
     private Component centerText(String line2, String line3) {
         TextComponent.Builder b = Component.text();
-        b.append(Component.text("ROULETTE", NamedTextColor.WHITE).decorate(TextDecoration.BOLD)).append(Component.newline());
+        TextColor tc = tier == TableTier.ROT ? TextColor.color(0xFF6A7A) : tier == TableTier.VIOLETT ? TextColor.color(0xC9A0FF) : NamedTextColor.WHITE;
+        b.append(Component.text(title(), tc).decorate(TextDecoration.BOLD)).append(Component.newline());
         b.append(Msg.parse(line2)).append(Component.newline()).append(Msg.parse(line3));
         return b.build();
     }
@@ -952,13 +1038,14 @@ public final class RouletteGame implements org.bukkit.event.Listener {
             case SPINNING -> "Die Kugel rollt – gleich geht's weiter";
             case RESULT -> "Ergebnis: " + lastResult + " " + (lastResult == 0 ? "Grün" : RouletteTable.red(lastResult) ? "Rot" : "Schwarz");
         };
-        long value = s.chip == 6 ? plugin.casino().chips(p.getUniqueId()) : s.chip == 5 ? s.custom
-                : CasinoScreens.CHIPS.get(s.chip).value();
+        long value = s.chip == 6 ? plugin.casino().chips(p.getUniqueId()) : s.chip == 5 ? Math.max(minBet(), s.custom)
+                : CasinoScreens.chipsFor(minBet()).get(s.chip).value();
         Map<String, Long> mine = new HashMap<>();
         for (Bet b : bets) if (b.player().equals(p.getUniqueId())) mine.merge(b.spot() + ":" + b.param(), b.amount(), Long::sum);
         CasinoScreens.RouletteView v = new CasinoScreens.RouletteView(plugin.casino().chips(p.getUniqueId()), s.expert,
                 history.size(), value, s.chip, status, lines, placed(p.getUniqueId()), !s.last.isEmpty(), mine,
-                List.copyOf(history.subList(0, Math.min(history.size(), 12))));
+                List.copyOf(history.subList(0, Math.min(history.size(), 12))), tier == TableTier.ROT ? "HIGH ROLLER" : title(),
+                mult(Kind.ZAHL) - 1, CasinoScreens.chipsFor(minBet()), minBet(), maxRound());
         UiDialog.show(p, CasinoScreens.roulette(v, actions));
     }
 

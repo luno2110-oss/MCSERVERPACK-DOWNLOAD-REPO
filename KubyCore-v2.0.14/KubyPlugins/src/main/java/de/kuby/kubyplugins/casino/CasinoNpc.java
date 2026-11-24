@@ -330,7 +330,7 @@ public final class CasinoNpc implements Listener {
                 }
                 new KasseMenu(plugin).open(p);
             };
-            case CROUPIER -> p -> plugin.roulette().open(p);
+            case CROUPIER -> p -> plugin.rouletteNear(p.getLocation()).open(p);
             case CRASH -> p -> plugin.crash().open(p);
             case MIA, MUSIK -> p -> plugin.casinoMusic().openMenu(p);
             case LOSBUDE -> p -> Losbude.open(plugin, p);

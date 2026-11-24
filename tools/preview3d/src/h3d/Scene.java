@@ -226,9 +226,11 @@ public final class Scene {
                 t.dealerText(Component.text("POKER", NamedTextColor.GOLD));
                 Mock.runLater();
             }
-            case "roulette", "roulette_spin", "roulette_dolly" -> {
-                // Las-Vegas-Tisch (v1.98): args[2] = Tick im Wurf (roulette_spin), Ergebnis 17
+            case "roulette", "roulette_spin", "roulette_dolly", "roulette_rot", "roulette_violett" -> {
+                // Las-Vegas-Tisch (v1.98): args[2] = Tick im Wurf (roulette_spin), Ergebnis 17; rot/violett ab v2.07
                 RouletteTable t = new RouletteTable(Mock.plugin(), tag);
+                if (args[0].equals("roulette_rot")) t.tier(de.kuby.kubyplugins.casino.TableTier.ROT);
+                if (args[0].equals("roulette_violett")) t.tier(de.kuby.kubyplugins.casino.TableTier.VIOLETT);
                 t.geometry(new Location(w, 0.5, 0, 0.5), 0f);
                 t.build();
                 t.center(Component.text("ROULETTE", NamedTextColor.WHITE).append(Component.newline())

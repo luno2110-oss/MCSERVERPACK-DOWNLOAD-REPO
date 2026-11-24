@@ -445,9 +445,11 @@ public final class LoadTestCommand implements CommandExecutor {
                 from = camPk.clone().add(0, 3.2, -4.2);
                 to = camPk.clone().add(0, 0.8, 0);
             }
-            case "roulette" -> {
-                // Las-Vegas-Tisch von der Spielerseite: Tableau, Kessel, Croupier und Tafel
-                var rt = plugin.roulette().table();
+            case "roulette", "roulette_rot", "roulette_violett" -> {
+                // Las-Vegas-Tisch von der Spielerseite: Tableau, Kessel, Croupier und Tafel (rot/violett ab v2.07)
+                var rg = where.equals("roulette_rot") ? plugin.rouletteHr() : where.equals("roulette_violett") ? plugin.rouletteVio() : plugin.roulette();
+                if (!rg.hasTable()) return;
+                var rt = rg.table();
                 from = rt.local(-0.4, -3.3, 2.5);
                 to = rt.local(-0.4, 0.1, 0.85);
             }
@@ -613,6 +615,9 @@ public final class LoadTestCommand implements CommandExecutor {
             for (int y = 0; y < 7; y++) w.getBlockAt(gx + 25, (int) gy + y, z).setType(org.bukkit.Material.POLISHED_BLACKSTONE_BRICKS, false);
         }
         camRad = new Location(w, gx + 21.5, gy, gz + 1.5);
+        // Roulette rot und violett (v2.07): östlich hinter der Glücksrad-Wand auf eigener Fläche, Spielerseite im Süden
+        flatten(w, gx + 27, gx + 40, gz - 7, gz + 10, (int) gy);
+        Location rlRot = new Location(w, gx + 33.5, gy, gz - 2.5), rlVio = new Location(w, gx + 33.5, gy, gz + 6.5);
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             de.kuby.kubyplugins.casino.BlackjackGame bj = plugin.blackjack().testTable(bjAt, 0f);
             // die anderen Tisch-Farben daneben (rot, violett) – für die Bilder aus dem echten Client
@@ -630,6 +635,8 @@ public final class LoadTestCommand implements CommandExecutor {
                 plugin.casinoNpc().spawn(de.kuby.kubyplugins.casino.CasinoNpc.Role.MUSIK, new Location(w, gx + 12.5, gy, gz + 13.5, 180f, 0f));
             }
             plugin.roulette().setTable(rlAt, 0f);
+            plugin.rouletteHr().setTable(rlRot, 0f);
+            plugin.rouletteVio().setTable(rlVio, 0f);
             plugin.poker().setTable(pkAt);
             // zwei neue Automaten freistehend (Hocker 1,6 davor, Blick nach +z zum Spieler)
             plugin.slots().testMachine("kgold", slotA, 0f, new Location(w, slotA.getX(), gy, slotA.getZ() + 1.6), "gold");

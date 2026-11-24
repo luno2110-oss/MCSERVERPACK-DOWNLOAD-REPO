@@ -157,7 +157,13 @@ public final class CasinoRules {
                         "Der erste Einsatz startet die Runde, nach " + c.getLong("casino.roulette.wait-seconds", 20)
                                 + " Sekunden läuft das Licht über die Zahlen und bleibt auf dem Ergebnis stehen.",
                         "Rot, Schwarz, Gerade, Ungerade, 1–18, 19–36: 1:1. Dutzend und Kolonne: 2:1. Zahl: 31:1.",
-                        "Nichts geht mehr: 1 bis 3 Blitz-Zahlen zahlen bei Volltreffer x2 bis x5 (also bis 160:1). Wer am meisten setzt, wirft die Kugel.");
+                        "Nichts geht mehr: 1 bis 3 Blitz-Zahlen zahlen bei Volltreffer x2 bis x5 (also bis 160:1). Wer am meisten setzt, wirft die Kugel.",
+                        "Roter Tisch (High Roller): ab " + de.kuby.kubyplugins.casino.CasinoText.num(c.getLong("casino.roulette.rot.min-bet", 1000)) + " Chips, immer 3 Blitz-Zahlen, "
+                                + pct(c.getDouble("casino.bonus.cashback-rot", 0.035)) + " % Cashback, Zahl "
+                                + c.getInt("casino.roulette.rot.zahl-quote", 29) + ":1. Violetter Tisch (Elite): ab "
+                                + de.kuby.kubyplugins.casino.CasinoText.num(c.getLong("casino.roulette.violett.min-bet", 5000)) + " Chips, 3 bis 5 Blitz-Zahlen, "
+                                + pct(c.getDouble("casino.bonus.cashback-violett", 0.0375)) + " % Cashback, Zahl "
+                                + c.getInt("casino.roulette.violett.zahl-quote", 27) + ":1.");
                 commands.add(new String[]{"/roulette", "Roulette-Menü"});
                 commands.add(new String[]{"/casino setzen <Einsatz> <rot|schwarz|0-36>", "Einsatz per Befehl"});
             }
@@ -341,5 +347,10 @@ public final class CasinoRules {
             case "rennen" -> "Rennen";
             default -> "Crash";
         };
+    }
+
+    /** Prozent mit bis zu zwei Nachkommastellen (0.035 → „3,5“). */
+    private static String pct(double v) {
+        return new java.text.DecimalFormat("0.##", java.text.DecimalFormatSymbols.getInstance(java.util.Locale.GERMANY)).format(v * 100);
     }
 }

@@ -61,7 +61,8 @@ public final class CasinoAdmin {
                 + " <gray>· Ziehung " + plugin.jackpotDraw().nextDrawLabel() + " · " + plugin.jackpotDraw().participantCount() + " Teilnehmer\n"
                 + "<white>Aufbau: " + mark("Kasse", plugin.casino().hasKasse())
                 + " " + mark("Blackjack", plugin.blackjack().hasTable())
-                + " " + mark("Roulette", plugin.roulette().hasTable())
+                + " " + mark("Roulette", plugin.roulette().hasTable()) + " " + mark("Roulette rot", plugin.rouletteHr().hasTable())
+                + " " + mark("Roulette violett", plugin.rouletteVio().hasTable())
                 + " " + mark("Slots", plugin.slots().hasMachine())
                 + " " + mark("Crash", plugin.crash().hasScreen())
                 + " " + mark("Poker", plugin.poker().hasTable()) + " " + mark("Poker rot", plugin.pokerHr().hasTable()) + " " + mark("Poker violett", plugin.pokerVio().hasTable())));
