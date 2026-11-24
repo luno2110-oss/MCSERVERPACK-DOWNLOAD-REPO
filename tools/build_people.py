@@ -789,6 +789,8 @@ def prop_img(kind):
                 px[x, y] = c
 
     if kind == "leer":
+        # unsichtbar für Gesten; ein fast durchsichtiger Punkt, damit der Bedrock-Bau ein Bild (und eine Zuordnung) hat
+        px[15, 15] = (255, 255, 255, 6)
         return im
     if kind == "sekt":          # Sektflöte: Fuß, Stiel, schlanker Kelch mit Perlen
         r(7, 3, 8, 9, rgb("F2D27A"))
