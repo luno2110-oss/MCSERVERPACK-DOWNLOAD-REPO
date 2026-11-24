@@ -174,6 +174,18 @@ jobs:
             sleep 9
             shot "10_$v"
           done
+          # Leute (v2.07): Gäste mit Tätigkeiten, Security, Personal-Varianten; Video mit Sprechblasen und Gesten
+          for v in leute leute_nah leute_bar leute_sitz leute_pech; do
+            echo "kubytest kamera $v Kamera" >&3
+            sleep 8
+            shot "16_$v"
+            sleep 3
+            shot "16_${v}_b"
+          done
+          echo "kubytest kamera leute_nah Kamera" >&3
+          sleep 3
+          clip video_leute 24
+          sleep 25
           # Blackjack-Runden vom Platz: Austeilen, Zug, Ergebnis (GEWONNEN/VERLOREN, Serie, Bonus)
           echo "kubytest kamera bj_platz Kamera" >&3
           sleep 4

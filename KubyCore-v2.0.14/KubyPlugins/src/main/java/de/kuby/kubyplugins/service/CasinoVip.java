@@ -9,7 +9,6 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Villager;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.io.File;
@@ -75,26 +74,46 @@ public final class CasinoVip {
     }
 
     /** Stellt einen Barkeeper an die Position des Admins. */
-    public void spawnBarkeeper(Player admin) {
+    /**
+     * Barkeeper an den Platz des Admins (v2.07: eigene Figur statt Dorfbewohner, zwei Varianten; Name darüber).
+     * variant = "1", "2" oder Kennung (barkeeper_2); sonst zufällig.
+     */
+    public void spawnBarkeeper(Player admin, String variant) {
         Location at = admin.getLocation();
-        at.getWorld().spawn(at, Villager.class, v -> {
-            v.setAI(false);
-            v.setInvulnerable(true);
-            v.setSilent(true);
-            v.setCollidable(false);
-            v.setPersistent(true);
-            v.setRemoveWhenFarAway(false);
-            v.customName(Msg.parse("<gold><b>Barkeeper</b>"));
-            v.setCustomNameVisible(true);
-            v.getPersistentDataContainer().set(tag, PersistentDataType.BYTE, (byte) 1);
-        });
+        at.setPitch(0);
+        java.util.List<de.kuby.kubyplugins.casino.People.Variant> pool = plugin.people().group("bar");
+        de.kuby.kubyplugins.casino.People.Variant v = null;
+        if (variant != null) {
+            v = plugin.people().find(variant);
+            if (v == null && variant.matches("\\d") && Integer.parseInt(variant) >= 1 && Integer.parseInt(variant) <= pool.size()) {
+                v = pool.get(Integer.parseInt(variant) - 1);
+            }
+        }
+        barkeeperAt(at, v);
+    }
+
+    /** Barkeeper-Figur an einen Platz (auch beim Umbau alter Dorfbewohner-Barkeeper). v = null: zufällig. */
+    public org.bukkit.entity.Mannequin barkeeperAt(Location at, de.kuby.kubyplugins.casino.People.Variant v) {
+        java.util.List<de.kuby.kubyplugins.casino.People.Variant> pool = plugin.people().group("bar");
+        if (v == null && !pool.isEmpty()) v = pool.get(new java.util.Random().nextInt(pool.size()));
+        if (v == null) return null;
+        org.bukkit.entity.Mannequin m = plugin.people().mannequin(at, v.name(), v.skin(), v.slim());
+        m.customName(Msg.parse("<gold><b>Barkeeper</b>"));
+        m.setCustomNameVisible(true);
+        m.getPersistentDataContainer().set(tag, PersistentDataType.BYTE, (byte) 1);
+        plugin.people().register(m);
+        return m;
+    }
+
+    public void spawnBarkeeper(Player admin) {
+        spawnBarkeeper(admin, null);
     }
 
     /** Entfernt den nächsten Barkeeper im Umkreis von 5 Blöcken. False, wenn keiner da ist. */
     public boolean removeBarkeeper(Player admin) {
-        Villager nearest = null;
+        Entity nearest = null;
         double best = Double.MAX_VALUE;
-        for (Villager v : admin.getWorld().getNearbyEntitiesByType(Villager.class, admin.getLocation(), 5)) {
+        for (Entity v : admin.getNearbyEntities(5, 5, 5)) {
             if (!isBarkeeper(v)) continue;
             double d = v.getLocation().distanceSquared(admin.getLocation());
             if (d < best) {

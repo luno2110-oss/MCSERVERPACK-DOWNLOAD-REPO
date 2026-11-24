@@ -157,6 +157,7 @@ public final class KubyPlugins extends JavaPlugin {
     private CasinoPlay casinoPlay;
     private CasinoMusic casinoMusic;
     private de.kuby.kubyplugins.casino.CasinoNpc casinoNpc;
+    private de.kuby.kubyplugins.casino.People people;
     private PokerService poker;
     private PokerService pokerHr;
     private PokerService pokerVio;
@@ -236,6 +237,7 @@ public final class KubyPlugins extends JavaPlugin {
         getServer().getScheduler().runTaskTimer(this, casinoPlay::tick, 40L, 20L);
         casinoMusic = new CasinoMusic(this);
         casinoNpc = new de.kuby.kubyplugins.casino.CasinoNpc(this);
+        people = new de.kuby.kubyplugins.casino.People(this);
         poker = new PokerService(this);
         poker.start();
         // weinroter High-Roller-Pokertisch (eigene Blinds, eigene Datei poker-rot.yml)
@@ -544,6 +546,8 @@ public final class KubyPlugins extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new RegionListener(this), this);
         getServer().getPluginManager().registerEvents(new BlackjackListener(this), this);
         getServer().getPluginManager().registerEvents(casinoNpc, this);
+        getServer().getPluginManager().registerEvents(people, this);
+        people.start();
         getServer().getPluginManager().registerEvents(roulette, this);
         getServer().getPluginManager().registerEvents(rouletteHr, this);
         getServer().getPluginManager().registerEvents(rouletteVio, this);
@@ -1077,6 +1081,7 @@ public final class KubyPlugins extends JavaPlugin {
     public CasinoPlay casinoPlay() { return casinoPlay; }
     public CasinoMusic casinoMusic() { return casinoMusic; }
     public de.kuby.kubyplugins.casino.CasinoNpc casinoNpc() { return casinoNpc; }
+    public de.kuby.kubyplugins.casino.People people() { return people; }
     public PokerService poker() { return poker; }
     public PokerService pokerHr() { return pokerHr; }
     public PokerService pokerVio() { return pokerVio; }

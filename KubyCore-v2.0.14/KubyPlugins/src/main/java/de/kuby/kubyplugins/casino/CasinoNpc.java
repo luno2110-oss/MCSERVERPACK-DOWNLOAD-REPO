@@ -16,7 +16,6 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
-import org.bukkit.entity.Villager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -84,19 +83,68 @@ public final class CasinoNpc implements Placeable, Listener {
         return id == null ? null : Role.of(id);
     }
 
+    /** Aussehen einer Personal-Figur: Skin-Pfad im Pack, Name, schlanke Arme, Hut (kuby:people/&lt;hut&gt;). */
+    public record Look(String skin, String name, boolean slim, String hat) {}
+
+    /**
+     * Varianten je Rolle (v2.07, Wunsch des Besitzers: „für alle NPCs mehrere Varianten, Hautfarbe, Haare, Anzug“):
+     * die handgemalten Figuren bleiben Variante 1, dazu die aus dem Figuren-Baukasten. Losbude und Chip-Shop haben
+     * jetzt eigene Figuren (vorher der Croupier).
+     */
+    public java.util.List<Look> looks(Role role) {
+        java.util.List<Look> out = new java.util.ArrayList<>();
+        switch (role) {
+            case KASSE -> out.add(new Look("entity/casino/kassierer", "Kassierer", false, null));
+            case CROUPIER -> out.add(new Look("entity/casino/croupier", "Croupier", true, null));
+            case MIA -> out.add(new Look("entity/casino/mia", "Mia", true, null));
+            default -> {
+            }
+        }
+        String group = switch (role) {
+            case KASSE -> "kasse";
+            case CROUPIER -> "croupier";
+            case CHIPSHOP -> "chipshop";
+            case LOSBUDE -> "losbude";
+            default -> null;
+        };
+        if (group != null && plugin.people() != null) {
+            for (People.Variant v : plugin.people().group(group)) out.add(new Look(v.skin(), v.name(), v.slim(), v.hat()));
+        }
+        if (out.isEmpty() && role != Role.CRASH && role != Role.MUSIK) out.add(new Look("entity/casino/croupier", role.title, true, null));
+        return out;
+    }
+
+    /** Variante nach Nummer (1 …) oder Kennung (losbude_2); sonst die erste. */
+    private Look look(Role role, String wanted) {
+        java.util.List<Look> all = looks(role);
+        if (all.isEmpty()) return null;
+        if (wanted != null) {
+            if (wanted.matches("\\d+")) {
+                int i = Integer.parseInt(wanted) - 1;
+                if (i >= 0 && i < all.size()) return all.get(i);
+            }
+            for (Look l : all) if (l.skin().endsWith("/" + wanted.toLowerCase(java.util.Locale.ROOT)) || l.name().equalsIgnoreCase(wanted)) return l;
+        }
+        return all.get(0);
+    }
+
     /** Stellt eine Figur an die Position des Admins (Blickrichtung wie der Admin). */
     public Entity spawn(Role role, Location at) {
+        return spawn(role, at, null);
+    }
+
+    public Entity spawn(Role role, Location at, String variant) {
         Location loc = at.clone();
         loc.setPitch(0);
         Entity npc = switch (role) {
-            // Kassierer wie im alten Casino (grüner Augenschirm, Weste, Ärmelhalter), breite Arme
-            case KASSE -> mannequin(loc, "Kassierer", "kassierer", org.bukkit.profile.PlayerTextures.SkinModel.CLASSIC);
             case MUSIK -> jukebox(loc);
-            case CROUPIER -> mannequin(loc, "Croupier", "croupier");
+            case KASSE, CROUPIER, MIA, CHIPSHOP, LOSBUDE -> {
+                Look l = look(role, variant);
+                org.bukkit.entity.Mannequin m = plugin.people().mannequin(loc, l.name(), l.skin(), l.slim());
+                if (l.hat() != null) m.getEquipment().setHelmet(People.model(l.hat()));
+                yield m;
+            }
             // geladener Creeper (blaue Aura) wie im Clip; ohne KI zündet er nie
-            case MIA -> mannequin(loc, "Mia", "mia");
-            case CHIPSHOP -> mannequin(loc, "Chip-Shop", "croupier");
-            case LOSBUDE -> mannequin(loc, "Losbude", "croupier");
             case CRASH -> loc.getWorld().spawn(loc, org.bukkit.entity.Creeper.class, c -> {
                 c.setPowered(true);
                 c.setMaxFuseTicks(Integer.MAX_VALUE / 2);
@@ -106,24 +154,8 @@ public final class CasinoNpc implements Placeable, Listener {
         };
         npc.getPersistentDataContainer().set(roleKey, PersistentDataType.STRING, role.id);
         spawnHolo(role, npc);
+        plugin.people().register(npc);
         return npc;
-    }
-
-    /** Figur mit eigenem Skin aus dem Pack (kuby:entity/casino/&lt;skin&gt;), schlanke Arme. */
-    private Entity mannequin(Location loc, String name, String skin) {
-        return mannequin(loc, name, skin, org.bukkit.profile.PlayerTextures.SkinModel.SLIM);
-    }
-
-    private Entity mannequin(Location loc, String name, String skin, org.bukkit.profile.PlayerTextures.SkinModel model) {
-        return loc.getWorld().spawn(loc, org.bukkit.entity.Mannequin.class, m -> {
-            m.setProfile(io.papermc.paper.datacomponent.item.ResolvableProfile.resolvableProfile()
-                    .name(name)
-                    .skinPatch(sp -> sp.body(Key.key("kuby", "entity/casino/" + skin)).model(model))
-                    .build());
-            m.setImmovable(true);
-            m.setDescription(null);
-            prepare(m);
-        });
     }
 
     /**
@@ -353,11 +385,33 @@ public final class CasinoNpc implements Placeable, Listener {
         if (role == null) {
             StringBuilder ids = new StringBuilder();
             for (Role r : Role.values()) ids.append(ids.isEmpty() ? "" : "|").append(r.id);
-            Msg.send(p, "<red>Nutzung: /casino npc <" + ids + "> | entfernen");
+            Msg.send(p, "<red>Nutzung: /casino npc <" + ids + "> [Variante 1 …] | entfernen");
             return;
         }
-        spawn(role, p.getLocation());
-        Msg.send(p, "<green>" + role.title + " aufgestellt. Entfernen: /casino npc entfernen (davor stehen).");
+        String variant = args.length > 2 ? args[2] : null;
+        spawn(role, p.getLocation(), variant);
+        int n = looks(role).size();
+        Msg.send(p, "<green>" + role.title + " aufgestellt" + (n > 1 ? " (" + n + " Varianten: /casino npc " + role.id + " 1 … " + n
+                + ", oder im Casino-Admin wechseln)" : "") + ". Entfernen: /casino npc entfernen (davor stehen).");
+    }
+
+    public java.util.List<String> tab(String[] args) {
+        java.util.List<String> out = new java.util.ArrayList<>();
+        if (args.length == 2) {
+            for (Role r : Role.values()) out.add(r.id);
+            out.add("entfernen");
+        } else if (args.length == 3 && Role.of(args[1]) != null) {
+            for (int i = 1; i <= looks(Role.of(args[1])).size(); i++) out.add(String.valueOf(i));
+        }
+        return out;
+    }
+
+    /** Ältere Figuren ohne Skin-Markierung (vor v2.07): Standard-Aussehen der Rolle übernehmen (Losbude neu). */
+    public void upgrade(Entity e) {
+        Role r = roleOf(e);
+        if (r == null || !(e instanceof org.bukkit.entity.Mannequin m)) return;
+        Look l = look(r, null);
+        if (l != null) plugin.people().restyle(m, l.name(), l.skin(), l.slim(), l.hat());
     }
 
     // ---------- Casino-Admin (v2.07): Figuren sind Entities, Schlüssel = UUID ----------
@@ -397,6 +451,32 @@ public final class CasinoNpc implements Placeable, Listener {
         Role r = roleOf(e);
         if (r != null) spawnHolo(r, e);
         return null;
+    }
+
+    @Override
+    public String variant(String id, int dir) {
+        Entity e = byId(id);
+        if (!(e instanceof org.bukkit.entity.Mannequin m)) return "Diese Figur hat keine Varianten.";
+        Role r = roleOf(e);
+        java.util.List<Look> all = looks(r);
+        if (all.size() < 2) return "Für " + r.title + " gibt es nur eine Figur.";
+        String cur = m.getPersistentDataContainer().get(new NamespacedKey(plugin, "people_skin"), PersistentDataType.STRING);
+        int i = 0;
+        for (int k = 0; k < all.size(); k++) if (all.get(k).skin().equals(cur)) i = k;
+        Look l = all.get(Math.floorMod(i + dir, all.size()));
+        plugin.people().restyle(m, l.name(), l.skin(), l.slim(), l.hat());
+        return null;
+    }
+
+    @Override
+    public String variantName(String id) {
+        Entity e = byId(id);
+        if (!(e instanceof org.bukkit.entity.Mannequin m)) return null;
+        java.util.List<Look> all = looks(roleOf(e));
+        if (all.size() < 2) return null;
+        String cur = m.getPersistentDataContainer().get(new NamespacedKey(plugin, "people_skin"), PersistentDataType.STRING);
+        for (int k = 0; k < all.size(); k++) if (all.get(k).skin().equals(cur)) return all.get(k).name() + " (" + (k + 1) + "/" + all.size() + ")";
+        return "1/" + all.size();
     }
 
     @Override

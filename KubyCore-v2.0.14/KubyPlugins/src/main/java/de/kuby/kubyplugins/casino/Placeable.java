@@ -39,6 +39,16 @@ public interface Placeable {
     /** Ganz entfernen (auch aus der Datei). */
     String remove(String id);
 
+    /** Andere Variante (Figuren: Haut, Haare, Kleidung); dir = +1 weiter, -1 zurück. Standard: geht nicht. */
+    default String variant(String id, int dir) {
+        return "Hier gibt es keine Varianten.";
+    }
+
+    /** Name der aktuellen Variante oder null, wenn das Teil keine Varianten hat. */
+    default String variantName(String id) {
+        return null;
+    }
+
     /** Schrittweite der Größe (für die Knöpfe), 0 = keine. */
     default double sizeStep() {
         return 0;

@@ -596,6 +596,11 @@ public final class CasinoPlay {
             int st = newStreak;
             plugin.getServer().getScheduler().runTask(plugin, () -> plugin.casinoMusic().onRound(id, won, st));
         }
+        // Leute im Casino (v2.07): Zuschauer jubeln oder leiden mit, Pechvögel betteln nach großen Gewinnen
+        if (plugin.people() != null) {
+            boolean won = gross > stake, big = gross >= stake * 5 && gross > 0;
+            plugin.getServer().getScheduler().runTask(plugin, () -> plugin.people().onRound(id, won, big));
+        }
         return out;
     }
 

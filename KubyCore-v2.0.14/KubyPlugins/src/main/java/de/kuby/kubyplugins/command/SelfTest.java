@@ -318,6 +318,8 @@ final class SelfTest {
         }
 
         // Sprache (12.7): Vorlagen geladen, Stichproben (Werte, Großschrift, Klick-Befehle bleiben unverändert)
+        // Leute im Casino (v2.07): Figuren-Liste und Pools je Tätigkeit
+        if (plugin.people() != null) for (String t : plugin.people().selfTest()) fails.add("Leute: " + t);
         if (I18n.size() < 4000) fails.add("Sprache: nur " + I18n.size() + " englische Vorlagen");
         String[][] probes = {
                 {"<green>Tag 5 abgeholt: <gold>+500$", "<green>Day 5 claimed: <gold>+500$"},

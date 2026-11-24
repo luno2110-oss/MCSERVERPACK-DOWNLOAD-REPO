@@ -341,7 +341,7 @@ public final class LoadTestCommand implements CommandExecutor {
         plugin.getLogger().info("[Inventar-Test] " + (ok ? "OK" : "FEHLER") + " " + String.join(" | ", res));
     }
     private static Location camBj, camRl, camPk, camSlots, camSlotsKlein, camPlinko, camRennen, camCrash, camBjRot, camBjVio, camPkRot, camPkVio,
-            camRad;
+            camRad, camLeute;
 
     /** Kamera-Punkte für Screenshots aus dem echten Client (CI "Client-Bilder"). */
     private void camera(Player p, String where) {
@@ -384,6 +384,36 @@ public final class LoadTestCommand implements CommandExecutor {
                 if (camRad == null) return;
                 from = camRad.clone().add(-8.2, 2.1, 0.3);
                 to = camRad.clone().add(0, 2.55, 0);
+            }
+            case "leute" -> {
+                // Leute-Ecke (v2.07) von Osten: Gruppe, Trinkende, Security, Bank, Wand, Theke
+                if (camLeute == null) return;
+                from = camLeute.clone().add(0, 2.4, 0);
+                to = camLeute.clone().add(-8.5, 0.9, -0.5);
+            }
+            case "leute_nah" -> {
+                // Gruppe nah: Sprechblasen, Gesten, Gesichter
+                if (camLeute == null) return;
+                from = camLeute.clone().add(-4.2, 1.75, -3.2);
+                to = camLeute.clone().add(-7.5, 1.35, -4.0);
+            }
+            case "leute_bar" -> {
+                // Theke: Bestellen, Barkeeper, Losbude mit Strohhut
+                if (camLeute == null) return;
+                from = camLeute.clone().add(-0.8, 1.9, 3.0);
+                to = camLeute.clone().add(-5.0, 1.2, 5.5);
+            }
+            case "leute_sitz" -> {
+                // Bank, Boden, Wand: Sitzen und Anlehnen von nah
+                if (camLeute == null) return;
+                from = camLeute.clone().add(-7.0, 1.7, 0.5);
+                to = camLeute.clone().add(-11.2, 0.8, 0.5);
+            }
+            case "leute_pech" -> {
+                // Pechvogel und Streife
+                if (camLeute == null) return;
+                from = camLeute.clone().add(-7.5, 1.7, -5.0);
+                to = camLeute.clone().add(-12.0, 0.7, -7.0);
             }
             case "gluecksrad_nah" -> {
                 // Glücksrad nah: Nadel und Stifte oben am Rad
@@ -540,6 +570,39 @@ public final class LoadTestCommand implements CommandExecutor {
     }
 
     /** Ebene Testfläche: Boden aus poliertem Andesit auf Höhe y-1, darüber 12 Blöcke Luft (keine Bäume vor der Kamera). */
+    /**
+     * Leute-Ecke (v2.07) westlich hinter der Rennen-Wand: Rückwand, Bank (Stufen-Platten), Theke, dazu jede Tätigkeit
+     * einmal, Personal-Varianten (neue Losbude mit Strohhut, Kasse 2, Barkeeper). Alle schauen nach Osten zur Kamera.
+     */
+    private void leute(org.bukkit.World w, int gx, double gy, int gz) {
+        flatten(w, gx - 30, gx - 16, gz - 5, gz + 13, (int) gy);
+        int y = (int) gy;
+        for (int z = gz - 5; z <= gz + 13; z++) {
+            for (int k = 0; k < 4; k++) w.getBlockAt(gx - 30, y + k, z).setType(org.bukkit.Material.DARK_OAK_PLANKS, false);
+        }
+        for (int z = gz + 2; z <= gz + 3; z++) w.getBlockAt(gx - 28, y, z).setType(org.bukkit.Material.DARK_OAK_SLAB, false);
+        for (int z = gz + 7; z <= gz + 11; z++) w.getBlockAt(gx - 20, y, z).setType(org.bukkit.Material.POLISHED_BLACKSTONE_BRICKS, false);
+        camLeute = new Location(w, gx - 16.5, gy, gz + 4.5);
+        var pe = plugin.people();
+        java.util.function.BiFunction<Double, Double, Location> at = (dx, dz) -> new Location(w, gx + dx, gy, gz + dz, -90f, 0f);
+        pe.spawn(de.kuby.kubyplugins.casino.People.Act.GRUPPE, at.apply(-24.0, 0.5), "viktor", 3);
+        pe.spawn(de.kuby.kubyplugins.casino.People.Act.TRINKEN, at.apply(-22.5, 4.5), "elena", 0);
+        pe.spawn(de.kuby.kubyplugins.casino.People.Act.TELEFON, at.apply(-25.5, 12.5), "lukas", 0);
+        pe.spawn(de.kuby.kubyplugins.casino.People.Act.BESTELLEN, at.apply(-21.2, 9.5), "sophie", 0);
+        pe.spawn(de.kuby.kubyplugins.casino.People.Act.WARTEN, at.apply(-21.5, -2.5), "mei", 0);
+        pe.spawn(de.kuby.kubyplugins.casino.People.Act.BANK, new Location(w, gx - 27.5, gy + 0.5, gz + 2.5, -90f, 0f), "frank", 0);
+        pe.spawn(de.kuby.kubyplugins.casino.People.Act.BODEN, at.apply(-26.5, 9.0), "nina", 0);
+        pe.spawn(de.kuby.kubyplugins.casino.People.Act.WAND, at.apply(-28.7, 6.5), "mateo", 0);
+        pe.spawn(de.kuby.kubyplugins.casino.People.Act.VERZWEIFELT, at.apply(-28.5, -2.5), "paul", 0);
+        pe.spawn(de.kuby.kubyplugins.casino.People.Act.ZUSCHAUER, at.apply(-18.5, 4.5), "amara", 0);
+        pe.spawn(de.kuby.kubyplugins.casino.People.Act.SECURITY, at.apply(-19.5, -3.5), "darnell", 0);
+        pe.spawn(de.kuby.kubyplugins.casino.People.Act.STREIFE, at.apply(-27.5, -4.5), "svenja", 0);
+        plugin.casinoNpc().spawn(de.kuby.kubyplugins.casino.CasinoNpc.Role.LOSBUDE, at.apply(-23.5, 12.5), "1");
+        plugin.casinoNpc().spawn(de.kuby.kubyplugins.casino.CasinoNpc.Role.KASSE, at.apply(-28.0, 12.5), "2");
+        plugin.casinoVip().barkeeperAt(new Location(w, gx - 18.5, gy, gz + 9.5, 90f, 0f), null);
+        plugin.getLogger().info("[Casino-Test] Leute-Ecke: " + pe.count() + " animierte Figuren");
+    }
+
     private static void flatten(org.bukkit.World w, int x0, int x1, int z0, int z1, int y) {
         for (int x = x0; x <= x1; x++) {
             for (int z = z0; z <= z1; z++) {
@@ -647,6 +710,7 @@ public final class LoadTestCommand implements CommandExecutor {
             plugin.plinko().testBoard("kplinko", camPlinko, 0f, 0.8);
             plugin.race().testBoard(camRennen, -90f, 0.7);
             plugin.wheel().testBoard("krad", camRad, 90f, 0.9);
+            leute(w, gx, gy, gz);
             int bjSeat = 0, pkSeat = 0;
             for (int i = 0; i < players.size(); i++) {
                 Player p = players.get(i);

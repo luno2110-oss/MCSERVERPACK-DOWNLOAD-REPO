@@ -83,7 +83,12 @@ public final class CasinoAdmin {
                       String empty) {}
 
     public record PieceView(KitData.Icon icon, String name, String sub, double step, boolean blocks, String size, TableTier tier,
-                            boolean fetch, boolean armed, String catKey, String hint) {}
+                            boolean fetch, boolean armed, String catKey, String hint, String variant) {
+        public PieceView(KitData.Icon icon, String name, String sub, double step, boolean blocks, String size, TableTier tier,
+                         boolean fetch, boolean armed, String catKey, String hint) {
+            this(icon, name, sub, step, blocks, size, tier, fetch, armed, catKey, hint, null);
+        }
+    }
 
     public record SetRow(String key, String label, String value, boolean bool, boolean on, String hover) {}
 
@@ -246,6 +251,25 @@ public final class CasinoAdmin {
         return c;
     }
 
+    /** Zeilen der Aufstell-Knöpfe (wie in category umbrochen). */
+    static int placeRows(List<Btn> place) {
+        int x = 0, rows = place.isEmpty() ? 0 : 1;
+        for (Btn b : place) {
+            int w = bw(b.label());
+            if (x + w > W) {
+                x = 0;
+                rows++;
+            }
+            x += w + 3;
+        }
+        return rows;
+    }
+
+    /** Einträge je Seite: jede Knopfzeile über zwei kostet einen Eintrag (Figuren-Kategorie „Leute“ hat drei). */
+    static int perPage(List<Btn> place) {
+        return PER - Math.max(0, placeRows(place) - 2);
+    }
+
     public static Canvas category(Cat v, Nav nav) {
         Canvas c = base();
         head(c, v.icon(), v.name().toUpperCase(Locale.ROOT), v.desc(), nav, "tab:aufbau", null);
@@ -344,6 +368,15 @@ public final class CasinoAdmin {
             }
         }
         y += h + 3;
+        if (v.variant() != null) {
+            // Figuren (v2.07): Variante wechseln (Haut, Haare, Kleidung)
+            card(c, y, 42, "Variante");
+            int bx = 10;
+            bx += button(c, bx, y + 20, 24, "‹", KitData.Small.VIOLET, LIGHT, nav.go("var:-"), "Vorige Variante") + 4;
+            bx += button(c, bx, y + 20, 24, "›", KitData.Small.GOLD, GOLD_SOFT, nav.go("var:+"), "Nächste Variante") + 8;
+            c.text(bx, y + 24, Canvas.fit(v.variant(), true, W - bx - 10), LIGHT, true);
+            y += 45;
+        }
         // Aktionen
         card(c, y, 42, "Aktionen");
         x = 10;
@@ -432,11 +465,18 @@ public final class CasinoAdmin {
                 List.of(new Btn("Grün hier", KitData.Small.GOLD, GOLD_SOFT, "x", "h"), new Btn("Rot hier", KitData.Small.GOLD, GOLD_SOFT, "x", "h"),
                         new Btn("Violett hier", KitData.Small.GOLD, GOLD_SOFT, "x", "h"), new Btn("Einstellungen", KitData.Small.VIOLET, LIGHT, "x", "h")),
                 rows, 1, 3, "blackjack", "leer"), nav));
+        List<Btn> many = new ArrayList<>();
+        for (Kind k : KINDS) if (k.key().equals("leute")) many.addAll(k.place());
+        List<Row> fewer = new ArrayList<>(rows.subList(0, Math.min(rows.size(), perPage(many))));
+        reg.accept("Casino-Admin Kategorie Leute", () -> category(new Cat(KitData.Icon.STAR, "Leute", "Gäste und Security mit Tätigkeiten",
+                many, fewer, 0, 2, "leute", "leer"), nav));
         reg.accept("Casino-Admin Kategorie leer", () -> category(new Cat(KitData.Icon.STAR, "Glücksrad", "Bühne", List.of(), List.of(), 0, 1,
                 "gluecksrad", "Noch nichts aufgestellt."), nav));
         reg.accept("Casino-Admin Teil", () -> piece(new PieceView(KitData.Icon.CHIP_GREEN, "Blackjack-Tisch 12 · High Roller " + "W".repeat(10),
                 "12345,5 64 -9876,5 · Blick 135° · frei " + "W".repeat(30), 0.5, false, "4,5", TableTier.ROT, true, true, "blackjack",
                 "Tipp: Spieler am Tisch? Verschieben geht erst nach der Runde."), nav));
+        reg.accept("Casino-Admin Teil Figur", () -> piece(new PieceView(KitData.Icon.STAR, "Viktor · Gruppe", "1 64 2 · Blick 90° · in einer Gruppe",
+                0.5, false, null, null, true, true, "leute", "Variante › wechselt die Person.", "Croupière (3/3) " + "W".repeat(12)), nav));
         reg.accept("Casino-Admin Teil Poker", () -> piece(new PieceView(KitData.Icon.CHIP_RED, "Pokertisch Elite", "1 64 2", 1, true, null, null,
                 false, false, "poker", null), nav));
         List<SetRow> set = new ArrayList<>();
@@ -593,7 +633,22 @@ public final class CasinoAdmin {
                             place("Jukebox", "casino npc musik", "Jukebox an deinem Standplatz"),
                             place("Barkeeper", "casino barkeeper", "Barkeeper an deinem Standplatz")),
                     pl -> List.of(new Source(pl.casinoNpc(), null, null, true)),
-                    List.of(), "Figuren gelten nur, solange ihr Chunk geladen ist."),
+                    List.of(), "Figur antippen: „Variante ›“ wechselt Haut, Haare und Kleidung. Nur geladene Chunks."),
+            new Kind("leute", "Service", KitData.Icon.STAR, "Leute", "Gäste und Security mit Tätigkeiten",
+                    List.of(place("Gruppe", "casino leute gruppe", "Drei Gäste im Kreis um dich, unterhalten sich"),
+                            place("Trinkt", "casino leute trinken", "Gast mit Glas an deinem Standplatz"),
+                            place("Telefoniert", "casino leute telefon", "Geht in Blickrichtung auf und ab"),
+                            place("Bestellt", "casino leute bestellen", "An die Bar stellen, Blick zur Theke"),
+                            place("Wartet", "casino leute warten", "Wartet auf Freunde, Blick wie du"),
+                            place("Bank", "casino leute bank", "Auf die Bank/den Hocker stellen"),
+                            place("Boden", "casino leute boden", "Sitzt am Boden, Blick wie du"),
+                            place("Wand", "casino leute wand", "Rücken zur Wand stellen"),
+                            place("Verzweifelt", "casino leute verzweifelt", "Pechvogel am Boden, bettelt"),
+                            place("Zuschauer", "casino leute zuschauer", "Neben einen Tisch: fiebert und jubelt mit"),
+                            place("Security", "casino leute security", "Steht Wache, Blick wie du"),
+                            place("Streife", "casino leute streife", "Läuft in Blickrichtung auf und ab")),
+                    pl -> List.of(new Source(pl.people(), null, null, true)),
+                    List.of(), "Variante › wechselt die Person, Größe = Weglänge (Streife, Telefon). Rechtsklick: sie reden mit dir."),
             new Kind("hologramme", "Service", KitData.Icon.BELL, "Hologramme", "Jackpot, Ranking, Eingang",
                     List.of(place("Jackpot", "casino holo jackpot", "Hologramm an deinem Standplatz"),
                             place("Ranking", "casino holo ranking", "Auf die Wand schauen (Mitte der Tafel)"),
@@ -756,6 +811,7 @@ public final class CasinoAdmin {
                 act(plugin, p, src -> src.p().move(s.piece, 0, 0, 0, r));
             }
             case "size" -> act(plugin, p, src -> src.p().resize(s.piece, (arg.equals("-") ? -1 : 1) * src.p().sizeStep()));
+            case "var" -> act(plugin, p, src -> src.p().variant(s.piece, arg.equals("-") ? -1 : 1));
             case "tier" -> {
                 TableTier t = TableTier.parse(arg);
                 act(plugin, p, src -> src.p() instanceof de.kuby.kubyplugins.casino.BlackjackService bj && t != null ? bj.tier(s.piece, t)
@@ -914,10 +970,11 @@ public final class CasinoAdmin {
                 all.add(new Row(name, col, sub.toString(), key + ":" + si + ":" + pc.id(), pc.busy()));
             }
         }
-        int pages = Math.max(1, (all.size() + PER - 1) / PER), pg = Math.max(0, Math.min(page, pages - 1));
         List<Btn> place = new ArrayList<>(k.place());
         if (!k.settings().isEmpty()) place.add(new Btn("Einstellungen", KitData.Small.VIOLET, LIGHT, "kset:" + key, k.name() + ": Werte einstellen"));
-        show(p, category(new Cat(k.icon(), k.name(), k.desc(), place, all.subList(pg * PER, Math.min(all.size(), (pg + 1) * PER)), pg, pages, key,
+        int per = perPage(place);
+        int pages = Math.max(1, (all.size() + per - 1) / per), pg = Math.max(0, Math.min(page, pages - 1));
+        show(p, category(new Cat(k.icon(), k.name(), k.desc(), place, all.subList(pg * per, Math.min(all.size(), (pg + 1) * per)), pg, pages, key,
                 "Noch nichts aufgestellt. Oben „… hier“ drücken: es wird an deinem Standplatz bzw. Blickpunkt aufgebaut."), nav(plugin)));
     }
 
@@ -939,7 +996,7 @@ public final class CasinoAdmin {
         String name = pc.name() + (src.tier() != null && !pc.name().contains("High") && !pc.name().contains("Elite") && !src.tier().equals("Grün")
                 ? " · " + src.tier() : "");
         show(p, piece(new PieceView(k.icon(), name, sub, poker ? Math.max(1, s.step) : s.step, poker, size, tier, src.floor(), s.armed,
-                s.cat, hint), nav(plugin)));
+                s.cat, hint, src.p().variantName(pc.id())), nav(plugin)));
     }
 
     // ---------- Einstellungen ----------

@@ -97,8 +97,8 @@ public final class CasinoCommand implements CommandExecutor, org.bukkit.command.
                     Msg.send(p, plugin.casinoVip().removeBarkeeper(p)
                             ? "<green>Barkeeper entfernt." : "<red>Kein Barkeeper im Umkreis von 5 Blöcken.");
                 } else {
-                    plugin.casinoVip().spawnBarkeeper(p);
-                    Msg.send(p, "<green>Barkeeper gesetzt. Entfernen mit /casino barkeeper entfernen.");
+                    plugin.casinoVip().spawnBarkeeper(p, args.length > 1 ? args[1] : null);
+                    Msg.send(p, "<green>Barkeeper gesetzt (Variante: /casino barkeeper 1|2). Entfernen mit /casino barkeeper entfernen.");
                 }
             }
             case "jackpot" -> jackpot(p, args);
@@ -108,6 +108,7 @@ public final class CasinoCommand implements CommandExecutor, org.bukkit.command.
                 if (!plugin.casinoTour().play(p)) Msg.send(p, "<red>Hier gibt es nichts zu zeigen – stell dich ins Casino (im Umkreis von 90 Blöcken).");
             }
             case "npc" -> plugin.casinoNpc().command(p, args);
+            case "leute", "figur", "figuren" -> plugin.people().command(p, args);
             case "einrichten", "setup" -> plugin.casinoSetup().command(p, args);
             case "wechseln", "chips" -> {
                 String blocked = plugin.casino().checkUse(p);
@@ -293,7 +294,13 @@ public final class CasinoCommand implements CommandExecutor, org.bukkit.command.
             opts.addAll(java.util.List.of("status", "kaufen", "verkaufen", "waehrung", "serie", "jackpot", "regeln", "stats", "rundgang",
                     "cashout", "hilfe", "plinko", "rennen", "gluecksrad", "shop"));
             if (admin) opts.addAll(java.util.List.of("blackjack", "poker-tisch", "roulette-tisch", "automat", "slots", "crash", "npc",
-                    "holo", "kasse", "barkeeper", "admin", "einrichten"));
+                    "leute", "holo", "kasse", "barkeeper", "admin", "einrichten"));
+        } else if (admin && args.length >= 2 && args[0].equalsIgnoreCase("leute")) {
+            opts.addAll(plugin.people().tab(args));
+        } else if (admin && args.length >= 2 && args.length <= 3 && args[0].equalsIgnoreCase("npc")) {
+            opts.addAll(plugin.casinoNpc().tab(args));
+        } else if (admin && args.length == 2 && args[0].equalsIgnoreCase("barkeeper")) {
+            opts.addAll(java.util.List.of("1", "2", "entfernen"));
         } else if (admin && args.length == 2 && args[0].equalsIgnoreCase("rennen")) {
             opts.addAll(java.util.List.of("bildschirm", "entfernen"));
         } else if (admin && args.length == 2 && args[0].equalsIgnoreCase("plinko")) {
