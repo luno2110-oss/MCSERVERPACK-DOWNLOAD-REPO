@@ -567,6 +567,10 @@ public final class KubyPlugins extends JavaPlugin {
         getServer().getPluginManager().registerEvents(casinoNpc, this);
         getServer().getPluginManager().registerEvents(people, this);
         getServer().getPluginManager().registerEvents(decor, this);
+        // Reste alter Tisch-Anzeigen (Dealer halb im Boden nach einem Neustart) vor dem Neuaufbau entfernen
+        de.kuby.kubyplugins.casino.StaleCleanup stale = new de.kuby.kubyplugins.casino.StaleCleanup(this);
+        getServer().getPluginManager().registerEvents(stale, this);
+        stale.sweep();
         people.start();
         getServer().getPluginManager().registerEvents(roulette, this);
         getServer().getPluginManager().registerEvents(rouletteHr, this);
